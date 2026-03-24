@@ -90,7 +90,8 @@ async def save_session(domain: str, browser_session: "BrowserSession") -> str:
 
     data = {
         "cookies": [
-            c.model_dump() if hasattr(c, "model_dump") else dict(c) for c in cookies
+            c.model_dump() if hasattr(c, "model_dump") else dict(c)  # type: ignore[union-attr]
+            for c in cookies
         ],
         "localStorage": {},
     }
