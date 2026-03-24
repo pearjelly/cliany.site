@@ -24,10 +24,12 @@ def cli(ctx, json_mode):
 
 
 from cliany_site.commands.doctor import doctor
+from cliany_site.commands.explore import explore_cmd
 from cliany_site.commands.login import login
 
 cli.add_command(doctor)
 cli.add_command(login)
+cli.add_command(explore_cmd)
 
 
 if __name__ == "__main__":
