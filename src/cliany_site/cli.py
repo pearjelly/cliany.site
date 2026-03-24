@@ -26,10 +26,16 @@ def cli(ctx, json_mode):
 from cliany_site.commands.doctor import doctor
 from cliany_site.commands.explore import explore_cmd
 from cliany_site.commands.login import login
+from cliany_site.commands.list_cmd import list_cmd
 
 cli.add_command(doctor)
 cli.add_command(login)
 cli.add_command(explore_cmd)
+cli.add_command(list_cmd)
+
+from cliany_site.loader import register_adapters
+
+register_adapters(cli)
 
 
 if __name__ == "__main__":
