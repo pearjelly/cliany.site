@@ -17,9 +17,13 @@ def print_response(
     response: dict,
     json_mode: bool = True,
     exit_on_error: bool = True,
+    compact: bool = False,
 ) -> None:
     if json_mode:
-        print(json.dumps(response, ensure_ascii=False, indent=2))
+        if compact:
+            print(json.dumps(response, ensure_ascii=False, separators=(",", ":")))
+        else:
+            print(json.dumps(response, ensure_ascii=False, indent=2))
     else:
         # rich 输出模式（非 JSON）
         from rich.console import Console
