@@ -6,7 +6,7 @@ PASS=0
 FAIL=0
 
 test_find_chrome() {
-  OUTPUT=$(python3 -c "
+  OUTPUT=$(uv run python3 -c "
 from cliany_site.browser.launcher import find_chrome_binary
 result = find_chrome_binary()
 if result is not None:
@@ -33,7 +33,7 @@ else:
 }
 
 test_detect_running() {
-  OUTPUT=$(python3 -c "
+  OUTPUT=$(uv run python3 -c "
 from cliany_site.browser.launcher import detect_running_chrome
 result = detect_running_chrome(port=19222)
 print(result if result else 'NONE')
@@ -49,7 +49,7 @@ print(result if result else 'NONE')
 }
 
 test_error_code() {
-  python3 -c "from cliany_site.errors import CHROME_NOT_FOUND; assert CHROME_NOT_FOUND == 'CHROME_NOT_FOUND'" 2>&1
+  uv run python3 -c "from cliany_site.errors import CHROME_NOT_FOUND; assert CHROME_NOT_FOUND == 'CHROME_NOT_FOUND'" 2>&1
   if [ $? -eq 0 ]; then
     echo "[PASS] CHROME_NOT_FOUND 错误码存在"
     PASS=$((PASS+1))
