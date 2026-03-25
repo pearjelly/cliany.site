@@ -53,6 +53,10 @@ class AtomExtractor:
 
         try:
             response = await self._llm.ainvoke(full_prompt)
+        except RuntimeError:
+            return []
+
+        try:
             response_text = self._response_to_text(response)
             parsed = _parse_llm_response(response_text)
 
@@ -73,7 +77,7 @@ class AtomExtractor:
                 new_atoms.append(atom)
 
             return new_atoms
-        except Exception:
+        except (json.JSONDecodeError, KeyError, TypeError, ValueError):
             return []
 
     def _derive_workflow_name(self, explore_result: ExploreResult) -> str:

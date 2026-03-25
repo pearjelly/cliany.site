@@ -16,6 +16,7 @@ from textual.widgets import (
     TabPane,
 )
 from textual.containers import Container, Horizontal, Vertical
+from textual.widgets.data_table import CellDoesNotExist
 
 from cliany_site.loader import discover_adapters, ADAPTERS_DIR
 from cliany_site.atoms.storage import list_atoms
@@ -182,11 +183,11 @@ class AdapterListScreen(Screen):
             if not row_key or not row_key.value:
                 return
             domain = str(row_key.value)
-        except Exception:
+        except CellDoesNotExist:
             self.app.notify("请先选择一个适配器", severity="warning")
             return
 
-        def check_delete(confirm: bool) -> None:
+        def check_delete(confirm: bool | None) -> None:
             if confirm:
                 target_dir = ADAPTERS_DIR / domain
                 if target_dir.exists():
@@ -195,7 +196,7 @@ class AdapterListScreen(Screen):
                         self.app.notify(f"已删除: {domain}")
                         self._load_data()
                         self._update_env_status()
-                    except Exception as e:
+                    except OSError as e:
                         self.app.notify(f"删除失败: {e}", severity="error")
 
         self.app.push_screen(
@@ -209,7 +210,7 @@ class AdapterListScreen(Screen):
             if not row_key or not row_key.value:
                 return
             domain = str(row_key.value)
-        except Exception:
+        except CellDoesNotExist:
             self.app.notify("请先选择一个适配器", severity="warning")
             return
 
@@ -223,11 +224,11 @@ class AdapterListScreen(Screen):
             with tarfile.open(out_path, "w:gz") as tar:
                 tar.add(target_dir, arcname=domain)
             self.app.notify(f"导出成功: {out_path.name}")
-        except Exception as e:
+        except (OSError, tarfile.TarError) as e:
             self.app.notify(f"导出失败: {e}", severity="error")
 
     def action_import_adapter(self) -> None:
-        def do_import(path_str: str) -> None:
+        def do_import(path_str: str | None) -> None:
             if not path_str:
                 return
 
@@ -263,7 +264,7 @@ class AdapterListScreen(Screen):
                     self.app.notify("导入成功")
                     self._load_data()
                     self._update_env_status()
-            except Exception as e:
+            except (OSError, tarfile.TarError) as e:
                 self.app.notify(f"导入失败: {e}", severity="error")
 
         self.app.push_screen(

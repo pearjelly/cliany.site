@@ -116,6 +116,7 @@ class AdapterMerger:
         explore_result = self._rebuild_explore_result(merge_result.merged)
         generator = AdapterGenerator()
         code = generator.generate(explore_result, self.domain)
+        existing_metadata = self._load_existing_metadata()
 
         self._adapter_dir.mkdir(parents=True, exist_ok=True)
 
@@ -125,10 +126,21 @@ class AdapterMerger:
             "domain": self.domain,
             "commands": merge_result.merged,
             "generated_at": datetime.now(timezone.utc).isoformat(),
-            "source_url": f"https://{self.domain}",
-            "workflow": "",
+            "source_url": existing_metadata.get("source_url", f"https://{self.domain}"),
+            "workflow": existing_metadata.get("workflow", ""),
         }
         self._atomic_write_json(self._metadata_path, metadata)
+
+    def _load_existing_metadata(self) -> dict[str, Any]:
+        if not self._metadata_path.exists():
+            return {}
+
+        try:
+            data = json.loads(self._metadata_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, TypeError):
+            return {}
+
+        return data if isinstance(data, dict) else {}
 
     def merge(
         self, explore_result: ExploreResult, json_mode: bool = True
@@ -345,7 +357,7 @@ class AdapterMerger:
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
                 handle.write(content)
             os.replace(tmp_path, str(path))
-        except Exception:
+        except (OSError, TypeError, ValueError):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
             raise
@@ -356,7 +368,7 @@ class AdapterMerger:
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
                 json.dump(payload, handle, ensure_ascii=False, indent=2)
             os.replace(tmp_path, str(path))
-        except Exception:
+        except (OSError, TypeError, ValueError):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
             raise

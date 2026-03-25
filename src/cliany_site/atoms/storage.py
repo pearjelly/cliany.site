@@ -121,7 +121,7 @@ def load_atom(domain: str, atom_id: str) -> AtomCommand | None:
 
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
         return None
 
     if not isinstance(data, dict):
@@ -138,7 +138,7 @@ def load_atoms(domain: str) -> list[AtomCommand]:
     for atom_file in sorted(atoms_dir.glob("*.json")):
         try:
             data = json.loads(atom_file.read_text(encoding="utf-8"))
-        except Exception:
+        except (OSError, json.JSONDecodeError, KeyError, TypeError):
             continue
         if isinstance(data, dict):
             atoms.append(_deserialize_atom(data))
@@ -155,7 +155,7 @@ def list_atoms(domain: str) -> list[dict]:
     for atom_file in sorted(atoms_dir.glob("*.json")):
         try:
             data = json.loads(atom_file.read_text(encoding="utf-8"))
-        except Exception:
+        except (OSError, json.JSONDecodeError, KeyError, TypeError):
             continue
 
         if not isinstance(data, dict):

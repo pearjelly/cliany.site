@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 import sys
 from pathlib import Path
@@ -34,7 +35,11 @@ def explore_cmd(
 
     async def _run():
         from cliany_site.browser.cdp import CDPConnection
-        from cliany_site.codegen.generator import AdapterGenerator, save_adapter
+        from cliany_site.codegen.generator import (
+            AdapterGenerator,
+            _safe_domain,
+            save_adapter,
+        )
         from cliany_site.codegen.merger import AdapterMerger
         from cliany_site.explorer.engine import (
             WorkflowExplorer,
@@ -135,7 +140,14 @@ def explore_cmd(
             extractor = AtomExtractor(llm_client, domain)
             new_atoms = await extractor.extract_atoms(explore_result)
             post_analysis["atoms_extracted"] = len(new_atoms)
-        except Exception:
+        except (
+            RuntimeError,
+            json.JSONDecodeError,
+            KeyError,
+            TypeError,
+            ValueError,
+            OSError,
+        ):
             pass
 
         print(
@@ -146,7 +158,7 @@ def explore_cmd(
             file=sys.stderr,
         )
 
-        adapter_dir = Path.home() / ".cliany-site" / "adapters" / domain
+        adapter_dir = Path.home() / ".cliany-site" / "adapters" / _safe_domain(domain)
 
         from cliany_site.activity_log import write_log
 
