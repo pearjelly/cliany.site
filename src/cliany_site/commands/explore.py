@@ -112,8 +112,38 @@ def explore_cmd(
                 "请检查 URL 是否可访问，LLM 配置是否正确",
             )
 
+        post_analysis = {
+            "atoms_extracted": 0,
+            "atoms_reused": 0,
+            "validation_warnings": 0,
+            "action_quality_score": 1.0,
+        }
+
+        try:
+            reuse_count = sum(
+                1
+                for action in explore_result.actions
+                if action.action_type == "reuse_atom"
+            )
+            post_analysis["atoms_reused"] = reuse_count
+
+            from cliany_site.explorer.analyzer import AtomExtractor
+
+            llm_client = getattr(explorer, "_llm", None)
+            if llm_client is None:
+                raise RuntimeError("LLM client unavailable")
+            extractor = AtomExtractor(llm_client, domain)
+            new_atoms = await extractor.extract_atoms(explore_result)
+            post_analysis["atoms_extracted"] = len(new_atoms)
+        except Exception:
+            pass
+
         print(
             f"[explore] 发现 {len(explore_result.commands)} 个命令建议", file=sys.stderr
+        )
+        print(
+            f"[explore] 后分析: 提取 {post_analysis['atoms_extracted']} 个原子, 复用 {post_analysis['atoms_reused']} 个原子",
+            file=sys.stderr,
         )
 
         adapter_dir = Path.home() / ".cliany-site" / "adapters" / domain
@@ -140,6 +170,7 @@ def explore_cmd(
                     "commands_total": len(commands_list),
                     "pages_explored": len(explore_result.pages),
                     "actions_found": len(explore_result.actions),
+                    "post_analysis": post_analysis,
                 }
             )
         else:
@@ -157,6 +188,7 @@ def explore_cmd(
                 "commands_total": merge_result.total_count,
                 "pages_explored": len(explore_result.pages),
                 "actions_found": len(explore_result.actions),
+                "post_analysis": post_analysis,
             }
             if merge_result.conflicts_resolved:
                 response_data["conflicts_resolved"] = merge_result.conflicts_resolved
