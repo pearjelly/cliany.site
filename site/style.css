@@ -185,6 +185,56 @@ img, svg {
   color: var(--color-text-main);
 }
 
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 2px;
+}
+
+html.no-js .lang-toggle {
+  display: none;
+}
+
+.lang-option {
+  padding: 4px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: var(--font-body);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  border-radius: 18px;
+  color: var(--color-text-muted);
+  transition: color var(--transition);
+  line-height: 1.4;
+}
+
+.lang-option[aria-pressed="true"] {
+  color: var(--color-white);
+}
+
+.lang-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  height: calc(100% - 4px);
+  width: calc(50% - 2px);
+  background: var(--color-accent);
+  border-radius: 18px;
+  transition: transform var(--transition);
+  z-index: 0;
+}
+
+.lang-toggle[data-active="en"] .lang-slider {
+  transform: translateX(100%);
+}
+
 .menu-toggle {
   display: none;
   background: none;
@@ -621,6 +671,9 @@ html.js .reveal.visible {
     opacity: 1;
     transform: none;
   }
+  .lang-slider {
+    transition: none;
+  }
   html {
     scroll-behavior: auto;
   }
@@ -691,6 +744,10 @@ html.js .reveal.visible {
   
   .hero-actions .btn {
     width: 100%;
+  }
+
+  .lang-toggle {
+    align-self: center;
   }
 
   .footer-container {

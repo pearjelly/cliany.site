@@ -14,6 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script>document.documentElement.classList.replace('no-js','js');</script>
+  <script>(function(){var s=localStorage.getItem('cliany-lang');var l=(s==='en'||s==='zh')?s:(navigator.language&&navigator.language.startsWith('en')?'en':'zh');document.documentElement.lang=l==='en'?'en':'zh-CN';document.documentElement.dataset.lang=l;})()</script>
 </head>
 <body>
   <div class="noise-overlay"></div>
@@ -31,15 +32,20 @@
       </button>
 
       <nav class="nav-links" id="main-nav">
-        <a href="#features" class="nav-link">功能</a>
-        <a href="#how-it-works" class="nav-link">工作原理</a>
-        <a href="#quickstart" class="nav-link">快速开始</a>
+        <a href="#features" class="nav-link" data-i18n="nav.features">功能</a>
+        <a href="#how-it-works" class="nav-link" data-i18n="nav.how">工作原理</a>
+        <a href="#quickstart" class="nav-link" data-i18n="nav.quickstart">快速开始</a>
+        <div class="lang-toggle" role="radiogroup" aria-label="Language" data-active="zh">
+          <button class="lang-option" data-lang="zh" aria-pressed="true">中文</button>
+          <button class="lang-option" data-lang="en" aria-pressed="false">EN</button>
+          <span class="lang-slider" aria-hidden="true"></span>
+        </div>
         <a href="https://github.com/pearjelly/cliany.site" target="_blank" rel="noopener noreferrer" class="nav-icon" aria-label="GitHub">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z"></path>
           </svg>
         </a>
-        <a href="#quickstart" class="btn btn-primary nav-cta">开始使用</a>
+        <a href="#quickstart" class="btn btn-primary nav-cta" data-i18n="nav.cta">开始使用</a>
       </nav>
     </div>
   </header>
@@ -47,11 +53,11 @@
   <main>
     <section class="hero reveal">
       <div class="container hero-container">
-        <h1 class="hero-title">将浏览器操作，变成命令行指令</h1>
-        <p class="hero-subtitle">基于 LLM 与 Chrome CDP 协议，cliany-site 自动探索网页工作流，生成可复用的 CLI 命令。像调用脚本一样操控任何网站。</p>
+        <h1 class="hero-title" data-i18n="hero.title">将浏览器操作，变成命令行指令</h1>
+        <p class="hero-subtitle" data-i18n="hero.subtitle">基于 LLM 与 Chrome CDP 协议，cliany-site 自动探索网页工作流，生成可复用的 CLI 命令。像调用脚本一样操控任何网站。</p>
         <div class="hero-actions">
-          <a href="#quickstart" class="btn btn-primary">开始使用</a>
-          <a href="https://github.com/pearjelly/cliany.site" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">查看 GitHub →</a>
+          <a href="#quickstart" class="btn btn-primary" data-i18n="hero.cta">开始使用</a>
+          <a href="https://github.com/pearjelly/cliany.site" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" data-i18n="hero.github">查看 GitHub →</a>
         </div>
 
         <div class="terminal-window">
@@ -63,10 +69,10 @@
           <div class="terminal-body" id="hero-terminal">
             <div class="line type-line" data-text="$ cliany-site explore &#34;https://github.com&#34; &#34;搜索仓库并查看 README&#34;"></div>
             <div class="result-lines">
-              <div class="line muted">✓ 正在连接 Chrome CDP...</div>
-              <div class="line muted">✓ 正在分析页面结构...</div>
-              <div class="line muted">✓ LLM 规划工作流...</div>
-              <div class="line success">✓ 生成 CLI 命令至 ~/.cliany-site/adapters/github.com/</div>
+              <div class="line muted" data-i18n="terminal.connecting">✓ 正在连接 Chrome CDP...</div>
+              <div class="line muted" data-i18n="terminal.analyzing">✓ 正在分析页面结构...</div>
+              <div class="line muted" data-i18n="terminal.planning">✓ LLM 规划工作流...</div>
+              <div class="line success" data-i18n="terminal.generated">✓ 生成 CLI 命令至 ~/.cliany-site/adapters/github.com/</div>
               <br>
             </div>
             <div class="line type-line delay" data-text="$ cliany-site github.com search --query &#34;cliany-site&#34; --json"></div>
@@ -81,39 +87,39 @@
     <section id="features" class="features section-padding">
       <div class="container">
         <div class="section-header reveal">
-          <h2 class="section-title">核心特性</h2>
-          <p class="section-subtitle">从探索到执行，全流程自动化</p>
+          <h2 class="section-title" data-i18n="features.title">核心特性</h2>
+          <p class="section-subtitle" data-i18n="features.subtitle">从探索到执行，全流程自动化</p>
         </div>
 
         <div class="features-grid reveal">
           <div class="feature-card">
             <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
-            <h3 class="feature-title">零侵入探索</h3>
-            <p class="feature-desc">通过 Chrome CDP 协议捕获页面无障碍树（AXTree），无需注入脚本，零侵入分析网页结构。</p>
+            <h3 class="feature-title" data-i18n="features.explore.title">零侵入探索</h3>
+            <p class="feature-desc" data-i18n="features.explore.desc">通过 Chrome CDP 协议捕获页面无障碍树（AXTree），无需注入脚本，零侵入分析网页结构。</p>
           </div>
           
           <div class="feature-card">
             <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-            <h3 class="feature-title">LLM 驱动代码生成</h3>
-            <p class="feature-desc">调用 Claude / GPT-4o 理解页面语义，自动将复杂工作流转化为结构化的 Python CLI 命令。</p>
+            <h3 class="feature-title" data-i18n="features.llm.title">LLM 驱动代码生成</h3>
+            <p class="feature-desc" data-i18n="features.llm.desc">调用 Claude / GPT-4o 理解页面语义，自动将复杂工作流转化为结构化的 Python CLI 命令。</p>
           </div>
 
           <div class="feature-card">
             <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
-            <h3 class="feature-title">标准 JSON 输出</h3>
-            <p class="feature-desc">所有命令支持 --json 选项，输出统一 {success, data, error} 信封格式，方便管道和自动化集成。</p>
+            <h3 class="feature-title" data-i18n="features.json.title">标准 JSON 输出</h3>
+            <p class="feature-desc" data-i18n="features.json.desc">所有命令支持 --json 选项，输出统一 {success, data, error} 信封格式，方便管道和自动化集成。</p>
           </div>
 
           <div class="feature-card">
             <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-            <h3 class="feature-title">持久化 Session</h3>
-            <p class="feature-desc">跨命令保持 Cookie 和 LocalStorage 登录状态，一次登录，多次复用。</p>
+            <h3 class="feature-title" data-i18n="features.session.title">持久化 Session</h3>
+            <p class="feature-desc" data-i18n="features.session.desc">跨命令保持 Cookie 和 LocalStorage 登录状态，一次登录，多次复用。</p>
           </div>
 
           <div class="feature-card">
             <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6l3 3"/><circle cx="12" cy="14" r="8"/></svg></div>
-            <h3 class="feature-title">动态适配器加载</h3>
-            <p class="feature-desc">每个网站自动生成独立适配器，按域名动态注册为 CLI 子命令。随时扩展，按需加载。</p>
+            <h3 class="feature-title" data-i18n="features.adapter.title">动态适配器加载</h3>
+            <p class="feature-desc" data-i18n="features.adapter.desc">每个网站自动生成独立适配器，按域名动态注册为 CLI 子命令。随时扩展，按需加载。</p>
           </div>
         </div>
       </div>
@@ -122,15 +128,15 @@
     <section id="how-it-works" class="how-it-works section-padding surface-bg">
       <div class="container">
         <div class="section-header reveal">
-          <h2 class="section-title">工作原理</h2>
-          <p class="section-subtitle">三步完成从网页到命令行的转化</p>
+          <h2 class="section-title" data-i18n="how.title">工作原理</h2>
+          <p class="section-subtitle" data-i18n="how.subtitle">三步完成从网页到命令行的转化</p>
         </div>
 
         <div class="steps-flow reveal">
           <div class="step-card">
             <div class="step-number">1</div>
-            <h3 class="step-title">探索 (Explore)</h3>
-            <p class="step-desc">指定目标 URL 和任务描述，LLM 自动分析页面结构并规划操作路径。</p>
+            <h3 class="step-title" data-i18n="how.explore.title">探索 (Explore)</h3>
+            <p class="step-desc" data-i18n="how.explore.desc">指定目标 URL 和任务描述，LLM 自动分析页面结构并规划操作路径。</p>
             <div class="step-code"><code>cliany-site explore "https://github.com" "搜索仓库"</code></div>
           </div>
 
@@ -140,8 +146,8 @@
 
           <div class="step-card">
             <div class="step-number">2</div>
-            <h3 class="step-title">生成 (Generate)</h3>
-            <p class="step-desc">将探索结果转化为 Python/Click 命令行工具，自动保存至本地适配器目录。</p>
+            <h3 class="step-title" data-i18n="how.generate.title">生成 (Generate)</h3>
+            <p class="step-desc" data-i18n="how.generate.desc">将探索结果转化为 Python/Click 命令行工具，自动保存至本地适配器目录。</p>
             <div class="step-code"><code>~/.cliany-site/adapters/github.com/commands.py</code></div>
           </div>
 
@@ -151,8 +157,8 @@
 
           <div class="step-card">
             <div class="step-number">3</div>
-            <h3 class="step-title">执行 (Run)</h3>
-            <p class="step-desc">通过生成的 CLI 命令一键回放工作流。模糊匹配技术确保页面微调后依然稳定运行。</p>
+            <h3 class="step-title" data-i18n="how.run.title">执行 (Run)</h3>
+            <p class="step-desc" data-i18n="how.run.desc">通过生成的 CLI 命令一键回放工作流。模糊匹配技术确保页面微调后依然稳定运行。</p>
             <div class="step-code"><code>cliany-site github.com search --query "browser-use" --json</code></div>
           </div>
         </div>
@@ -161,7 +167,7 @@
 
     <section class="demo-section section-padding dark-bg reveal">
       <div class="container">
-        <h2 class="section-title dark-title text-center">命令行参考</h2>
+        <h2 class="section-title dark-title text-center" data-i18n="demo.title">命令行参考</h2>
         <div class="terminal-window large-terminal">
           <div class="terminal-header">
             <span class="dot dot-red"></span>
@@ -173,11 +179,11 @@
             <div class="line json">{"success": true, "data": {"cdp": true, "llm": true}}</div>
             <br>
             <div class="line"><span class="prompt">$</span> <span class="cmd">cliany-site</span> <span class="subcmd">login</span> <span class="string">"https://github.com"</span> <span class="flag">--json</span></div>
-            <div class="line muted">✓ 等待浏览器完成登录...</div>
-            <div class="line muted">✓ Session 已保存至 ~/.cliany-site/sessions/</div>
+            <div class="line muted" data-i18n="demo.login.waiting">✓ 等待浏览器完成登录...</div>
+            <div class="line muted" data-i18n="demo.login.saved">✓ Session 已保存至 ~/.cliany-site/sessions/</div>
             <br>
             <div class="line"><span class="prompt">$</span> <span class="cmd">cliany-site</span> <span class="subcmd">explore</span> <span class="string">"https://github.com"</span> <span class="string">"搜索仓库并查看 README"</span> <span class="flag">--json</span></div>
-            <div class="line success">✓ 探索完成，已生成适配器</div>
+            <div class="line success" data-i18n="demo.explore.done">✓ 探索完成，已生成适配器</div>
             <br>
             <div class="line"><span class="prompt">$</span> <span class="cmd">cliany-site</span> <span class="subcmd">list</span> <span class="flag">--json</span></div>
             <div class="line json">{"success": true, "data": {"adapters": ["github.com"]}}</div>
@@ -192,47 +198,47 @@
     <section id="quickstart" class="quickstart section-padding">
       <div class="container">
         <div class="section-header reveal">
-          <h2 class="section-title">快速开始</h2>
-          <p class="section-subtitle">五分钟完成安装与配置</p>
+          <h2 class="section-title" data-i18n="qs.title">快速开始</h2>
+          <p class="section-subtitle" data-i18n="qs.subtitle">五分钟完成安装与配置</p>
         </div>
 
         <div class="qs-grid reveal">
           <div class="qs-card">
-            <h3 class="qs-title">Step 1: 安装</h3>
+            <h3 class="qs-title" data-i18n="qs.step1">Step 1: 安装</h3>
             <div class="code-block-container">
               <pre class="code-block"><code>git clone https://github.com/pearjelly/cliany.site.git
 cd cliany-site
 pip install -e .</code></pre>
-              <button class="copy-btn" data-clipboard="git clone https://github.com/pearjelly/cliany.site.git&#10;cd cliany-site&#10;pip install -e ." aria-label="Copy to clipboard">复制</button>
+              <button class="copy-btn" data-clipboard="git clone https://github.com/pearjelly/cliany.site.git&#10;cd cliany-site&#10;pip install -e ." aria-label="Copy to clipboard" data-i18n="copy.btn">复制</button>
             </div>
           </div>
 
           <div class="qs-card">
-            <h3 class="qs-title">Step 2: 配置 LLM</h3>
+            <h3 class="qs-title" data-i18n="qs.step2">Step 2: 配置 LLM</h3>
             <div class="code-block-container">
               <pre class="code-block"><code>export CLIANY_LLM_PROVIDER=anthropic
 export CLIANY_ANTHROPIC_API_KEY="sk-ant-..."</code></pre>
-              <button class="copy-btn" data-clipboard="export CLIANY_LLM_PROVIDER=anthropic&#10;export CLIANY_ANTHROPIC_API_KEY=&#34;sk-ant-...&#34;" aria-label="Copy to clipboard">复制</button>
+              <button class="copy-btn" data-clipboard="export CLIANY_LLM_PROVIDER=anthropic&#10;export CLIANY_ANTHROPIC_API_KEY=&#34;sk-ant-...&#34;" aria-label="Copy to clipboard" data-i18n="copy.btn">复制</button>
             </div>
           </div>
 
           <div class="qs-card">
-            <h3 class="qs-title">Step 3: 启动 Chrome CDP</h3>
+            <h3 class="qs-title" data-i18n="qs.step3">Step 3: 启动 Chrome CDP</h3>
             <div class="code-block-container">
               <pre class="code-block"><code># macOS
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
   --remote-debugging-port=9222 \
   --user-data-dir=/tmp/chrome-debug</code></pre>
-              <button class="copy-btn" data-clipboard="# macOS&#10;/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \&#10;  --remote-debugging-port=9222 \&#10;  --user-data-dir=/tmp/chrome-debug" aria-label="Copy to clipboard">复制</button>
+              <button class="copy-btn" data-clipboard="# macOS&#10;/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \&#10;  --remote-debugging-port=9222 \&#10;  --user-data-dir=/tmp/chrome-debug" aria-label="Copy to clipboard" data-i18n="copy.btn">复制</button>
             </div>
           </div>
 
           <div class="qs-card">
-            <h3 class="qs-title">Step 4: 开始探索</h3>
+            <h3 class="qs-title" data-i18n="qs.step4">Step 4: 开始探索</h3>
             <div class="code-block-container">
-              <pre class="code-block"><code>cliany-site doctor --json  # 检查环境
+              <pre class="code-block"><code>cliany-site doctor --json
 cliany-site explore "https://github.com" "搜索仓库" --json</code></pre>
-              <button class="copy-btn" data-clipboard="cliany-site doctor --json&#10;cliany-site explore &#34;https://github.com&#34; &#34;搜索仓库&#34; --json" aria-label="Copy to clipboard">复制</button>
+              <button class="copy-btn" data-clipboard="cliany-site doctor --json&#10;cliany-site explore &#34;https://github.com&#34; &#34;搜索仓库&#34; --json" aria-label="Copy to clipboard" data-i18n="copy.btn">复制</button>
             </div>
           </div>
         </div>
@@ -244,12 +250,12 @@ cliany-site explore "https://github.com" "搜索仓库" --json</code></pre>
     <div class="container footer-container">
       <div class="footer-left">
         <a href="#" class="logo footer-logo">cliany<span class="logo-dot">.</span>site</a>
-        <p class="footer-desc">将任意网页操作自动化为 CLI 命令</p>
+        <p class="footer-desc" data-i18n="footer.desc">将任意网页操作自动化为 CLI 命令</p>
       </div>
       <div class="footer-right">
         <a href="https://github.com/pearjelly/cliany.site" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
-        <a href="https://github.com/pearjelly/cliany.site#readme" target="_blank" rel="noopener noreferrer" class="footer-link">文档</a>
-        <a href="#quickstart" class="footer-link">快速开始</a>
+        <a href="https://github.com/pearjelly/cliany.site#readme" target="_blank" rel="noopener noreferrer" class="footer-link" data-i18n="footer.docs">文档</a>
+        <a href="#quickstart" class="footer-link" data-i18n="footer.quickstart">快速开始</a>
       </div>
     </div>
     <div class="container footer-bottom">
