@@ -4,6 +4,7 @@ import os
 import re
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from cliany_site.action_runtime import execute_action_steps, normalize_navigation_url
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
@@ -69,6 +70,26 @@ def _load_dotenv() -> None:
             os.environ[key] = value
 
 
+def _normalize_openai_base_url(base_url: str | None) -> str | None:
+    if not isinstance(base_url, str):
+        return None
+
+    normalized = base_url.strip().rstrip("/")
+    if not normalized:
+        return None
+
+    parsed = urlparse(normalized)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise EnvironmentError(
+            "CLIANY_OPENAI_BASE_URL 格式无效，请使用 http(s)://host[:port][/v1]"
+        )
+
+    path = parsed.path.rstrip("/")
+    if path in {"", "/"}:
+        return f"{normalized}/v1"
+    return normalized
+
+
 def _get_llm():
     _load_dotenv()
     provider = os.environ.get("CLIANY_LLM_PROVIDER", "anthropic").lower()
@@ -78,7 +99,7 @@ def _get_llm():
         if not api_key:
             raise EnvironmentError("请设置 CLIANY_OPENAI_API_KEY 环境变量")
         model = os.environ.get("CLIANY_OPENAI_MODEL", "gpt-4o-mini")
-        base_url = os.environ.get("CLIANY_OPENAI_BASE_URL")
+        base_url = _normalize_openai_base_url(os.environ.get("CLIANY_OPENAI_BASE_URL"))
         try:
             chat_openai = importlib.import_module("langchain_openai")
             ChatOpenAI = getattr(chat_openai, "ChatOpenAI")
@@ -90,7 +111,7 @@ def _get_llm():
             raise EnvironmentError(
                 "请安装 langchain-openai: pip install langchain-openai"
             )
-    else:
+    elif provider == "anthropic":
         # anthropic（默认），向后兼容旧环境变量 ANTHROPIC_API_KEY
         api_key = os.environ.get("CLIANY_ANTHROPIC_API_KEY") or os.environ.get(
             "ANTHROPIC_API_KEY"
@@ -112,6 +133,8 @@ def _get_llm():
             raise EnvironmentError(
                 "请安装 langchain-anthropic: pip install langchain-anthropic"
             )
+
+    raise EnvironmentError("CLIANY_LLM_PROVIDER 仅支持 anthropic 或 openai")
 
 
 def _parse_llm_response(text: str) -> dict:
@@ -164,6 +187,16 @@ def _sanitize_actions_data(actions_data: Any, current_url: str) -> list[dict[str
             action_type = "type"
         if action_type:
             normalized["type"] = action_type
+
+        # value 字段归一化：LLM 可能用 text/content/query/keyword 代替 value
+        current_value = str(normalized.get("value", "") or "").strip()
+        if not current_value:
+            for alt_key in ("text", "content", "query", "keyword", "input"):
+                alt_value = str(normalized.get(alt_key, "") or "").strip()
+                if alt_value:
+                    normalized["value"] = alt_value
+                    break
+
         if action_type == "navigate":
             nav_url = normalize_navigation_url(normalized.get("url", ""), current_url)
             if not nav_url:
@@ -221,7 +254,14 @@ class WorkflowExplorer:
                     completed_steps=completed_steps_text,
                 )
 
-                response = await llm.ainvoke(f"{SYSTEM_PROMPT}\n\n{prompt_text}")
+                try:
+                    response = await llm.ainvoke(f"{SYSTEM_PROMPT}\n\n{prompt_text}")
+                except AttributeError as e:
+                    if "model_dump" in str(e):
+                        raise RuntimeError(
+                            "OpenAI 兼容接口返回格式异常；若使用代理，请将 CLIANY_OPENAI_BASE_URL 配置为包含 /v1 的地址（例如 https://sub2api.chinahrt.com/v1）"
+                        ) from e
+                    raise
                 parsed = _parse_llm_response(_to_text(response.content))
 
                 actions_data = _sanitize_actions_data(
