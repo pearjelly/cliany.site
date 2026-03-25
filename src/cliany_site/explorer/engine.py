@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from cliany_site.action_runtime import execute_action_steps, normalize_navigation_url
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.explorer.models import (
@@ -148,16 +149,30 @@ def _to_text(content: Any) -> str:
     return str(content)
 
 
-def _parse_ref_to_index(ref: str) -> int | None:
-    if not ref:
-        return None
-    match = re.search(r"(\d+)", ref)
-    if not match:
-        return None
-    try:
-        return int(match.group(1))
-    except ValueError:
-        return None
+def _sanitize_actions_data(actions_data: Any, current_url: str) -> list[dict[str, Any]]:
+    if not isinstance(actions_data, list):
+        return []
+
+    sanitized: list[dict[str, Any]] = []
+    for action_data in actions_data:
+        if not isinstance(action_data, dict):
+            continue
+
+        normalized = dict(action_data)
+        action_type = str(normalized.get("type", "")).lower()
+        if action_type == "input":
+            action_type = "type"
+        if action_type:
+            normalized["type"] = action_type
+        if action_type == "navigate":
+            nav_url = normalize_navigation_url(normalized.get("url", ""), current_url)
+            if not nav_url:
+                continue
+            normalized["url"] = nav_url
+
+        sanitized.append(normalized)
+
+    return sanitized
 
 
 class WorkflowExplorer:
@@ -187,10 +202,11 @@ class WorkflowExplorer:
 
             for _ in range(MAX_STEPS):
                 tree = await capture_axtree(browser_session)
+                selector_map = tree.get("selector_map") or {}
                 page_info = PageInfo(
                     url=tree.get("url", ""),
                     title=tree.get("title", ""),
-                    elements=list((tree.get("selector_map") or {}).values()),
+                    elements=list(selector_map.values()),
                 )
 
                 if not any(p.url == page_info.url for p in result.pages):
@@ -208,20 +224,27 @@ class WorkflowExplorer:
                 response = await llm.ainvoke(f"{SYSTEM_PROMPT}\n\n{prompt_text}")
                 parsed = _parse_llm_response(_to_text(response.content))
 
-                actions_data = parsed.get("actions", [])
-                if not isinstance(actions_data, list):
-                    actions_data = []
+                actions_data = _sanitize_actions_data(
+                    parsed.get("actions", []), tree.get("url", "")
+                )
 
                 for action_data in actions_data:
                     if not isinstance(action_data, dict):
                         continue
+                    target_ref = str(action_data.get("ref", "") or "")
+                    selector = selector_map.get(target_ref, {})
+                    if not isinstance(selector, dict):
+                        selector = {}
                     action = ActionStep(
                         action_type=action_data.get("type", "unknown"),
                         page_url=tree.get("url", ""),
-                        target_ref=action_data.get("ref", ""),
+                        target_ref=target_ref,
                         target_url=action_data.get("url", ""),
                         value=action_data.get("value", ""),
                         description=action_data.get("description", ""),
+                        target_name=str(selector.get("name", "") or ""),
+                        target_role=str(selector.get("role", "") or ""),
+                        target_attributes=dict(selector.get("attributes", {}) or {}),
                     )
                     result.actions.append(action)
 
@@ -234,7 +257,9 @@ class WorkflowExplorer:
                         f"{i + 1}. {desc}" for i, desc in enumerate(completed_steps)
                     )
 
-                await self._execute_actions(browser_session, actions_data)
+                await execute_action_steps(
+                    browser_session, actions_data, continue_on_error=True
+                )
 
                 if parsed.get("done", False):
                     commands_data = parsed.get("commands", [])
@@ -257,12 +282,10 @@ class WorkflowExplorer:
                         result.commands.append(cmd)
                     break
 
-                next_url = parsed.get("next_url", "")
-                if (
-                    isinstance(next_url, str)
-                    and next_url
-                    and next_url != tree.get("url", "")
-                ):
+                next_url = normalize_navigation_url(
+                    parsed.get("next_url", ""), tree.get("url", "")
+                )
+                if next_url and next_url != tree.get("url", ""):
                     try:
                         await browser_session.navigate_to(next_url, new_tab=False)
                     except Exception:
@@ -282,83 +305,3 @@ class WorkflowExplorer:
                 await self._cdp.disconnect()
 
         return result
-
-    async def _execute_actions(self, browser_session: Any, actions_data: list[dict]):
-        from browser_use.browser.events import (
-            ClickElementEvent,
-            NavigateToUrlEvent,
-            SelectDropdownOptionEvent,
-            SendKeysEvent,
-            TypeTextEvent,
-        )
-
-        for action_data in actions_data:
-            if not isinstance(action_data, dict):
-                continue
-
-            try:
-                action_type = action_data.get("type", "")
-
-                if action_type == "navigate":
-                    nav_url = action_data.get("url", "")
-                    if isinstance(nav_url, str) and nav_url:
-                        event = browser_session.event_bus.dispatch(
-                            NavigateToUrlEvent(
-                                url=nav_url,
-                                wait_until="domcontentloaded",
-                                new_tab=False,
-                            )
-                        )
-                        await event
-                        await event.event_result(
-                            raise_if_any=False, raise_if_none=False
-                        )
-                    continue
-
-                if action_type == "submit":
-                    event = browser_session.event_bus.dispatch(
-                        SendKeysEvent(keys="Enter")
-                    )
-                    await event
-                    await event.event_result(raise_if_any=False, raise_if_none=False)
-                    continue
-
-                ref = action_data.get("ref", "")
-                if not isinstance(ref, str):
-                    continue
-                element_index = _parse_ref_to_index(ref)
-                if element_index is None:
-                    continue
-
-                node = await browser_session.get_element_by_index(element_index)
-                if node is None:
-                    continue
-
-                if action_type == "click":
-                    event = browser_session.event_bus.dispatch(
-                        ClickElementEvent(node=node)
-                    )
-                    await event
-                    await event.event_result(raise_if_any=False, raise_if_none=False)
-                elif action_type == "type":
-                    value = action_data.get("value", "")
-                    if isinstance(value, str):
-                        event = browser_session.event_bus.dispatch(
-                            TypeTextEvent(node=node, text=value, clear=True)
-                        )
-                        await event
-                        await event.event_result(
-                            raise_if_any=False, raise_if_none=False
-                        )
-                elif action_type == "select":
-                    value = action_data.get("value", "")
-                    if isinstance(value, str) and value:
-                        event = browser_session.event_bus.dispatch(
-                            SelectDropdownOptionEvent(node=node, text=value)
-                        )
-                        await event
-                        await event.event_result(
-                            raise_if_any=False, raise_if_none=False
-                        )
-            except Exception:
-                pass

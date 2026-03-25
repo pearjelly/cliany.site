@@ -16,6 +16,7 @@ class AdapterGenerator:
         domain_doc = self._sanitize_docstring_text(domain)
         source_url = self._extract_source_url(explore_result)
         workflow_description = self._infer_workflow_description(explore_result)
+        source_url_literal = source_url or f"https://{domain}"
 
         command_blocks: list[str] = []
         for index, command in enumerate(explore_result.commands):
@@ -34,13 +35,16 @@ class AdapterGenerator:
 # 工作流: {workflow_description}
 
 import asyncio
+import json
 import click
+from cliany_site.action_runtime import execute_action_steps
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.session import load_session_data
 from cliany_site.response import success_response, error_response, print_response
 from cliany_site.errors import CDP_UNAVAILABLE, SESSION_EXPIRED, EXECUTION_FAILED
 
 DOMAIN = {domain!r}
+SOURCE_URL = {source_url_literal!r}
 
 
 @click.group()
@@ -123,7 +127,10 @@ if __name__ == "__main__":
         ]
         function_signature = ", ".join(function_args)
         args_payload = self._render_args_payload(arg_parameters)
-        action_lines = self._render_action_comment_lines(
+        action_comment_lines = self._render_action_comment_lines(
+            command.action_steps, all_actions
+        )
+        action_data_literal = self._render_action_data_literal(
             command.action_steps, all_actions
         )
 
@@ -135,14 +142,17 @@ def {function_name}({function_signature}):
         if not await cdp.check_available():
             return error_response(CDP_UNAVAILABLE, "Chrome CDP 不可用", "启动 Chrome 并开启 --remote-debugging-port=9222")
         browser_session = await cdp.connect()
+        await browser_session.navigate_to(SOURCE_URL, new_tab=False)
+        await asyncio.sleep(1.5)
         session_data = load_session_data(DOMAIN)
         if session_data:
             if session_data.get("expires_hint") == "expired":
                 return error_response(SESSION_EXPIRED, "Session 已失效", "请重新登录后再执行命令")
             await browser_session._cdp_set_cookies(session_data.get("cookies", []))
         try:
-            # 执行操作序列（来自 action_steps）
-{action_lines}
+            action_steps = json.loads({action_data_literal!r})
+{action_comment_lines}
+            await execute_action_steps(browser_session, action_steps, continue_on_error=True)
             return success_response({{"status": "completed", "command": "{command_name}", "args": {args_payload}}})
         except Exception as e:
             return error_response(EXECUTION_FAILED, str(e))
@@ -163,14 +173,17 @@ def run_workflow(ctx: click.Context, json_mode: bool | None):
         if not await cdp.check_available():
             return error_response(CDP_UNAVAILABLE, "Chrome CDP 不可用", "启动 Chrome 并开启 --remote-debugging-port=9222")
         browser_session = await cdp.connect()
+        await browser_session.navigate_to(SOURCE_URL, new_tab=False)
+        await asyncio.sleep(1.5)
         session_data = load_session_data(DOMAIN)
         if session_data:
             if session_data.get("expires_hint") == "expired":
                 return error_response(SESSION_EXPIRED, "Session 已失效", "请重新登录后再执行命令")
             await browser_session._cdp_set_cookies(session_data.get("cookies", []))
         try:
-            # 执行操作序列（来自 action_steps）
+            action_steps = []
             # - 无操作步骤
+            await execute_action_steps(browser_session, action_steps, continue_on_error=True)
             return success_response({"status": "completed", "command": "run-workflow"})
         except Exception as e:
             return error_response(EXECUTION_FAILED, str(e))
@@ -308,6 +321,31 @@ def run_workflow(ctx: click.Context, json_mode: bool | None):
         if not lines:
             return "            # - 无操作步骤"
         return "\n".join(lines)
+
+    def _render_action_data_literal(
+        self, action_steps: list[int], all_actions: list[ActionStep]
+    ) -> str:
+        payload: list[dict[str, Any]] = []
+        for raw_step in action_steps or []:
+            if not isinstance(raw_step, int):
+                continue
+            if raw_step < 0 or raw_step >= len(all_actions):
+                continue
+
+            action = all_actions[raw_step]
+            payload.append(
+                {
+                    "type": action.action_type,
+                    "ref": action.target_ref,
+                    "url": action.target_url,
+                    "value": action.value,
+                    "description": action.description,
+                    "target_name": action.target_name,
+                    "target_role": action.target_role,
+                    "target_attributes": action.target_attributes,
+                }
+            )
+        return json.dumps(payload, ensure_ascii=False)
 
     def _action_detail(self, action: ActionStep) -> str:
         action_type = (action.action_type or "").lower()

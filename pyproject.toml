@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "cliany-site"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = ["browser-use", "click", "rich", "langchain-openai", "python-dotenv"]
+dependencies = ["browser-use", "click", "rich", "langchain-openai", "langchain-anthropic", "python-dotenv"]
 
 [project.scripts]
 cliany-site = "cliany_site.cli:cli"

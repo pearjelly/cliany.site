@@ -35,7 +35,9 @@ def explore_cmd(
     async def _run():
         from cliany_site.browser.cdp import CDPConnection
         from cliany_site.codegen.generator import AdapterGenerator, save_adapter
-        from cliany_site.explorer.engine import WorkflowExplorer
+        from cliany_site.explorer.engine import WorkflowExplorer, _load_dotenv
+
+        _load_dotenv()
 
         cdp = CDPConnection()
         if not await cdp.check_available():
@@ -45,11 +47,16 @@ def explore_cmd(
                 "启动 Chrome 并开启 --remote-debugging-port=9222",
             )
 
-        if not (os.getenv("ANTHROPIC_API_KEY") or os.getenv("OPENAI_API_KEY")):
+        if not (
+            os.getenv("CLIANY_ANTHROPIC_API_KEY")
+            or os.getenv("CLIANY_OPENAI_API_KEY")
+            or os.getenv("ANTHROPIC_API_KEY")
+            or os.getenv("OPENAI_API_KEY")
+        ):
             return error_response(
                 LLM_UNAVAILABLE,
                 "LLM API Key 未配置",
-                "设置 ANTHROPIC_API_KEY 或 OPENAI_API_KEY 环境变量",
+                "设置 CLIANY_ANTHROPIC_API_KEY 或 CLIANY_OPENAI_API_KEY 环境变量",
             )
 
         parsed = urlparse(url)

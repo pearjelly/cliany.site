@@ -31,6 +31,9 @@ async def capture_axtree(browser_session: Any) -> dict:
     dom_service = DomService(browser_session)
     serialized, _enhanced_tree, _timing = await dom_service.get_serialized_dom_tree()
 
+    if hasattr(serialized, "selector_map") and serialized.selector_map:
+        browser_session.update_cached_selector_map(serialized.selector_map)
+
     element_tree_text = serialized.llm_representation()
 
     selector_map: dict[str, dict] = {}
