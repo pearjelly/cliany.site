@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import re
 from typing import Any
 from urllib.parse import urljoin, urlparse
@@ -74,6 +75,32 @@ def _normalize_attr_value(value: Any, current_url: str) -> str:
         return ""
     url_value = normalize_navigation_url(str(value), current_url)
     return _normalize_text(url_value or value)
+
+
+def substitute_parameters(
+    actions_data: list[dict[str, Any]], params: dict[str, Any]
+) -> list[dict[str, Any]]:
+    substituted = copy.deepcopy(actions_data)
+    if not isinstance(params, dict) or not params:
+        return substituted
+
+    pattern = re.compile(r"\{\{(\w+)\}\}")
+
+    for action_data in substituted:
+        if not isinstance(action_data, dict):
+            continue
+
+        for field_name in ("value", "url", "description", "target_name"):
+            field_value = action_data.get(field_name)
+            if not isinstance(field_value, str):
+                continue
+
+            action_data[field_name] = pattern.sub(
+                lambda match: str(params.get(match.group(1), match.group(0))),
+                field_value,
+            )
+
+    return substituted
 
 
 def _score_candidate(
@@ -174,16 +201,24 @@ async def execute_action_steps(
     browser_session: Any,
     actions_data: list[dict[str, Any]],
     continue_on_error: bool = False,
+    params: dict[str, Any] | None = None,
 ) -> None:
-    from browser_use.browser.events import (
-        ClickElementEvent,
-        NavigateToUrlEvent,
-        SelectDropdownOptionEvent,
-        SendKeysEvent,
-        TypeTextEvent,
+    import importlib
+
+    events_module = importlib.import_module("browser_use.browser.events")
+    ClickElementEvent = getattr(events_module, "ClickElementEvent")
+    NavigateToUrlEvent = getattr(events_module, "NavigateToUrlEvent")
+    SelectDropdownOptionEvent = getattr(events_module, "SelectDropdownOptionEvent")
+    SendKeysEvent = getattr(events_module, "SendKeysEvent")
+    TypeTextEvent = getattr(events_module, "TypeTextEvent")
+
+    effective_actions = (
+        substitute_parameters(actions_data, params)
+        if params is not None
+        else actions_data
     )
 
-    for action_data in actions_data:
+    for action_data in effective_actions:
         if not isinstance(action_data, dict):
             continue
 

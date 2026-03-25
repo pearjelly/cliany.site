@@ -280,21 +280,43 @@ class WorkflowExplorer:
                 for action_data in actions_data:
                     if not isinstance(action_data, dict):
                         continue
+                    action_type = action_data.get("type", "unknown")
                     target_ref = str(action_data.get("ref", "") or "")
                     selector = selector_map.get(target_ref, {})
                     if not isinstance(selector, dict):
                         selector = {}
-                    action = ActionStep(
-                        action_type=action_data.get("type", "unknown"),
-                        page_url=tree.get("url", ""),
-                        target_ref=target_ref,
-                        target_url=action_data.get("url", ""),
-                        value=action_data.get("value", ""),
-                        description=action_data.get("description", ""),
-                        target_name=str(selector.get("name", "") or ""),
-                        target_role=str(selector.get("role", "") or ""),
-                        target_attributes=dict(selector.get("attributes", {}) or {}),
-                    )
+
+                    # reuse_atom 操作：atom_id 存入 target_ref，parameters 存入 target_attributes
+                    if action_type == "reuse_atom":
+                        atom_id = str(action_data.get("reuse_atom", "") or "")
+                        params = action_data.get("parameters", {})
+                        if not isinstance(params, dict):
+                            params = {}
+                        action = ActionStep(
+                            action_type="reuse_atom",
+                            page_url=tree.get("url", ""),
+                            target_ref=atom_id,
+                            target_url="",
+                            value="",
+                            description=action_data.get("description", ""),
+                            target_name="",
+                            target_role="",
+                            target_attributes=params,
+                        )
+                    else:
+                        action = ActionStep(
+                            action_type=action_type,
+                            page_url=tree.get("url", ""),
+                            target_ref=target_ref,
+                            target_url=action_data.get("url", ""),
+                            value=action_data.get("value", ""),
+                            description=action_data.get("description", ""),
+                            target_name=str(selector.get("name", "") or ""),
+                            target_role=str(selector.get("role", "") or ""),
+                            target_attributes=dict(
+                                selector.get("attributes", {}) or {}
+                            ),
+                        )
                     result.actions.append(action)
 
                     description = action_data.get("description")

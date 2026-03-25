@@ -6,10 +6,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from cliany_site.atoms.models import AtomCommand, AtomParameter
+from cliany_site.atoms.storage import load_atom, load_atoms
 from cliany_site.explorer.models import ActionStep, CommandSuggestion, ExploreResult
 
 
 class AdapterGenerator:
+    def __init__(self, domain: str = ""):
+        self.domain = domain
+
     def generate(self, explore_result: ExploreResult, domain: str) -> str:
         """将探索结果生成为可执行的 Python/Click 模块代码字符串"""
         generated_at = datetime.now(timezone.utc).isoformat()
@@ -17,6 +22,8 @@ class AdapterGenerator:
         source_url = self._extract_source_url(explore_result)
         workflow_description = self._infer_workflow_description(explore_result)
         source_url_literal = source_url or f"https://{domain}"
+
+        has_reuse_atom = self._has_reuse_atom_actions(explore_result)
 
         command_blocks: list[str] = []
         for index, command in enumerate(explore_result.commands):
@@ -28,6 +35,29 @@ class AdapterGenerator:
             command_blocks.append(self._render_empty_command_block())
 
         commands_text = "\n\n".join(command_blocks)
+
+        atom_imports = ""
+        normalize_helper = ""
+        if has_reuse_atom:
+            atom_imports = (
+                "\nfrom cliany_site.atoms.storage import load_atom"
+                "\nfrom cliany_site.action_runtime import substitute_parameters"
+            )
+            normalize_helper = """
+
+def _normalize_atom_actions(actions):
+    normalized = []
+    for action in actions or []:
+        if not isinstance(action, dict):
+            continue
+        item = dict(action)
+        if "type" not in item and "action_type" in item:
+            item["type"] = item.get("action_type")
+        if "url" not in item and "target_url" in item:
+            item["url"] = item.get("target_url")
+        normalized.append(item)
+    return normalized
+"""
 
         return f'''# 自动生成 — DO NOT EDIT
 # 生成时间: {generated_at}
@@ -41,7 +71,7 @@ from cliany_site.action_runtime import execute_action_steps
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.session import load_session_data
 from cliany_site.response import success_response, error_response, print_response
-from cliany_site.errors import CDP_UNAVAILABLE, SESSION_EXPIRED, EXECUTION_FAILED
+from cliany_site.errors import CDP_UNAVAILABLE, SESSION_EXPIRED, EXECUTION_FAILED{atom_imports}
 
 DOMAIN = {domain!r}
 SOURCE_URL = {source_url_literal!r}
@@ -64,7 +94,7 @@ def _resolve_json_mode(local_json_mode):
     if not isinstance(obj, dict):
         return False
     return bool(obj.get("json_mode", False))
-
+{normalize_helper}
 
 {commands_text}
 
@@ -72,6 +102,211 @@ def _resolve_json_mode(local_json_mode):
 if __name__ == "__main__":
     cli()
 '''
+
+    def generate_atom_command(self, atom: AtomCommand) -> str:
+        atom_id = self._sanitize_inline_text(atom.atom_id) or "unknown-atom"
+        command_source_name = self._sanitize_inline_text(atom.name) or atom_id
+        command_name = self._to_command_name(command_source_name, 0)
+        function_name = self._to_function_name(command_name)
+        description = self._sanitize_docstring_text(
+            atom.description or f"执行原子命令 {command_name}"
+        )
+        missing_message = self._sanitize_inline_text(f"原子命令 '{atom_id}' 未找到")
+
+        option_decorators: list[str] = []
+        param_entries: list[str] = []
+        used_names = {"ctx", "json_mode", "param_args"}
+
+        for index, raw_parameter in enumerate(atom.parameters or []):
+            if isinstance(raw_parameter, AtomParameter):
+                parameter = raw_parameter
+            elif isinstance(raw_parameter, dict):
+                parameter = AtomParameter(
+                    name=str(raw_parameter.get("name") or ""),
+                    description=str(raw_parameter.get("description") or ""),
+                    default=str(raw_parameter.get("default") or ""),
+                    required=bool(raw_parameter.get("required", False)),
+                )
+            else:
+                continue
+
+            raw_name = (
+                self._sanitize_inline_text(parameter.name) or f"param_{index + 1}"
+            )
+            option_name = re.sub(
+                r"[^a-zA-Z0-9_-]+", "-", raw_name.replace("_", "-").lower()
+            )
+            option_name = re.sub(r"[_-]+", "-", option_name).strip("-")
+            if not option_name:
+                option_name = f"param-{index + 1}"
+
+            parameter_name = self._unique_parameter_name(
+                self._to_parameter_name(raw_name), used_names
+            )
+            used_names.add(parameter_name)
+
+            option_parts = [
+                repr(f"--{option_name}"),
+                repr(parameter_name),
+                f"required={bool(parameter.required)!r}",
+            ]
+            if parameter.default:
+                option_parts.append(f"default={parameter.default!r}")
+
+            help_text = self._sanitize_inline_text(parameter.description)
+            if help_text:
+                option_parts.append(f"help={help_text!r}")
+
+            option_decorators.append(f"@click.option({', '.join(option_parts)})")
+
+            param_key = raw_name
+            param_entries.append(f"{param_key!r}: param_args.get({parameter_name!r})")
+
+        params_payload = "{}"
+        if param_entries:
+            params_payload = "{" + ", ".join(param_entries) + "}"
+
+        decorator_lines = [
+            f'@atoms_group.command("{command_name}")',
+            *option_decorators,
+            '@click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")',
+            "@click.pass_context",
+        ]
+        decorators_text = "\n".join(decorator_lines)
+
+        return f'''{decorators_text}
+def {function_name}(ctx: click.Context, json_mode: bool | None, **param_args):
+    """{description}"""
+    async def _run():
+        atom = load_atom(DOMAIN, {atom_id!r})
+        if atom is None:
+            return error_response(EXECUTION_FAILED, {missing_message!r})
+        params = {params_payload}
+        actions = substitute_parameters(_normalize_atom_actions(atom.actions), params)
+        cdp = CDPConnection()
+        if not await cdp.check_available():
+            return error_response(CDP_UNAVAILABLE, "Chrome CDP 不可用", "启动 Chrome 并开启 --remote-debugging-port=9222")
+        browser_session = await cdp.connect()
+        await browser_session.navigate_to(SOURCE_URL, new_tab=False)
+        await asyncio.sleep(1.5)
+        session_data = load_session_data(DOMAIN)
+        if session_data:
+            if session_data.get("expires_hint") == "expired":
+                return error_response(SESSION_EXPIRED, "Session 已失效", "请重新登录后再执行命令")
+            await browser_session._cdp_set_cookies(session_data.get("cookies", []))
+        try:
+            await execute_action_steps(browser_session, actions, continue_on_error=True)
+            return success_response({{"status": "completed", "command": "atoms {command_name}", "atom_id": {atom_id!r}, "args": params}})
+        except Exception as e:
+            return error_response(EXECUTION_FAILED, str(e))
+        finally:
+            await cdp.disconnect()
+    result = asyncio.run(_run())
+    print_response(result, _resolve_json_mode(json_mode))
+'''
+
+    def generate_with_atoms(self) -> str:
+        domain = self._resolve_generation_domain()
+        generated_at = datetime.now(timezone.utc).isoformat()
+        domain_doc = self._sanitize_docstring_text(domain)
+        source_url = f"https://{domain}"
+        atoms = load_atoms(domain)
+
+        if not atoms:
+            code = f'''# 自动生成 — DO NOT EDIT
+# 生成时间: {generated_at}
+# 来源 URL: {source_url}
+# 工作流: 原子命令集合
+
+import click
+
+
+@click.group()
+def cli():
+    """{domain_doc} 的自动生成 CLI 命令"""
+    pass
+
+
+if __name__ == "__main__":
+    cli()
+'''
+            return save_adapter(domain, code)
+
+        atom_blocks: list[str] = [self.generate_atom_command(atom) for atom in atoms]
+        atoms_text = "\n\n".join(atom_blocks)
+        load_atom_name = load_atom.__name__
+
+        code = f'''# 自动生成 — DO NOT EDIT
+# 生成时间: {generated_at}
+# 来源 URL: {source_url}
+# 工作流: 原子命令集合
+
+import asyncio
+import click
+from cliany_site.action_runtime import execute_action_steps, substitute_parameters
+from cliany_site.atoms.storage import {load_atom_name}
+from cliany_site.browser.cdp import CDPConnection
+from cliany_site.session import load_session_data
+from cliany_site.response import success_response, error_response, print_response
+from cliany_site.errors import CDP_UNAVAILABLE, SESSION_EXPIRED, EXECUTION_FAILED
+
+DOMAIN = {domain!r}
+SOURCE_URL = {source_url!r}
+
+
+@click.group()
+def cli():
+    """{domain_doc} 的自动生成 CLI 命令"""
+    pass
+
+
+def _resolve_json_mode(local_json_mode):
+    if local_json_mode is not None:
+        return bool(local_json_mode)
+    ctx = click.get_current_context(silent=True)
+    if ctx is None:
+        return False
+    root_ctx = ctx.find_root()
+    obj = getattr(root_ctx, "obj", None)
+    if not isinstance(obj, dict):
+        return False
+    return bool(obj.get("json_mode", False))
+
+
+def _normalize_atom_actions(actions):
+    normalized = []
+    for action in actions or []:
+        if not isinstance(action, dict):
+            continue
+        item = dict(action)
+        if "type" not in item and "action_type" in item:
+            item["type"] = item.get("action_type")
+        if "url" not in item and "target_url" in item:
+            item["url"] = item.get("target_url")
+        normalized.append(item)
+    return normalized
+
+
+atoms_group = click.Group("atoms", help="原子命令")
+cli.add_command(atoms_group)
+
+
+{atoms_text}
+
+
+if __name__ == "__main__":
+    cli()
+'''
+        return save_adapter(domain, code)
+
+    def _resolve_generation_domain(self, domain: str | None = None) -> str:
+        resolved = self._sanitize_inline_text(
+            domain if domain is not None else self.domain
+        )
+        if not resolved:
+            resolved = "unknown-domain"
+        self.domain = resolved
+        return resolved
 
     def _extract_source_url(self, explore_result: ExploreResult) -> str:
         if explore_result.pages:
@@ -127,11 +362,9 @@ if __name__ == "__main__":
         ]
         function_signature = ", ".join(function_args)
         args_payload = self._render_args_payload(arg_parameters)
-        action_comment_lines = self._render_action_comment_lines(
-            command.action_steps, all_actions
-        )
-        action_data_literal = self._render_action_data_literal(
-            command.action_steps, all_actions
+
+        execution_blocks = self._render_execution_blocks(
+            command.action_steps, all_actions, arg_parameters
         )
 
         return f'''{decorators_text}
@@ -150,9 +383,7 @@ def {function_name}({function_signature}):
                 return error_response(SESSION_EXPIRED, "Session 已失效", "请重新登录后再执行命令")
             await browser_session._cdp_set_cookies(session_data.get("cookies", []))
         try:
-            action_steps = json.loads({action_data_literal!r})
-{action_comment_lines}
-            await execute_action_steps(browser_session, action_steps, continue_on_error=True)
+{execution_blocks}
             return success_response({{"status": "completed", "command": "{command_name}", "args": {args_payload}}})
         except Exception as e:
             return error_response(EXECUTION_FAILED, str(e))
@@ -161,6 +392,124 @@ def {function_name}({function_signature}):
     result = asyncio.run(_run())
     print_response(result, _resolve_json_mode(json_mode))
 '''
+
+    def _has_reuse_atom_actions(self, explore_result: ExploreResult) -> bool:
+        for action in explore_result.actions:
+            if action.action_type == "reuse_atom":
+                return True
+        return False
+
+    def _collect_atom_refs(
+        self, action_steps: list[int], all_actions: list[ActionStep]
+    ) -> list[str]:
+        seen: list[str] = []
+        for raw_step in action_steps or []:
+            if not isinstance(raw_step, int):
+                continue
+            if raw_step < 0 or raw_step >= len(all_actions):
+                continue
+            action = all_actions[raw_step]
+            if action.action_type == "reuse_atom" and action.target_ref:
+                atom_id = action.target_ref
+                if atom_id not in seen:
+                    seen.append(atom_id)
+        return seen
+
+    def _render_execution_blocks(
+        self,
+        action_steps: list[int],
+        all_actions: list[ActionStep],
+        arg_parameters: list[str],
+    ) -> str:
+        if not action_steps:
+            return "            action_steps = []\n            await execute_action_steps(browser_session, action_steps, continue_on_error=True)"
+
+        groups: list[tuple[str, Any]] = []
+        inline_group: list[int] = []
+
+        for raw_step in action_steps:
+            if not isinstance(raw_step, int):
+                continue
+            if raw_step < 0 or raw_step >= len(all_actions):
+                continue
+            action = all_actions[raw_step]
+            if action.action_type == "reuse_atom":
+                if inline_group:
+                    groups.append(("inline", list(inline_group)))
+                    inline_group = []
+                groups.append(("atom", action))
+            else:
+                inline_group.append(raw_step)
+
+        if inline_group:
+            groups.append(("inline", inline_group))
+
+        if not groups:
+            return "            action_steps = []\n            await execute_action_steps(browser_session, action_steps, continue_on_error=True)"
+
+        block_lines: list[str] = []
+        var_counter = [0]
+
+        for group_type, group_data in groups:
+            if group_type == "inline":
+                step_indices: list[int] = group_data
+                var_counter[0] += 1
+                var_name = (
+                    f"action_steps_{var_counter[0]}"
+                    if var_counter[0] > 1
+                    else "action_steps"
+                )
+                comment_lines = self._render_action_comment_lines(
+                    step_indices, all_actions
+                )
+                literal = self._render_action_data_literal(step_indices, all_actions)
+                block_lines.append(f"            {var_name} = json.loads({literal!r})")
+                block_lines.append(comment_lines)
+                block_lines.append(
+                    f"            await execute_action_steps(browser_session, {var_name}, continue_on_error=True)"
+                )
+            else:
+                atom_action: ActionStep = group_data
+                atom_id = atom_action.target_ref
+                params_dict = atom_action.target_attributes or {}
+                description_text = self._sanitize_inline_text(atom_action.description)
+                safe_var = re.sub(r"[^a-zA-Z0-9]", "_", atom_id)
+                atom_var = f"_atom_{safe_var}"
+                params_code = self._render_atom_params_code(params_dict, arg_parameters)
+                comment = f"            # atom: {atom_id}"
+                if description_text:
+                    comment += f" — {description_text}"
+                block_lines.append(comment)
+                block_lines.append(
+                    f"            {atom_var} = load_atom(DOMAIN, {atom_id!r})"
+                )
+                block_lines.append(f"            if {atom_var}:")
+                block_lines.append(
+                    f"                _atom_actions = substitute_parameters(_normalize_atom_actions({atom_var}.actions), {params_code})"
+                )
+                block_lines.append(
+                    f"                await execute_action_steps(browser_session, _atom_actions, continue_on_error=True)"
+                )
+
+        return "\n".join(block_lines)
+
+    def _render_atom_params_code(
+        self, params_dict: dict, arg_parameters: list[str]
+    ) -> str:
+        if not params_dict:
+            return "{}"
+        entries: list[str] = []
+        for key, val in params_dict.items():
+            key_as_param = self._to_parameter_name(str(key))
+            if key_as_param in arg_parameters:
+                entries.append(f"{key!r}: {key_as_param}")
+            else:
+                val_as_param = self._to_parameter_name(str(val))
+                if val_as_param in arg_parameters:
+                    entries.append(f"{key!r}: {val_as_param}")
+                else:
+                    entries.append(f"{key!r}: {str(val)!r}")
+        return "{" + ", ".join(entries) + "}"
 
     def _render_empty_command_block(self) -> str:
         return '''@cli.command("run-workflow")
@@ -333,6 +682,8 @@ def run_workflow(ctx: click.Context, json_mode: bool | None):
                 continue
 
             action = all_actions[raw_step]
+            if action.action_type == "reuse_atom":
+                continue
             payload.append(
                 {
                     "type": action.action_type,
@@ -450,6 +801,7 @@ def save_adapter(
         command_defs: list[dict[str, Any]] = []
         for cmd in explore_result.commands:
             cmd_actions: list[dict[str, Any]] = []
+            atom_refs: list[str] = []
             for step_idx in cmd.action_steps or []:
                 if 0 <= step_idx < len(explore_result.actions):
                     action = explore_result.actions[step_idx]
@@ -466,16 +818,21 @@ def save_adapter(
                             "target_attributes": action.target_attributes,
                         }
                     )
+                    if action.action_type == "reuse_atom" and action.target_ref:
+                        atom_id = action.target_ref
+                        if atom_id not in atom_refs:
+                            atom_refs.append(atom_id)
 
-            command_defs.append(
-                {
-                    "name": cmd.name,
-                    "description": cmd.description,
-                    "args": cmd.args,
-                    "action_steps": cmd.action_steps,
-                    "actions": cmd_actions,
-                }
-            )
+            cmd_def: dict[str, Any] = {
+                "name": cmd.name,
+                "description": cmd.description,
+                "args": cmd.args,
+                "action_steps": cmd.action_steps,
+                "actions": cmd_actions,
+            }
+            if atom_refs:
+                cmd_def["atom_refs"] = atom_refs
+            command_defs.append(cmd_def)
 
         base_metadata["commands"] = command_defs
     else:
