@@ -342,15 +342,49 @@ class WorkflowExplorer:
                         args = cmd_data.get("args", [])
                         if not isinstance(args, list):
                             args = []
+
+                        raw_action_steps = cmd_data.get("action_steps")
+                        if isinstance(raw_action_steps, list):
+                            action_steps = [
+                                idx
+                                for idx in raw_action_steps
+                                if isinstance(idx, int)
+                                and 0 <= idx < len(result.actions)
+                            ]
+                        else:
+                            action_steps = []  # will be fixed in validation below
+
                         cmd = CommandSuggestion(
                             name=cmd_data.get(
                                 "name", f"command-{len(result.commands) + 1}"
                             ),
                             description=cmd_data.get("description", ""),
                             args=args,
-                            action_steps=list(range(len(result.actions))),
+                            action_steps=action_steps,
                         )
                         result.commands.append(cmd)
+
+                    all_action_indices = set(range(len(result.actions)))
+                    assigned_indices: set[int] = set()
+                    for cmd in result.commands:
+                        assigned_indices.update(cmd.action_steps)
+
+                    if assigned_indices != all_action_indices:
+                        # LLM didn't provide valid partitioning — fall back
+                        if len(result.commands) == 1:
+                            result.commands[0].action_steps = list(
+                                range(len(result.actions))
+                            )
+                        else:
+                            total = len(result.actions)
+                            n_cmds = len(result.commands)
+                            per_cmd = total // n_cmds if n_cmds else total
+                            start = 0
+                            for i, cmd in enumerate(result.commands):
+                                end = start + per_cmd if i < n_cmds - 1 else total
+                                cmd.action_steps = list(range(start, end))
+                                start = end
+
                     break
 
                 next_url = normalize_navigation_url(

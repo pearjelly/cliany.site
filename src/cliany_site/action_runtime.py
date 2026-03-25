@@ -6,6 +6,35 @@ from urllib.parse import urljoin, urlparse
 
 from cliany_site.browser.axtree import capture_axtree
 
+
+class ActionExecutionError(Exception):
+    """操作执行失败时的结构化异常"""
+
+    def __init__(
+        self,
+        error_type: str,
+        action_index: int,
+        action: dict[str, Any],
+        message: str,
+        suggestion: str = "",
+    ):
+        self.error_type = error_type
+        self.action_index = action_index
+        self.action = action
+        self.message = message
+        self.suggestion = suggestion
+        super().__init__(message)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "error_type": self.error_type,
+            "action_index": self.action_index,
+            "action": self.action,
+            "message": self.message,
+            "suggestion": self.suggestion,
+        }
+
+
 # 导航后等待页面动态内容渲染的时间（秒）
 _POST_NAVIGATE_DELAY = 1.5
 # 元素定位失败后重试前的等待时间（秒）
@@ -218,7 +247,7 @@ async def execute_action_steps(
         else actions_data
     )
 
-    for action_data in effective_actions:
+    for idx, action_data in enumerate(effective_actions):
         if not isinstance(action_data, dict):
             continue
 
@@ -234,7 +263,13 @@ async def execute_action_steps(
                     action_data.get("url", ""), current_url
                 )
                 if not nav_url:
-                    raise RuntimeError(f"无效导航 URL: {action_data.get('url', '')}")
+                    raise ActionExecutionError(
+                        error_type="invalid_url",
+                        action_index=idx,
+                        action=action_data,
+                        message=f"无效导航 URL: {action_data.get('url', '')}",
+                        suggestion="URL 可能已变更，建议重新 explore",
+                    )
                 event = browser_session.event_bus.dispatch(
                     NavigateToUrlEvent(
                         url=nav_url,
@@ -259,8 +294,12 @@ async def execute_action_steps(
 
             node = await _resolve_action_node(browser_session, action_data)
             if node is None:
-                raise RuntimeError(
-                    f"未找到目标元素: {action_data.get('description', action_type)}"
+                raise ActionExecutionError(
+                    error_type="element_not_found",
+                    action_index=idx,
+                    action=action_data,
+                    message=f"未找到目标元素: {action_data.get('description', action_type)}",
+                    suggestion="目标元素可能已更名或移除，建议重新 explore",
                 )
 
             if action_type == "click":
@@ -289,6 +328,14 @@ async def execute_action_steps(
                     await event.event_result(
                         raise_if_any=not continue_on_error, raise_if_none=False
                     )
-        except Exception:
+        except Exception as exc:
             if not continue_on_error:
-                raise
+                if isinstance(exc, ActionExecutionError):
+                    raise
+                raise ActionExecutionError(
+                    error_type="execution_error",
+                    action_index=idx,
+                    action=action_data,
+                    message=str(exc),
+                    suggestion="操作执行异常，建议检查页面状态或重新 explore",
+                )

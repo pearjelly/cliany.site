@@ -170,12 +170,13 @@ if __name__ == "__main__":
             f'@atoms_group.command("{command_name}")',
             *option_decorators,
             '@click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")',
+            '@click.option("--retry", is_flag=True, default=False, help="执行失败时提示重新 explore")',
             "@click.pass_context",
         ]
         decorators_text = "\n".join(decorator_lines)
 
         return f'''{decorators_text}
-def {function_name}(ctx: click.Context, json_mode: bool | None, **param_args):
+def {function_name}(ctx: click.Context, json_mode: bool | None, retry: bool, **param_args):
     """{description}"""
     async def _run():
         atom = load_atom(DOMAIN, {atom_id!r})
@@ -198,7 +199,13 @@ def {function_name}(ctx: click.Context, json_mode: bool | None, **param_args):
             await execute_action_steps(browser_session, actions, continue_on_error=True)
             return success_response({{"status": "completed", "command": "atoms {command_name}", "atom_id": {atom_id!r}, "args": params}})
         except Exception as e:
-            return error_response(EXECUTION_FAILED, str(e))
+            fix_hint = ""
+            if hasattr(e, "to_dict"):
+                fix_hint = e.to_dict().get("suggestion", "")
+            if retry:
+                retry_cmd = f"cliany-site explore \\"{{SOURCE_URL}}\\" \\"<workflow>\\" --force"
+                fix_hint = f"{{fix_hint}} | 重试: {{retry_cmd}}" if fix_hint else f"重试: {{retry_cmd}}"
+            return error_response(EXECUTION_FAILED, str(e), fix_hint or None)
         finally:
             await cdp.disconnect()
     result = asyncio.run(_run())
@@ -350,6 +357,7 @@ if __name__ == "__main__":
         decorator_lines = [
             f'@cli.command("{command_name}")',
             '@click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")',
+            '@click.option("--retry", is_flag=True, default=False, help="执行失败时提示重新 explore")',
             "@click.pass_context",
             *arg_decorators,
         ]
@@ -358,6 +366,7 @@ if __name__ == "__main__":
         function_args = [
             "ctx: click.Context",
             "json_mode: bool | None",
+            "retry: bool",
             *arg_parameters,
         ]
         function_signature = ", ".join(function_args)
@@ -386,7 +395,13 @@ def {function_name}({function_signature}):
 {execution_blocks}
             return success_response({{"status": "completed", "command": "{command_name}", "args": {args_payload}}})
         except Exception as e:
-            return error_response(EXECUTION_FAILED, str(e))
+            fix_hint = ""
+            if hasattr(e, "to_dict"):
+                fix_hint = e.to_dict().get("suggestion", "")
+            if retry:
+                retry_cmd = f"cliany-site explore \\"{{SOURCE_URL}}\\" \\"<workflow>\\" --force"
+                fix_hint = f"{{fix_hint}} | 重试: {{retry_cmd}}" if fix_hint else f"重试: {{retry_cmd}}"
+            return error_response(EXECUTION_FAILED, str(e), fix_hint or None)
         finally:
             await cdp.disconnect()
     result = asyncio.run(_run())
@@ -514,8 +529,9 @@ def {function_name}({function_signature}):
     def _render_empty_command_block(self) -> str:
         return '''@cli.command("run-workflow")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")
+@click.option("--retry", is_flag=True, default=False, help="执行失败时提示重新 explore")
 @click.pass_context
-def run_workflow(ctx: click.Context, json_mode: bool | None):
+def run_workflow(ctx: click.Context, json_mode: bool | None, retry: bool):
     """执行默认工作流"""
     async def _run():
         cdp = CDPConnection()
@@ -535,7 +551,13 @@ def run_workflow(ctx: click.Context, json_mode: bool | None):
             await execute_action_steps(browser_session, action_steps, continue_on_error=True)
             return success_response({"status": "completed", "command": "run-workflow"})
         except Exception as e:
-            return error_response(EXECUTION_FAILED, str(e))
+            fix_hint = ""
+            if hasattr(e, "to_dict"):
+                fix_hint = e.to_dict().get("suggestion", "")
+            if retry:
+                retry_cmd = f"cliany-site explore \\"{{SOURCE_URL}}\\" \\"<workflow>\\" --force"
+                fix_hint = f"{{fix_hint}} | 重试: {{retry_cmd}}" if fix_hint else f"重试: {{retry_cmd}}"
+            return error_response(EXECUTION_FAILED, str(e), fix_hint or None)
         finally:
             await cdp.disconnect()
     result = asyncio.run(_run())
