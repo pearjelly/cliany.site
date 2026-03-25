@@ -188,10 +188,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
   var toggle = document.querySelector('.lang-toggle');
   if (toggle) {
-    toggle.addEventListener('click', function(e) {
-      var btn = e.target.closest('.lang-option');
-      if (!btn) return;
-      setLang(btn.dataset.lang);
+    var langOptions = toggle.querySelectorAll('.lang-option');
+    langOptions.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var lang = btn.dataset.lang;
+        if (!lang) return;
+        setLang(lang);
+      });
+
+      btn.addEventListener('touchstart', function() {
+        var lang = btn.dataset.lang;
+        if (!lang) return;
+        setLang(lang);
+      }, { passive: true });
     });
 
     toggle.addEventListener('keydown', function(e) {

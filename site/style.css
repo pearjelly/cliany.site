@@ -193,10 +193,11 @@ img, svg {
   display: inline-flex;
   align-items: center;
   position: relative;
-  background: rgba(237, 232, 223, 0.6);
-  border: 1px solid rgba(120, 100, 75, 0.1);
-  border-radius: 20px;
-  padding: 3px;
+  padding: 2px;
+  border-radius: 999px;
+  background: rgba(237, 232, 223, 0.36);
+  border: 1px solid rgba(120, 100, 75, 0.16);
+  box-shadow: inset 0 1px 0 rgba(250, 250, 248, 0.62);
 }
 
 html.no-js .lang-toggle {
@@ -204,26 +205,28 @@ html.no-js .lang-toggle {
 }
 
 .lang-option {
-  padding: 4px 0;
-  width: 44px;
-  text-align: center;
-  font-size: 0.8rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
+  width: 48px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   font-family: var(--font-body);
   border: none;
   background: transparent;
   cursor: pointer;
   position: relative;
   z-index: 1;
-  border-radius: 16px;
-  color: var(--color-text-muted);
-  transition: color var(--transition);
-  line-height: 1.4;
+  border-radius: 999px;
+  color: var(--color-text-light);
+  transition: color var(--transition), background-color var(--transition);
 }
 
 .lang-option:hover {
   color: var(--color-text-main);
+  background-color: rgba(237, 232, 223, 0.42);
 }
 
 .lang-option[aria-checked="true"] {
@@ -232,16 +235,17 @@ html.no-js .lang-toggle {
 
 .lang-slider {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  height: calc(100% - 6px);
-  width: 44px;
-  background: var(--color-white);
-  border-radius: 16px;
+  top: 2px;
+  left: 2px;
+  width: 48px;
+  height: calc(100% - 4px);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(250, 250, 248, 0.96), rgba(237, 232, 223, 0.96));
+  border: 1px solid rgba(120, 100, 75, 0.15);
   transition: transform var(--transition);
   z-index: 0;
   pointer-events: none;
-  box-shadow: 0 1px 3px rgba(26, 22, 18, 0.06), 0 1px 2px rgba(120, 100, 75, 0.04);
+  box-shadow: 0 2px 8px rgba(26, 22, 18, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.66);
 }
 
 .lang-toggle[data-active="en"] .lang-slider {
