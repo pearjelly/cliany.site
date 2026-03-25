@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -807,7 +809,16 @@ def save_adapter(
     commands_path = adapter_dir / "commands.py"
     metadata_path = adapter_dir / "metadata.json"
 
-    commands_path.write_text(code, encoding="utf-8")
+    # 原子写入 commands.py (tempfile → os.replace)
+    fd, tmp_path = tempfile.mkstemp(dir=str(adapter_dir), suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(code)
+        os.replace(tmp_path, str(commands_path))
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise
 
     base_metadata = {
         "domain": domain,
@@ -870,10 +881,17 @@ def save_adapter(
     if "workflow" not in base_metadata:
         base_metadata["workflow"] = ""
 
-    metadata_path.write_text(
-        json.dumps(base_metadata, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
+    # 原子写入 metadata.json
+    meta_content = json.dumps(base_metadata, ensure_ascii=False, indent=2)
+    fd, tmp_path = tempfile.mkstemp(dir=str(adapter_dir), suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(meta_content)
+        os.replace(tmp_path, str(metadata_path))
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise
 
     return str(commands_path.resolve())
 

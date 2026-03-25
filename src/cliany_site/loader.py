@@ -66,7 +66,8 @@ def load_adapter(domain: str) -> click.Group | None:
             return None
         module = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = module
-        spec.loader.exec_module(module)  # type: ignore[attr-defined]
+        assert spec.loader is not None
+        spec.loader.exec_module(module)
 
         cli_group = getattr(module, "cli", None)
         if not isinstance(cli_group, click.Group):

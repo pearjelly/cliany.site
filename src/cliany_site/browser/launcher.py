@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import time
 import os
+import urllib.error
 import urllib.request
 import json
 from typing import Optional
@@ -51,7 +52,7 @@ def detect_running_chrome(port: int = 9222) -> Optional[str]:
             if response.status == 200:
                 data = json.loads(response.read().decode())
                 return data.get("webSocketDebuggerUrl")
-    except Exception:
+    except (urllib.error.URLError, OSError, ValueError, json.JSONDecodeError):
         pass
     return None
 
