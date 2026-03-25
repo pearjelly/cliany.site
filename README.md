@@ -119,7 +119,7 @@ cliany-site login "https://github.com" --json
 ### 3. 探索工作流
 
 ```bash
-cliany-site explore "https://github.com" "搜索仓库并查看 README" --json
+cliany-site explore "https://github.com" "搜索 cliany.site 仓库并查看 README" --json
 ```
 
 探索完成后，自动生成 adapter 至 `~/.cliany-site/adapters/github.com/`。
