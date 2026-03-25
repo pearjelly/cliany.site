@@ -22,9 +22,10 @@ def _load_dotenv() -> None:
     """从 .env 文件加载环境变量，不覆盖已存在的系统环境变量。
 
     查找顺序（后者优先级低，先查找优先级低的，后查找高优先级会覆盖低优先级）：
-    1. ~/.cliany-site/.env（用户级配置，最低优先级）
-    2. 项目目录 .env（项目级配置）
-    3. os.environ 中已有的值保持不变（最高优先级）
+    1. ~/.config/cliany-site/.env（XDG 用户配置目录，最低优先级）
+    2. ~/.cliany-site/.env（旧版用户配置目录，向后兼容）
+    3. 项目目录 .env（项目级配置）
+    4. os.environ 中已有的值保持不变（最高优先级）
     """
     try:
         from dotenv import dotenv_values
@@ -35,12 +36,21 @@ def _load_dotenv() -> None:
     # 收集要加载的 .env 文件，按优先级从低到高排列
     env_files: list[Path] = []
 
-    # 用户主目录级别（最低优先级）
+    # XDG 标准用户配置目录（最高用户优先级）
+    xdg_env = (
+        Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+        / "cliany-site"
+        / ".env"
+    )
+    if xdg_env.is_file():
+        env_files.append(xdg_env)
+
+    # 旧版用户配置目录（向后兼容）
     user_env = Path.home() / ".cliany-site" / ".env"
     if user_env.is_file():
         env_files.append(user_env)
 
-    # 项目目录级别（中优先级）
+    # 项目目录级别（最低优先级）
     project_env = Path.cwd() / ".env"
     if project_env.is_file():
         env_files.append(project_env)
