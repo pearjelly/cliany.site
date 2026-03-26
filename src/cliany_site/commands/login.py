@@ -56,18 +56,30 @@ async def _capture_session(url: str) -> dict:
             page = await browser_session.get_current_page()
             if page is not None:
                 await page.goto(url)
-        except Exception:
-            pass
+        except Exception as nav_err:
+            click.echo(
+                f"⚠ 页面导航失败（{nav_err}），请手动在 Chrome 中打开 {url}",
+                err=True,
+            )
 
-        click.echo("提示：请确认已在 Chrome 中登录目标网站，然后继续...", err=True)
+        click.echo("提示：请在 Chrome 中完成登录，然后按 Enter 继续...", err=True)
+        click.pause("")
 
-        path = await save_session(domain, browser_session)
+        path, cookies_count = await save_session(domain, browser_session)
+
+        if cookies_count == 0:
+            return error_response(
+                "NO_COOKIES",
+                f"未从 {domain} 获取到任何 Cookie，登录可能未成功",
+                fix="请确认已在 Chrome 中完成登录后重试",
+            )
 
         return success_response(
             {
                 "domain": domain,
                 "session_file": path,
-                "message": f"Session 已保存到 {path}",
+                "cookies_count": cookies_count,
+                "message": f"Session 已保存到 {path}（{cookies_count} 个 Cookie）",
             }
         )
     except Exception as e:

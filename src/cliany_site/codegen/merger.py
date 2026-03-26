@@ -112,7 +112,7 @@ class AdapterMerger:
         result.total_count = len(result.merged)
         return result
 
-    def save_merged(self, merge_result: MergeResult) -> None:
+    def save_merged(self, merge_result: MergeResult, workflow: str = "") -> None:
         explore_result = self._rebuild_explore_result(merge_result.merged)
         generator = AdapterGenerator()
         code = generator.generate(explore_result, self.domain)
@@ -127,7 +127,7 @@ class AdapterMerger:
             "commands": merge_result.merged,
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "source_url": existing_metadata.get("source_url", f"https://{self.domain}"),
-            "workflow": existing_metadata.get("workflow", ""),
+            "workflow": workflow or existing_metadata.get("workflow", ""),
         }
         self._atomic_write_json(self._metadata_path, metadata)
 
@@ -143,7 +143,10 @@ class AdapterMerger:
         return data if isinstance(data, dict) else {}
 
     def merge(
-        self, explore_result: ExploreResult, json_mode: bool = True
+        self,
+        explore_result: ExploreResult,
+        json_mode: bool = True,
+        workflow: str = "",
     ) -> MergeResult:
         existing = self.load_existing()
         merge_result = self.merge_commands(
@@ -256,7 +259,7 @@ class AdapterMerger:
 
             merge_result.total_count = len(merge_result.merged)
 
-        self.save_merged(merge_result)
+        self.save_merged(merge_result, workflow=workflow)
         return merge_result
 
     def _build_command_definition(

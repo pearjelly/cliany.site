@@ -81,21 +81,32 @@ def clear_session(domain: str) -> bool:
 # =========== 高层（浏览器交互）===========
 
 
-async def save_session(domain: str, browser_session: "BrowserSession") -> str:
-    """从 BrowserSession 通过 CDP 提取 cookies，保存到文件，返回文件路径"""
+async def save_session(
+    domain: str, browser_session: "BrowserSession"
+) -> tuple[str, int]:
+    """从 BrowserSession 通过 CDP 提取 cookies，保存到文件。
+
+    Returns:
+        (文件路径, cookies 数量) 的元组
+
+    Raises:
+        RuntimeError: 无法从浏览器获取 cookies 时抛出
+    """
     try:
         cookies = await browser_session._cdp_get_cookies()
-    except Exception:
-        cookies = []
+    except Exception as e:
+        raise RuntimeError(f"无法从浏览器获取 Cookie: {e}") from e
 
+    cookie_list = [
+        c.model_dump() if hasattr(c, "model_dump") else dict(c)  # type: ignore[union-attr]
+        for c in cookies
+    ]
     data = {
-        "cookies": [
-            c.model_dump() if hasattr(c, "model_dump") else dict(c)  # type: ignore[union-attr]
-            for c in cookies
-        ],
+        "cookies": cookie_list,
         "localStorage": {},
     }
-    return save_session_data(domain, data)
+    path = save_session_data(domain, data)
+    return path, len(cookie_list)
 
 
 async def load_session(domain: str, browser_session: "BrowserSession") -> bool:

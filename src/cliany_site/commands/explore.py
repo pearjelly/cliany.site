@@ -196,7 +196,11 @@ def explore_cmd(
             )
         else:
             merger = AdapterMerger(domain)
-            merge_result = merger.merge(explore_result, json_mode=effective_json_mode)
+            merge_result = merger.merge(
+                explore_result,
+                json_mode=effective_json_mode,
+                workflow=workflow_description,
+            )
             commands_list = [cmd.get("name", "") for cmd in merge_result.merged]
             adapter_path = str(merger.metadata_path.parent / "commands.py")
             print(f"[explore] Adapter 已合并: {adapter_path}", file=sys.stderr)

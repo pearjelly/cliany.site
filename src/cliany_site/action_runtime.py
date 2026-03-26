@@ -285,7 +285,16 @@ async def execute_action_steps(
                 continue
 
             if action_type == "submit":
-                event = browser_session.event_bus.dispatch(SendKeysEvent(keys="Enter"))
+                # 优先通过 ref 点击提交按钮；无 ref 时 fallback 发送 Enter
+                submit_node = await _resolve_action_node(browser_session, action_data)
+                if submit_node is not None:
+                    event = browser_session.event_bus.dispatch(
+                        ClickElementEvent(node=submit_node)
+                    )
+                else:
+                    event = browser_session.event_bus.dispatch(
+                        SendKeysEvent(keys="Enter")
+                    )
                 await event
                 await event.event_result(
                     raise_if_any=not continue_on_error, raise_if_none=False

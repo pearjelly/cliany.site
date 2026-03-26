@@ -26,6 +26,11 @@ class AdapterGenerator:
         source_url_literal = source_url or f"https://{domain}"
 
         has_reuse_atom = self._has_reuse_atom_actions(explore_result)
+        has_parameterized_args = any(cmd.args for cmd in explore_result.commands)
+        has_param_placeholders = any(
+            re.search(r"\{\{\w+\}\}", action.value or "")
+            for action in explore_result.actions
+        )
 
         command_blocks: list[str] = []
         for index, command in enumerate(explore_result.commands):
@@ -37,6 +42,12 @@ class AdapterGenerator:
             command_blocks.append(self._render_empty_command_block())
 
         commands_text = "\n\n".join(command_blocks)
+
+        substitute_import = ""
+        if (has_parameterized_args or has_param_placeholders) and not has_reuse_atom:
+            substitute_import = (
+                "\nfrom cliany_site.action_runtime import substitute_parameters"
+            )
 
         atom_imports = ""
         normalize_helper = ""
@@ -73,7 +84,7 @@ from cliany_site.action_runtime import execute_action_steps
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.session import load_session_data
 from cliany_site.response import success_response, error_response, print_response
-from cliany_site.errors import CDP_UNAVAILABLE, SESSION_EXPIRED, EXECUTION_FAILED{atom_imports}
+from cliany_site.errors import CDP_UNAVAILABLE, SESSION_EXPIRED, EXECUTION_FAILED{atom_imports}{substitute_import}
 
 DOMAIN = {domain!r}
 SOURCE_URL = {source_url_literal!r}
@@ -343,6 +354,151 @@ if __name__ == "__main__":
 
         return "自动探索工作流"
 
+    def _deduplicate_parameterized_actions(
+        self,
+        step_indices: list[int],
+        all_actions: list[ActionStep],
+    ) -> list[int]:
+        """Remove earlier hardcoded actions superseded by later parameterized versions.
+
+        When the LLM appends parameterized duplicates instead of replacing values
+        in-place, this method detects the pattern and keeps only the parameterized
+        versions.
+        """
+        if not step_indices:
+            return step_indices
+
+        param_pattern = re.compile(r"\{\{\w+\}\}")
+
+        def _fingerprint(action: ActionStep) -> tuple[str, str, str]:
+            return (
+                action.action_type or "",
+                action.target_name or "",
+                action.target_role or "",
+            )
+
+        param_positions: list[int] = []
+        for pos, idx in enumerate(step_indices):
+            if 0 <= idx < len(all_actions):
+                action = all_actions[idx]
+                if param_pattern.search(action.value or ""):
+                    param_positions.append(pos)
+
+        if not param_positions:
+            return step_indices
+
+        to_remove: set[int] = set()
+
+        for param_pos in param_positions:
+            param_action = all_actions[step_indices[param_pos]]
+            fp = _fingerprint(param_action)
+            for earlier_pos in range(param_pos - 1, -1, -1):
+                earlier_idx = step_indices[earlier_pos]
+                if earlier_pos in to_remove:
+                    continue
+                if 0 <= earlier_idx < len(all_actions):
+                    earlier_action = all_actions[earlier_idx]
+                    if _fingerprint(earlier_action) == fp and not param_pattern.search(
+                        earlier_action.value or ""
+                    ):
+                        to_remove.add(earlier_pos)
+                        break
+
+        # Deduplicate non-value actions (click/submit) between hardcoded
+        # and parameterized blocks that have matching duplicates after.
+        if to_remove:
+            first_removed = min(to_remove)
+            first_param = min(param_positions)
+            for pos in range(first_removed, first_param):
+                if pos in to_remove:
+                    continue
+                idx = step_indices[pos]
+                if not (0 <= idx < len(all_actions)):
+                    continue
+                action = all_actions[idx]
+                if action.value:
+                    continue
+                fp = _fingerprint(action)
+                for later_pos in range(first_param, len(step_indices)):
+                    if later_pos in to_remove:
+                        continue
+                    later_idx = step_indices[later_pos]
+                    if 0 <= later_idx < len(all_actions):
+                        later_action = all_actions[later_idx]
+                        if _fingerprint(later_action) == fp and not later_action.value:
+                            to_remove.add(pos)
+                            break
+
+        if not to_remove:
+            return step_indices
+
+        return [idx for pos, idx in enumerate(step_indices) if pos not in to_remove]
+
+    def _auto_detect_params_from_actions(
+        self,
+        step_indices: list[int],
+        all_actions: list[ActionStep],
+    ) -> list[dict[str, Any]]:
+        """Scan action values for {{param_name}} patterns and generate arg defs."""
+        param_pattern = re.compile(r"\{\{(\w+)\}\}")
+        seen: set[str] = set()
+        auto_args: list[dict[str, Any]] = []
+
+        for idx in step_indices:
+            if not (0 <= idx < len(all_actions)):
+                continue
+            action = all_actions[idx]
+            for match in param_pattern.finditer(action.value or ""):
+                param_name = match.group(1)
+                if param_name not in seen:
+                    seen.add(param_name)
+                    auto_args.append(
+                        {
+                            "name": param_name,
+                            "description": f"参数 {param_name}",
+                            "required": True,
+                        }
+                    )
+        return auto_args
+
+    def _build_param_overrides(
+        self,
+        args: list[dict[str, Any]] | None,
+        step_indices: list[int],
+        all_actions: list[ActionStep],
+    ) -> dict[int, str]:
+        """Map action_index → '{{param_name}}' from args metadata.
+
+        Uses explicit ``action_index`` when available; falls back to matching
+        the arg's ``default`` value against action values in *step_indices*.
+        """
+        overrides: dict[int, str] = {}
+        step_set = set(step_indices)
+
+        for arg in args or []:
+            if not isinstance(arg, dict):
+                continue
+            name = str(arg.get("name") or "").strip()
+            if not name:
+                continue
+
+            action_idx = arg.get("action_index")
+            if isinstance(action_idx, int) and action_idx in step_set:
+                overrides[action_idx] = f"{{{{{name}}}}}"
+                continue
+
+            default = str(arg.get("default") or "").strip()
+            if default:
+                for idx in step_indices:
+                    if idx in overrides:
+                        continue
+                    if 0 <= idx < len(all_actions):
+                        if (all_actions[idx].value or "").strip() == default:
+                            overrides[idx] = f"{{{{{name}}}}}"
+                            break
+
+        return overrides
+
     def _render_command_block(
         self,
         command: CommandSuggestion,
@@ -355,7 +511,24 @@ if __name__ == "__main__":
             command.description or f"执行命令 {command_name}"
         )
 
-        arg_decorators, arg_parameters = self._render_argument_decorators(command.args)
+        # Safety net: deduplicate LLM-appended parameterized duplicates
+        cleaned_steps = self._deduplicate_parameterized_actions(
+            command.action_steps, all_actions
+        )
+        effective_args = command.args
+        if not effective_args:
+            effective_args = self._auto_detect_params_from_actions(
+                cleaned_steps, all_actions
+            )
+
+        arg_decorators, arg_parameters = self._render_argument_decorators(
+            effective_args
+        )
+
+        param_overrides = self._build_param_overrides(
+            effective_args, cleaned_steps, all_actions
+        )
+
         decorator_lines = [
             f'@cli.command("{command_name}")',
             '@click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")',
@@ -375,7 +548,11 @@ if __name__ == "__main__":
         args_payload = self._render_args_payload(arg_parameters)
 
         execution_blocks = self._render_execution_blocks(
-            command.action_steps, all_actions, arg_parameters
+            cleaned_steps,
+            all_actions,
+            arg_parameters,
+            raw_args=effective_args,
+            param_overrides=param_overrides,
         )
 
         return f'''{decorators_text}
@@ -437,6 +614,8 @@ def {function_name}({function_signature}):
         action_steps: list[int],
         all_actions: list[ActionStep],
         arg_parameters: list[str],
+        raw_args: list[dict[str, Any]] | None = None,
+        param_overrides: dict[int, str] | None = None,
     ) -> str:
         if not action_steps:
             return "            action_steps = []\n            await execute_action_steps(browser_session, action_steps, continue_on_error=True)"
@@ -479,9 +658,18 @@ def {function_name}({function_signature}):
                 comment_lines = self._render_action_comment_lines(
                     step_indices, all_actions
                 )
-                literal = self._render_action_data_literal(step_indices, all_actions)
+                literal = self._render_action_data_literal(
+                    step_indices, all_actions, param_overrides
+                )
                 block_lines.append(f"            {var_name} = json.loads({literal!r})")
                 block_lines.append(comment_lines)
+                if arg_parameters and raw_args:
+                    sub_code = self._render_substitute_params_code(
+                        raw_args, arg_parameters
+                    )
+                    block_lines.append(
+                        f"            {var_name} = substitute_parameters({var_name}, {sub_code})"
+                    )
                 block_lines.append(
                     f"            await execute_action_steps(browser_session, {var_name}, continue_on_error=True)"
                 )
@@ -526,6 +714,28 @@ def {function_name}({function_signature}):
                     entries.append(f"{key!r}: {val_as_param}")
                 else:
                     entries.append(f"{key!r}: {str(val)!r}")
+        return "{" + ", ".join(entries) + "}"
+
+    def _render_substitute_params_code(
+        self,
+        raw_args: list[dict[str, Any]],
+        arg_parameters: list[str],
+    ) -> str:
+        """Map raw arg names (matching {{param_name}} placeholders) to sanitized Python variable names."""
+        entries: list[str] = []
+        for i, arg in enumerate(raw_args or []):
+            if not isinstance(arg, dict):
+                continue
+            raw_name = str(arg.get("name") or "").strip()
+            if not raw_name or i >= len(arg_parameters):
+                continue
+            param_var = arg_parameters[i]
+            entries.append(f"{raw_name!r}: {param_var}")
+            # dual-key: raw_name="issue-title" → param_var="issue_title", support both in {{}}
+            if param_var != raw_name:
+                entries.append(f"{param_var!r}: {param_var}")
+        if not entries:
+            return "{}"
         return "{" + ", ".join(entries) + "}"
 
     def _render_empty_command_block(self) -> str:
@@ -696,7 +906,10 @@ def run_workflow(ctx: click.Context, json_mode: bool | None, retry: bool):
         return "\n".join(lines)
 
     def _render_action_data_literal(
-        self, action_steps: list[int], all_actions: list[ActionStep]
+        self,
+        action_steps: list[int],
+        all_actions: list[ActionStep],
+        param_overrides: dict[int, str] | None = None,
     ) -> str:
         payload: list[dict[str, Any]] = []
         for raw_step in action_steps or []:
@@ -708,12 +921,17 @@ def run_workflow(ctx: click.Context, json_mode: bool | None, retry: bool):
             action = all_actions[raw_step]
             if action.action_type == "reuse_atom":
                 continue
+
+            value = action.value
+            if param_overrides and raw_step in param_overrides:
+                value = param_overrides[raw_step]
+
             payload.append(
                 {
                     "type": action.action_type,
                     "ref": action.target_ref,
                     "url": action.target_url,
-                    "value": action.value,
+                    "value": value,
                     "description": action.description,
                     "target_name": action.target_name,
                     "target_role": action.target_role,

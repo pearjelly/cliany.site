@@ -24,6 +24,73 @@ from cliany_site.explorer.prompts import (
 MAX_STEPS = 10
 
 
+def _to_snake_case(value: str) -> str:
+    normalized = re.sub(r"[^0-9a-zA-Z]+", "_", value.strip())
+    normalized = re.sub(r"_+", "_", normalized).strip("_")
+    return normalized.lower()
+
+
+def _infer_name_from_description(description: str) -> str:
+    mapping: list[tuple[tuple[str, ...], str]] = [
+        (("标题",), "title"),
+        (("内容", "正文", "描述"), "body"),
+        (("搜索", "关键词", "查询"), "query"),
+        (("名称", "名字"), "name"),
+        (("地址", "网址", "url"), "url"),
+    ]
+
+    for keywords, inferred_name in mapping:
+        if any(keyword in description for keyword in keywords):
+            return inferred_name
+    return ""
+
+
+def _infer_params_from_actions(
+    actions: list,
+    workflow_description: str,
+) -> list[dict]:
+    _ = workflow_description
+    inferred_args: list[dict] = []
+    seen_names: set[str] = set()
+
+    for action_index, action in enumerate(actions):
+        if len(inferred_args) >= 5:
+            break
+
+        action_type = str(getattr(action, "action_type", "") or "").lower()
+        if action_type != "type":
+            continue
+
+        value = str(getattr(action, "value", "") or "").strip()
+        if not value:
+            continue
+
+        raw_description = str(getattr(action, "description", "") or "")
+        target_name = str(getattr(action, "target_name", "") or "").strip()
+
+        param_name = _to_snake_case(target_name) if target_name else ""
+        if not param_name and raw_description.strip():
+            param_name = _infer_name_from_description(raw_description)
+        if not param_name:
+            param_name = f"input_{action_index}"
+
+        if param_name in seen_names:
+            continue
+        seen_names.add(param_name)
+
+        inferred_args.append(
+            {
+                "name": param_name,
+                "description": raw_description,
+                "required": True,
+                "action_index": action_index,
+                "default": value,
+            }
+        )
+
+    return inferred_args
+
+
 def _load_dotenv() -> None:
     """从 .env 文件加载环境变量，不覆盖已存在的系统环境变量。
 
@@ -110,7 +177,15 @@ def _get_llm():
             kwargs: dict = {"model": model, "temperature": 0, "api_key": api_key}
             if base_url:
                 kwargs["base_url"] = base_url
-            return ChatOpenAI(**kwargs)
+
+            json_mode_kwargs = dict(kwargs)
+            json_mode_kwargs["model_kwargs"] = {
+                "response_format": {"type": "json_object"}
+            }
+            try:
+                return ChatOpenAI(**json_mode_kwargs)
+            except Exception:
+                return ChatOpenAI(**kwargs)
         except ImportError:
             raise EnvironmentError(
                 "请安装 langchain-openai: pip install langchain-openai"
@@ -336,6 +411,7 @@ class WorkflowExplorer:
                     commands_data = parsed.get("commands", [])
                     if not isinstance(commands_data, list):
                         commands_data = []
+
                     for cmd_data in commands_data:
                         if not isinstance(cmd_data, dict):
                             continue
@@ -363,6 +439,12 @@ class WorkflowExplorer:
                             action_steps=action_steps,
                         )
                         result.commands.append(cmd)
+
+                    for cmd in result.commands:
+                        if not cmd.args:
+                            cmd.args = _infer_params_from_actions(
+                                result.actions, workflow_description
+                            )
 
                     all_action_indices = set(range(len(result.actions)))
                     assigned_indices: set[int] = set()
@@ -397,11 +479,14 @@ class WorkflowExplorer:
                         pass
 
             if not result.commands and result.actions:
+                inferred_args = _infer_params_from_actions(
+                    result.actions, workflow_description
+                )
                 result.commands.append(
                     CommandSuggestion(
                         name="run-workflow",
-                        description=f"执行工作流: {workflow_description[:50]}",
-                        args=[],
+                        description=workflow_description,
+                        args=inferred_args,
                         action_steps=list(range(len(result.actions))),
                     )
                 )
