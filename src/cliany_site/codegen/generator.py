@@ -358,30 +358,21 @@ if __name__ == "__main__":
         self,
         step_indices: list[int],
         all_actions: list[ActionStep],
+        param_overrides: dict[int, str] | None = None,
     ) -> list[int]:
-        """Remove earlier hardcoded actions superseded by later parameterized versions.
-
-        When the LLM appends parameterized duplicates instead of replacing values
-        in-place, this method detects the pattern and keeps only the parameterized
-        versions.
-        """
+        """Remove hardcoded actions superseded by parameterized versions."""
         if not step_indices:
             return step_indices
 
         param_pattern = re.compile(r"\{\{\w+\}\}")
-
-        def _fingerprint(action: ActionStep) -> tuple[str, str, str]:
-            return (
-                action.action_type or "",
-                action.target_name or "",
-                action.target_role or "",
-            )
+        overrides = param_overrides or {}
 
         param_positions: list[int] = []
         for pos, idx in enumerate(step_indices):
-            if 0 <= idx < len(all_actions):
-                action = all_actions[idx]
-                if param_pattern.search(action.value or ""):
+            if idx in overrides:
+                param_positions.append(pos)
+            elif 0 <= idx < len(all_actions):
+                if param_pattern.search(all_actions[idx].value or ""):
                     param_positions.append(pos)
 
         if not param_positions:
@@ -390,22 +381,24 @@ if __name__ == "__main__":
         to_remove: set[int] = set()
 
         for param_pos in param_positions:
-            param_action = all_actions[step_indices[param_pos]]
-            fp = _fingerprint(param_action)
-            for earlier_pos in range(param_pos - 1, -1, -1):
-                earlier_idx = step_indices[earlier_pos]
-                if earlier_pos in to_remove:
+            param_idx = step_indices[param_pos]
+            fp = self._action_fingerprint(all_actions[param_idx])
+            for other_pos in range(len(step_indices)):
+                if other_pos == param_pos or other_pos in to_remove:
                     continue
-                if 0 <= earlier_idx < len(all_actions):
-                    earlier_action = all_actions[earlier_idx]
-                    if _fingerprint(earlier_action) == fp and not param_pattern.search(
-                        earlier_action.value or ""
-                    ):
-                        to_remove.add(earlier_pos)
-                        break
+                if other_pos in param_positions:
+                    continue
+                other_idx = step_indices[other_pos]
+                if not (0 <= other_idx < len(all_actions)):
+                    continue
+                other_action = all_actions[other_idx]
+                if (
+                    self._action_fingerprint(other_action) == fp
+                    and not param_pattern.search(other_action.value or "")
+                    and other_idx not in overrides
+                ):
+                    to_remove.add(other_pos)
 
-        # Deduplicate non-value actions (click/submit) between hardcoded
-        # and parameterized blocks that have matching duplicates after.
         if to_remove:
             first_removed = min(to_remove)
             first_param = min(param_positions)
@@ -418,14 +411,17 @@ if __name__ == "__main__":
                 action = all_actions[idx]
                 if action.value:
                     continue
-                fp = _fingerprint(action)
+                fp = self._action_fingerprint(action)
                 for later_pos in range(first_param, len(step_indices)):
                     if later_pos in to_remove:
                         continue
                     later_idx = step_indices[later_pos]
                     if 0 <= later_idx < len(all_actions):
                         later_action = all_actions[later_idx]
-                        if _fingerprint(later_action) == fp and not later_action.value:
+                        if (
+                            self._action_fingerprint(later_action) == fp
+                            and not later_action.value
+                        ):
                             to_remove.add(pos)
                             break
 
@@ -433,6 +429,53 @@ if __name__ == "__main__":
             return step_indices
 
         return [idx for pos, idx in enumerate(step_indices) if pos not in to_remove]
+
+    def _remove_consecutive_duplicate_clicks(
+        self,
+        step_indices: list[int],
+        all_actions: list[ActionStep],
+    ) -> list[int]:
+        if len(step_indices) < 2:
+            return step_indices
+
+        result: list[int] = [step_indices[0]]
+        for i in range(1, len(step_indices)):
+            idx = step_indices[i]
+            prev_idx = result[-1]
+            if not (0 <= idx < len(all_actions) and 0 <= prev_idx < len(all_actions)):
+                result.append(idx)
+                continue
+            cur = all_actions[idx]
+            prev = all_actions[prev_idx]
+            if (
+                cur.action_type == prev.action_type
+                and cur.action_type in ("click", "submit")
+                and self._action_fingerprint(cur) == self._action_fingerprint(prev)
+            ):
+                continue
+            result.append(idx)
+        return result
+
+    def _remove_redundant_duplicate_actions(
+        self,
+        step_indices: list[int],
+        all_actions: list[ActionStep],
+        param_overrides: dict[int, str],
+    ) -> list[int]:
+        seen: dict[tuple[str, str, str, str], int] = {}
+        keep: list[int] = []
+        for idx in step_indices:
+            if not (0 <= idx < len(all_actions)):
+                keep.append(idx)
+                continue
+            action = all_actions[idx]
+            effective_value = param_overrides.get(idx, action.value or "")
+            key = (*self._action_fingerprint(action), effective_value)
+            if key in seen:
+                continue
+            seen[key] = idx
+            keep.append(idx)
+        return keep
 
     def _auto_detect_params_from_actions(
         self,
@@ -461,16 +504,24 @@ if __name__ == "__main__":
                     )
         return auto_args
 
+    @staticmethod
+    def _action_fingerprint(action: ActionStep) -> tuple[str, str, str]:
+        """Return (action_type, target_name, target_role) for dedup matching."""
+        return (
+            action.action_type or "",
+            action.target_name or "",
+            action.target_role or "",
+        )
+
     def _build_param_overrides(
         self,
         args: list[dict[str, Any]] | None,
         step_indices: list[int],
         all_actions: list[ActionStep],
     ) -> dict[int, str]:
-        """Map action_index → '{{param_name}}' from args metadata.
+        """Map action_index → '{{param_name}}' for value substitution.
 
-        Uses explicit ``action_index`` when available; falls back to matching
-        the arg's ``default`` value against action values in *step_indices*.
+        Also overrides duplicate steps sharing the same fingerprint.
         """
         overrides: dict[int, str] = {}
         step_set = set(step_indices)
@@ -481,21 +532,36 @@ if __name__ == "__main__":
             name = str(arg.get("name") or "").strip()
             if not name:
                 continue
+            placeholder = f"{{{{{name}}}}}"
 
+            primary_idx: int | None = None
             action_idx = arg.get("action_index")
             if isinstance(action_idx, int) and action_idx in step_set:
-                overrides[action_idx] = f"{{{{{name}}}}}"
+                primary_idx = action_idx
+            else:
+                default = str(arg.get("default") or "").strip()
+                if default:
+                    for idx in step_indices:
+                        if idx in overrides:
+                            continue
+                        if 0 <= idx < len(all_actions):
+                            if (all_actions[idx].value or "").strip() == default:
+                                primary_idx = idx
+                                break
+
+            if primary_idx is None:
                 continue
 
-            default = str(arg.get("default") or "").strip()
-            if default:
+            overrides[primary_idx] = placeholder
+
+            if 0 <= primary_idx < len(all_actions):
+                fp = self._action_fingerprint(all_actions[primary_idx])
                 for idx in step_indices:
-                    if idx in overrides:
+                    if idx == primary_idx or idx in overrides:
                         continue
                     if 0 <= idx < len(all_actions):
-                        if (all_actions[idx].value or "").strip() == default:
-                            overrides[idx] = f"{{{{{name}}}}}"
-                            break
+                        if self._action_fingerprint(all_actions[idx]) == fp:
+                            overrides[idx] = placeholder
 
         return overrides
 
@@ -511,22 +577,32 @@ if __name__ == "__main__":
             command.description or f"执行命令 {command_name}"
         )
 
-        # Safety net: deduplicate LLM-appended parameterized duplicates
-        cleaned_steps = self._deduplicate_parameterized_actions(
-            command.action_steps, all_actions
-        )
         effective_args = command.args
         if not effective_args:
             effective_args = self._auto_detect_params_from_actions(
-                cleaned_steps, all_actions
+                command.action_steps, all_actions
             )
+
+        # Order matters: overrides must be computed before dedup so dedup
+        # knows which indices are parameterized (fixes fallback-inference path).
+        param_overrides = self._build_param_overrides(
+            effective_args, command.action_steps, all_actions
+        )
+        cleaned_steps = self._deduplicate_parameterized_actions(
+            command.action_steps, all_actions, param_overrides
+        )
+        cleaned_steps = self._remove_consecutive_duplicate_clicks(
+            cleaned_steps, all_actions
+        )
+        cleaned_steps = self._remove_redundant_duplicate_actions(
+            cleaned_steps, all_actions, param_overrides
+        )
+        param_overrides = {
+            idx: v for idx, v in param_overrides.items() if idx in set(cleaned_steps)
+        }
 
         arg_decorators, arg_parameters = self._render_argument_decorators(
             effective_args
-        )
-
-        param_overrides = self._build_param_overrides(
-            effective_args, cleaned_steps, all_actions
         )
 
         decorator_lines = [

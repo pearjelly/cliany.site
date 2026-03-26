@@ -45,6 +45,59 @@ def _infer_name_from_description(description: str) -> str:
     return ""
 
 
+_GENERIC_COMMAND_NAMES = frozenset(
+    {
+        "run-workflow",
+        "run_workflow",
+        "workflow",
+        "command",
+        "command-1",
+    }
+)
+
+
+def _infer_command_name_from_description(description: str) -> str:
+    mapping: list[tuple[tuple[str, ...], str]] = [
+        (
+            (
+                "创建issue",
+                "创建 issue",
+                "新建issue",
+                "新建 issue",
+                "提交issue",
+                "提交 issue",
+                "提issue",
+                "提 issue",
+                "create issue",
+            ),
+            "create-issue",
+        ),
+        (("搜索", "查找", "search"), "search"),
+        (("登录", "login", "sign in"), "login"),
+        (("注册", "signup", "sign up"), "register"),
+        (("删除", "delete", "remove"), "delete"),
+        (("编辑", "修改", "edit", "update"), "edit"),
+        (("查看", "浏览", "view"), "view"),
+        (("下载", "download"), "download"),
+        (("上传", "upload"), "upload"),
+        (("发布", "publish"), "publish"),
+        (("评论", "comment"), "comment"),
+        (("提交", "submit"), "submit"),
+    ]
+    desc_lower = description.lower()
+
+    # 取最后出现的关键词匹配 —— 描述末尾的动作通常是最终意图
+    best_name = ""
+    best_pos = -1
+    for keywords, inferred_name in mapping:
+        for kw in keywords:
+            pos = desc_lower.rfind(kw)
+            if pos != -1 and pos > best_pos:
+                best_pos = pos
+                best_name = inferred_name
+    return best_name
+
+
 def _infer_params_from_actions(
     actions: list,
     workflow_description: str,
@@ -445,6 +498,12 @@ class WorkflowExplorer:
                             cmd.args = _infer_params_from_actions(
                                 result.actions, workflow_description
                             )
+                        if cmd.name in _GENERIC_COMMAND_NAMES:
+                            better = _infer_command_name_from_description(
+                                cmd.description or workflow_description
+                            )
+                            if better:
+                                cmd.name = better
 
                     all_action_indices = set(range(len(result.actions)))
                     assigned_indices: set[int] = set()
@@ -482,9 +541,13 @@ class WorkflowExplorer:
                 inferred_args = _infer_params_from_actions(
                     result.actions, workflow_description
                 )
+                fallback_name = (
+                    _infer_command_name_from_description(workflow_description)
+                    or "run-workflow"
+                )
                 result.commands.append(
                     CommandSuggestion(
-                        name="run-workflow",
+                        name=fallback_name,
                         description=workflow_description,
                         args=inferred_args,
                         action_steps=list(range(len(result.actions))),

@@ -37,6 +37,10 @@ class ActionExecutionError(Exception):
 
 # 导航后等待页面动态内容渲染的时间（秒）
 _POST_NAVIGATE_DELAY = 1.5
+# 点击带 href 的元素后等待页面加载的时间（秒）
+_POST_CLICK_NAV_DELAY = 2.0
+# 新标签页打开后等待加载的时间（秒）
+_NEW_TAB_SETTLE_DELAY = 2.5
 # 元素定位失败后重试前的等待时间（秒）
 _RESOLVE_RETRY_DELAY = 1.0
 # 元素定位最大重试次数
@@ -183,6 +187,39 @@ def _score_candidate(
     return score
 
 
+def _action_has_href(action_data: dict[str, Any]) -> bool:
+    attrs = action_data.get("target_attributes", {})
+    return bool(isinstance(attrs, dict) and attrs.get("href"))
+
+
+def _action_opens_new_tab(action_data: dict[str, Any]) -> bool:
+    attrs = action_data.get("target_attributes", {})
+    return isinstance(attrs, dict) and str(attrs.get("target", "")).strip() == "_blank"
+
+
+async def _switch_to_newest_tab(browser_session: Any) -> None:
+    import importlib
+
+    events_module = importlib.import_module("browser_use.browser.events")
+    SwitchTabEvent = getattr(events_module, "SwitchTabEvent")
+
+    event = browser_session.event_bus.dispatch(SwitchTabEvent(target_id=None))
+    await event
+    await event.event_result(raise_if_any=False, raise_if_none=False)
+
+
+async def _handle_post_click_navigation(
+    browser_session: Any,
+    action_data: dict[str, Any],
+) -> None:
+    if _action_opens_new_tab(action_data):
+        await asyncio.sleep(0.5)
+        await _switch_to_newest_tab(browser_session)
+        await asyncio.sleep(_NEW_TAB_SETTLE_DELAY)
+    elif _action_has_href(action_data):
+        await asyncio.sleep(_POST_CLICK_NAV_DELAY)
+
+
 async def _resolve_action_node(
     browser_session: Any, action_data: dict[str, Any]
 ) -> Any | None:
@@ -285,7 +322,6 @@ async def execute_action_steps(
                 continue
 
             if action_type == "submit":
-                # 优先通过 ref 点击提交按钮；无 ref 时 fallback 发送 Enter
                 submit_node = await _resolve_action_node(browser_session, action_data)
                 if submit_node is not None:
                     event = browser_session.event_bus.dispatch(
@@ -299,6 +335,8 @@ async def execute_action_steps(
                 await event.event_result(
                     raise_if_any=not continue_on_error, raise_if_none=False
                 )
+                if _action_has_href(action_data) or _action_opens_new_tab(action_data):
+                    await _handle_post_click_navigation(browser_session, action_data)
                 continue
 
             node = await _resolve_action_node(browser_session, action_data)
@@ -317,6 +355,7 @@ async def execute_action_steps(
                 await event.event_result(
                     raise_if_any=not continue_on_error, raise_if_none=False
                 )
+                await _handle_post_click_navigation(browser_session, action_data)
             elif action_type == "type":
                 value = action_data.get("value", "")
                 if isinstance(value, str):
