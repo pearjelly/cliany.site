@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260325b">
+  <link rel="stylesheet" href="style.css?v=20260326a">
   <script>document.documentElement.classList.replace('no-js','js');</script>
   <script>(function(){var s;try{s=localStorage.getItem('cliany-lang')}catch(e){}var l=(s==='en'||s==='zh')?s:(navigator.language&&navigator.language.startsWith('zh')?'zh':'en');document.documentElement.lang=l==='en'?'en':'zh-CN';document.documentElement.dataset.lang=l;})()</script>
 </head>
@@ -88,7 +88,7 @@
       <div class="container">
         <div class="section-header reveal">
           <h2 class="section-title" data-i18n="features.title">核心特性</h2>
-          <p class="section-subtitle" data-i18n="features.subtitle">从探索到执行，全流程自动化</p>
+          <p class="section-subtitle" data-i18n="features.subtitle">十大核心能力，从探索到执行</p>
         </div>
 
         <div class="features-grid reveal">
@@ -120,6 +120,36 @@
             <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6l3 3"/><circle cx="12" cy="14" r="8"/></svg></div>
             <h3 class="feature-title" data-i18n="features.adapter.title">动态适配器加载</h3>
             <p class="feature-desc" data-i18n="features.adapter.desc">每个网站自动生成独立适配器，按域名动态注册为 CLI 子命令。随时扩展，按需加载。</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div>
+            <h3 class="feature-title" data-i18n="features.chrome.title">Chrome 自动管理</h3>
+            <p class="feature-desc" data-i18n="features.chrome.desc">自动检测并启动 Chrome 调试实例，跨平台支持 macOS、Linux、Windows，无需手动配置 CDP。</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg></div>
+            <h3 class="feature-title" data-i18n="features.merge.title">适配器增量合并</h3>
+            <p class="feature-desc" data-i18n="features.merge.desc">重复探索同一网站时智能合并新旧适配器，保留已有命令，自动处理冲突。</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.315 8.685a.98.98 0 0 1 .837-.276c.47.07.802.48.968.925a2.501 2.501 0 1 0 3.214-3.214c-.446-.166-.855-.497-.925-.968a.979.979 0 0 1 .276-.837l1.61-1.61a2.404 2.404 0 0 1 1.705-.707c.618 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z"/></svg></div>
+            <h3 class="feature-title" data-i18n="features.atoms.title">原子命令系统</h3>
+            <p class="feature-desc" data-i18n="features.atoms.desc">从工作流中自动提取可复用的原子操作，跨适配器共享登录、搜索等通用步骤，参数化执行。</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+            <h3 class="feature-title" data-i18n="features.validator.title">智能录制验证</h3>
+            <p class="feature-desc" data-i18n="features.validator.desc">多阶段验证器自动校验操作步骤的完整性，结构化错误报告，支持 --retry 一键重试。</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></div>
+            <h3 class="feature-title" data-i18n="features.tui.title">TUI 管理界面</h3>
+            <p class="feature-desc" data-i18n="features.tui.desc">基于 Textual 的终端 UI，可视化管理适配器、查看操作日志、导入导出配置，全键盘操作。</p>
           </div>
         </div>
       </div>
@@ -264,7 +294,7 @@ cliany-site explore "https://github.com" "搜索仓库" --json</code></pre>
     </div>
   </footer>
 
-  <script src="script.js?v=20260325b"></script>
+  <script src="script.js?v=20260326a"></script>
   <script>setTimeout(function(){document.body.style.visibility='visible'},2000)</script>
 </body>
 </html>

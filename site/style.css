@@ -392,13 +392,8 @@ html.no-js .lang-toggle {
   gap: 2rem;
 }
 
-.features-grid .feature-card:nth-child(4),
-.features-grid .feature-card:nth-child(5) {
-  grid-column: span 1;
-}
-
-.features-grid .feature-card:nth-child(4) {
-  grid-column-start: 1;
+.features-grid .feature-card:last-child:nth-child(3n+1) {
+  grid-column: 2;
 }
 
 .feature-card {
@@ -702,10 +697,7 @@ html.js .reveal.visible {
     grid-template-columns: repeat(2, 1fr);
   }
   
-  .features-grid .feature-card:nth-child(4) {
-    grid-column: auto;
-  }
-  .features-grid .feature-card:nth-child(5) {
+  .features-grid .feature-card:last-child:nth-child(2n+1) {
     grid-column: span 2;
   }
   
@@ -748,10 +740,6 @@ html.js .reveal.visible {
 
   .features-grid {
     grid-template-columns: 1fr;
-  }
-  
-  .features-grid .feature-card:nth-child(5) {
-    grid-column: auto;
   }
 
   .hero-actions {

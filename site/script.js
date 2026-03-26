@@ -21,7 +21,7 @@ const I18N = {
   },
 
   'features.title': { zh: '核心特性', en: 'Core Features' },
-  'features.subtitle': { zh: '从探索到执行，全流程自动化', en: 'End-to-end automation, from exploration to execution' },
+  'features.subtitle': { zh: '十大核心能力，从探索到执行', en: 'Ten core capabilities, from exploration to execution' },
   'features.explore.title': { zh: '零侵入探索', en: 'Zero-Intrusion Exploration' },
   'features.explore.desc': {
     zh: '通过 Chrome CDP 协议捕获页面无障碍树（AXTree），无需注入脚本，零侵入分析网页结构。',
@@ -46,6 +46,31 @@ const I18N = {
   'features.adapter.desc': {
     zh: '每个网站自动生成独立适配器，按域名动态注册为 CLI 子命令。随时扩展，按需加载。',
     en: 'Each website generates its own adapter, dynamically registered as a CLI subcommand by domain. Extend anytime, load on demand.'
+  },
+  'features.chrome.title': { zh: 'Chrome 自动管理', en: 'Chrome Auto-Management' },
+  'features.chrome.desc': {
+    zh: '自动检测并启动 Chrome 调试实例，跨平台支持 macOS、Linux、Windows，无需手动配置 CDP。',
+    en: 'Automatically detect and launch Chrome debug instances. Cross-platform support for macOS, Linux, and Windows — no manual CDP setup needed.'
+  },
+  'features.merge.title': { zh: '适配器增量合并', en: 'Incremental Adapter Merge' },
+  'features.merge.desc': {
+    zh: '重复探索同一网站时智能合并新旧适配器，保留已有命令，自动处理冲突。',
+    en: 'Smart-merge new and existing adapters when re-exploring the same site. Preserves existing commands with automatic conflict resolution.'
+  },
+  'features.atoms.title': { zh: '原子命令系统', en: 'Atomic Command System' },
+  'features.atoms.desc': {
+    zh: '从工作流中自动提取可复用的原子操作，跨适配器共享登录、搜索等通用步骤，参数化执行。',
+    en: 'Auto-extract reusable atomic actions from workflows. Share common steps like login and search across adapters with parameterized execution.'
+  },
+  'features.validator.title': { zh: '智能录制验证', en: 'Smart Recording Validation' },
+  'features.validator.desc': {
+    zh: '多阶段验证器自动校验操作步骤的完整性，结构化错误报告，支持 --retry 一键重试。',
+    en: 'Multi-phase validator auto-checks action step integrity. Structured error reports with one-click --retry support.'
+  },
+  'features.tui.title': { zh: 'TUI 管理界面', en: 'TUI Management Interface' },
+  'features.tui.desc': {
+    zh: '基于 Textual 的终端 UI，可视化管理适配器、查看操作日志、导入导出配置，全键盘操作。',
+    en: 'Textual-based terminal UI for visual adapter management, activity logs, config import/export — fully keyboard-driven.'
   },
 
   'how.title': { zh: '工作原理', en: 'How It Works' },
