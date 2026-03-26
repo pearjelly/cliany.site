@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260326a">
+  <link rel="stylesheet" href="style.css?v=20260326b">
   <script>document.documentElement.classList.replace('no-js','js');</script>
   <script>(function(){var s;try{s=localStorage.getItem('cliany-lang')}catch(e){}var l=(s==='en'||s==='zh')?s:(navigator.language&&navigator.language.startsWith('zh')?'zh':'en');document.documentElement.lang=l==='en'?'en':'zh-CN';document.documentElement.dataset.lang=l;})()</script>
 </head>
@@ -125,7 +125,7 @@
           <div class="feature-card">
             <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div>
             <h3 class="feature-title" data-i18n="features.chrome.title">Chrome 自动管理</h3>
-            <p class="feature-desc" data-i18n="features.chrome.desc">自动检测并启动 Chrome 调试实例，跨平台支持 macOS、Linux、Windows，无需手动配置 CDP。</p>
+            <p class="feature-desc" data-i18n="features.chrome.desc">自动检测并启动 Chrome 调试实例，支持 macOS 和 Linux，无需手动配置 CDP。</p>
           </div>
           
           <div class="feature-card">
@@ -143,7 +143,7 @@
           <div class="feature-card">
             <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
             <h3 class="feature-title" data-i18n="features.validator.title">智能录制验证</h3>
-            <p class="feature-desc" data-i18n="features.validator.desc">多阶段验证器自动校验操作步骤的完整性，结构化错误报告，支持 --retry 一键重试。</p>
+            <p class="feature-desc" data-i18n="features.validator.desc">纯逻辑验证器校验操作步骤完整性，结构化错误报告，可由调用方集成至工作流。</p>
           </div>
 
           <div class="feature-card">
@@ -253,13 +253,16 @@ export CLIANY_ANTHROPIC_API_KEY="sk-ant-..."</code></pre>
           </div>
 
           <div class="qs-card">
-            <h3 class="qs-title" data-i18n="qs.step3">Step 3: 启动 Chrome CDP</h3>
+            <h3 class="qs-title" data-i18n="qs.step3">Step 3: Chrome 配置</h3>
             <div class="code-block-container">
-              <pre class="code-block"><code># macOS
+              <pre class="code-block"><code># 自动检测并启动（推荐，无需手动配置）
+cliany-site doctor --json
+
+# 或手动启动 CDP（高级用户）
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
   --remote-debugging-port=9222 \
   --user-data-dir=/tmp/chrome-debug</code></pre>
-              <button class="copy-btn" data-clipboard="# macOS&#10;/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \&#10;  --remote-debugging-port=9222 \&#10;  --user-data-dir=/tmp/chrome-debug" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">复制</button>
+              <button class="copy-btn" data-clipboard="cliany-site doctor --json" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">复制</button>
             </div>
           </div>
 
@@ -294,7 +297,7 @@ cliany-site explore "https://github.com" "搜索仓库" --json</code></pre>
     </div>
   </footer>
 
-  <script src="script.js?v=20260326a"></script>
+  <script src="script.js?v=20260326b"></script>
   <script>setTimeout(function(){document.body.style.visibility='visible'},2000)</script>
 </body>
 </html>

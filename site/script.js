@@ -49,8 +49,8 @@ const I18N = {
   },
   'features.chrome.title': { zh: 'Chrome 自动管理', en: 'Chrome Auto-Management' },
   'features.chrome.desc': {
-    zh: '自动检测并启动 Chrome 调试实例，跨平台支持 macOS、Linux、Windows，无需手动配置 CDP。',
-    en: 'Automatically detect and launch Chrome debug instances. Cross-platform support for macOS, Linux, and Windows — no manual CDP setup needed.'
+    zh: '自动检测并启动 Chrome 调试实例，支持 macOS 和 Linux，无需手动配置 CDP。',
+    en: 'Automatically detect and launch Chrome debug instances. Supports macOS and Linux — no manual CDP setup needed.'
   },
   'features.merge.title': { zh: '适配器增量合并', en: 'Incremental Adapter Merge' },
   'features.merge.desc': {
@@ -64,8 +64,8 @@ const I18N = {
   },
   'features.validator.title': { zh: '智能录制验证', en: 'Smart Recording Validation' },
   'features.validator.desc': {
-    zh: '多阶段验证器自动校验操作步骤的完整性，结构化错误报告，支持 --retry 一键重试。',
-    en: 'Multi-phase validator auto-checks action step integrity. Structured error reports with one-click --retry support.'
+    zh: '纯逻辑验证器校验操作步骤完整性，结构化错误报告，可由调用方集成至工作流。',
+    en: 'Pure-logic validator checks action step integrity. Structured error reports, ready for caller integration into workflows.'
   },
   'features.tui.title': { zh: 'TUI 管理界面', en: 'TUI Management Interface' },
   'features.tui.desc': {
@@ -100,7 +100,7 @@ const I18N = {
   'qs.subtitle': { zh: '五分钟完成安装与配置', en: 'Set up in five minutes' },
   'qs.step1': { zh: 'Step 1: 安装', en: 'Step 1: Install' },
   'qs.step2': { zh: 'Step 2: 配置 LLM', en: 'Step 2: Configure LLM' },
-  'qs.step3': { zh: 'Step 3: 启动 Chrome CDP', en: 'Step 3: Start Chrome CDP' },
+  'qs.step3': { zh: 'Step 3: Chrome 配置', en: 'Step 3: Chrome Setup' },
   'qs.step4': { zh: 'Step 4: 开始探索', en: 'Step 4: Start Exploring' },
 
   'copy.btn': { zh: '复制', en: 'Copy' },
