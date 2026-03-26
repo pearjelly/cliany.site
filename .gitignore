@@ -24,3 +24,4 @@ MANIFEST
 
 .vercel
 .sisyphus/
+tests/
