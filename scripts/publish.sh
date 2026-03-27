@@ -7,7 +7,7 @@ DIST_DIR="$PROJECT_DIR/dist"
 
 echo "=== 发布 cliany-site 到 PyPI ==="
 
-python -c "import build" 2>/dev/null || pip install build twine
+python -c "import build" 2>/dev/null || python -m pip install build twine
 
 if [ -n "$VERSION" ]; then
     echo "更新版本号到 $VERSION..."
@@ -23,12 +23,17 @@ python -m build
 echo "构建产物:"
 ls -lh "$DIST_DIR"
 
+TOKEN_FILE="$(dirname "$0")/.pypi-token"
+if [ -f "$TOKEN_FILE" ]; then
+    PYPI_TOKEN=$(cat "$TOKEN_FILE")
+fi
+
 echo "上传到 PyPI (Token 认证)..."
-PYPI_TOKEN="${PYPI_TOKEN:-}"
 if [ -n "$PYPI_TOKEN" ]; then
-    twine upload "$DIST_DIR"/* -u "__token__" -p "$PYPI_TOKEN"
+    twine upload "$DIST_DIR"/* -u "__token__" -p "$PYPI_TOKEN" --skip-existing
 else
-    twine upload "$DIST_DIR"/*
+    echo "错误: 未找到 PyPI Token (scripts/.pypi-token)"
+    exit 1
 fi
 
 echo "=== 发布完成 ==="
