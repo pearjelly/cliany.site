@@ -1,10 +1,11 @@
 import asyncio
 import copy
+import os
 import re
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urljoin, urlparse
 
-from cliany_site.browser.axtree import capture_axtree
+from cliany_site.browser.axtree import capture_axtree, serialize_axtree
 
 
 class ActionExecutionError(Exception):
@@ -45,6 +46,11 @@ _NEW_TAB_SETTLE_DELAY = 2.5
 _RESOLVE_RETRY_DELAY = 1.0
 # 元素定位最大重试次数
 _RESOLVE_MAX_RETRIES = 2
+_ADAPTIVE_REPAIR_MAX_ATTEMPTS = 3
+
+
+def _adaptive_repair_enabled() -> bool:
+    return os.environ.get("CLIANY_ADAPTIVE_REPAIR", "").lower() == "true"
 
 
 def _normalize_text(value: Any) -> str:
@@ -197,6 +203,145 @@ def _action_opens_new_tab(action_data: dict[str, Any]) -> bool:
     return isinstance(attrs, dict) and str(attrs.get("target", "")).strip() == "_blank"
 
 
+def _extract_repair_selector_refs(parsed_response: Any) -> list[str]:
+    if not isinstance(parsed_response, dict):
+        return []
+
+    selectors = parsed_response.get("selectors", [])
+    if not isinstance(selectors, list):
+        return []
+
+    normalized: list[str] = []
+    for selector in selectors:
+        normalized_ref = str(selector or "").strip()
+        if normalized_ref and normalized_ref not in normalized:
+            normalized.append(normalized_ref)
+    return normalized
+
+
+async def _attempt_adaptive_repair(
+    browser_session: Any, action_data: dict[str, Any]
+) -> Any | None:
+    import importlib
+
+    from cliany_site.repair_prompts import REPAIR_PROMPT_TEMPLATE
+
+    try:
+        engine_module = importlib.import_module("cliany_site.explorer.engine")
+    except Exception:
+        return None
+
+    get_replay_llm = getattr(engine_module, "_get_replay_llm", None)
+    if not callable(get_replay_llm):
+        get_replay_llm = getattr(engine_module, "_get_llm", None)
+    if not callable(get_replay_llm):
+        return None
+
+    llm = None
+    for kwargs in ({"role": "replay"}, {}, {"role": "explore"}):
+        try:
+            llm = get_replay_llm(**kwargs) if kwargs else get_replay_llm()
+            break
+        except TypeError:
+            continue
+        except Exception:
+            return None
+
+    if llm is None:
+        return None
+
+    parse_llm_response = getattr(engine_module, "_parse_llm_response", None)
+    if not callable(parse_llm_response):
+        return None
+    to_text = getattr(engine_module, "_to_text", None)
+
+    repair_attempts = action_data.get("repair_attempts")
+    if not isinstance(repair_attempts, list):
+        repair_attempts = []
+        action_data["repair_attempts"] = repair_attempts
+
+    original_ref = str(action_data.get("ref", "") or action_data.get("target_ref", ""))
+    attempted_refs: list[str] = [original_ref] if original_ref else []
+
+    for llm_attempt in range(_ADAPTIVE_REPAIR_MAX_ATTEMPTS):
+        tree = await capture_axtree(browser_session)
+        selector_map = tree.get("selector_map", {})
+
+        prompt_text = REPAIR_PROMPT_TEMPLATE.format(
+            current_url=tree.get("url", ""),
+            page_title=tree.get("title", ""),
+            action_type=str(action_data.get("type", "")),
+            action_description=str(action_data.get("description", "")),
+            original_ref=original_ref,
+            target_name=str(action_data.get("target_name", "")),
+            target_role=str(action_data.get("target_role", "")),
+            target_attributes=action_data.get("target_attributes", {}),
+            attempted_refs=attempted_refs,
+            element_tree=serialize_axtree(tree),
+        )
+
+        attempt_record: dict[str, Any] = {
+            "strategy": "adaptive_repair",
+            "attempt": llm_attempt + 1,
+            "attempted_refs": list(attempted_refs),
+        }
+
+        try:
+            ainvoke = getattr(llm, "ainvoke", None)
+            if callable(ainvoke):
+                maybe_async_result = ainvoke(prompt_text)
+                if asyncio.iscoroutine(maybe_async_result):
+                    response = await cast(Any, maybe_async_result)
+                else:
+                    response = maybe_async_result
+            else:
+                invoke = getattr(llm, "invoke", None)
+                if not callable(invoke):
+                    raise TypeError("LLM 对象缺少 invoke/ainvoke 接口")
+                response = invoke(prompt_text)
+            response_content = getattr(response, "content", response)
+            response_text = (
+                to_text(response_content)
+                if callable(to_text)
+                else str(response_content)
+            )
+            parsed = parse_llm_response(response_text)
+        except Exception as exc:
+            attempt_record["success"] = False
+            attempt_record["error"] = str(exc)
+            repair_attempts.append(attempt_record)
+            continue
+
+        selector_refs = _extract_repair_selector_refs(parsed)
+        attempt_record["selector_refs"] = selector_refs
+
+        for candidate_ref in selector_refs:
+            if candidate_ref not in attempted_refs:
+                attempted_refs.append(candidate_ref)
+
+            candidate_index = _parse_ref_to_index(candidate_ref)
+            if candidate_index is None:
+                continue
+
+            if not isinstance(selector_map.get(str(candidate_index)), dict):
+                continue
+
+            try:
+                node = await browser_session.get_element_by_index(candidate_index)
+            except Exception:
+                continue
+
+            attempt_record["success"] = True
+            attempt_record["resolved_ref"] = str(candidate_index)
+            repair_attempts.append(attempt_record)
+            return node
+
+        attempt_record["success"] = False
+        repair_attempts.append(attempt_record)
+
+    return None
+
+
 async def _switch_to_newest_tab(browser_session: Any) -> None:
     import importlib
 
@@ -260,6 +405,11 @@ async def _resolve_action_node(
         if attempt < _RESOLVE_MAX_RETRIES:
             await asyncio.sleep(_RESOLVE_RETRY_DELAY)
 
+    if _adaptive_repair_enabled():
+        repaired = await _attempt_adaptive_repair(browser_session, action_data)
+        if repaired is not None:
+            return repaired
+
     return None
 
 
@@ -268,8 +418,13 @@ async def execute_action_steps(
     actions_data: list[dict[str, Any]],
     continue_on_error: bool = False,
     params: dict[str, Any] | None = None,
+    domain: str = "",
+    command_name: str = "",
 ) -> None:
     import importlib
+    from datetime import datetime, timezone
+
+    from cliany_site.report import ActionStepResult, ExecutionReport, save_report
 
     events_module = importlib.import_module("browser_use.browser.events")
     ClickElementEvent = getattr(events_module, "ClickElementEvent")
@@ -284,106 +439,179 @@ async def execute_action_steps(
         else actions_data
     )
 
-    for idx, action_data in enumerate(effective_actions):
-        if not isinstance(action_data, dict):
-            continue
+    resolved_domain = domain
+    if not resolved_domain:
+        for _a in effective_actions:
+            if isinstance(_a, dict) and str(_a.get("type", "")).lower() == "navigate":
+                _url = _a.get("url", "")
+                if _url:
+                    try:
+                        resolved_domain = urlparse(_url).netloc or _url
+                    except Exception:
+                        resolved_domain = _url
+                    break
 
-        try:
+    started_at = datetime.now(timezone.utc).isoformat()
+    step_results: list[ActionStepResult] = []
+
+    try:
+        for idx, action_data in enumerate(effective_actions):
+            if not isinstance(action_data, dict):
+                continue
+
             action_type = str(action_data.get("type", "")).lower()
-
             if action_type not in ("click", "type", "select", "navigate", "submit"):
                 continue
 
-            if action_type == "navigate":
-                current_url = await browser_session.get_current_page_url()
-                nav_url = normalize_navigation_url(
-                    action_data.get("url", ""), current_url
+            step_success = True
+            step_error: str | None = None
+
+            try:
+                if action_type == "navigate":
+                    current_url = await browser_session.get_current_page_url()
+                    nav_url = normalize_navigation_url(
+                        action_data.get("url", ""), current_url
+                    )
+                    if not nav_url:
+                        raise ActionExecutionError(
+                            error_type="invalid_url",
+                            action_index=idx,
+                            action=action_data,
+                            message=f"无效导航 URL: {action_data.get('url', '')}",
+                            suggestion="URL 可能已变更，建议重新 explore",
+                        )
+                    event = browser_session.event_bus.dispatch(
+                        NavigateToUrlEvent(
+                            url=nav_url,
+                            wait_until="load",
+                            new_tab=False,
+                        )
+                    )
+                    await event
+                    await event.event_result(
+                        raise_if_any=not continue_on_error, raise_if_none=False
+                    )
+                    await asyncio.sleep(_POST_NAVIGATE_DELAY)
+
+                elif action_type == "submit":
+                    submit_node = await _resolve_action_node(
+                        browser_session, action_data
+                    )
+                    if submit_node is not None:
+                        event = browser_session.event_bus.dispatch(
+                            ClickElementEvent(node=submit_node)
+                        )
+                    else:
+                        event = browser_session.event_bus.dispatch(
+                            SendKeysEvent(keys="Enter")
+                        )
+                    await event
+                    await event.event_result(
+                        raise_if_any=not continue_on_error, raise_if_none=False
+                    )
+                    if _action_has_href(action_data) or _action_opens_new_tab(
+                        action_data
+                    ):
+                        await _handle_post_click_navigation(
+                            browser_session, action_data
+                        )
+
+                else:
+                    node = await _resolve_action_node(browser_session, action_data)
+                    if node is None:
+                        raise ActionExecutionError(
+                            error_type="element_not_found",
+                            action_index=idx,
+                            action=action_data,
+                            message=f"未找到目标元素: {action_data.get('description', action_type)}",
+                            suggestion="目标元素可能已更名或移除，建议重新 explore",
+                        )
+
+                    if action_type == "click":
+                        event = browser_session.event_bus.dispatch(
+                            ClickElementEvent(node=node)
+                        )
+                        await event
+                        await event.event_result(
+                            raise_if_any=not continue_on_error, raise_if_none=False
+                        )
+                        await _handle_post_click_navigation(
+                            browser_session, action_data
+                        )
+                    elif action_type == "type":
+                        value = action_data.get("value", "")
+                        if isinstance(value, str):
+                            event = browser_session.event_bus.dispatch(
+                                TypeTextEvent(node=node, text=value, clear=True)
+                            )
+                            await event
+                            await event.event_result(
+                                raise_if_any=not continue_on_error, raise_if_none=False
+                            )
+                    elif action_type == "select":
+                        value = action_data.get("value", "")
+                        if isinstance(value, str) and value:
+                            event = browser_session.event_bus.dispatch(
+                                SelectDropdownOptionEvent(node=node, text=value)
+                            )
+                            await event
+                            await event.event_result(
+                                raise_if_any=not continue_on_error, raise_if_none=False
+                            )
+
+            except Exception as exc:
+                step_success = False
+                step_error = str(exc)
+                step_results.append(
+                    ActionStepResult(
+                        step_index=idx,
+                        action_type=action_type,
+                        description=str(action_data.get("description", action_type)),
+                        success=False,
+                        error_message=step_error,
+                        timestamp=datetime.now(timezone.utc).isoformat(),
+                    )
                 )
-                if not nav_url:
+                if not continue_on_error:
+                    if isinstance(exc, ActionExecutionError):
+                        raise
                     raise ActionExecutionError(
-                        error_type="invalid_url",
+                        error_type="execution_error",
                         action_index=idx,
                         action=action_data,
-                        message=f"无效导航 URL: {action_data.get('url', '')}",
-                        suggestion="URL 可能已变更，建议重新 explore",
+                        message=str(exc),
+                        suggestion="操作执行异常，建议检查页面状态或重新 explore",
                     )
-                event = browser_session.event_bus.dispatch(
-                    NavigateToUrlEvent(
-                        url=nav_url,
-                        wait_until="load",
-                        new_tab=False,
-                    )
-                )
-                await event
-                await event.event_result(
-                    raise_if_any=not continue_on_error, raise_if_none=False
-                )
-                await asyncio.sleep(_POST_NAVIGATE_DELAY)
                 continue
 
-            if action_type == "submit":
-                submit_node = await _resolve_action_node(browser_session, action_data)
-                if submit_node is not None:
-                    event = browser_session.event_bus.dispatch(
-                        ClickElementEvent(node=submit_node)
-                    )
-                else:
-                    event = browser_session.event_bus.dispatch(
-                        SendKeysEvent(keys="Enter")
-                    )
-                await event
-                await event.event_result(
-                    raise_if_any=not continue_on_error, raise_if_none=False
+            step_results.append(
+                ActionStepResult(
+                    step_index=idx,
+                    action_type=action_type,
+                    description=str(action_data.get("description", action_type)),
+                    success=step_success,
+                    error_message=step_error,
+                    timestamp=datetime.now(timezone.utc).isoformat(),
                 )
-                if _action_has_href(action_data) or _action_opens_new_tab(action_data):
-                    await _handle_post_click_navigation(browser_session, action_data)
-                continue
+            )
 
-            node = await _resolve_action_node(browser_session, action_data)
-            if node is None:
-                raise ActionExecutionError(
-                    error_type="element_not_found",
-                    action_index=idx,
-                    action=action_data,
-                    message=f"未找到目标元素: {action_data.get('description', action_type)}",
-                    suggestion="目标元素可能已更名或移除，建议重新 explore",
-                )
-
-            if action_type == "click":
-                event = browser_session.event_bus.dispatch(ClickElementEvent(node=node))
-                await event
-                await event.event_result(
-                    raise_if_any=not continue_on_error, raise_if_none=False
-                )
-                await _handle_post_click_navigation(browser_session, action_data)
-            elif action_type == "type":
-                value = action_data.get("value", "")
-                if isinstance(value, str):
-                    event = browser_session.event_bus.dispatch(
-                        TypeTextEvent(node=node, text=value, clear=True)
-                    )
-                    await event
-                    await event.event_result(
-                        raise_if_any=not continue_on_error, raise_if_none=False
-                    )
-            elif action_type == "select":
-                value = action_data.get("value", "")
-                if isinstance(value, str) and value:
-                    event = browser_session.event_bus.dispatch(
-                        SelectDropdownOptionEvent(node=node, text=value)
-                    )
-                    await event
-                    await event.event_result(
-                        raise_if_any=not continue_on_error, raise_if_none=False
-                    )
-        except Exception as exc:
-            if not continue_on_error:
-                if isinstance(exc, ActionExecutionError):
-                    raise
-                raise ActionExecutionError(
-                    error_type="execution_error",
-                    action_index=idx,
-                    action=action_data,
-                    message=str(exc),
-                    suggestion="操作执行异常，建议检查页面状态或重新 explore",
-                )
+    finally:
+        if resolved_domain:
+            finished_at = datetime.now(timezone.utc).isoformat()
+            succeeded = sum(1 for s in step_results if s.success)
+            failed = sum(1 for s in step_results if not s.success)
+            report = ExecutionReport(
+                adapter_domain=resolved_domain,
+                command_name=command_name,
+                started_at=started_at,
+                finished_at=finished_at,
+                total_steps=len(step_results),
+                succeeded_steps=succeeded,
+                failed_steps=failed,
+                repaired_steps=0,
+                step_results=step_results,
+            )
+            try:
+                save_report(report, resolved_domain)
+            except Exception:
+                pass

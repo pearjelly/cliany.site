@@ -7,6 +7,8 @@ from typing import Any
 
 import click
 
+from cliany_site.codegen.generator import METADATA_SCHEMA_VERSION
+
 
 ADAPTERS_DIR = Path.home() / ".cliany-site" / "adapters"
 
@@ -36,12 +38,16 @@ def discover_adapters() -> list[dict[str, Any]]:
         commands_list = metadata.get("commands", [])
         command_count = len(commands_list) if isinstance(commands_list, list) else 0
 
+        schema_version = metadata.get("schema_version", "")
+        needs_migration = schema_version != METADATA_SCHEMA_VERSION
+
         adapters.append(
             {
                 "domain": domain,
                 "commands_path": str(commands_py),
                 "command_count": command_count,
                 "metadata": metadata,
+                "needs_migration": needs_migration,
             }
         )
 

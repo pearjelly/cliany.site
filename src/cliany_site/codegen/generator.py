@@ -12,6 +12,8 @@ from cliany_site.atoms.models import AtomCommand, AtomParameter
 from cliany_site.atoms.storage import load_atom, load_atoms
 from cliany_site.explorer.models import ActionStep, CommandSuggestion, ExploreResult
 
+METADATA_SCHEMA_VERSION = "1"
+
 
 class AdapterGenerator:
     def __init__(self, domain: str = ""):
@@ -1115,11 +1117,13 @@ def save_adapter(
         raise
 
     base_metadata = {
+        "schema_version": METADATA_SCHEMA_VERSION,
         "domain": domain,
         "source_url": _extract_header_value(code, "# 来源 URL:"),
         "workflow": _extract_header_value(code, "# 工作流:"),
         "commands": _extract_commands_from_code(code),
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "explore_model": explore_result.explore_model if explore_result else "",
     }
     if metadata:
         base_metadata.update(metadata)

@@ -35,6 +35,7 @@ class ExploreResult:
     pages: list[PageInfo] = field(default_factory=list)
     actions: list[ActionStep] = field(default_factory=list)
     commands: list[CommandSuggestion] = field(default_factory=list)
+    explore_model: str = ""
 
     def to_dict(self) -> dict:
         import dataclasses

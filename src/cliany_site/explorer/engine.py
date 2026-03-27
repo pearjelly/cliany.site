@@ -214,16 +214,31 @@ def _normalize_openai_base_url(base_url: str | None) -> str | None:
     return normalized
 
 
-def _get_llm():
+def _get_llm(role: str = "explore"):
     _load_dotenv()
-    provider = os.environ.get("CLIANY_LLM_PROVIDER", "anthropic").lower()
+
+    # 双模型支持：录制阶段用 EXPLORE 环境变量，回放阶段用 REPLAY 环境变量
+    # 若对应 role 的变量未设置，则回退到通用变量
+    role_upper = role.upper()
+
+    provider = (
+        os.environ.get(f"CLIANY_{role_upper}_LLM_PROVIDER")
+        or os.environ.get("CLIANY_LLM_PROVIDER", "anthropic")
+    ).lower()
 
     if provider == "openai":
-        api_key = os.environ.get("CLIANY_OPENAI_API_KEY")
+        api_key = os.environ.get(
+            f"CLIANY_{role_upper}_OPENAI_API_KEY"
+        ) or os.environ.get("CLIANY_OPENAI_API_KEY")
         if not api_key:
             raise EnvironmentError("请设置 CLIANY_OPENAI_API_KEY 环境变量")
-        model = os.environ.get("CLIANY_OPENAI_MODEL", "gpt-4o-mini")
-        base_url = _normalize_openai_base_url(os.environ.get("CLIANY_OPENAI_BASE_URL"))
+        model = os.environ.get(f"CLIANY_{role_upper}_OPENAI_MODEL") or os.environ.get(
+            "CLIANY_OPENAI_MODEL", "gpt-4o-mini"
+        )
+        base_url = _normalize_openai_base_url(
+            os.environ.get(f"CLIANY_{role_upper}_OPENAI_BASE_URL")
+            or os.environ.get("CLIANY_OPENAI_BASE_URL")
+        )
         try:
             chat_openai = importlib.import_module("langchain_openai")
             ChatOpenAI = getattr(chat_openai, "ChatOpenAI")
@@ -244,16 +259,21 @@ def _get_llm():
                 "请安装 langchain-openai: pip install langchain-openai"
             )
     elif provider == "anthropic":
-        # anthropic（默认），向后兼容旧环境变量 ANTHROPIC_API_KEY
-        api_key = os.environ.get("CLIANY_ANTHROPIC_API_KEY") or os.environ.get(
-            "ANTHROPIC_API_KEY"
+        api_key = (
+            os.environ.get(f"CLIANY_{role_upper}_ANTHROPIC_API_KEY")
+            or os.environ.get("CLIANY_ANTHROPIC_API_KEY")
+            or os.environ.get("ANTHROPIC_API_KEY")
         )
         if not api_key:
             raise EnvironmentError(
                 "请设置 CLIANY_ANTHROPIC_API_KEY 环境变量（或旧版 ANTHROPIC_API_KEY）"
             )
-        model = os.environ.get("CLIANY_ANTHROPIC_MODEL", "claude-3-5-haiku-20241022")
-        base_url = os.environ.get("CLIANY_ANTHROPIC_BASE_URL")
+        model = os.environ.get(
+            f"CLIANY_{role_upper}_ANTHROPIC_MODEL"
+        ) or os.environ.get("CLIANY_ANTHROPIC_MODEL", "claude-3-5-haiku-20241022")
+        base_url = os.environ.get(
+            f"CLIANY_{role_upper}_ANTHROPIC_BASE_URL"
+        ) or os.environ.get("CLIANY_ANTHROPIC_BASE_URL")
         try:
             chat_anthropic = importlib.import_module("langchain_anthropic")
             ChatAnthropic = getattr(chat_anthropic, "ChatAnthropic")
@@ -267,6 +287,10 @@ def _get_llm():
             )
 
     raise EnvironmentError("CLIANY_LLM_PROVIDER 仅支持 anthropic 或 openai")
+
+
+def _get_replay_llm():
+    return _get_llm(role="replay")
 
 
 def _parse_llm_response(text: str) -> dict:
@@ -351,7 +375,10 @@ class WorkflowExplorer:
         port: int = 9222,
     ) -> ExploreResult:
         result = ExploreResult()
-        llm = _get_llm()
+        llm = _get_llm(role="explore")
+        result.explore_model = (
+            getattr(llm, "model", None) or getattr(llm, "model_name", None) or ""
+        )
 
         self._cdp = CDPConnection()
         if not await self._cdp.check_available(port):
