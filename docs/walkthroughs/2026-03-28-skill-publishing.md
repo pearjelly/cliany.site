@@ -1,7 +1,7 @@
 # cliany-site Skill 发布指南
 
 **日期:** 2026-03-28
-**状态:** 已就绪，待 ClawHub 授权后一键发布
+**状态:** ClawHub 已发布 (v0.1.1) | SkillsMP 待仓库达到 2 stars 后自动收录
 
 ## Skill 文件结构
 
@@ -104,10 +104,17 @@ SkillsMP 从 GitHub 公开仓库自动发现根目录 SKILL.md。
 2. 根目录有 SKILL.md（已有，内容已更新）
 3. 仓库获得 2+ stars（SkillsMP 最低收录门槛）
 
-### 加速索引
+### 当前状态（2026-03-28）
 
-访问 https://skillsmp.com 搜索 `cliany-site` 验证。
-如未收录，可手动提交仓库 URL：`https://github.com/pearjelly/cliany.site`
+- 仓库已公开：`pearjelly/cliany.site` (visibility: PUBLIC)
+- 当前 stars: **1**（需要 **2+** 才能被 SkillsMP 爬虫收录）
+- SkillsMP 无手动提交入口，完全依赖爬虫自动发现
+- 搜索 `cliany` 确认尚未被索引
+
+### 下一步
+
+1. 仓库获得第 2 个 star 后，等待 SkillsMP 下一次爬虫同步
+2. 访问 https://skillsmp.com 搜索 `cliany-site` 验证收录
 
 ## 本地安装验证
 
