@@ -1,0 +1,12 @@
+{
+  "name": "cliany-site",
+  "tagline": "Turn any web workflow into a callable CLI command via Chrome CDP and LLM",
+  "description": "cliany-site converts browser workflows into executable CLI commands. It connects to Chrome via CDP, captures page accessibility trees, uses LLM to plan actions, and generates Python/Click adapters. This skill enables AI agents to drive the full automation cycle: environment check, login, workflow exploration, adapter generation, and command replay.",
+  "category": "tools",
+  "tags": ["automation", "browser", "cdp", "web", "cli", "workflow"],
+  "version": "0.1.1",
+  "license": "Apache-2.0",
+  "pricing": "free",
+  "support_url": "https://github.com/pearjelly/cliany.site/issues",
+  "homepage": "https://github.com/pearjelly/cliany.site"
+}
