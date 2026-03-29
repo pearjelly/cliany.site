@@ -56,6 +56,7 @@ AUDIT_FAILED = "AUDIT_FAILED"
 SESSION_DECRYPT_FAILED = "SESSION_DECRYPT_FAILED"
 PACK_FAILED = "PACK_FAILED"
 INSTALL_FAILED = "INSTALL_FAILED"
+BAD_REQUEST = "BAD_REQUEST"
 
 ERROR_FIX_HINTS: dict[str, str] = {
     CDP_UNAVAILABLE: "请先启动 Chrome：google-chrome --remote-debugging-port=9222",
@@ -75,4 +76,5 @@ ERROR_FIX_HINTS: dict[str, str] = {
     SESSION_DECRYPT_FAILED: "Session 解密失败，请尝试重新登录",
     PACK_FAILED: "适配器打包失败，请检查 adapter 目录",
     INSTALL_FAILED: "适配器安装失败，请检查安装包格式",
+    BAD_REQUEST: "请求参数无效，请检查请求体格式",
 }

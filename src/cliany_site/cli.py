@@ -126,6 +126,7 @@ from cliany_site.commands.list_cmd import list_cmd
 from cliany_site.commands.login import login
 from cliany_site.commands.market import market_group
 from cliany_site.commands.report import report_group
+from cliany_site.commands.serve import serve_cmd
 from cliany_site.commands.tui import tui_cmd
 from cliany_site.commands.workflow import workflow_group
 
@@ -138,6 +139,7 @@ cli.add_command(report_group)
 cli.add_command(check_cmd)
 cli.add_command(workflow_group)
 cli.add_command(market_group)
+cli.add_command(serve_cmd)
 
 from cliany_site.loader import register_adapters
 
