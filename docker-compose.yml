@@ -1,0 +1,16 @@
+services:
+  cliany-site:
+    build: .
+    environment:
+      - CLIANY_LLM_PROVIDER=${CLIANY_LLM_PROVIDER:-anthropic}
+      - CLIANY_ANTHROPIC_API_KEY=${CLIANY_ANTHROPIC_API_KEY:-}
+      - CLIANY_OPENAI_API_KEY=${CLIANY_OPENAI_API_KEY:-}
+      - CLIANY_OPENAI_BASE_URL=${CLIANY_OPENAI_BASE_URL:-}
+      - CLIANY_HEADLESS=true
+    volumes:
+      - cliany-data:/root/.cliany-site
+    entrypoint: ["cliany-site"]
+    command: ["doctor", "--json"]
+
+volumes:
+  cliany-data:
