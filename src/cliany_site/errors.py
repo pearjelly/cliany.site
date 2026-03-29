@@ -54,6 +54,8 @@ BATCH_PARTIAL_FAILURE = "BATCH_PARTIAL_FAILURE"
 SANDBOX_VIOLATION = "SANDBOX_VIOLATION"
 AUDIT_FAILED = "AUDIT_FAILED"
 SESSION_DECRYPT_FAILED = "SESSION_DECRYPT_FAILED"
+PACK_FAILED = "PACK_FAILED"
+INSTALL_FAILED = "INSTALL_FAILED"
 
 ERROR_FIX_HINTS: dict[str, str] = {
     CDP_UNAVAILABLE: "请先启动 Chrome：google-chrome --remote-debugging-port=9222",
@@ -71,4 +73,6 @@ ERROR_FIX_HINTS: dict[str, str] = {
     SANDBOX_VIOLATION: "沙箱策略禁止此操作，请检查域名和动作类型",
     AUDIT_FAILED: "生成代码安全审计未通过，请检查 adapter 代码",
     SESSION_DECRYPT_FAILED: "Session 解密失败，请尝试重新登录",
+    PACK_FAILED: "适配器打包失败，请检查 adapter 目录",
+    INSTALL_FAILED: "适配器安装失败，请检查安装包格式",
 }
