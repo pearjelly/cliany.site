@@ -211,6 +211,10 @@ URL: {url}
 ## 页面可交互元素
 {element_tree}
 
+## 元素 CSS 选择器候选
+以下是页面元素对应的 CSS 选择器候选，当你需要使用 extract 动作时，请从候选中选择最稳定的选择器，不要自行编造：
+{selector_candidates}
+
 ## 工作流描述
 {workflow_description}
 

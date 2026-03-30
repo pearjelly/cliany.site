@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 
 from cliany_site.action_runtime import execute_action_steps, normalize_navigation_url
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
+from cliany_site.browser.selector import format_selector_candidates_section
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.config import get_config
 from cliany_site.explorer.models import (
@@ -347,6 +348,11 @@ def _sanitize_actions_data(actions_data: Any, current_url: str) -> list[dict[str
                 continue
             normalized["url"] = nav_url
 
+        if action_type == "extract" and not str(normalized.get("selector", "") or "").strip():
+            logger.warning(
+                "extract 动作的 selector 为空，可能无法提取数据: %s",
+                normalized.get("description", ""),
+            )
         sanitized.append(normalized)
 
     return sanitized
@@ -410,10 +416,12 @@ class WorkflowExplorer:
                     result.pages.append(page_info)
 
                 element_tree_text = serialize_axtree(tree)
+                selector_candidates_text = format_selector_candidates_section(selector_map)
                 prompt_text = EXPLORE_PROMPT_TEMPLATE.format(
                     url=tree.get("url", ""),
                     title=tree.get("title", ""),
                     element_tree=element_tree_text,
+                    selector_candidates=selector_candidates_text,
                     workflow_description=workflow_description,
                     completed_steps=completed_steps_text,
                 )
