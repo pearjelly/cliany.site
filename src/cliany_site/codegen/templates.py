@@ -44,6 +44,13 @@ def render_command_block(
 
     arg_decorators, arg_parameters = render_argument_decorators(effective_args)
 
+    has_extract = any(
+        isinstance(raw_step, int)
+        and 0 <= raw_step < len(all_actions)
+        and all_actions[raw_step].action_type == "extract"
+        for raw_step in cleaned_steps
+    )
+
     decorator_lines = [
         f'@cli.command("{command_name}")',
         '@click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")',
@@ -51,6 +58,10 @@ def render_command_block(
         "@click.pass_context",
         *arg_decorators,
     ]
+    if has_extract:
+        decorator_lines.append(
+            '@click.option("--output", type=click.Path(), default=None, help="提取结果保存路径（默认自动生成）")'
+        )
     decorators_text = "\n".join(decorator_lines)
 
     function_args = [
@@ -59,6 +70,8 @@ def render_command_block(
         "retry: bool",
         *arg_parameters,
     ]
+    if has_extract:
+        function_args.append("output: str | None")
     function_signature = ", ".join(function_args)
     args_payload = render_args_payload(arg_parameters)
 
@@ -70,16 +83,23 @@ def render_command_block(
         param_overrides=param_overrides,
     )
 
-    has_extract = any(
-        isinstance(raw_step, int)
-        and 0 <= raw_step < len(all_actions)
-        and all_actions[raw_step].action_type == "extract"
-        for raw_step in cleaned_steps
-    )
     if has_extract:
         success_line = f'            return success_response({{"status": "completed", "command": "{command_name}", "args": {args_payload}, "results": _extraction_results}})'
+        writer_call = (
+            "            from cliany_site.extract_writer import save_extract_markdown\n"
+            "            from pathlib import Path as _Path\n"
+            "            _saved = save_extract_markdown(\n"
+            "                extraction_results=_extraction_results,\n"
+            f"                domain=DOMAIN,\n"
+            f"                workflow_description={description!r},\n"
+            "                output_path=_Path(output) if output else None,\n"
+            "            )\n"
+            "            if _saved:\n"
+            '                click.echo(f"\\U0001f4c4 提取结果已保存: {_saved}", err=True)'
+        )
     else:
         success_line = f'            return success_response({{"status": "completed", "command": "{command_name}", "args": {args_payload}}})'
+        writer_call = ""
 
     return f'''{decorators_text}
 def {function_name}({function_signature}):
@@ -98,6 +118,7 @@ def {function_name}({function_signature}):
             await browser_session._cdp_set_cookies(session_data.get("cookies", []))
         try:
 {execution_blocks}
+{writer_call}
 {success_line}
         except Exception as e:
             fix_hint = ""

@@ -9,7 +9,10 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+import click
+
 from cliany_site.action_runtime import execute_action_steps, normalize_navigation_url
+from cliany_site.extract_writer import save_extract_markdown
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
 from cliany_site.browser.selector import format_selector_candidates_section
 from cliany_site.browser.cdp import CDPConnection
@@ -501,7 +504,17 @@ class WorkflowExplorer:
                 if completed_steps:
                     completed_steps_text = "\n".join(f"{i + 1}. {desc}" for i, desc in enumerate(completed_steps))
 
-                await execute_action_steps(browser_session, actions_data, continue_on_error=True)
+                _extraction_results: list = []
+                await execute_action_steps(
+                    browser_session, actions_data, continue_on_error=True, extraction_results=_extraction_results
+                )
+                saved_path = save_extract_markdown(
+                    extraction_results=_extraction_results,
+                    domain=domain,
+                    workflow_description=workflow_description,
+                )
+                if saved_path:
+                    click.echo(f"📄 提取结果已保存: {saved_path}", err=True)
                 step_elapsed = (time.monotonic() - step_start) * 1000
                 reporter.on_explore_step_done(step_num, len(actions_data), step_elapsed)
                 logger.info(
