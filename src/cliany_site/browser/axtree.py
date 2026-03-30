@@ -11,6 +11,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from cliany_site.browser.selector import enrich_selector_map
+
 if TYPE_CHECKING:
     pass
 
@@ -93,6 +95,8 @@ async def capture_axtree(browser_session: Any) -> dict:
                 selector_map[str(ref_id)] = entry
             except (AttributeError, TypeError, KeyError):
                 selector_map[str(ref_id)] = {"ref": str(ref_id)}
+
+    selector_map = enrich_selector_map(selector_map)
 
     if nested_stats["iframe_count"] > 0 or nested_stats["shadow_root_count"] > 0:
         logger.info(
