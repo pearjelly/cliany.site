@@ -49,6 +49,10 @@ class ClanySiteConfig:
     resolve_retry_delay: float = 1.0
     resolve_max_retries: int = 2
 
+    llm_retry_max_attempts: int = 3
+    llm_retry_base_delay: float = 2.0
+    llm_retry_backoff_factor: float = 2.0
+
     adaptive_repair_enabled: bool = False
     adaptive_repair_max_attempts: int = 3
 
@@ -91,6 +95,9 @@ class ClanySiteConfig:
             "new_tab_settle_delay": self.new_tab_settle_delay,
             "resolve_retry_delay": self.resolve_retry_delay,
             "resolve_max_retries": self.resolve_max_retries,
+            "llm_retry_max_attempts": self.llm_retry_max_attempts,
+            "llm_retry_base_delay": self.llm_retry_base_delay,
+            "llm_retry_backoff_factor": self.llm_retry_backoff_factor,
             "adaptive_repair_enabled": self.adaptive_repair_enabled,
             "adaptive_repair_max_attempts": self.adaptive_repair_max_attempts,
             "explore_max_steps": self.explore_max_steps,
@@ -117,6 +124,9 @@ def load_config() -> ClanySiteConfig:
         new_tab_settle_delay=_env_float("CLIANY_NEW_TAB_SETTLE_DELAY", 2.5),
         resolve_retry_delay=_env_float("CLIANY_RESOLVE_RETRY_DELAY", 1.0),
         resolve_max_retries=_env_int("CLIANY_RESOLVE_MAX_RETRIES", 2),
+        llm_retry_max_attempts=_env_int("CLIANY_LLM_RETRY_MAX_ATTEMPTS", 3),
+        llm_retry_base_delay=_env_float("CLIANY_LLM_RETRY_BASE_DELAY", 2.0),
+        llm_retry_backoff_factor=_env_float("CLIANY_LLM_RETRY_BACKOFF_FACTOR", 2.0),
         adaptive_repair_enabled=_env_bool("CLIANY_ADAPTIVE_REPAIR", False),
         adaptive_repair_max_attempts=_env_int("CLIANY_ADAPTIVE_REPAIR_MAX_ATTEMPTS", 3),
         explore_max_steps=_env_int("CLIANY_EXPLORE_MAX_STEPS", 10),

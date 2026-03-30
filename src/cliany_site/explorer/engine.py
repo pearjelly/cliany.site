@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import importlib
 import json
@@ -12,10 +13,9 @@ from urllib.parse import urlparse
 import click
 
 from cliany_site.action_runtime import execute_action_steps, normalize_navigation_url
-from cliany_site.extract_writer import save_extract_markdown
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
-from cliany_site.browser.selector import format_selector_candidates_section
 from cliany_site.browser.cdp import CDPConnection
+from cliany_site.browser.selector import format_selector_candidates_section
 from cliany_site.config import get_config
 from cliany_site.explorer.models import (
     ActionStep,
@@ -28,6 +28,7 @@ from cliany_site.explorer.prompts import (
     SYSTEM_PROMPT,
     build_atom_inventory_section,
 )
+from cliany_site.extract_writer import save_extract_markdown
 from cliany_site.progress import NullProgressReporter, ProgressReporter
 
 logger = logging.getLogger(__name__)
@@ -303,6 +304,46 @@ def _parse_llm_response(text: str) -> dict:
         }
 
 
+_RETRYABLE_STATUS_CODES = frozenset({429, 500, 502, 503, 504})
+
+
+def _is_retryable_error(exc: Exception) -> bool:
+    for target in (exc, exc.__cause__):
+        if target is None:
+            continue
+        status_code = getattr(target, "status_code", None)
+        if isinstance(status_code, int) and status_code in _RETRYABLE_STATUS_CODES:
+            return True
+    return False
+
+
+async def _invoke_llm_with_retry(
+    llm: Any,
+    prompt: str,
+    *,
+    max_attempts: int = 3,
+    base_delay: float = 2.0,
+    backoff_factor: float = 2.0,
+) -> Any:
+    """带指数退避重试的 LLM 调用。仅对 5xx/429 等瞬时错误重试。"""
+    for attempt in range(max_attempts):
+        try:
+            return await llm.ainvoke(prompt)
+        except Exception as exc:
+            if not _is_retryable_error(exc) or attempt >= max_attempts - 1:
+                raise
+            delay = base_delay * (backoff_factor**attempt)
+            logger.warning(
+                "LLM 调用失败 (第 %d/%d 次): %s — %.1f 秒后重试",
+                attempt + 1,
+                max_attempts,
+                exc,
+                delay,
+            )
+            await asyncio.sleep(delay)
+    raise RuntimeError("LLM 重试逻辑异常")
+
+
 def _to_text(content: Any) -> str:
     if isinstance(content, str):
         return content
@@ -437,7 +478,13 @@ class WorkflowExplorer:
                 try:
                     logger.debug("步骤 %d: 调用 LLM (page=%s)", step_num + 1, tree.get("url", ""))
                     reporter.on_explore_llm_start(step_num)
-                    response = await llm.ainvoke(f"{SYSTEM_PROMPT}\n\n{prompt_text}")
+                    response = await _invoke_llm_with_retry(
+                        llm,
+                        f"{SYSTEM_PROMPT}\n\n{prompt_text}",
+                        max_attempts=cfg.llm_retry_max_attempts,
+                        base_delay=cfg.llm_retry_base_delay,
+                        backoff_factor=cfg.llm_retry_backoff_factor,
+                    )
                     logger.debug("步骤 %d: LLM 响应已收到", step_num + 1)
                 except AttributeError as e:
                     if "model_dump" in str(e):
