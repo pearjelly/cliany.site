@@ -7,6 +7,23 @@
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-03-31
+
+### 新增
+- 添加完整的开源社区基础设施文件
+
+### 文档
+- 添加 MIT LICENSE（版权 pearjelly，2026）
+- 添加 CONTRIBUTING.md 贡献者指南（中英双语）
+- 添加 CODE_OF_CONDUCT.md 行为准则（Contributor Covenant v2.1）
+- 添加 SECURITY.md 安全漏洞报告政策
+- 添加 SUPPORT.md 用户支持指引
+- 添加 CHANGELOG.md（Keep-a-Changelog 格式，迁移历史版本）
+- 添加 .github/ISSUE_TEMPLATE/（bug report / feature request / config）
+- 添加 .github/PULL_REQUEST_TEMPLATE.md
+- 添加 .pre-commit-config.yaml（ruff + mypy 本地工具）
+- 更新 README.md（更新日志/贡献指南改为链接外部文件）
+
 ## [0.6.1] - 2026-03-31
 
 ### 修复
