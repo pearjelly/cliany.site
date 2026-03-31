@@ -587,7 +587,12 @@ async def execute_action_steps(
                     else:
                         try:
                             js_expr = build_extract_js(selector, extract_mode, fields if fields else None)
-                            raw_result = await browser_session.evaluate(js_expr)
+                            page = await browser_session.get_current_page()
+                            if page is None:
+                                logger.warning("extract 执行失败 (selector=%s): 无法获取当前页面", selector)
+                                raw_result = None
+                            else:
+                                raw_result = await page.evaluate(js_expr)
                         except Exception as exc:
                             logger.warning("extract 执行失败 (selector=%s): %s", selector, exc)
                             raw_result = None
