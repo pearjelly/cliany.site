@@ -1,0 +1,38 @@
+# Pre-commit hooks 配置
+# 本地开发便利工具 — 非 CI 强制要求
+# Installation: pip install pre-commit && pre-commit install
+
+repos:
+  # Ruff: linting and formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.10
+    hooks:
+      - id: ruff
+        args: ["--config-file=pyproject.toml"]
+      - id: ruff-format
+        args: ["--check", "--config-file=pyproject.toml"]
+
+  # Mypy: type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+      - id: mypy
+        args: ["--config-file=pyproject.toml"]
+        additional_dependencies:
+          - click
+          - rich
+          - python-dotenv
+          - cryptography
+          - keyring
+          - types-pyyaml
+
+  # Common file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: debug-statements
