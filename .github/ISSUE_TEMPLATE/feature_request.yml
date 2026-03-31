@@ -1,0 +1,52 @@
+name: "✨ Feature Request"
+description: "提出功能建议 / Suggest a feature"
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢你的功能建议！请描述你希望解决的问题。
+        
+        Thanks for your feature suggestion! Please describe the problem you'd like to solve.
+  
+  - type: textarea
+    id: problem
+    attributes:
+      label: "问题描述 / Problem Statement"
+      description: "你想解决什么问题？/ What problem are you trying to solve?"
+      placeholder: "当我尝试...时，我发现... / When I try to..., I find that..."
+    validations:
+      required: true
+  
+  - type: textarea
+    id: solution
+    attributes:
+      label: "期望的解决方案 / Proposed Solution"
+      description: "你期望 cliany-site 如何工作？/ How would you like cliany-site to work?"
+    validations:
+      required: true
+  
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "替代方案 / Alternatives Considered"
+      description: "你考虑过哪些替代方案？/ What alternatives have you considered?"
+    validations:
+      required: false
+  
+  - type: textarea
+    id: context
+    attributes:
+      label: "附加上下文 / Additional Context"
+      description: "截图、示例或其他上下文信息 / Screenshots, examples, or other context"
+    validations:
+      required: false
+  
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "提交前检查 / Pre-submission Checklist"
+      options:
+        - label: "我已搜索过现有 Issues 和 Feature Requests，确认这是新建议 / I have searched existing issues and feature requests"
+          required: true

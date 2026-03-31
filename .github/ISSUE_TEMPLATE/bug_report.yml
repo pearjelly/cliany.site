@@ -1,0 +1,79 @@
+name: "🐛 Bug Report"
+description: "报告一个 Bug / Report a bug"
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢提交 Bug 报告！请尽量填写完整信息，以便我们快速定位问题。
+        
+        Thanks for filing a bug report! Please fill in as much detail as possible.
+  
+  - type: textarea
+    id: description
+    attributes:
+      label: "Bug 描述 / Bug Description"
+      description: "清晰简洁地描述这个 Bug / A clear and concise description of what the bug is"
+    validations:
+      required: true
+  
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: "复现步骤 / Steps to Reproduce"
+      description: "逐步描述如何复现此问题 / Steps to reproduce the behavior"
+      placeholder: |
+        1. 运行命令 `cliany-site explore ...`
+        2. 出现以下错误...
+    validations:
+      required: true
+  
+  - type: textarea
+    id: expected
+    attributes:
+      label: "预期行为 / Expected Behavior"
+      description: "你期望发生什么？/ What did you expect to happen?"
+    validations:
+      required: true
+  
+  - type: textarea
+    id: actual
+    attributes:
+      label: "实际行为 / Actual Behavior"
+      description: "实际发生了什么？/ What actually happened?"
+    validations:
+      required: true
+  
+  - type: textarea
+    id: environment
+    attributes:
+      label: "环境信息 / Environment"
+      description: "请填写相关环境信息 / Please provide environment details"
+      placeholder: |
+        - OS: macOS 15.0 / Ubuntu 22.04 / Windows 11
+        - Python: 3.11.x
+        - cliany-site: 0.6.1
+        - Chrome: 131.x
+        - LLM Provider: anthropic / openai
+    validations:
+      required: true
+  
+  - type: textarea
+    id: logs
+    attributes:
+      label: "相关日志 / Relevant Logs"
+      description: "粘贴 `--debug` 模式下的输出（可选）/ Paste output with `--debug` flag (optional)"
+      render: shell
+    validations:
+      required: false
+  
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "提交前检查 / Pre-submission Checklist"
+      options:
+        - label: "我已搜索过现有 Issues，确认这是一个新问题 / I have searched existing issues and this is new"
+          required: true
+        - label: "我正在使用最新版本的 cliany-site / I am using the latest version of cliany-site"
+          required: true

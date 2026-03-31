@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📖 文档 / Documentation
+    url: https://www.cliany.site
+    about: 查看官方文档 / View official documentation
+  - name: 🔒 安全漏洞 / Security Vulnerability
+    url: https://github.com/pearjelly/cliany.site/security/advisories/new
+    about: 请通过 GitHub Security Advisories 私下报告安全漏洞 / Please report security vulnerabilities privately
