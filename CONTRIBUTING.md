@@ -43,6 +43,20 @@ cd cliany.site
 pip install -e ".[dev,test]"
 ```
 
+## 运行测试 / Running Tests
+
+```bash
+# 运行单元测试 / Run unit tests
+pytest tests/ -v
+
+# 运行集成测试（需要 Chrome）/ Run integration tests (requires Chrome)
+bash qa/run_all.sh
+```
+
+> 注意：`qa/` 目录下的集成测试需要一个已启动并开放 CDP 调试端口（`--remote-debugging-port=9222`）的 Chrome 实例。
+>
+> Note: Integration tests in `qa/` require a running Chrome instance with CDP debug port (`--remote-debugging-port=9222`) open.
+
 ## 提交代码流程 / Contribution Workflow
 
 1. **Fork** 本仓库到你的账号。
@@ -110,3 +124,13 @@ We follow the Conventional Commits specification. Commit messages are primarily 
 - All PRs require approval from at least one maintainer before merging.
 - Maintainers usually process PRs within a few business days.
 - Please ensure the PR description is clear and associated with relevant Issues.
+
+## 报告问题 / Reporting Issues
+
+提交 Bug 或功能建议时，请使用 [Issue 模板](https://github.com/pearjelly/cliany.site/issues/new/choose)。
+
+如发现安全漏洞，**请勿在公开 Issue 中披露**，请查阅 [SECURITY.md](SECURITY.md) 了解私密报告流程。
+
+When submitting bugs or feature suggestions, please use the [Issue templates](https://github.com/pearjelly/cliany.site/issues/new/choose).
+
+If you discover a security vulnerability, **do not disclose it in a public Issue**. Please see [SECURITY.md](SECURITY.md) for the private reporting process.
