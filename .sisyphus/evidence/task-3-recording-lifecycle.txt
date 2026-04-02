@@ -1,0 +1,20 @@
+录像完整生命周期测试
+====================
+命令: uv run pytest tests/test_recording.py -v -k "lifecycle"
+输出:
+============================= test session starts ==============================
+platform darwin -- Python 3.13.9, pytest-9.0.2, pluggy-1.6.0 -- /Users/hxb/workspace/cliany.site/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/hxb/workspace/cliany.site
+configfile: pyproject.toml
+plugins: anyio-4.12.1, mock-3.15.1, asyncio-1.3.0, langsmith-0.7.22
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 18 items / 15 deselected / 3 selected
+
+tests/test_recording.py::TestRecordingLifecycle::test_recording_lifecycle PASSED [ 33%]
+tests/test_recording.py::TestRecordingLifecycle::test_finalize_sets_completed PASSED [ 66%]
+tests/test_recording.py::TestRecordingLifecycle::test_finalize_sets_not_completed PASSED [100%]
+
+======================= 3 passed, 15 deselected in 0.39s =======================
+
+结论: 通过 — start → save_step x3 → finalize → load → 验证 3 个 steps 全部正确

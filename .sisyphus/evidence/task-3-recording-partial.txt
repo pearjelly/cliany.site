@@ -1,0 +1,19 @@
+截图失败降级测试
+================
+命令: uv run pytest tests/test_recording.py -v -k "without"
+输出:
+============================= test session starts ==============================
+platform darwin -- Python 3.13.9, pytest-9.0.2, pluggy-1.6.0 -- /Users/hxb/workspace/cliany.site/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/hxb/workspace/cliany.site
+configfile: pyproject.toml
+plugins: anyio-4.12.1, mock-3.15.1, asyncio-1.3.0, langsmith-0.7.22
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 18 items / 16 deselected / 2 selected
+
+tests/test_recording.py::TestSaveStep::test_save_step_without_screenshot PASSED [ 50%]
+tests/test_recording.py::TestSaveStep::test_save_step_without_axtree PASSED [100%]
+
+======================= 2 passed, 16 deselected in 0.36s =======================
+
+结论: 通过 — screenshot_bytes=None 时步骤仍保存 (screenshot_path=None)；axtree_json=None 时同理 (axtree_snapshot_path=None)

@@ -1,0 +1,18 @@
+自动创建目录测试
+================
+命令: uv run pytest tests/test_recording.py -v -k "directory"
+输出:
+============================= test session starts ==============================
+platform darwin -- Python 3.13.9, pytest-9.0.2, pluggy-1.6.0 -- /Users/hxb/workspace/cliany.site/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/hxb/workspace/cliany.site
+configfile: pyproject.toml
+plugins: anyio-4.12.1, mock-3.15.1, asyncio-1.3.0, langsmith-0.7.22
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 18 items / 17 deselected / 1 selected
+
+tests/test_recording.py::TestStartRecording::test_start_recording_creates_directory PASSED [100%]
+
+======================= 1 passed, 17 deselected in 0.38s =======================
+
+结论: 通过 — start_recording() 调用后目录自动创建 (<tmp_path>/recordings/<domain>/<session_id>/)
