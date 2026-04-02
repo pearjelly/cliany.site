@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -204,11 +205,7 @@ class TestWorkflowExplorerExtendDomain:
 
             explorer = WorkflowExplorer(extend_domain="example.com")
 
-            import asyncio
-
-            asyncio.get_event_loop().run_until_complete(
-                explorer.explore("https://example.com", "测试工作流", record=False)
-            )
+            asyncio.run(explorer.explore("https://example.com", "测试工作流", record=False))
 
         assert len(captured_prompts) >= 1
         prompt_text = captured_prompts[0]
