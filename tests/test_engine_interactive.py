@@ -196,3 +196,85 @@ class TestWorkflowExplorerInteractive:
         assert interactive_ctrl.ask_continue_after_done.await_count == 2
         assert mocks["capture_axtree"].await_count == 2
         assert len(result.actions) == 2
+
+
+class TestKeyboardInterrupt:
+    """Ctrl-C 优雅中断：保存部分结果 + 截断录像"""
+
+    @pytest.mark.asyncio
+    async def test_keyboard_interrupt_saves_partial_result(self, mocker):
+        """第 N 步 LLM 抛 KeyboardInterrupt，验证 AdapterGenerator.generate() 被调用含部分结果"""
+        # 第一步正常返回，第二步 LLM 抛 KeyboardInterrupt
+        parse_results = [
+            {
+                "actions": [{"type": "click", "ref": "1", "description": "第一步点击"}],
+                "commands": [],
+                "done": False,
+                "next_url": "",
+            },
+        ]
+        _prepare_explore_mocks(mocker, parse_results=parse_results)
+
+        # 让第二次 LLM 调用抛 KeyboardInterrupt
+        invoke_mock = mocker.patch(
+            "cliany_site.explorer.engine._invoke_llm_with_retry",
+            new_callable=AsyncMock,
+            side_effect=[
+                SimpleNamespace(content="response-0"),
+                KeyboardInterrupt(),
+            ],
+        )
+
+        generator_mock = MagicMock()
+        mocker.patch(
+            "cliany_site.explorer.engine.AdapterGenerator",
+            return_value=generator_mock,
+        )
+
+        explorer = WorkflowExplorer(interactive=False)
+        with pytest.raises(KeyboardInterrupt):
+            await explorer.explore("https://example.com/start", "中断测试", record=False)
+
+        # 验证 AdapterGenerator().generate() 被调用，且包含部分结果
+        generator_mock.generate.assert_called_once()
+        call_kwargs = generator_mock.generate.call_args
+        partial_result = call_kwargs.args[0] if call_kwargs.args else call_kwargs.kwargs.get("result")
+        assert partial_result is not None
+        assert len(partial_result.actions) == 1  # 只有第一步的 action
+
+    @pytest.mark.asyncio
+    async def test_keyboard_interrupt_finalizes_recording(self, mocker):
+        """第 N 步 LLM 抛 KeyboardInterrupt，验证 RecordingManager.finalize 以 completed=False 调用"""
+        parse_results = [
+            {
+                "actions": [{"type": "click", "ref": "1", "description": "第一步点击"}],
+                "commands": [],
+                "done": False,
+                "next_url": "",
+            },
+        ]
+
+        recording_manager = MagicMock()
+        recording_manager.start_recording.return_value = MagicMock()
+
+        _prepare_explore_mocks(mocker, parse_results=parse_results, recording_manager=recording_manager)
+
+        # 让第二次 LLM 调用抛 KeyboardInterrupt
+        mocker.patch(
+            "cliany_site.explorer.engine._invoke_llm_with_retry",
+            new_callable=AsyncMock,
+            side_effect=[
+                SimpleNamespace(content="response-0"),
+                KeyboardInterrupt(),
+            ],
+        )
+
+        mocker.patch("cliany_site.explorer.engine.AdapterGenerator", return_value=MagicMock())
+
+        explorer = WorkflowExplorer(interactive=False)
+        with pytest.raises(KeyboardInterrupt):
+            await explorer.explore("https://example.com/start", "录像截断测试", record=True)
+
+        # finalize 只调用一次，且 completed=False
+        recording_manager.finalize.assert_called_once()
+        assert recording_manager.finalize.call_args.kwargs["completed"] is False

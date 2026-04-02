@@ -18,6 +18,7 @@ from cliany_site.browser.axtree import capture_axtree, serialize_axtree
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.browser.screenshot import capture_screenshot
 from cliany_site.browser.selector import format_selector_candidates_section
+from cliany_site.codegen.generator import AdapterGenerator
 from cliany_site.config import get_config
 from cliany_site.explorer.models import (
     ActionStep,
@@ -520,6 +521,7 @@ class WorkflowExplorer:
             interactive_ctrl = InteractiveController()
 
         explore_completed = False
+        _recording_finalized = False
 
         try:
             await browser_session.navigate_to(url, new_tab=False)
@@ -867,16 +869,36 @@ class WorkflowExplorer:
             if saved_path:
                 click.echo(f"📄 提取结果已保存: {saved_path}", err=True)
             explore_completed = True
+        except KeyboardInterrupt:
+            n_commands = len(result.commands)
+            try:
+                AdapterGenerator().generate(result, domain)
+            except Exception as gen_err:
+                logger.warning("Ctrl-C 中断后保存部分适配器失败: %s", gen_err)
+            if recording_manager is not None and recording_manifest is not None:
+                try:
+                    recording_manager.finalize(recording_manifest, completed=False)
+                    _recording_finalized = True
+                except Exception as finalize_err:
+                    logger.warning("录像截断写入失败: %s", finalize_err)
+            click.echo(f"探索被 Ctrl-C 中断，已保存 {n_commands} 个命令和录像", err=True)
+            raise
         except Exception as e:
             logger.debug("探索异常，准备以失败态结束录像: %s", e)
             if recording_manager is not None and recording_manifest is not None:
                 try:
                     recording_manager.finalize(recording_manifest, completed=False)
+                    _recording_finalized = True
                 except Exception as finalize_error:
                     logger.warning("录像结束写入失败(失败态): %s", finalize_error)
             raise
         finally:
-            if explore_completed and recording_manager is not None and recording_manifest is not None:
+            if (
+                explore_completed
+                and not _recording_finalized
+                and recording_manager is not None
+                and recording_manifest is not None
+            ):
                 try:
                     recording_manager.finalize(recording_manifest, completed=True)
                 except Exception as finalize_error:
