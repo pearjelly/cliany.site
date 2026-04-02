@@ -25,6 +25,7 @@ from cliany_site.explorer.models import (
     ExploreResult,
     PageInfo,
     StepRecord,
+    TurnSnapshot,
 )
 from cliany_site.explorer.prompts import (
     EXPLORE_PROMPT_TEMPLATE,
@@ -457,14 +458,32 @@ class WorkflowExplorer:
         cdp_url: str | None = None,
         headless: bool | None = None,
         extend_domain: str | None = None,
+        interactive: bool = False,
     ):
         self._cdp: CDPConnection | None = None
         self._cdp_url = cdp_url
         self._headless = headless
+        self._interactive = interactive
         self._extend_context: dict | None = None
         if extend_domain is not None:
             # 快速失败：在初始化时验证 domain 存在
             self._extend_context = load_existing_adapter_context(extend_domain)
+
+    async def handle_rollback(
+        self,
+        browser_session: Any,
+        turn_snapshot: TurnSnapshot,
+        result: ExploreResult,
+    ) -> None:
+        _ = browser_session
+        _ = result
+        logger.info(
+            "收到回退请求（预留接口）: turn=%d actions_before=%d pages_before=%d history=%d",
+            turn_snapshot.turn_index,
+            turn_snapshot.actions_before_count,
+            turn_snapshot.pages_before_count,
+            turn_snapshot.browser_history_index,
+        )
 
     async def explore(
         self,
@@ -510,6 +529,12 @@ class WorkflowExplorer:
             except Exception as e:
                 logger.warning(f"录像初始化失败，将跳过录像: {e}")
 
+        interactive_ctrl = None
+        if self._interactive:
+            from cliany_site.explorer.interactive import InteractiveController
+
+            interactive_ctrl = InteractiveController()
+
         explore_completed = False
 
         try:
@@ -524,6 +549,14 @@ class WorkflowExplorer:
             for step_num in range(cfg.explore_max_steps):
                 step_start = time.monotonic()
                 reporter.on_explore_step_start(step_num, cfg.explore_max_steps)
+
+                turn_snapshot = TurnSnapshot(
+                    turn_index=step_num,
+                    actions_before_count=len(result.actions),
+                    pages_before_count=len(result.pages),
+                    browser_history_index=step_num,
+                )
+
                 tree = await capture_axtree(browser_session)
                 selector_map = tree.get("selector_map") or {}
                 page_info = PageInfo(
@@ -623,6 +656,32 @@ class WorkflowExplorer:
                 actions_data = _sanitize_actions_data(parsed.get("actions", []), tree.get("url", ""))
                 reporter.on_explore_llm_done(step_num, len(actions_data))
 
+                if interactive_ctrl is not None:
+                    page_summary = f"{tree.get('title', '')} ({tree.get('url', '')})"
+                    decision = await interactive_ctrl.prompt_action_confirmation(actions_data, page_summary)
+                    from cliany_site.explorer.interactive import DecisionType
+
+                    if decision.decision_type == DecisionType.SKIP:
+                        step_elapsed = (time.monotonic() - step_start) * 1000
+                        reporter.on_explore_step_done(step_num, 0, step_elapsed)
+                        logger.info("步骤 %d 被用户跳过", step_num + 1)
+                        continue
+                    if decision.decision_type == DecisionType.MODIFY:
+                        if decision.field and decision.field in ("value", "ref"):
+                            for ad in actions_data:
+                                if isinstance(ad, dict):
+                                    ad[decision.field] = decision.new_value or ""
+                    elif decision.decision_type == DecisionType.ROLLBACK:
+                        await self.handle_rollback(
+                            browser_session=browser_session,
+                            turn_snapshot=turn_snapshot,
+                            result=result,
+                        )
+                        step_elapsed = (time.monotonic() - step_start) * 1000
+                        reporter.on_explore_step_done(step_num, 0, step_elapsed)
+                        logger.info("步骤 %d 回退请求已记录，跳过本轮执行", step_num + 1)
+                        continue
+
                 for action_data in actions_data:
                     if not isinstance(action_data, dict):
                         continue
@@ -720,6 +779,18 @@ class WorkflowExplorer:
                 )
 
                 if parsed.get("done", False):
+                    if interactive_ctrl is not None:
+                        ask_continue = getattr(interactive_ctrl, "ask_continue_after_done", None)
+                        if callable(ask_continue):
+                            maybe_keep_going = ask_continue()
+                            if asyncio.iscoroutine(maybe_keep_going):
+                                keep_going = await maybe_keep_going
+                            else:
+                                keep_going = bool(maybe_keep_going)
+                            if keep_going:
+                                logger.info("步骤 %d: 用户选择继续探索", step_num + 1)
+                                continue
+
                     logger.info(
                         "探索完成: 共 %d 步, %d 个动作, %d 个命令",
                         step_num + 1,
