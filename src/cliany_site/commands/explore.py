@@ -16,6 +16,9 @@ from cliany_site.response import error_response, print_response, success_respons
 @click.argument("workflow_description")
 @click.option("--force", is_flag=True, default=False, help="覆盖已有的 adapter（无需确认）")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")
+@click.option("--interactive", "-i", is_flag=True, default=False, help="交互式探索模式")
+@click.option("--extend", type=str, help="扩展现有适配器")
+@click.option("--record/--no-record", default=True, help="是否记录探索过程")
 @click.pass_context
 def explore_cmd(
     ctx: click.Context,
@@ -23,11 +26,20 @@ def explore_cmd(
     workflow_description: str,
     force: bool,
     json_mode: bool | None,
+    interactive: bool,
+    extend: str | None,
+    record: bool,
 ):
     """探索网站工作流并生成 CLI adapter"""
     root_ctx = ctx.find_root()
     root_obj = root_ctx.obj if isinstance(root_ctx.obj, dict) else {}
     effective_json_mode = json_mode if json_mode is not None else bool(root_obj.get("json_mode", False))
+
+    if interactive and effective_json_mode:
+        raise click.UsageError("--interactive 与 --json 不兼容，请删除 --json 标志")
+
+    if interactive and not sys.stdin.isatty():
+        raise click.UsageError("--interactive 需要 TTY 终端")
 
     async def _run():
         from cliany_site.browser.cdp import cdp_from_context
@@ -106,8 +118,10 @@ def explore_cmd(
         try:
             cdp_url = root_obj.get("cdp_url")
             headless = root_obj.get("headless", False)
-            explorer = WorkflowExplorer(cdp_url=cdp_url, headless=headless)
-            explore_result = await explorer.explore(url, workflow_description, progress=reporter)
+            explorer = WorkflowExplorer(
+                cdp_url=cdp_url, headless=headless, interactive=interactive, extend_domain=extend
+            )
+            explore_result = await explorer.explore(url, workflow_description, progress=reporter, record=record)
         except (OSError, RuntimeError, ValueError) as e:
             return error_response(
                 EXECUTION_FAILED,
