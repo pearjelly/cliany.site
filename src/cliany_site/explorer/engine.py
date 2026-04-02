@@ -409,15 +409,62 @@ def _sanitize_actions_data(actions_data: Any, current_url: str) -> list[dict[str
     return sanitized
 
 
+def load_existing_adapter_context(domain: str) -> dict:
+    """加载已有适配器的 metadata.json，返回命令上下文摘要。
+
+    Args:
+        domain: 域名，如 "github.com"
+
+    Returns:
+        包含命令摘要的字典
+
+    Raises:
+        FileNotFoundError: 若该 domain 的适配器不存在
+    """
+    adapter_path = Path.home() / ".cliany-site" / "adapters" / domain / "metadata.json"
+    if not adapter_path.exists():
+        raise FileNotFoundError(f"域名 '{domain}' 的适配器不存在: {adapter_path}")
+
+    with adapter_path.open("r", encoding="utf-8") as f:
+        metadata = json.load(f)
+
+    commands = metadata.get("commands", [])
+    context: dict = {
+        "domain": domain,
+        "existing_commands": [],
+    }
+
+    for cmd in commands:
+        if not isinstance(cmd, dict):
+            continue
+        cmd_summary = {
+            "name": cmd.get("name", ""),
+            "description": cmd.get("description", ""),
+            "args": [
+                {"name": a.get("name", ""), "description": a.get("description", "")}
+                for a in (cmd.get("args") or [])
+                if isinstance(a, dict)
+            ],
+        }
+        context["existing_commands"].append(cmd_summary)
+
+    return context
+
+
 class WorkflowExplorer:
     def __init__(
         self,
         cdp_url: str | None = None,
         headless: bool | None = None,
+        extend_domain: str | None = None,
     ):
         self._cdp: CDPConnection | None = None
         self._cdp_url = cdp_url
         self._headless = headless
+        self._extend_context: dict | None = None
+        if extend_domain is not None:
+            # 快速失败：在初始化时验证 domain 存在
+            self._extend_context = load_existing_adapter_context(extend_domain)
 
     async def explore(
         self,
@@ -503,6 +550,19 @@ class WorkflowExplorer:
                 if atom_inventory:
                     prompt_text = f"{prompt_text}\n\n{atom_inventory}"
 
+                extend_section = ""
+                if self._extend_context is not None:
+                    cmds = self._extend_context.get("existing_commands", [])
+                    domain_name = self._extend_context.get("domain", "")
+                    lines = [f"\n\n## 已有命令（{domain_name}）— 请勿重复生成\n"]
+                    for c in cmds:
+                        args_text = (
+                            "，".join(f"{a['name']}: {a['description']}" for a in c.get("args", []) if a.get("name"))
+                            or "（无参数）"
+                        )
+                        lines.append(f"- **{c['name']}**: {c['description']} | 参数: {args_text}")
+                    extend_section = "\n".join(lines)
+
                 screenshot_data = tree.get("screenshot", b"")
                 if cfg.vision_enabled and screenshot_data:
                     from cliany_site.browser.screenshot import (
@@ -524,14 +584,14 @@ class WorkflowExplorer:
                         max_labels=cfg.vision_som_max_labels,
                     )
 
-                    full_text = f"{SYSTEM_PROMPT}\n\n{prompt_text}\n\n{VISION_SUPPLEMENT_PROMPT}"
+                    full_text = f"{SYSTEM_PROMPT}{extend_section}\n\n{prompt_text}\n\n{VISION_SUPPLEMENT_PROMPT}"
                     llm_input: Any = build_multimodal_message(
                         full_text,
                         annotated_screenshot or screenshot_data,
                         screenshot_format=cfg.screenshot_format,
                     )
                 else:
-                    llm_input = f"{SYSTEM_PROMPT}\n\n{prompt_text}"
+                    llm_input = f"{SYSTEM_PROMPT}{extend_section}\n\n{prompt_text}"
 
                 try:
                     logger.debug(
