@@ -125,6 +125,7 @@ from cliany_site.commands.explore import explore_cmd
 from cliany_site.commands.list_cmd import list_cmd
 from cliany_site.commands.login import login
 from cliany_site.commands.market import market_group
+from cliany_site.commands.replay import replay
 from cliany_site.commands.report import report_group
 from cliany_site.commands.serve import serve_cmd
 from cliany_site.commands.tui import tui_cmd
@@ -134,6 +135,7 @@ cli.add_command(doctor)
 cli.add_command(login)
 cli.add_command(explore_cmd)
 cli.add_command(list_cmd)
+cli.add_command(replay)
 cli.add_command(tui_cmd)
 cli.add_command(report_group)
 cli.add_command(check_cmd)
