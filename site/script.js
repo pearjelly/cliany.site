@@ -168,7 +168,56 @@ const I18N = {
   'meta.og.description': {
     zh: '基于 LLM 与 Chrome CDP 协议，自动探索网页工作流，生成可复用的 CLI 命令。',
     en: 'Powered by LLM and Chrome CDP — automatically explore web workflows and generate reusable CLI commands.'
-  }
+  },
+
+  // --- Nav: Use Cases ---
+  'nav.usecases': { zh: '案例', en: 'Use Cases' },
+
+  // --- Use Cases Section ---
+  'usecases.title': { zh: '真实场景', en: 'Real-World Use Cases' },
+  'usecases.subtitle': { zh: '一次探索，永久拥有你的专属 CLI', en: 'Explore once, own your CLI forever' },
+  'usecases.badge.conceptual': { zh: '概念展示', en: 'CONCEPT' },
+
+  // --- Shared Tab Labels ---
+  'usecases.tab.before': { zh: '之前', en: 'BEFORE' },
+  'usecases.tab.after': { zh: '之后', en: 'AFTER' },
+
+  // --- Case 1: GitHub ---
+  'usecases.case1.title': { zh: 'GitHub 变成你的命令行', en: 'GitHub as Your CLI' },
+  'usecases.case1.desc': {
+    zh: '还在手动点击 GitHub 搜索仓库、查看 README？现在，一行命令搞定一切。',
+    en: 'Tired of repetitive clicks on GitHub? Search repos and view READMEs directly from your terminal.'
+  },
+  'usecases.case1.before': { zh: '打开浏览器 → 输入网址 → 搜索关键词 → 点击仓库 → 查看 README', en: 'Browser → Search → Click repo → View README' },
+  'usecases.case1.before.steps': { zh: '5 步操作 · 约 30 秒', en: '5 steps · ~30s' },
+  'usecases.case1.after': { zh: '一行命令，结构化 JSON 输出，可管道组合', en: 'Single command, structured JSON, pipe-friendly' },
+  'usecases.case1.after.steps': { zh: '1 条命令 · 秒级响应', en: '1 command · Instant' },
+
+  // --- Case 2: CRM ---
+  'usecases.case2.title': { zh: '没有 API？自己造一个', en: 'No API? Build Your Own' },
+  'usecases.case2.desc': {
+    zh: '企业 CRM 没 API，查个客户要点 7 个页面？cliany-site 为任何网站生成专属 CLI。',
+    en: 'Stuck with a legacy CRM with no API? Generate a dedicated CLI for any web portal in minutes.'
+  },
+  'usecases.case2.before': { zh: '登录 → 侧边栏 → 客户管理 → 搜索 → 点详情 → 切订单 → 筛选', en: 'Login → CRM → Search → Details → Orders → Filter' },
+  'usecases.case2.before.steps': { zh: '7 步操作 · 约 2 分钟', en: '7 steps · ~2m' },
+  'usecases.case2.after': { zh: '管道组合，直接抽取订单数据', en: 'Extract structured data with pipes' },
+  'usecases.case2.after.steps': { zh: '1 条命令 · 秒级响应', en: '1 command · Instant' },
+
+  // --- Case 3: Team Toolbox ---
+  'usecases.case3.title': { zh: '团队工具箱：一人探索，全队受益', en: 'Team Toolbox' },
+  'usecases.case3.desc': {
+    zh: '团队有 10 个内部平台，新人入职学 2 周？资深工程师一次探索，全队永久受益。',
+    en: 'Stop wasting time on internal portal onboarding. Explore once, share adapters, and level up the whole team.'
+  },
+  'usecases.case3.before': { zh: '10 份操作文档 + 每天问 5 次「这个功能在哪」', en: '10+ docs + constant "where is this?" questions' },
+  'usecases.case3.before.steps': { zh: '碎片化知识 · 高依赖成本', en: 'Fragmented knowledge · High friction' },
+  'usecases.case3.after': { zh: '安装团队工具箱，所有平台一键调用', en: 'Install shared adapters for instant access' },
+  'usecases.case3.after.steps': { zh: '统一 CLI · 零学习成本', en: 'Unified CLI · Zero learning curve' },
+
+  // --- Terminal Result Lines ---
+  'usecases.case1.terminal.result': { zh: '✓ 适配器已生成至 ~/.cliany-site/adapters/github.com/', en: '✓ Adapter generated at ~/.cliany-site/adapters/github.com/' },
+  'usecases.case3.terminal.result': { zh: '✓ 已安装: jira.company.com, confluence.company.com, jenkins.company.com', en: '✓ Installed: jira.company.com, confluence.company.com, jenkins.company.com' }
 };
 
 function getLang() {
@@ -491,4 +540,92 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   });
+
+  var useCasesSection = document.getElementById('use-cases');
+  if (useCasesSection) {
+    useCasesSection.addEventListener('click', function(e) {
+      var tab = e.target.closest('.case-tab');
+      if (!tab) return;
+      
+      var comparison = tab.closest('.case-comparison');
+      if (!comparison) return;
+      
+      var tabs = comparison.querySelectorAll('.case-tab');
+      for (var i = 0; i < tabs.length; i++) {
+        tabs[i].classList.remove('active');
+      }
+      tab.classList.add('active');
+      
+      var panels = comparison.querySelectorAll('.case-panel');
+      for (var j = 0; j < panels.length; j++) {
+        panels[j].classList.remove('active');
+      }
+      
+      var targetId = tab.getAttribute('data-target');
+      if (targetId) {
+        var targetPanel = document.getElementById(targetId);
+        if (targetPanel) {
+          targetPanel.classList.add('active');
+        }
+      }
+    });
+  }
+
+  var case1Terminal = document.getElementById('case1-terminal');
+  if (case1Terminal) {
+    var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    
+    var case1Observer = new IntersectionObserver(function(entries, observer) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          observer.unobserve(entry.target);
+          
+          var typeLines = entry.target.querySelectorAll('.case-type-line');
+          
+          function typeLine(index) {
+            if (index >= typeLines.length) return;
+            
+            var line = typeLines[index];
+            var text = line.getAttribute('data-text') || '';
+            var resultDiv = line.nextElementSibling;
+            
+            line.classList.add('animated');
+            
+            if (prefersReducedMotion) {
+              line.textContent = text;
+              if (resultDiv && resultDiv.classList.contains('result-lines')) {
+                resultDiv.classList.add('visible');
+              }
+              typeLine(index + 1);
+              return;
+            }
+            
+            line.textContent = '';
+            var charIndex = 0;
+            
+            function typeChar() {
+              if (charIndex < text.length) {
+                line.textContent += text.charAt(charIndex);
+                charIndex++;
+                setTimeout(typeChar, 30 + Math.random() * 20);
+              } else {
+                if (resultDiv && resultDiv.classList.contains('result-lines')) {
+                  resultDiv.classList.add('visible');
+                }
+                setTimeout(function() {
+                  typeLine(index + 1);
+                }, 600);
+              }
+            }
+            
+            typeChar();
+          }
+          
+          typeLine(0);
+        }
+      });
+    }, { threshold: 0.3 });
+    
+    case1Observer.observe(case1Terminal);
+  }
 });

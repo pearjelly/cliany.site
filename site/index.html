@@ -33,6 +33,7 @@
 
       <nav class="nav-links" id="main-nav">
         <a href="#features" class="nav-link" data-i18n="nav.features">功能</a>
+        <a href="#use-cases" class="nav-link" data-i18n="nav.usecases">案例</a>
         <a href="#how-it-works" class="nav-link" data-i18n="nav.how">工作原理</a>
         <a href="#quickstart" class="nav-link" data-i18n="nav.quickstart">快速开始</a>
         <div class="lang-toggle" role="radiogroup" aria-label="Language" data-active="zh" data-i18n-aria="aria.langToggle">
@@ -187,6 +188,138 @@
             <h3 class="feature-title" data-i18n="features.marketplace.title">适配器市场</h3>
             <p class="feature-desc" data-i18n="features.marketplace.desc">打包、发布、安装、回滚适配器，团队间共享自动化能力，版本化管理。</p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="use-cases" class="use-cases section-padding reveal">
+      <div class="container">
+        <div class="section-header reveal">
+          <h2 class="section-title" data-i18n="usecases.title">真实场景</h2>
+          <p class="section-subtitle" data-i18n="usecases.subtitle">一次探索，永久拥有你的专属 CLI</p>
+        </div>
+
+        <div class="cases-grid reveal">
+
+          <!-- 案例1: GitHub CLI 化（真实） -->
+          <div class="case-card">
+            <div class="case-story">
+              <div class="case-icon">🔥</div>
+              <h3 class="case-title" data-i18n="usecases.case1.title">GitHub 变成你的命令行</h3>
+              <p class="case-desc" data-i18n="usecases.case1.desc">每天在 GitHub 重复搜索仓库、查看 README、管理 Issue。现在，一行命令搞定一切。</p>
+            </div>
+
+            <div class="case-comparison">
+              <div class="case-tabs">
+                <button class="case-tab" data-target="case1-before" data-i18n="usecases.tab.before">之前</button>
+                <button class="case-tab active" data-target="case1-after" data-i18n="usecases.tab.after">之后</button>
+              </div>
+              <div class="case-panel before" id="case1-before">
+                <p data-i18n="usecases.case1.before">打开浏览器 → 输入网址 → 搜索关键词 → 点击仓库 → 查看 README</p>
+                <span class="case-steps" data-i18n="usecases.case1.before.steps">5 步操作 · 约 30 秒</span>
+              </div>
+              <div class="case-panel after active" id="case1-after">
+                <p data-i18n="usecases.case1.after">一行命令，结构化 JSON 输出，可管道组合</p>
+                <span class="case-steps" data-i18n="usecases.case1.after.steps">1 条命令 · 秒级响应</span>
+              </div>
+            </div>
+
+            <div class="terminal-window case-terminal" id="case1-terminal">
+              <div class="terminal-header">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+              </div>
+              <div class="terminal-body">
+                <div class="line type-line case-type-line" data-text='$ cliany-site explore "https://github.com" "搜索仓库并查看 README" --json'></div>
+                <div class="result-lines">
+<div class="line success" data-i18n="usecases.case1.terminal.result">✓ 适配器已生成至 ~/.cliany-site/adapters/github.com/</div>
+                </div>
+                <div class="line type-line case-type-line delay" data-text='$ cliany-site github.com search --query "browser automation" --json'></div>
+                <div class="result-lines delay">
+                  <div class="line json">{"success": true, "data": {"results": [...]}}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 案例2: 企业 CRM 无 API（概念展示） -->
+          <div class="case-card conceptual">
+            <span class="case-badge" data-i18n="usecases.badge.conceptual">概念展示</span>
+            <div class="case-story">
+              <div class="case-icon">💡</div>
+              <h3 class="case-title" data-i18n="usecases.case2.title">没有 API？自己造一个</h3>
+              <p class="case-desc" data-i18n="usecases.case2.desc">企业 CRM 没有开放 API，查一个客户要点 7 个页面，耗时 2 分钟。用 cliany-site，为任何网站生成专属 CLI 接口。</p>
+            </div>
+
+            <div class="case-comparison">
+              <div class="case-tabs">
+                <button class="case-tab" data-target="case2-before" data-i18n="usecases.tab.before">之前</button>
+                <button class="case-tab active" data-target="case2-after" data-i18n="usecases.tab.after">之后</button>
+              </div>
+              <div class="case-panel before" id="case2-before">
+                <p data-i18n="usecases.case2.before">登录 → 侧边栏 → 客户管理 → 搜索 → 点详情 → 切订单 → 筛选</p>
+                <span class="case-steps" data-i18n="usecases.case2.before.steps">7 步操作 · 约 2 分钟</span>
+              </div>
+              <div class="case-panel after active" id="case2-after">
+                <p data-i18n="usecases.case2.after">管道组合，直接抽取订单数据</p>
+                <span class="case-steps" data-i18n="usecases.case2.after.steps">1 条命令 · 秒级响应</span>
+              </div>
+            </div>
+
+            <div class="terminal-window case-terminal">
+              <div class="terminal-header">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+              </div>
+              <div class="terminal-body">
+                <div class="line"><span class="prompt">$</span> cliany-site crm.company.com search-customer --name "张三" --json | jq '.orders[:5]'</div>
+                <div class="line json">{"success": true, "data": {"name": "张三", "orders": [...]}}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 案例3: 团队工具箱（概念展示） -->
+          <div class="case-card conceptual">
+            <span class="case-badge" data-i18n="usecases.badge.conceptual">概念展示</span>
+            <div class="case-story">
+              <div class="case-icon">🚀</div>
+              <h3 class="case-title" data-i18n="usecases.case3.title">团队工具箱：一人探索，全队受益</h3>
+              <p class="case-desc" data-i18n="usecases.case3.desc">团队有 10 个内部平台，新人入职学 2 周。资深工程师一次探索，生成适配器包，全队永久受益。</p>
+            </div>
+
+            <div class="case-comparison">
+              <div class="case-tabs">
+                <button class="case-tab" data-target="case3-before" data-i18n="usecases.tab.before">之前</button>
+                <button class="case-tab active" data-target="case3-after" data-i18n="usecases.tab.after">之后</button>
+              </div>
+              <div class="case-panel before" id="case3-before">
+                <p data-i18n="usecases.case3.before">10 份操作文档 + 每天问 5 次「这个功能在哪」</p>
+                <span class="case-steps" data-i18n="usecases.case3.before.steps">碎片化知识 · 高依赖成本</span>
+              </div>
+              <div class="case-panel after active" id="case3-after">
+                <p data-i18n="usecases.case3.after">安装团队工具箱，所有平台一键调用</p>
+                <span class="case-steps" data-i18n="usecases.case3.after.steps">统一 CLI · 零学习成本</span>
+              </div>
+            </div>
+
+            <div class="terminal-window case-terminal">
+              <div class="terminal-header">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+              </div>
+              <div class="terminal-body">
+                <div class="line"><span class="prompt">$</span> cliany-site market install ./team-toolkit.cliany-adapter.tar.gz</div>
+                <div class="line success" data-i18n="usecases.case3.terminal.result">✓ 已安装: jira.company.com, confluence.company.com, jenkins.company.com</div>
+                <br>
+                <div class="line"><span class="prompt">$</span> cliany-site jira.company.com create-ticket --title "修复登录 bug" --json</div>
+                <div class="line json">{"success": true, "data": {"id": "PROJ-1234"}}</div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>

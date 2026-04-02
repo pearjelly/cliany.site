@@ -764,3 +764,213 @@ html.js .reveal.visible {
     gap: 1rem;
   }
 }
+
+/* ============================================================
+   Use Cases Section
+   ============================================================ */
+
+/* Section 布局 */
+.use-cases {
+  background-color: var(--color-bg);
+}
+
+/* 卡片网格 */
+.cases-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+/* 案例卡片 */
+.case-card {
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.case-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* 概念展示徽章 */
+.case-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.6rem;
+  letter-spacing: 0.02em;
+}
+
+/* 案例故事层 */
+.case-story {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.case-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.case-title {
+  font-size: 1.2rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--color-text-main);
+  margin: 0;
+}
+
+.case-desc {
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Before/After 标签页 */
+.case-comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.case-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.case-tab {
+  flex: 1;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  background: var(--color-surface);
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: background var(--transition), color var(--transition);
+}
+
+.case-tab:first-child {
+  border-right: 1px solid var(--color-border);
+}
+
+.case-tab.active {
+  background: var(--color-white);
+  color: var(--color-accent);
+}
+
+.case-tab:hover:not(.active) {
+  background: var(--color-bg);
+  color: var(--color-text-main);
+}
+
+/* 面板显示/隐藏 */
+.case-panel {
+  display: none;
+  padding: 1rem 1.25rem;
+  background: var(--color-white);
+}
+
+.case-panel.active {
+  display: block;
+}
+
+.case-panel p {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin: 0 0 0.4rem;
+}
+
+.case-steps {
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-light);
+}
+
+/* 案例1 打字动画 */
+.case-terminal .case-type-line {
+  min-height: 1.5em;
+  visibility: hidden;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.case-terminal .case-type-line.animated {
+  visibility: visible;
+}
+
+.case-terminal .result-lines {
+  display: none;
+}
+
+.case-terminal .result-lines.visible {
+  display: block;
+}
+
+/* 响应式：平板 2 列 */
+@media (max-width: 1024px) {
+  .cases-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .cases-grid .case-card:last-child:nth-child(2n+1) {
+    grid-column: span 2;
+  }
+}
+
+/* 响应式：手机单列 */
+@media (max-width: 768px) {
+  .cases-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cases-grid .case-card:last-child:nth-child(2n+1) {
+    grid-column: span 1;
+  }
+
+  .case-terminal .terminal-body {
+    font-size: 0.78rem;
+  }
+}
+
+/* 减少动画偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .case-card {
+    transition: none;
+  }
+  .case-tab {
+    transition: none;
+  }
+  .case-terminal .case-type-line {
+    visibility: visible;
+  }
+}
+
+/* --- 溢出修复：确保 Grid 1fr 正确工作 --- */
+.cases-grid > .case-card {
+  min-width: 0;
+}
+
+.case-terminal .terminal-body {
+  overflow-x: auto;
+}
