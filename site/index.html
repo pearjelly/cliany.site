@@ -89,105 +89,66 @@
       <div class="container">
         <div class="section-header reveal">
           <h2 class="section-title" data-i18n="features.title">核心特性</h2>
-          <p class="section-subtitle" data-i18n="features.subtitle">十六大核心能力，从探索到生态</p>
+          <p class="section-subtitle" data-i18n="features.subtitle">4 个核心能力 + 12 个扩展能力</p>
         </div>
 
-        <div class="features-grid reveal">
-          <div class="feature-card">
+        <div class="features-value-strip reveal">
+          <p class="features-value-text" data-i18n="features.value.text">先用核心 4 项打通路径，再按需启用扩展能力。</p>
+        </div>
+
+        <div class="features-grid features-grid-focus reveal">
+          <article class="feature-card feature-card-focus">
+            <span class="feature-rank">01</span>
+            <span class="feature-priority" data-i18n="features.focus.badge">核心</span>
             <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
             <h3 class="feature-title" data-i18n="features.explore.title">零侵入探索</h3>
-            <p class="feature-desc" data-i18n="features.explore.desc">通过 Chrome CDP 协议捕获页面无障碍树（AXTree），无需注入脚本，零侵入分析网页结构。</p>
-          </div>
-          
-          <div class="feature-card">
+            <p class="feature-desc" data-i18n="features.focus.explore.desc">AXTree 无注入探索，快速定位可自动化路径。</p>
+          </article>
+
+          <article class="feature-card feature-card-focus">
+            <span class="feature-rank">02</span>
+            <span class="feature-priority" data-i18n="features.focus.badge">核心</span>
             <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
             <h3 class="feature-title" data-i18n="features.llm.title">LLM 驱动代码生成</h3>
-            <p class="feature-desc" data-i18n="features.llm.desc">调用 Claude / GPT-4o 理解页面语义，自动将复杂工作流转化为结构化的 Python CLI 命令。</p>
-          </div>
+            <p class="feature-desc" data-i18n="features.focus.llm.desc">把页面语义直接转成可执行 CLI 命令。</p>
+          </article>
 
-          <div class="feature-card">
+          <article class="feature-card feature-card-focus">
+            <span class="feature-rank">03</span>
+            <span class="feature-priority" data-i18n="features.focus.badge">核心</span>
             <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
             <h3 class="feature-title" data-i18n="features.json.title">标准 JSON 输出</h3>
-            <p class="feature-desc" data-i18n="features.json.desc">所有命令支持 --json 选项，输出统一 {success, data, error} 信封格式，方便管道和自动化集成。</p>
-          </div>
+            <p class="feature-desc" data-i18n="features.focus.json.desc">统一 {success,data,error}，自动化易集成。</p>
+          </article>
 
-          <div class="feature-card">
+          <article class="feature-card feature-card-focus">
+            <span class="feature-rank">04</span>
+            <span class="feature-priority" data-i18n="features.focus.badge">核心</span>
             <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
             <h3 class="feature-title" data-i18n="features.session.title">持久化 Session</h3>
-            <p class="feature-desc" data-i18n="features.session.desc">跨命令保持 Cookie 和 LocalStorage 登录状态，一次登录，多次复用。</p>
-          </div>
+            <p class="feature-desc" data-i18n="features.focus.session.desc">一次登录跨命令复用，减少重复操作。</p>
+          </article>
+        </div>
 
-          <div class="feature-card">
-            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6l3 3"/><circle cx="12" cy="14" r="8"/></svg></div>
-            <h3 class="feature-title" data-i18n="features.adapter.title">动态适配器加载</h3>
-            <p class="feature-desc" data-i18n="features.adapter.desc">每个网站自动生成独立适配器，按域名动态注册为 CLI 子命令。随时扩展，按需加载。</p>
+        <div class="features-compact reveal">
+          <div class="features-compact-header">
+            <h3 class="features-compact-title" data-i18n="features.more.title">扩展能力（12）</h3>
+            <p class="features-compact-subtitle" data-i18n="features.more.subtitle">默认隐藏复杂度，需要时再打开。</p>
           </div>
-
-          <div class="feature-card">
-            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></div>
-            <h3 class="feature-title" data-i18n="features.chrome.title">Chrome 自动管理</h3>
-            <p class="feature-desc" data-i18n="features.chrome.desc">自动检测并启动 Chrome 调试实例，支持 macOS 和 Linux，无需手动配置 CDP。</p>
-          </div>
-          
-          <div class="feature-card">
-            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg></div>
-            <h3 class="feature-title" data-i18n="features.merge.title">适配器增量合并</h3>
-            <p class="feature-desc" data-i18n="features.merge.desc">重复探索同一网站时智能合并新旧适配器，保留已有命令，自动处理冲突。</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.315 8.685a.98.98 0 0 1 .837-.276c.47.07.802.48.968.925a2.501 2.501 0 1 0 3.214-3.214c-.446-.166-.855-.497-.925-.968a.979.979 0 0 1 .276-.837l1.61-1.61a2.404 2.404 0 0 1 1.705-.707c.618 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z"/></svg></div>
-            <h3 class="feature-title" data-i18n="features.atoms.title">原子命令系统</h3>
-            <p class="feature-desc" data-i18n="features.atoms.desc">从工作流中自动提取可复用的原子操作，跨适配器共享登录、搜索等通用步骤，参数化复用。</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
-            <h3 class="feature-title" data-i18n="features.validator.title">智能录制验证</h3>
-            <p class="feature-desc" data-i18n="features.validator.desc">纯逻辑验证器校验操作步骤完整性，结构化错误报告，可由调用方集成至工作流。</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg></div>
-            <h3 class="feature-title" data-i18n="features.tui.title">TUI 管理界面</h3>
-            <p class="feature-desc" data-i18n="features.tui.desc">基于 Textual 的终端 UI，可视化管理适配器、查看操作日志、导入导出配置，全键盘操作。</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M2 12h4"/><path d="M18 12h4"/></svg></div>
-            <h3 class="feature-title" data-i18n="features.headless.title">Headless & 远程浏览器</h3>
-            <p class="feature-desc" data-i18n="features.headless.desc">支持 Headless Chrome 和远程 CDP 连接，可在服务器和 Docker 容器中运行，突破本地 GUI 限制。</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg></div>
-            <h3 class="feature-title" data-i18n="features.workflow.title">YAML 工作流编排</h3>
-            <p class="feature-desc" data-i18n="features.workflow.desc">通过 YAML 声明式编排多步骤工作流，支持步骤间数据传递、条件判断和重试策略。</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></div>
-            <h3 class="feature-title" data-i18n="features.batch.title">数据驱动批量执行</h3>
-            <p class="feature-desc" data-i18n="features.batch.desc">从 CSV/JSON 读取参数列表批量执行，支持并发控制，自动生成汇总报告。</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="12" y1="2" x2="12" y2="22"/></svg></div>
-            <h3 class="feature-title" data-i18n="features.sdk.title">Python SDK & HTTP API</h3>
-            <p class="feature-desc" data-i18n="features.sdk.desc">程序化调用 from cliany_site import explore，或启动 REST API 服务，集成到任意系统。</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-            <h3 class="feature-title" data-i18n="features.security.title">安全加固</h3>
-            <p class="feature-desc" data-i18n="features.security.desc">Session 加密存储、沙箱执行模式、生成代码自动 AST 安全审计，全方位安全保障。</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>
-            <h3 class="feature-title" data-i18n="features.marketplace.title">适配器市场</h3>
-            <p class="feature-desc" data-i18n="features.marketplace.desc">打包、发布、安装、回滚适配器，团队间共享自动化能力，版本化管理。</p>
-          </div>
+          <ul class="feature-pills">
+            <li class="feature-pill" data-i18n="features.adapter.title">动态适配器加载</li>
+            <li class="feature-pill" data-i18n="features.chrome.title">Chrome 自动管理</li>
+            <li class="feature-pill" data-i18n="features.merge.title">适配器增量合并</li>
+            <li class="feature-pill" data-i18n="features.atoms.title">原子命令系统</li>
+            <li class="feature-pill" data-i18n="features.validator.title">智能录制验证</li>
+            <li class="feature-pill" data-i18n="features.tui.title">TUI 管理界面</li>
+            <li class="feature-pill" data-i18n="features.headless.title">Headless & 远程浏览器</li>
+            <li class="feature-pill" data-i18n="features.workflow.title">YAML 工作流编排</li>
+            <li class="feature-pill" data-i18n="features.batch.title">数据驱动批量执行</li>
+            <li class="feature-pill" data-i18n="features.sdk.title">Python SDK & HTTP API</li>
+            <li class="feature-pill" data-i18n="features.security.title">安全加固</li>
+            <li class="feature-pill" data-i18n="features.marketplace.title">适配器市场</li>
+          </ul>
         </div>
       </div>
     </section>

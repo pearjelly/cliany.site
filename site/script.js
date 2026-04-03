@@ -21,7 +21,15 @@ const I18N = {
   },
 
   'features.title': { zh: '核心特性', en: 'Core Features' },
-  'features.subtitle': { zh: '十六大核心能力，从探索到生态', en: 'Sixteen core capabilities, from exploration to ecosystem' },
+  'features.subtitle': { zh: '4 个核心能力 + 12 个扩展能力', en: '4 core capabilities + 12 extended capabilities' },
+  'features.focus.badge': { zh: '核心', en: 'CORE' },
+  'features.more.title': { zh: '扩展能力（12）', en: 'Extended Capabilities (12)' },
+  'features.more.subtitle': { zh: '默认隐藏复杂度，需要时再打开。', en: 'Hide complexity by default, unlock it when needed.' },
+  'features.value.text': { zh: '先用核心 4 项打通路径，再按需启用扩展能力。', en: 'Start with the core four, then enable advanced capabilities on demand.' },
+  'features.focus.explore.desc': { zh: 'AXTree 无注入探索，快速定位可自动化路径。', en: 'Injection-free AXTree exploration to quickly locate automatable paths.' },
+  'features.focus.llm.desc': { zh: '把页面语义直接转成可执行 CLI 命令。', en: 'Turn page semantics directly into executable CLI commands.' },
+  'features.focus.json.desc': { zh: '统一 {success,data,error}，自动化易集成。', en: 'Unified {success,data,error} output for easy automation integration.' },
+  'features.focus.session.desc': { zh: '一次登录跨命令复用，减少重复操作。', en: 'Reuse one login across commands to eliminate repetitive operations.' },
   'features.explore.title': { zh: '零侵入探索', en: 'Zero-Intrusion Exploration' },
   'features.explore.desc': {
     zh: '通过 Chrome CDP 协议捕获页面无障碍树（AXTree），无需注入脚本，零侵入分析网页结构。',

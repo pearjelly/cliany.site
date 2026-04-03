@@ -442,6 +442,122 @@ html.js .features-grid.visible .feature-card {
   font-size: 0.95rem;
 }
 
+.features-grid-focus {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.features-grid-focus .feature-card:last-child:nth-child(3n+1) {
+  grid-column: auto;
+}
+
+.feature-card-focus {
+  padding: 1.2rem;
+  position: relative;
+  min-width: 0;
+}
+
+.feature-card-focus .feature-icon {
+  margin-bottom: 0.75rem;
+  width: 42px;
+  height: 42px;
+}
+
+.feature-card-focus .feature-title {
+  margin-bottom: 0.45rem;
+  font-size: 1rem;
+}
+
+.feature-card-focus .feature-desc {
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.features-value-strip {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 0.7rem 0.9rem;
+  margin: 0 0 0.9rem;
+}
+
+.features-value-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-main);
+}
+
+.feature-rank {
+  position: absolute;
+  top: 0.8rem;
+  left: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+}
+
+.feature-priority {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.45rem;
+}
+
+.features-compact {
+  margin-top: 0.8rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.1rem;
+}
+
+.features-compact-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.features-compact-title {
+  font-size: 1rem;
+  margin: 0;
+  font-family: var(--font-body);
+}
+
+.features-compact-subtitle {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.feature-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.feature-pill {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  color: var(--color-text-main);
+  font-size: 0.82rem;
+  line-height: 1.2;
+  padding: 0.35rem 0.55rem;
+  white-space: nowrap;
+}
+
 /* How It Works */
 .steps-flow {
   display: flex;
@@ -704,6 +820,11 @@ html.js .reveal.visible {
   .steps-flow {
     flex-direction: column;
   }
+
+  .features-compact-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
   
   .step-connector {
     transform: rotate(90deg);
@@ -740,6 +861,24 @@ html.js .reveal.visible {
 
   .features-grid {
     grid-template-columns: 1fr;
+  }
+
+  .feature-card-focus {
+    padding: 1.05rem;
+  }
+
+  .feature-priority {
+    top: 0.65rem;
+    right: 0.65rem;
+  }
+
+  .feature-rank {
+    top: 0.65rem;
+    left: 0.65rem;
+  }
+
+  .feature-pill {
+    white-space: normal;
   }
 
   .hero-actions {
