@@ -7,6 +7,19 @@
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-04-03
+
+### 新增
+- **官网 Use Cases 展示模块**：在 Features 和 How It Works 之间新增「真实场景」案例展示
+- 3 个案例卡片：GitHub CLI 化（真实）、企业 CRM 无 API（概念）、团队工具箱（概念）
+- Before/After 标签页切换交互
+- 案例 1 终端 CSS 打字动画（IntersectionObserver 触发，支持 prefers-reduced-motion）
+- 完整中英双语支持，44 个 `usecases.*` i18n 键
+- 响应式布局：375/900/1280px 三视口适配
+
+### 文档
+- 官网新增 Use Cases 模块完整实施 walkthrough 文档
+
 ## [0.8.0] - 2026-04-02
 
 ### 新增
