@@ -1,6 +1,11 @@
+import json
+
 import click
 
+from cliany_site.config import get_config
+from cliany_site.envelope import ok
 from cliany_site.loader import discover_adapters
+from cliany_site.metadata import LegacyMetadataError, load_metadata
 from cliany_site.response import print_response, success_response
 
 
@@ -8,15 +13,22 @@ from cliany_site.response import print_response, success_response
 @click.option(
     "--detail", is_flag=True, default=False, help="显示每个 adapter 的命令详情"
 )
+@click.option(
+    "--legacy", is_flag=True, default=False, help="只列出旧版 adapter（需重新生成）"
+)
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")
 @click.pass_context
-def list_cmd(ctx: click.Context, detail: bool, json_mode: bool | None):
+def list_cmd(ctx: click.Context, detail: bool, legacy: bool, json_mode: bool | None):
     """列出所有已生成的 CLI adapter"""
     root_ctx = ctx.find_root()
     root_obj = root_ctx.obj if isinstance(root_ctx.obj, dict) else {}
     effective_json_mode = (
         json_mode if json_mode is not None else bool(root_obj.get("json_mode", False))
     )
+
+    if legacy:
+        _list_legacy(effective_json_mode)
+        return
 
     adapters_raw = discover_adapters()
 
@@ -66,3 +78,51 @@ def list_cmd(ctx: click.Context, detail: bool, json_mode: bool | None):
         return
 
     print_response(result, effective_json_mode)
+
+
+def _list_legacy(json_mode: bool) -> None:
+    adapters_dir = get_config().adapters_dir
+    legacy_list = []
+
+    if adapters_dir.exists():
+        for adapter_dir in sorted(adapters_dir.iterdir()):
+            if not adapter_dir.is_dir():
+                continue
+            metadata_path = adapter_dir / "metadata.json"
+            if not metadata_path.exists():
+                continue
+            domain = adapter_dir.name
+            try:
+                load_metadata(metadata_path)
+            except LegacyMetadataError:
+                source_url = "<entry_url>"
+                try:
+                    raw_md = json.loads(metadata_path.read_text(encoding="utf-8"))
+                    source_url = raw_md.get("source_url", "<entry_url>")
+                except (json.JSONDecodeError, OSError):
+                    pass
+                legacy_list.append(
+                    {
+                        "domain": domain,
+                        "path": str(adapter_dir),
+                        "suggested_command": f"cliany-site explore {source_url}",
+                    }
+                )
+            except Exception:  # noqa: BLE001
+                pass
+
+    result = ok(command="list", data=legacy_list, source="builtin")
+
+    if json_mode:
+        click.echo(json.dumps(result, ensure_ascii=False, indent=2))
+    else:
+        from rich.console import Console
+
+        console = Console()
+        if not legacy_list:
+            console.print("[green]没有旧版 adapter。[/green]")
+        else:
+            for item in legacy_list:
+                console.print(
+                    f"[yellow]{item['domain']}[/yellow]: {item['suggested_command']}"
+                )

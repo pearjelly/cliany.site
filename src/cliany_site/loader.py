@@ -9,6 +9,7 @@ import click
 
 from cliany_site.codegen.generator import METADATA_SCHEMA_VERSION
 from cliany_site.config import get_config
+from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -83,10 +84,27 @@ def load_adapter(domain: str) -> click.Group | None:
         return None
 
 
-def register_adapters(main_cli: click.Group) -> None:
-    """将所有已安装 adapter 的命令组注册到主 CLI"""
+def register_adapters(main_cli: click.Group) -> dict:
+    """将所有已安装 adapter 的命令组注册到主 CLI，返回含 legacy_adapters 的结果字典"""
+    legacy_adapters: list[str] = []
+
     for adapter_info in discover_adapters():
         domain = adapter_info["domain"]
+        metadata_path = get_config().adapters_dir / domain / "metadata.json"
+
+        try:
+            load_metadata(metadata_path)
+        except LegacyMetadataError:
+            logger.warning("跳过旧版 adapter '%s'（需重新生成）", domain)
+            legacy_adapters.append(domain)
+            continue
+        except MetadataParseError as exc:
+            logger.warning("跳过无效 metadata '%s': %s", domain, exc)
+            continue
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("注册 adapter '%s' 时出错: %s", domain, exc)
+            continue
+
         try:
             group = load_adapter(domain)
             if group is not None:
@@ -95,3 +113,12 @@ def register_adapters(main_cli: click.Group) -> None:
                 logger.debug("已注册 adapter: %s", domain)
         except (ImportError, SyntaxError, OSError) as exc:
             logger.warning("注册 adapter '%s' 失败: %s", domain, exc)
+
+    if legacy_adapters:
+        n = len(legacy_adapters)
+        print(
+            f"⚠ legacy adapters: {n} 个（运行 cliany-site list --legacy 查看详情）",
+            file=sys.stderr,
+        )
+
+    return {"legacy_adapters": legacy_adapters}
