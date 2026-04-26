@@ -661,9 +661,117 @@ def {function_name}(ctx: click.Context, json_mode: bool | None, retry: bool, **p
 '''
 
 
+def _shift_indent(text: str, remove: int = 8) -> str:
+    lines = text.splitlines()
+    result = []
+    for line in lines:
+        if line and len(line) >= remove and line[:remove] == " " * remove:
+            result.append(line[remove:])
+        elif not line.strip():
+            result.append("")
+        else:
+            result.append(line)
+    return "\n".join(result)
+
+
+def render_command_block_v2(
+    command: CommandSuggestion,
+    all_actions: list[ActionStep],
+    index: int,
+) -> str:
+    command_name = to_command_name(command.name, index)
+    function_name = to_function_name(command_name)
+    description = sanitize_docstring_text(command.description or f"执行命令 {command_name}")
+
+    effective_args = command.args
+    if not effective_args:
+        effective_args = auto_detect_params_from_actions(command.action_steps, all_actions)
+
+    param_overrides = build_param_overrides(effective_args, command.action_steps, all_actions)
+    cleaned_steps = deduplicate_parameterized_actions(command.action_steps, all_actions, param_overrides)
+    cleaned_steps = remove_consecutive_duplicate_clicks(cleaned_steps, all_actions)
+    cleaned_steps = remove_redundant_duplicate_actions(cleaned_steps, all_actions, param_overrides)
+    param_overrides = {idx: v for idx, v in param_overrides.items() if idx in set(cleaned_steps)}
+
+    arg_decorators, arg_parameters = render_argument_decorators(effective_args)
+
+    decorator_lines = [
+        f'@cli.command("{command_name}")',
+        '@click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")',
+        "@click.pass_context",
+        *arg_decorators,
+    ]
+    decorators_text = "\n".join(decorator_lines)
+
+    function_args = [
+        "ctx: click.Context",
+        "json_mode: bool | None",
+        *arg_parameters,
+    ]
+    function_signature = ", ".join(function_args)
+    args_payload = render_args_payload(arg_parameters)
+
+    raw_blocks = render_execution_blocks(
+        cleaned_steps,
+        all_actions,
+        arg_parameters,
+        raw_args=effective_args,
+        param_overrides=param_overrides,
+    )
+    execution_blocks = _shift_indent(raw_blocks, remove=8)
+
+    return f'''{decorators_text}
+def {function_name}({function_signature}):
+    """{description}"""
+{execution_blocks}
+    results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)
+    failed = next((r for r in results if not r.get("ok")), None)
+    if _resolve_json_mode(json_mode):
+        click.echo(json.dumps({{
+            "ok": failed is None,
+            "data": {{"results": results, "command": "{command_name}", "args": {args_payload}}},
+            "error": (failed or {{}}).get("error"),
+            "meta": {{"source": "adapter"}},
+        }}, ensure_ascii=False))
+    elif failed is None:
+        click.echo("\u2713 {command_name} \u5b8c\u6210")
+    else:
+        err_msg = (failed.get("error") or {{}}).get("message", "")
+        click.echo(f"\u2717 {{err_msg}}", err=True)
+        ctx.exit(1)
+'''
+
+
+def render_empty_command_block_v2() -> str:
+    return '''@cli.command("run-workflow")
+@click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")
+@click.pass_context
+def run_workflow(ctx: click.Context, json_mode: bool | None):
+    """执行默认工作流"""
+    action_steps = []
+    results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)
+    failed = next((r for r in results if not r.get("ok")), None)
+    if _resolve_json_mode(json_mode):
+        click.echo(json.dumps({
+            "ok": failed is None,
+            "data": {"results": results, "command": "run-workflow", "args": {}},
+            "error": (failed or {}).get("error"),
+            "meta": {"source": "adapter"},
+        }, ensure_ascii=False))
+    elif failed is None:
+        click.echo("\u2713 run-workflow \u5b8c\u6210")
+    else:
+        err_msg = (failed.get("error") or {}).get("message", "")
+        click.echo(f"\u2717 {err_msg}", err=True)
+        ctx.exit(1)
+'''
+
+
 __all__ = [
     "render_command_block",
+    "render_command_block_v2",
     "render_empty_command_block",
+    "render_empty_command_block_v2",
     "render_execution_blocks",
     "render_atom_command",
     "render_atom_params_code",

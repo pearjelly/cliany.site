@@ -20,7 +20,11 @@ from cliany_site.codegen.naming import (
     to_parameter_name,
     unique_parameter_name,
 )
-from cliany_site.codegen.templates import render_atom_command, render_command_block, render_empty_command_block
+from cliany_site.codegen.templates import (
+    render_atom_command,
+    render_command_block_v2,
+    render_empty_command_block_v2,
+)
 from cliany_site.config import get_config
 from cliany_site.explorer.models import ActionStep, ExploreResult
 
@@ -58,10 +62,10 @@ class AdapterGenerator:
 
         command_blocks: list[str] = []
         for index, command in enumerate(explore_result.commands):
-            command_blocks.append(render_command_block(command, explore_result.actions, index))
+            command_blocks.append(render_command_block_v2(command, explore_result.actions, index))
 
         if not command_blocks:
-            command_blocks.append(render_empty_command_block())
+            command_blocks.append(render_empty_command_block_v2())
 
         commands_text = "\n\n".join(command_blocks)
 
@@ -107,14 +111,10 @@ def _normalize_atom_actions(actions):
 # 来源 URL: {source_url}
 # 工作流: {workflow_description}
 
-import asyncio
 import json
 import click
-from cliany_site.action_runtime import execute_action_steps
-from cliany_site.browser.cdp import CDPConnection, cdp_from_context
-from cliany_site.session import load_session_data
-from cliany_site.response import success_response, error_response, print_response
-from cliany_site.errors import CDP_UNAVAILABLE, SESSION_EXPIRED, EXECUTION_FAILED{atom_imports}{substitute_import}
+from cliany_site.codegen.runtime_helpers import execute_steps_via_atoms
+from cliany_site.response import success_response, error_response, print_response{atom_imports}{substitute_import}
 
 DOMAIN = {domain!r}
 SOURCE_URL = {source_url_literal!r}
@@ -357,7 +357,17 @@ def save_adapter(
         "generated_at": datetime.now(UTC).isoformat(),
         "explore_model": explore_result.explore_model if explore_result else "",
         "generator_version": _GENERATOR_VERSION,
-        "canonical_actions": [],
+        "canonical_actions": [
+            {
+                "action_type": a.action_type,
+                "target_ref": a.target_ref,
+                "target_name": getattr(a, "target_name", None),
+                "target_url": a.target_url,
+                "description": getattr(a, "description", None),
+            }
+            for a in explore_result.actions
+            if a.action_type
+        ] if explore_result else [],
         "selector_pool": [],
         "smoke": _build_minimal_smoke(
             [{"name": cmd.name} for cmd in explore_result.commands]
