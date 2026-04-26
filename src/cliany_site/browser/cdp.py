@@ -1,6 +1,7 @@
 # src/cliany_site/browser/cdp.py
 import logging
 import subprocess
+from contextlib import asynccontextmanager
 from typing import Any
 from urllib.parse import urlparse
 
@@ -127,6 +128,20 @@ class CDPConnection:
             except (OSError, subprocess.SubprocessError) as exc:
                 logger.debug("终止 Chrome 进程时出错: %s", exc)
             self._chrome_proc = None
+
+
+    @asynccontextmanager
+    async def with_scope(self, name: str | None = None):
+        from cliany_site.browser.session_scope import acquire_scope, release_scope
+
+        scope = acquire_scope(
+            name=name,
+            scopes_path=get_config().sessions_dir / "scopes.json",
+        )
+        try:
+            yield scope
+        finally:
+            release_scope(scope)
 
 
 def cdp_from_context(ctx: Any) -> CDPConnection:
