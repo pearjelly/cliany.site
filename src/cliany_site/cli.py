@@ -159,6 +159,10 @@ cli.add_command(workflow_group)
 cli.add_command(market_group)
 cli.add_command(serve_cmd)
 
+from cliany_site.commands.browser import browser_group
+
+cli.add_command(browser_group)
+
 from cliany_site.loader import register_adapters
 
 register_adapters(cli)
