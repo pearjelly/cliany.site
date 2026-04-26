@@ -41,3 +41,7 @@ def print_response(
 
     if exit_on_error and not response.get("success", False):
         raise SystemExit(1)
+
+
+# 注意：以上函数已被 envelope.py 中的新统一 envelope 系统替代
+# 为保持向后兼容性，这些函数继续保留，但新代码应使用 envelope.ok() 和 envelope.err()
