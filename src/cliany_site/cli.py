@@ -1,6 +1,6 @@
+import importlib.metadata as metadata
 import sys
 from collections.abc import Sequence
-from importlib.metadata import version
 from typing import NoReturn
 
 import click
@@ -90,7 +90,7 @@ class SafeGroup(click.Group):
 
 
 @click.group(cls=SafeGroup, invoke_without_command=True)
-@click.version_option(version("cliany-site"), "--version")
+@click.version_option(metadata.version("cliany-site"), "--version")
 @click.option("--json", "json_mode", is_flag=True, default=False, help="JSON 输出模式")
 @click.option("--verbose", "-v", is_flag=True, default=False, help="显示详细日志 (INFO)")
 @click.option("--debug", is_flag=True, default=False, help="显示调试日志 (DEBUG)")
@@ -118,8 +118,14 @@ def cli(ctx, json_mode, verbose, debug, cdp_url, headless, sandbox, explain):
 
     if explain:
         import json as _json
-        from cliany_site.envelope import ok
+
+        from cliany_site.envelope import ErrorCode
         from cliany_site.registry import Registry
+
+        try:
+            version = metadata.version("cliany-site")
+        except Exception:
+            version = "unknown"
 
         builtin_names = list(ctx.command.commands.keys())
         reg = Registry().collect(
@@ -127,8 +133,40 @@ def cli(ctx, json_mode, verbose, debug, cdp_url, headless, sandbox, explain):
             atom_names=[],
             adapter_entries=[],
         )
-        result = ok(command="--explain", data=reg.to_explain_dict(), source="builtin")
-        click.echo(_json.dumps(result, ensure_ascii=False, indent=2))
+
+        commands = []
+        for entry in reg.to_explain_dict().get("commands", []):
+            commands.append({
+                "name": entry.get("name", ""),
+                "source": entry.get("source", "builtin"),
+                "params": entry.get("params", []),
+                "returns": entry.get("returns", {}),
+                "examples": entry.get("examples", [])
+            })
+
+        error_codes = []
+        for attr_name in dir(ErrorCode):
+            if attr_name.startswith("E_"):
+                error_codes.append({
+                    "code": attr_name,
+                    "message": str(getattr(ErrorCode, attr_name)),
+                    "hint": None
+                })
+
+        result = {
+            "schema_version": "1",
+            "binary": "cliany-site",
+            "version": version,
+            "commands": commands,
+            "error_codes": error_codes
+        }
+
+        if json_mode:
+            click.echo(_json.dumps(result, ensure_ascii=False, indent=2))
+        else:
+            from rich.console import Console
+            console = Console()
+            console.print_json(json=_json.dumps(result))
         ctx.exit(0)
 
     if ctx.invoked_subcommand is None:
