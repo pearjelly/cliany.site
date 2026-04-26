@@ -25,7 +25,8 @@ def load_metadata(path: str | Path) -> dict:
         raise MetadataParseError(f"Failed to parse metadata.json: {e}") from e
 
     schema_version = metadata.get("schema_version")
-    if schema_version is None or schema_version == 1:
+    # 接受整数 2；缺字段、字符串 "1"、整数 1 均视为旧版
+    if schema_version is None or schema_version in (1, "1", ""):
         raise LegacyMetadataError(f"Legacy metadata schema version: {schema_version}")
 
     if schema_version != 2:
