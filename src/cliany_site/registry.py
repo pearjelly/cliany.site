@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal, Any
-
+from typing import Literal
 
 SourceType = Literal["builtin", "atom", "adapter"]
 PRIORITY: dict[SourceType, int] = {"builtin": 0, "atom": 1, "adapter": 2}
@@ -31,7 +30,7 @@ class Registry:
         builtin_names: list[str],
         atom_names: list[str],
         adapter_entries: list[tuple[str, str]],   # [(name, domain), ...]
-    ) -> "Registry":
+    ) -> Registry:
         """
         合并三源。builtin > atom > adapter 优先级。
         同名冲突：winner 保留 name；loser 挂 qualified_name="adapter:{domain}.{name}"。
@@ -44,7 +43,7 @@ class Registry:
         for n in atom_names:
             all_entries.append(CommandEntry(name=n, source="atom", qualified_name=n))
 
-        for (n, domain) in adapter_entries:
+        for (n, _domain) in adapter_entries:
             all_entries.append(CommandEntry(name=n, source="adapter", qualified_name=n,
                                             version="0.0.0"))
 

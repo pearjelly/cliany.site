@@ -22,7 +22,7 @@ def print_response(
     # Support both old response format and new envelope format
     is_envelope = "ok" in response
     success = response.get("ok", response.get("success", False))
-    
+
     if json_mode:
         if compact:
             print(json.dumps(response, ensure_ascii=False, separators=(",", ":")))
