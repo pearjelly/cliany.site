@@ -1,0 +1,37 @@
+{
+  "schema_version": 2,
+  "domain": "example.com",
+  "generated_at": "2026-04-26T12:00:00Z",
+  "generator_version": "1.0.0",
+  "commands": [
+    {
+      "name": "search",
+      "params": [
+        {
+          "name": "query",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "returns": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array"
+          }
+        }
+      },
+      "examples": [
+        {
+          "input": {"query": "test"},
+          "output": {"results": []}
+        }
+      ],
+      "source": "explore"
+    }
+  ],
+  "canonical_actions": [],
+  "selector_pool": [],
+  "smoke": [],
+  "heal_history": []
+}
