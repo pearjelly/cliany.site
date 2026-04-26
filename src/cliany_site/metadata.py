@@ -19,10 +19,10 @@ def load_metadata(path: str | Path) -> dict:
     - 返回原始 dict（不做 jsonschema 全量验证，验证由 verify 命令负责）
     """
     try:
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, encoding='utf-8') as f:
             metadata = json.load(f)
     except (json.JSONDecodeError, OSError) as e:
-        raise MetadataParseError(f"Failed to parse metadata.json: {e}")
+        raise MetadataParseError(f"Failed to parse metadata.json: {e}") from e
 
     schema_version = metadata.get("schema_version")
     if schema_version is None or schema_version == 1:
@@ -32,3 +32,4 @@ def load_metadata(path: str | Path) -> dict:
         raise MetadataParseError(f"Unsupported schema version: {schema_version}")
 
     return metadata
+
