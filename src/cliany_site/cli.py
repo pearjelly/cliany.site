@@ -22,6 +22,14 @@ def _ensure_dirs():
     cfg.sessions_dir.mkdir(parents=True, exist_ok=True)
 
 
+def _print_startup_banner(json_mode: bool) -> None:
+    if json_mode:
+        return
+    import sys
+    sys.stderr.write("⚡ cliany-site v0.9.0 — Agent-first web CLI\n")
+    sys.stderr.flush()
+
+
 def _is_json_mode(args: list[str] | None) -> bool:
     argv = list(args) if args is not None else sys.argv[1:]
     return "--json" in argv
@@ -63,7 +71,8 @@ class SafeGroup(click.Group):
         windows_expand_args: bool = True,
         **extra: object,
     ) -> NoReturn:
-        argv = list(args) if args is not None else None
+        argv = list(args) if args is not None else sys.argv[1:]
+        _print_startup_banner(_is_json_mode(argv))
         try:
             result = super().main(
                 args=args,

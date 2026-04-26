@@ -7,35 +7,35 @@
 
 ## [Unreleased]
 
-## [0.9.0] — 2026-04-26 (Breaking)
+## [0.9.0] - 2026-04-26
 
-### ⚠️ BREAKING CHANGES
-
-- **旧 adapter 全面 refuse**：所有 schema_version < 2 的 adapter 在启动时被拒绝加载，请重新 explore：
-  ```
-  cliany-site explore <url> <workflow>
-  ```
-- **envelope 结构变更**：JSON 输出字段从 `{success, data, error}` 改为 `{ok, version, command, data, error, meta}`
+### BREAKING CHANGES
+- **metadata schema v2 hardcut**: `schema_version` 정수 필드 필수. 구 adapter 자동 거부 + `cliany-site explore <url>` 지침 출력.
+- **envelope 통일**: 모든 명령 출력이 `{ok, version, command, data, error, meta}` 형식으로 전환. `success` 키는 하위 호환 alias.
 
 ### Added
-- `cliany-site browser state/navigate/find/click/type/extract/wait/screenshot/eval`（9 个原子命令）
-- 运行时 registry（`cliany-site --explain` 输出完整命令契约）
-- `cliany-site verify [domain]`（默认静态 + `--smoke` 冒烟验证）
-- 项目级 `./AGENT.md` 自动生成（explore 完成后自动写入）
-- `--heal` 自愈（最多 3 次 LLM 调用 + 4000 token cap）
-- metadata schema v2（新增 smoke/heal_history/canonical_actions 字段）
+- `cliany-site browser state/navigate/find/click/type/extract/wait/screenshot/eval` — 9개 atom 명령 (zero LLM)
+- `cliany-site verify [domain]` — 정적(jsonschema+AST) + `--smoke` CDP 냉간 테스트
+- `cliany-site --json --explain` — Agent 자기설명 엔드포인트
+- `cliany-site adapter accept-heal <domain>` — healer sidecar 적용
+- `cliany-site list --legacy` — 거부된 구 adapter 목록 표시
+- `cliany-site doctor` — registry/legacy/agent_md/healed_pending 체크 추가
+- `./AGENT.md` 자동 생성/갱신 (sentinel+hash 이중 보호)
+- `--heal` 자가치유 플래그 (LLM 비용 cap: max_calls=3, max_tokens=4000)
+- `CLIANY_HEAL_DISABLE`, `CLIANY_HEAL_MAX_CALLS`, `CLIANY_HEAL_MAX_TOKENS` 환경변수
+- `CLIANY_NO_AGENT_MD=1` 환경변수로 AGENT.md 자동 재작성 억제
 
 ### Changed
-- 执行路径默认零 LLM（仅 explore + --heal 调用 LLM）
-- CDP session scope 抽象（ephemeral 默认 + named `--session=name`）
-- doctor 扩展健康检查（registry/legacy adapter/CDP/LLM 全维度）
+- `explore` 성공 시 v2 metadata 원자 쓰기 + AGENT.md 자동 재작성
+- `loader` — 구 adapter 하드 거부 (이전: 경고 후 로드)
+- `codegen` — generated 명령이 run_atom() 통해 atom 명령을 호출 (직접 CDP 미사용)
 
 ### Removed
-- metadata schema v1 支持（硬切换，无迁移路径）
+- 구 metadata (`schema_version` 없거나 문자열 "1") 자동 로드 지원 종료
 
-### Migration Guide
-1. 重新 explore 所有站点生成 v2 adapter：`cliany-site explore <url> <workflow>`
-2. 更新消费 JSON 输出的脚本：`success` 字段改为 `ok`，`error.hint` 改为 `error.hint`
+### Migration
+구 adapter → 재생성: `cliany-site explore <url> "<workflow>"`  
+자세한 마이그레이션 절차: [docs/migration-0.9.md](docs/migration-0.9.md)
 
 ## [0.8.3] - 2026-04-13
 
