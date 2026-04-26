@@ -21,6 +21,19 @@ run_script() {
   fi
 }
 
+echo "========================================"
+echo "运行: pytest 单元测试"
+echo "========================================"
+uv run pytest -q --tb=short 2>&1
+_pytest_exit=$?
+if [ $_pytest_exit -eq 0 ] || [ $_pytest_exit -eq 5 ]; then
+  echo "[SUITE PASS] pytest"
+  TOTAL_PASS=$((TOTAL_PASS+1))
+else
+  echo "[SUITE FAIL] pytest"
+  TOTAL_FAIL=$((TOTAL_FAIL+1))
+fi
+
 run_script "$SCRIPT_DIR/doctor_check.sh"
 run_script "$SCRIPT_DIR/test_errors.sh"
 run_script "$SCRIPT_DIR/test_commands.sh"

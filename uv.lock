@@ -492,7 +492,7 @@ wheels = [
 
 [[package]]
 name = "cliany-site"
-version = "0.8.2"
+version = "0.8.3"
 source = { editable = "." }
 dependencies = [
     { name = "browser-use" },
@@ -510,6 +510,7 @@ dependencies = [
 dev = [
     { name = "mypy" },
     { name = "ruff" },
+    { name = "types-pyyaml" },
 ]
 test = [
     { name = "pytest" },
@@ -522,6 +523,9 @@ vision = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "jsonschema" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
     { name = "types-pyyaml" },
 ]
 
@@ -542,11 +546,17 @@ requires-dist = [
     { name = "rich" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11" },
     { name = "textual" },
+    { name = "types-pyyaml", marker = "extra == 'dev'", specifier = ">=6.0" },
 ]
 provides-extras = ["vision", "test", "dev"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "types-pyyaml", specifier = ">=6.0.12.20250915" }]
+dev = [
+    { name = "jsonschema", specifier = ">=4.26.0" },
+    { name = "pytest", specifier = ">=9.0.2" },
+    { name = "pytest-asyncio", specifier = ">=1.3.0" },
+    { name = "types-pyyaml", specifier = ">=6.0.12.20250915" },
+]
 
 [[package]]
 name = "click"

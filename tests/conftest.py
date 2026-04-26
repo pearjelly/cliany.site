@@ -49,3 +49,40 @@ def sample_adapter_dir(tmp_path, sample_metadata):
         "import click\n\n@click.group()\ndef cli():\n    pass\n"
     )
     return d
+
+
+@pytest.fixture
+def no_llm(monkeypatch):
+    """阻断所有 LLM 客户端调用，防止测试意外触发真实 LLM"""
+    import cliany_site.explorer.engine as engine_mod
+    
+    def _raise(*args, **kwargs):
+        raise RuntimeError("LLM disabled in tests")
+    
+    # 用 monkeypatch 替换 LLM 客户端初始化
+    monkeypatch.setattr(engine_mod, "_create_llm_client", _raise, raising=False)
+    # 也 patch 常见的 LLM 调用入口
+    try:
+        import langchain_openai
+        monkeypatch.setattr(langchain_openai, "ChatOpenAI", _raise)
+    except ImportError:
+        pass
+    try:
+        import langchain_anthropic
+        monkeypatch.setattr(langchain_anthropic, "ChatAnthropic", _raise)
+    except ImportError:
+        pass
+    return _raise
+
+
+@pytest.fixture
+def tmp_home(tmp_path, monkeypatch):
+    """用临时目录替换 ~/.cliany-site，避免测试污染用户主目录"""
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    # 重置 config 单例让其重新读取 HOME
+    from cliany_site.config import reset_config
+    reset_config()
+    yield fake_home
+    reset_config()
