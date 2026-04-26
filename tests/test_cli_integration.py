@@ -201,10 +201,10 @@ class TestJsonOutput:
         result = runner.invoke(cli, ["list", "--json"])
         assert result.exit_code == 0
         data = json.loads(result.output)
-        assert "success" in data
+        assert "ok" in data
         assert "data" in data
         assert "error" in data
-        assert data["success"] is True
+        assert data["ok"] is True
 
     def test_report_list_json_output(self):
         """report list --json 应返回有效 JSON 信封"""
@@ -233,4 +233,4 @@ class TestJsonOutput:
         result = runner.invoke(cli, ["--json", "list"])
         assert result.exit_code == 0
         data = json.loads(result.output)
-        assert data["success"] is True
+        assert data["ok"] is True

@@ -6,7 +6,7 @@ from cliany_site.config import get_config
 from cliany_site.envelope import ok
 from cliany_site.loader import discover_adapters
 from cliany_site.metadata import LegacyMetadataError, load_metadata
-from cliany_site.response import print_response, success_response
+from cliany_site.response import print_response
 
 
 @click.command("list")
@@ -52,7 +52,7 @@ def list_cmd(ctx: click.Context, detail: bool, legacy: bool, json_mode: bool | N
     else:
         message = f"共 {len(adapters_data)} 个 adapter"
 
-    result = success_response({"adapters": adapters_data, "message": message})
+    result = ok(command="list", data={"adapters": adapters_data, "message": message}, source="builtin")
 
     if not effective_json_mode:
         from rich.console import Console
