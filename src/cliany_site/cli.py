@@ -97,8 +97,9 @@ class SafeGroup(click.Group):
 @click.option("--cdp-url", default=None, help="远程 CDP 地址 (如 ws://host:9222)")
 @click.option("--headless", is_flag=True, default=False, help="以 Headless 模式启动 Chrome")
 @click.option("--sandbox", is_flag=True, default=False, help="沙箱模式：限制跨域导航和危险操作")
+@click.option("--explain", is_flag=True, default=False, help="输出 registry 命令契约 JSON")
 @click.pass_context
-def cli(ctx, json_mode, verbose, debug, cdp_url, headless, sandbox):
+def cli(ctx, json_mode, verbose, debug, cdp_url, headless, sandbox, explain):
     """cliany-site: 将任意网站 CLI 化"""
     _ensure_dirs()
     ctx.ensure_object(dict)
@@ -114,6 +115,21 @@ def cli(ctx, json_mode, verbose, debug, cdp_url, headless, sandbox):
     else:
         log_level = LEVEL_QUIET
     setup_logging(level=log_level, json_format=json_mode)
+
+    if explain:
+        import json as _json
+        from cliany_site.envelope import ok
+        from cliany_site.registry import Registry
+
+        builtin_names = list(ctx.command.commands.keys())
+        reg = Registry().collect(
+            builtin_names=builtin_names,
+            atom_names=[],
+            adapter_entries=[],
+        )
+        result = ok(command="--explain", data=reg.to_explain_dict(), source="builtin")
+        click.echo(_json.dumps(result, ensure_ascii=False, indent=2))
+        ctx.exit(0)
 
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
