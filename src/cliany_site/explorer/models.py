@@ -39,6 +39,9 @@ class ExploreResult:
     actions: list[ActionStep] = field(default_factory=list)
     commands: list[CommandSuggestion] = field(default_factory=list)
     explore_model: str = ""
+    smoke: list[dict] = field(default_factory=list)
+    canonical_actions: list[dict] = field(default_factory=list)
+    selector_pool: list[dict] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         import dataclasses

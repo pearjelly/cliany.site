@@ -1,7 +1,9 @@
 import asyncio
+import contextlib
 import json
 import os
 import sys
+from pathlib import Path
 from urllib.parse import urlparse
 
 import click
@@ -9,6 +11,18 @@ import click
 from cliany_site.config import get_config
 from cliany_site.errors import CDP_UNAVAILABLE, EXECUTION_FAILED, LLM_UNAVAILABLE
 from cliany_site.response import error_response, print_response, success_response
+
+
+def _post_save_agent_md(domain: str, commands_list: list[str]) -> None:
+    from cliany_site.agent_md import regenerate
+    from cliany_site.registry import Registry
+
+    env_skip = bool(os.environ.get("CLIANY_NO_AGENT_MD"))
+    registry = Registry()
+    registry.collect([], [], [(name, domain) for name in commands_list])
+    result = regenerate(Path.cwd(), registry, force=False, env_skip=env_skip)
+    if result.conflict:
+        click.echo("⚠ AGENT.md 충돌 감지: 수동 수정됨, 덮어쓰지 않음", err=True)
 
 
 @click.command("explore")
@@ -176,8 +190,16 @@ def explore_cmd(
                 "source_url": url,
                 "workflow": workflow_description,
             }
-            adapter_path = save_adapter(domain, code, metadata, explore_result=explore_result)
+            try:
+                adapter_path = save_adapter(domain, code, metadata, explore_result=explore_result)
+            except Exception:
+                if adapter_dir.exists():
+                    for _tmp in adapter_dir.glob("*.tmp"):
+                        _tmp.unlink(missing_ok=True)
+                raise
             commands_list = [cmd.name for cmd in explore_result.commands]
+            with contextlib.suppress(Exception):
+                _post_save_agent_md(domain, commands_list)
             print(f"[explore] Adapter 已生成: {adapter_path}", file=sys.stderr)
             write_log(
                 "explore",
@@ -208,6 +230,8 @@ def explore_cmd(
             )
             commands_list = [cmd.get("name", "") for cmd in merge_result.merged]
             adapter_path = str(merger.metadata_path.parent / "commands.py")
+            with contextlib.suppress(Exception):
+                _post_save_agent_md(domain, commands_list)
             print(f"[explore] Adapter 已合并: {adapter_path}", file=sys.stderr)
             write_log(
                 "explore",

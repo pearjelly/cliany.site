@@ -842,6 +842,15 @@ class WorkflowExplorer:
                                 cmd.action_steps = list(range(start, end))
                                 start = end
 
+                    _ca = parsed.get("canonical_actions", [])
+                    result.canonical_actions = [a for a in _ca if isinstance(a, dict)]
+                    _sp = parsed.get("selector_pool", [])
+                    result.selector_pool = [s for s in _sp if isinstance(s, dict)]
+                    result.smoke = [
+                        {"action": "navigate", "url": url},
+                        {"action": "state"},
+                    ]
+
                     break
 
                 next_url = normalize_navigation_url(parsed.get("next_url", ""), tree.get("url", ""))
