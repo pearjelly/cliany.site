@@ -34,6 +34,13 @@ else
   TOTAL_FAIL=$((TOTAL_FAIL+1))
 fi
 
+FIXTURE_PID=""
+if [ -f "$SCRIPT_DIR/fixtures/serve.sh" ]; then
+  bash "$SCRIPT_DIR/fixtures/serve.sh" &
+  FIXTURE_PID=$!
+  sleep 1
+fi
+
 run_script "$SCRIPT_DIR/doctor_check.sh"
 run_script "$SCRIPT_DIR/test_errors.sh"
 run_script "$SCRIPT_DIR/test_commands.sh"
@@ -50,4 +57,5 @@ echo "========================================"
 echo "=== 总计汇总 ==="
 echo "PASS: $TOTAL_PASS, FAIL: $TOTAL_FAIL"
 echo "========================================"
+[ -n "$FIXTURE_PID" ] && kill "$FIXTURE_PID" 2>/dev/null
 [ $TOTAL_FAIL -eq 0 ] && exit 0 || exit 1
