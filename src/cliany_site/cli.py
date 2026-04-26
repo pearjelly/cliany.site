@@ -167,6 +167,10 @@ from cliany_site.commands.verify import verify_cmd
 
 cli.add_command(verify_cmd)
 
+from cliany_site.commands.adapter_cmd import adapter_group
+
+cli.add_command(adapter_group)
+
 from cliany_site.loader import register_adapters
 
 register_adapters(cli)

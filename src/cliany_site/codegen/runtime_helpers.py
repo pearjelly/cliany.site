@@ -9,12 +9,11 @@ from cliany_site.cli import cli
 from cliany_site.envelope import Envelope
 
 
-def run_atom(command: list[str], session: str | None = None) -> Envelope:
-    """
-    in-process 调用 cliany-site atom 子命令（零网络，零 LLM）。
-    command: 命令路径，如 ["browser", "navigate", "https://example.com"]
-    返回 Envelope dict；失败时返回 err envelope。
-    """
+def run_atom(
+    command: list[str],
+    session: str | None = None,
+    heal_on_failure: bool = False,
+) -> Envelope:
     args = list(command)
     if session:
         args.extend(["--session", session])
@@ -22,16 +21,29 @@ def run_atom(command: list[str], session: str | None = None) -> Envelope:
     runner = CliRunner()
     result = runner.invoke(cli, args, catch_exceptions=False)
     try:
-        return json.loads(result.output)
+        envelope = json.loads(result.output)
     except (json.JSONDecodeError, ValueError):
         from cliany_site.envelope import ErrorCode, err
 
-        return err(
+        envelope = err(
             command=" ".join(command),
             code=ErrorCode.E_UNKNOWN,
             message=result.output[:200],
             source="builtin",
         )
+
+    if not envelope.get("ok") and heal_on_failure:
+        from cliany_site.healer import Healer
+
+        domain = session or ""
+        cmd_name = command[0] if command else ""
+        Healer().heal(
+            domain=domain,
+            command=cmd_name,
+            failure_envelope=envelope,
+        )
+
+    return envelope
 
 
 def execute_steps_via_atoms(
