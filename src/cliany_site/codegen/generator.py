@@ -7,6 +7,7 @@ import re
 import tempfile
 import time
 from datetime import UTC, datetime
+from importlib.metadata import version as _pkg_version
 from typing import Any
 
 from cliany_site.atoms.models import AtomCommand
@@ -23,7 +24,12 @@ from cliany_site.codegen.templates import render_atom_command, render_command_bl
 from cliany_site.config import get_config
 from cliany_site.explorer.models import ActionStep, ExploreResult
 
-METADATA_SCHEMA_VERSION = "1"
+METADATA_SCHEMA_VERSION = 2
+
+try:
+    _GENERATOR_VERSION: str = _pkg_version("cliany-site")
+except Exception:
+    _GENERATOR_VERSION = "unknown"
 
 logger = logging.getLogger(__name__)
 
@@ -308,6 +314,17 @@ if __name__ == "__main__":
         return sanitize_docstring_text(value)
 
 
+def _build_minimal_smoke(commands: list[dict]) -> list[dict]:
+    result = []
+    for cmd in commands[:3]:  # 最多取前 3 个
+        result.append({
+            "command": cmd.get("name", ""),
+            "args": {},
+            "expect": {"ok": True},
+        })
+    return result
+
+
 def save_adapter(
     domain: str,
     code: str,
@@ -339,6 +356,15 @@ def save_adapter(
         "commands": _extract_commands_from_code(code),
         "generated_at": datetime.now(UTC).isoformat(),
         "explore_model": explore_result.explore_model if explore_result else "",
+        "generator_version": _GENERATOR_VERSION,
+        "canonical_actions": [],
+        "selector_pool": [],
+        "smoke": _build_minimal_smoke(
+            [{"name": cmd.name} for cmd in explore_result.commands]
+            if explore_result
+            else []
+        ),
+        "heal_history": [],
     }
     if metadata:
         base_metadata.update(metadata)
@@ -445,4 +471,4 @@ def _extract_commands_from_code(code: str) -> list[str]:
     return commands
 
 
-__all__ = ["AdapterGenerator", "save_adapter"]
+__all__ = ["AdapterGenerator", "save_adapter", "METADATA_SCHEMA_VERSION", "_build_minimal_smoke"]
