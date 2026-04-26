@@ -19,6 +19,10 @@ def print_response(
     exit_on_error: bool = True,
     compact: bool = False,
 ) -> None:
+    # Support both old response format and new envelope format
+    is_envelope = "ok" in response
+    success = response.get("ok", response.get("success", False))
+    
     if json_mode:
         if compact:
             print(json.dumps(response, ensure_ascii=False, separators=(",", ":")))
@@ -29,17 +33,30 @@ def print_response(
         from rich.console import Console
 
         console = Console()
-        if response["success"]:
-            console.print(f"[green]✓[/green] {response.get('data', '')}")
+        if success:
+            if is_envelope:
+                data = response.get("data", "")
+                console.print(f"[green]✓[/green] {data}")
+            else:
+                data = response.get("data", "")
+                console.print(f"[green]✓[/green] {data}")
         else:
-            err = response.get("error", {})
-            console.print(
-                f"[red]✗ {err.get('code', 'ERROR')}[/red]: {err.get('message', '')}"
-            )
-            if err.get("fix"):
-                console.print(f"[yellow]Fix:[/yellow] {err.get('fix')}")
+            if is_envelope:
+                err = response.get("error", {})
+                console.print(
+                    f"[red]✗ {err.get('code', 'ERROR')}[/red]: {err.get('message', '')}"
+                )
+                if err.get("hint"):
+                    console.print(f"[yellow]Hint:[/yellow] {err.get('hint')}")
+            else:
+                err = response.get("error", {})
+                console.print(
+                    f"[red]✗ {err.get('code', 'ERROR')}[/red]: {err.get('message', '')}"
+                )
+                if err.get("fix"):
+                    console.print(f"[yellow]Fix:[/yellow] {err.get('fix')}")
 
-    if exit_on_error and not response.get("success", False):
+    if exit_on_error and not success:
         raise SystemExit(1)
 
 
