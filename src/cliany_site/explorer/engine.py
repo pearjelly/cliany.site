@@ -738,6 +738,11 @@ class WorkflowExplorer:
                             full_page=False,
                         )
                         step_axtree = await capture_axtree(browser_session)
+                        axtree_without_bytes = (
+                            {k: v for k, v in step_axtree.items() if not isinstance(v, bytes)}
+                            if step_axtree
+                            else None
+                        )
                         step_record = StepRecord(
                             step_index=step_num,
                             action_data={
@@ -752,7 +757,7 @@ class WorkflowExplorer:
                             manifest=recording_manifest,
                             step_record=step_record,
                             screenshot_bytes=step_screenshot or None,
-                            axtree_json=step_axtree,
+                            axtree_json=axtree_without_bytes,
                         )
                     except Exception as e:
                         logger.warning("步骤录像保存失败，将继续探索: %s", e)

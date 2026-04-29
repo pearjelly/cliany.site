@@ -1,11 +1,13 @@
 import json
+from collections.abc import Mapping
+from typing import Any
 
 
-def success_response(data: dict) -> dict:
+def success_response(data: dict[str, Any]) -> dict[str, Any]:
     return {"success": True, "data": data, "error": None}
 
 
-def error_response(code: str, message: str, fix: str | None = None) -> dict:
+def error_response(code: str, message: str, fix: str | None = None) -> dict[str, Any]:
     return {
         "success": False,
         "data": None,
@@ -14,7 +16,7 @@ def error_response(code: str, message: str, fix: str | None = None) -> dict:
 
 
 def print_response(
-    response: dict,
+    response: Mapping[str, Any],
     json_mode: bool = True,
     exit_on_error: bool = True,
     compact: bool = False,

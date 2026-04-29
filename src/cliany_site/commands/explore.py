@@ -9,8 +9,8 @@ from urllib.parse import urlparse
 import click
 
 from cliany_site.config import get_config
-from cliany_site.errors import CDP_UNAVAILABLE, EXECUTION_FAILED, LLM_UNAVAILABLE
-from cliany_site.response import error_response, print_response, success_response
+from cliany_site.envelope import ErrorCode, err, ok
+from cliany_site.response import print_response
 
 
 def _post_save_agent_md(domain: str, commands_list: list[str]) -> None:
@@ -73,45 +73,50 @@ def explore_cmd(
 
         cdp = cdp_from_context(ctx)
         if not await cdp.check_available():
-            return error_response(
-                CDP_UNAVAILABLE,
+            return err(
+                "explore",
+                ErrorCode.E_CDP_UNAVAILABLE,
                 "Chrome CDP 不可用",
-                "启动 Chrome 并开启 --remote-debugging-port=9222",
+                hint="启动 Chrome 并开启 --remote-debugging-port=9222",
             )
 
         provider = os.getenv("CLIANY_LLM_PROVIDER", "anthropic").lower()
         if provider not in {"anthropic", "openai"}:
-            return error_response(
-                LLM_UNAVAILABLE,
+            return err(
+                "explore",
+                ErrorCode.E_LLM_DISABLED,
                 "LLM provider 配置无效",
-                "请将 CLIANY_LLM_PROVIDER 设置为 anthropic 或 openai",
+                hint="请将 CLIANY_LLM_PROVIDER 设置为 anthropic 或 openai",
             )
 
         has_anthropic_key = bool(os.getenv("CLIANY_ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY"))
         has_openai_key = bool(os.getenv("CLIANY_OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY"))
 
         if provider == "anthropic" and not has_anthropic_key:
-            return error_response(
-                LLM_UNAVAILABLE,
+            return err(
+                "explore",
+                ErrorCode.E_LLM_DISABLED,
                 "Anthropic API Key 未配置",
-                "设置 CLIANY_ANTHROPIC_API_KEY（或旧版 ANTHROPIC_API_KEY）",
+                hint="设置 CLIANY_ANTHROPIC_API_KEY（或旧版 ANTHROPIC_API_KEY）",
             )
 
         if provider == "openai" and not has_openai_key:
-            return error_response(
-                LLM_UNAVAILABLE,
+            return err(
+                "explore",
+                ErrorCode.E_LLM_DISABLED,
                 "OpenAI API Key 未配置",
-                "设置 CLIANY_OPENAI_API_KEY（OpenRouter key 也可）",
+                hint="设置 CLIANY_OPENAI_API_KEY（OpenRouter key 也可）",
             )
 
         if provider == "openai":
             try:
                 _normalize_openai_base_url(os.getenv("CLIANY_OPENAI_BASE_URL"))
             except (ValueError, TypeError) as e:
-                return error_response(
-                    LLM_UNAVAILABLE,
+                return err(
+                    "explore",
+                    ErrorCode.E_LLM_DISABLED,
                     f"OpenAI base URL 配置无效: {e}",
-                    "请使用 https://host[:port]/v1 格式，例如 https://sub2api.chinahrt.com/v1",
+                    hint="请使用 https://host[:port]/v1 格式，例如 https://sub2api.chinahrt.com/v1",
                 )
 
         parsed = urlparse(url)
@@ -137,10 +142,11 @@ def explore_cmd(
             )
             explore_result = await explorer.explore(url, workflow_description, progress=reporter, record=record)
         except (OSError, RuntimeError, ValueError) as e:
-            return error_response(
-                EXECUTION_FAILED,
+            return err(
+                "explore",
+                ErrorCode.E_UNKNOWN,
                 f"探索失败: {e}",
-                "请检查 URL 是否可访问，LLM 配置是否正确",
+                hint="请检查 URL 是否可访问，LLM 配置是否正确",
             )
 
         post_analysis = {
@@ -208,7 +214,8 @@ def explore_cmd(
                 "success",
                 f"created {len(commands_list)} commands",
             )
-            return success_response(
+            return ok(
+                "explore",
                 {
                     "domain": domain,
                     "adapter_path": adapter_path,
@@ -219,7 +226,7 @@ def explore_cmd(
                     "pages_explored": len(explore_result.pages),
                     "actions_found": len(explore_result.actions),
                     "post_analysis": post_analysis,
-                }
+                },
             )
         else:
             merger = AdapterMerger(domain)
@@ -253,7 +260,7 @@ def explore_cmd(
             }
             if merge_result.conflicts_resolved:
                 response_data["conflicts_resolved"] = merge_result.conflicts_resolved
-            return success_response(response_data)
+            return ok("explore", response_data)
 
     result = asyncio.run(_run())
     print_response(result, effective_json_mode)
