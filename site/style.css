@@ -908,19 +908,19 @@ html.js .reveal.visible {
    Use Cases Section
    ============================================================ */
 
-/* Section 布局 */
+/* Section layout */
 .use-cases {
   background-color: var(--color-bg);
 }
 
-/* 卡片网格 */
+/* Card grid */
 .cases-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2rem;
 }
 
-/* 案例卡片 */
+/* Case study cards */
 .case-card {
   background: var(--color-white);
   border-radius: var(--radius-md);
@@ -938,7 +938,7 @@ html.js .reveal.visible {
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
 }
 
-/* 概念展示徽章 */
+/* Concept display badge */
 .case-badge {
   position: absolute;
   top: 1rem;
@@ -953,7 +953,7 @@ html.js .reveal.visible {
   letter-spacing: 0.02em;
 }
 
-/* 案例故事层 */
+/* Case story layer */
 .case-story {
   display: flex;
   flex-direction: column;
@@ -980,7 +980,7 @@ html.js .reveal.visible {
   margin: 0;
 }
 
-/* Before/After 标签页 */
+/* Before/After tabs */
 .case-comparison {
   display: flex;
   flex-direction: column;
@@ -1022,7 +1022,7 @@ html.js .reveal.visible {
   color: var(--color-text-main);
 }
 
-/* 面板显示/隐藏 */
+/* Panel show/hide */
 .case-panel {
   display: none;
   padding: 1rem 1.25rem;
@@ -1046,7 +1046,7 @@ html.js .reveal.visible {
   color: var(--color-text-light);
 }
 
-/* 案例1 打字动画 */
+/* Case 1 typing animation */
 .case-terminal .case-type-line {
   min-height: 1.5em;
   visibility: hidden;
@@ -1066,7 +1066,7 @@ html.js .reveal.visible {
   display: block;
 }
 
-/* 响应式：平板 2 列 */
+/* Responsive: tablet 2-column */
 @media (max-width: 1024px) {
   .cases-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -1077,7 +1077,7 @@ html.js .reveal.visible {
   }
 }
 
-/* 响应式：手机单列 */
+/* Responsive: mobile single-column */
 @media (max-width: 768px) {
   .cases-grid {
     grid-template-columns: 1fr;
@@ -1092,7 +1092,7 @@ html.js .reveal.visible {
   }
 }
 
-/* 减少动画偏好 */
+/* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   .case-card {
     transition: none;
@@ -1105,11 +1105,19 @@ html.js .reveal.visible {
   }
 }
 
-/* --- 溢出修复：确保 Grid 1fr 正确工作 --- */
+/* --- Overflow fix: ensure Grid 1fr works correctly --- */
 .cases-grid > .case-card {
   min-width: 0;
 }
 
 .case-terminal .terminal-body {
   overflow-x: auto;
+}
+
+.feature-card code {
+  font-family: monospace;
+  font-size: 0.85em;
+  background: rgba(0,0,0,0.08);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
 }

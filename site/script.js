@@ -225,7 +225,19 @@ const I18N = {
 
   // --- Terminal Result Lines ---
   'usecases.case1.terminal.result': { zh: '✓ 适配器已生成至 ~/.cliany-site/adapters/github.com/', en: '✓ Adapter generated at ~/.cliany-site/adapters/github.com/' },
-  'usecases.case3.terminal.result': { zh: '✓ 已安装: jira.company.com, confluence.company.com, jenkins.company.com', en: '✓ Installed: jira.company.com, confluence.company.com, jenkins.company.com' }
+  'usecases.case3.terminal.result': { zh: '✓ 已安装: jira.company.com, confluence.company.com, jenkins.company.com', en: '✓ Installed: jira.company.com, confluence.company.com, jenkins.company.com' },
+
+  // --- v0.9.x New Features ---
+  'features.healer.title': { zh: '智能自愈', en: 'Smart Self-Healing' },
+  'features.healer.desc': { zh: 'AXTree 快照对比，selector 热修复，无需重新 explore。', en: 'AXTree snapshot diffing, hot-patch selectors without re-exploring.' },
+  'features.verify.title': { zh: '静态校验', en: 'Static Verification' },
+  'features.verify.desc': { zh: '不打开浏览器，校验 adapter schema、签名、依赖完整性。', en: 'Verify adapter schema, signature, and dependency integrity without launching a browser.' },
+  'features.explain.title': { zh: '自描述契约', en: 'Self-Describing Contract' },
+  'features.explain.desc': { zh: '`--explain` 输出机器可读的 Agent 契约，便于自动化集成。', en: '`--explain` outputs a machine-readable Agent contract for automation integration.' },
+  'features.atomCommands.title': { zh: '原子命令系统', en: 'Atom Commands System' },
+  'features.atomCommands.desc': { zh: 'Generated commands 复用原子操作而非内嵌 CDP，跨适配器共享。', en: 'Generated commands reuse atomic operations instead of inlined CDP, shared across adapters.' },
+  'features.metadata.title': { zh: 'Metadata Schema v2', en: 'Metadata Schema v2' },
+  'features.metadata.desc': { zh: '强制使用 v2 metadata，旧 adapter 自动拒绝并提示重新探索。', en: 'Enforces v2 metadata; legacy adapters auto-rejected with re-explore hint.' }
 };
 
 function getLang() {
@@ -236,7 +248,7 @@ function getLang() {
 }
 
 function setLang(lang) {
-  if (lang !== 'en' && lang !== 'zh') lang = 'zh';
+  if (lang !== 'en' && lang !== 'zh') lang = 'en';
 
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
   document.documentElement.dataset.lang = lang;
