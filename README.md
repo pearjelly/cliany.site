@@ -5,134 +5,148 @@
 [![CI](https://github.com/pearjelly/cliany.site/actions/workflows/ci.yml/badge.svg)](https://github.com/pearjelly/cliany.site/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/pearjelly/cliany.site)](LICENSE)
 
-> **⚠️ v0.9.0 BREAKING**: metadata schema v2 hardcut. 구 adapter(schema_version 없음)는 자동 거부됩니다.  
-> 재생성: `cliany-site explore <url> "<workflow>"`
+> 🌐 Languages: [English](README.md) | [简体中文](README.zh.md)
 
-> 将任意网页操作自动化为可调用的 CLI 命令
+> **⚠️ v0.9.0 BREAKING**: metadata schema v2 hardcut. Legacy adapters (no schema_version) are auto-rejected.  
+> Regenerate: `cliany-site explore <url> "<workflow>"`
 
-cliany-site 基于 browser-use 和大语言模型（LLM），通过 Chrome CDP 协议实现从网页探索到代码生成、回放的全流程自动化。一条命令探索、一条命令执行，把复杂的网页工作流变成可重复调用的 CLI 工具。
+> Automate any web workflow into callable CLI commands
 
-## 特性
+cliany-site is built on browser-use and Large Language Models (LLMs), enabling full-process automation from web exploration to code generation and replay via the Chrome CDP protocol. Explore with one command, execute with another—turning complex web workflows into repeatable CLI tools.
 
-### 核心能力
+## Features
 
-- **零侵入探索** — Chrome CDP 捕获页面 AXTree，无需注入脚本
-- **LLM 驱动代码生成** — Claude / GPT-4o 理解页面语义，自动生成 Python CLI 命令
-- **LLM 调用重试机制** — 网络抖动时自动重试，提升探索成功率
-- **标准 JSON 输出** — 所有命令支持 `--json`，输出统一 `{success, data, error}` 信封
-- **持久化 Session** — 跨命令保持 Cookie / LocalStorage 登录状态
-- **动态适配器加载** — 按域名自动注册 CLI 子命令，随时扩展
-- **Chrome 自动管理** — 自动检测并启动 Chrome 调试实例
-- **Extract 数据抽取** — 支持从页面提取结构化数据，保存为 Markdown
+### Core Capabilities
 
-### 开发体验
+- **Zero-Intrusion Exploration** — Chrome CDP captures page AXTree without script injection.
+- **LLM-Driven Code Generation** — Claude / GPT-4o understands page semantics and generates Python CLI commands automatically.
+- **LLM Call Retry Mechanism** — Automatic retries during network fluctuations to improve exploration success rates.
+- **Standard JSON Output** — All commands support `--json`, outputting a unified `{success, data, error}` envelope.
+- **Persistent Sessions** — Maintains Cookie / LocalStorage login states across commands.
+- **Dynamic Adapter Loading** — Automatically registers CLI subcommands by domain, allowing for easy expansion.
+- **Automatic Chrome Management** — Detects and starts Chrome debugging instances automatically.
+- **Data Extraction** — Supports extracting structured data from pages and saving it as Markdown.
 
-- **适配器增量合并** — 重复 explore 同一网站时智能合并，保留已有命令
-- **原子命令系统** — 自动提取可复用的原子操作，跨适配器共享
-- **实时进度反馈** — explore/execute 过程中展示 Rich 进度条和 NDJSON 流式事件
-- **智能自愈** — AXTree 快照对比，selector 热修复，无需重新 explore
-- **CSS Selector 候选预计算** — 预生成多个 selector 候选，提升元素匹配韧性
-- **断点续执行** — adapter 命令失败后记录断点，可通过 `cliany-site <domain> <command> --resume` 从断点恢复
-- **会话式探索** — `--interactive` 逐步确认、`--extend <domain>` 增量扩展、探索录像自动保存（`~/.cliany-site/recordings/`）
+### Developer Experience
 
-### 企业级特性
+- **Incremental Adapter Merging** — Intelligently merges when exploring the same site repeatedly, preserving existing commands.
+- **Atomic Command System** — Automatically extracts reusable atomic operations shared across adapters.
+- **Real-Time Progress Feedback** — Displays Rich progress bars and NDJSON streaming events during explore/execute.
+- **Smart Healing** — AXTree snapshot comparison and selector hot-fixes without re-exploring.
+- **CSS Selector Candidate Pre-computation** — Pre-generates multiple selector candidates to improve element matching resilience.
+- **Breakpoint Resumption** — Records breakpoints after adapter command failures; resume via `cliany-site <domain> <command> --resume`.
+- **Conversational Exploration** — `--interactive` for step-by-step confirmation, `--extend <domain>` for incremental expansion, and automatic exploration recording (`~/.cliany-site/recordings/`).
 
-- **Headless & 远程浏览器** — 支持 `--headless` 和 `--cdp-url ws://host:port`，可在服务器/Docker 中运行
-- **YAML 工作流编排** — 声明式多步骤工作流，步骤间数据传递 + 条件判断 + 重试策略
-- **数据驱动批量执行** — CSV/JSON 批量参数，并发控制，汇总报告
-- **Session 加密存储** — Fernet 对称加密 + 系统 Keychain 密钥管理
-- **沙箱执行模式** — `--sandbox` 限制跨域导航和危险操作；当前优先作用于 CLI adapter 执行路径
-- **生成代码安全审计** — AST 静态分析检测 eval/exec/os.system 等危险模式
+### Enterprise Features
 
-### 生态集成
+- **Headless & Remote Browsers** — Supports `--headless` and `--cdp-url ws://host:port` for running in servers or Docker.
+- **YAML Workflow Orchestration** — Declarative multi-step workflows with data passing, conditional logic, and retry strategies.
+- **Data-Driven Batch Execution** — CSV/JSON batch parameters with concurrency control and summary reports.
+- **Encrypted Session Storage** — Fernet symmetric encryption with system Keychain integration for key management.
+- **Sandbox Execution Mode** — `--sandbox` limits cross-origin navigation and dangerous operations, currently prioritized for CLI adapter paths.
+- **Generated Code Security Audit** — AST static analysis detects dangerous patterns like eval/exec/os.system.
 
-- **Python SDK** — `from cliany_site import explore, execute`，程序化调用
-- **HTTP API** — `cliany-site serve --port 8080` 启动 REST API 服务
-- **适配器市场** — 打包、安装、卸载、回滚适配器，团队共享自动化能力
-- **TUI 管理界面** — 基于 Textual 的终端 UI，可视化管理适配器
-- **iframe/Shadow DOM** — 递归 AXTree 采集，跨域 iframe 和 Shadow DOM 穿透
+### Ecosystem Integration
 
-## 快速开始 (0.9.0)
+- **Python SDK** — `from cliany_site import explore, execute` for programmatic calls.
+- **HTTP API** — `cliany-site serve --port 8080` starts a REST API service.
+- **Adapter Marketplace** — Pack, install, uninstall, and rollback adapters to share automation capabilities within teams.
+- **TUI Management Interface** — A Textual-based terminal UI for visual adapter management.
+- **iframe/Shadow DOM** — Recursive AXTree collection with cross-origin iframe and Shadow DOM penetration.
 
-### 安装
+### New in v0.9.x
+
+- **Metadata Schema v2 Hardcut** — Mandatory schema_version=2; legacy adapters are rejected with a prompt to regenerate via `cliany-site explore <url> "<workflow>"`.
+- **Smart Healing (`--heal`)** — AXTree snapshot diff + selector hot-fixes without re-exploring; supports healing caps and sidecar recording.
+- **Static Verification (`verify`)** — Checks adapter schema, signatures, and dependency integrity without opening a browser; `cliany-site verify <domain> --json`.
+- **Self-Describing Endpoints (`--explain`)** — `cliany-site --json --explain` outputs a machine-readable Agent contract for easier automation integration.
+- **AGENT.md Auto-Rewrite** — AGENT.md includes sentinels and hashes; automatically updates with new features to keep the agent contract current.
+- **Atomic Command System** — Generated commands call reusable atom commands instead of inlining CDP operations, shared across adapters.
+- **Unified Envelope (`ok()`)** — All built-in commands use the unified `{success, data, error}` output format.
+- **Extended Doctor Health Check** — Covers registry / legacy adapter detection / agent-md consistency validation.
+- **Breakpoint Resumption (`--resume`)** — Records breakpoints after adapter command failures, supporting recovery from the point of failure.
+
+## Quick Start (v0.9.0+)
+
+### Installation
 
 ```bash
-# PyPI 安装
+# Install via PyPI
 pip install cliany-site
 
-# 或源码安装
+# Or install from source
 git clone https://github.com/pearjelly/cliany.site.git
 cd cliany.site
 pip install -e .
 ```
 
-### 基础流程
+### Basic Workflow
 
 ```bash
-# 环境确认
+# Check environment
 cliany-site doctor --json
 
-# 웹 워크플로 탐색 (LLM 필요)
-cliany-site explore "https://github.com" "검색 후 결과 확인" --json
+# Explore web workflow (requires LLM)
+cliany-site explore "https://github.com" "搜索后查看结果" --json
 
-# 생성된 명령 확인
+# List generated commands
 cliany-site list --json
 
-# 생성된 명령 실행 (zero LLM)
+# Execute generated commands (zero LLM)
 cliany-site github.com search --query "cliany-site" --json
 
-# 정적 검증
+# Static verification
 cliany-site verify github.com --json
 
-# Agent 계약서 조회
+# Query Agent contract
 cliany-site --json --explain
 ```
 
-### 配置
+### Configuration
 
 ```bash
-# LLM Provider（二选一）
+# LLM Provider (choose one)
 export CLIANY_LLM_PROVIDER=anthropic
 export CLIANY_ANTHROPIC_API_KEY="sk-ant-..."
 
-# 或 OpenAI
+# Or OpenAI
 export CLIANY_LLM_PROVIDER=openai
 export CLIANY_OPENAI_API_KEY="sk-..."
 ```
 
-也支持 `.env` 文件配置，查找顺序：`~/.config/cliany-site/.env` → `~/.cliany-site/.env` → 项目目录 `.env` → 环境变量。
+Also supports `.env` file configuration. Search order: `~/.config/cliany-site/.env` → `~/.cliany-site/.env` → project directory `.env` → environment variables.
 
-### 验证环境
+### Verify Environment
 
 ```bash
 cliany-site doctor --json
 ```
 
-## 使用示例
+## Usage Examples
 
-### 基础流程
+### Basic Flow
 
 ```bash
-# 1. 探索工作流
+# 1. Explore workflow
 cliany-site explore "https://github.com" "搜索仓库并查看 README" --json
 
-# 2. 查看已生成命令
+# 2. List generated commands
 cliany-site list --json
 
-# 3. 执行生成的命令
+# 3. Execute generated command
 cliany-site github.com search --query "browser-use" --json
 ```
 
-### 会话式探索（v0.8）
+### Conversational Exploration (v0.8)
 
 ```bash
-# 交互式探索（每步确认）
+# Interactive exploration (confirm each step)
 cliany-site explore "https://github.com" "搜索仓库" --interactive
 
-# 增量扩展已有适配器
+# Incrementally extend an existing adapter
 cliany-site explore "https://github.com" "查看 Issues 列表" --extend github.com
 
-# 回放探索录像
+# Replay exploration recording
 cliany-site replay github.com --step
 ```
 
@@ -149,10 +163,10 @@ async with ClanySite() as cs:
 ### HTTP API
 
 ```bash
-# 启动服务
+# Start service
 cliany-site serve --port 8080
 
-# 调用 API
+# Call API
 curl http://localhost:8080/doctor
 curl http://localhost:8080/adapters
 curl -X POST http://localhost:8080/explore \
@@ -160,18 +174,18 @@ curl -X POST http://localhost:8080/explore \
   -d '{"url": "https://github.com", "workflow": "搜索仓库"}'
 ```
 
-### YAML 工作流编排
+### YAML Workflow Orchestration
 
 ```yaml
 # workflow.yaml
-name: GitHub 搜索流程
+name: GitHub Search Process
 steps:
-  - name: 搜索仓库
+  - name: Search Repository
     adapter: github.com
     command: search
     params:
       query: "cliany-site"
-  - name: 查看详情
+  - name: View Details
     adapter: github.com
     command: view
     params:
@@ -183,96 +197,93 @@ cliany-site workflow run workflow.yaml --json
 cliany-site workflow validate workflow.yaml --json
 ```
 
-### 批量执行
+### Batch Execution
 
 ```bash
-# 从 CSV 批量执行
+# Batch execution from CSV
 cliany-site workflow batch github.com search data.csv --concurrency 3 --json
 ```
 
-### 适配器市场
+### Adapter Marketplace
 
 ```bash
-# 打包适配器
+# Pack adapter
 cliany-site market publish github.com --version 1.0.0
 
-# 安装适配器
+# Install adapter
 cliany-site market install ./github.com.cliany-adapter.tar.gz
 
-# 回滚
+# Rollback
 cliany-site market rollback github.com
 ```
 
-## 命令参考
+## Command Reference
 
-| 命令 | 参数 | 说明 |
+| Command | Arguments | Description |
 |------|------|------|
-| `doctor` | `[--json]` | 检查环境（CDP、LLM Key、目录结构） |
-| `login <url>` | `[--json]` | 打开 URL 等待登录，保存 Session |
-| `explore <url> <workflow>` | `[--json] [--interactive] [--extend <domain>] [--record]` | 探索工作流，生成 adapter |
-| `list` | `[--json]` | 列出已生成的 adapter |
-| `replay <domain>` | `[--session <id>] [--step]` | 回放探索录像，终端展示每步截图和动作 |
-| `check <domain>` | `[--json] [--fix]` | 检查适配器健康状态 |
-| `tui` | | 启动 TUI 管理界面 |
-| `serve` | `[--host] [--port]` | 启动 HTTP API 服务 |
-| `market publish <domain>` | `[--version] [--json]` | 打包导出适配器 |
-| `market install <path>` | `[--force] [--json]` | 安装适配器包 |
-| `market uninstall <domain>` | `[--json]` | 卸载适配器 |
-| `market rollback <domain>` | `[--index] [--json]` | 回滚到备份版本 |
-| `workflow run <file>` | `[--json] [--dry-run]` | 执行 YAML 工作流 |
-| `workflow validate <file>` | `[--json]` | 验证工作流文件 |
-| `workflow batch <adapter> <cmd> <data>` | `[--concurrency] [--json]` | 批量执行 |
-| `report list` | `[--domain] [--json]` | 列出执行报告 |
-| `report show <id>` | `[--json]` | 查看报告详情 |
-| `<domain> <command>` | `[--json] [args...]` | 执行适配器中的命令 |
+| `doctor` | `[--json]` | Check environment (CDP, LLM Key, directory structure). |
+| `login <url>` | `[--json]` | Open URL to wait for login and save session. |
+| `explore <url> <workflow>` | `[--json] [--interactive] [--extend <domain>] [--record]` | Explore workflow and generate adapter. |
+| `list` | `[--json]` | List generated adapters. |
+| `verify <domain>` | `[--json]` | Statically verify adapter schema, signatures, and dependency integrity. |
+| `replay <domain>` | `[--session <id>] [--step]` | Replay exploration recording with screenshots and actions. |
+| `check <domain>` | `[--json] [--fix]` | Check adapter health status. |
+| `tui` | | Start TUI management interface. |
+| `serve` | `[--host] [--port]` | Start HTTP API service. |
+| `market publish <domain>` | `[--version] [--json]` | Pack and export adapter. |
+| `market install <path>` | `[--force] [--json]` | Install adapter package. |
+| `market uninstall <domain>` | `[--json]` | Uninstall adapter. |
+| `market rollback <domain>` | `[--index] [--json]` | Rollback to a backup version. |
+| `workflow run <file>` | `[--json] [--dry-run]` | Execute YAML workflow. |
+| `workflow validate <file>` | `[--json]` | Validate workflow file. |
+| `workflow batch <adapter> <cmd> <data>` | `[--concurrency] [--json]` | Batch execution. |
+| `report list` | `[--domain] [--json]` | List execution reports. |
+| `report show <id>` | `[--json]` | View report details. |
+| `<domain> <command>` | `[--json] [args...]` | Execute a command from an adapter. |
 
-**全局选项：** `--json` `--verbose` `--debug` `--cdp-url <ws://host:port>` `--headless` `--sandbox`
+**Global Options:** `--json` `--verbose` `--debug` `--cdp-url <ws://host:port>` `--headless` `--sandbox` `--explain`
 
-## 架构概览
+## Architecture Overview
 
 ```
 cliany-site/src/cliany_site/
-├── cli.py              # 主入口，SafeGroup 全局异常捕获
-├── config.py           # 统一配置中心（环境变量 + .env）
-├── errors.py           # 异常层级体系 + 错误码
-├── response.py         # JSON 信封 {success, data, error}
-├── logging_config.py   # 结构化日志（JSON format + 脱敏）
-├── sdk.py              # Python SDK（同步 + 异步）
-├── server.py           # HTTP API 服务（aiohttp）
-├── security.py         # Session 加密（Fernet + Keychain）
-├── sandbox.py          # 沙箱策略执行
-├── audit.py            # 代码安全审计（AST 分析）
-├── marketplace.py      # 适配器市场（打包/安装/回滚）
-├── browser/            # CDP 连接 + AXTree + Chrome 启动 + iframe
-├── explorer/           # LLM 工作流探索 + 原子提取 + 验证
-├── codegen/            # 代码生成（模板/参数推导/去重/合并）
-├── workflow/           # YAML 编排 + 批量执行
-├── commands/           # 内置 CLI 命令
-└── tui/                # Textual 终端 UI
+├── cli.py              # Main entry point, SafeGroup global exception capture
+├── config.py           # Unified configuration center (env + .env)
+├── errors.py           # Exception hierarchy + error codes
+├── response.py         # JSON envelope {success, data, error}
+├── logging_config.py   # Structured logging (JSON format + masking)
+├── sdk.py              # Python SDK (sync + async)
+├── server.py           # HTTP API service (aiohttp)
+├── security.py         # Session encryption (Fernet + Keychain)
+├── sandbox.py          # Sandbox policy execution
+├── audit.py            # Code security audit (AST analysis)
+├── marketplace.py      # Adapter marketplace (pack/install/rollback)
+├── browser/            # CDP connection + AXTree + Chrome start + iframe
+├── explorer/           # LLM workflow exploration + atom extraction + verification
+├── codegen/            # Code generation (template/param inference/deduplication/merge)
+├── workflow/           # YAML orchestration + batch execution
+├── commands/           # Built-in CLI commands
+└── tui/                # Textual terminal UI
 ```
 
-## 安全特性
+## Security Features
 
-- **Session 加密**：Fernet 对称加密，密钥存入系统 Keychain（macOS Keychain / Linux Secret Service），无 Keychain 时降级为文件密钥
-- **沙箱模式**：`--sandbox` 限制 navigate 同域、禁止 `javascript:` / `file://` / `data:` URL、禁止文件下载；本轮闭环优先覆盖 CLI adapter 执行路径
-- **代码审计**：codegen 输出自动 AST 扫描，检测 `eval` / `exec` / `os.system` / `subprocess` 等危险调用
+- **Session Encryption**: Fernet symmetric encryption with keys stored in system Keychain (macOS Keychain / Linux Secret Service); falls back to file keys if Keychain is unavailable.
+- **Sandbox Mode**: `--sandbox` limits navigation to the same origin, forbids `javascript:` / `file://` / `data:` URLs, and prevents file downloads.
+- **Code Audit**: Automatic AST scanning of codegen output to detect dangerous calls like `eval` / `exec`.
 
-## 贡献指南 / Contributing
-
-欢迎参与贡献！请查阅 [CONTRIBUTING.md](CONTRIBUTING.md) 了解开发环境搭建、代码规范和 PR 流程。
+## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, and PR workflow.
 
-## 限制说明
+## Limitations
 
-- 需要 Chrome/Chromium（自动启动或手动 `--remote-debugging-port=9222`）
-- 需要有效的 LLM API Key（Anthropic 或 OpenAI）
-- 生成的命令依赖页面 DOM 结构，大幅页面改版后可能需要重新 explore（小幅变化由模糊匹配和自愈机制处理）
-- Session 不跨浏览器 Profile 共享
-- 跨域 iframe 默认启用递归采集（可通过 `CLIANY_CROSS_ORIGIN_IFRAMES` 配置）
+- Requires Chrome/Chromium (auto-start or manual `--remote-debugging-port=9222`).
+- Requires a valid LLM API Key (Anthropic or OpenAI).
+- Generated commands depend on page DOM structure; major redesigns may require re-exploration (minor changes handled by fuzzy matching and self-healing).
+- Sessions are not shared across browser profiles.
+- Recursive collection for cross-origin iframes is enabled by default (configurable via `CLIANY_CROSS_ORIGIN_IFRAMES`).
 
-## 更新日志 / Changelog
-
-查看完整更新日志：[CHANGELOG.md](CHANGELOG.md)
+## Changelog
 
 See full changelog: [CHANGELOG.md](CHANGELOG.md)
