@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["schema_version", "domain", "generated_at", "generator_version", "commands"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "enum": [2]
+    },
+    "domain": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "generator_version": {
+      "type": "string"
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "params": {
+            "type": "array"
+          },
+          "returns": {
+            "type": "object"
+          },
+          "examples": {
+            "type": "array"
+          },
+          "source": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "canonical_actions": {
+      "type": "array"
+    },
+    "selector_pool": {
+      "type": "array"
+    },
+    "smoke": {
+      "type": "array"
+    },
+    "heal_history": {
+      "type": "array"
+    }
+  }
+}

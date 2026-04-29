@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.resources as importlib_resources
 import json
 import logging
 from pathlib import Path
@@ -12,18 +13,16 @@ from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_m
 
 logger = logging.getLogger(__name__)
 
-# 禁用的危险代码模式（逐行字符串匹配）
 BANNED_PATTERNS = ["eval(", "exec(", "__import__(", "subprocess.", "os.system("]
-
-# schema 文件路径（相对于本文件向上 4 级到项目根目录）
-_SCHEMA_PATH = Path(__file__).parents[3] / "schemas" / "metadata.v2.json"
 
 
 def _load_schema() -> dict:
     try:
-        return json.loads(_SCHEMA_PATH.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        logger.warning("无法加载 schema 文件 %s: %s", _SCHEMA_PATH, exc)
+        ref = importlib_resources.files("cliany_site").joinpath("schemas/metadata.v2.json")
+        content = ref.read_text(encoding="utf-8")
+        return json.loads(content)
+    except (OSError, json.JSONDecodeError, TypeError) as exc:
+        logger.warning("无法加载 schema 文件: %s", exc)
         return {}
 
 

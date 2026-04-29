@@ -192,6 +192,93 @@ class TestParameterValidation:
         assert result.exit_code != 0
 
 
+class TestRootJsonErrorEnvelope:
+    """根 CLI --json 模式下错误应使用新 envelope 格式 {ok: false}，不得使用旧 {success: false}"""
+
+    def test_invalid_option_uses_new_envelope(self):
+        """无效选项（UsageError）应返回 {ok: false, error.code, error.message}"""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["list", "--invalid-option-xyz", "--json"])
+        assert result.exit_code != 0
+        data = json.loads(result.output)
+        assert "ok" in data, "新信封必须有 ok 字段"
+        assert data["ok"] is False
+        assert "error" in data
+        assert "code" in data["error"]
+        assert "message" in data["error"]
+        assert "success" not in data, "不得出现旧信封 success 字段"
+
+    def test_unknown_command_uses_new_envelope(self):
+        """未知命令（UsageError）应返回 ok=false 且 error.code == E_INVALID_PARAM"""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "nonexistent-command-xyz"])
+        assert result.exit_code != 0
+        data = json.loads(result.output)
+        assert data["ok"] is False
+        assert data["error"]["code"] == "E_INVALID_PARAM"
+        assert "success" not in data
+
+    def test_invalid_option_error_code_is_e_invalid_param(self):
+        """UsageError 的 code 必须是 E_INVALID_PARAM"""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--json", "list", "--no-such-flag"])
+        assert result.exit_code != 0
+        data = json.loads(result.output)
+        assert data["error"]["code"] == "E_INVALID_PARAM"
+
+
+class TestListLegacyFiltering:
+    """list --json 默认应隐藏 legacy adapter；--legacy --json 才显示"""
+
+    def test_list_json_hides_legacy_by_default(self, tmp_home, no_llm):
+        """list --json 不应返回 loader 会跳过的 legacy adapter"""
+        from pathlib import Path
+
+        adapters_dir = tmp_home / ".cliany-site" / "adapters"
+        legacy_dir = adapters_dir / "old.local"
+        legacy_dir.mkdir(parents=True)
+        import json as _json
+        (legacy_dir / "metadata.json").write_text(
+            _json.dumps({"domain": "old.local", "schema_version": "1", "commands": []}),
+            encoding="utf-8",
+        )
+        (legacy_dir / "commands.py").write_text(
+            "import click\n\n@click.group()\ndef cli():\n    pass\n",
+            encoding="utf-8",
+        )
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["list", "--json"])
+        assert result.exit_code == 0, result.output
+        data = _json.loads(result.output)
+        domains = [a["domain"] for a in data["data"]["adapters"]]
+        assert "old.local" not in domains, "legacy adapter 不应出现在默认 list 中"
+
+    def test_list_legacy_flag_shows_legacy(self, tmp_home, no_llm):
+        """list --legacy --json 应能看到 legacy adapter"""
+        from pathlib import Path
+
+        adapters_dir = tmp_home / ".cliany-site" / "adapters"
+        legacy_dir = adapters_dir / "old.local"
+        legacy_dir.mkdir(parents=True)
+        import json as _json
+        (legacy_dir / "metadata.json").write_text(
+            _json.dumps({"domain": "old.local", "schema_version": "1", "commands": []}),
+            encoding="utf-8",
+        )
+        (legacy_dir / "commands.py").write_text(
+            "import click\n\n@click.group()\ndef cli():\n    pass\n",
+            encoding="utf-8",
+        )
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["list", "--legacy", "--json"])
+        assert result.exit_code == 0, result.output
+        data = _json.loads(result.output)
+        domains = [item["domain"] for item in data["data"]]
+        assert "old.local" in domains, "legacy adapter 应出现在 --legacy 列表中"
+
+
 class TestJsonOutput:
     """--json 模式下的输出格式验证"""
 

@@ -14,8 +14,11 @@ from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_m
 logger = logging.getLogger(__name__)
 
 
-def discover_adapters() -> list[dict[str, Any]]:
-    """扫描 ~/.cliany-site/adapters/ 目录，返回所有已安装的 adapter 信息"""
+def discover_adapters(include_legacy: bool = False) -> list[dict[str, Any]]:
+    """扫描 ~/.cliany-site/adapters/ 目录，返回已安装的 adapter 信息。
+
+    默认只返回可加载的 v2 adapter（exclude legacy）；传 include_legacy=True 则包含旧版。
+    """
     adapters_dir = get_config().adapters_dir
     adapters: list[dict[str, Any]] = []
     if not adapters_dir.exists():
@@ -35,11 +38,14 @@ def discover_adapters() -> list[dict[str, Any]]:
             with contextlib.suppress(json.JSONDecodeError, OSError):
                 metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
 
-        commands_list = metadata.get("commands", [])
-        command_count = len(commands_list) if isinstance(commands_list, list) else 0
-
         schema_version = metadata.get("schema_version", "")
         needs_migration = schema_version != METADATA_SCHEMA_VERSION
+
+        if needs_migration and not include_legacy:
+            continue
+
+        commands_list = metadata.get("commands", [])
+        command_count = len(commands_list) if isinstance(commands_list, list) else 0
 
         adapters.append(
             {
@@ -88,7 +94,7 @@ def register_adapters(main_cli: click.Group) -> dict:
     """将所有已安装 adapter 的命令组注册到主 CLI，返回含 legacy_adapters 的结果字典"""
     legacy_adapters: list[str] = []
 
-    for adapter_info in discover_adapters():
+    for adapter_info in discover_adapters(include_legacy=True):
         domain = adapter_info["domain"]
         metadata_path = get_config().adapters_dir / domain / "metadata.json"
 

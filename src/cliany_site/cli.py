@@ -6,14 +6,15 @@ from typing import NoReturn
 import click
 
 from cliany_site.config import get_config
-from cliany_site.errors import COMMAND_NOT_FOUND, EXECUTION_FAILED
+from cliany_site.envelope import ErrorCode
+from cliany_site.envelope import err as envelope_err
 from cliany_site.logging_config import (
     LEVEL_DEBUG,
     LEVEL_QUIET,
     LEVEL_VERBOSE,
     setup_logging,
 )
-from cliany_site.response import error_response, print_response
+from cliany_site.response import print_response
 
 
 def _ensure_dirs():
@@ -37,13 +38,17 @@ def _is_json_mode(args: list[str] | None) -> bool:
 
 def _build_click_error(exc: click.ClickException) -> dict:
     message = str(exc)
-    code = EXECUTION_FAILED
-    fix = None
+    ctx = getattr(exc, "ctx", None)
+    command = ctx.command_path if ctx is not None else "cli"
+
     if isinstance(exc, click.UsageError):
-        if "No such command" in message:
-            code = COMMAND_NOT_FOUND
-        fix = "使用 'cliany-site --help' 查看可用命令"
-    return error_response(code=code, message=message, fix=fix)
+        return envelope_err(
+            command=command,
+            code=ErrorCode.E_INVALID_PARAM,
+            message=message,
+            hint="使用 'cliany-site --help' 查看可用命令",
+        )
+    return envelope_err(command=command, code=ErrorCode.E_UNKNOWN, message=message)
 
 
 def _render_error(exc: Exception, json_mode: bool) -> None:
@@ -51,7 +56,11 @@ def _render_error(exc: Exception, json_mode: bool) -> None:
         if isinstance(exc, click.ClickException):
             response = _build_click_error(exc)
         else:
-            response = error_response(EXECUTION_FAILED, str(exc))
+            response = envelope_err(
+                command="cli",
+                code=ErrorCode.E_UNKNOWN,
+                message=str(exc),
+            )
         print_response(response, json_mode=True, exit_on_error=False)
         return
 

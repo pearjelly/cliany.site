@@ -51,6 +51,7 @@ Changelog = "https://github.com/pearjelly/cliany.site/blob/master/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cliany_site"]
+artifacts = ["src/cliany_site/schemas/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
