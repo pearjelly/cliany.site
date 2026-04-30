@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import builtins
 from dataclasses import dataclass, field
-from typing import List, Literal
+from typing import Literal
 
 SourceType = Literal["builtin", "atom", "adapter"]
 PRIORITY: dict[SourceType, int] = {"builtin": 0, "atom": 1, "adapter": 2}
@@ -92,7 +93,7 @@ class Registry:
             return [e for e in entries if e.source == source]
         return entries
 
-    def to_agent_md_dict(self) -> List[dict]:
+    def to_agent_md_dict(self) -> builtins.list[dict]:
         return [
             {
                 "name": e.name,

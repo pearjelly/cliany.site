@@ -6,8 +6,7 @@ from typing import NoReturn
 import click
 
 from cliany_site.config import get_config
-from cliany_site.envelope import ErrorCode
-from cliany_site.envelope import Envelope
+from cliany_site.envelope import Envelope, ErrorCode
 from cliany_site.envelope import err as envelope_err
 from cliany_site.logging_config import (
     LEVEL_DEBUG,
