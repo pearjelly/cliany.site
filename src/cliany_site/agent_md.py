@@ -36,7 +36,7 @@ def _render_section(registry: object, version: int) -> str:  # noqa: ARG001
         "|------|------|",
     ]
     try:
-        for entry in registry.list():  # type: ignore[union-attr]
+        for entry in registry.list():  # type: ignore[attr-defined]
             desc = getattr(entry, "description", "") or ""
             lines.append(f"| `{entry.name}` | {desc} |")
     except Exception:  # noqa: BLE001

@@ -7,7 +7,7 @@ import click
 from cliany_site.browser.cdp import cdp_from_context
 from cliany_site.commands.browser import browser_group
 from cliany_site.commands.browser._common import print_envelope
-from cliany_site.envelope import ErrorCode, err, ok
+from cliany_site.envelope import Envelope, ErrorCode, err, ok
 
 
 @browser_group.command("eval")
@@ -45,7 +45,7 @@ def eval_cmd(
         ctx.exit(1)
 
 
-async def _run_eval(cdp, expr: str) -> dict:
+async def _run_eval(cdp, expr: str) -> Envelope:
     if not await cdp.check_available():
         return err(
             command="browser eval",

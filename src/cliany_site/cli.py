@@ -7,6 +7,7 @@ import click
 
 from cliany_site.config import get_config
 from cliany_site.envelope import ErrorCode
+from cliany_site.envelope import Envelope
 from cliany_site.envelope import err as envelope_err
 from cliany_site.logging_config import (
     LEVEL_DEBUG,
@@ -36,7 +37,7 @@ def _is_json_mode(args: list[str] | None) -> bool:
     return "--json" in argv
 
 
-def _build_click_error(exc: click.ClickException) -> dict:
+def _build_click_error(exc: click.ClickException) -> Envelope:
     message = str(exc)
     ctx = getattr(exc, "ctx", None)
     command = ctx.command_path if ctx is not None else "cli"

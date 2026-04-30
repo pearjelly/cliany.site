@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, cast
 
 from click.testing import CliRunner
 
@@ -21,7 +21,7 @@ def run_atom(
     runner = CliRunner()
     result = runner.invoke(cli, args, catch_exceptions=False)
     try:
-        envelope = json.loads(result.output)
+        envelope = cast(Envelope, json.loads(result.output))
     except (json.JSONDecodeError, ValueError):
         from cliany_site.envelope import ErrorCode, err
 

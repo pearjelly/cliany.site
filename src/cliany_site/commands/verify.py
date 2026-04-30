@@ -4,6 +4,7 @@ import importlib.resources as importlib_resources
 import json
 import logging
 from pathlib import Path
+from typing import Any, cast
 
 import click
 
@@ -20,7 +21,7 @@ def _load_schema() -> dict:
     try:
         ref = importlib_resources.files("cliany_site").joinpath("schemas/metadata.v2.json")
         content = ref.read_text(encoding="utf-8")
-        return json.loads(content)
+        return cast(dict[str, Any], json.loads(content))
     except (OSError, json.JSONDecodeError, TypeError) as exc:
         logger.warning("无法加载 schema 文件: %s", exc)
         return {}

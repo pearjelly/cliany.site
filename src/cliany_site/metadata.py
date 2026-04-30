@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Any, cast
 
 
 class LegacyMetadataError(Exception):
@@ -32,5 +33,5 @@ def load_metadata(path: str | Path) -> dict:
     if schema_version != 2:
         raise MetadataParseError(f"Unsupported schema version: {schema_version}")
 
-    return metadata
+    return cast(dict[str, Any], metadata)
 

@@ -8,7 +8,7 @@ import time
 import click
 
 from cliany_site.config import get_config
-from cliany_site.envelope import ErrorCode, err, ok
+from cliany_site.envelope import Envelope, ErrorCode, err, ok
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +164,7 @@ def accept_heal(ctx: click.Context, domain: str, json_mode: bool | None) -> None
     _output(envelope, effective_json)
 
 
-def _output(envelope: dict, json_mode: bool) -> None:
+def _output(envelope: Envelope, json_mode: bool) -> None:
     if json_mode:
         import json as _json
 
@@ -173,5 +173,7 @@ def _output(envelope: dict, json_mode: bool) -> None:
         if envelope.get("ok"):
             click.echo(f"✓ accept-heal 成功: {envelope.get('data', {})}")
         else:
-            err_obj = envelope.get("error") or {}
-            click.echo(f"✗ {err_obj.get('code', 'ERROR')}: {err_obj.get('message', '')}")
+            err_info = envelope.get("error")
+            err_code = err_info.get("code", "ERROR") if err_info else "ERROR"
+            err_msg = err_info.get("message", "") if err_info else ""
+            click.echo(f"✗ {err_code}: {err_msg}")

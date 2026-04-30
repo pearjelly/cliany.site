@@ -4,7 +4,9 @@ import json
 import logging
 import os
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass, field
+from typing import Any, cast
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ class Healer:
         self,
         domain: str,
         command: str,
-        failure_envelope: dict,
+        failure_envelope: Mapping[str, Any],
         axtree_summary: str = "",
         max_calls: int | None = None,
         max_tokens: int | None = None,
@@ -183,7 +185,7 @@ class Healer:
     def _build_prompt(
         domain: str,
         command: str,
-        failure_envelope: dict,
+        failure_envelope: Mapping[str, Any],
         axtree_summary: str,
         metadata: dict,
     ) -> str:
@@ -224,6 +226,6 @@ class Healer:
                 text = match.group(0)
 
         try:
-            return json.loads(text)
+            return cast(dict[str, Any], json.loads(text))
         except (json.JSONDecodeError, ValueError):
             return None

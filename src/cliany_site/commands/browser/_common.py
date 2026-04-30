@@ -6,6 +6,8 @@ from typing import Any
 
 import click
 
+from cliany_site.envelope import Envelope
+
 
 def resolve_ref(selector_map: dict, ref: str) -> Any | None:
     """从 selector_map 查找 ref；不存在返回 None"""
@@ -33,7 +35,7 @@ def fuzzy_find_by_text(selector_map: dict, text: str, limit: int = 5) -> list[di
     return results[:limit]
 
 
-def print_envelope(result: dict, json_mode: bool) -> None:
+def print_envelope(result: Envelope, json_mode: bool) -> None:
     """统一输出 envelope（供各子命令复用）"""
     if json_mode:
         click.echo(json.dumps(result, ensure_ascii=False, indent=2))
@@ -41,8 +43,10 @@ def print_envelope(result: dict, json_mode: bool) -> None:
         data = result.get("data")
         click.echo(f"✓ {result.get('command', '')}  {data}")
     else:
-        error = result.get("error", {})
+        error_info = result.get("error")
+        error_code = error_info.get("code", "ERROR") if error_info else "ERROR"
+        error_msg = error_info.get("message", "") if error_info else ""
         click.echo(
-            f"✗ {error.get('code', 'ERROR')}: {error.get('message', '')}",
+            f"✗ {error_code}: {error_msg}",
             err=True,
         )

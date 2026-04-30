@@ -9,7 +9,7 @@ import click
 
 from cliany_site.agent_md import _SENTINEL_RE
 from cliany_site.config import get_config
-from cliany_site.envelope import ErrorCode, err, ok
+from cliany_site.envelope import Envelope, ErrorCode, err, ok
 from cliany_site.metadata import LegacyMetadataError, load_metadata
 from cliany_site.registry import Registry
 from cliany_site.response import print_response
@@ -38,7 +38,7 @@ def doctor(ctx: click.Context, json_mode: bool | None):
     print_response(result, json_mode=effective_json_mode, exit_on_error=True)
 
 
-async def _run_checks(cdp_conn: Any = None) -> dict:
+async def _run_checks(cdp_conn: Any = None) -> Envelope:
     from cliany_site.browser.cdp import CDPConnection
     from cliany_site.explorer.engine import _load_dotenv, _normalize_openai_base_url
 

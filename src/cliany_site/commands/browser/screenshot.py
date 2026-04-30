@@ -7,19 +7,21 @@ import click
 
 from cliany_site.browser.cdp import cdp_from_context
 from cliany_site.commands.browser import browser_group
-from cliany_site.envelope import ErrorCode, err, ok
+from cliany_site.envelope import Envelope, ErrorCode, err, ok
 
 
-def _print_envelope(result: dict, json_mode: bool) -> None:
+def _print_envelope(result: Envelope, json_mode: bool) -> None:
     if json_mode:
         click.echo(json.dumps(result, ensure_ascii=False, indent=2))
     elif result.get("ok"):
         data = result.get("data", {})
         click.echo(f"✓ 截图已保存  {data.get('path', '')}  ({data.get('size_bytes', 0)} bytes)")
     else:
-        error = result.get("error", {})
+        error_info = result.get("error")
+        error_code = error_info.get("code", "ERROR") if error_info else "ERROR"
+        error_msg = error_info.get("message", "") if error_info else ""
         click.echo(
-            f"✗ {error.get('code', 'ERROR')}: {error.get('message', '')}",
+            f"✗ {error_code}: {error_msg}",
             err=True,
         )
 
@@ -46,7 +48,7 @@ def screenshot(
         ctx.exit(1)
 
 
-async def _run_screenshot(cdp, out: str | None, full_page: bool) -> dict:
+async def _run_screenshot(cdp, out: str | None, full_page: bool) -> Envelope:
     from cliany_site.browser.screenshot import capture_screenshot
 
     if not await cdp.check_available():

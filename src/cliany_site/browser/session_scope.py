@@ -5,6 +5,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any, cast
 
 
 @dataclass
@@ -24,7 +25,7 @@ class ScopesRegistry:
         if not self._path.exists():
             return {}
         try:
-            return json.loads(self._path.read_text(encoding="utf-8"))
+            return cast(dict[str, dict[str, Any]], json.loads(self._path.read_text(encoding="utf-8")))
         except (json.JSONDecodeError, OSError):
             return {}
 
