@@ -7,6 +7,27 @@
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-04-30
+
+### 文档
+- README.md 默认改为英文，新增 README.zh.md（中文完整版）
+- 删除旧的 README.en.md
+- 官网全面英文化：默认语言改为 en、style.css 注释翻译为英文、补齐 script.js 缺失英文翻译
+
+### 官网
+- 新增 5 张 v0.9.x 功能展示 cards（Smart Self-Healing、Static Verification、Self-Describing Contract、Atom Commands System、Metadata Schema v2）
+- SEO meta 同步中英语言切换
+
+## [0.9.2] - 2026-04-28
+
+### 修复
+- 录像 AXTree bytes 序列化 + explore 命令迁移到新 envelope 格式
+
+## [0.9.1] - 2026-04-27
+
+### 修复
+- 修复 3 个运行时回归：根级 JSON 错误信封、legacy adapter 列表过滤、verify schema 资源打包
+
 ## [0.9.0] - 2026-04-26
 
 ### BREAKING CHANGES
@@ -151,7 +172,12 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.8.2...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.9.3...HEAD
+[0.9.3]: https://github.com/pearjelly/cliany.site/compare/v0.9.2...v0.9.3
+[0.9.2]: https://github.com/pearjelly/cliany.site/compare/v0.9.1...v0.9.2
+[0.9.1]: https://github.com/pearjelly/cliany.site/compare/v0.9.0...v0.9.1
+[0.9.0]: https://github.com/pearjelly/cliany.site/compare/v0.8.3...v0.9.0
+[0.8.3]: https://github.com/pearjelly/cliany.site/compare/v0.8.2...v0.8.3
 [0.8.2]: https://github.com/pearjelly/cliany.site/compare/v0.8.1...v0.8.2
 [0.8.1]: https://github.com/pearjelly/cliany.site/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/pearjelly/cliany.site/compare/v0.7.1...v0.8.0
