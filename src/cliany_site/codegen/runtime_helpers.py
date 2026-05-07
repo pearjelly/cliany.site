@@ -5,7 +5,6 @@ from typing import Any, cast
 
 from click.testing import CliRunner
 
-from cliany_site.cli import cli
 from cliany_site.envelope import Envelope
 
 
@@ -14,6 +13,8 @@ def run_atom(
     session: str | None = None,
     heal_on_failure: bool = False,
 ) -> Envelope:
+    from cliany_site.cli import cli  # 延迟导入，避免与 loader.py 的循环导入
+
     args = list(command)
     if session:
         args.extend(["--session", session])
