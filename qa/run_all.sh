@@ -51,6 +51,7 @@ run_script "$SCRIPT_DIR/test_extract_writer.sh"
 run_script "$SCRIPT_DIR/test_interactive_smoke.sh"
 run_script "$SCRIPT_DIR/test_replay_smoke.sh"
 run_script "$SCRIPT_DIR/test_extend_smoke.sh"
+run_script "$SCRIPT_DIR/test_v010_e2e.sh"
 
 echo ""
 echo "========================================"

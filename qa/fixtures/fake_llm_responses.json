@@ -1,0 +1,4 @@
+[
+  "{\"actions\": [{\"type\": \"navigate\", \"url\": \"http://localhost:18080\", \"description\": \"导航到首页\"}], \"done\": false, \"reasoning\": \"先导航到首页\"}",
+  "{\"actions\": [{\"type\": \"click\", \"ref\": \"1\", \"description\": \"点击搜索按钮\"}], \"commands\": [{\"name\": \"search\", \"description\": \"搜索功能\", \"args\": [{\"name\": \"query\", \"description\": \"搜索关键词\", \"type\": \"str\", \"action_index\": 0}]}], \"canonical_actions\": [], \"selector_pool\": [], \"done\": true, \"reasoning\": \"搜索工作流完成\"}"
+]

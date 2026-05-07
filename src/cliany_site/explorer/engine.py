@@ -229,6 +229,14 @@ def _normalize_openai_base_url(base_url: str | None) -> str | None:
 def _get_llm(role: str = "explore"):
     _load_dotenv()
 
+    if os.environ.get("CLIANY_QA_OFFLINE") == "1":
+        fake_path = os.environ.get("CLIANY_QA_FAKE_LLM_RESPONSES")
+        if not fake_path:
+            raise ValueError("CLIANY_QA_OFFLINE=1 requires CLIANY_QA_FAKE_LLM_RESPONSES")
+        import json as _json
+        from cliany_site.testing.fake_llm import FakeChatModel
+        return FakeChatModel(responses=_json.loads(Path(fake_path).read_text()))
+
     # 双模型支持：录制阶段用 EXPLORE 环境变量，回放阶段用 REPLAY 环境变量
     # 若对应 role 的变量未设置，则回退到通用变量
     role_upper = role.upper()

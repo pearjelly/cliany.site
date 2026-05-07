@@ -1,0 +1,3 @@
+[
+  "{\"actions\": [], \"commands\": [], \"canonical_actions\": [], \"selector_pool\": [], \"done\": true, \"reasoning\": \"诊断完成\", \"root_cause\": \"元素选择器失效\", \"suggested_fix\": \"重新 explore 更新 selector\"}"
+]

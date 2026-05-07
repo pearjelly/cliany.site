@@ -39,6 +39,8 @@ class ErrorCode:
     E_EVAL_DISABLED = "E_EVAL_DISABLED"
     E_EVAL_BLACKLIST = "E_EVAL_BLACKLIST"
     E_UNKNOWN = "E_UNKNOWN"
+    E_QA_OFFLINE_MISSING_FAKE_LLM = "E_QA_OFFLINE_MISSING_FAKE_LLM"
+    E_DIAGNOSE = "E_DIAGNOSE"
 
     @classmethod
     def from_exception(cls, exc: Exception) -> str:

@@ -71,6 +71,16 @@ def explore_cmd(
 
         _load_dotenv()
 
+        qa_offline = os.getenv("CLIANY_QA_OFFLINE") == "1"
+        if qa_offline and not os.getenv("CLIANY_QA_FAKE_LLM_RESPONSES"):
+            return err(
+                "explore",
+                ErrorCode.E_QA_OFFLINE_MISSING_FAKE_LLM,
+                "CLIANY_QA_OFFLINE=1 requires CLIANY_QA_FAKE_LLM_RESPONSES",
+                hint="set CLIANY_QA_FAKE_LLM_RESPONSES to a JSON file path",
+                source="builtin",
+            )
+
         cdp = cdp_from_context(ctx)
         if not await cdp.check_available():
             return err(
@@ -80,44 +90,45 @@ def explore_cmd(
                 hint="启动 Chrome 并开启 --remote-debugging-port=9222",
             )
 
-        provider = os.getenv("CLIANY_LLM_PROVIDER", "anthropic").lower()
-        if provider not in {"anthropic", "openai"}:
-            return err(
-                "explore",
-                ErrorCode.E_LLM_DISABLED,
-                "LLM provider 配置无效",
-                hint="请将 CLIANY_LLM_PROVIDER 设置为 anthropic 或 openai",
-            )
-
-        has_anthropic_key = bool(os.getenv("CLIANY_ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY"))
-        has_openai_key = bool(os.getenv("CLIANY_OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY"))
-
-        if provider == "anthropic" and not has_anthropic_key:
-            return err(
-                "explore",
-                ErrorCode.E_LLM_DISABLED,
-                "Anthropic API Key 未配置",
-                hint="设置 CLIANY_ANTHROPIC_API_KEY（或旧版 ANTHROPIC_API_KEY）",
-            )
-
-        if provider == "openai" and not has_openai_key:
-            return err(
-                "explore",
-                ErrorCode.E_LLM_DISABLED,
-                "OpenAI API Key 未配置",
-                hint="设置 CLIANY_OPENAI_API_KEY（OpenRouter key 也可）",
-            )
-
-        if provider == "openai":
-            try:
-                _normalize_openai_base_url(os.getenv("CLIANY_OPENAI_BASE_URL"))
-            except (ValueError, TypeError) as e:
+        if not qa_offline:
+            provider = os.getenv("CLIANY_LLM_PROVIDER", "anthropic").lower()
+            if provider not in {"anthropic", "openai"}:
                 return err(
                     "explore",
                     ErrorCode.E_LLM_DISABLED,
-                    f"OpenAI base URL 配置无效: {e}",
-                    hint="请使用 https://host[:port]/v1 格式，例如 https://sub2api.chinahrt.com/v1",
+                    "LLM provider 配置无效",
+                    hint="请将 CLIANY_LLM_PROVIDER 设置为 anthropic 或 openai",
                 )
+
+            has_anthropic_key = bool(os.getenv("CLIANY_ANTHROPIC_API_KEY") or os.getenv("ANTHROPIC_API_KEY"))
+            has_openai_key = bool(os.getenv("CLIANY_OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY"))
+
+            if provider == "anthropic" and not has_anthropic_key:
+                return err(
+                    "explore",
+                    ErrorCode.E_LLM_DISABLED,
+                    "Anthropic API Key 未配置",
+                    hint="设置 CLIANY_ANTHROPIC_API_KEY（或旧版 ANTHROPIC_API_KEY）",
+                )
+
+            if provider == "openai" and not has_openai_key:
+                return err(
+                    "explore",
+                    ErrorCode.E_LLM_DISABLED,
+                    "OpenAI API Key 未配置",
+                    hint="设置 CLIANY_OPENAI_API_KEY（OpenRouter key 也可）",
+                )
+
+            if provider == "openai":
+                try:
+                    _normalize_openai_base_url(os.getenv("CLIANY_OPENAI_BASE_URL"))
+                except (ValueError, TypeError) as e:
+                    return err(
+                        "explore",
+                        ErrorCode.E_LLM_DISABLED,
+                        f"OpenAI base URL 配置无效: {e}",
+                        hint="请使用 https://host[:port]/v1 格式，例如 https://sub2api.chinahrt.com/v1",
+                    )
 
         parsed = urlparse(url)
         domain = parsed.netloc or parsed.path
@@ -141,7 +152,22 @@ def explore_cmd(
                 cdp_url=cdp_url, headless=headless, interactive=interactive, extend_domain=extend
             )
             explore_result = await explorer.explore(url, workflow_description, progress=reporter, record=record)
-        except (OSError, RuntimeError, ValueError) as e:
+        except ValueError as e:
+            if "CLIANY_QA_FAKE_LLM_RESPONSES" in str(e):
+                return err(
+                    "explore",
+                    ErrorCode.E_QA_OFFLINE_MISSING_FAKE_LLM,
+                    str(e),
+                    hint="set CLIANY_QA_FAKE_LLM_RESPONSES to a JSON file path",
+                    source="builtin",
+                )
+            return err(
+                "explore",
+                ErrorCode.E_UNKNOWN,
+                f"探索失败: {e}",
+                hint="请检查 URL 是否可访问，LLM 配置是否正确",
+            )
+        except (OSError, RuntimeError) as e:
             return err(
                 "explore",
                 ErrorCode.E_UNKNOWN,
