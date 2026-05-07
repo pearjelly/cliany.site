@@ -1,5 +1,6 @@
 # src/cliany_site/commands/doctor.py
 import asyncio
+import json
 import os
 import time
 from pathlib import Path
@@ -71,7 +72,7 @@ async def _run_checks(cdp_conn: Any = None) -> Envelope:
     )
     checks.append({
         "name": "llm",
-        "status": "ok" if has_llm else "fail",
+        "status": "ok" if has_llm else "warning",
         "duration_ms": 0,
         "details": None
     })
@@ -170,4 +171,42 @@ async def _run_checks(cdp_conn: Any = None) -> Envelope:
     if failed:
         return err("doctor", ErrorCode.E_UNKNOWN, f"检查失败: {', '.join(failed)}",
                    details={"checks": checks}, source="builtin")
-    return ok("doctor", {"checks": checks}, source="builtin")
+    
+    # 新增字段
+    data = {"checks": checks}
+    data["schema_version"] = 3
+    
+    # manifest_status
+    manifest_path = Path.home() / ".cliany-site" / "cli-manifest.json"
+    if not manifest_path.exists():
+        data["manifest_status"] = "missing"
+    else:
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                json.load(f)
+            data["manifest_status"] = "ok"
+        except (json.JSONDecodeError, OSError):
+            data["manifest_status"] = "corrupt"
+    
+    # legacy_adapter_count
+    legacy_count = 0
+    if adapters_dir.exists():
+        for d in adapters_dir.iterdir():
+            if d.is_dir():
+                meta_path = d / "metadata.json"
+                if meta_path.exists():
+                    try:
+                        with open(meta_path, "r", encoding="utf-8") as f:
+                            meta = json.load(f)
+                        if meta.get("schema_version") != 3:
+                            legacy_count += 1
+                    except (json.JSONDecodeError, OSError):
+                        pass  # 忽略损坏的 metadata
+    data["legacy_adapter_count"] = legacy_count
+    
+    data["capability_router"] = "enabled"
+    data["network_capture"] = os.environ.get("CLIANY_CAPTURE_NETWORK", "1") != "0"
+    data["console_capture"] = os.environ.get("CLIANY_CAPTURE_CONSOLE", "1") != "0"
+    data["diagnose_llm"] = os.environ.get("CLIANY_DIAGNOSE_LLM", "1") != "0"
+    
+    return ok("doctor", data, source="builtin")
