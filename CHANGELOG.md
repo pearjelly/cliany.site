@@ -7,6 +7,31 @@
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-05-07
+
+### BREAKING 变更
+- **metadata schema v3 硬切换**：schema_version 2 及以下 adapter 标记为 legacy，需通过 `cliany-site migrate` 重新迁移或重新 explore 生成。
+
+### 新功能（借鉴自 opencli）
+- **DOM 剪枝 + 复合控件提取**（T02/T03）：AXTree 捕获时四层剪枝（深度/节点数/屏蔽角色/压缩序列），自动提取 `<select>` / `<input type=date>` / `<input type=file>` 的选项元数据，减少 prompt token 消耗 30%~50%。
+- **Lazy Adapter Registry**（T05/T06）：`LazyAdapterRegistry` 替代全量 import，`discover()` 仅读 `metadata.json`，`get(domain, cmd)` 按需 `importlib.import_module()`，加快 CLI 启动 2~5x。
+- **Repair Cache（修复缓存）**（T10）：heal 结果写入 `~/.cliany-site/adapters/{domain}/repair-cache.json`（LRU 100 条/domain），相同故障模式命中缓存可跳过 LLM 调用。
+- **Network + Console Capture**（T11）：explore 阶段自动捕获 Network 请求（>1MB 停止）和 Console 日志（500 条滚动覆盖），存入 StepRecord，供诊断/回放使用。
+- **Capability Routing**（T13）：探索时嗅探 API endpoints，replay 时自动路由 browser / api 双通道，`--force-browser` flag 强制走 browser 模式。
+- **migrate 命令**（T12）：`cliany-site migrate [--json] [--dry-run]` 一键扫描并迁移所有 legacy adapter 到 schema_version 3，带 `.bak` 备份。
+- **Diagnostic Mode**（T20/T22/T23）：`cliany-site --diagnose --json <domain> <cmd>` 在命令失败时触发 LLM 诊断，输出 `root_cause` + `suggested_fix`；生成的 adapter 模板已内置 `diagnose_if_enabled(ctx, failed)` hook。
+
+### 新测试
+- `tests/test_v010_integration.py`：10 项集成测试（CI 可跑，不依赖 Chrome/LLM key）
+- `tests/fixtures/fake_llm.py`：`FakeChatModel` 用于离线 QA（`CLIANY_QA_OFFLINE=1`）
+- `qa/test_v010_e2e.sh`：端到端 shell 测试套件
+
+### 环境变量新增
+- `CLIANY_QA_OFFLINE=1`：离线 QA 模式，配合 `CLIANY_QA_FAKE_LLM_RESPONSES` 使用
+- `CLIANY_QA_FAKE_LLM_RESPONSES=<path>`：FakeChatModel 的 response 文件路径
+- `--force-browser`：root flag，强制 replay 走 browser 通道
+- `--diagnose`：root flag，命令失败时触发 LLM 诊断
+
 ## [0.9.3] - 2026-04-30
 
 ### 文档

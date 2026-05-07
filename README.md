@@ -54,6 +54,19 @@ cliany-site is built on browser-use and Large Language Models (LLMs), enabling f
 - **TUI Management Interface** — A Textual-based terminal UI for visual adapter management.
 - **iframe/Shadow DOM** — Recursive AXTree collection with cross-origin iframe and Shadow DOM penetration.
 
+### New in v0.10.0 (BREAKING)
+
+> ⚠️ **BREAKING**: metadata schema v3 hardcut. v2 adapters must be migrated.  
+> Run `cliany-site migrate --json` to upgrade all legacy adapters.
+
+- **DOM Pruning & Compound Controls** — 4-layer AXTree pruning (depth/count/role/compress) + automatic extraction of `<select>` / `<input type=date>` / `<input type=file>` option metadata. Reduces prompt tokens by 30-50%.
+- **Lazy Adapter Registry** — `discover()` reads only `metadata.json`; `get(domain, cmd)` loads on demand. CLI startup 2-5x faster.
+- **Repair Cache** — Heal results cached in `~/.cliany-site/adapters/{domain}/repair-cache.json` (LRU 100/domain). Repeated failures skip LLM calls.
+- **Network + Console Capture** — Explore phase auto-captures Network requests (stops at 1MB) and Console logs (500-entry ring), stored in StepRecord.
+- **Capability Routing** — Sniffs API endpoints during explore; replay routes browser/API automatically. Override with `--force-browser`.
+- **`migrate` command** — `cliany-site migrate [--json] [--dry-run]` scans and upgrades all legacy adapters to schema v3 with `.bak` backups.
+- **Diagnostic Mode** — `cliany-site --diagnose --json <domain> <cmd>` triggers LLM diagnosis on failure, outputs `root_cause` + `suggested_fix`. Built into generated adapter templates via `diagnose_if_enabled()`.
+
 ### New in v0.9.x
 
 - **Metadata Schema v2 Hardcut** — Mandatory schema_version=2; legacy adapters are rejected with a prompt to regenerate via `cliany-site explore <url> "<workflow>"`.
@@ -226,6 +239,7 @@ cliany-site market rollback github.com
 | `explore <url> <workflow>` | `[--json] [--interactive] [--extend <domain>] [--record]` | Explore workflow and generate adapter. |
 | `list` | `[--json]` | List generated adapters. |
 | `verify <domain>` | `[--json]` | Statically verify adapter schema, signatures, and dependency integrity. |
+| `migrate` | `[--json] [--dry-run]` | Migrate all legacy adapters to schema v3. |
 | `replay <domain>` | `[--session <id>] [--step]` | Replay exploration recording with screenshots and actions. |
 | `check <domain>` | `[--json] [--fix]` | Check adapter health status. |
 | `tui` | | Start TUI management interface. |
@@ -241,7 +255,7 @@ cliany-site market rollback github.com
 | `report show <id>` | `[--json]` | View report details. |
 | `<domain> <command>` | `[--json] [args...]` | Execute a command from an adapter. |
 
-**Global Options:** `--json` `--verbose` `--debug` `--cdp-url <ws://host:port>` `--headless` `--sandbox` `--explain`
+**Global Options:** `--json` `--verbose` `--debug` `--cdp-url <ws://host:port>` `--headless` `--sandbox` `--explain` `--force-browser` `--diagnose`
 
 ## Architecture Overview
 
