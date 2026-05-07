@@ -144,6 +144,22 @@ class CDPConnection:
             release_scope(scope)
 
 
+async def enable_network_capture(
+    browser_session: BrowserSession,
+    *,
+    session_id: str | None = None,
+) -> None:
+    await browser_session.cdp_client.send.Network.enable(session_id=session_id)
+
+
+async def enable_console_capture(
+    browser_session: BrowserSession,
+    *,
+    session_id: str | None = None,
+) -> None:
+    await browser_session.cdp_client.send.Console.enable(session_id=session_id)
+
+
 def cdp_from_context(ctx: Any) -> CDPConnection:
     obj: dict = {}
     if hasattr(ctx, "find_root"):
