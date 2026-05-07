@@ -116,8 +116,10 @@ class SafeGroup(click.Group):
 @click.option("--headless", is_flag=True, default=False, help="以 Headless 模式启动 Chrome")
 @click.option("--sandbox", is_flag=True, default=False, help="沙箱模式：限制跨域导航和危险操作")
 @click.option("--explain", is_flag=True, default=False, help="输出 registry 命令契约 JSON")
+@click.option("--force-browser", is_flag=True, default=False, help="强制走浏览器路径，不走 API capability 路由")
+@click.option("--diagnose", is_flag=True, default=False, help="失败时调用 LLM 输出诊断报告 (≤500 tokens)")
 @click.pass_context
-def cli(ctx, json_mode, verbose, debug, cdp_url, headless, sandbox, explain):
+def cli(ctx, json_mode, verbose, debug, cdp_url, headless, sandbox, explain, force_browser, diagnose):
     """cliany-site: 将任意网站 CLI 化"""
     _ensure_dirs()
     ctx.ensure_object(dict)
@@ -125,6 +127,8 @@ def cli(ctx, json_mode, verbose, debug, cdp_url, headless, sandbox, explain):
     ctx.obj["cdp_url"] = cdp_url
     ctx.obj["headless"] = headless
     ctx.obj["sandbox"] = sandbox
+    ctx.obj["force_browser"] = force_browser
+    ctx.obj["diagnose"] = diagnose
 
     if debug:
         log_level = LEVEL_DEBUG

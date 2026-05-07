@@ -125,4 +125,32 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
     )
 
 
-__all__ = ["run_atom", "execute_steps_via_atoms", "_execute_single_step"]
+def diagnose_if_enabled(ctx, failure_context: dict) -> dict:
+    """失败时若 --diagnose flag 开启，调用 diagnostic.run_diagnose 返回诊断结果。
+    
+    若 diagnose 未启用或 LLM 不可用，直接返回空 dict。
+    """
+    import click as _click
+    try:
+        root_obj = _click.get_current_context().find_root().obj or {}
+    except RuntimeError:
+        root_obj = {}
+    
+    if not root_obj.get("diagnose", False):
+        return {}
+    
+    try:
+        from cliany_site.diagnostic import collect_diagnostic_context, format_diagnostic_prompt, run_diagnose
+        context = collect_diagnostic_context(
+            failure=failure_context,
+            recording={},
+            network=[],
+            console=[],
+            axtree_snapshot={},
+        )
+        return run_diagnose(context, llm_call_fn=None)  # llm_call_fn=None 时若 CLIANY_DIAGNOSE_LLM=0 则跳过
+    except Exception:
+        return {}
+
+
+__all__ = ["run_atom", "execute_steps_via_atoms", "_execute_single_step", "diagnose_if_enabled"]
