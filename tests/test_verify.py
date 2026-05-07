@@ -8,8 +8,8 @@ from click.testing import CliRunner
 from cliany_site.cli import cli
 
 
-VALID_V2_METADATA = {
-    "schema_version": 2,
+VALID_V3_METADATA = {
+    "schema_version": 3,
     "domain": "test.com",
     "generated_at": "2024-01-01T00:00:00Z",
     "generator_version": "1.0.0",
@@ -49,7 +49,7 @@ def test_verify_no_adapters(tmp_home, no_llm):
 
 
 def test_verify_ok_adapter(tmp_home, no_llm, adapters_dir):
-    _make_adapter(adapters_dir, "test.com", VALID_V2_METADATA, SAFE_COMMANDS_PY)
+    _make_adapter(adapters_dir, "test.com", VALID_V3_METADATA, SAFE_COMMANDS_PY)
     runner = CliRunner()
     result = runner.invoke(cli, ["verify", "--json", "test.com"])
     assert result.exit_code == 0, result.output
@@ -63,7 +63,7 @@ def test_verify_ok_adapter(tmp_home, no_llm, adapters_dir):
 
 
 def test_verify_security_issue(tmp_home, no_llm, adapters_dir):
-    _make_adapter(adapters_dir, "evil.com", VALID_V2_METADATA, UNSAFE_COMMANDS_PY)
+    _make_adapter(adapters_dir, "evil.com", VALID_V3_METADATA, UNSAFE_COMMANDS_PY)
     runner = CliRunner()
     result = runner.invoke(cli, ["verify", "--json", "evil.com"])
     assert result.exit_code == 0, result.output
@@ -90,7 +90,7 @@ def test_verify_legacy_adapter(tmp_home, no_llm, adapters_dir):
 
 
 def test_verify_all_adapters(tmp_home, no_llm, adapters_dir):
-    _make_adapter(adapters_dir, "a.com", VALID_V2_METADATA | {"domain": "a.com"}, SAFE_COMMANDS_PY)
+    _make_adapter(adapters_dir, "a.com", VALID_V3_METADATA | {"domain": "a.com"}, SAFE_COMMANDS_PY)
     legacy = {"domain": "b.com", "commands": []}
     _make_adapter(adapters_dir, "b.com", legacy, SAFE_COMMANDS_PY)
     runner = CliRunner()

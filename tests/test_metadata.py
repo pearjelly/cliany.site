@@ -7,12 +7,11 @@ from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_m
 
 
 class TestLoadMetadata:
-    def test_v2_valid(self, tmp_path):
-        """加载 fixtures/metadata.v2.sample.json → 不抛错，返回 dict"""
+    def test_v2_is_now_legacy(self):
+        """schema_version=2 (fixture) → LegacyMetadataError (v3 업그레이드 후)"""
         sample_path = pathlib.Path("tests/fixtures/metadata.v2.sample.json")
-        metadata = load_metadata(sample_path)
-        assert isinstance(metadata, dict)
-        assert metadata["schema_version"] == 2
+        with pytest.raises(LegacyMetadataError):
+            load_metadata(sample_path)
 
     def test_v1_raises_legacy(self, tmp_path):
         """schema_version=1 → 抛 LegacyMetadataError"""

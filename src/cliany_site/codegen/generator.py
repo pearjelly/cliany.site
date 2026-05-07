@@ -28,7 +28,7 @@ from cliany_site.codegen.templates import (
 from cliany_site.config import get_config
 from cliany_site.explorer.models import ActionStep, ExploreResult
 
-METADATA_SCHEMA_VERSION = 2
+METADATA_SCHEMA_VERSION = 3
 
 try:
     _GENERATOR_VERSION: str = _pkg_version("cliany-site")

@@ -19,7 +19,7 @@ BANNED_PATTERNS = ["eval(", "exec(", "__import__(", "subprocess.", "os.system("]
 
 def _load_schema() -> dict:
     try:
-        ref = importlib_resources.files("cliany_site").joinpath("schemas/metadata.v2.json")
+        ref = importlib_resources.files("cliany_site").joinpath("schemas/metadata.v3.json")
         content = ref.read_text(encoding="utf-8")
         return cast(dict[str, Any], json.loads(content))
     except (OSError, json.JSONDecodeError, TypeError) as exc:

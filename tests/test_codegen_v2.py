@@ -26,7 +26,7 @@ def search():
     pass
 """
 
-_SCHEMA_PATH = pathlib.Path("schemas/metadata.v2.json")
+_SCHEMA_PATH = pathlib.Path("schemas/metadata.v3.json")
 
 
 def _make_explore_result(command_names: list[str]) -> ExploreResult:
@@ -42,11 +42,11 @@ class TestMetadataSchemaVersion:
         save_adapter("test.com", _MINIMAL_CODE)
         meta_path = tmp_home / ".cliany-site" / "adapters" / "test.com" / "metadata.json"
         meta = json.loads(meta_path.read_text())
-        assert meta["schema_version"] == 2
+        assert meta["schema_version"] == 3
         assert isinstance(meta["schema_version"], int)
 
-    def test_constant_is_integer_two(self):
-        assert METADATA_SCHEMA_VERSION == 2
+    def test_constant_is_integer_three(self):
+        assert METADATA_SCHEMA_VERSION == 3
         assert isinstance(METADATA_SCHEMA_VERSION, int)
 
 
