@@ -736,6 +736,7 @@ def {function_name}({function_signature}):
     elif failed is None:
         click.echo("\u2713 {command_name} \u5b8c\u6210")
     else:
+        diagnose_if_enabled(ctx, failed or {{}})
         err_msg = (failed.get("error") or {{}}).get("message", "")
         click.echo(f"\u2717 {{err_msg}}", err=True)
         ctx.exit(1)
@@ -761,6 +762,7 @@ def run_workflow(ctx: click.Context, json_mode: bool | None):
     elif failed is None:
         click.echo("\u2713 run-workflow \u5b8c\u6210")
     else:
+        diagnose_if_enabled(ctx, failed or {})
         err_msg = (failed.get("error") or {}).get("message", "")
         click.echo(f"\u2717 {err_msg}", err=True)
         ctx.exit(1)
