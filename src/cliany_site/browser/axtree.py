@@ -9,8 +9,10 @@ tuple[SerializedDOMState, EnhancedDOMTreeNode, dict]；llm_representation() 生�
 from __future__ import annotations
 
 import logging
+import os
 from typing import TYPE_CHECKING, Any
 
+from cliany_site.browser.axtree_pruning import prune_selector_map
 from cliany_site.browser.selector import enrich_selector_map
 
 if TYPE_CHECKING:
@@ -98,6 +100,11 @@ async def capture_axtree(browser_session: Any) -> dict:
 
     selector_map = enrich_selector_map(selector_map)
 
+    if os.environ.get("CLIANY_AXTREE_PRUNE", "1") != "0":
+        selector_map, pruning_meta = prune_selector_map(selector_map)
+    else:
+        pruning_meta: dict = {"original_count": 0, "pruned_count": 0, "pruning_ratio": 0.0}
+
     if nested_stats["iframe_count"] > 0 or nested_stats["shadow_root_count"] > 0:
         logger.info(
             "AXTree 嵌套上下文: iframe=%d shadow_root=%d unique_frames=%d",
@@ -133,6 +140,7 @@ async def capture_axtree(browser_session: Any) -> dict:
         "iframe_count": nested_stats["iframe_count"],
         "shadow_root_count": nested_stats["shadow_root_count"],
         "screenshot": screenshot_data,
+        "pruning_meta": pruning_meta,
     }
 
 
@@ -182,5 +190,12 @@ def axtree_to_markdown(tree: dict) -> str:
     parts.append("## Interactive Elements")
     parts.append("")
     parts.append(content)
+
+    pruning_meta = tree.get("pruning_meta", {})
+    pruning_ratio = pruning_meta.get("pruning_ratio", 0)
+    if pruning_ratio > 0:
+        pruned = pruning_meta.get("pruned_count", 0)
+        original = pruning_meta.get("original_count", 0)
+        parts.append(f"Pruning: {pruned}/{original} ({pruning_ratio:.1%} reduced)")
 
     return "\n".join(parts)
