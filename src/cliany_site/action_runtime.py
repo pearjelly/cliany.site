@@ -5,12 +5,14 @@ import json
 import logging
 import re
 import time
+import warnings
 from collections.abc import Awaitable, Callable
 from datetime import UTC
 from typing import Any, cast
 from urllib.parse import urljoin, urlparse
 
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
+from cliany_site.capability import ApiEndpoint, RouteDecision, route_action
 from cliany_site.config import get_config
 from cliany_site.errors import ClanySiteError
 from cliany_site.extract import build_extract_js
@@ -544,6 +546,19 @@ async def _resolve_action_node(browser_session: Any, action_data: dict[str, Any]
     return None
 
 
+async def _execute_api_step(endpoint: ApiEndpoint, action: dict) -> dict:
+    """通过 HTTP API 执行一个 action 步骤（代替 CDP 浏览器操作）。
+    
+    GET 请求目标 endpoint.url，返回响应 JSON。
+    """
+    import aiohttp
+    async with aiohttp.ClientSession() as session:
+        async with session.get(endpoint.url) as r:
+            r.raise_for_status()
+            data = await r.json()
+    return {"success": True, "mode": "api", "data": data}
+
+
 async def execute_action_steps(
     browser_session: Any,
     actions_data: list[dict[str, Any]],
@@ -555,6 +570,7 @@ async def execute_action_steps(
     start_index: int = 0,
     dry_run: bool = False,
     extraction_results: list | None = None,
+    metadata: dict | None = None,
 ) -> None:
     import importlib
     from datetime import datetime
@@ -570,6 +586,32 @@ async def execute_action_steps(
     TypeTextEvent = events_module.TypeTextEvent
 
     effective_actions = substitute_parameters(actions_data, params) if params is not None else actions_data
+
+    # capability routing 初始化
+    _api_endpoints: list[ApiEndpoint] = []
+    if metadata:
+        for ep_dict in (metadata.get("api_endpoints") or []):
+            try:
+                _api_endpoints.append(ApiEndpoint(
+                    url=ep_dict["url"],
+                    method=ep_dict.get("method", "GET"),
+                    status=ep_dict.get("status", 200),
+                    sample_response_keys=ep_dict.get("sample_response_keys", []),
+                    content_type=ep_dict.get("content_type", "application/json"),
+                ))
+            except (KeyError, TypeError):
+                pass
+
+    # 检查 force_browser flag
+    import click as _click
+    _force_browser = False
+    try:
+        _ctx = _click.get_current_context(silent=True)
+        if _ctx is not None and isinstance(_ctx.obj, dict):
+            _force_browser = bool(_ctx.obj.get("force_browser", False))
+    except Exception:
+        pass
+
     reporter: ProgressReporter = progress or NullProgressReporter()
 
     mode_label = "[dry-run] " if dry_run else ""
@@ -660,6 +702,18 @@ async def execute_action_steps(
                                 suggestion="目标元素可能已更名或移除，建议重新 explore",
                             )
                         logger.debug("[dry-run] %s → 元素已定位 (验证通过)", action_type)
+
+                # capability routing：非 dry_run 时检查是否走 API
+                if not dry_run and action_type not in ("navigate", "extract"):
+                    _decision = route_action(action_data, _api_endpoints, force_browser=_force_browser)
+                    if _decision.mode == "api" and _decision.endpoint is not None:
+                        try:
+                            _api_result = await _execute_api_step(_decision.endpoint, action_data)
+                            completed_indices.append(idx)
+                            continue
+                        except Exception as _api_err:
+                            warnings.warn(f"API step failed: {_api_err}, falling back to browser", UserWarning, stacklevel=2)
+                            # fall through to browser execution
 
                 elif action_type == "navigate":
                     current_url = step_page_url

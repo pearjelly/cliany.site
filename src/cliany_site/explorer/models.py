@@ -42,6 +42,8 @@ class ExploreResult:
     smoke: list[dict] = field(default_factory=list)
     canonical_actions: list[dict] = field(default_factory=list)
     selector_pool: list[dict] = field(default_factory=list)
+    api_endpoints: list = field(default_factory=list)
+    capability: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         import dataclasses
@@ -65,6 +67,8 @@ class StepRecord:
     timestamp: str
     screenshot_path: str | None = None
     axtree_snapshot_path: str | None = None
+    network: dict | None = None
+    console: dict | None = None
     rolled_back: bool = False
 
 
@@ -76,4 +80,6 @@ class RecordingManifest:
     workflow: str
     started_at: str
     steps: list[StepRecord] = field(default_factory=list)
+    network_summary: dict | None = None
+    console_summary: dict | None = None
     completed: bool = False

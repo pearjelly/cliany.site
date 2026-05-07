@@ -132,6 +132,10 @@ async def capture_axtree(browser_session: Any) -> dict:
             quality=cfg.screenshot_quality,
         )
 
+    # 提取复合控件（在 selector_map 处理之后，return 之前）
+    from cliany_site.browser.compounds import extract_compounds
+    compounds_data = extract_compounds(selector_map)
+
     return {
         "element_tree": element_tree_text,
         "selector_map": selector_map,
@@ -141,6 +145,7 @@ async def capture_axtree(browser_session: Any) -> dict:
         "shadow_root_count": nested_stats["shadow_root_count"],
         "screenshot": screenshot_data,
         "pruning_meta": pruning_meta,
+        "compounds": compounds_data,
     }
 
 
@@ -156,9 +161,11 @@ def serialize_axtree(tree: dict) -> str:
 
 
 def extract_interactive_elements(tree: dict) -> list[dict]:
+    compounds = tree.get("compounds", {})  # ← 获取 compounds
     selector_map = tree.get("selector_map", {})
-    return [
-        {
+    elements = []
+    for ref_id, element in selector_map.items():
+        elem = {
             "ref": element.get("ref", str(ref_id)),
             "role": element.get("role", "unknown"),
             "name": element.get("name", ""),
@@ -166,8 +173,11 @@ def extract_interactive_elements(tree: dict) -> list[dict]:
             **({"frame_id": element["frame_id"]} if "frame_id" in element else {}),
             **({"shadow_root_type": element["shadow_root_type"]} if "shadow_root_type" in element else {}),
         }
-        for ref_id, element in selector_map.items()
-    ]
+        ref = elem.get("ref")
+        if str(ref) in compounds:
+            elem["compound"] = compounds[str(ref)]
+        elements.append(elem)
+    return elements
 
 
 def axtree_to_markdown(tree: dict) -> str:

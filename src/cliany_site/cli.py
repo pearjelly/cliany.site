@@ -231,6 +231,10 @@ from cliany_site.loader import register_adapters
 
 register_adapters(cli)
 
+from cliany_site.commands.migrate import migrate_cmd
+
+cli.add_command(migrate_cmd)
+
 
 if __name__ == "__main__":
     cli()

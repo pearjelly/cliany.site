@@ -376,6 +376,20 @@ def save_adapter(
         ),
         "heal_history": [],
     }
+    # v3 新增字段
+    import hashlib as _hashlib
+    _sig = _hashlib.sha256(commands_path.read_bytes()).hexdigest()
+    base_metadata["axtree"] = {
+        "compounds": {},
+        "pruning_meta": {
+            "original_count": 0,
+            "pruned_count": 0,
+            "pruning_ratio": 0.0,
+        },
+    }
+    base_metadata["capability"] = "browser"
+    base_metadata["api_endpoints"] = []
+    base_metadata["signature"] = _sig
     if metadata:
         base_metadata.update(metadata)
 

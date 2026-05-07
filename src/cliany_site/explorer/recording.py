@@ -6,6 +6,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import os
+from cliany_site.browser.network_capture import NetworkCapture, start_network_capture, stop_network_capture
+from cliany_site.browser.console_capture import ConsoleCapture, start_console_capture, stop_console_capture
+
 from cliany_site.explorer.models import RecordingManifest, StepRecord
 
 
@@ -14,6 +18,8 @@ class RecordingManager:
         if base_dir is None:
             base_dir = Path.home() / ".cliany-site" / "recordings"
         self.base_dir = base_dir
+        self._net_cap: NetworkCapture | None = None
+        self._con_cap: ConsoleCapture | None = None
 
     def _recording_dir(self, domain: str, session_id: str) -> Path:
         return self.base_dir / domain / session_id
@@ -27,6 +33,9 @@ class RecordingManager:
     ) -> RecordingManifest:
         rec_dir = self._recording_dir(domain, session_id)
         rec_dir.mkdir(parents=True, exist_ok=True)
+        # 初始化 capture
+        self._net_cap = start_network_capture(None) if os.environ.get("CLIANY_CAPTURE_NETWORK", "1") != "0" else None
+        self._con_cap = start_console_capture(None) if os.environ.get("CLIANY_CAPTURE_CONSOLE", "1") != "0" else None
         return RecordingManifest(
             domain=domain,
             session_id=session_id,
@@ -59,6 +68,39 @@ class RecordingManager:
         else:
             step_record.axtree_snapshot_path = None
 
+        # 填入 network snapshot
+        if self._net_cap is not None:
+            snapshot_data = stop_network_capture(self._net_cap)
+            # 截断保护：序列化后超 100KB 则丢弃尾部请求
+            import json as _json
+            raw_json = _json.dumps(snapshot_data["requests"], ensure_ascii=False)
+            if len(raw_json.encode()) > 100 * 1024:
+                # 逐条添加直到超限
+                kept = []
+                total = 0
+                for req in snapshot_data["requests"]:
+                    req_bytes = len(_json.dumps(req, ensure_ascii=False).encode())
+                    if total + req_bytes > 100 * 1024:
+                        break
+                    kept.append(req)
+                    total += req_bytes
+                step_record.network = {
+                    "requests": kept,
+                    "truncated": True,
+                    "total_size": total,
+                    "count": len(kept),
+                }
+            else:
+                step_record.network = snapshot_data
+        else:
+            step_record.network = None
+
+        # 填入 console snapshot
+        if self._con_cap is not None:
+            step_record.console = stop_console_capture(self._con_cap)
+        else:
+            step_record.console = None
+
         manifest.steps.append(step_record)
         self._write_manifest(manifest)
 
@@ -71,6 +113,16 @@ class RecordingManager:
 
     def finalize(self, manifest: RecordingManifest, completed: bool) -> None:
         manifest.completed = completed
+        if self._net_cap is not None:
+            net_data = stop_network_capture(self._net_cap)
+            manifest.network_summary = {"count": net_data["count"], "total_size": net_data["total_size"]}
+        else:
+            manifest.network_summary = None
+        if self._con_cap is not None:
+            con_data = stop_console_capture(self._con_cap)
+            manifest.console_summary = {"count": con_data["count"]}
+        else:
+            manifest.console_summary = None
         self._write_manifest(manifest)
 
     def list_recordings(self, domain: str) -> list[RecordingManifest]:

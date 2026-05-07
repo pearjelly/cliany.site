@@ -33,7 +33,7 @@ def _create_adapter_with_actions(tmp_path: Path, domain: str = "test.com") -> Pa
     commands_py.write_text("import click\n", encoding="utf-8")
 
     metadata = {
-        "schema_version": 2,
+        "schema_version": 3,
         "domain": domain,
         "generated_at": "2026-01-01T00:00:00Z",
         "generator_version": "0.9.0",

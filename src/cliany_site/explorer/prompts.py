@@ -428,3 +428,64 @@ VISION_ELEMENT_LOCATE_PROMPT = """你是一个页面元素定位专家。
 ```
 
 如果找不到匹配的元素，ref 返回空字符串，confidence 返回 0。"""
+
+
+def format_compounds_section(compounds: dict) -> str:
+    """将复合控件元数据格式化为 Markdown 说明段落，供 LLM prompt 使用。
+
+    Args:
+        compounds: dict，键为 @ref 编号，值为复合控件元数据 dict。
+
+    Returns:
+        Markdown 字符串；若无有效控件则返回空字符串。
+    """
+    if not compounds:
+        return ""
+
+    lines: list[str] = []
+
+    for ref, info in compounds.items():
+        if not isinstance(info, dict):
+            continue
+
+        # 格式一：{"kind": "select", "options": [...]}
+        if "kind" in info and info["kind"] == "select" and "options" in info:
+            options: list[dict] = info["options"][:5]
+            opts_str = ", ".join(
+                f"{o.get('text', '')}={o.get('value', '')}" for o in options
+            )
+            suffix = " (truncated)" if len(info["options"]) > 5 else ""
+            lines.append(f"- @{ref} → select: {opts_str}{suffix}")
+
+        # 格式二：{"select_options": {"options": [...], "truncated": bool}}
+        elif "select_options" in info:
+            sel = info["select_options"]
+            options = (sel.get("options") or [])[:5]
+            opts_str = ", ".join(
+                f"{o.get('text', '')}={o.get('value', '')}" for o in options
+            )
+            trunc = sel.get("truncated", False) or len(sel.get("options") or []) > 5
+            suffix = " (truncated)" if trunc else ""
+            lines.append(f"- @{ref} → select: {opts_str}{suffix}")
+
+        # 格式三：{"date_format": {"type": ..., ...}}
+        elif "date_format" in info:
+            df = info["date_format"]
+            date_type = df.get("type", "date")
+            min_v = df.get("min", "")
+            max_v = df.get("max", "")
+            extra = f" [{min_v}~{max_v}]" if min_v or max_v else ""
+            lines.append(f"- @{ref} → {date_type}{extra}")
+
+        # 格式四：{"file_accept": {"accept": ..., "multiple": bool}}
+        elif "file_accept" in info:
+            fa = info["file_accept"]
+            accept = fa.get("accept", "")
+            multiple = fa.get("multiple", False)
+            multi_str = " (multiple)" if multiple else ""
+            lines.append(f"- @{ref} → file: {accept}{multi_str}")
+
+    if not lines:
+        return ""
+
+    return "## Compound Controls\n" + "\n".join(lines)

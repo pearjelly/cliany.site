@@ -10,7 +10,7 @@ from cliany_site.healer import HealResult, Healer
 
 
 VALID_V2_METADATA = {
-    "schema_version": 2,
+    "schema_version": 3,
     "domain": "test.com",
     "generated_at": "2024-01-01T00:00:00Z",
     "generator_version": "0.9.0",
@@ -18,7 +18,7 @@ VALID_V2_METADATA = {
 }
 
 HEALED_JSON = {
-    "schema_version": 2,
+    "schema_version": 3,
     "domain": "test.com",
     "healed_command": "search",
     "new_selectors": {"ref_1": "#new-btn"},

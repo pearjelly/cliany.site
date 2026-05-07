@@ -1,0 +1,7 @@
+{
+  "schema_version": 2,
+  "domain": "example.com",
+  "generated_at": "2024-01-01T00:00:00Z",
+  "generator_version": "0.9.0",
+  "commands": [{"name": "search", "description": "搜索"}]
+}

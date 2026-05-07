@@ -36,6 +36,9 @@ from cliany_site.explorer.prompts import (
 from cliany_site.extract_writer import save_extract_markdown
 from cliany_site.progress import NullProgressReporter, ProgressReporter
 
+import warnings
+from cliany_site.capability import sniff_api_endpoints
+
 logger = logging.getLogger(__name__)
 
 
@@ -934,4 +937,23 @@ class WorkflowExplorer:
             len(result.commands),
             total_elapsed,
         )
+        # capability sniffing
+        try:
+            _endpoints = sniff_api_endpoints([], {})
+            # 按 URL 去重
+            seen_urls: set = set()
+            deduped: list = []
+            for ep in _endpoints:
+                if ep.url not in seen_urls:
+                    seen_urls.add(ep.url)
+                    deduped.append(ep)
+            result.api_endpoints = deduped
+        except Exception as _sniff_err:
+            warnings.warn(f"capability sniffing failed: {_sniff_err}", UserWarning, stacklevel=2)
+            result.api_endpoints = []
+        
+        result.capability = {
+            "mode": "auto",
+            "endpoints_count": len(result.api_endpoints),
+        }
         return result

@@ -57,10 +57,7 @@
       "type": "object",
       "properties": {
         "compounds": {
-          "type": "array",
-          "items": {
-            "type": "object"
-          }
+          "type": "object"
         },
         "pruning_meta": {
           "type": "object"
@@ -68,18 +65,8 @@
       }
     },
     "capability": {
-      "type": "object",
-      "properties": {
-        "read": {
-          "type": "boolean"
-        },
-        "write": {
-          "type": "boolean"
-        },
-        "navigate": {
-          "type": "boolean"
-        }
-      }
+      "type": "string",
+      "enum": ["browser"]
     },
     "api_endpoints": {
       "type": "array",

@@ -6,6 +6,7 @@ import os
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, cast
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,30 @@ class HealResult:
     calls_used: int = 0
     tokens_used: int = 0
     error: str | None = None
+    cache_hit: bool = False
+
+
+def _heal_cache_path(domain: str) -> Path:
+    return Path.home() / ".cliany-site" / "adapters" / domain / "heal-cache.json"
+
+
+def _heal_cache_load(domain: str) -> dict:
+    from cliany_site.atomic_io import atomic_read_json
+    return atomic_read_json(_heal_cache_path(domain), {})
+
+
+def _heal_cache_save(domain: str, key: str, value: dict) -> None:
+    from cliany_site.atomic_io import atomic_read_json, atomic_write_json
+    path = _heal_cache_path(domain)
+    data = atomic_read_json(path, {})
+    data[key] = value
+    # LRU: 超过 100 条时删除最旧的
+    if len(data) > 100:
+        # 没有时间戳时按插入序近似排序（Python dict 保序），删除前面的
+        keys_to_delete = list(data.keys())[: len(data) - 100]
+        for k in keys_to_delete:
+            del data[k]
+    atomic_write_json(path, data)
 
 
 class Healer:
@@ -64,6 +89,31 @@ class Healer:
         calls_used = 0
         tokens_used = 0
         response_text = ""
+
+        # 计算 cache key
+        from cliany_site.repair_cache import compute_subtree_hash
+        
+        _selector = ""
+        _err = failure_envelope.get("error") or {}
+        _details = _err.get("details") or {}
+        if isinstance(_details, dict):
+            _selector = str(_details.get("selector", ""))
+        _subtree_data = failure_envelope.get("data")
+        if not isinstance(_subtree_data, dict):
+            _subtree_data = {}
+        _subtree_hash = compute_subtree_hash(_subtree_data)
+        _cache_key = f"{_selector}:{_subtree_hash}"
+
+        # cache lookup
+        if domain:
+            _cached = _heal_cache_load(domain).get(_cache_key)
+            if _cached is not None:
+                return HealResult(
+                    ok=True,
+                    new_selectors=_cached.get("new_selectors", {}),
+                    new_actions=_cached.get("new_actions", []),
+                    cache_hit=True,
+                )
 
         for attempt in range(resolved_max_calls):
             if tokens_used >= resolved_max_tokens:
@@ -142,6 +192,13 @@ class Healer:
                 tokens_used=tokens_used,
                 error=f"写入失败: {exc}",
             )
+
+        # cache write
+        if domain and _cache_key:
+            _heal_cache_save(domain, _cache_key, {
+                "new_selectors": new_selectors,
+                "new_actions": new_actions,
+            })
 
         return HealResult(
             ok=True,

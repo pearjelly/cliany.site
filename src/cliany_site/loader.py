@@ -129,6 +129,9 @@ def register_adapters(main_cli: click.Group) -> dict:
             file=sys.stderr,
         )
 
+    return {"legacy_adapters": legacy_adapters}
+
+
 class LazyAdapterRegistry:
     def __init__(self, adapters_dir: Path):
         self._adapters_dir = adapters_dir

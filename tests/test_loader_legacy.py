@@ -10,7 +10,7 @@ from cliany_site.cli import cli
 _FIXTURES = Path(__file__).parent / "fixtures"
 
 _V2_METADATA = {
-    "schema_version": 2,
+    "schema_version": 3,
     "domain": "new.local",
     "generated_at": "2026-04-26T12:00:00Z",
     "generator_version": "1.0.0",
