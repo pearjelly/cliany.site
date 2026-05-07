@@ -12,7 +12,7 @@ from typing import Any, cast
 from urllib.parse import urljoin, urlparse
 
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
-from cliany_site.capability import ApiEndpoint, RouteDecision, route_action
+from cliany_site.capability import ApiEndpoint, route_action
 from cliany_site.config import get_config
 from cliany_site.errors import ClanySiteError
 from cliany_site.extract import build_extract_js
@@ -548,7 +548,7 @@ async def _resolve_action_node(browser_session: Any, action_data: dict[str, Any]
 
 async def _execute_api_step(endpoint: ApiEndpoint, action: dict) -> dict:
     """通过 HTTP API 执行一个 action 步骤（代替 CDP 浏览器操作）。
-    
+
     GET 请求目标 endpoint.url，返回响应 JSON。
     """
     import aiohttp

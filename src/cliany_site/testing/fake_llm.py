@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Optional
+from typing import Any
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage
@@ -8,7 +8,7 @@ from langchain_core.outputs import ChatGeneration, ChatResult
 
 
 class FakeChatModel(BaseChatModel):
-    responses: List[str]
+    responses: list[str]
     i: int = 0
 
     @property
@@ -17,8 +17,8 @@ class FakeChatModel(BaseChatModel):
 
     def _generate(
         self,
-        messages: List[BaseMessage],
-        stop: Optional[List[str]] = None,
+        messages: list[BaseMessage],
+        stop: list[str] | None = None,
         run_manager: Any = None,
         **kwargs: Any,
     ) -> ChatResult:

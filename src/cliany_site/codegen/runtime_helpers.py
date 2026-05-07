@@ -127,7 +127,7 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
 
 def diagnose_if_enabled(ctx, failure_context: dict) -> dict:
     """失败时若 --diagnose flag 开启，调用 diagnostic.run_diagnose 返回诊断结果。
-    
+
     若 diagnose 未启用或 LLM 不可用，直接返回空 dict。
     """
     import click as _click
@@ -135,12 +135,12 @@ def diagnose_if_enabled(ctx, failure_context: dict) -> dict:
         root_obj = _click.get_current_context().find_root().obj or {}
     except RuntimeError:
         root_obj = {}
-    
+
     if not root_obj.get("diagnose", False):
         return {}
-    
+
     try:
-        from cliany_site.diagnostic import collect_diagnostic_context, format_diagnostic_prompt, run_diagnose
+        from cliany_site.diagnostic import collect_diagnostic_context, run_diagnose
         context = collect_diagnostic_context(
             failure=failure_context,
             recording={},
