@@ -18,6 +18,7 @@ def _make_config(tmp_path: Path) -> MagicMock:
     cfg.logs_dir = tmp_path / "logs"
     cfg.activity_log_path = tmp_path / "activity.log"
     cfg.cdp_port = 9222
+    cfg.browser_provider = ""  # 默认空字符串表示 Chrome
     cfg.adapters_dir.mkdir(parents=True, exist_ok=True)
     cfg.sessions_dir.mkdir(parents=True, exist_ok=True)
     cfg.to_dict.return_value = {"cdp_port": 9222, "home_dir": str(tmp_path)}

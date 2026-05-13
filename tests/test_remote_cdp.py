@@ -71,6 +71,27 @@ class TestCDPConnectionInit:
         cdp = CDPConnection(cdp_url="ws://explicit:9222")
         assert cdp._cdp_url == "ws://explicit:9222"
 
+    def test_provider_failure_raises_exception(self):
+        from cliany_site.providers.factory import ProviderError
+
+        with patch("cliany_site.providers.factory.get_provider", side_effect=ProviderError("test error")):
+            try:
+                CDPConnection(provider_name="unknown_provider")
+                assert False, "Expected ProviderError to be raised"
+            except ProviderError:
+                pass
+
+    def test_provider_get_cdp_url_failure_raises_exception(self):
+        mock_provider = MagicMock()
+        mock_provider.get_cdp_url.side_effect = RuntimeError("get_cdp_url failed")
+
+        with patch("cliany_site.providers.factory.get_provider", return_value=mock_provider):
+            try:
+                CDPConnection(provider_name="obscura")
+                assert False, "Expected RuntimeError to be raised"
+            except RuntimeError:
+                pass
+
 
 class TestIsRemote:
     def test_empty_url_is_not_remote(self):

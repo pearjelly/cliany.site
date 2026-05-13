@@ -108,6 +108,11 @@ class TestClanySiteConfig:
             "reports_dir",
             "logs_dir",
             "activity_log_path",
+            "browser_provider",
+            "obscura_port",
+            "obscura_version",
+            "obscura_ready_timeout",
+            "obscura_auto_upgrade",
         }
         assert set(d.keys()) == expected_keys
 
