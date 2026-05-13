@@ -65,8 +65,11 @@ jobs:
         run: pytest tests/ -v --tb=short
 
   obscura-smoke:
-    name: Obscura Smoke (offline/mock)
-    runs-on: ubuntu-latest
+    name: Obscura Smoke (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
