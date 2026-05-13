@@ -129,6 +129,35 @@ export CLIANY_OPENAI_API_KEY="sk-..."
 
 Also supports `.env` file configuration. Search order: `~/.config/cliany-site/.env` → `~/.cliany-site/.env` → project directory `.env` → environment variables.
 
+### Experimental: Obscura Browser Provider
+
+Obscura is a lightweight browser provider currently in **experimental** status. Chrome remains the default provider.
+
+> **Note**: Obscura does **not** support `explore` (AXTree/Accessibility) yet. Use it for executing existing adapters or lightweight navigation tasks.
+
+#### Supported Platforms
+- `darwin-arm64` (Apple Silicon)
+- `darwin-x86_64` (Intel Mac)
+- `linux-x86_64`
+- `windows-x86_64`
+
+#### Setup and Usage
+```bash
+# 1. Install Obscura binary (version >= 0.1.0)
+cliany-site obscura install 0.1.0 --json
+
+# 2. Enable Obscura as provider
+export CLIANY_BROWSER_PROVIDER=obscura
+
+# 3. Check status
+cliany-site obscura status --json
+
+# 4. Revert to Chrome
+unset CLIANY_BROWSER_PROVIDER
+```
+
+For more details, see the [Obscura Experimental Guide](docs/walkthroughs/obscura-experimental-guide.md).
+
 ### Verify Environment
 
 ```bash
@@ -242,6 +271,7 @@ cliany-site market rollback github.com
 | `migrate` | `[--json] [--dry-run]` | Migrate all legacy adapters to schema v3. |
 | `replay <domain>` | `[--session <id>] [--step]` | Replay exploration recording with screenshots and actions. |
 | `check <domain>` | `[--json] [--fix]` | Check adapter health status. |
+| `obscura <subcommand>` | `install/use/status/clean/rollback/upgrade/doctor` | Manage experimental Obscura browser provider. |
 | `tui` | | Start TUI management interface. |
 | `serve` | `[--host] [--port]` | Start HTTP API service. |
 | `market publish <domain>` | `[--version] [--json]` | Pack and export adapter. |
