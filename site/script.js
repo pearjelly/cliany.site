@@ -28,7 +28,7 @@ const I18N = {
   'features.value.text': { zh: '先用核心 4 项打通路径，再按需启用扩展能力。', en: 'Start with the core four, then enable advanced capabilities on demand.' },
   'features.focus.explore.desc': { zh: 'AXTree 无注入探索，快速定位可自动化路径。', en: 'Injection-free AXTree exploration to quickly locate automatable paths.' },
   'features.focus.llm.desc': { zh: '把页面语义直接转成可执行 CLI 命令。', en: 'Turn page semantics directly into executable CLI commands.' },
-  'features.focus.json.desc': { zh: '统一 {success,data,error}，自动化易集成。', en: 'Unified {success,data,error} output for easy automation integration.' },
+  'features.focus.json.desc': { zh: '统一 {ok,data,error}，自动化易集成。', en: 'Unified {ok,data,error} output for easy automation integration.' },
   'features.focus.session.desc': { zh: '一次登录跨命令复用，减少重复操作。', en: 'Reuse one login across commands to eliminate repetitive operations.' },
   'features.explore.title': { zh: '零侵入探索', en: 'Zero-Intrusion Exploration' },
   'features.explore.desc': {
@@ -42,8 +42,8 @@ const I18N = {
   },
   'features.json.title': { zh: '标准 JSON 输出', en: 'Standard JSON Output' },
   'features.json.desc': {
-    zh: '所有命令支持 --json 选项，输出统一 {success, data, error} 信封格式，方便管道和自动化集成。',
-    en: 'All commands support --json, outputting a unified {success, data, error} envelope for easy piping and automation.'
+    zh: '所有命令支持 --json 选项，输出统一 {ok, data, error} 信封格式，方便管道和自动化集成。',
+    en: 'All commands support --json, outputting a unified {ok, data, error} envelope for easy piping and automation.'
   },
   'features.session.title': { zh: '持久化 Session', en: 'Persistent Sessions' },
   'features.session.desc': {
@@ -138,8 +138,14 @@ const I18N = {
   'qs.subtitle': { zh: '五分钟完成安装与配置', en: 'Set up in five minutes' },
   'qs.step1': { zh: 'Step 1: 安装', en: 'Step 1: Install' },
   'qs.step2': { zh: 'Step 2: 配置 LLM', en: 'Step 2: Configure LLM' },
-  'qs.step3': { zh: 'Step 3: Chrome 配置', en: 'Step 3: Chrome Setup' },
+  'qs.step3': { zh: 'Step 3: 选择 Provider', en: 'Step 3: Choose Provider' },
   'qs.step4': { zh: 'Step 4: 开始探索', en: 'Step 4: Start Exploring' },
+
+  'obscura.title': { zh: '实验性功能：Obscura Browser Provider', en: 'Experimental: Obscura Browser Provider' },
+  'obscura.desc': { zh: 'Obscura 是一个轻量级的浏览器替代方案，目前处于实验阶段。Chrome 仍然是默认 provider。', en: 'Obscura is a lightweight alternative to Chrome, currently in experimental status. Chrome remains the default provider.' },
+  'obscura.limitation': { zh: '<strong>探索不支持：</strong>Obscura 尚未支持 AXTree 探索功能。请仅用于执行已有的适配器。', en: '<strong>Explore Not Supported:</strong> Obscura does not yet support AXTree exploration. Use it for executing existing adapters.' },
+  'obscura.platforms': { zh: '<strong>支持平台：</strong> <code>darwin-arm64</code>, <code>darwin-x86_64</code>, <code>linux-x86_64</code>, <code>windows-x86_64</code>', en: '<strong>Platforms:</strong> <code>darwin-arm64</code>, <code>darwin-x86_64</code>, <code>linux-x86_64</code>, <code>windows-x86_64</code>' },
+  'obscura.lifecycle': { zh: '<strong>生命周期命令：</strong> <code>install / use / status / clean / rollback / upgrade / doctor</code>', en: '<strong>Lifecycle Commands:</strong> <code>install / use / status / clean / rollback / upgrade / doctor</code>' },
 
   'copy.btn': { zh: '复制', en: 'Copy' },
   'copy.done': { zh: '已复制 ✓', en: 'Copied ✓' },
@@ -227,17 +233,17 @@ const I18N = {
   'usecases.case1.terminal.result': { zh: '✓ 适配器已生成至 ~/.cliany-site/adapters/github.com/', en: '✓ Adapter generated at ~/.cliany-site/adapters/github.com/' },
   'usecases.case3.terminal.result': { zh: '✓ 已安装: jira.company.com, confluence.company.com, jenkins.company.com', en: '✓ Installed: jira.company.com, confluence.company.com, jenkins.company.com' },
 
-  // --- v0.9.x New Features ---
+  // --- v0.11.0 / v0.10.x Features ---
   'features.healer.title': { zh: '智能自愈', en: 'Smart Self-Healing' },
   'features.healer.desc': { zh: 'AXTree 快照对比，selector 热修复，无需重新 explore。', en: 'AXTree snapshot diffing, hot-patch selectors without re-exploring.' },
-  'features.verify.title': { zh: '静态校验', en: 'Static Verification' },
-  'features.verify.desc': { zh: '不打开浏览器，校验 adapter schema、签名、依赖完整性。', en: 'Verify adapter schema, signature, and dependency integrity without launching a browser.' },
-  'features.explain.title': { zh: '自描述契约', en: 'Self-Describing Contract' },
-  'features.explain.desc': { zh: '`--explain` 输出机器可读的 Agent 契约，便于自动化集成。', en: '`--explain` outputs a machine-readable Agent contract for automation integration.' },
-  'features.atomCommands.title': { zh: '原子命令系统', en: 'Atom Commands System' },
-  'features.atomCommands.desc': { zh: 'Generated commands 复用原子操作而非内嵌 CDP，跨适配器共享。', en: 'Generated commands reuse atomic operations instead of inlined CDP, shared across adapters.' },
-  'features.metadata.title': { zh: 'Metadata Schema v2', en: 'Metadata Schema v2' },
-  'features.metadata.desc': { zh: '强制使用 v2 metadata，旧 adapter 自动拒绝并提示重新探索。', en: 'Enforces v2 metadata; legacy adapters auto-rejected with re-explore hint.' }
+  'features.domPruning.title': { zh: '智能 DOM 剪枝', en: 'Smart DOM Pruning' },
+  'features.domPruning.desc': { zh: '4 层 AXTree 剪枝，大幅降低复杂页面的 LLM Token 消耗。', en: '4-layer AXTree pruning reduces LLM token usage by up to 50% for complex pages.' },
+  'features.lazyLoad.title': { zh: '延迟加载 Registry', en: 'Lazy Adapter Registry' },
+  'features.lazyLoad.desc': { zh: '按需加载适配器，CLI 启动速度提升 2-5 倍。', en: 'On-demand adapter loading accelerates CLI startup times significantly.' },
+  'features.diagnostic.title': { zh: '诊断模式', en: 'Diagnostic Mode' },
+  'features.diagnostic.desc': { zh: 'AI 驱动的根本原因分析，快速定位命令执行失败原因。', en: 'AI-powered root cause analysis for command execution failures.' },
+  'features.metadata.title': { zh: 'Metadata Schema v3', en: 'Metadata Schema v3' },
+  'features.metadata.desc': { zh: '强制使用 v3 metadata，提供 migrate 工具自动升级旧适配器。', en: 'Enforces v3 metadata with `migrate` utility to auto-upgrade legacy adapters.' }
 };
 
 function getLang() {
@@ -257,7 +263,13 @@ function setLang(lang) {
   document.querySelectorAll('[data-i18n]').forEach(function(el) {
     var key = el.getAttribute('data-i18n');
     var entry = I18N[key];
-    if (entry) el.textContent = entry[lang];
+    if (entry) {
+      if (entry[lang].indexOf('<') !== -1) {
+        el.innerHTML = entry[lang];
+      } else {
+        el.textContent = entry[lang];
+      }
+    }
   });
 
   if (window._terminalRestart) {

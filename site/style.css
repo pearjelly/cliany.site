@@ -642,11 +642,10 @@ html.js .steps-flow.visible .step-connector {
 
 /* Quick Start */
 .qs-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
-  max-width: 800px;
-  margin: 0 auto;
+  margin-bottom: 2rem;
 }
 
 .qs-card {
@@ -668,9 +667,62 @@ html.js .qs-grid.visible .qs-card {
 }
 
 .qs-title {
-  font-family: var(--font-body);
-  font-size: 1.1rem;
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
   margin-bottom: 1rem;
+  color: var(--color-text-main);
+}
+
+.obscura-note {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  margin-top: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.obscura-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-accent);
+}
+
+.obscura-desc {
+  color: var(--color-text-muted);
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.obscura-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.obscura-list li {
+  margin-bottom: 0.5rem;
+  padding-left: 1rem;
+  position: relative;
+  line-height: 1.6;
+  color: var(--color-text-main);
+}
+
+.obscura-list li::before {
+  content: '•';
+  color: var(--color-accent);
+  position: absolute;
+  left: 0;
+}
+
+.obscura-list code {
+  background: var(--color-bg);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  color: var(--color-accent);
 }
 
 .code-block-container {
