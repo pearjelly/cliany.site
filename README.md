@@ -7,8 +7,8 @@
 
 > 🌐 Languages: [English](README.md) | [简体中文](README.zh.md)
 
-> **⚠️ v0.9.0 BREAKING**: metadata schema v2 hardcut. Legacy adapters (no schema_version) are auto-rejected.  
-> Regenerate: `cliany-site explore <url> "<workflow>"`
+> **🚀 v0.11.0 Released**: Added experimental Obscura browser provider, multi-platform binaries, and lifecycle management.  
+> ⚠️ **v0.10.0 BREAKING**: metadata schema v3 hardcut. Use `cliany-site migrate` to upgrade legacy adapters.
 
 > Automate any web workflow into callable CLI commands
 
@@ -21,10 +21,10 @@ cliany-site is built on browser-use and Large Language Models (LLMs), enabling f
 - **Zero-Intrusion Exploration** — Chrome CDP captures page AXTree without script injection.
 - **LLM-Driven Code Generation** — Claude / GPT-4o understands page semantics and generates Python CLI commands automatically.
 - **LLM Call Retry Mechanism** — Automatic retries during network fluctuations to improve exploration success rates.
-- **Standard JSON Output** — All commands support `--json`, outputting a unified `{success, data, error}` envelope.
+- **Unified JSON Envelope** — All commands support `--json`, outputting a machine-readable `{ok, data, error, meta}` envelope (v1).
 - **Persistent Sessions** — Maintains Cookie / LocalStorage login states across commands.
 - **Dynamic Adapter Loading** — Automatically registers CLI subcommands by domain, allowing for easy expansion.
-- **Automatic Chrome Management** — Detects and starts Chrome debugging instances automatically.
+- **Automatic Browser Management** — Manages Chrome debugging instances or experimental Obscura binaries automatically.
 - **Data Extraction** — Supports extracting structured data from pages and saving it as Markdown.
 
 ### Developer Experience
@@ -40,6 +40,7 @@ cliany-site is built on browser-use and Large Language Models (LLMs), enabling f
 ### Enterprise Features
 
 - **Headless & Remote Browsers** — Supports `--headless` and `--cdp-url ws://host:port` for running in servers or Docker.
+- **Obscura Lifecycle Management** — Dedicated `obscura` command group for binary installation, rollback, and health checks.
 - **YAML Workflow Orchestration** — Declarative multi-step workflows with data passing, conditional logic, and retry strategies.
 - **Data-Driven Batch Execution** — CSV/JSON batch parameters with concurrency control and summary reports.
 - **Encrypted Session Storage** — Fernet symmetric encryption with system Keychain integration for key management.
@@ -53,6 +54,14 @@ cliany-site is built on browser-use and Large Language Models (LLMs), enabling f
 - **Adapter Marketplace** — Pack, install, uninstall, and rollback adapters to share automation capabilities within teams.
 - **TUI Management Interface** — A Textual-based terminal UI for visual adapter management.
 - **iframe/Shadow DOM** — Recursive AXTree collection with cross-origin iframe and Shadow DOM penetration.
+
+### New in v0.11.0
+
+- **Obscura Experimental Provider** — Integration of the Obscura lightweight browser backend. Enable via `CLIANY_BROWSER_PROVIDER=obscura`.
+- **Obscura Command Group** — New `cliany-site obscura` commands: `install/use/status/clean/rollback/upgrade/doctor`.
+- **Multi-Platform Support** — Pre-built binaries for `darwin-arm64`, `darwin-x86_64`, `linux-x86_64`, and `windows-x86_64`.
+- **Capability Snapshot & Feature Gates** — Abstraction layer for browser providers with explicit capability routing.
+- **Note**: `explore` is currently gated/unsupported under Obscura. Chrome remains the default provider for exploration.
 
 ### New in v0.10.0 (BREAKING)
 
@@ -75,11 +84,11 @@ cliany-site is built on browser-use and Large Language Models (LLMs), enabling f
 - **Self-Describing Endpoints (`--explain`)** — `cliany-site --json --explain` outputs a machine-readable Agent contract for easier automation integration.
 - **AGENT.md Auto-Rewrite** — AGENT.md includes sentinels and hashes; automatically updates with new features to keep the agent contract current.
 - **Atomic Command System** — Generated commands call reusable atom commands instead of inlining CDP operations, shared across adapters.
-- **Unified Envelope (`ok()`)** — All built-in commands use the unified `{success, data, error}` output format.
+- **Unified Envelope (`ok()`)** — All built-in commands use the unified `{ok, data, error, meta}` output format.
 - **Extended Doctor Health Check** — Covers registry / legacy adapter detection / agent-md consistency validation.
 - **Breakpoint Resumption (`--resume`)** — Records breakpoints after adapter command failures, supporting recovery from the point of failure.
 
-## Quick Start (v0.9.0+)
+## Quick Start (v0.11.0+)
 
 ### Installation
 
@@ -100,7 +109,7 @@ pip install -e .
 cliany-site doctor --json
 
 # Explore web workflow (requires LLM)
-cliany-site explore "https://github.com" "搜索后查看结果" --json
+cliany-site explore "https://github.com" "Search and view results" --json
 
 # List generated commands
 cliany-site list --json
@@ -125,21 +134,18 @@ export CLIANY_ANTHROPIC_API_KEY="sk-ant-..."
 # Or OpenAI
 export CLIANY_LLM_PROVIDER=openai
 export CLIANY_OPENAI_API_KEY="sk-..."
+
+# Experimental: Obscura Browser Provider
+# export CLIANY_BROWSER_PROVIDER=obscura
 ```
 
 Also supports `.env` file configuration. Search order: `~/.config/cliany-site/.env` → `~/.cliany-site/.env` → project directory `.env` → environment variables.
 
 ### Experimental: Obscura Browser Provider
 
-Obscura is a lightweight browser provider currently in **experimental** status. Chrome remains the default provider.
+Obscura is a lightweight browser provider currently in **experimental** status. Chrome remains the default provider for exploration.
 
 > **Note**: Obscura does **not** support `explore` (AXTree/Accessibility) yet. Use it for executing existing adapters or lightweight navigation tasks.
-
-#### Supported Platforms
-- `darwin-arm64` (Apple Silicon)
-- `darwin-x86_64` (Intel Mac)
-- `linux-x86_64`
-- `windows-x86_64`
 
 #### Setup and Usage
 ```bash
@@ -170,7 +176,7 @@ cliany-site doctor --json
 
 ```bash
 # 1. Explore workflow
-cliany-site explore "https://github.com" "搜索仓库并查看 README" --json
+cliany-site explore "https://github.com" "Search repository and view README" --json
 
 # 2. List generated commands
 cliany-site list --json
@@ -294,7 +300,7 @@ cliany-site/src/cliany_site/
 ├── cli.py              # Main entry point, SafeGroup global exception capture
 ├── config.py           # Unified configuration center (env + .env)
 ├── errors.py           # Exception hierarchy + error codes
-├── response.py         # JSON envelope {success, data, error}
+├── response.py         # JSON envelope {ok, data, error, meta} (v1)
 ├── logging_config.py   # Structured logging (JSON format + masking)
 ├── sdk.py              # Python SDK (sync + async)
 ├── server.py           # HTTP API service (aiohttp)
