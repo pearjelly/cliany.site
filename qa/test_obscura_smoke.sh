@@ -124,16 +124,31 @@ else
 fi
 
 # ── Check 6: binary version (optional — skipped when binary absent) ───────────
-OBSCURA_BIN="${HOME}/.cliany-site/bin/obscura/latest/obscura"
-if [ -x "$OBSCURA_BIN" ]; then
+OBSCURA_ROOT="${HOME}/.cliany-site/bin/obscura"
+ACTIVE_FILE="${OBSCURA_ROOT}/active"
+OBSCURA_BIN=""
+
+if [ -f "$ACTIVE_FILE" ]; then
+  ACTIVE_VERSION=$(cat "$ACTIVE_FILE" | tr -d '[:space:]')
+  if [ -n "$ACTIVE_VERSION" ]; then
+    # 考虑 Windows 环境下的可执行文件名（脚本运行于 bash）
+    if [ -f "${OBSCURA_ROOT}/${ACTIVE_VERSION}/obscura.exe" ]; then
+      OBSCURA_BIN="${OBSCURA_ROOT}/${ACTIVE_VERSION}/obscura.exe"
+    elif [ -f "${OBSCURA_ROOT}/${ACTIVE_VERSION}/obscura" ]; then
+      OBSCURA_BIN="${OBSCURA_ROOT}/${ACTIVE_VERSION}/obscura"
+    fi
+  fi
+fi
+
+if [ -n "$OBSCURA_BIN" ] && [ -x "$OBSCURA_BIN" ]; then
   VERSION_OUTPUT=$("$OBSCURA_BIN" --version 2>&1 || true)
   if [ -n "$VERSION_OUTPUT" ]; then
-    pass "binary_version"
+    pass "binary_version" "path: $OBSCURA_BIN"
   else
-    fail "binary_version" "empty output from --version"
+    fail "binary_version" "empty output from --version at $OBSCURA_BIN"
   fi
 else
-  skip "binary_version" "binary not found at $OBSCURA_BIN"
+  skip "binary_version" "active binary not found or not executable (checked active version via $ACTIVE_FILE)"
 fi
 
 # ── Summary ──────────────────────────────────────────────────────────────────

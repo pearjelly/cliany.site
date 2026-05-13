@@ -53,6 +53,12 @@ run_script "$SCRIPT_DIR/test_replay_smoke.sh"
 run_script "$SCRIPT_DIR/test_extend_smoke.sh"
 run_script "$SCRIPT_DIR/test_v010_e2e.sh"
 
+echo "=== Obscura Smoke ==="
+bash qa/test_obscura_smoke.sh
+
+echo "=== Obscura Compat ==="
+bash qa/test_obscura_compat.sh
+
 echo ""
 echo "========================================"
 echo "=== 总计汇总 ==="
