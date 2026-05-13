@@ -27,7 +27,11 @@ def _print_startup_banner(json_mode: bool) -> None:
     if json_mode:
         return
     import sys
-    sys.stderr.write("⚡ cliany-site v0.9.0 — Agent-first web CLI\n")
+    try:
+        version = metadata.version("cliany-site")
+    except Exception:
+        version = "unknown"
+    sys.stderr.write(f"⚡ cliany-site {version} — Agent-first web CLI\n")
     sys.stderr.flush()
 
 
@@ -206,6 +210,7 @@ from cliany_site.commands.report import report_group
 from cliany_site.commands.serve import serve_cmd
 from cliany_site.commands.tui import tui_cmd
 from cliany_site.commands.workflow import workflow_group
+from cliany_site.commands.obscura import obscura_group
 
 cli.add_command(doctor)
 cli.add_command(login)
@@ -238,6 +243,9 @@ register_adapters(cli)
 from cliany_site.commands.migrate import migrate_cmd
 
 cli.add_command(migrate_cmd)
+
+from cliany_site.commands.obscura import obscura_group
+cli.add_command(obscura_group)
 
 
 if __name__ == "__main__":
