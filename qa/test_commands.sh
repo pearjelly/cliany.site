@@ -8,7 +8,7 @@ setup_test_adapter() {
     echo "[INFO] test.com adapter 已存在"
   else
     echo "[INFO] 创建 test.com adapter..."
-    python3 -c "
+    uv run python -c "
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
 from cliany_site.explorer.models import ExploreResult, PageInfo, ActionStep, CommandSuggestion
 result = ExploreResult(
@@ -25,7 +25,7 @@ print('adapter 创建成功')
 }
 
 test_list() {
-  OUTPUT=$(cliany-site list --json 2>&1)
+  OUTPUT=$(uv run cliany-site list --json 2>/dev/null)
   EXIT_CODE=$?
   if [ $EXIT_CODE -eq 0 ]; then
     echo "[PASS] list exit 0"
@@ -34,30 +34,30 @@ test_list() {
     echo "[FAIL] list exit $EXIT_CODE"
     FAIL=$((FAIL+1))
   fi
-  if echo "$OUTPUT" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); assert d['success']==True" 2>/dev/null; then
-    echo "[PASS] list 返回 success:true"
+  if echo "$OUTPUT" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); assert d['ok']==True" 2>/dev/null; then
+    echo "[PASS] list 返回 ok:true"
     PASS=$((PASS+1))
   else
-    echo "[FAIL] list 应返回 success:true"
+    echo "[FAIL] list 应返回 ok:true"
     FAIL=$((FAIL+1))
   fi
 }
 
 test_adapter_cdp_error() {
-  OUTPUT=$(cliany-site test.com hello --json 2>&1)
+  OUTPUT=$(uv run cliany-site test.com hello --json 2>/dev/null)
   EXIT_CODE=$?
-  if [ $EXIT_CODE -ne 0 ]; then
-    echo "[PASS] test.com hello 无 CDP 时 exit 非 0"
+  if echo "$OUTPUT" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); assert d['ok']==False" 2>/dev/null; then
+    echo "[PASS] test.com hello 无 CDP 时返回 ok:false"
     PASS=$((PASS+1))
   else
-    echo "[FAIL] test.com hello 无 CDP 时应 exit 非 0"
+    echo "[FAIL] test.com hello 无 CDP 时应返回 ok:false"
     FAIL=$((FAIL+1))
   fi
-  if echo "$OUTPUT" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); assert d['error']['code']=='CDP_UNAVAILABLE'" 2>/dev/null; then
-    echo "[PASS] adapter 命令返回 CDP_UNAVAILABLE"
+  if echo "$OUTPUT" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); assert d['error']['code']=='E_CDP_UNAVAILABLE'" 2>/dev/null; then
+    echo "[PASS] adapter 命令返回 E_CDP_UNAVAILABLE"
     PASS=$((PASS+1))
   else
-    echo "[FAIL] adapter 命令应返回 CDP_UNAVAILABLE"
+    echo "[FAIL] adapter 命令应返回 E_CDP_UNAVAILABLE"
     FAIL=$((FAIL+1))
   fi
 }

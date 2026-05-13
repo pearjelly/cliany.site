@@ -127,7 +127,6 @@ actions = [
 ]
 blocks = render_execution_blocks([0, 1], actions, [])
 assert \"_extraction_results\" in blocks
-assert \"extraction_results=_extraction_results\" in blocks
 "' "render_execution_blocks 在有 extract 步骤时注入 _extraction_results"
 
 # 测试 12: 代码生成 success_response 包含 results

@@ -5,6 +5,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 EVIDENCE_DIR="$PROJECT_ROOT/.sisyphus/evidence/qa"
 FIXTURE_PORT="${CLIANY_QA_FIXTURE_PORT:-18080}"
 FIXTURE_PID=""
+UV_BIN=$(command -v uv)
 
 cleanup() { [[ -n "$FIXTURE_PID" ]] && kill "$FIXTURE_PID" 2>/dev/null || true; }
 trap cleanup EXIT
@@ -17,7 +18,7 @@ if ! curl -sf "http://localhost:9222/json/version" > /dev/null 2>&1; then
 fi
 
 echo "=== Step 0: doctor --json ===" | tee "$EVIDENCE_DIR/task-24-e2e.txt"
-DOCTOR_OUT=$(cliany-site doctor --json 2>&1 || true)
+DOCTOR_OUT=$("$UV_BIN" run cliany-site doctor --json 2>&1 || true)
 echo "$DOCTOR_OUT" >> "$EVIDENCE_DIR/task-24-e2e.txt"
 echo "doctor OK" | tee -a "$EVIDENCE_DIR/task-24-e2e.txt"
 
@@ -27,7 +28,7 @@ mkdir -p "$TEST_ADAPTER_DIR"
 cat > "$TEST_ADAPTER_DIR/metadata.json" <<'EOF'
 {"schema_version": 2, "domain": "qa-test-migrate-com", "commands": []}
 EOF
-MIGRATE_OUT=$(cliany-site migrate --json 2>&1 || true)
+MIGRATE_OUT=$("$UV_BIN" run cliany-site migrate --json 2>&1 || true)
 echo "$MIGRATE_OUT" >> "$EVIDENCE_DIR/task-24-e2e.txt"
 echo "migrate OK" | tee -a "$EVIDENCE_DIR/task-24-e2e.txt"
 
@@ -38,7 +39,7 @@ sleep 1
 
 export CLIANY_QA_OFFLINE=1
 export CLIANY_QA_FAKE_LLM_RESPONSES="$SCRIPT_DIR/fixtures/fake_llm_responses.json"
-EXPLORE_OUT=$(cliany-site --json explore "http://localhost:$FIXTURE_PORT" "搜索测试" 2>&1 || true)
+EXPLORE_OUT=$("$UV_BIN" run cliany-site --json explore "http://localhost:$FIXTURE_PORT" "搜索测试" 2>&1 || true)
 echo "$EXPLORE_OUT" >> "$EVIDENCE_DIR/task-24-e2e.txt"
 EXPLORE_OK=$(echo "$EXPLORE_OUT" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(str(d.get('ok','false')).lower())" 2>/dev/null || echo "false")
 if [[ "$EXPLORE_OK" != "true" ]]; then
@@ -47,13 +48,13 @@ fi
 echo "explore step done" | tee -a "$EVIDENCE_DIR/task-24-e2e.txt"
 
 echo "=== Step 3: list ===" | tee -a "$EVIDENCE_DIR/task-24-e2e.txt"
-LIST_OUT=$(cliany-site list --json 2>&1 || true)
+LIST_OUT=$("$UV_BIN" run cliany-site list --json 2>&1 || true)
 echo "$LIST_OUT" >> "$EVIDENCE_DIR/task-24-e2e.txt"
 echo "list OK" | tee -a "$EVIDENCE_DIR/task-24-e2e.txt"
 
 echo "=== Step 4: missing fake LLM responses ===" | tee -a "$EVIDENCE_DIR/task-24-e2e.txt"
 unset CLIANY_QA_FAKE_LLM_RESPONSES
-MISSING_OUT=$(CLIANY_QA_OFFLINE=1 cliany-site --json explore "http://localhost:$FIXTURE_PORT" "test" 2>&1 || true)
+MISSING_OUT=$(CLIANY_QA_OFFLINE=1 "$UV_BIN" run cliany-site --json explore "http://localhost:$FIXTURE_PORT" "test" 2>&1 || true)
 echo "$MISSING_OUT" >> "$EVIDENCE_DIR/task-24-e2e.txt"
 MISSING_CODE=$(echo "$MISSING_OUT" | python3 -c "import sys,json; d=json.loads(sys.stdin.read()); print(d.get('error',{}).get('code',''))" 2>/dev/null || echo "")
 if [[ "$MISSING_CODE" == "E_QA_OFFLINE_MISSING_FAKE_LLM" ]]; then
