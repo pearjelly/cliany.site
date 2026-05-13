@@ -71,6 +71,30 @@ def explore_cmd(
 
         _load_dotenv()
 
+        # Browser provider capability gate：非 Chrome provider 必须支持 AXTree 才允许 explore
+        _browser_provider = get_config().browser_provider
+        if _browser_provider and _browser_provider.lower() != "chrome":
+            from cliany_site.providers.capabilities import feature_gate
+            from cliany_site.providers.factory import get_provider
+            try:
+                _provider_inst = get_provider(_browser_provider)
+                _snap = _provider_inst.get_capability_snapshot()
+            except Exception as _exc:
+                return err(
+                    "explore",
+                    ErrorCode.E_PROVIDER_NOT_FOUND,
+                    f"Browser provider '{_browser_provider}' 初始化失败: {_exc}",
+                    hint="请检查 CLIANY_BROWSER_PROVIDER 配置",
+                )
+            _gate = feature_gate("explore", _snap)
+            if not _gate.allowed:
+                return err(
+                    "explore",
+                    ErrorCode.E_MISSING_CAPABILITY,
+                    f"当前 provider '{_browser_provider}' 不支持 explore 命令（缺少必要能力）",
+                    hint=_gate.reason,
+                )
+
         qa_offline = os.getenv("CLIANY_QA_OFFLINE") == "1"
         if qa_offline and not os.getenv("CLIANY_QA_FAKE_LLM_RESPONSES"):
             return err(

@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 import click
 
+from cliany_site.config import get_config
 from cliany_site.errors import CDP_UNAVAILABLE
 from cliany_site.response import error_response, print_response, success_response
 
@@ -33,6 +34,31 @@ def login(ctx: click.Context, url: str, json_mode: bool | None):
 async def _capture_session(url: str, cdp_conn: Any = None) -> dict:
     from cliany_site.browser.cdp import CDPConnection
     from cliany_site.session import save_session
+
+    # Browser provider capability gate：非 Chrome provider 必须支持 login 能力
+    _browser_provider = get_config().browser_provider
+    if _browser_provider and _browser_provider.lower() != "chrome":
+        from cliany_site.envelope import ErrorCode, err
+        from cliany_site.providers.capabilities import feature_gate
+        from cliany_site.providers.factory import get_provider
+        try:
+            _provider_inst = get_provider(_browser_provider)
+            _snap = _provider_inst.get_capability_snapshot()
+        except Exception as _exc:
+            return err(
+                "login",
+                ErrorCode.E_PROVIDER_NOT_FOUND,
+                f"Browser provider '{_browser_provider}' 初始化失败: {_exc}",
+                hint="请检查 CLIANY_BROWSER_PROVIDER 配置",
+            )
+        _gate = feature_gate("login", _snap)
+        if not _gate.allowed:
+            return err(
+                "login",
+                ErrorCode.E_MISSING_CAPABILITY,
+                f"当前 provider '{_browser_provider}' 不支持 login 命令（缺少必要能力）",
+                hint=_gate.reason,
+            )
 
     parsed = urlparse(url)
     domain = parsed.netloc or parsed.path

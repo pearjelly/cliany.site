@@ -167,6 +167,35 @@ async def _run_checks(cdp_conn: Any = None) -> Envelope:
         "details": {"count": healed_count, "hint": "cliany-site adapter accept-heal <domain>"}
     })
 
+    provider_name = cfg.browser_provider or "chrome"
+    try:
+        from cliany_site.providers.factory import get_provider
+        _prov = get_provider(provider_name)
+        snap = _prov.get_capability_snapshot()
+        provider_caps = {
+            "provider": snap.provider,
+            "version": snap.version,
+            "supports_axtree": snap.supports_axtree,
+            "supports_navigation": snap.supports_navigation,
+            "supports_screenshot": snap.supports_screenshot,
+            "supports_cookies": snap.supports_cookies,
+            "supports_network_events": snap.supports_network_events,
+            "supports_console_events": snap.supports_console_events,
+        }
+        checks.append({
+            "name": "provider",
+            "status": "ok",
+            "duration_ms": 0,
+            "details": {"provider_name": provider_name, "provider_capabilities": provider_caps},
+        })
+    except Exception as exc:
+        checks.append({
+            "name": "provider",
+            "status": "warning",
+            "duration_ms": 0,
+            "details": {"provider_name": provider_name, "provider_capabilities": None, "error": str(exc)},
+        })
+
     failed = [c["name"] for c in checks if c["status"] == "fail"]
     if failed:
         return err("doctor", ErrorCode.E_UNKNOWN, f"检查失败: {', '.join(failed)}",

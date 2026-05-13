@@ -5,6 +5,7 @@ import click
 
 from cliany_site.browser.cdp import cdp_from_context
 from cliany_site.commands.browser import browser_group
+from cliany_site.config import get_config
 from cliany_site.envelope import Envelope, ErrorCode, err, ok
 
 
@@ -55,6 +56,29 @@ def navigate(
 
 
 async def _run_navigate(cdp, url: str, wait_state: str, timeout: int) -> Envelope:
+    _browser_provider = get_config().browser_provider
+    if _browser_provider and _browser_provider.lower() != "chrome":
+        from cliany_site.providers.capabilities import feature_gate
+        from cliany_site.providers.factory import get_provider
+        try:
+            _provider_inst = get_provider(_browser_provider)
+            _snap = _provider_inst.get_capability_snapshot()
+        except Exception as _exc:
+            return err(
+                command="browser navigate",
+                code=ErrorCode.E_PROVIDER_NOT_FOUND,
+                message=f"Browser provider '{_browser_provider}' 初始化失败: {_exc}",
+                hint="请检查 CLIANY_BROWSER_PROVIDER 配置",
+            )
+        _gate = feature_gate("browser.navigate", _snap)
+        if not _gate.allowed:
+            return err(
+                command="browser navigate",
+                code=ErrorCode.E_MISSING_CAPABILITY,
+                message=f"当前 provider '{_browser_provider}' 不支持 navigate 命令（缺少必要能力）",
+                hint=_gate.reason,
+            )
+
     if not await cdp.check_available():
         return err(
             command="browser navigate",
