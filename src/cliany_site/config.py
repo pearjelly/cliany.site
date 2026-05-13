@@ -69,6 +69,13 @@ class ClanySiteConfig:
     max_iframes: int = 100
     max_iframe_depth: int = 5
 
+    # Provider / Obscura 配置
+    browser_provider: str = ""  # 空字符串 = Chrome（默认）
+    obscura_port: int = 9223
+    obscura_version: str = ""   # 空字符串 = 使用已安装的默认版本
+    obscura_ready_timeout: float = 30.0
+    obscura_auto_upgrade: bool = False
+
     home_dir: Path = field(default_factory=lambda: Path.home() / ".cliany-site")
 
     @property
@@ -116,6 +123,11 @@ class ClanySiteConfig:
             "cross_origin_iframes": self.cross_origin_iframes,
             "max_iframes": self.max_iframes,
             "max_iframe_depth": self.max_iframe_depth,
+            "browser_provider": self.browser_provider,
+            "obscura_port": self.obscura_port,
+            "obscura_version": self.obscura_version,
+            "obscura_ready_timeout": self.obscura_ready_timeout,
+            "obscura_auto_upgrade": self.obscura_auto_upgrade,
             "home_dir": str(self.home_dir),
             "adapters_dir": str(self.adapters_dir),
             "sessions_dir": str(self.sessions_dir),
@@ -150,6 +162,11 @@ def load_config() -> ClanySiteConfig:
         cross_origin_iframes=_env_bool("CLIANY_CROSS_ORIGIN_IFRAMES", True),
         max_iframes=_env_int("CLIANY_MAX_IFRAMES", 100),
         max_iframe_depth=_env_int("CLIANY_MAX_IFRAME_DEPTH", 5),
+        browser_provider=os.environ.get("CLIANY_BROWSER_PROVIDER", ""),
+        obscura_port=_env_int("CLIANY_OBSCURA_PORT", 9223),
+        obscura_version=os.environ.get("CLIANY_OBSCURA_VERSION", ""),
+        obscura_ready_timeout=_env_float("CLIANY_OBSCURA_READY_TIMEOUT", 30.0),
+        obscura_auto_upgrade=_env_bool("CLIANY_OBSCURA_AUTO_UPGRADE", False),
     )
 
 
