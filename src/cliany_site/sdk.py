@@ -87,11 +87,16 @@ class ClanySite:
             self._session = None
 
     async def _ensure_cdp(self) -> Any:
-        """确保 CDP 连接可用并返回 CDPConnection 实例。"""
         if self._cdp is None:
             from cliany_site.browser.cdp import CDPConnection
 
-            self._cdp = CDPConnection(cdp_url=self._cdp_url, headless=self._headless)
+            cfg = get_config()
+            provider_name = cfg.browser_provider or None
+            self._cdp = CDPConnection(
+                cdp_url=self._cdp_url,
+                headless=self._headless,
+                provider_name=provider_name,
+            )
         return self._cdp
 
     async def _ensure_browser_session(self) -> Any:

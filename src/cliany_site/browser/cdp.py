@@ -33,13 +33,27 @@ class CDPConnection:
         self,
         cdp_url: str | None = None,
         headless: bool | None = None,
+        provider_name: str | None = None,
     ):
         cfg = get_config()
-        self._cdp_url: str = cdp_url or cfg.cdp_url
         self._headless: bool = headless if headless is not None else cfg.headless
         self._session: BrowserSession | None = None
         self._chrome_proc: subprocess.Popen | None = None
         self._chrome_auto_launched: bool = False
+
+        # URL 优先级：显式 cdp_url > CLIANY_CDP_URL > provider factory > 空（走 Chrome 默认路径）
+        if cdp_url:
+            self._cdp_url: str = cdp_url
+        elif cfg.cdp_url:
+            self._cdp_url = cfg.cdp_url
+        else:
+            effective_provider = (provider_name or cfg.browser_provider or "").lower()
+            if effective_provider and effective_provider != "chrome":
+                from cliany_site.providers.factory import get_provider
+                _provider = get_provider(effective_provider)
+                self._cdp_url = _provider.get_cdp_url()
+            else:
+                self._cdp_url = ""
 
     @property
     def is_remote(self) -> bool:
