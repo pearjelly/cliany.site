@@ -7,6 +7,25 @@
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-05-12
+
+### Obscura 实验性浏览器后端集成
+- **核心功能**：
+  - 新增浏览器提供者抽象层（Browser Provider Abstraction），支持能力快照（Capability Snapshot）与特性门禁（Feature Gate）。
+  - 新增 `ObscuraProvider` 与 `ChromeProvider` 包装层，Chrome 保持为默认提供者。
+  - 显式启用方式：设置环境变量 `CLIANY_BROWSER_PROVIDER=obscura`。
+  - **注意**：`explore` 命令在 Obscura 下已被门禁（Gated），目前不宣称完全支持。
+- **Obscura 生命周期管理**：
+  - 增加 `cliany-site obscura` 命令组：支持 `install/use/status/clean/rollback/upgrade/doctor`。
+  - 实现二进制文件生命周期：包括 Manifest 管理、本地缓存、原子安装（Atomic Install）、Active 指针切换、回滚支持及进程管理器。
+- **多平台支持**：
+  - 支持 `darwin-arm64` (Apple Silicon), `darwin-x86_64` (Intel Mac), `linux-x86_64`, `windows-x86_64`。
+- **测试与质量保证**：
+  - 建立 Smoke（冒烟）、Compat（兼容性）、Benchmark（基准）三层测试体系。
+  - 集成 CI Release Gates，确保发布质量。
+- **文档与工程**：
+  - 新增相关 ADR（决策记录）与 Obscura Experimental Guide 实验性指南。
+
 ## [0.10.0] - 2026-05-07
 
 ### BREAKING 变更
@@ -197,16 +216,6 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.9.3...HEAD
-[0.9.3]: https://github.com/pearjelly/cliany.site/compare/v0.9.2...v0.9.3
-[0.9.2]: https://github.com/pearjelly/cliany.site/compare/v0.9.1...v0.9.2
-[0.9.1]: https://github.com/pearjelly/cliany.site/compare/v0.9.0...v0.9.1
-[0.9.0]: https://github.com/pearjelly/cliany.site/compare/v0.8.3...v0.9.0
-[0.8.3]: https://github.com/pearjelly/cliany.site/compare/v0.8.2...v0.8.3
-[0.8.2]: https://github.com/pearjelly/cliany.site/compare/v0.8.1...v0.8.2
-[0.8.1]: https://github.com/pearjelly/cliany.site/compare/v0.8.0...v0.8.1
-[0.8.0]: https://github.com/pearjelly/cliany.site/compare/v0.7.1...v0.8.0
-[0.7.1]: https://github.com/pearjelly/cliany.site/compare/v0.7.0...v0.7.1
-[0.6.2]: https://github.com/pearjelly/cliany.site/compare/v0.6.1...v0.6.2
-[0.6.1]: https://github.com/pearjelly/cliany.site/compare/v0.5.1...v0.6.1
-[0.5.1]: https://github.com/pearjelly/cliany.site/releases/tag/v0.5.1
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/pearjelly/cliany.site/compare/v0.10.0...v0.11.0
+[0.10.0]: https://github.com/pearjelly/cliany.site/compare/v0.9.3...v0.10.0
