@@ -130,8 +130,12 @@ class InteractiveController:
                     cdp_session = maybe_session
                 maybe_session_id = getattr(cdp_session, "session_id", None)
                 session_id = str(maybe_session_id) if maybe_session_id else None
-        except Exception as exc:
-            logger.warning("获取 CDP session 失败，将继续尝试回退: %s", exc)
+        except (AttributeError, RuntimeError, asyncio.TimeoutError) as exc:
+            logger.warning(
+                "获取 CDP session 失败，将继续尝试回退: %s",
+                exc,
+                extra={"step": "get_cdp_session", "url": fallback_url},
+            )
 
         cdp_client = getattr(browser_session, "cdp_client", None)
         send_api = getattr(cdp_client, "send", None)
@@ -189,18 +193,30 @@ class InteractiveController:
 
         try:
             await self._try_browser_back(browser_session, fallback_url)
-        except Exception as exc:
-            logger.warning("执行浏览器回退失败（继续流程）: %s", exc)
+        except (asyncio.TimeoutError, ConnectionError, RuntimeError, OSError) as exc:
+            logger.warning(
+                "执行浏览器回退失败（继续流程）: %s",
+                exc,
+                extra={"step": "browser_back", "url": fallback_url},
+            )
 
         try:
             await capture_axtree(browser_session)
         except Exception as exc:
-            logger.warning("回退后 AXTree 捕获失败（继续流程）: %s", exc)
+            logger.warning(
+                "回退后 AXTree 捕获失败（继续流程）: %s",
+                exc,
+                extra={"step": "capture_axtree", "url": fallback_url},
+            )
 
         if recording_manager is not None and recording_manifest is not None:
             try:
                 recording_manager.mark_rolled_back(recording_manifest, snapshot.turn_index)
             except Exception as exc:
-                logger.warning("标记录像回退步骤失败（继续流程）: %s", exc)
+                logger.warning(
+                    "标记录像回退步骤失败（继续流程）: %s",
+                    exc,
+                    extra={"step": "mark_rolled_back", "url": fallback_url},
+                )
 
         return True
