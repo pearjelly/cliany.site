@@ -501,6 +501,7 @@ dependencies = [
     { name = "keyring" },
     { name = "langchain-anthropic" },
     { name = "langchain-openai" },
+    { name = "portalocker" },
     { name = "python-dotenv" },
     { name = "rich" },
     { name = "textual" },
@@ -513,7 +514,6 @@ dev = [
     { name = "types-pyyaml" },
 ]
 test = [
-    { name = "portalocker" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
@@ -542,7 +542,7 @@ requires-dist = [
     { name = "langchain-openai" },
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.15" },
     { name = "pillow", marker = "extra == 'vision'", specifier = ">=10.0" },
-    { name = "portalocker", marker = "extra == 'test'", specifier = ">=2.8" },
+    { name = "portalocker", specifier = ">=2.8" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
     { name = "pytest-asyncio", marker = "extra == 'test'", specifier = ">=0.23" },
     { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=5.0" },

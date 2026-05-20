@@ -4,11 +4,14 @@ import os
 import signal
 import socket
 import subprocess
+import tempfile
 import time
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
+
+import portalocker
 
 from cliany_site.envelope import ErrorCode
 from cliany_site.errors import ClanySiteError
@@ -46,6 +49,52 @@ class CleanupResult:
 class ProcessManager:
     def __init__(self, pid_file: Optional[Path] = None):
         self.pid_file = pid_file or Path.home() / ".cliany-site" / "run" / "obscura.pid"
+
+    def _write_pid_file(self, pid: int) -> None:
+        self.pid_file.parent.mkdir(parents=True, exist_ok=True)
+        lock_file = self.pid_file.with_suffix(self.pid_file.suffix + ".lock")
+        with lock_file.open("a+", encoding="utf-8") as fd:
+            portalocker.lock(fd, portalocker.LOCK_EX)
+            with tempfile.NamedTemporaryFile(
+                "w",
+                encoding="utf-8",
+                dir=self.pid_file.parent,
+                prefix=f"{self.pid_file.name}.",
+                suffix=".tmp",
+                delete=False,
+            ) as tmp:
+                tmp.write(str(pid))
+                tmp.flush()
+                os.fsync(tmp.fileno())
+                tmp_path = Path(tmp.name)
+            os.replace(tmp_path, self.pid_file)
+
+    def _read_pid_file(self) -> Optional[int]:
+        if not self.pid_file.exists():
+            return None
+        try:
+            text = self.pid_file.read_text(encoding="utf-8").strip()
+            if not text:
+                return None
+            return int(text)
+        except (ValueError, OSError):
+            return None
+
+    @staticmethod
+    def _close_process_pipes(proc: subprocess.Popen) -> None:
+        for pipe in (proc.stdout, proc.stderr):
+            if pipe is not None:
+                pipe.close()
+
+    def _terminate_after_start_timeout(self, proc: subprocess.Popen) -> None:
+        proc.terminate()
+        try:
+            proc.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.communicate()
+        finally:
+            self._close_process_pipes(proc)
 
     def find_free_port(self, start: int = 9222, max_tries: int = 10) -> int:
         """扫描并返回第一个可用端口。
@@ -116,50 +165,45 @@ class ProcessManager:
 
         proc = subprocess.Popen(
             [str(binary_path), "serve", "--port", str(selected_port)],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
 
         if not self._wait_ready(selected_port, timeout):
-            proc.terminate()
-            try:
-                proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                proc.kill()
-                proc.wait()
+            self._terminate_after_start_timeout(proc)
             raise ProcessError(
                 f"Obscura 启动超时（端口 {selected_port}，{timeout}s 内未就绪）",
                 ErrorCode.E_TIMEOUT,
             )
 
-        self.pid_file.parent.mkdir(parents=True, exist_ok=True)
-        self.pid_file.write_text(str(proc.pid), encoding="utf-8")
+        self._write_pid_file(proc.pid)
 
         return ProcessHandle(pid=proc.pid, port=selected_port, binary_path=binary_path)
 
     def stop(self, handle: ProcessHandle) -> None:
+        pid = self._read_pid_file()
+        if pid is None:
+            return
+
         try:
-            os.kill(handle.pid, signal.SIGTERM)
+            os.kill(pid, signal.SIGTERM)
             deadline = time.monotonic() + 10.0
             while time.monotonic() < deadline:
                 try:
-                    os.kill(handle.pid, 0)
+                    os.kill(pid, 0)
                     time.sleep(0.1)
                 except ProcessLookupError:
                     break
             else:
                 try:
-                    os.kill(handle.pid, signal.SIGKILL)
+                    os.kill(pid, signal.SIGKILL)
                 except ProcessLookupError:
                     pass
         except ProcessLookupError:
             pass
 
         if self.pid_file.exists():
-            try:
-                self.pid_file.unlink()
-            except OSError:
-                pass
+            self.pid_file.unlink(missing_ok=True)
 
     def is_running(self, port: int) -> bool:
         if not self.pid_file.exists():
