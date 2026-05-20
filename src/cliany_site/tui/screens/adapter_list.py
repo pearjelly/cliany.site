@@ -1,6 +1,7 @@
 import os
 import shutil
 import tarfile
+from collections.abc import Iterator
 from pathlib import Path
 
 from textual.app import ComposeResult
@@ -25,6 +26,24 @@ from cliany_site.config import get_config
 from cliany_site.explorer.engine import _load_dotenv
 from cliany_site.loader import discover_adapters
 from cliany_site.tui.screens.adapter_detail import AdapterDetailScreen
+
+
+def _safe_tar_members(tar: tarfile.TarFile, dest: Path) -> Iterator[tarfile.TarInfo]:
+    dest_resolved = dest.resolve()
+    for member in tar.getmembers():
+        if os.path.isabs(member.name):
+            raise ValueError(f"不安全的归档条目（绝对路径）: {member.name!r}")
+        if ".." in member.name.split("/"):
+            raise ValueError(f"不安全的归档条目（路径穿越）: {member.name!r}")
+        if member.issym() or member.islnk():
+            link_target = member.linkname
+            if os.path.isabs(link_target):
+                raise ValueError(f"不安全的归档条目（绝对链接目标）: {member.name!r}")
+            member_dir = (dest_resolved / member.name).parent
+            resolved_link = (member_dir / link_target).resolve()
+            if not str(resolved_link).startswith(str(dest_resolved) + os.sep) and resolved_link != dest_resolved:
+                raise ValueError(f"不安全的归档条目（链接目标超出解压目录）: {member.name!r}")
+        yield member
 
 
 class ConfirmScreen(ModalScreen[bool]):
@@ -251,11 +270,11 @@ class AdapterListScreen(Screen):
                         self.app.notify(f"适配器已存在，将被覆盖: {domain}", severity="warning")
 
                     get_config().adapters_dir.mkdir(parents=True, exist_ok=True)
-                    tar.extractall(path=get_config().adapters_dir)
+                    tar.extractall(path=get_config().adapters_dir, members=_safe_tar_members(tar, get_config().adapters_dir))
                     self.app.notify("导入成功")
                     self._load_data()
                     self._update_env_status()
-            except (OSError, tarfile.TarError) as e:
+            except (OSError, tarfile.TarError, ValueError) as e:
                 self.app.notify(f"导入失败: {e}", severity="error")
 
         self.app.push_screen(InputPathScreen("请输入要导入的 .tar.gz 文件路径:"), do_import)
