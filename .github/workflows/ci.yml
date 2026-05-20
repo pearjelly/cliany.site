@@ -62,7 +62,13 @@ jobs:
       - name: 安装依赖
         run: uv pip install -e ".[test]" --system
       - name: 运行测试
-        run: pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=short --cov=cliany_site --cov-report=xml --cov-report=term
+      - name: 上传 coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.python-version }}
+          path: coverage.xml
+          if-no-files-found: warn
 
   obscura-smoke:
     name: Obscura Smoke (${{ matrix.os }})
