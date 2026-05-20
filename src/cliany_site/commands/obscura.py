@@ -11,6 +11,7 @@ from cliany_site.binary.cache import CacheError, CacheManager
 from cliany_site.binary.platforms import UnsupportedPlatformError, normalize_platform
 from cliany_site.binary.process import ProcessManager
 from cliany_site.envelope import ErrorCode, err, ok
+from cliany_site.errors import BINARY_DOWNLOAD_FAILED, ClanySiteError
 from cliany_site.response import print_response
 
 _VERSION_RE = re.compile(r"^\d+\.\d+\.\d+$")
@@ -23,19 +24,43 @@ def _effective_json(ctx: click.Context, json_mode: bool | None) -> bool:
     return bool(json_mode)
 
 
+def _download_with_retry(url: str, timeout: int = 60, max_attempts: int = 3, base_backoff: float = 1.0) -> bytes:
+    import socket
+    import time
+    import urllib.request
+    from urllib.error import HTTPError, URLError
+
+    last_exc: Exception = RuntimeError("未执行下载")
+    for attempt in range(max_attempts):
+        try:
+            with urllib.request.urlopen(url, timeout=timeout) as resp:
+                return resp.read()
+        except HTTPError as e:
+            if e.code and 400 <= e.code < 500:
+                raise
+            last_exc = e
+        except (URLError, socket.timeout, ConnectionResetError) as e:
+            last_exc = e
+
+        if attempt < max_attempts - 1:
+            wait = base_backoff * (2 ** attempt)
+            time.sleep(wait)
+
+    exc_obj = ClanySiteError(f"下载失败（重试 {max_attempts} 次后）: {last_exc}")
+    exc_obj.error_code = BINARY_DOWNLOAD_FAILED  # type: ignore[attr-defined]
+    raise exc_obj from last_exc
+
+
 def _download_and_install(version: str, cache_mgr: CacheManager) -> Path:
     import platform as _platform
 
     from cliany_site.binary.platforms import normalize_platform
     from cliany_site.binary.releases import resolve_release
 
-    import urllib.request
-
     plat = normalize_platform(sys.platform, _platform.machine())
     spec = resolve_release(version, plat)
 
-    with urllib.request.urlopen(spec.download_url, timeout=60) as resp:
-        archive_bytes = resp.read()
+    archive_bytes = _download_with_retry(spec.download_url, timeout=60)
 
     return cache_mgr.install(spec, archive_bytes)
 
