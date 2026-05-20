@@ -358,7 +358,17 @@ class AdapterMerger:
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
                 handle.write(content)
+                handle.flush()
+                os.fsync(handle.fileno())
             os.replace(tmp_path, str(path))
+            try:
+                dir_fd = os.open(str(path.parent), os.O_RDONLY)
+                try:
+                    os.fsync(dir_fd)
+                finally:
+                    os.close(dir_fd)
+            except OSError:
+                pass
         except (OSError, TypeError, ValueError):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
@@ -369,7 +379,17 @@ class AdapterMerger:
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
                 json.dump(payload, handle, ensure_ascii=False, indent=2)
+                handle.flush()
+                os.fsync(handle.fileno())
             os.replace(tmp_path, str(path))
+            try:
+                dir_fd = os.open(str(path.parent), os.O_RDONLY)
+                try:
+                    os.fsync(dir_fd)
+                finally:
+                    os.close(dir_fd)
+            except OSError:
+                pass
         except (OSError, TypeError, ValueError):
             if os.path.exists(tmp_path):
                 os.unlink(tmp_path)
