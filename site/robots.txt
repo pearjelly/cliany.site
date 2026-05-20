@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /.vercel/
+
+Sitemap: https://www.cliany.site/sitemap.xml

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>cliany-site 文档 | Browser Automation CLI Documentation</title>
+  <link rel="canonical" href="https://www.cliany.site/docs/">
+  <meta name="description" content="cliany-site 完整文档：安装配置、命令参考、Python SDK、HTTP API、YAML 工作流编排。将浏览器操作自动化为 CLI 命令的开发者指南。">
+  <meta name="keywords" content="cliany-site docs, browser automation documentation, Chrome CDP CLI, LLM web automation guide, Python browser CLI tutorial">
+  <meta name="robots" content="index, follow">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.cliany.site/docs/">
+  <meta property="og:title" content="cliany-site 文档 | Browser Automation CLI Docs">
+  <meta property="og:description" content="cliany-site 完整文档：安装、命令参考、SDK、HTTP API、工作流编排。">
+  <meta property="og:image" content="https://www.cliany.site/og-image.png">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%231A1612%22/><text x=%2218%22 y=%2270%22 font-family=%22monospace%22 font-size=%2260%22 font-weight=%22bold%22 fill=%22%23D97757%22>%3E_</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "cliany-site 文档 — 浏览器自动化 CLI 工具完整指南",
+    "description": "cliany-site 完整文档：安装配置、命令参考、Python SDK、HTTP API、YAML 工作流编排。",
+    "url": "https://www.cliany.site/docs/",
+    "author": { "@type": "Person", "name": "pearjelly" },
+    "about": {
+      "@type": "SoftwareApplication",
+      "name": "cliany-site",
+      "url": "https://www.cliany.site"
+    }
+  }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #F5F0E8; --surface: #EDE8DF; --dark: #1A1612; --text: #1A1612;
+      --muted: #6B5F4E; --accent: #D97757; --border: rgba(120,100,75,0.15);
+      --font: 'Inter', system-ui, sans-serif; --mono: 'JetBrains Mono', monospace;
+      --radius: 8px;
+    }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.7; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; }
+    header { background: var(--dark); padding: 1rem 0; position: sticky; top: 0; z-index: 100; }
+    header .container { display: flex; align-items: center; gap: 1.5rem; }
+    .logo { color: #F5F0E8; font-size: 1.1rem; font-weight: 600; }
+    .logo span { color: var(--accent); }
+    .nav-back { color: #9C9488; font-size: 0.875rem; }
+    .nav-back:hover { color: #F5F0E8; text-decoration: none; }
+    .layout { display: grid; grid-template-columns: 220px 1fr; gap: 3rem; padding: 3rem 0 4rem; }
+    @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } aside { display: none; } }
+    aside { position: sticky; top: 80px; height: fit-content; }
+    aside nav a { display: block; padding: 0.3rem 0; color: var(--muted); font-size: 0.875rem; }
+    aside nav a:hover { color: var(--accent); text-decoration: none; }
+    aside nav .section-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 1rem 0 0.25rem; }
+    h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.25; }
+    h2 { font-size: 1.4rem; font-weight: 600; margin: 2.5rem 0 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border); }
+    h3 { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    pre { background: var(--dark); color: #D3C6AA; padding: 1rem 1.25rem; border-radius: var(--radius); overflow-x: auto; margin: 1rem 0; font-family: var(--mono); font-size: 0.875rem; line-height: 1.6; }
+    code { font-family: var(--mono); font-size: 0.875em; background: var(--surface); padding: 0.1em 0.35em; border-radius: 4px; }
+    pre code { background: none; padding: 0; font-size: inherit; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.875rem; }
+    th { background: var(--surface); font-weight: 600; text-align: left; padding: 0.6rem 0.75rem; border: 1px solid var(--border); }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); }
+    .badge { display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 0.15em 0.5em; border-radius: 4px; background: var(--accent); color: #fff; vertical-align: middle; margin-left: 0.4rem; }
+    .intro-meta { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+    footer { border-top: 1px solid var(--border); padding: 2rem 0; text-align: center; color: var(--muted); font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="/" class="logo">cliany<span>.</span>site</a>
+      <a href="/" class="nav-back">← 返回首页</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="layout">
+      <aside>
+        <nav>
+          <span class="section-label">起步</span>
+          <a href="#install">安装</a>
+          <a href="#config">配置 LLM</a>
+          <a href="#quickstart">5 分钟快速开始</a>
+          <span class="section-label">命令参考</span>
+          <a href="#doctor">doctor</a>
+          <a href="#login">login</a>
+          <a href="#explore">explore</a>
+          <a href="#list">list</a>
+          <a href="#execute">执行适配器命令</a>
+          <span class="section-label">进阶</span>
+          <a href="#sdk">Python SDK</a>
+          <a href="#api">HTTP API</a>
+          <a href="#workflow">YAML 工作流</a>
+          <a href="#batch">批量执行</a>
+          <span class="section-label">参考</span>
+          <a href="#env">环境变量</a>
+          <a href="#faq">常见问题</a>
+        </nav>
+      </aside>
+
+      <main>
+        <h1>cliany-site 文档</h1>
+        <p class="intro-meta">v0.8.3 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
+
+        <p>cliany-site 基于 LLM 和 Chrome CDP 协议，将任意网页操作自动化为可重复调用的 CLI 命令。核心流程：<strong>explore（探索）→ generate（生成适配器）→ run（执行）</strong>。</p>
+
+        <h2 id="install">安装</h2>
+        <h3>PyPI 安装（推荐）</h3>
+        <pre><code>pip install cliany-site</code></pre>
+        <h3>源码安装</h3>
+        <pre><code>git clone https://github.com/pearjelly/cliany.site.git
+cd cliany.site
+pip install -e .</code></pre>
+        <p>依赖 Python ≥ 3.11 和 Chrome/Chromium 浏览器（工具会自动检测并启动）。</p>
+
+        <h2 id="config">配置 LLM</h2>
+        <p>支持 Anthropic（Claude）和 OpenAI（GPT-4o）两种 provider，二选一：</p>
+        <pre><code># Anthropic Claude（推荐）
+export CLIANY_LLM_PROVIDER=anthropic
+export CLIANY_ANTHROPIC_API_KEY="sk-ant-..."
+
+# OpenAI GPT-4o
+export CLIANY_LLM_PROVIDER=openai
+export CLIANY_OPENAI_API_KEY="sk-..."</code></pre>
+        <p>也可以写入 <code>.env</code> 文件，查找顺序：<code>~/.config/cliany-site/.env</code> → <code>~/.cliany-site/.env</code> → 项目目录 <code>.env</code> → 系统环境变量。</p>
+
+        <h2 id="quickstart">5 分钟快速开始</h2>
+        <pre><code># 1. 验证环境
+cliany-site doctor --json
+
+# 2. 探索目标网站（此处以 GitHub 为例）
+cliany-site explore "https://github.com" "搜索仓库并查看 README" --json
+
+# 3. 查看已生成的适配器
+cliany-site list --json
+
+# 4. 执行生成的命令
+cliany-site github.com search --query "browser-use" --json</code></pre>
+
+        <h2 id="doctor">doctor — 环境检查</h2>
+        <p>检查 Chrome CDP 连通性、LLM Key 有效性、目录结构。</p>
+        <pre><code>cliany-site doctor [--json]</code></pre>
+        <p>返回示例：</p>
+        <pre><code>{"success": true, "data": {"cdp": true, "llm": true, "adapters_dir": true}}</code></pre>
+
+        <h2 id="login">login — 保存登录状态</h2>
+        <p>打开目标 URL，等待用户在浏览器中完成登录，然后持久化 Cookie / LocalStorage。</p>
+        <pre><code>cliany-site login "https://your-site.com" [--json]</code></pre>
+
+        <h2 id="explore">explore — 探索工作流</h2>
+        <p>核心命令。指定 URL 和任务描述，LLM 自动分析页面 AXTree，规划并执行操作路径，将结果生成为 Python/Click CLI 适配器。</p>
+        <pre><code>cliany-site explore &lt;url&gt; &lt;workflow&gt; [OPTIONS]
+
+Options:
+  --json          JSON 输出
+  --interactive   交互式探索，每步手动确认
+  --extend &lt;domain&gt;  增量扩展已有适配器
+  --headless      无头模式（服务器/CI 环境）
+  --cdp-url &lt;ws://host:port&gt;  连接远程浏览器</code></pre>
+        <p>示例：</p>
+        <pre><code># 基础探索
+cliany-site explore "https://github.com" "搜索仓库并查看 README" --json
+
+# 交互式（每步确认）
+cliany-site explore "https://github.com" "管理 Issues" --interactive
+
+# 增量扩展（不覆盖已有命令）
+cliany-site explore "https://github.com" "创建 PR" --extend github.com</code></pre>
+
+        <h2 id="list">list — 查看适配器</h2>
+        <pre><code>cliany-site list [--json]</code></pre>
+        <p>列出 <code>~/.cliany-site/adapters/</code> 目录下所有已生成的域名适配器及其命令。</p>
+
+        <h2 id="execute">执行适配器命令</h2>
+        <p>生成适配器后，通过 <code>cliany-site &lt;domain&gt; &lt;command&gt;</code> 执行：</p>
+        <pre><code># 查看 github.com 适配器的所有命令
+cliany-site github.com --help
+
+# 执行搜索命令
+cliany-site github.com search --query "browser automation" --json
+
+# 从断点恢复
+cliany-site github.com search --query "browser automation" --resume --json</code></pre>
+
+        <h2 id="sdk">Python SDK</h2>
+        <pre><code>from cliany_site.sdk import ClanySite
+import asyncio
+
+async def main():
+    async with ClanySite() as cs:
+        # 探索
+        result = await cs.explore("https://github.com", "搜索仓库")
+        print(result)
+
+        # 列出适配器
+        adapters = await cs.list_adapters()
+        print(adapters)
+
+asyncio.run(main())</code></pre>
+
+        <h2 id="api">HTTP API</h2>
+        <p>启动本地 REST API 服务：</p>
+        <pre><code>cliany-site serve --port 8080</code></pre>
+        <table>
+          <tr><th>端点</th><th>方法</th><th>说明</th></tr>
+          <tr><td><code>GET /doctor</code></td><td>GET</td><td>环境检查</td></tr>
+          <tr><td><code>GET /adapters</code></td><td>GET</td><td>列出适配器</td></tr>
+          <tr><td><code>POST /explore</code></td><td>POST</td><td>探索工作流</td></tr>
+          <tr><td><code>POST /execute</code></td><td>POST</td><td>执行适配器命令</td></tr>
+        </table>
+        <pre><code>curl -X POST http://localhost:8080/explore \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://github.com", "workflow": "搜索仓库"}'</code></pre>
+
+        <h2 id="workflow">YAML 工作流编排</h2>
+        <pre><code># workflow.yaml
+name: GitHub 搜索并查看详情
+steps:
+  - name: 搜索仓库
+    adapter: github.com
+    command: search
+    params:
+      query: "cliany-site"
+  - name: 查看第一个结果
+    adapter: github.com
+    command: view
+    params:
+      repo: "$prev.data.results[0].name"</code></pre>
+        <pre><code>cliany-site workflow run workflow.yaml --json
+cliany-site workflow validate workflow.yaml --json</code></pre>
+
+        <h2 id="batch">批量执行</h2>
+        <p>从 CSV/JSON 文件批量驱动适配器命令：</p>
+        <pre><code>cliany-site workflow batch github.com search data.csv --concurrency 3 --json</code></pre>
+
+        <h2 id="env">环境变量参考</h2>
+        <table>
+          <tr><th>变量</th><th>默认值</th><th>说明</th></tr>
+          <tr><td><code>CLIANY_LLM_PROVIDER</code></td><td>—</td><td><code>anthropic</code> 或 <code>openai</code></td></tr>
+          <tr><td><code>CLIANY_ANTHROPIC_API_KEY</code></td><td>—</td><td>Anthropic API Key</td></tr>
+          <tr><td><code>CLIANY_OPENAI_API_KEY</code></td><td>—</td><td>OpenAI API Key</td></tr>
+          <tr><td><code>CLIANY_OPENAI_BASE_URL</code></td><td>—</td><td>自定义 OpenAI 兼容端点</td></tr>
+          <tr><td><code>CLIANY_CROSS_ORIGIN_IFRAMES</code></td><td><code>true</code></td><td>是否递归采集跨域 iframe</td></tr>
+        </table>
+
+        <h2 id="faq">常见问题</h2>
+        <h3>Chrome 无法连接怎么办？</h3>
+        <p>运行 <code>cliany-site doctor --json</code> 检查 CDP 状态。工具会自动尝试启动 Chrome；如果失败，可手动启动：</p>
+        <pre><code>/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+  --remote-debugging-port=9222 \
+  --user-data-dir=/tmp/chrome-debug</code></pre>
+
+        <h3>页面改版后命令失效？</h3>
+        <p>小幅页面变化由 AXTree 模糊匹配和自愈机制自动处理。大幅改版时，用 <code>--extend</code> 增量重新探索即可：</p>
+        <pre><code>cliany-site explore "https://your-site.com" "原有任务" --extend your-site.com</code></pre>
+
+        <h3>如何在服务器/Docker 中使用？</h3>
+        <pre><code>cliany-site explore "https://github.com" "搜索仓库" \
+  --headless \
+  --cdp-url "ws://localhost:9222" \
+  --json</code></pre>
+      </main>
+    </div>
+  </div>
+
+  <footer>
+    <p>© 2024-2026 cliany-site · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a> · <a href="/">首页</a></p>
+  </footer>
+</body>
+</html>
