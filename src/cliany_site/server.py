@@ -22,9 +22,12 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from cliany_site.sdk import ClanySite
+
+if TYPE_CHECKING:
+    from aiohttp.web import Application, Request, Response
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +51,7 @@ class APIServer:
             self._sdk = ClanySite(cdp_url=self._cdp_url, headless=self._headless)
         return self._sdk
 
-    def _build_app(self) -> Any:
+    def _build_app(self) -> Application:
         from aiohttp import web
 
         app = web.Application()
@@ -61,33 +64,33 @@ class APIServer:
         app.on_cleanup.append(self._cleanup)
         return app
 
-    async def _cleanup(self, _app: Any) -> None:
+    async def _cleanup(self, _app: Application) -> None:
         if self._sdk is not None:
             await self._sdk.close()
             self._sdk = None
 
     @staticmethod
-    def _json_response(data: dict[str, Any], status: int = 200) -> Any:
+    def _json_response(data: dict[str, Any], status: int = 200) -> Response:
         from aiohttp import web
 
         return web.json_response(data, status=status)
 
-    async def _handle_health(self, _request: Any) -> Any:
+    async def _handle_health(self, _request: Request) -> Response:
         return self._json_response({"status": "ok"})
 
-    async def _handle_doctor(self, _request: Any) -> Any:
+    async def _handle_doctor(self, _request: Request) -> Response:
         sdk = await self._get_sdk()
         result = await sdk.doctor()
         status = 200 if result.get("success") else 503
         return self._json_response(result, status=status)
 
-    async def _handle_list_adapters(self, request: Any) -> Any:
+    async def _handle_list_adapters(self, request: Request) -> Response:
         detail = request.query.get("detail", "").lower() in ("1", "true", "yes")
         sdk = await self._get_sdk()
         result = await sdk.list_adapters(detail=detail)
         return self._json_response(result)
 
-    async def _handle_explore(self, request: Any) -> Any:
+    async def _handle_explore(self, request: Request) -> Response:
         try:
             body = await request.json()
         except (json.JSONDecodeError, ValueError):
@@ -114,7 +117,7 @@ class APIServer:
         status = 200 if result.get("success") else 500
         return self._json_response(result, status=status)
 
-    async def _handle_execute(self, request: Any) -> Any:
+    async def _handle_execute(self, request: Request) -> Response:
         try:
             body = await request.json()
         except (json.JSONDecodeError, ValueError):
@@ -142,7 +145,7 @@ class APIServer:
         status = 200 if result.get("success") else 500
         return self._json_response(result, status=status)
 
-    async def _handle_login(self, request: Any) -> Any:
+    async def _handle_login(self, request: Request) -> Response:
         try:
             body = await request.json()
         except (json.JSONDecodeError, ValueError):

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import hashlib
 import re
 from dataclasses import dataclass
@@ -14,6 +15,8 @@ _SENTINEL_RE = re.compile(
     r"<!-- end cliany-site:auto-generated -->",
     re.DOTALL,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -39,8 +42,8 @@ def _render_section(registry: object, version: int) -> str:  # noqa: ARG001
         for entry in registry.list():  # type: ignore[attr-defined]
             desc = getattr(entry, "description", "") or ""
             lines.append(f"| `{entry.name}` | {desc} |")
-    except Exception:  # noqa: BLE001
-        pass
+    except Exception as exc:
+        logger.warning("agent_md: registry.list() failed: %s", exc)
     return "\n".join(lines)
 
 

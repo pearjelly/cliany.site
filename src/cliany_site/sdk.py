@@ -24,8 +24,13 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Any
+from types import TracebackType
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
+
+if TYPE_CHECKING:
+    from browser_use.browser.session import BrowserSession
+    from cliany_site.browser.cdp import CDPConnection
 
 from cliany_site.config import get_config
 from cliany_site.errors import (
@@ -70,13 +75,18 @@ class ClanySite:
         self._cdp_url = cdp_url
         self._headless = headless
         self._port = port
-        self._cdp: Any = None
-        self._session: Any = None
+        self._cdp: CDPConnection | None = None
+        self._session: BrowserSession | None = None
 
     async def __aenter__(self) -> ClanySite:
         return self
 
-    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         await self.close()
 
     async def close(self) -> None:
@@ -86,7 +96,7 @@ class ClanySite:
             self._cdp = None
             self._session = None
 
-    async def _ensure_cdp(self) -> Any:
+    async def _ensure_cdp(self) -> CDPConnection:
         if self._cdp is None:
             from cliany_site.browser.cdp import CDPConnection
 
@@ -99,7 +109,7 @@ class ClanySite:
             )
         return self._cdp
 
-    async def _ensure_browser_session(self) -> Any:
+    async def _ensure_browser_session(self) -> BrowserSession:
         """确保浏览器会话已建立并返回 BrowserSession 实例。"""
         cdp = await self._ensure_cdp()
         if self._session is None:
