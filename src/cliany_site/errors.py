@@ -63,6 +63,7 @@ INSTALL_FAILED = "INSTALL_FAILED"
 BAD_REQUEST = "BAD_REQUEST"
 UNSAFE_ARCHIVE = "UNSAFE_ARCHIVE"
 BINARY_DOWNLOAD_FAILED = "BINARY_DOWNLOAD_FAILED"
+LOCK_TIMEOUT = "LOCK_TIMEOUT"
 
 ERROR_FIX_HINTS: dict[str, str] = {
     CDP_UNAVAILABLE: "请先启动 Chrome：google-chrome --remote-debugging-port=9222",
@@ -85,4 +86,5 @@ ERROR_FIX_HINTS: dict[str, str] = {
     BAD_REQUEST: "请求参数无效，请检查请求体格式",
     UNSAFE_ARCHIVE: "归档文件包含路径穿越或不安全链接，拒绝解压",
     BINARY_DOWNLOAD_FAILED: "下载二进制失败，请检查网络连接或使用镜像源",
+    LOCK_TIMEOUT: "文件锁等待超时，请稍后重试或检查是否有其他进程占用锁文件",
 }
