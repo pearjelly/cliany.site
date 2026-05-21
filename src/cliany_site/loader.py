@@ -15,6 +15,7 @@ import portalocker
 
 from cliany_site.codegen.generator import METADATA_SCHEMA_VERSION
 from cliany_site.config import get_config
+from cliany_site.errors import LOCK_TIMEOUT
 from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
 
 logger = logging.getLogger(__name__)
@@ -240,30 +241,36 @@ def load_or_rebuild(registry: LazyAdapterRegistry) -> dict:
     lock_file = manifest_file.with_suffix(".lock")
     lock_file.parent.mkdir(parents=True, exist_ok=True)
 
-    with portalocker.Lock(str(lock_file), timeout=10, mode="a"):
-        try:
-            if manifest_file.exists():
-                manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
-                if validate_manifest(manifest, registry):
-                    return manifest
-        except (json.JSONDecodeError, OSError, KeyError) as exc:
-            logger.warning("加载 manifest 失败: %s", exc)
-
-        manifest = build_manifest(registry)
-
-        try:
-            manifest_file.parent.mkdir(parents=True, exist_ok=True)
-            fd, tmp = tempfile.mkstemp(dir=str(manifest_file.parent), suffix=".tmp")
+    try:
+        with portalocker.Lock(str(lock_file), timeout=10, mode="a"):
             try:
-                with os.fdopen(fd, "w", encoding="utf-8") as f:
-                    json.dump(manifest, f, ensure_ascii=False, indent=2)
-                    f.flush()
-                    os.fsync(f.fileno())
-                os.replace(tmp, str(manifest_file))
-            except (OSError, TypeError, ValueError):
-                if os.path.exists(tmp):
-                    os.unlink(tmp)
-                raise
-        except OSError as exc:
-            logger.warning("写入 manifest 失败: %s", exc)
-        return manifest
+                if manifest_file.exists():
+                    manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+                    if validate_manifest(manifest, registry):
+                        return manifest
+            except (json.JSONDecodeError, OSError, KeyError) as exc:
+                logger.warning("加载 manifest 失败: %s", exc)
+
+            manifest = build_manifest(registry)
+
+            try:
+                manifest_file.parent.mkdir(parents=True, exist_ok=True)
+                fd, tmp = tempfile.mkstemp(dir=str(manifest_file.parent), suffix=".tmp")
+                try:
+                    with os.fdopen(fd, "w", encoding="utf-8") as f:
+                        json.dump(manifest, f, ensure_ascii=False, indent=2)
+                        f.flush()
+                        os.fsync(f.fileno())
+                    os.replace(tmp, str(manifest_file))
+                except (OSError, TypeError, ValueError):
+                    if os.path.exists(tmp):
+                        os.unlink(tmp)
+                    raise
+            except OSError as exc:
+                logger.warning("写入 manifest 失败: %s", exc)
+            return manifest
+    except portalocker.LockException as _lock_exc:
+        from cliany_site.errors import AdapterLoadError
+        _exc = AdapterLoadError(f"获取 manifest 锁超时，请稍后重试: {_lock_exc}")
+        _exc.error_code = LOCK_TIMEOUT
+        raise _exc from _lock_exc

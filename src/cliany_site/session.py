@@ -48,18 +48,24 @@ def save_session_data(domain: str, data: dict) -> str:
         "expires_hint": data.get("expires_hint"),
     }
     lock_file = path.with_suffix(".lock")
-    with portalocker.Lock(str(lock_file), timeout=10, mode="a"):
-        fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
-        try:
-            with os.fdopen(fd, "w", encoding="utf-8") as f:
-                f.write(json.dumps(payload, ensure_ascii=False, indent=2))
-                f.flush()
-                os.fsync(f.fileno())
-            os.replace(tmp, str(path))
-        except Exception:
-            if os.path.exists(tmp):
-                os.unlink(tmp)
-            raise
+    try:
+        with portalocker.Lock(str(lock_file), timeout=10, mode="a"):
+            fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    f.write(json.dumps(payload, ensure_ascii=False, indent=2))
+                    f.flush()
+                    os.fsync(f.fileno())
+                os.replace(tmp, str(path))
+            except Exception:
+                if os.path.exists(tmp):
+                    os.unlink(tmp)
+                raise
+    except portalocker.LockException as _lock_exc:
+        from cliany_site.errors import LOCK_TIMEOUT, SessionError
+        _exc = SessionError(f"获取 session 锁超时，请稍后重试: {_lock_exc}")
+        _exc.error_code = LOCK_TIMEOUT
+        raise _exc from _lock_exc
     return str(path)
 
 

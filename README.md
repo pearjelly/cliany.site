@@ -7,7 +7,8 @@
 
 > 🌐 Languages: [English](README.md) | [简体中文](README.zh.md)
 
-> **🚀 v0.11.0 Released**: Added experimental Obscura browser provider, multi-platform binaries, and lifecycle management.  
+> **🔒 v0.12.0 稳定性与质量加固**：新增文件锁保护（manifest/session 并发写安全）、tar 路径穿越防护、Obscura 下载重试、统一错误码体系，详见 [CHANGELOG.md](CHANGELOG.md)。  
+> **🚀 v0.11.0**: Added experimental Obscura browser provider, multi-platform binaries, and lifecycle management.  
 > ⚠️ **v0.10.0 BREAKING**: metadata schema v3 hardcut. Use `cliany-site migrate` to upgrade legacy adapters.
 
 > Automate any web workflow into callable CLI commands

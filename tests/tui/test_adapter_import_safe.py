@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from cliany_site.errors import UnsafeArchiveError
 from cliany_site.tui.screens.adapter_list import _safe_tar_members
 
 
@@ -36,7 +37,7 @@ def test_extract_rejects_path_traversal(tmp_path: Path) -> None:
     dest.mkdir()
 
     with tarfile.open(tar_path, "r:gz") as tar:
-        with pytest.raises(ValueError):
+        with pytest.raises(UnsafeArchiveError):
             list(_safe_tar_members(tar, dest))
 
 
@@ -49,7 +50,7 @@ def test_extract_rejects_absolute_path(tmp_path: Path) -> None:
     dest.mkdir()
 
     with tarfile.open(tar_path, "r:gz") as tar:
-        with pytest.raises(ValueError):
+        with pytest.raises(UnsafeArchiveError):
             list(_safe_tar_members(tar, dest))
 
 
@@ -62,7 +63,7 @@ def test_extract_rejects_symlink_escape(tmp_path: Path) -> None:
     dest.mkdir()
 
     with tarfile.open(tar_path, "r:gz") as tar:
-        with pytest.raises(ValueError):
+        with pytest.raises(UnsafeArchiveError):
             list(_safe_tar_members(tar, dest))
 
 
@@ -75,7 +76,7 @@ def test_extract_rejects_symlink_relative_escape(tmp_path: Path) -> None:
     dest.mkdir()
 
     with tarfile.open(tar_path, "r:gz") as tar:
-        with pytest.raises(ValueError):
+        with pytest.raises(UnsafeArchiveError):
             list(_safe_tar_members(tar, dest))
 
 
@@ -88,7 +89,7 @@ def test_extract_rejects_hardlink_escape(tmp_path: Path) -> None:
     dest.mkdir()
 
     with tarfile.open(tar_path, "r:gz") as tar:
-        with pytest.raises(ValueError):
+        with pytest.raises(UnsafeArchiveError):
             list(_safe_tar_members(tar, dest))
 
 

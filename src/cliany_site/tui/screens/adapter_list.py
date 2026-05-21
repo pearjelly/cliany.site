@@ -19,6 +19,7 @@ from textual.widgets import (
 )
 from textual.widgets.data_table import CellDoesNotExist
 
+from cliany_site.errors import UNSAFE_ARCHIVE, UnsafeArchiveError
 from cliany_site.activity_log import read_recent_logs
 from cliany_site.atoms.storage import list_atoms
 from cliany_site.browser.launcher import find_chrome_binary
@@ -32,17 +33,25 @@ def _safe_tar_members(tar: tarfile.TarFile, dest: Path) -> Iterator[tarfile.TarI
     dest_resolved = dest.resolve()
     for member in tar.getmembers():
         if os.path.isabs(member.name):
-            raise ValueError(f"不安全的归档条目（绝对路径）: {member.name!r}")
+            _exc = UnsafeArchiveError(f"不安全的归档条目（绝对路径）: {member.name!r}")
+            _exc.error_code = UNSAFE_ARCHIVE
+            raise _exc
         if ".." in member.name.split("/"):
-            raise ValueError(f"不安全的归档条目（路径穿越）: {member.name!r}")
+            _exc = UnsafeArchiveError(f"不安全的归档条目（路径穿越）: {member.name!r}")
+            _exc.error_code = UNSAFE_ARCHIVE
+            raise _exc
         if member.issym() or member.islnk():
             link_target = member.linkname
             if os.path.isabs(link_target):
-                raise ValueError(f"不安全的归档条目（绝对链接目标）: {member.name!r}")
+                _exc = UnsafeArchiveError(f"不安全的归档条目（绝对链接目标）: {member.name!r}")
+                _exc.error_code = UNSAFE_ARCHIVE
+                raise _exc
             member_dir = (dest_resolved / member.name).parent
             resolved_link = (member_dir / link_target).resolve()
             if not str(resolved_link).startswith(str(dest_resolved) + os.sep) and resolved_link != dest_resolved:
-                raise ValueError(f"不安全的归档条目（链接目标超出解压目录）: {member.name!r}")
+                _exc = UnsafeArchiveError(f"不安全的归档条目（链接目标超出解压目录）: {member.name!r}")
+                _exc.error_code = UNSAFE_ARCHIVE
+                raise _exc
         yield member
 
 
