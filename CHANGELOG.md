@@ -7,6 +7,30 @@
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-05-21
+
+### Fixed
+- **[보안] tar 경로 순회 차단** (`tui/screens/adapter_list.py`): 악성 `.tar.gz` 임포트 시 경로 이탈 방지, `UnsafeArchiveError` 추가 (commit bbb13d6)
+- **[안정성] binary/process.py PID 파일 경쟁 조건 수정**: portalocker 배타 락 + NamedTemporaryFile + os.replace()로 원자적 쓰기 보장 (commit 3924c00)
+- **[안정성] loader.py manifest 경쟁 조건 수정**: portalocker.Lock + threading.RLock + 원자 쓰기로 동시 접근 안전성 확보 (commit e903f44)
+- **[안정성] codegen/merger.py fsync 누락 수정**: flush + fsync + 디렉터리 fsync로 전력 이상 시 데이터 손실 방지 (commit 9b236cd)
+- **[안정성] obscura 다운로드 재시도 없음 수정**: 지수 백오프 3회 재시도 구현, HTTPError/URLError 예외 계층 올바르게 처리 (commit 6e8c713)
+- **[안정성] session.py / atomic_io.py 파일 락 및 로그 누락 수정**: portalocker + mkstemp + fdopen + fsync 패턴 적용, 파싱 실패 시 에러 로그 추가 (commit 74ee847)
+
+### Changed
+- **explorer/interactive.py 연쇄 except 세분화**: 브로드 Exception 블록을 구체적 예외 타입(AttributeError, RuntimeError, asyncio.TimeoutError 등)으로 분리, logger.extra 컨텍스트 필드 추가 (commit 60a9b59)
+- **errors.py 에러 코드 통일**: `LOCK_TIMEOUT`, `UNSAFE_ARCHIVE` 2개 에러 코드 추가(후방 호환), ERROR_FIX_HINTS 힌트 메시지 보완 (commit 5bf36c4)
+
+### Added
+- **pytest-cov 및 portalocker 의존성 추가**: v0.12 가딩 작업 기반 인프라 (commit 5980712)
+- **CI coverage 리포트**: GitHub Actions에 pytest-cov 플래그 + artifact 업로드 추가 (commit bff9074)
+- **가관측성 단언 테스트 4종**: 로깅 마스킹, JSONFormatter, ERROR_FIX_HINTS 커버리지, envelope ok/success 호환성 (commit e4eb52c)
+- **action_runtime.py 분기 커버리지 보완**: `_resolve_action_node`, `_attempt_adaptive_repair` 등 9개 분기 테스트 추가 (commit 74ee847)
+- **성능 마이크로 벤치마크**: `tests/perf/` 디렉터리에 pytest-benchmark 기반 P95 회귀 임계값 테스트 추가 (commit 26ebc82)
+
+### Internal
+- **ADR-0007 안정성 가딩 결정 기록**: `docs/decisions/0007-v012-stability-hardening.md` 신규 작성 (commit 046cbcc)
+
 ## [0.11.0] - 2026-05-12
 
 ### Obscura 实验性浏览器后端集成
