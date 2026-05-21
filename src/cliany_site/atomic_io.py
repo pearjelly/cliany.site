@@ -1,7 +1,10 @@
+import logging
 from pathlib import Path
 import json
 import os
 import tempfile
+
+logger = logging.getLogger(__name__)
 
 
 def atomic_write_json(path: Path, data: dict) -> None:
@@ -19,4 +22,5 @@ def atomic_read_json(path: Path, default: dict) -> dict:
         with path.open(encoding='utf-8') as f:
             return json.load(f)
     except (json.JSONDecodeError, OSError):
+        logger.error("解析失败: %s", path, exc_info=True)
         return default

@@ -1,8 +1,12 @@
 import json
 import logging
+import os
+import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+import portalocker
 
 if TYPE_CHECKING:
     from browser_use.browser.session import BrowserSession
@@ -43,7 +47,19 @@ def save_session_data(domain: str, data: dict) -> str:
         "saved_at": datetime.now(UTC).isoformat(),
         "expires_hint": data.get("expires_hint"),
     }
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    lock_file = path.with_suffix(".lock")
+    with portalocker.Lock(str(lock_file), timeout=10, mode="a"):
+        fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(json.dumps(payload, ensure_ascii=False, indent=2))
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp, str(path))
+        except Exception:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+            raise
     return str(path)
 
 
@@ -113,12 +129,12 @@ async def save_session(domain: str, browser_session: "BrowserSession") -> tuple[
         RuntimeError: 无法从浏览器获取 cookies 时抛出
     """
     try:
-        cookies = await browser_session._cdp_get_cookies()
+        cookies: list[Any] = await browser_session._cdp_get_cookies()
     except Exception as e:
         raise RuntimeError(f"无法从浏览器获取 Cookie: {e}") from e
 
     cookie_list = [
-        c.model_dump() if hasattr(c, "model_dump") else dict(c)  # type: ignore[union-attr,attr-defined]
+        c.model_dump() if hasattr(c, "model_dump") else dict(c)
         for c in cookies
     ]
     data = {
