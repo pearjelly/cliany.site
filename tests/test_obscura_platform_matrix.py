@@ -1,4 +1,5 @@
 # tests/test_obscura_platform_matrix.py
+# pyright: reportMissingImports=false
 import sys
 import pytest
 from unittest.mock import patch
@@ -66,27 +67,42 @@ class TestNormalizePlatform:
         assert target.archive_ext == ".zip"
         assert target.is_supported is True
 
-    def test_linux_arm64_unsupported(self):
-        with pytest.raises(UnsupportedPlatformError) as exc:
-            normalize_platform("linux", "aarch64")
-        assert exc.value.target_key == "linux-arm64"
-        assert exc.value.error_code == "E_UNSUPPORTED_PLATFORM"
+    def test_linux_arm64_supported(self):
+        target = normalize_platform("linux", "arm64")
+        assert target.os == "linux"
+        assert target.arch == "aarch64"
+        assert target.target_key == "linux-aarch64"
+        assert target.exe_suffix == ""
+        assert target.archive_ext == ".tar.gz"
+        assert target.is_supported is True
 
-    def test_linux_aarch64_unsupported(self):
-        with pytest.raises(UnsupportedPlatformError) as exc:
-            normalize_platform("linux", "aarch64")
-        assert exc.value.target_key == "linux-arm64"
-        assert exc.value.error_code == "E_UNSUPPORTED_PLATFORM"
+    def test_linux_aarch64_supported(self):
+        target = normalize_platform("linux", "aarch64")
+        assert target.os == "linux"
+        assert target.arch == "aarch64"
+        assert target.target_key == "linux-aarch64"
+        assert target.exe_suffix == ""
+        assert target.archive_ext == ".tar.gz"
+        assert target.is_supported is True
+
+    def test_darwin_universal2_maps_to_arm64(self):
+        target = normalize_platform("darwin", "universal2")
+        assert target.os == "darwin"
+        assert target.arch == "arm64"
+        assert target.target_key == "darwin-arm64"
+        assert target.is_supported is True
 
     def test_unknown_os_unsupported(self):
         with pytest.raises(UnsupportedPlatformError) as exc:
             normalize_platform("unknown", "x86_64")
         assert "unknown-x86_64" in str(exc.value)
+        assert exc.value.hint
 
     def test_unknown_arch_unsupported(self):
         with pytest.raises(UnsupportedPlatformError) as exc:
             normalize_platform("linux", "unknown")
         assert "linux-unknown" in str(exc.value)
+        assert exc.value.hint
 
 
 class TestGetArtifactFilename:
@@ -122,6 +138,14 @@ class TestGetArtifactFilename:
         filename = get_artifact_filename(target)
         assert filename == "obscura-x86_64-windows.zip"
 
+    def test_linux_aarch64_filename(self):
+        target = PlatformTarget(
+            os="linux", arch="aarch64", target_key="linux-aarch64",
+            exe_suffix="", archive_ext=".tar.gz", is_supported=True
+        )
+        filename = get_artifact_filename(target)
+        assert filename == "obscura-aarch64-linux.tar.gz"
+
     def test_unsupported_target_raises_error(self):
         target = PlatformTarget(
             os="linux", arch="arm64", target_key="linux-arm64",
@@ -130,3 +154,4 @@ class TestGetArtifactFilename:
         with pytest.raises(UnsupportedPlatformError) as exc:
             get_artifact_filename(target)
         assert exc.value.target_key == "linux-arm64"
+        assert exc.value.hint

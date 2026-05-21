@@ -11,15 +11,26 @@ class PlatformTarget:
     archive_ext: str  # '.tar.gz' 或 '.zip'
     is_supported: bool
 
+    def __str__(self) -> str:
+        return self.target_key
+
 
 class UnsupportedPlatformError(Exception):
     target_key: str
     error_code: str
+    hint: str
 
-    def __init__(self, target_key: str):
+    def __init__(self, target_key: str, hint: str = ""):
         self.target_key = target_key
         self.error_code = "E_UNSUPPORTED_PLATFORM"
-        super().__init__(f"Unsupported platform: {target_key}")
+        self.hint = hint
+        message = f"Unsupported platform: {target_key}"
+        if hint:
+            message = f"{message}. {hint}"
+        super().__init__(message)
+
+
+SUPPORTED_PLATFORM_HINT = "支持平台: darwin-arm64, darwin-x86_64, linux-x86_64, linux-aarch64, windows-x86_64"
 
 
 def normalize_platform(sys_platform: str, machine: str) -> PlatformTarget:
@@ -32,15 +43,17 @@ def normalize_platform(sys_platform: str, machine: str) -> PlatformTarget:
     elif sys_platform == "win32":
         os_name = "windows"
     else:
-        raise UnsupportedPlatformError(f"{sys_platform}-{machine}")
+        raise UnsupportedPlatformError(f"{sys_platform}-{machine}", hint=SUPPORTED_PLATFORM_HINT)
 
     # 归一化架构
     if machine in ("x86_64", "AMD64"):
         arch_name = "x86_64"
-    elif machine in ("arm64", "aarch64"):
+    elif sys_platform == "linux" and machine in ("arm64", "aarch64"):
+        arch_name = "aarch64"
+    elif machine in ("arm64", "aarch64", "universal", "universal2"):
         arch_name = "arm64"
     else:
-        raise UnsupportedPlatformError(f"{sys_platform}-{machine}")
+        raise UnsupportedPlatformError(f"{sys_platform}-{machine}", hint=SUPPORTED_PLATFORM_HINT)
 
     # 构建 target_key
     target_key = f"{os_name}-{arch_name}"
@@ -49,6 +62,7 @@ def normalize_platform(sys_platform: str, machine: str) -> PlatformTarget:
     supported_targets = {
         "darwin-arm64",
         "darwin-x86_64",
+        "linux-aarch64",
         "linux-x86_64",
         "windows-x86_64"
     }
@@ -57,7 +71,7 @@ def normalize_platform(sys_platform: str, machine: str) -> PlatformTarget:
 
     # 如果不支持，抛出异常
     if not is_supported:
-        raise UnsupportedPlatformError(target_key)
+        raise UnsupportedPlatformError(target_key, hint=SUPPORTED_PLATFORM_HINT)
 
     # 设置文件后缀
     exe_suffix = ".exe" if os_name == "windows" else ""
@@ -84,7 +98,9 @@ def get_artifact_filename(target: PlatformTarget) -> str:
         return f"obscura-x86_64-macos.tar.gz"
     elif target.target_key == "linux-x86_64":
         return f"obscura-x86_64-linux.tar.gz"
+    elif target.target_key == "linux-aarch64":
+        return f"obscura-aarch64-linux.tar.gz"
     elif target.target_key == "windows-x86_64":
         return f"obscura-x86_64-windows.zip"
     else:
-        raise UnsupportedPlatformError(target.target_key)
+        raise UnsupportedPlatformError(target.target_key, hint=SUPPORTED_PLATFORM_HINT)

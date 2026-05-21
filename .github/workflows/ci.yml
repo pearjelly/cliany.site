@@ -70,6 +70,22 @@ jobs:
           path: coverage.xml
           if-no-files-found: warn
 
+  test-windows:
+    name: Test Windows (pytest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 安装依赖
+        run: uv pip install -e ".[test]" --system
+      - name: 运行核心测试 (排除 perf/qa)
+        run: pytest tests/ -v --tb=short --ignore=tests/perf -k "not qa" --no-cov
+
   obscura-smoke:
     name: Obscura Smoke (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
