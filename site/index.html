@@ -130,6 +130,30 @@
           </article>
         </div>
 
+        <!-- v0.12.0 Stability & Quality Hardening Features -->
+        <div class="features-grid reveal">
+          <article class="feature-card">
+            <div class="feature-icon">🔒</div>
+            <h3 class="feature-title">File Lock Protection</h3>
+            <p class="feature-desc">Concurrent-safe manifest and session writes via portalocker — no corruption under parallel processes.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon">🛡️</div>
+            <h3 class="feature-title">Tar Path Traversal Guard</h3>
+            <p class="feature-desc">Adapter import rejects archives with absolute paths, traversal segments, or symlink escapes.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon">🔄</div>
+            <h3 class="feature-title">Download Retry</h3>
+            <p class="feature-desc">Obscura binary downloads automatically retry on transient network failures with exponential back-off.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-icon">🗂️</div>
+            <h3 class="feature-title">Unified Error Codes</h3>
+            <p class="feature-desc">All error paths now carry machine-readable error codes and actionable fix hints in the JSON envelope.</p>
+          </article>
+        </div>
+
         <!-- v0.11.0 / v0.10.x Features -->
         <div class="features-grid reveal">
           <article class="feature-card">
@@ -395,7 +419,7 @@
           <div class="qs-card">
             <h3 class="qs-title" data-i18n="qs.step1">Step 1: Install</h3>
             <div class="code-block-container">
-              <pre class="code-block"><code># PyPI install (v0.11.0+)
+              <pre class="code-block"><code># PyPI install (v0.12.0+)
 pip install cliany-site
 
 # Or install from source
