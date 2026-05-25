@@ -219,7 +219,7 @@ const I18N = {
   'usecases.case2.after.steps': { zh: '1 条命令 · 秒级', en: '1 command · Instant' },
 
   // --- Case 3: Team Toolbox ---
-  'usecases.case3.title': { zh: '团队工具箱：聚合 Jira/Confluence/Jenkins', en: 'Team Toolbox: Jira / Confluence / Jenkins Aggregated' },
+  'usecases.case3.title': { zh: 'Apache 开源工具聚合：Jira / Wiki / Jenkins', en: 'Apache OSS Tools: Jira / Wiki / Jenkins Aggregated' },
   'usecases.case3.desc': {
     zh: '同一 CLI 风格，覆盖三个公开开源项目工具站，跨平台聚合查询。',
     en: 'Same CLI style across three open-source project tools — cross-platform aggregated queries.'
