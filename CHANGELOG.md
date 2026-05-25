@@ -7,6 +7,20 @@
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-05-25
+
+### Fixed
+- **[Bug] loader.py::load_or_rebuild 未捕获 RuntimeError**：`build_manifest()` 调用现在被 `try/except` 包裹，异常时记录 `logger.warning` 并回退为空 manifest，不再向上传播
+- **[Flaky] test_session_lock 不稳定测试修复**：改用 `patch.object(logger, "error")` 替代 caplog，测试确定性提升
+
+### Added
+- **doctor 命令增强**：新增 `versions` 检查项（Python 版本、cliany-site 版本、click/anthropic/openai 依赖版本）和 `adapter_stats` 检查项（adapter 数量、命令总数）
+- **ERROR_FIX_HINTS 补全**：为 `ErrorCode` 类的所有 `E_*` 前缀常量（共 27 个）补充用户友好的修复提示
+
+### Changed
+- **envelope.py TypedDict 分离**：新增 `SuccessEnvelope`（`ok: Literal[True]`）和 `ErrorEnvelope`（`ok: Literal[False]`）分离 TypedDict；`Envelope` 保留为 Union 别名，向后兼容
+- **核心模块 pyright strict**：`errors.py`、`response.py`、`atomic_io.py`、`envelope.py`、`loader.py` 进入 pyright strict 模式，0 errors
+
 ## [0.12.0] - 2026-05-21
 
 ### Fixed

@@ -3,7 +3,7 @@ import pytest
 from typing import Any
 
 from cliany_site.envelope import ok, err, ErrorCode, Envelope
-from cliany_site.errors import CdpError, SessionError, ExplorerError
+from cliany_site.errors import CdpError, SessionError, ExplorerError, ERROR_FIX_HINTS
 
 try:
     import jsonschema
@@ -124,3 +124,41 @@ def test_err_with_custom_source():
     """err 支持自定义 source"""
     result = err("test_cmd", "E_TEST", "message", source="atom")
     assert result["meta"]["source"] == "atom"
+
+
+@pytest.mark.parametrize(
+    "code",
+    [
+        ErrorCode.E_CDP_UNAVAILABLE,
+        ErrorCode.E_SESSION_EXPIRED,
+        ErrorCode.E_SELECTOR_NOT_FOUND,
+        ErrorCode.E_LLM_DISABLED,
+        ErrorCode.E_LEGACY_ADAPTER,
+        ErrorCode.E_VERIFY_STATIC,
+        ErrorCode.E_VERIFY_SMOKE,
+        ErrorCode.E_HEAL_CAP_EXCEEDED,
+        ErrorCode.E_AGENT_MD_CONFLICT,
+        ErrorCode.E_REGISTRY_CONFLICT,
+        ErrorCode.E_INVALID_PARAM,
+        ErrorCode.E_TIMEOUT,
+        ErrorCode.E_CDP_DISCONNECTED,
+        ErrorCode.E_EVAL_DISABLED,
+        ErrorCode.E_EVAL_BLACKLIST,
+        ErrorCode.E_UNKNOWN,
+        ErrorCode.E_QA_OFFLINE_MISSING_FAKE_LLM,
+        ErrorCode.E_DIAGNOSE,
+        ErrorCode.E_UNSUPPORTED_PLATFORM,
+        ErrorCode.E_MISSING_CAPABILITY,
+        ErrorCode.E_PROVIDER_NOT_FOUND,
+        ErrorCode.E_PROVIDER_VERSION_TOO_OLD,
+        ErrorCode.E_BINARY_NOT_FOUND,
+        ErrorCode.E_STALE_PID,
+        ErrorCode.E_PORT_CONFLICT,
+        ErrorCode.E_DOWNLOAD_FAILED,
+        ErrorCode.E_VERSION_MISMATCH,
+    ],
+)
+def test_error_fix_hints_cover_error_codes(code):
+    """新增的 ErrorCode 常量都应有非空修复提示"""
+    assert code in ERROR_FIX_HINTS
+    assert ERROR_FIX_HINTS[code].strip()

@@ -3,11 +3,12 @@ from pathlib import Path
 import json
 import os
 import tempfile
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def atomic_write_json(path: Path, data: dict) -> None:
+def atomic_write_json(path: Path, data: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(mode='w', dir=path.parent, delete=False, suffix='.tmp', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -15,7 +16,7 @@ def atomic_write_json(path: Path, data: dict) -> None:
     os.replace(temp_path, path)
 
 
-def atomic_read_json(path: Path, default: dict) -> dict:
+def atomic_read_json(path: Path, default: dict[str, Any]) -> dict[str, Any]:
     if not path.exists():
         return default
     try:

@@ -1,7 +1,9 @@
 # src/cliany_site/commands/doctor.py
 import asyncio
+import importlib.metadata as importlib_metadata
 import json
 import os
+import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -200,7 +202,36 @@ async def _run_checks(cdp_conn: Any = None) -> Envelope:
     if failed:
         return err("doctor", ErrorCode.E_UNKNOWN, f"检查失败: {', '.join(failed)}",
                    details={"checks": checks}, source="builtin")
-    
+
+    python_ver = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+    try:
+        cliany_ver = importlib_metadata.version("cliany-site")
+    except importlib_metadata.PackageNotFoundError:
+        cliany_ver = "unknown"
+    versions_details: dict[str, str] = {"python": python_ver, "cliany_site": cliany_ver}
+    for pkg in ("click", "anthropic", "openai"):
+        try:
+            versions_details[pkg] = importlib_metadata.version(pkg)
+        except importlib_metadata.PackageNotFoundError:
+            versions_details[pkg] = "not installed"
+    checks.append({"name": "versions", "status": "ok", "duration_ms": 0, "details": versions_details})
+
+    adapter_count = 0
+    command_count = 0
+    if adapters_dir.exists():
+        for d in adapters_dir.iterdir():
+            if d.is_dir():
+                meta_path = d / "metadata.json"
+                if meta_path.exists():
+                    adapter_count += 1
+                    try:
+                        with open(meta_path, "r", encoding="utf-8") as f:
+                            meta = json.load(f)
+                        command_count += len(meta.get("commands", {}))
+                    except (json.JSONDecodeError, OSError):
+                        pass
+    checks.append({"name": "adapter_stats", "status": "ok", "duration_ms": 0, "details": {"adapter_count": adapter_count, "command_count": command_count}})
+
     # 新增字段
     data = {"checks": checks}
     data["schema_version"] = 3

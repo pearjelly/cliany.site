@@ -8,7 +8,7 @@ import sys
 import tempfile
 import threading
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import click
 import portalocker
@@ -16,7 +16,7 @@ import portalocker
 from cliany_site.codegen.generator import METADATA_SCHEMA_VERSION
 from cliany_site.config import get_config
 from cliany_site.errors import LOCK_TIMEOUT
-from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
+from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata  # type: ignore[reportUnknownVariableType]  # metadata.py 未标注 dict 类型参数
 
 logger = logging.getLogger(__name__)
 
@@ -39,20 +39,20 @@ def discover_adapters(include_legacy: bool = False) -> list[dict[str, Any]]:
             continue
 
         domain = adapter_dir.name
-        metadata = {}
+        metadata: dict[str, Any] = {}
         metadata_path = adapter_dir / "metadata.json"
         if metadata_path.exists():
             with contextlib.suppress(json.JSONDecodeError, OSError):
                 metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
 
-        schema_version = metadata.get("schema_version", "")
-        needs_migration = schema_version != METADATA_SCHEMA_VERSION
+        schema_version: Any = metadata.get("schema_version", "")
+        needs_migration: bool = schema_version != METADATA_SCHEMA_VERSION
 
         if needs_migration and not include_legacy:
             continue
 
-        commands_list = metadata.get("commands", [])
-        command_count = len(commands_list) if isinstance(commands_list, list) else 0
+        commands_raw: Any = metadata.get("commands", [])
+        command_count: int = len(cast(list[Any], commands_raw)) if isinstance(commands_raw, list) else 0
 
         adapters.append(
             {
@@ -97,7 +97,7 @@ def load_adapter(domain: str) -> click.Group | None:
         return None
 
 
-def register_adapters(main_cli: click.Group) -> dict:
+def register_adapters(main_cli: click.Group) -> dict[str, Any]:
     """将所有已安装 adapter 的命令组注册到主 CLI，返回含 legacy_adapters 的结果字典"""
     legacy_adapters: list[str] = []
 
@@ -140,11 +140,15 @@ def register_adapters(main_cli: click.Group) -> dict:
 class LazyAdapterRegistry:
     def __init__(self, adapters_dir: Path):
         self._adapters_dir = adapters_dir
-        self._discovered: dict[str, dict] | None = None
+        self._discovered: dict[str, dict[str, Any]] | None = None
         self._cache: dict[str, click.Group] = {}
         self._lock = threading.RLock()
 
-    def discover(self) -> dict[str, dict]:
+    @property
+    def adapters_dir(self) -> Path:
+        return self._adapters_dir
+
+    def discover(self) -> dict[str, dict[str, Any]]:
         with self._lock:
             if self._discovered is not None:
                 return self._discovered
@@ -158,7 +162,7 @@ class LazyAdapterRegistry:
                 if not metadata_path.exists():
                     continue
                 try:
-                    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+                    metadata: dict[str, Any] = json.loads(metadata_path.read_text(encoding="utf-8"))
                 except (json.JSONDecodeError, OSError):
                     continue
                 if metadata.get("schema_version") != METADATA_SCHEMA_VERSION:
@@ -202,10 +206,10 @@ def manifest_path() -> Path:
     return Path.home() / ".cliany-site" / "cli-manifest.json"
 
 
-def build_manifest(registry: LazyAdapterRegistry) -> dict:
-    adapters = {}
+def build_manifest(registry: LazyAdapterRegistry) -> dict[str, Any]:
+    adapters: dict[str, dict[str, Any]] = {}
     for domain, meta in registry.discover().items():
-        metadata_path = registry._adapters_dir / domain / "metadata.json"
+        metadata_path = registry._adapters_dir / domain / "metadata.json"  # type: ignore[reportPrivateUsage]
         last_modified = ""
         if metadata_path.exists():
             try:
@@ -228,15 +232,16 @@ def build_manifest(registry: LazyAdapterRegistry) -> dict:
     }
 
 
-def validate_manifest(manifest: dict, registry: LazyAdapterRegistry) -> bool:
+def validate_manifest(manifest: dict[str, Any], registry: LazyAdapterRegistry) -> bool:
     if manifest.get("schema_version") != METADATA_SCHEMA_VERSION:
         return False
-    manifest_domains = set(manifest.get("adapters", {}).keys())
+    adapters_data: dict[str, Any] = manifest.get("adapters") or {}
+    manifest_domains = set(adapters_data.keys())
     registry_domains = set(registry.domains())
     return manifest_domains == registry_domains
 
 
-def load_or_rebuild(registry: LazyAdapterRegistry) -> dict:
+def load_or_rebuild(registry: LazyAdapterRegistry) -> dict[str, Any]:
     manifest_file = manifest_path()
     lock_file = manifest_file.with_suffix(".lock")
     lock_file.parent.mkdir(parents=True, exist_ok=True)
@@ -245,13 +250,22 @@ def load_or_rebuild(registry: LazyAdapterRegistry) -> dict:
         with portalocker.Lock(str(lock_file), timeout=10, mode="a"):
             try:
                 if manifest_file.exists():
-                    manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+                    manifest: dict[str, Any] = json.loads(manifest_file.read_text(encoding="utf-8"))
                     if validate_manifest(manifest, registry):
                         return manifest
             except (json.JSONDecodeError, OSError, KeyError) as exc:
                 logger.warning("加载 manifest 失败: %s", exc)
 
-            manifest = build_manifest(registry)
+            try:
+                manifest = build_manifest(registry)
+            except (OSError, ValueError, TypeError, KeyError, RuntimeError) as exc:
+                logger.warning("构建 manifest 失败: %s", exc)
+                empty_adapters: dict[str, Any] = {}
+                manifest = {
+                    "schema_version": METADATA_SCHEMA_VERSION,
+                    "generated_at": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
+                    "adapters": empty_adapters,
+                }
 
             try:
                 manifest_file.parent.mkdir(parents=True, exist_ok=True)
@@ -272,5 +286,5 @@ def load_or_rebuild(registry: LazyAdapterRegistry) -> dict:
     except portalocker.LockException as _lock_exc:
         from cliany_site.errors import AdapterLoadError
         _exc = AdapterLoadError(f"获取 manifest 锁超时，请稍后重试: {_lock_exc}")
-        _exc.error_code = LOCK_TIMEOUT
+        setattr(_exc, "error_code", LOCK_TIMEOUT)
         raise _exc from _lock_exc

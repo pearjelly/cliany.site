@@ -1,11 +1,8 @@
 # pyright: reportMissingImports=false
 import json
-import logging
 import multiprocessing
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-
-import pytest
 
 
 def _save_session_worker(args: tuple) -> None:
@@ -47,18 +44,18 @@ def test_concurrent_save_session_no_corruption(tmp_path: Path) -> None:
     assert "cookies" in data
 
 
-def test_atomic_read_json_logs_parse_error(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+def test_atomic_read_json_logs_parse_error(tmp_path: Path) -> None:
+    import cliany_site.atomic_io as atomic_io
     from cliany_site.atomic_io import atomic_read_json
 
     bad_json_file = tmp_path / "bad.json"
     bad_json_file.write_text("{invalid json content}", encoding="utf-8")
     default: dict = {"fallback": True}
 
-    with caplog.at_level(logging.ERROR, logger="cliany_site.atomic_io"):
+    with patch.object(atomic_io.logger, "error") as mock_error:
         result = atomic_read_json(bad_json_file, default)
 
     assert result == default
-
-    error_records = [r for r in caplog.records if r.levelno == logging.ERROR]
-    assert len(error_records) >= 1
-    assert str(bad_json_file) in error_records[0].getMessage()
+    mock_error.assert_called_once()
+    assert mock_error.call_args.args[0] == "解析失败: %s"
+    assert mock_error.call_args.args[1] == bad_json_file

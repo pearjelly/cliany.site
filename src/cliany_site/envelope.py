@@ -1,5 +1,5 @@
 import time
-from typing import Any, TypedDict
+from typing import Any, Literal, TypedDict
 
 
 # TypedDict 定义
@@ -7,19 +7,31 @@ class ErrorObj(TypedDict):
     code: str
     message: str
     hint: str | None
-    details: dict | None
+    details: dict[str, Any] | None
 
 class EnvelopeMeta(TypedDict):
     duration_ms: int
     source: str  # "builtin"|"atom"|"adapter"
 
-class Envelope(TypedDict):
-    ok: bool
+class SuccessEnvelope(TypedDict):
+    ok: Literal[True]
     version: str
     command: str
     data: Any
-    error: ErrorObj | None
+    error: None
     meta: EnvelopeMeta
+
+
+class ErrorEnvelope(TypedDict):
+    ok: Literal[False]
+    version: str
+    command: str
+    data: None
+    error: ErrorObj
+    meta: EnvelopeMeta
+
+
+Envelope = SuccessEnvelope | ErrorEnvelope
 
 # ErrorCode 类（class，不是枚举）
 class ErrorCode:
@@ -83,7 +95,7 @@ class ErrorCode:
 # 全局 start times 追踪（基于 command str）
 _start_times: dict[str, float] = {}
 
-def ok(command: str, data: Any, source: str = "builtin") -> Envelope:
+def ok(command: str, data: Any, source: str = "builtin") -> SuccessEnvelope:
     """返回成功 Envelope，自动计算 duration_ms"""
     start_time = _start_times.pop(command, time.time())
     duration_ms = int((time.time() - start_time) * 1000)
@@ -106,9 +118,9 @@ def err(
     message: str,
     *,
     hint: str | None = None,
-    details: dict | None = None,
+    details: dict[str, Any] | None = None,
     source: str = "builtin",
-) -> Envelope:
+) -> ErrorEnvelope:
     """返回错误 Envelope；code 为 None/空时 raise ValueError('code is required')"""
     if not code:
         raise ValueError("code is required")

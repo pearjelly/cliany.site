@@ -1,0 +1,12 @@
+{
+  "include": ["src"],
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic",
+  "strict": [
+    "src/cliany_site/errors.py",
+    "src/cliany_site/response.py",
+    "src/cliany_site/atomic_io.py",
+    "src/cliany_site/envelope.py",
+    "src/cliany_site/loader.py"
+  ]
+}
