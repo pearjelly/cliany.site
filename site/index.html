@@ -253,12 +253,11 @@
             </div>
           </div>
 
-          <!-- Case 2: Enterprise CRM without API (concept) -->
-          <div class="case-card conceptual">
-            <span class="case-badge" data-i18n="usecases.badge.conceptual">CONCEPT</span>
+          <!-- Case 2: SuiteCRM Demo (real) -->
+          <div class="case-card">
             <div class="case-story">
               <div class="case-icon">💡</div>
-              <h3 class="case-title" data-i18n="usecases.case2.title">No API? Build Your Own</h3>
+              <h3 class="case-title" data-i18n="usecases.case2.title">Enterprise CRM: Login &amp; Query</h3>
               <p class="case-desc" data-i18n="usecases.case2.desc">Stuck with a legacy CRM with no API? Generate a dedicated CLI for any web portal in minutes.</p>
             </div>
 
@@ -269,10 +268,10 @@
               </div>
               <div class="case-panel before" id="case2-before">
                 <p data-i18n="usecases.case2.before">Login → CRM → Search → Details → Orders → Filter</p>
-                <span class="case-steps" data-i18n="usecases.case2.before.steps">7 steps · ~2m</span>
+                <span class="case-steps" data-i18n="usecases.case2.before.steps">5 steps · ~1m</span>
               </div>
               <div class="case-panel after active" id="case2-after">
-                <p data-i18n="usecases.case2.after">Extract structured data with pipes</p>
+                <p data-i18n="usecases.case2.after">Login once, then list-accounts --json</p>
                 <span class="case-steps" data-i18n="usecases.case2.after.steps">1 command · Instant</span>
               </div>
             </div>
@@ -284,15 +283,17 @@
                 <span class="dot dot-green"></span>
               </div>
               <div class="terminal-body">
-                <div class="line"><span class="prompt">$</span> cliany-site crm.company.com search-customer --name "John Doe" --json | jq '.orders[:5]'</div>
-                <div class="line json">{"ok": true, "data": {"name": "John Doe", "orders": [...]}}</div>
+                <div class="line"><span class="prompt">$</span> cliany-site login https://demo.suiteondemand.com/</div>
+                <div class="line success" data-i18n="usecases.case2.terminal.result">✓ Session saved for demo.suiteondemand.com</div>
+                <br>
+                <div class="line"><span class="prompt">$</span> cliany-site demo.suiteondemand.com list-accounts --limit 5 --json</div>
+                <div class="line json">{"ok": true, "data": {"accounts": [...], "count": 5}}</div>
               </div>
             </div>
           </div>
 
           <!-- Case 3: Team Toolbox (concept) -->
-          <div class="case-card conceptual">
-            <span class="case-badge" data-i18n="usecases.badge.conceptual">CONCEPT</span>
+          <div class="case-card">
             <div class="case-story">
               <div class="case-icon">🚀</div>
               <h3 class="case-title" data-i18n="usecases.case3.title">Team Toolbox</h3>
@@ -321,11 +322,14 @@
                 <span class="dot dot-green"></span>
               </div>
               <div class="terminal-body">
-                <div class="line"><span class="prompt">$</span> cliany-site market install ./team-toolkit.cliany-adapter.tar.gz</div>
-                <div class="line success" data-i18n="usecases.case3.terminal.result">✓ Installed: jira.company.com, confluence.company.com, jenkins.company.com</div>
+                <div class="line"><span class="prompt">$</span> cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json</div>
+                <div class="line json">{"ok": true, "data": {"issues": [...]}}</div>
                 <br>
-                <div class="line"><span class="prompt">$</span> cliany-site jira.company.com create-ticket --title "fix login bug" --json</div>
-                <div class="line json">{"ok": true, "data": {"id": "PROJ-1234"}}</div>
+                <div class="line"><span class="prompt">$</span> cliany-site cwiki.apache.org search-pages --space SPARK --query "release" --json</div>
+                <div class="line json">{"ok": true, "data": {"results": [...]}}</div>
+                <br>
+                <div class="line"><span class="prompt">$</span> cliany-site builds.apache.org list-jobs --json</div>
+                <div class="line json" data-i18n="usecases.case3.terminal.result">{"ok": true, "data": {"jobs": [...]}}</div>
               </div>
             </div>
           </div>

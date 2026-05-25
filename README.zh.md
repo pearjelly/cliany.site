@@ -7,6 +7,7 @@
 
 > 🌐 Languages: [English](README.md) | [简体中文](README.zh.md)
 
+> **✨ v0.14.0 真实演示上线**：官网案例 2 (企业 CRM) 和案例 3 (团队工具箱) 现已支持真实的公开 demo 站点 — SuiteCRM Demo、ASF Jira、ASF Confluence、ASF Jenkins。详见 [体验真实演示](#体验真实演示)。
 > **✨ v0.13.0 开发者体验加固**：修复 loader RuntimeError bug、稳定 test_session_lock 测试、补全 ERROR_FIX_HINTS 27 条提示、新增 SuccessEnvelope/ErrorEnvelope TypedDict、核心模块 pyright strict（0 errors）、doctor 命令增强（versions + adapter_stats），详见 [CHANGELOG.md](CHANGELOG.md)。  
 > **🔒 v0.12.0 稳定性与质量加固**：新增文件锁保护（manifest/session 并发写安全）、tar 路径穿越防护、Obscura 下载重试、统一错误码体系，详见 [CHANGELOG.md](CHANGELOG.md)。  
 > **🚀 v0.11.0 已发布**: 新增实验性 Obscura 浏览器提供者、多平台二进制支持及生命周期管理。  
@@ -215,6 +216,43 @@ async with ClanySite() as cs:
     result = await cs.explore("https://github.com", "搜索仓库")
     adapters = await cs.list_adapters()
 ```
+
+## 体验真实演示
+
+以下适配器可在 [GitHub Release v0.14.0](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.0) 的资源中下载。
+
+### SuiteCRM Demo (企业 CRM)
+```bash
+# 1. 安装适配器
+cliany-site market install ./demo.suiteondemand.com.cliany-adapter-v0.14.0.tar.gz
+
+# 2. 登录 (会打开浏览器 — 请使用 https://demo.suiteondemand.com/ 提供的 demo 账号)
+cliany-site login https://demo.suiteondemand.com/
+
+# 3. 查询账户 (登录后无需开启浏览器)
+cliany-site demo.suiteondemand.com list-accounts --limit 5 --json
+```
+
+### ASF Jira (任务追踪)
+```bash
+cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz
+cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json
+```
+
+### ASF Confluence (Wiki)
+```bash
+cliany-site market install ./cwiki.apache.org.cliany-adapter-v0.14.0.tar.gz
+cliany-site cwiki.apache.org search-pages --space SPARK --query "release" --json
+```
+
+### ASF Jenkins (构建状态)
+```bash
+cliany-site market install ./builds.apache.org.cliany-adapter-v0.14.0.tar.gz
+cliany-site builds.apache.org list-jobs --json
+```
+
+> **免责声明**：以上 demo 站点由第三方维护，可能临时不可用。cliany-site 仅提供 CLI 适配层，不控制 demo 数据或可用性。
+
 
 ### HTTP API
 

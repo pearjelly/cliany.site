@@ -208,30 +208,31 @@ const I18N = {
   'usecases.case1.after.steps': { zh: '1 条命令 · 秒级响应', en: '1 command · Instant' },
 
   // --- Case 2: CRM ---
-  'usecases.case2.title': { zh: '没有 API？自己造一个', en: 'No API? Build Your Own' },
+  'usecases.case2.title': { zh: '企业 CRM：登录后只读查询', en: 'Enterprise CRM: Login & Query' },
   'usecases.case2.desc': {
-    zh: '企业 CRM 没 API，查个客户要点 7 个页面？cliany-site 为任何网站生成专属 CLI。',
-    en: 'Stuck with a legacy CRM with no API? Generate a dedicated CLI for any web portal in minutes.'
+    zh: '公开 SuiteCRM demo 演示：先 login 保存 session，后续查询无需打开浏览器。',
+    en: 'SuiteCRM public demo: login once to save session, then query without a browser.'
   },
-  'usecases.case2.before': { zh: '登录 → 侧边栏 → 客户管理 → 搜索 → 点详情 → 切订单 → 筛选', en: 'Login → CRM → Search → Details → Orders → Filter' },
-  'usecases.case2.before.steps': { zh: '7 步操作 · 约 2 分钟', en: '7 steps · ~2m' },
-  'usecases.case2.after': { zh: '管道组合，直接抽取订单数据', en: 'Extract structured data with pipes' },
-  'usecases.case2.after.steps': { zh: '1 条命令 · 秒级响应', en: '1 command · Instant' },
+  'usecases.case2.before': { zh: '登录 CRM → 找 Accounts → 翻页查 5 条客户', en: 'Login → CRM → Search → View 5 accounts' },
+  'usecases.case2.before.steps': { zh: '5 步 · 约 1 分钟', en: '5 steps · ~1m' },
+  'usecases.case2.after': { zh: '一次 login，后续 `list-accounts --json`', en: 'Login once, then `list-accounts --json`' },
+  'usecases.case2.after.steps': { zh: '1 条命令 · 秒级', en: '1 command · Instant' },
 
   // --- Case 3: Team Toolbox ---
-  'usecases.case3.title': { zh: '团队工具箱：一人探索，全队受益', en: 'Team Toolbox' },
+  'usecases.case3.title': { zh: '团队工具箱：聚合 Jira/Confluence/Jenkins', en: 'Team Toolbox: Jira / Confluence / Jenkins Aggregated' },
   'usecases.case3.desc': {
-    zh: '团队有 10 个内部平台，新人入职学 2 周？资深工程师一次探索，全队永久受益。',
-    en: 'Stop wasting time on internal portal onboarding. Explore once, share adapters, and level up the whole team.'
+    zh: '同一 CLI 风格，覆盖三个公开开源项目工具站，跨平台聚合查询。',
+    en: 'Same CLI style across three open-source project tools — cross-platform aggregated queries.'
   },
-  'usecases.case3.before': { zh: '10 份操作文档 + 每天问 5 次「这个功能在哪」', en: '10+ docs + constant "where is this?" questions' },
-  'usecases.case3.before.steps': { zh: '碎片化知识 · 高依赖成本', en: 'Fragmented knowledge · High friction' },
-  'usecases.case3.after': { zh: '安装团队工具箱，所有平台一键调用', en: 'Install shared adapters for instant access' },
-  'usecases.case3.after.steps': { zh: '统一 CLI · 零学习成本', en: 'Unified CLI · Zero learning curve' },
+  'usecases.case3.before': { zh: '在 3 个 Web UI 切换、搜索、复制', en: 'Switch & search across 3 web UIs' },
+  'usecases.case3.before.steps': { zh: '多窗口切换 · 上下文丢失', en: 'Multi-tab · Context loss' },
+  'usecases.case3.after': { zh: 'shell 脚本三命令聚合查询', en: 'Three CLI commands aggregate the data' },
+  'usecases.case3.after.steps': { zh: '统一 JSON · 可管道', en: 'Unified JSON · Pipe-friendly' },
 
   // --- Terminal Result Lines ---
   'usecases.case1.terminal.result': { zh: '✓ 适配器已生成至 ~/.cliany-site/adapters/github.com/', en: '✓ Adapter generated at ~/.cliany-site/adapters/github.com/' },
-  'usecases.case3.terminal.result': { zh: '✓ 已安装: jira.company.com, confluence.company.com, jenkins.company.com', en: '✓ Installed: jira.company.com, confluence.company.com, jenkins.company.com' },
+  'usecases.case2.terminal.result': { zh: '✓ Session 已保存：demo.suiteondemand.com', en: '✓ Session saved for demo.suiteondemand.com' },
+  'usecases.case3.terminal.result': { zh: '{"ok": true, "data": {"jobs": [...] }}', en: '{"ok": true, "data": {"jobs": [...]}}' },
 
   // --- v0.11.0 / v0.10.x Features ---
   'features.healer.title': { zh: '智能自愈', en: 'Smart Self-Healing' },

@@ -27,3 +27,8 @@ MANIFEST
 .playwright-mcp/
 
 scripts/.pypi-token
+
+# 测试 & 覆盖率文件
+.coverage
+coverage.xml
+*.png

@@ -7,6 +7,17 @@
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-05-25
+
+### Added
+- **4개 공개 데모 사이트 adapter 자산**: SuiteCRM Demo, ASF Jira, ASF Confluence, ASF Jenkins(builds.apache.org). GitHub Release v0.14.0 assets에 탑재.
+
+### Changed
+- **官网 "Real-World Use Cases" 섹션**: Case 2(기업 CRM) · Case 3(팀 도구함) 카드에서 CONCEPT 배지 제거, 실제 공개 데모 사이트 명령어 및 i18n 문案으로 교체.
+
+### Docs
+- **README.md / README.zh.md**: "Try Real Demos" 단락 추가, 제3자 유지 demo 사이트 disclaimer 포함.
+
 ## [0.13.0] - 2026-05-25
 
 ### Fixed

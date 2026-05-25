@@ -7,6 +7,7 @@
 
 > 🌐 Languages: [English](README.md) | [简体中文](README.zh.md)
 
+> **✨ v0.14.0 Real-World Demos**: Case 2 (Enterprise CRM) & Case 3 (Team Toolbox) on the website now use real public demo sites — SuiteCRM Demo, ASF Jira, ASF Confluence, ASF Jenkins. See [Try Real Demos](#try-real-demos).
 > **✨ v0.13.0 开发者体验加固**：修复 loader RuntimeError bug、稳定 test_session_lock 测试、补全 ERROR_FIX_HINTS 27 条提示、新增 SuccessEnvelope/ErrorEnvelope TypedDict、核心模块 pyright strict（0 errors）、doctor 命令增强（versions + adapter_stats），详见 [CHANGELOG.md](CHANGELOG.md)。  
 > **🔒 v0.12.0 稳定性与质量加固**：新增文件锁保护（manifest/session 并发写安全）、tar 路径穿越防护、Obscura 下载重试、统一错误码体系，详见 [CHANGELOG.md](CHANGELOG.md)。  
 > **🚀 v0.11.0**: Added experimental Obscura browser provider, multi-platform binaries, and lifecycle management.  
@@ -209,6 +210,43 @@ async with ClanySite() as cs:
     result = await cs.explore("https://github.com", "搜索仓库")
     adapters = await cs.list_adapters()
 ```
+
+## Try Real Demos
+
+The following adapters are available as downloadable assets on [GitHub Release v0.14.0](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.0).
+
+### SuiteCRM Demo (Enterprise CRM)
+```bash
+# 1. Install adapter
+cliany-site market install ./demo.suiteondemand.com.cliany-adapter-v0.14.0.tar.gz
+
+# 2. Login (opens browser — use demo account from https://demo.suiteondemand.com/)
+cliany-site login https://demo.suiteondemand.com/
+
+# 3. Query accounts (no browser needed after login)
+cliany-site demo.suiteondemand.com list-accounts --limit 5 --json
+```
+
+### ASF Jira (Issue Tracker)
+```bash
+cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz
+cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json
+```
+
+### ASF Confluence (Wiki)
+```bash
+cliany-site market install ./cwiki.apache.org.cliany-adapter-v0.14.0.tar.gz
+cliany-site cwiki.apache.org search-pages --space SPARK --query "release" --json
+```
+
+### ASF Jenkins (Build Status)
+```bash
+cliany-site market install ./builds.apache.org.cliany-adapter-v0.14.0.tar.gz
+cliany-site builds.apache.org list-jobs --json
+```
+
+> **Disclaimer**: These demo sites are operated by third parties and may be temporarily unavailable. cliany-site only provides the CLI shim; we do not control the demo data or uptime.
+
 
 ### HTTP API
 
