@@ -7,6 +7,7 @@
 
 > 🌐 Languages: [English](README.md) | [简体中文](README.zh.md)
 
+> **✨ v0.13.0 开发者体验加固**：修复 loader RuntimeError bug、稳定 test_session_lock 测试、补全 ERROR_FIX_HINTS 27 条提示、新增 SuccessEnvelope/ErrorEnvelope TypedDict、核心模块 pyright strict（0 errors）、doctor 命令增强（versions + adapter_stats），详见 [CHANGELOG.md](CHANGELOG.md)。  
 > **🔒 v0.12.0 稳定性与质量加固**：新增文件锁保护（manifest/session 并发写安全）、tar 路径穿越防护、Obscura 下载重试、统一错误码体系，详见 [CHANGELOG.md](CHANGELOG.md)。  
 > **🚀 v0.11.0**: Added experimental Obscura browser provider, multi-platform binaries, and lifecycle management.  
 > ⚠️ **v0.10.0 BREAKING**: metadata schema v3 hardcut. Use `cliany-site migrate` to upgrade legacy adapters.
