@@ -13,12 +13,17 @@ def _print_envelope(result: Envelope, json_mode: bool) -> None:
     if json_mode:
         click.echo(json.dumps(result, ensure_ascii=False, indent=2))
     elif result.get("ok"):
-        data = result.get("data", {})
-        click.echo(f"✓ 已导航至 {data.get('url', '')}")
+        data = result.get("data")
+        url_text = data.get("url", "") if isinstance(data, dict) else ""
+        click.echo(f"✓ 已导航至 {url_text}")
     else:
         error_info = result.get("error")
-        error_code = error_info.get("code", "ERROR") if error_info else "ERROR"
-        error_msg = error_info.get("message", "") if error_info else ""
+        if isinstance(error_info, dict):
+            error_code = error_info.get("code", "ERROR")
+            error_msg = error_info.get("message", "")
+        else:
+            error_code = "ERROR"
+            error_msg = ""
         click.echo(
             f"✗ {error_code}: {error_msg}",
             err=True,
@@ -95,7 +100,15 @@ async def _run_navigate(cdp, url: str, wait_state: str, timeout: int) -> Envelop
                 await page.wait_for_load_state(wait_state, timeout=timeout * 1000)
         finally:
             await cdp.disconnect()
-    except (OSError, RuntimeError) as exc:
+    except (OSError, RuntimeError, TimeoutError, asyncio.TimeoutError) as exc:
+        if isinstance(exc, (TimeoutError, asyncio.TimeoutError)):
+            return err(
+                command="browser navigate",
+                code=ErrorCode.E_PAGE_NOT_READY,
+                message="页面就绪超时",
+                details={"error": str(exc)},
+                source="builtin",
+            )
         return err(
             command="browser navigate",
             code=ErrorCode.E_CDP_UNAVAILABLE,
@@ -107,3 +120,6 @@ async def _run_navigate(cdp, url: str, wait_state: str, timeout: int) -> Envelop
         data={"url": url, "status": "navigated"},
         source="builtin",
     )
+
+
+navigate_atom = navigate

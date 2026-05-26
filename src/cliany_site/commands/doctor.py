@@ -143,17 +143,33 @@ async def _run_checks(cdp_conn: Any = None) -> Envelope:
         "details": {"count": legacy_count}
     })
 
-    agent_md_path = Path.cwd() / "AGENT.md"
-    if not agent_md_path.exists():
+    agent_md_path: Path | None = None
+    for candidate in ("AGENT.md", "AGENTS.md"):
+        path = Path.cwd() / candidate
+        if path.exists():
+            agent_md_path = path
+            break
+
+    if agent_md_path is None:
         agent_md_status = "missing"
+        agent_md_message = "未找到 AGENT.md / AGENTS.md"
     else:
-        content = agent_md_path.read_text()
-        agent_md_status = "ok" if _SENTINEL_RE.search(content) else "no_sentinel"
+        content = agent_md_path.read_text(encoding="utf-8")
+        if _SENTINEL_RE.search(content):
+            agent_md_status = "ok"
+            agent_md_message = None
+        else:
+            agent_md_status = "no_sentinel"
+            agent_md_message = "文件存在但缺少 sentinel，建议运行 cliany-site explore"
     checks.append({
         "name": "agent_md",
         "status": "warning" if agent_md_status != "ok" else "ok",
         "duration_ms": 0,
-        "details": {"status": agent_md_status}
+        "details": {
+            "status": agent_md_status,
+            "path": agent_md_path.name if agent_md_path is not None else None,
+            "message": agent_md_message,
+        }
     })
 
     healed_count = 0

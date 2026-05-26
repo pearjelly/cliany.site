@@ -103,3 +103,26 @@ def test_legacy_adapter_count(tmp_home, no_llm, monkeypatch):
     data = json.loads(result.output)
     assert "legacy_adapter_count" in data["data"]
     assert data["data"]["legacy_adapter_count"] == 1
+
+
+def test_agent_md_reports_warning_for_missing_sentinel(tmp_home, no_llm, monkeypatch):
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.setenv("CLIANY_ANTHROPIC_API_KEY", "test")
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["--json", "doctor"], catch_exceptions=False)
+    assert result.exit_code == 0
+
+    data = json.loads(result.output)
+    agent_check = next(c for c in data["data"]["checks"] if c["name"] == "agent_md")
+    assert agent_check["status"] == "warning"
+    assert agent_check["details"]["status"] in {"no_sentinel", "missing"}
+    assert agent_check["details"]["path"] in {"AGENT.md", "AGENTS.md"}
+    assert "cliany-site explore" in (agent_check["details"]["message"] or "")

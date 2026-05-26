@@ -54,6 +54,8 @@ async def _run_extract(cdp, selector: str | None, fmt: str) -> Envelope:
             content = await _do_extract(browser_session, selector, fmt)
         finally:
             await cdp.disconnect()
+        if isinstance(content, dict) and not content.get("ok", True):
+            return content
     except (OSError, RuntimeError) as exc:
         return err(
             command="browser extract",
@@ -69,7 +71,7 @@ async def _run_extract(cdp, selector: str | None, fmt: str) -> Envelope:
     )
 
 
-async def _do_extract(browser_session, selector: str | None, fmt: str) -> str:
+async def _do_extract(browser_session, selector: str | None, fmt: str) -> str | Envelope:
     try:
         result = await browser_session.execute_action(
             {"action": "extract_content", "selector": selector, "format": fmt}
@@ -78,8 +80,13 @@ async def _do_extract(browser_session, selector: str | None, fmt: str) -> str:
             return str(result["content"])
         if isinstance(result, str):
             return result
-    except Exception:
-        pass
+    except Exception as exc:
+        return err(
+            command="browser extract",
+            code=ErrorCode.E_PARSE_FAILED,
+            message=str(exc)[:200],
+            details={"selector": selector, "mode": fmt},
+        )
 
     # 回退：获取页面源码并提取文本
     try:
@@ -88,8 +95,13 @@ async def _do_extract(browser_session, selector: str | None, fmt: str) -> str:
             source = source.get("html", "") or source.get("source", "")
         if isinstance(source, str):
             return _html_to_text(source, fmt)
-    except Exception:
-        pass
+    except Exception as exc:
+        return err(
+            command="browser extract",
+            code=ErrorCode.E_PARSE_FAILED,
+            message=str(exc)[:200],
+            details={"selector": selector, "mode": fmt},
+        )
 
     return ""
 
@@ -105,3 +117,6 @@ def _html_to_text(html: str, fmt: str) -> str:
     text = re.sub(r"<[^>]+>", " ", cleaned)
     # 合并多余空白
     return re.sub(r"\s+", " ", text).strip()
+
+
+extract_atom = extract

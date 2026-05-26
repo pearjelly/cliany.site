@@ -14,6 +14,7 @@ from urllib.parse import urljoin, urlparse
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
 from cliany_site.capability import ApiEndpoint, route_action
 from cliany_site.config import get_config
+from cliany_site.envelope import ErrorCode
 from cliany_site.errors import ClanySiteError
 from cliany_site.extract import build_extract_js
 from cliany_site.progress import NullProgressReporter, ProgressReporter
@@ -760,6 +761,7 @@ async def execute_action_steps(
                         logger.warning("extract 动作缺少 selector，跳过")
                     else:
                         data: dict[str, str] | list[Any] | Any
+                        _eval_exc: Exception | None = None
                         try:
                             js_expr = build_extract_js(selector, extract_mode, fields if fields else None)
                             page = await browser_session.get_current_page()
@@ -769,28 +771,46 @@ async def execute_action_steps(
                             else:
                                 raw_result = await page.evaluate(js_expr)
                         except Exception as exc:
-                            logger.warning("extract 执行失败 (selector=%s): %s", selector, exc)
+                            logger.warning(
+                                "extract evaluate failed: selector=%s error=%s",
+                                selector or None,
+                                exc,
+                            )
+                            _eval_exc = exc
                             raw_result = None
 
                         if extraction_results is not None:
-                            if raw_result is None:
-                                if extract_mode == "text":
-                                    data = {"text": ""}
-                                elif extract_mode == "attribute":
-                                    data = cast(dict[str, str], {})
-                                else:
-                                    data = cast(list[Any], [])
+                            if _eval_exc is not None:
+                                extraction_results.append(
+                                    {
+                                        "ok": False,
+                                        "error": {
+                                            "code": ErrorCode.E_PARSE_FAILED,
+                                            "message": str(_eval_exc)[:200],
+                                            "step_index": idx,
+                                            "selector": selector or None,
+                                        },
+                                    }
+                                )
                             else:
-                                data = _coerce_json_like_extract_data(raw_result)
+                                if raw_result is None:
+                                    if extract_mode == "text":
+                                        data = {"text": ""}
+                                    elif extract_mode == "attribute":
+                                        data = cast(dict[str, str], {})
+                                    else:
+                                        data = cast(list[Any], [])
+                                else:
+                                    data = _coerce_json_like_extract_data(raw_result)
 
-                            extraction_results.append(
-                                {
-                                    "step_index": idx,
-                                    "extract_mode": extract_mode,
-                                    "description": description,
-                                    "data": data,
-                                }
-                            )
+                                extraction_results.append(
+                                    {
+                                        "step_index": idx,
+                                        "extract_mode": extract_mode,
+                                        "description": description,
+                                        "data": data,
+                                    }
+                                )
 
                 else:
                     node = await _resolve_action_node(browser_session, action_data)
@@ -873,6 +893,23 @@ async def execute_action_steps(
             completed_indices.append(idx)
             reporter.on_execute_step_done(idx, len(effective_actions), True, step_elapsed)
             logger.debug("%s步骤 %d 完成: 耗时 %.0fms", mode_label, idx + 1, step_elapsed)
+
+        if extraction_results and any(
+            isinstance(r, dict) and r.get("ok") is False for r in extraction_results
+        ):
+            _extract_fail_count = sum(
+                1 for r in extraction_results if isinstance(r, dict) and r.get("ok") is False
+            )
+            _first_err = next(
+                r for r in extraction_results if isinstance(r, dict) and r.get("ok") is False
+            )
+            raise ActionExecutionError(
+                error_type="extract_failed",
+                action_index=_first_err["error"].get("step_index", -1),
+                action={"type": "extract"},
+                message=f"提取步骤失败 ({_extract_fail_count} 个): {_first_err['error']['message']}",
+                suggestion="检查 selector 或页面结构是否变化",
+            )
 
     finally:
         total_execute_elapsed = (time.monotonic() - execute_start) * 1000
