@@ -63,3 +63,61 @@ cliany-site obscura rollback --json
 - `E_UNSUPPORTED_PLATFORM`: 当前操作系统或架构暂不支持。
 - `E_MISSING_CAPABILITY`: 尝试调用了 Obscura 暂不支持的功能（如 `explore`）。
 - `E_BINARY_NOT_FOUND`: 未找到 Obscura 可执行文件，请重新执行 `install`。
+
+## Why Obscura cannot explore yet
+
+目前 Obscura 提供商的 `supports_axtree` 属性为 `False`。正如 **ADR-0005** 和 **ADR-0009** 中所述，`explore` 命令的核心依赖于浏览器提供的 **AXTree (Accessibility Tree)** 数据来进行页面语义理解和 Click 适配器代码生成。
+
+由于 Obscura 目前尚无法导出完整的 AXTree，它无法为 LLM 提供必要的结构化信息。因此，`explore` 功能目前被门禁系统拦截，以避免产生无效的探索结果。
+
+## Recommended workflow
+
+虽然 Obscura 暂不支持探索，但你依然可以结合 Chrome 的能力来完成完整的自动化流程。推荐的工作流如下：
+
+1. **使用 Chrome 进行探索并生成适配器**：
+   ```bash
+   # 确保处于 Chrome 模式（默认模式）
+   unset CLIANY_BROWSER_PROVIDER
+   
+   # 执行探索
+   cliany-site explore "https://example.com" "点击登录并搜索产品" --json
+   ```
+
+2. **切换到 Obscura 进行快速重放 (Replay)**：
+   ```bash
+   # 切换到 Obscura 提供商
+   export CLIANY_BROWSER_PROVIDER=obscura
+   
+   # 执行生成的适配器命令
+   cliany-site example.com search --query "test" --json
+   ```
+
+这种工作流利用了 Chrome 强大的页面解析能力来生成代码，同时利用了 Obscura 的轻量化特性来执行重复性的自动化任务。
+
+## Troubleshooting
+
+如果你在运行 `explore` 命令时遇到 `E_MISSING_CAPABILITY` 错误，这是由于当前活跃的浏览器提供商（如 Obscura）不支持探索功能。
+
+**错误示例：**
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "E_MISSING_CAPABILITY",
+    "message": "当前浏览器提供商不支持 explore (AXTree) 功能。",
+    "details": {
+      "suggested_action": "unset CLIANY_BROWSER_PROVIDER",
+      "doc_url": "docs/walkthroughs/obscura-experimental-guide.md"
+    }
+  }
+}
+```
+
+**应对步骤：**
+1. 检查环境变量 `CLIANY_BROWSER_PROVIDER` 是否已设置为 `obscura`。
+2. 如果你需要执行探索任务，请取消设置该环境变量：
+   ```bash
+   unset CLIANY_BROWSER_PROVIDER
+   ```
+3. 再次尝试运行 `explore` 命令。
+4. 更多信息请参考：[Obscura 实验性功能操作指南](docs/walkthroughs/obscura-experimental-guide.md)
