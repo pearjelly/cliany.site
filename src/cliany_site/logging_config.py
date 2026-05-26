@@ -130,6 +130,11 @@ def setup_logging(
 ) -> None:
     root_logger = logging.getLogger("cliany_site")
 
+    if level > logging.DEBUG:
+        # 第三方 cdp_use 会自行忽略重复的 CDP 响应；这里将其 WARNING 噪音静默掉。
+        # 参考 .venv/.../cdp_use/client.py:312-327
+        logging.getLogger("cdp_use.client").setLevel(logging.ERROR)
+
     if root_logger.handlers:
         root_logger.setLevel(level)
         for handler in root_logger.handlers:
