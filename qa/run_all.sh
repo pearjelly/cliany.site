@@ -59,6 +59,10 @@ bash qa/test_obscura_smoke.sh
 echo "=== Obscura Compat ==="
 bash qa/test_obscura_compat.sh
 
+run_script "$SCRIPT_DIR/test_failure_semantics.sh"
+run_script "$SCRIPT_DIR/test_doctor_agent_md.sh"
+run_script "$SCRIPT_DIR/test_obscura_explore_friendly.sh"
+
 echo ""
 echo "========================================"
 echo "=== 总计汇总 ==="

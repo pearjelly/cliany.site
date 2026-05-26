@@ -16,6 +16,7 @@ def test_doctor_has_schema_version(tmp_home, no_llm, monkeypatch):
 
     monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
     monkeypatch.setenv("CLIANY_ANTHROPIC_API_KEY", "test")
+    monkeypatch.setattr("cliany_site.commands.doctor.Path.cwd", lambda: tmp_home)
 
     runner = CliRunner()
     result = runner.invoke(cli, ["--json", "doctor"], catch_exceptions=False)
@@ -115,6 +116,17 @@ def test_agent_md_reports_warning_for_missing_sentinel(tmp_home, no_llm, monkeyp
 
     monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
     monkeypatch.setenv("CLIANY_ANTHROPIC_API_KEY", "test")
+
+    class MockPath:
+        @classmethod
+        def home(cls):
+            return tmp_home
+
+        @classmethod
+        def cwd(cls):
+            return tmp_home
+
+    monkeypatch.setattr("cliany_site.commands.doctor.Path", MockPath)
 
     runner = CliRunner()
     result = runner.invoke(cli, ["--json", "doctor"], catch_exceptions=False)

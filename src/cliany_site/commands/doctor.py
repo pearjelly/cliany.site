@@ -152,7 +152,7 @@ async def _run_checks(cdp_conn: Any = None) -> Envelope:
 
     if agent_md_path is None:
         agent_md_status = "missing"
-        agent_md_message = "未找到 AGENT.md / AGENTS.md"
+        agent_md_message = "未找到 AGENT.md / AGENTS.md，建议运行 cliany-site explore"
     else:
         content = agent_md_path.read_text(encoding="utf-8")
         if _SENTINEL_RE.search(content):
@@ -167,7 +167,7 @@ async def _run_checks(cdp_conn: Any = None) -> Envelope:
         "duration_ms": 0,
         "details": {
             "status": agent_md_status,
-            "path": agent_md_path.name if agent_md_path is not None else None,
+            "path": agent_md_path.name if agent_md_path is not None else "AGENT.md",
             "message": agent_md_message,
         }
     })
