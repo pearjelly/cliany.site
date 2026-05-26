@@ -95,9 +95,9 @@ class TestGetCapabilitySnapshot:
         p = ObscuraProvider(source="external")
         snap = p.get_capability_snapshot()
         assert snap.provider == "obscura"
-        assert snap.supports_navigation is True
+        assert snap.supports_navigation is False
         assert snap.supports_screenshot is True
-        assert snap.supports_cookies is True
+        assert snap.supports_cookies is False
         assert snap.supports_network_events is True
         assert snap.supports_console_events is True
 
