@@ -91,8 +91,13 @@ def explore_cmd(
                 return err(
                     "explore",
                     ErrorCode.E_MISSING_CAPABILITY,
-                    f"当前 provider '{_browser_provider}' 不支持 explore 命令（缺少必要能力）",
-                    hint=_gate.reason,
+                    "Obscura provider 暂不支持 explore（需要 AXTree/accessibility）。请改用 Chrome（unset CLIANY_BROWSER_PROVIDER）或参阅文档。",
+                    hint="Obscura 当前缺少 AXTree/accessibility 能力，无法执行 explore。",
+                    details={
+                        "suggested_action": "unset CLIANY_BROWSER_PROVIDER",
+                        "doc_url": "docs/walkthroughs/obscura-experimental-guide.md",
+                        "missing_capability": "supports_axtree",
+                    },
                 )
 
         qa_offline = os.getenv("CLIANY_QA_OFFLINE") == "1"

@@ -114,7 +114,7 @@ def _normalize_atom_actions(actions):
 import json
 import click
 from cliany_site.codegen.runtime_helpers import execute_steps_via_atoms, diagnose_if_enabled
-from cliany_site.response import success_response, error_response, print_response{atom_imports}{substitute_import}
+from cliany_site.envelope import ok, err, ErrorCode{atom_imports}{substitute_import}
 
 DOMAIN = {domain!r}
 SOURCE_URL = {source_url_literal!r}
@@ -191,7 +191,7 @@ from cliany_site.action_runtime import execute_action_steps, substitute_paramete
 from cliany_site.atoms.storage import {load_atom_name}
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.session import load_session_data
-from cliany_site.response import success_response, error_response, print_response
+from cliany_site.envelope import ok, err, ErrorCode
 from cliany_site.errors import CDP_UNAVAILABLE, SESSION_EXPIRED, EXECUTION_FAILED
 
 DOMAIN = {domain!r}

@@ -31,7 +31,7 @@ def login(ctx: click.Context, url: str, json_mode: bool | None):
     print_response(result, json_mode=effective_json_mode)
 
 
-async def _capture_session(url: str, cdp_conn: Any = None) -> dict:
+async def _capture_session(url: str, cdp_conn: Any = None) -> Any:
     from cliany_site.browser.cdp import CDPConnection
     from cliany_site.session import save_session
 
@@ -56,8 +56,13 @@ async def _capture_session(url: str, cdp_conn: Any = None) -> dict:
             return err(
                 "login",
                 ErrorCode.E_MISSING_CAPABILITY,
-                f"当前 provider '{_browser_provider}' 不支持 login 命令（缺少必要能力）",
-                hint=_gate.reason,
+                "Obscura provider 暂不支持 login（需要 navigation/cookies）。请改用 Chrome（unset CLIANY_BROWSER_PROVIDER）或参阅文档。",
+                hint="Obscura 当前缺少 navigation/cookies 能力，无法执行 login。",
+                details={
+                    "suggested_action": "unset CLIANY_BROWSER_PROVIDER",
+                    "doc_url": "docs/walkthroughs/obscura-experimental-guide.md",
+                    "missing_capability": "supports_navigation",
+                },
             )
 
     parsed = urlparse(url)
