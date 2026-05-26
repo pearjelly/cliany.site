@@ -95,9 +95,9 @@ class ObscuraProvider(BrowserProvider):
             provider="obscura",
             version=self._version,
             supports_axtree=False,
-            supports_navigation=True,
+            supports_navigation=False,
             supports_screenshot=True,
-            supports_cookies=True,
+            supports_cookies=False,
             supports_network_events=True,
             supports_console_events=True,
         )
