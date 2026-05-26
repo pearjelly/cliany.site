@@ -674,6 +674,27 @@ def _shift_indent(text: str, remove: int = 8) -> str:
     return "\n".join(result)
 
 
+def _render_empty_result_check(command_name: str) -> str:
+    return (
+        "    # opt-in 空结果检测：list-/search- 命令保守判定，聚合 data 为空时返回 E_EMPTY_RESULT\n"
+        "    # 如需关闭：在 metadata 中设置 expects_nonempty=False（当前仅占位，未实现）\n"
+        "    if failed is None:\n"
+        "        _agg: list = []\n"
+        "        for _r in results:\n"
+        '            if _r.get("ok"):\n'
+        '                _d = _r.get("data") or {}\n'
+        "                if isinstance(_d, list):\n"
+        "                    _agg.extend(_d)\n"
+        "                elif isinstance(_d, dict):\n"
+        "                    for _v in _d.values():\n"
+        "                        if isinstance(_v, list):\n"
+        "                            _agg.extend(_v)\n"
+        "                            break\n"
+        "        if not _agg:\n"
+        f'            failed = {{"ok": False, "error": {{"code": "E_EMPTY_RESULT", "message": "{command_name} 未找到任何结果"}}}}\n'
+    )
+
+
 def render_command_block_v2(
     command: CommandSuggestion,
     all_actions: list[ActionStep],
@@ -720,13 +741,20 @@ def render_command_block_v2(
     )
     execution_blocks = _shift_indent(raw_blocks, remove=8)
 
+    # opt-in 空结果检测：list-/search- 命令在聚合 data 为空时注入 E_EMPTY_RESULT 判定
+    empty_result_check = (
+        _render_empty_result_check(command_name)
+        if command_name.startswith(("list-", "search-"))
+        else ""
+    )
+
     return f'''{decorators_text}
 def {function_name}({function_signature}):
     """{description}"""
 {execution_blocks}
     results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)
     failed = next((r for r in results if not r.get("ok")), None)
-    if _resolve_json_mode(json_mode):
+{empty_result_check}    if _resolve_json_mode(json_mode):
         click.echo(json.dumps({{
             "ok": failed is None,
             "data": {{"results": results, "command": "{command_name}", "args": {args_payload}}},
