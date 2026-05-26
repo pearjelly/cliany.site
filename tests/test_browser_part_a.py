@@ -63,7 +63,7 @@ class TestBrowserState:
 
 
 class TestBrowserNavigate:
-    def test_navigate_success(self, no_llm, runner):
+    def test_navigate_success(self, no_llm, runner, clean_env):
         mock_session = MagicMock()
         mock_session.navigate_to = AsyncMock()
         mock_page = MagicMock()
