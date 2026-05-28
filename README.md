@@ -7,6 +7,7 @@
 
 > 🌐 Languages: [English](README.md) | [简体中文](README.zh.md)
 
+> **🔧 v0.14.1 修复与增强**：新增 `E_PAGE_NOT_READY` / `E_PARSE_FAILED` / `E_EMPTY_RESULT` 错误码、修复 navigate/extract/action_runtime 失败语义、doctor 同时识别 `AGENT.md` / `AGENTS.md`、Obscura 能力声明修正（navigation/cookies）、list-/search- 命令空结果 opt-in 检测、Obscura 友好错误提示，详见 [CHANGELOG.md](CHANGELOG.md)。  
 > **✨ v0.14.0 Real-World Demos**: Case 2 (Enterprise CRM) & Case 3 (Team Toolbox) on the website now use real public demo sites — SuiteCRM Demo, ASF Jira, ASF Confluence, ASF Jenkins. See [Try Real Demos](#try-real-demos).
 > **✨ v0.13.0 开发者体验加固**：修复 loader RuntimeError bug、稳定 test_session_lock 测试、补全 ERROR_FIX_HINTS 27 条提示、新增 SuccessEnvelope/ErrorEnvelope TypedDict、核心模块 pyright strict（0 errors）、doctor 命令增强（versions + adapter_stats），详见 [CHANGELOG.md](CHANGELOG.md)。  
 > **🔒 v0.12.0 稳定性与质量加固**：新增文件锁保护（manifest/session 并发写安全）、tar 路径穿越防护、Obscura 下载重试、统一错误码体系，详见 [CHANGELOG.md](CHANGELOG.md)。  
@@ -213,7 +214,7 @@ async with ClanySite() as cs:
 
 ## Try Real Demos
 
-The following adapters are available as downloadable assets on [GitHub Release v0.14.0](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.0).
+The following adapters are available as downloadable assets on [GitHub Release v0.14.1](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.1).
 
 ### SuiteCRM Demo (Enterprise CRM)
 ```bash

@@ -7,7 +7,23 @@
 
 ## [Unreleased]
 
-## [0.14.0] - 2026-05-25
+## [0.14.1] - 2026-05-28
+
+### Added
+- **3 个新错误码**：`E_PAGE_NOT_READY`（页面未就绪超时）、`E_PARSE_FAILED`（解析异常）、`E_EMPTY_RESULT`（空结果，list-/search- opt-in），统一"空结果 vs 显式失败"语义。
+- **list-/search- 命令空结果检测**：生成器模板新增 opt-in 空结果 guard，防止静默空返回。
+- **Obscura 友好错误提示**：explore/login 在 Obscura provider 下返回结构化友好提示，包含 `suggested_action` 和文档链接。
+- **ADR-0008**：`docs/decisions/0008-failure-semantics.md` — 失败语义决策记录。
+- **ADR-0009**：`docs/decisions/0009-provider-capability-matrix.md` — Provider 能力矩阵决策记录。
+- **3 个新 qa 脚本**：`test_failure_semantics.sh`（4 场景）、`test_doctor_agent_md.sh`（2 场景）、`test_obscura_explore_friendly.sh`（2 场景）。
+
+### Fixed
+- **navigate/extract/action_runtime 失败语义**：readiness timeout 和解析异常统一返回 `ok=false` + 对应错误码，而非静默空结果。
+- **doctor agent_md 双文件名检查**：同时识别 `AGENT.md` 和 `AGENTS.md`，sentinel 缺失时仅提示不重生成。
+- **Obscura 能力声明修正**：`ObscuraProvider` 正确声明 `supports_navigation=False` / `supports_cookies=False`，与实际行为一致，修复 login feature gate 不拦截导致的挂起问题。
+- **CDP 日志降噪**：`cdp_use.client` logger 设为 ERROR 级别，消除探索过程中的 WARNING 噪声。
+
+
 
 ### Added
 - **4개 공개 데모 사이트 adapter 자산**: SuiteCRM Demo, ASF Jira, ASF Confluence, ASF Jenkins(builds.apache.org). GitHub Release v0.14.0 assets에 탑재.
