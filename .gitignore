@@ -25,6 +25,7 @@ MANIFEST
 .vercel
 .sisyphus/
 .playwright-mcp/
+.opencode/
 
 scripts/.pypi-token
 

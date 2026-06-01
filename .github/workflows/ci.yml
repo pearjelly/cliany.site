@@ -104,3 +104,22 @@ jobs:
         run: uv pip install -e ".[test]" --system
       - name: Obscura smoke (mock-based)
         run: uv run pytest -q tests/test_obscura_provider.py tests/test_obscura_explore_compat.py tests/test_obscura_browser_commands.py tests/test_obscura_session_recording.py tests/test_obscura_benchmark.py
+
+  benchmark-regression:
+    name: Benchmark Regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 安装依赖
+        run: uv pip install -e ".[test]" --system
+      - name: 运行 benchmark 回归测试
+        env:
+          CLIANY_QA_OFFLINE: "1"
+        run: pytest tests/benchmarks/ -v --no-cov
