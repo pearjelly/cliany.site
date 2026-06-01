@@ -43,3 +43,14 @@ src/cliany_site/
 ## LOCAL CHILD GUIDES
 - `explorer/AGENTS.md` — prompt contract, exploration loop, result models.
 - `codegen/AGENTS.md` — generated adapter format and metadata rules.
+
+## AUTONOMOUS IMPROVEMENT GUARDRAILS（包级）
+
+> 同步自根 `AGENTS.md` 守则，聚焦 `src/cliany_site/` 包内代码层约束：
+
+- **语义化优先**：禁止引入 CSS 选择器兜底；所有元素定位必须走 `selector_map` 的 role/name 语义匹配。
+- **codegen 安全**：修改 `codegen/generator.py` 须保持 type hints 完整，兼容 Python 3.11+；禁止生成 `eval`/`exec`/`os.system`。
+- **不编辑生成代码**：标记 `# 自动生成 — DO NOT EDIT` 的 adapter 文件绝对禁止修改。
+- **测试隔离**：包内测试必须使用 `tmp_home` fixture，禁止在 repo 内写 `~/.cliany-site/` 运行时状态。
+- **不重写现有模块**：只扩展/新增；禁止重写 `testing/snapshot.py`、`browser/cdp.py` 等核心模块。
+- **确定性回归**：新增的 LLM 相关测试必须设置 `CLIANY_QA_OFFLINE=1`，走 `FakeChatModel` 而非真实 API。

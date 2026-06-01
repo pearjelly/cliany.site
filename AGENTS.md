@@ -53,6 +53,17 @@ Core flow: inspect Chrome via CDP + AXTree, ask an LLM to plan actions, emit Cli
 - Environment resolution is layered: XDG config `.env` → legacy `~/.cliany-site/.env` → project `.env` → real environment.
 - OpenAI-compatible base URLs are normalized to include `/v1`; do not duplicate normalization logic elsewhere.
 
+## AUTONOMOUS IMPROVEMENT GUARDRAILS
+
+> 适用于所有自主改进循环中的 agent 行为约束。
+
+- **坚守语义化**：禁止引入脆弱 CSS 选择器作兜底，必须基于 AXTree 语义模糊匹配（`selector_map` 语义 role/name 查找）。
+- **零数据污染**：生成的 adapters/sessions/snapshots 严格隔离在 `~/.cliany-site/`；测试必须使用 `tmp_home` fixture，禁止在 repo 内 write 运行时状态。
+- **codegen 规范**：修改 `generator.py` 须保证生成的 adapter 代码符合 type hints，兼容 Python 3.11+；禁止生成 `eval`/`exec`/`os.system` 等危险调用。
+- **自主修复边界**：CI workflow 只搭脚手架（触发器 + 指令文档），不内联 opencode/agent 调用链；真正修复由 OpenCode 读取 `.github/AUTONOMOUS_FIX.md` 执行。
+- **PR 门禁零真实 LLM 密钥**：所有 PR 触发的 job 必须设置 `CLIANY_QA_OFFLINE=1` 走确定性回归；受保护 workflow 可用 GitHub Secrets，仅限非 fork-PR 触发。
+- **禁止重写现有基础设施**：只允许扩展/新增，禁止重写 `.github/workflows/ci.yml` 现有 jobs、`tests/conftest.py`、`src/cliany_site/testing/snapshot.py`；已标记 `# 自动生成 — DO NOT EDIT` 的文件绝对禁止修改。
+
 ## ANTI-PATTERNS (THIS PROJECT)
 - Do not edit generated adapter code marked `# 自动生成 — DO NOT EDIT`.
 - Do not assume generated adapters or session files live in this repo; runtime state lives under `~/.cliany-site/`.
