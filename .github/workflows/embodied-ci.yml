@@ -1,0 +1,35 @@
+# 具身测试 CI — headless Chrome + CDP + AXTree 集成测试
+# 触发：push/PR 到 master + 手动触发
+name: Embodied CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  embodied:
+    name: Embodied Test (headless Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CLIANY_QA_OFFLINE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 安装依赖
+        run: uv pip install -e ".[test]" --system
+      - name: 安装 Playwright Chromium
+        run: python3 -m playwright install --with-deps chromium
+      - name: 运行具身测试
+        run: pytest tests/embodied/ -m embodied -v --no-cov
