@@ -1,0 +1,63 @@
+name: 依赖升级验证
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  dep-upgrade-verify:
+    if: >-
+      github.actor == 'dependabot[bot]' ||
+      contains(github.event.pull_request.labels.*.name, 'dependencies')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: uv pip install -e ".[test]" --system
+
+      - name: 运行测试套件（零真实 LLM）
+        id: test
+        env:
+          CLIANY_QA_OFFLINE: "1"
+        run: |
+          set -o pipefail
+          pytest tests/ -v --no-cov -x 2>&1 | tee /tmp/test-output.txt
+        continue-on-error: true
+
+      - name: 标注 PR（测试失败时）
+        if: steps.test.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          SUMMARY=$(tail -20 /tmp/test-output.txt)
+          gh pr comment "$PR_NUMBER" --body "⚠️ 依赖升级后测试失败。请参阅 [AUTONOMOUS_FIX.md](.github/AUTONOMOUS_FIX.md) 的「维度4 依赖升级修复」章节。
+
+          失败摘要：
+          \`\`\`
+          $SUMMARY
+          \`\`\`"
+
+          # 标注待修复（不自动 merge）
+          gh pr edit "$PR_NUMBER" --add-label "needs-autonomous-fix" || true
+
+      - name: 验证通过
+        if: steps.test.outcome == 'success'
+        run: echo "✅ 依赖升级验证通过"

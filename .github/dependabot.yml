@@ -1,0 +1,21 @@
+version: 2
+updates:
+  # 监控 Python 依赖：browser-use、langchain-*、以及项目内其他 pip 包
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+
+  # 监控 GitHub Actions：actions/checkout@v4、astral-sh/setup-uv@v5、actions/setup-python@v5、actions/upload-artifact@v4
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "ci(deps)"
