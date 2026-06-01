@@ -1,0 +1,61 @@
+name: 自主复现 Bug
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  auto-reproduce:
+    if: github.event.label.name == 'auto-reproduce'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      issues: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 解析 Issue 结构化字段
+        id: parse
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          mkdir -p /tmp/repro
+          # 将 issue body 保存为原始文本，供后续解析
+          echo "$ISSUE_BODY" > /tmp/repro/issue_body.txt
+
+          # 简单提取结构化字段（基于 bug_report.yml 的字段 id）
+          # 实际解析由 AUTONOMOUS_FIX.md 中的 agent 指令完成
+          python3 -c "
+          import json, os, re, sys
+          body = os.environ['ISSUE_BODY']
+          # 提取 markdown 表单的字段（GitHub issue form 格式）
+          context = {
+              'issue_number': os.environ.get('ISSUE_NUMBER', ''),
+              'body_length': len(body),
+              'has_axtree': 'axtree' in body.lower() or 'selector_map' in body.lower(),
+              'has_url': bool(re.search(r'https?://', body)),
+          }
+          with open('/tmp/repro/context.json', 'w') as f:
+              json.dump(context, f, indent=2, ensure_ascii=False)
+          print('context:', json.dumps(context))
+          "
+
+      - name: "[占位] Agent 复现触发点"
+        # 此处由 OpenCode/Sisyphus agent 读取 .github/AUTONOMOUS_FIX.md 后接管
+        # 当前仅输出日志，真正复现由 agent 运行时执行
+        run: |
+          echo "=== 自主复现触发 ==="
+          echo "Issue context 已保存到 /tmp/repro/context.json"
+          echo "请参阅 .github/AUTONOMOUS_FIX.md 的「维度2 运行时复现修复」章节"
+          cat /tmp/repro/context.json
+
+      - name: 回复 Issue 确认捕获
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --body "🤖 已捕获结构化上下文，自主复现流程已启动。参见 [AUTONOMOUS_FIX.md](.github/AUTONOMOUS_FIX.md)。"

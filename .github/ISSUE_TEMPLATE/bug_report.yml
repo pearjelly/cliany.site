@@ -1,7 +1,7 @@
 name: "🐛 Bug Report"
 description: "报告一个 Bug / Report a bug"
 title: "[Bug] "
-labels: ["bug"]
+labels: ["bug", "auto-reproduce"]
 body:
   - type: markdown
     attributes:
@@ -77,3 +77,77 @@ body:
           required: true
         - label: "我正在使用最新版本的 cliany-site / I am using the latest version of cliany-site"
           required: true
+
+  - type: input
+    id: target_url
+    attributes:
+      label: "目标 URL"
+      description: "触发问题的页面地址"
+      placeholder: "https://example.com/page"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: error_code
+    attributes:
+      label: "错误码"
+      description: "cliany-site 报告的错误码（来自 errors.py）"
+      options:
+        - E_CDP_UNAVAILABLE
+        - E_SESSION_EXPIRED
+        - E_SELECTOR_NOT_FOUND
+        - E_PAGE_NOT_READY
+        - E_PARSE_FAILED
+        - E_EMPTY_RESULT
+        - E_LLM_DISABLED
+        - E_LEGACY_ADAPTER
+        - E_VERIFY_STATIC
+        - E_VERIFY_SMOKE
+        - E_HEAL_CAP_EXCEEDED
+        - E_AGENT_MD_CONFLICT
+        - E_REGISTRY_CONFLICT
+        - E_INVALID_PARAM
+        - E_TIMEOUT
+        - E_CDP_DISCONNECTED
+        - E_EVAL_DISABLED
+        - E_EVAL_BLACKLIST
+        - E_UNKNOWN
+        - E_QA_OFFLINE_MISSING_FAKE_LLM
+        - E_DIAGNOSE
+        - E_UNSUPPORTED_PLATFORM
+        - E_MISSING_CAPABILITY
+        - E_PROVIDER_NOT_FOUND
+        - E_PROVIDER_VERSION_TOO_OLD
+        - E_BINARY_NOT_FOUND
+        - E_STALE_PID
+        - E_PORT_CONFLICT
+        - E_DOWNLOAD_FAILED
+        - E_VERSION_MISMATCH
+        - "其他/Other"
+    validations:
+      required: false
+
+  - type: textarea
+    id: axtree_snapshot
+    attributes:
+      label: "AXTree 快照（JSON）"
+      description: "粘贴 cliany-site 捕获的 AXTree JSON，或 doctor --json 的相关输出"
+      placeholder: '{"element_tree": ..., "selector_map": ...}'
+    validations:
+      required: false
+
+  - type: input
+    id: cliany_version
+    attributes:
+      label: "cliany-site 版本"
+      placeholder: "0.14.1"
+    validations:
+      required: false
+
+  - type: textarea
+    id: doctor_output
+    attributes:
+      label: "doctor --json 输出"
+      description: "运行 `cliany-site doctor --json` 的完整输出"
+    validations:
+      required: false
