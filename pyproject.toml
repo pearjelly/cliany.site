@@ -59,6 +59,7 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 addopts = "--cov=cliany_site --cov-report=term-missing --cov-report=xml"
 markers = [
+    "embodied: headless Chrome 具身集成测试",
     "perf: performance benchmark tests (run manually with --benchmark-only)",
 ]
 

@@ -1,0 +1,110 @@
+[
+  {
+    "actions": [
+      {
+        "type": "navigate",
+        "url": "http://test.local/tickets/new",
+        "description": "进入新建工单页面"
+      }
+    ],
+    "next_url": "http://test.local/tickets/new",
+    "commands": [],
+    "done": false,
+    "reasoning": "需要先导航到新建工单页面再填写表单。",
+    "canonical_actions": [],
+    "selector_pool": []
+  },
+  {
+    "actions": [
+      {
+        "type": "type",
+        "ref": "5",
+        "value": "登录失败",
+        "description": "输入工单标题",
+        "target_name": "标题",
+        "target_role": "textbox"
+      },
+      {
+        "type": "select",
+        "ref": "6",
+        "value": "高",
+        "description": "选择优先级",
+        "target_name": "优先级",
+        "target_role": "combobox"
+      },
+      {
+        "type": "click",
+        "ref": "7",
+        "description": "保存工单",
+        "target_name": "保存",
+        "target_role": "button"
+      }
+    ],
+    "next_url": "",
+    "commands": [
+      {
+        "name": "create-ticket",
+        "description": "创建新工单",
+        "args": [
+          {
+            "name": "title",
+            "description": "工单标题",
+            "required": true,
+            "action_index": 1,
+            "default": "登录失败"
+          },
+          {
+            "name": "priority",
+            "description": "工单优先级",
+            "required": true,
+            "action_index": 2,
+            "default": "高"
+          }
+        ],
+        "action_steps": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    ],
+    "done": true,
+    "reasoning": "已进入表单页并完成标题、优先级、保存动作，工作流完成。",
+    "canonical_actions": [
+      {
+        "name": "创建工单",
+        "description": "打开新建页，填写标题和优先级后保存",
+        "steps": [
+          0,
+          1,
+          2,
+          3
+        ]
+      }
+    ],
+    "selector_pool": [
+      {
+        "ref": "5",
+        "candidates": [
+          "#ticket-title",
+          "input[name=\"title\"]"
+        ]
+      },
+      {
+        "ref": "6",
+        "candidates": [
+          "#ticket-priority",
+          "select[name=\"priority\"]"
+        ]
+      },
+      {
+        "ref": "7",
+        "candidates": [
+          "#ticket-save",
+          "button[type=\"submit\"]"
+        ]
+      }
+    ]
+  }
+]

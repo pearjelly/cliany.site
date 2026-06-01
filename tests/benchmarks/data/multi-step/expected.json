@@ -1,0 +1,204 @@
+{
+  "pages": [
+    {
+      "url": "http://test.local/dashboard",
+      "title": "Test Local Dashboard",
+      "elements": [
+        {
+          "ref": "4",
+          "role": "link",
+          "name": "新建工单",
+          "attributes": {
+            "id": "ticket-new",
+            "class": "benchmark-ticket-new"
+          },
+          "bbox": {
+            "x": 80,
+            "y": 10,
+            "width": 120,
+            "height": 32
+          }
+        },
+        {
+          "ref": "5",
+          "role": "textbox",
+          "name": "标题",
+          "attributes": {
+            "id": "ticket-title",
+            "class": "benchmark-ticket-title"
+          },
+          "bbox": {
+            "x": 100,
+            "y": 10,
+            "width": 120,
+            "height": 32
+          }
+        },
+        {
+          "ref": "6",
+          "role": "combobox",
+          "name": "优先级",
+          "attributes": {
+            "id": "ticket-priority",
+            "class": "benchmark-ticket-priority"
+          },
+          "bbox": {
+            "x": 120,
+            "y": 10,
+            "width": 120,
+            "height": 32
+          }
+        },
+        {
+          "ref": "7",
+          "role": "button",
+          "name": "保存",
+          "attributes": {
+            "id": "ticket-save",
+            "class": "benchmark-ticket-save"
+          },
+          "bbox": {
+            "x": 140,
+            "y": 10,
+            "width": 120,
+            "height": 32
+          }
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "action_type": "navigate",
+      "page_url": "http://test.local/dashboard",
+      "target_ref": "",
+      "target_url": "http://test.local/tickets/new",
+      "value": "",
+      "description": "进入新建工单页面",
+      "target_name": "",
+      "target_role": "",
+      "target_attributes": {},
+      "selector": "",
+      "extract_mode": "text",
+      "fields_map": {}
+    },
+    {
+      "action_type": "type",
+      "page_url": "http://test.local/dashboard",
+      "target_ref": "5",
+      "target_url": "",
+      "value": "登录失败",
+      "description": "输入工单标题",
+      "target_name": "标题",
+      "target_role": "textbox",
+      "target_attributes": {
+        "id": "ticket-title",
+        "class": "benchmark-ticket-title"
+      },
+      "selector": "",
+      "extract_mode": "text",
+      "fields_map": {}
+    },
+    {
+      "action_type": "select",
+      "page_url": "http://test.local/dashboard",
+      "target_ref": "6",
+      "target_url": "",
+      "value": "高",
+      "description": "选择优先级",
+      "target_name": "优先级",
+      "target_role": "combobox",
+      "target_attributes": {
+        "id": "ticket-priority",
+        "class": "benchmark-ticket-priority"
+      },
+      "selector": "",
+      "extract_mode": "text",
+      "fields_map": {}
+    },
+    {
+      "action_type": "click",
+      "page_url": "http://test.local/dashboard",
+      "target_ref": "7",
+      "target_url": "",
+      "value": "",
+      "description": "保存工单",
+      "target_name": "保存",
+      "target_role": "button",
+      "target_attributes": {
+        "id": "ticket-save",
+        "class": "benchmark-ticket-save"
+      },
+      "selector": "",
+      "extract_mode": "text",
+      "fields_map": {}
+    }
+  ],
+  "commands": [
+    {
+      "name": "create-ticket",
+      "description": "创建新工单",
+      "args": [
+        {
+          "name": "title",
+          "description": "工单标题",
+          "required": true,
+          "action_index": 1,
+          "default": "登录失败"
+        },
+        {
+          "name": "priority",
+          "description": "工单优先级",
+          "required": true,
+          "action_index": 2,
+          "default": "高"
+        }
+      ],
+      "action_steps": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "explore_model": "fake",
+  "smoke": [],
+  "canonical_actions": [
+    {
+      "name": "创建工单",
+      "description": "打开新建页，填写标题和优先级后保存",
+      "steps": [
+        0,
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "selector_pool": [
+    {
+      "ref": "5",
+      "candidates": [
+        "#ticket-title",
+        "input[name=\"title\"]"
+      ]
+    },
+    {
+      "ref": "6",
+      "candidates": [
+        "#ticket-priority",
+        "select[name=\"priority\"]"
+      ]
+    },
+    {
+      "ref": "7",
+      "candidates": [
+        "#ticket-save",
+        "button[type=\"submit\"]"
+      ]
+    }
+  ],
+  "api_endpoints": [],
+  "capability": {}
+}

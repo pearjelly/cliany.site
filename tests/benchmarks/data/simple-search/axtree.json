@@ -1,0 +1,57 @@
+{
+  "element_tree": "@1 button 打开搜索\n@2 textbox 搜索关键词\n@3 button 提交搜索",
+  "selector_map": {
+    "1": {
+      "ref": "1",
+      "role": "button",
+      "name": "打开搜索",
+      "attributes": {
+        "id": "search-open",
+        "class": "benchmark-search-open"
+      },
+      "bbox": {
+        "x": 20,
+        "y": 10,
+        "width": 120,
+        "height": 32
+      }
+    },
+    "2": {
+      "ref": "2",
+      "role": "textbox",
+      "name": "搜索关键词",
+      "attributes": {
+        "id": "search-input",
+        "class": "benchmark-search-input"
+      },
+      "bbox": {
+        "x": 40,
+        "y": 10,
+        "width": 120,
+        "height": 32
+      }
+    },
+    "3": {
+      "ref": "3",
+      "role": "button",
+      "name": "提交搜索",
+      "attributes": {
+        "id": "search-submit",
+        "class": "benchmark-search-submit"
+      },
+      "bbox": {
+        "x": 60,
+        "y": 10,
+        "width": 120,
+        "height": 32
+      }
+    }
+  },
+  "url": "http://test.local/",
+  "title": "Test Local Search",
+  "pruning_meta": {
+    "original_count": 3,
+    "pruned_count": 3,
+    "pruning_ratio": 0.0
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "canonical_actions": [
+    {
+      "action_type": "navigate",
+      "target_ref": "",
+      "target_name": "",
+      "target_url": "http://test.local/tickets/new",
+      "description": "进入新建工单页面"
+    },
+    {
+      "action_type": "type",
+      "target_ref": "5",
+      "target_name": "标题",
+      "target_url": "",
+      "description": "输入工单标题"
+    },
+    {
+      "action_type": "select",
+      "target_ref": "6",
+      "target_name": "优先级",
+      "target_url": "",
+      "description": "选择优先级"
+    },
+    {
+      "action_type": "click",
+      "target_ref": "7",
+      "target_name": "保存",
+      "target_url": "",
+      "description": "保存工单"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[
+  [
+    {
+      "type": "click",
+      "ref": "1",
+      "description": "点击打开搜索框",
+      "target_name": "打开搜索",
+      "target_role": "button"
+    },
+    {
+      "type": "type",
+      "ref": "2",
+      "value": "cliany-site",
+      "description": "输入搜索关键词",
+      "target_name": "搜索关键词",
+      "target_role": "textbox"
+    },
+    {
+      "type": "submit",
+      "ref": "2",
+      "description": "提交搜索表单",
+      "target_name": "搜索关键词",
+      "target_role": "textbox"
+    }
+  ]
+]

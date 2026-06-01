@@ -1,0 +1,159 @@
+{
+  "pages": [
+    {
+      "url": "http://test.local/",
+      "title": "Test Local Search",
+      "elements": [
+        {
+          "ref": "1",
+          "role": "button",
+          "name": "打开搜索",
+          "attributes": {
+            "id": "search-open",
+            "class": "benchmark-search-open"
+          },
+          "bbox": {
+            "x": 20,
+            "y": 10,
+            "width": 120,
+            "height": 32
+          }
+        },
+        {
+          "ref": "2",
+          "role": "textbox",
+          "name": "搜索关键词",
+          "attributes": {
+            "id": "search-input",
+            "class": "benchmark-search-input"
+          },
+          "bbox": {
+            "x": 40,
+            "y": 10,
+            "width": 120,
+            "height": 32
+          }
+        },
+        {
+          "ref": "3",
+          "role": "button",
+          "name": "提交搜索",
+          "attributes": {
+            "id": "search-submit",
+            "class": "benchmark-search-submit"
+          },
+          "bbox": {
+            "x": 60,
+            "y": 10,
+            "width": 120,
+            "height": 32
+          }
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "action_type": "click",
+      "page_url": "http://test.local/",
+      "target_ref": "1",
+      "target_url": "",
+      "value": "",
+      "description": "点击打开搜索框",
+      "target_name": "打开搜索",
+      "target_role": "button",
+      "target_attributes": {
+        "id": "search-open",
+        "class": "benchmark-search-open"
+      },
+      "selector": "",
+      "extract_mode": "text",
+      "fields_map": {}
+    },
+    {
+      "action_type": "type",
+      "page_url": "http://test.local/",
+      "target_ref": "2",
+      "target_url": "",
+      "value": "cliany-site",
+      "description": "输入搜索关键词",
+      "target_name": "搜索关键词",
+      "target_role": "textbox",
+      "target_attributes": {
+        "id": "search-input",
+        "class": "benchmark-search-input"
+      },
+      "selector": "",
+      "extract_mode": "text",
+      "fields_map": {}
+    },
+    {
+      "action_type": "submit",
+      "page_url": "http://test.local/",
+      "target_ref": "2",
+      "target_url": "",
+      "value": "",
+      "description": "提交搜索表单",
+      "target_name": "搜索关键词",
+      "target_role": "textbox",
+      "target_attributes": {
+        "id": "search-input",
+        "class": "benchmark-search-input"
+      },
+      "selector": "",
+      "extract_mode": "text",
+      "fields_map": {}
+    }
+  ],
+  "commands": [
+    {
+      "name": "search",
+      "description": "搜索站内内容",
+      "args": [
+        {
+          "name": "query",
+          "description": "搜索关键词",
+          "required": true,
+          "action_index": 1,
+          "default": "cliany-site"
+        }
+      ],
+      "action_steps": [
+        0,
+        1,
+        2
+      ]
+    }
+  ],
+  "explore_model": "fake",
+  "smoke": [],
+  "canonical_actions": [
+    {
+      "name": "站内搜索",
+      "description": "打开搜索框并按关键词搜索",
+      "steps": [
+        0,
+        1,
+        2
+      ]
+    }
+  ],
+  "selector_pool": [
+    {
+      "ref": "1",
+      "candidates": [
+        "#search-open",
+        "button[aria-label=\"打开搜索\"]"
+      ]
+    },
+    {
+      "ref": "2",
+      "candidates": [
+        "#search-input",
+        "input[type=\"search\"]"
+      ]
+    }
+  ],
+  "api_endpoints": [],
+  "capability": {}
+}

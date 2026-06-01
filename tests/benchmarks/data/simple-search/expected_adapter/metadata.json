@@ -1,0 +1,25 @@
+{
+  "canonical_actions": [
+    {
+      "action_type": "click",
+      "target_ref": "1",
+      "target_name": "打开搜索",
+      "target_url": "",
+      "description": "点击打开搜索框"
+    },
+    {
+      "action_type": "type",
+      "target_ref": "2",
+      "target_name": "搜索关键词",
+      "target_url": "",
+      "description": "输入搜索关键词"
+    },
+    {
+      "action_type": "submit",
+      "target_ref": "2",
+      "target_name": "搜索关键词",
+      "target_url": "",
+      "description": "提交搜索表单"
+    }
+  ]
+}

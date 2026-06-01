@@ -1,0 +1,34 @@
+[
+  [
+    {
+      "type": "navigate",
+      "url": "http://test.local/tickets/new",
+      "description": "进入新建工单页面"
+    }
+  ],
+  [
+    {
+      "type": "type",
+      "ref": "5",
+      "value": "登录失败",
+      "description": "输入工单标题",
+      "target_name": "标题",
+      "target_role": "textbox"
+    },
+    {
+      "type": "select",
+      "ref": "6",
+      "value": "高",
+      "description": "选择优先级",
+      "target_name": "优先级",
+      "target_role": "combobox"
+    },
+    {
+      "type": "click",
+      "ref": "7",
+      "description": "保存工单",
+      "target_name": "保存",
+      "target_role": "button"
+    }
+  ]
+]
