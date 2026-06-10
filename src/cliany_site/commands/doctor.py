@@ -106,6 +106,12 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
     summary["ready_for_explore"] = not summary["must_fix"] and not any(
         item["name"] == "llm" for item in summary["should_fix"]
     )
+    if summary["must_fix"]:
+        summary["recommended_next_step"] = "先处理必须修复项，然后重新运行 cliany-site doctor。"
+    elif summary["ready_for_explore"]:
+        summary["recommended_next_step"] = "可以运行真实 demo adapter，或使用 explore 生成自己的命令。"
+    else:
+        summary["recommended_next_step"] = "先运行真实 demo adapter；需要生成新 adapter 时再配置 LLM key。"
     return summary
 
 
@@ -140,6 +146,9 @@ def _print_doctor_human(result: Envelope) -> None:
         explore_ready = "yes" if summary.get("ready_for_explore") else "no"
         click.echo(f"Demo adapter ready: {demo_ready}")
         click.echo(f"Explore ready: {explore_ready}")
+        recommended_next_step = summary.get("recommended_next_step")
+        if recommended_next_step:
+            click.echo(f"下一步: {recommended_next_step}")
 
         labels = (
             ("must_fix", "必须修复"),

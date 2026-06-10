@@ -83,6 +83,7 @@ def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):
     assert any(item["name"] == "llm" for item in summary["should_fix"])
     assert summary["ready_for_demo_adapters"] is True
     assert summary["ready_for_explore"] is False
+    assert summary["recommended_next_step"] == "先运行真实 demo adapter；需要生成新 adapter 时再配置 LLM key。"
 
 
 def test_doctor_human_output_groups_action_items(tmp_home, no_llm, monkeypatch):
@@ -108,6 +109,7 @@ def test_doctor_human_output_groups_action_items(tmp_home, no_llm, monkeypatch):
     assert "状态: 可继续" in result.output
     assert "Demo adapter ready: yes" in result.output
     assert "Explore ready: no" in result.output
+    assert "下一步: 先运行真实 demo adapter；需要生成新 adapter 时再配置 LLM key。" in result.output
     assert "建议处理:" in result.output
     assert "llm" in result.output
     assert "只安装/执行已有 adapter 可暂时忽略" in result.output
@@ -132,6 +134,7 @@ async def test_doctor_cdp_failure_includes_must_fix_summary(tmp_home, no_llm, mo
     assert summary["counts"]["must_fix"] >= 1
     assert summary["ready_for_demo_adapters"] is False
     assert summary["ready_for_explore"] is False
+    assert summary["recommended_next_step"] == "先处理必须修复项，然后重新运行 cliany-site doctor。"
     cdp_item = next(item for item in summary["must_fix"] if item["name"] == "cdp")
     assert "CDP" in cdp_item["action"]
 
@@ -157,9 +160,33 @@ def test_doctor_human_output_exits_nonzero_for_must_fix(tmp_home, no_llm, monkey
 
     assert result.exit_code == 1
     assert "状态: 需要修复" in result.output
+    assert "下一步: 先处理必须修复项，然后重新运行 cliany-site doctor。" in result.output
     assert "必须修复:" in result.output
     assert "cdp" in result.output
     assert "CDP" in result.output
+
+
+def test_doctor_recommends_explore_when_llm_and_cdp_are_ready(tmp_home, no_llm, monkeypatch):
+    """Test that first-run guidance moves to explore once all prerequisites are ready."""
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.setenv("CLIANY_ANTHROPIC_API_KEY", "test")
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["--json", "doctor"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    summary = data["data"]["summary"]
+    assert summary["ready_for_demo_adapters"] is True
+    assert summary["ready_for_explore"] is True
+    assert summary["recommended_next_step"] == "可以运行真实 demo adapter，或使用 explore 生成自己的命令。"
 
 
 def test_legacy_adapter_count(tmp_home, no_llm, monkeypatch):

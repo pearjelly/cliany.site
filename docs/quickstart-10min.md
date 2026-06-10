@@ -34,6 +34,8 @@ cliany-site doctor
 - `建议处理`：建议处理；例如没有 LLM key 时仍可先安装/执行已有 adapter。
 - `诊断信息`：通常无需动作。
 
+摘要中的 `下一步` 会直接告诉你当前应该先运行真实 demo adapter、配置 LLM key，还是先修复必须项。
+
 自动化脚本可以使用 JSON：
 
 ```bash
@@ -45,6 +47,7 @@ cliany-site doctor --json
 - `must_fix`：先处理，否则关键路径不可用。
 - `should_fix`：建议处理；例如没有 LLM key 时仍可先安装/执行已有 adapter。
 - `info`：诊断信息，通常无需动作。
+- `recommended_next_step`：和 human 输出中的 `下一步` 一致，可用于脚本判断后续引导。
 
 ### 3. 下载一个 demo adapter
 
@@ -130,7 +133,7 @@ cliany-site github.com search --query "cliany.site" --json
 一次有效的首次成功应满足：
 
 - `cliany-site --version` 正常。
-- `cliany-site doctor` 返回可读摘要；`cliany-site doctor --json` 返回结构化 JSON。
+- `cliany-site doctor` 返回可读摘要和 `下一步`；`cliany-site doctor --json` 返回结构化 JSON 与 `recommended_next_step`。
 - 至少一个 demo adapter 能安装、列出、验证。
 - 至少一个只读命令返回 JSON envelope。
 - 如果继续使用 `explore`，生成结果能被 `list` 发现，并能用 `--json` 执行。

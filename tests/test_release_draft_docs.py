@@ -30,6 +30,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "docs/adapter-lifecycle.md",
         "market install",
         "verify --json",
+        "summary.recommended_next_step",
         "scripts/validate_cases.py",
         "Case Catalog Validation",
         "cases/README.md",

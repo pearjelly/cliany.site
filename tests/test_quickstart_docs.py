@@ -9,6 +9,8 @@ def test_quickstart_links_first_success_to_case_contribution_path():
 
     required = [
         "cliany-site doctor",
+        "recommended_next_step",
+        "下一步",
         "cliany-site verify issues.apache.org --json",
         "Real Demo Case Proposal",
         "cases/manifest.json",
