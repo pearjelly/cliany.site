@@ -222,6 +222,7 @@ async with ClanySite() as cs:
 ## 体验真实演示
 
 以下适配器可在 [GitHub Release v0.14.1](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.1) 的资源中下载。
+可维护案例索引见 [cases/README.md](cases/README.md) 与 [cases/manifest.json](cases/manifest.json)。
 
 ### SuiteCRM Demo (企业 CRM)
 ```bash

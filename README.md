@@ -216,6 +216,7 @@ async with ClanySite() as cs:
 ## Try Real Demos
 
 The following adapters are available as downloadable assets on [GitHub Release v0.14.1](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.1).
+The maintained case index lives in [cases/README.md](cases/README.md) and [cases/manifest.json](cases/manifest.json).
 
 ### SuiteCRM Demo (Enterprise CRM)
 ```bash

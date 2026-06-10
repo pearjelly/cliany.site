@@ -1,0 +1,91 @@
+[
+  {
+    "id": "suitecrm-accounts",
+    "title": "SuiteCRM Demo accounts list",
+    "category": "crm",
+    "status": "active",
+    "target_url": "https://demo.suiteondemand.com/",
+    "adapter_domain": "demo.suiteondemand.com",
+    "source_release": "v0.14.1",
+    "docs": "README.md#suitecrm-demo-enterprise-crm",
+    "commands": [
+      "cliany-site market install ./demo.suiteondemand.com.cliany-adapter-v0.14.0.tar.gz",
+      "cliany-site login https://demo.suiteondemand.com/",
+      "cliany-site demo.suiteondemand.com list-accounts --limit 5 --json"
+    ],
+    "validation": {
+      "offline": "adapter package metadata should validate against schema v3",
+      "online": "read-only account listing returns a JSON envelope with account rows"
+    }
+  },
+  {
+    "id": "apache-jira-issues",
+    "title": "ASF Jira issue list",
+    "category": "devops",
+    "status": "active",
+    "target_url": "https://issues.apache.org/jira/",
+    "adapter_domain": "issues.apache.org",
+    "source_release": "v0.14.1",
+    "docs": "README.md#asf-jira-issue-tracker",
+    "commands": [
+      "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
+      "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json"
+    ],
+    "validation": {
+      "offline": "adapter package metadata should validate against schema v3",
+      "online": "read-only issue listing returns a JSON envelope with issue rows"
+    }
+  },
+  {
+    "id": "apache-confluence-search",
+    "title": "ASF Confluence page search",
+    "category": "knowledge-base",
+    "status": "active",
+    "target_url": "https://cwiki.apache.org/",
+    "adapter_domain": "cwiki.apache.org",
+    "source_release": "v0.14.1",
+    "docs": "README.md#asf-confluence-wiki",
+    "commands": [
+      "cliany-site market install ./cwiki.apache.org.cliany-adapter-v0.14.0.tar.gz",
+      "cliany-site cwiki.apache.org search-pages --space SPARK --query \"release\" --json"
+    ],
+    "validation": {
+      "offline": "adapter package metadata should validate against schema v3",
+      "online": "read-only wiki search returns a JSON envelope with page rows"
+    }
+  },
+  {
+    "id": "apache-jenkins-jobs",
+    "title": "ASF Jenkins job list",
+    "category": "ci",
+    "status": "active",
+    "target_url": "https://builds.apache.org/",
+    "adapter_domain": "builds.apache.org",
+    "source_release": "v0.14.1",
+    "docs": "README.md#asf-jenkins-build-status",
+    "commands": [
+      "cliany-site market install ./builds.apache.org.cliany-adapter-v0.14.0.tar.gz",
+      "cliany-site builds.apache.org list-jobs --json"
+    ],
+    "validation": {
+      "offline": "adapter package metadata should validate against schema v3",
+      "online": "read-only job listing returns a JSON envelope with build rows"
+    }
+  },
+  {
+    "id": "search-extraction-gap",
+    "title": "Search result extraction gap review",
+    "category": "known-gap",
+    "status": "known-gap",
+    "target_url": "https://duckduckgo.com/",
+    "adapter_domain": null,
+    "source_release": null,
+    "docs": "cases/cliany-site-case-review.md",
+    "commands": [],
+    "validation": {
+      "offline": "case review documents the task-level mismatch between click success and extraction success",
+      "online": null
+    }
+  }
+]
+
