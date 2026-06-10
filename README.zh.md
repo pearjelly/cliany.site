@@ -335,7 +335,7 @@ cliany-site workflow batch github.com search data.csv --concurrency 3 --json
 cliany-site market publish github.com --version 1.0.0
 
 # 安装适配器
-cliany-site market install ./github.com.cliany-adapter.tar.gz
+cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz
 
 # 回滚
 cliany-site market rollback github.com

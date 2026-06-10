@@ -30,6 +30,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "docs/adapter-lifecycle.md",
         "market install",
         "离线 roundtrip",
+        "<domain>-<version>.cliany-adapter.tar.gz",
         "verify --json",
         "summary.recommended_next_step",
         "summary.capabilities",

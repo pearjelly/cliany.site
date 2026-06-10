@@ -329,7 +329,7 @@ See [Adapter lifecycle and package format](docs/adapter-lifecycle.md) for the ru
 cliany-site market publish github.com --version 1.0.0
 
 # Install adapter
-cliany-site market install ./github.com.cliany-adapter.tar.gz
+cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz
 
 # Rollback
 cliany-site market rollback github.com
