@@ -12,3 +12,8 @@ def test_project_metadata_has_pypi_description():
     readme = project["readme"]
     assert readme == "README.md"
     assert (ROOT / readme).exists()
+
+
+def test_project_has_open_source_metadata_files():
+    for filename in ("LICENSE", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "SECURITY.md", "SUPPORT.md"):
+        assert (ROOT / filename).exists(), f"{filename} is required for open source readiness"

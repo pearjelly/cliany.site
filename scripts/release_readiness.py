@@ -292,6 +292,17 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         if not urls.get(key):
             issues.append(f"project.urls.{key} is required")
 
+    required_files = [
+        "LICENSE",
+        "CONTRIBUTING.md",
+        "CODE_OF_CONDUCT.md",
+        "SECURITY.md",
+        "SUPPORT.md",
+    ]
+    for filename in required_files:
+        if not (root / filename).exists():
+            issues.append(f"open source metadata file is missing: {filename}")
+
     return ProjectMetadataReport(ok=not issues, path=str(path), issues=issues)
 
 

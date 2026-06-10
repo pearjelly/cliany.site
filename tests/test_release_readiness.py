@@ -260,6 +260,8 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
     (repo / "cases").mkdir()
     (repo / "docs" / "releases").mkdir(parents=True)
     (repo / ".github" / "workflows").mkdir(parents=True)
+    for filename in ("LICENSE", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md", "SECURITY.md", "SUPPORT.md"):
+        (repo / filename).write_text(f"# {filename}\n", encoding="utf-8")
     (repo / "pyproject.toml").write_text(
         '[project]\n'
         'name = "demo"\n'
@@ -314,6 +316,11 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "add",
         "pyproject.toml",
         "CHANGELOG.md",
+        "LICENSE",
+        "CONTRIBUTING.md",
+        "CODE_OF_CONDUCT.md",
+        "SECURITY.md",
+        "SUPPORT.md",
         "README.md",
         "cases/manifest.json",
         "cases/examples/demo-case.json",
@@ -446,6 +453,17 @@ def test_release_readiness_blocks_missing_project_description(tmp_path):
     assert "project metadata validation failed" in report.blockers
     assert report.project_metadata.ok is False
     assert "project.description is required for PyPI" in report.project_metadata.issues
+
+
+def test_release_readiness_blocks_missing_open_source_metadata_file(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "LICENSE").unlink()
+
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert "open source metadata file is missing: LICENSE" in report.project_metadata.issues
 
 
 def test_release_readiness_blocks_release_workflow_without_strict_preflight(tmp_path):
