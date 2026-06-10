@@ -318,6 +318,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "E_EMPTY_RESULT",
             "scripts/release_readiness.py",
             "Real Demo Case Proposal",
+            "weekly-maintainer-loop.md",
+            "next_actions",
         ],
         "README.zh.md": [
             "10 分钟成功路径",
@@ -326,6 +328,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "E_EMPTY_RESULT",
             "scripts/release_readiness.py",
             "Real Demo Case Proposal",
+            "weekly-maintainer-loop.md",
+            "next_actions",
         ],
         "docs/roadmap-2026-q3.md": [
             "weekly-maintainer-loop.md",

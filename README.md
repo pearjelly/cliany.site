@@ -394,7 +394,7 @@ cliany-site/src/cliany_site/
 
 ## Roadmap
 
-The current iteration plan is tracked in [docs/roadmap-2026-q3.md](docs/roadmap-2026-q3.md). Release and commit cadence is defined in [docs/release-cadence.md](docs/release-cadence.md): at least one version per week and commits on at least three days each week.
+The current iteration plan is tracked in [docs/roadmap-2026-q3.md](docs/roadmap-2026-q3.md). Release and commit cadence is defined in [docs/release-cadence.md](docs/release-cadence.md): at least one version per week and commits on at least three days each week. Maintainers can use the [weekly maintainer loop](docs/weekly-maintainer-loop.md), plus `next_actions` from `scripts/release_readiness.py --json` or `scripts/check_release_cadence.py --json`, to choose the next small verified release slice.
 
 ## Contributing
 

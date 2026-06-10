@@ -298,6 +298,8 @@ def _readme_content() -> str:
         "E_EMPTY_RESULT\n"
         "scripts/release_readiness.py\n"
         "Real Demo Case Proposal\n"
+        "weekly-maintainer-loop.md\n"
+        "next_actions\n"
         "## demo\n"
     )
 
