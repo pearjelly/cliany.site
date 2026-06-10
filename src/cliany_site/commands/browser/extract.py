@@ -30,6 +30,7 @@ from cliany_site.extract_quality import evaluate_extract_quality
     help="结构化提取模式（text/list/table/attribute），生成 adapter 使用",
 )
 @click.option("--fields-json", default=None, help="结构化字段映射 JSON，仅用于 list/table/attribute")
+@click.option("--strict-quality", is_flag=True, default=False, help="结构化提取质量为空时返回 E_EMPTY_RESULT")
 @click.option("--session", default=None, help="会话名称")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出模式")
 @click.pass_context
@@ -39,6 +40,7 @@ def extract(
     fmt: str,
     mode: str | None,
     fields_json: str | None,
+    strict_quality: bool,
     session: str | None,
     json_mode: bool | None,
 ) -> None:
@@ -50,7 +52,7 @@ def extract(
     if isinstance(fields, dict) and fields.get("ok") is False:
         print_envelope(fields, effective_json)
         ctx.exit(1)
-    result = asyncio.run(_run_extract(cdp, selector, fmt, mode, fields))
+    result = asyncio.run(_run_extract(cdp, selector, fmt, mode, fields, strict_quality=strict_quality))
     print_envelope(result, effective_json)
     if not result.get("ok"):
         ctx.exit(1)
@@ -84,6 +86,7 @@ async def _run_extract(
     fmt: str,
     mode: str | None = None,
     fields: dict | None = None,
+    strict_quality: bool = False,
 ) -> Envelope:
     if not await cdp.check_available():
         return err(
@@ -119,7 +122,16 @@ async def _run_extract(
         "fields": fields or {},
     }
     if mode:
-        payload["quality"] = evaluate_extract_quality(mode, content, fields).to_dict()
+        quality = evaluate_extract_quality(mode, content, fields).to_dict()
+        payload["quality"] = quality
+        if strict_quality and quality.get("status") == "empty":
+            return err(
+                command="browser extract",
+                code=ErrorCode.E_EMPTY_RESULT,
+                message="结构化提取结果为空",
+                details={"quality": quality, "selector": selector, "mode": mode},
+                source="builtin",
+            )
 
     return ok(command="browser extract", data=payload, source="builtin")
 
