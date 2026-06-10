@@ -24,6 +24,7 @@ RELEASE_PREFLIGHT_COMMAND = (
     '--release-tag "${{ github.ref_name }}" '
     "--report release-readiness-report.md"
 )
+PROMOTION_FIELDS = ("adapter_package", "metadata_validation", "online_smoke")
 
 
 @dataclass(frozen=True)
@@ -571,6 +572,21 @@ def _next_action_lines(report: ReadinessReport) -> list[str]:
     return lines
 
 
+def _markdown_cell(value: Any) -> str:
+    return str(value or "-").replace("|", "\\|").replace("\n", "<br>")
+
+
+def _candidate_promotion_rows(report: ReadinessReport) -> list[str]:
+    rows: list[str] = []
+    for case in report.cases.cases:
+        if case.status != "candidate" or case.promotion is None:
+            continue
+        cells = [_markdown_cell(case.id)]
+        cells.extend(_markdown_cell(case.promotion.get(field_name)) for field_name in PROMOTION_FIELDS)
+        rows.append(f"| `{cells[0]}` | {cells[1]} | {cells[2]} | {cells[3]} |")
+    return rows
+
+
 def _render_markdown_report(report: ReadinessReport) -> str:
     blockers = "<br>".join(report.blockers) if report.blockers else "-"
     commit_days = ", ".join(report.cadence.commit_days) if report.cadence.commit_days else "-"
@@ -623,6 +639,18 @@ def _render_markdown_report(report: ReadinessReport) -> str:
                 "## Gate Issues",
                 "",
                 *issue_lines,
+            ]
+        )
+    candidate_rows = _candidate_promotion_rows(report)
+    if candidate_rows:
+        lines.extend(
+            [
+                "",
+                "## Candidate Promotions",
+                "",
+                "| Case | Adapter Package | Metadata Validation | Online Smoke |",
+                "|------|-----------------|---------------------|--------------|",
+                *candidate_rows,
             ]
         )
     next_actions = _next_action_lines(report)

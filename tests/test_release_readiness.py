@@ -487,6 +487,65 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "## Next Actions" not in text
 
 
+def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    metadata_validation = "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
+    cases = json.loads((repo / "cases" / "manifest.json").read_text(encoding="utf-8"))
+    cases.append(
+        {
+            "id": "candidate-case",
+            "title": "Candidate case",
+            "category": "demo",
+            "status": "candidate",
+            "target_url": "https://demo.example.com/search",
+            "adapter_domain": "demo.example.com",
+            "source_release": None,
+            "docs": "README.md#demo",
+            "example_output": "cases/examples/candidate-case.json",
+            "commands": ["cliany-site demo.example.com search-items --query demo --json"],
+            "validation": {
+                "offline": "candidate metadata validates",
+                "online": "read-only search returns rows",
+            },
+            "promotion": {
+                "adapter_package": "publish demo.example.com.cliany-adapter-v0.1.1.tar.gz",
+                "metadata_validation": metadata_validation,
+                "online_smoke": "cliany-site demo.example.com search-items --query demo --json",
+            },
+        }
+    )
+    (repo / "cases" / "manifest.json").write_text(json.dumps(cases), encoding="utf-8")
+    (repo / "cases" / "examples" / "candidate-case.json").write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "data": {
+                    "command": "search-items",
+                    "results": [{"ok": True, "data": {"items": [{"name": "Candidate"}]}}],
+                },
+                "error": None,
+                "meta": {
+                    "source": "case-example",
+                    "case_id": "candidate-case",
+                    "sample": True,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report_path = tmp_path / "reports" / "release-readiness.md"
+
+    release_readiness._write_markdown_report(report, report_path)
+
+    text = report_path.read_text(encoding="utf-8")
+    assert "## Candidate Promotions" in text
+    assert "| `candidate-case` |" in text
+    assert "publish demo.example.com.cliany-adapter-v0.1.1.tar.gz" in text
+    assert metadata_validation in text
+    assert "cliany-site demo.example.com search-items --query demo --json" in text
+
+
 def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, capsys):
     repo = _init_repo(tmp_path, with_draft=True)
     _commit(repo, "notes/tuesday.md", "tuesday", "2026-06-09")
