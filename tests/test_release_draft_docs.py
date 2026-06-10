@@ -31,7 +31,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "verify --json",
         "scripts/validate_cases.py",
         "Case Catalog Validation",
-        "python scripts/check_release_cadence.py --strict",
+        "python scripts/release_readiness.py --strict",
         "git tag v0.14.4",
     ]
     for snippet in required:

@@ -38,6 +38,7 @@
 - [ ] `pyproject.toml` 版本号与 tag 一致。
 - [ ] README/README.zh/官网中受影响的版本文案同步。
 - [ ] 运行离线默认检查：`CLIANY_QA_OFFLINE=1 pytest tests/ -q`。
+- [ ] 运行统一发版门禁：`python scripts/release_readiness.py --strict`。
 - [ ] 运行真实案例库离线验收：`python scripts/validate_cases.py --strict`。
 - [ ] 对 CLI 或 adapter 行为有影响时，运行相关 `qa/*.sh` 脚本。
 - [ ] 对官网有影响时，按 `AGENTS.md` 的 Vercel 步骤部署 `site/`。
@@ -48,6 +49,10 @@
 ## 推荐命令
 
 ```bash
+# 汇总检查下一版是否可发布（默认只报告，不失败）
+python scripts/release_readiness.py
+python scripts/release_readiness.py --json
+
 # 汇总检查发布节奏（默认只报告，不失败）
 python scripts/check_release_cadence.py
 python scripts/check_release_cadence.py --json
@@ -57,7 +62,7 @@ python scripts/validate_cases.py
 python scripts/validate_cases.py --json
 
 # 严格检查：不满足时 exit 1，适合发版前本地门禁
-python scripts/check_release_cadence.py --strict
+python scripts/release_readiness.py --strict
 python scripts/validate_cases.py --strict
 
 # 查看本周提交天数
@@ -76,6 +81,8 @@ uv build
 git tag v0.15.0
 git push origin master --tags
 ```
+
+`release_readiness.py` 是发版前总入口，会同时检查下一版草案、每周提交/版本 tag 节奏、`CHANGELOG.md` Unreleased 状态、工作区清洁度和真实案例库离线验收。默认模式用于观察，`--strict` 用于发版前拦截。
 
 `check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、`CHANGELOG.md` Unreleased 是否有内容，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截。
 
