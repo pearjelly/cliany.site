@@ -88,9 +88,9 @@ git tag v0.15.0
 git push origin master --tags
 ```
 
-`release_readiness.py` 是发版前总入口，会同时检查下一版草案、每周提交/版本 tag 节奏、`CHANGELOG.md` Unreleased 状态与 compare 链接、工作区清洁度、真实案例库离线验收、默认 CI release gates、tag 发布 workflow、PyPI 项目元数据和开源社区入口文件。默认模式用于观察，`--strict` 用于发版前拦截，`--report` 可生成 Markdown readiness 摘要供发版复盘引用；正式发版前加上 `--packages-dir ~/.cliany-site/packages --require-packages`，确保 demo adapter release assets 也完成离线校验。
+`release_readiness.py` 是发版前总入口，会同时检查下一版草案、每周提交/版本 tag 节奏、`CHANGELOG.md` Unreleased 状态与 compare 链接、工作区清洁度、真实案例库离线验收、默认 CI release gates、tag 发布 workflow、PyPI 项目元数据和开源社区入口文件。默认模式用于观察，`--strict` 用于发版前拦截，`--report` 可生成 Markdown readiness 摘要供发版复盘引用；正式发版前加上 `--packages-dir ~/.cliany-site/packages --require-packages`，确保 demo adapter release assets 也完成离线校验。报告中的 `Gate Issues` 小节是维护者排障入口：先修具体 gate 失败原因，再重新运行 `python scripts/release_readiness.py --strict`，不要只根据顶层 blocker 文案判断是否可以发版。
 
-CI 的 `Release Readiness Report` job 会在 PR/主分支生成 `release-readiness-report` artifact。该 job 不使用 `--strict`，用于持续观察下一版距离发版还差什么；真正发版仍以本地 `python scripts/release_readiness.py --strict` 为准。
+CI 的 `Release Readiness Report` job 会在 PR/主分支生成 `release-readiness-report` artifact。该 job 不使用 `--strict`，用于持续观察下一版距离发版还差什么；真正发版仍以本地 `python scripts/release_readiness.py --strict` 为准。维护者查看 artifact 时，优先读取 `Gate Issues`，将其中的 `cadence`、`cases/*`、`draft`、`ci`、`release_workflow`、`project_metadata` 或 `package_gate` 项逐条关闭。
 
 `.github/workflows/release.yml` 的 tag 发布流程还会在构建前运行 `Release Preflight`，执行 `python scripts/release_readiness.py --strict --release-tag "${{ github.ref_name }}" --report release-readiness-report.md`。`--release-tag` 用于校验“当前 tag 正在发布”的状态，避免把已 bump 的版本误判成下一版；正式 tag 发布会再次拦截版本号、CHANGELOG、发布草案、CI gate、release workflow 和工作区状态问题。
 
