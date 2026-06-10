@@ -82,7 +82,7 @@ git tag v0.15.0
 git push origin master --tags
 ```
 
-`release_readiness.py` 是发版前总入口，会同时检查下一版草案、每周提交/版本 tag 节奏、`CHANGELOG.md` Unreleased 状态、工作区清洁度和真实案例库离线验收。默认模式用于观察，`--strict` 用于发版前拦截。
+`release_readiness.py` 是发版前总入口，会同时检查下一版草案、每周提交/版本 tag 节奏、`CHANGELOG.md` Unreleased 状态、工作区清洁度、真实案例库离线验收和默认 CI release gates。默认模式用于观察，`--strict` 用于发版前拦截。
 
 `check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、`CHANGELOG.md` Unreleased 是否有内容，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截。
 

@@ -37,6 +37,20 @@ class DraftReport:
 
 
 @dataclass(frozen=True)
+class CiReport:
+    ok: bool
+    path: str
+    issues: list[str]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "ok": self.ok,
+            "path": self.path,
+            "issues": self.issues,
+        }
+
+
+@dataclass(frozen=True)
 class ReadinessReport:
     ok: bool
     current_version: str
@@ -45,6 +59,7 @@ class ReadinessReport:
     cadence: CadenceReport
     cases: CasesReport
     draft: DraftReport
+    ci: CiReport
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -55,6 +70,7 @@ class ReadinessReport:
             "cadence": self.cadence.to_dict(),
             "cases": self.cases.to_dict(),
             "draft": self.draft.to_dict(),
+            "ci": self.ci.to_dict(),
         }
 
 
@@ -100,6 +116,35 @@ def _build_draft_report(root: Path, current_version: str, target_version: str) -
     return DraftReport(ok=not issues, path=str(path), target_version=target_version, issues=issues)
 
 
+def _build_ci_report(root: Path) -> CiReport:
+    path = root / ".github" / "workflows" / "ci.yml"
+    issues: list[str] = []
+    if not path.exists():
+        issues.append("CI workflow is missing")
+        return CiReport(ok=False, path=str(path), issues=issues)
+
+    text = path.read_text(encoding="utf-8")
+    required_snippets = [
+        "case-catalog:",
+        "Case Catalog Validation",
+        "python scripts/validate_cases.py --strict",
+        "pytest tests/test_validate_cases.py tests/test_cases_manifest.py -q --no-cov",
+        "extract-quality:",
+        "Extract Quality Regression",
+        "CLIANY_QA_OFFLINE",
+        "tests/test_extract_quality.py",
+        "tests/test_extract_writer_quality.py",
+        "tests/test_runtime_helpers_extract_quality.py",
+        "tests/test_browser_part_c.py",
+        "tests/test_generated_orchestration.py",
+    ]
+    for snippet in required_snippets:
+        if snippet not in text:
+            issues.append(f"CI workflow missing snippet: {snippet}")
+
+    return CiReport(ok=not issues, path=str(path), issues=issues)
+
+
 def _cadence_blockers(report: CadenceReport) -> list[str]:
     blockers: list[str] = []
     if report.commit_day_count < report.min_commit_days:
@@ -126,12 +171,15 @@ def build_report(
     cadence = build_cadence_report(root, today=today or date.today(), min_commit_days=min_commit_days)
     cases = build_cases_report(root, packages_dir=packages_dir)
     draft = _build_draft_report(root, current_version, expected_target)
+    ci = _build_ci_report(root)
 
     blockers = _cadence_blockers(cadence)
     if not cases.ok:
         blockers.append("case catalog validation failed")
     if not draft.ok:
         blockers.append("release draft validation failed")
+    if not ci.ok:
+        blockers.append("CI release gates validation failed")
 
     return ReadinessReport(
         ok=not blockers,
@@ -141,6 +189,7 @@ def build_report(
         cadence=cadence,
         cases=cases,
         draft=draft,
+        ci=ci,
     )
 
 
@@ -156,6 +205,7 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"cadence: {report.cadence.ok}")
     print(f"cases: {report.cases.ok}")
     print(f"draft: {report.draft.ok}")
+    print(f"ci: {report.ci.ok}")
 
 
 def main(argv: list[str] | None = None) -> int:

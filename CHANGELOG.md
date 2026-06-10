@@ -15,6 +15,7 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
+- `scripts/release_readiness.py` 新增 CI release gate 检查，发布前会确认案例库和抽取质量回归 job 仍在默认 CI 中。
 - CI 新增 `Extract Quality Regression` job，在零真实 LLM key 环境中显式运行抽取质量、结构化 `browser extract` 和生成数据命令回归。
 - 生成 adapter 的 JSON 输出新增 `data.quality` 汇总，并修复 extract 步骤调用 `browser extract --mode` 时内置命令不识别该参数的问题。
 - `browser extract --mode ... --json` 在结构化提取时新增 `data.quality`，便于手动调试 list/table/attribute 结果是否为空或字段缺失。
