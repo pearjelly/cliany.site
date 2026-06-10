@@ -361,6 +361,13 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
         for command in commands:
             if not str(command).startswith("cliany-site "):
                 check.issues.append(f"command must start with cliany-site: {command}")
+        promotion = case.get("promotion")
+        if not isinstance(promotion, dict):
+            check.issues.append("candidate case requires promotion checklist")
+        else:
+            for field_name in ("adapter_package", "metadata_validation", "online_smoke"):
+                if not promotion.get(field_name):
+                    check.issues.append(f"candidate promotion.{field_name} is required")
 
     if packages_dir is not None and status == "active":
         package_name = _install_package_name(case)

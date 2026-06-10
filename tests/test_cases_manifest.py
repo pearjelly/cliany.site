@@ -37,6 +37,9 @@ def test_cases_manifest_entries_are_actionable():
         if case["status"] == "candidate":
             assert case["commands"]
             assert all(command.startswith("cliany-site ") for command in case["commands"])
+            assert case["promotion"]["adapter_package"]
+            assert case["promotion"]["metadata_validation"]
+            assert case["promotion"]["online_smoke"]
 
 
 def test_cases_manifest_docs_links_exist_locally():

@@ -27,7 +27,13 @@
 
 ## Candidate Cases
 
-`candidate` 表示真实公开只读工作流已经进入案例管道，但尚未承诺已有 release adapter 包。候选案例必须有期望命令和离线样例输出；当 adapter 包、metadata 校验和在线只读 smoke 都准备好后，再改为 `active`。
+`candidate` 表示真实公开只读工作流已经进入案例管道，但尚未承诺已有 release adapter 包。候选案例必须有期望命令、离线样例输出和 `promotion` 清单；当 adapter 包、metadata 校验和在线只读 smoke 都准备好后，再改为 `active`。
+
+`promotion` 至少包含：
+
+- `adapter_package`：要生成或发布的 adapter 包资产。
+- `metadata_validation`：包资产准备好后要运行的离线 metadata 校验。
+- `online_smoke`：晋级前需要手动确认的公开只读 smoke 命令或结果。
 
 ## 维护规则
 
