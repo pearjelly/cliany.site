@@ -138,9 +138,25 @@ jobs:
   ci:
     uses: ./.github/workflows/ci.yml
 
+  release-preflight:
+    name: Release Preflight
+    needs: ci
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: |
+          python scripts/release_readiness.py --strict --report release-readiness-report.md
+        env:
+          CLIANY_QA_OFFLINE: "1"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-readiness-report
+          path: release-readiness-report.md
+
   build:
     name: Build Distribution
-    needs: ci
+    needs: [ci, release-preflight]
     steps:
       - run: uv build
       - uses: actions/upload-artifact@v4
@@ -397,6 +413,21 @@ def test_release_readiness_blocks_missing_release_workflow_pypi_publish(tmp_path
     assert "release workflow validation failed" in report.blockers
     assert report.release_workflow.ok is False
     assert any("pypa/gh-action-pypi-publish@release/v1" in issue for issue in report.release_workflow.issues)
+
+
+def test_release_readiness_blocks_release_workflow_without_strict_preflight(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    release_workflow = _release_workflow().replace(
+        "python scripts/release_readiness.py --strict --report release-readiness-report.md",
+        "python scripts/release_readiness.py --json --report release-readiness-report.md",
+    )
+    (repo / ".github" / "workflows" / "release.yml").write_text(release_workflow, encoding="utf-8")
+
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "release workflow validation failed" in report.blockers
+    assert any("--strict --report release-readiness-report.md" in issue for issue in report.release_workflow.issues)
 
 
 def test_release_readiness_blocks_when_required_package_check_not_run(tmp_path):
