@@ -157,6 +157,7 @@ def _build_ci_report(root: Path) -> CiReport:
         "tests/test_runtime_helpers_extract_quality.py",
         "tests/test_browser_part_c.py",
         "tests/test_generated_orchestration.py",
+        "tests/test_search_extraction_gap_fixture.py",
     ]
     for snippet in required_snippets:
         if snippet not in text:

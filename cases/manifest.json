@@ -83,9 +83,8 @@
     "docs": "cases/cliany-site-case-review.md",
     "commands": [],
     "validation": {
-      "offline": "case review documents the task-level mismatch between click success and extraction success",
+      "offline": "case review plus tests/fixtures/search_extraction_gap.html reproduce partial extraction quality without network access",
       "online": null
     }
   }
 ]
-

@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Added
+- 新增 `tests/fixtures/search_extraction_gap.html` 和离线回归测试，用最小 HTML 页面固定搜索结果抽取字段缺失应判为 `partial` 的 known-gap 语义。
 - 新增 `docs/adapter-lifecycle.md`，固化 adapter 从生成、验证、打包、安装到回滚的生命周期，以及 `.cliany-adapter.tar.gz` 包格式和安全边界。
 - 新增 `scripts/validate_cases.py`，为 `cases/manifest.json` 提供离线验收报告，并可选检查本地 demo adapter 包 manifest、声明文件哈希和 metadata schema v3 是否与案例声明匹配。
 - 新增 `scripts/release_readiness.py`，聚合发布节奏、真实案例库和下一版发布草案检查，作为发版前统一本地门禁。

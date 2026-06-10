@@ -5,6 +5,7 @@
 ## 文件列表
 
 - `metadata.v2.sample.json`：符合 metadata schema v2 的最小合法样本，用于 test_metadata.py
+- `search_extraction_gap.html`：搜索结果抽取 known-gap 的最小 HTML 复现，用于固定 partial 字段缺失质量判断
 
 ## 约定
 

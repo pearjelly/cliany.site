@@ -37,7 +37,7 @@ pytest tests/test_cases_manifest.py tests/test_release_cadence.py -q --no-cov
 | doctor 提示 | 补充某个 check 的 action 文案或测试 | `src/cliany_site/commands/doctor.py`, `tests/test_doctor_v3.py` | `pytest tests/test_doctor_v3.py -q --no-cov` |
 | 发布节奏 | 改进本地 cadence 检查或 release checklist | `scripts/check_release_cadence.py`, `docs/release-cadence.md` | `pytest tests/test_release_cadence.py -q --no-cov` |
 | 错误语义 | 为已有错误码补测试或提示，不改 contract | `src/cliany_site/envelope.py`, `src/cliany_site/errors.py`, `tests/test_error_uniformity.py` | 相关单测 + `ruff check` |
-| 抽取质量 | 补充 list/table/attribute 的空结果、字段缺失和 Markdown/JSON 报告回归 | `src/cliany_site/extract_quality.py`, `src/cliany_site/commands/browser/extract.py`, `tests/test_extract_quality.py` | `pytest tests/test_extract_quality.py tests/test_extract_writer_quality.py tests/test_runtime_helpers_extract_quality.py tests/test_browser_part_c.py -q --no-cov` |
+| 抽取质量 | 补充 list/table/attribute 的空结果、字段缺失和 Markdown/JSON 报告回归 | `src/cliany_site/extract_quality.py`, `src/cliany_site/commands/browser/extract.py`, `tests/test_extract_quality.py` | `pytest tests/test_extract_quality.py tests/test_extract_writer_quality.py tests/test_runtime_helpers_extract_quality.py tests/test_browser_part_c.py tests/test_search_extraction_gap_fixture.py -q --no-cov` |
 | 静态校验 | 扩展 schema/metadata/manifest 的离线校验 | `src/cliany_site/metadata.py`, `schemas/`, `tests/test_metadata.py` | 相关单测 |
 
 不建议第一次贡献就做：
@@ -84,7 +84,7 @@ pytest tests/test_cases_manifest.py tests/test_release_cadence.py -q --no-cov
 | 发布脚本 | `pytest tests/test_release_cadence.py -q --no-cov` 和 `bash -n scripts/publish.sh` |
 | doctor/CLI | doctor 相关单测 + `ruff check src/cliany_site/commands/doctor.py` |
 | codegen/loader/action_runtime | 相关单测 + `CLIANY_QA_OFFLINE=1 pytest tests/ -q --no-cov` |
-| 抽取质量 / 数据命令 | `pytest tests/test_extract_quality.py tests/test_extract_writer_quality.py tests/test_runtime_helpers_extract_quality.py tests/test_browser_part_c.py tests/test_generated_orchestration.py -q --no-cov` |
+| 抽取质量 / 数据命令 | `pytest tests/test_extract_quality.py tests/test_extract_writer_quality.py tests/test_runtime_helpers_extract_quality.py tests/test_browser_part_c.py tests/test_generated_orchestration.py tests/test_search_extraction_gap_fixture.py -q --no-cov` |
 | 浏览器具身路径 | 默认单测先过，再按需跑 `tests/embodied/` 或 `qa/*.sh` |
 
 ## 贡献边界

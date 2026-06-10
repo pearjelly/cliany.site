@@ -39,7 +39,10 @@
 python scripts/validate_cases.py
 python scripts/validate_cases.py --json
 python scripts/validate_cases.py --strict
+pytest tests/test_search_extraction_gap_fixture.py -q --no-cov
 ```
+
+`search-extraction-gap` 的最小复现页面固定在 [tests/fixtures/search_extraction_gap.html](../tests/fixtures/search_extraction_gap.html)，用于离线验证搜索结果列表中链接或摘要缺失时应被判为 `partial` 质量问题。
 
 如果本地有从 GitHub Release 下载的 demo adapter 包，可以额外检查 active 案例声明的安装包是否存在、tarball 是否安全可读、`manifest.json` 是否与 `adapter_domain` 匹配、声明文件哈希是否一致，以及 `metadata.json` 是否为 schema v3：
 
@@ -52,4 +55,4 @@ python scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --req
 
 - 在正式发版前，把 GitHub Release 候选 demo adapter 包下载到 `~/.cliany-site/packages`，再运行 `scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --require-packages --strict`。
 - 在 release notes 中链接案例库，说明每个版本新增或修复了哪些真实场景。
-- 将 `search-extraction-gap` 拆成抽取能力设计任务：列表检测、字段映射、任务级验收。当前已先在保存的抽取 Markdown 报告和生成 adapter 的 JSON 输出中标记空结果、全空字段和部分缺字段，并让 `browser extract --strict-quality` 与生成的 `list-` / `search-` 数据命令都能把空结果或字段缺失判为 `E_EMPTY_RESULT`；后续继续沉淀最小可复现页面 fixture。
+- 将 `search-extraction-gap` 继续拆成更细的抽取能力设计任务：列表检测、字段映射、任务级验收。当前已用最小 HTML fixture 固定 partial 字段缺失语义，并让 `browser extract --strict-quality` 与生成的 `list-` / `search-` 数据命令都能把空结果或字段缺失判为 `E_EMPTY_RESULT`。

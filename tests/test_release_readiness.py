@@ -91,6 +91,7 @@ jobs:
             tests/test_runtime_helpers_extract_quality.py \
             tests/test_browser_part_c.py \
             tests/test_generated_orchestration.py \
+            tests/test_search_extraction_gap_fixture.py \
             -q --no-cov
         env:
           CLIANY_QA_OFFLINE: "1"
