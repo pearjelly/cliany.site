@@ -47,6 +47,13 @@
 ## 推荐命令
 
 ```bash
+# 汇总检查发布节奏（默认只报告，不失败）
+python scripts/check_release_cadence.py
+python scripts/check_release_cadence.py --json
+
+# 严格检查：不满足时 exit 1，适合发版前本地门禁
+python scripts/check_release_cadence.py --strict
+
 # 查看本周提交天数
 git log --since='monday' --date=short --pretty=format:'%ad' | sort -u
 
@@ -63,6 +70,8 @@ uv build
 git tag v0.15.0
 git push origin master --tags
 ```
+
+`check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、`CHANGELOG.md` Unreleased 是否有内容，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截。
 
 ## 提交规则
 
@@ -106,4 +115,3 @@ chore(release): bump version to 0.15.0
 - 如果 CI 失败，不发正式版本；可以提交修复直到 release gate 通过。
 - 如果上游 demo 站点不可用，把案例标记为 degraded，不静默删除。
 - 如果用户反馈暴露高风险 bug，优先 patch，再回到当周计划。
-

@@ -13,6 +13,7 @@
 - 新增 `cases/manifest.json` 与 `cases/README.md`，把 v0.14 真实 demo 和搜索抽取短板复盘沉淀为可维护案例库，并新增离线结构校验测试。
 - 新增 `docs/quickstart-10min.md`，提供不依赖 LLM key 的 demo adapter 首次成功路径，以及生成自定义 adapter 的后续路径。
 - `doctor --json` 新增 `data.summary` 分层行动建议，并为每个 check 补充 `severity` 与 `action` 字段，帮助新用户区分必须修复、建议优化和诊断信息。
+- 新增 `scripts/check_release_cadence.py`，本地检查版本 tag、本周提交天数、CHANGELOG Unreleased 和工作区状态；`scripts/publish.sh` 改为优先使用 `PYPI_TOKEN` 环境变量。
 
 ## [0.14.2] - 2026-06-10
 
