@@ -711,3 +711,25 @@ class TestMarketCLI:
         data = json.loads(result.output)
         assert data["success"] is True
         assert data["data"]["backups"] == []
+
+    def test_install_bad_hash_returns_actionable_fix(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        pack_path = _make_tarball(tmp_path / "packs", "cli-bad.com", bad_hash=True)
+
+        result = self._invoke(["install", str(pack_path), "--json"], cfg)
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["success"] is False
+        assert data["error"]["code"] == "INSTALL_FAILED"
+        assert "manifest.file_hashes" in data["error"]["fix"]
+
+    def test_install_duplicate_returns_force_hint(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        _create_adapter(cfg.adapters_dir, "cli-dup.com")
+        pack_path = _make_tarball(tmp_path / "packs", "cli-dup.com")
+
+        result = self._invoke(["install", str(pack_path), "--json"], cfg)
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["error"]["code"] == "INSTALL_FAILED"
+        assert "--force" in data["error"]["fix"]

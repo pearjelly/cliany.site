@@ -109,6 +109,18 @@ adapter 分发包后缀为 `.cliany-adapter.tar.gz`，由 `src/cliany_site/marke
 - adapter 动作回放必须基于 AXTree 语义信息和 `selector_map` 做模糊匹配，不能新增脆弱 CSS selector 兜底。
 - 分发包不应包含真实账号 cookies、API key、私有截图或业务数据。
 
+## 安装故障排查
+
+`market install --json` 失败时会返回 `INSTALL_FAILED`，并在 `error.fix` 中给出下一步建议：
+
+| 失败信息 | 典型原因 | 修复路径 |
+|----------|----------|----------|
+| `adapter '<domain>' 已安装` | 目标环境已有同域 adapter | 确认版本后加 `--force` 覆盖，或先 `cliany-site market uninstall <domain>` |
+| `文件校验失败` | 包内容与 `manifest.file_hashes` 不一致 | 重新下载包，或在来源环境重新运行 `cliany-site market publish <domain>` |
+| `缺少声明文件` / `缺少文件哈希` | `manifest.files` 与 `file_hashes` 不完整 | 使用 `market publish` 重新打包，不要手工拼 tarball |
+| `未声明文件` | tarball 中夹带了 manifest 未列出的文件 | 移除额外文件后重新打包，确认不会分发私密数据 |
+| `不安全路径` | tarball 包含绝对路径或 `..` 路径穿越 | 丢弃该包，从可信来源重新获取 |
+
 ## 维护流程
 
 一次高质量 adapter 更新建议按这个顺序提交：

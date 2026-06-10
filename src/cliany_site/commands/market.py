@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import click
 
-from cliany_site.errors import ADAPTER_NOT_FOUND, EXECUTION_FAILED
+from cliany_site.errors import ADAPTER_NOT_FOUND, ERROR_FIX_HINTS, EXECUTION_FAILED, INSTALL_FAILED
 from cliany_site.marketplace import (
     get_adapter_info,
     install_adapter,
@@ -12,6 +12,24 @@ from cliany_site.marketplace import (
     uninstall_adapter,
 )
 from cliany_site.response import error_response, print_response, success_response
+
+
+def _install_fix_hint(message: str) -> str:
+    if "已安装" in message:
+        return "使用 --force 覆盖安装，或先运行 cliany-site market uninstall <domain> 卸载旧版本。"
+    if "不安全路径" in message:
+        return "安装包包含路径穿越风险，请从可信来源重新获取，或用 cliany-site market publish <domain> 重新打包。"
+    if "文件校验失败" in message:
+        return (
+            "安装包内容与 manifest.file_hashes 不一致，请重新下载包，"
+            "或在来源环境重新运行 cliany-site market publish <domain>。"
+        )
+    if "manifest.json" in message or "声明文件" in message or "文件哈希" in message or "未声明文件" in message:
+        return (
+            "请用 cliany-site market publish <domain> 重新打包，"
+            "确保 manifest.files 与 file_hashes 覆盖所有载荷文件。"
+        )
+    return ERROR_FIX_HINTS[INSTALL_FAILED]
 
 
 @click.group("market", help="适配器市场：打包/安装/卸载/回滚")
@@ -55,9 +73,9 @@ def install_cmd(ctx: click.Context, pack_path: str, force: bool, json_mode: bool
         manifest = install_adapter(pack_path, force=force)
         resp = success_response(manifest.to_dict())
     except (FileNotFoundError, FileExistsError, ValueError) as exc:
-        resp = error_response(EXECUTION_FAILED, str(exc))
+        resp = error_response(INSTALL_FAILED, str(exc), _install_fix_hint(str(exc)))
     except OSError as exc:
-        resp = error_response(EXECUTION_FAILED, str(exc))
+        resp = error_response(INSTALL_FAILED, str(exc), ERROR_FIX_HINTS[INSTALL_FAILED])
 
     print_response(resp, json_mode=jm)
 

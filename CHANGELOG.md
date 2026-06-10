@@ -13,6 +13,7 @@
 ### Changed
 - 官网 Quick Start 同步 v0.14.3 首次成功路径：先运行 `doctor` 摘要和真实 demo adapter，再配置 LLM 生成自定义命令。
 - `market install` 收紧包内容校验：拒绝缺失声明文件、缺失哈希和未声明额外文件，并在覆盖安装前先完成完整校验，避免坏包产生无意义备份。
+- `market install --json` 对安装失败返回 `INSTALL_FAILED` 和针对性 `error.fix`，覆盖重复安装、哈希不匹配、manifest 缺失字段、未声明文件与不安全路径场景。
 
 ## [0.14.3] - 2026-06-10
 

@@ -13,6 +13,7 @@ def test_adapter_lifecycle_doc_has_required_sections():
         "## 包格式",
         "## 兼容性矩阵",
         "## 安全边界",
+        "## 安装故障排查",
         "## 维护流程",
         "## 贡献入口",
     ]
@@ -31,6 +32,8 @@ def test_adapter_lifecycle_doc_pins_package_contract():
         "metadata.json",
         "manifest.json",
         "file_hashes",
+        "INSTALL_FAILED",
+        "error.fix",
         "cliany-site market publish",
         "cliany-site market install",
         "cliany-site market rollback",
