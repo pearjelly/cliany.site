@@ -59,6 +59,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "next_actions",
         "missing_commit_days",
         "release_readiness.py --json",
+        "market publish` 包名",
         "python scripts/release_readiness.py --strict",
         "git tag v0.14.4",
     ]

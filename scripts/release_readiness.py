@@ -323,6 +323,7 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "docs/good-first-issues.md",
             "weekly-maintainer-loop.md",
             "next_actions",
+            "github.com-1.0.0.cliany-adapter.tar.gz",
         ],
         "README.zh.md": [
             "10 分钟成功路径",
@@ -334,6 +335,7 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "docs/good-first-issues.md",
             "weekly-maintainer-loop.md",
             "next_actions",
+            "github.com-1.0.0.cliany-adapter.tar.gz",
         ],
         "docs/contributor-starter.md": [
             "good-first-issues.md",
