@@ -7,6 +7,17 @@
 
 ## [Unreleased]
 
+## [0.14.2] - 2026-06-10
+
+### Added
+- **自主改进闭环基础设施**：新增 5 个维度的自主改进脚手架，使 OpenCode 可触发自主演进循环。
+  - **维度1 确定性回归**：`tests/benchmarks/` 基线数据集（2 场景）+ `_parse_llm_response` / `_sanitize_actions_data` / `AdapterGenerator.generate` 三层回归测试 + 哨兵有效性闭环验证，零真实 LLM。
+  - **维度2 运行时反馈**：扩展 `bug_report.yml` 新增 5 个结构化字段（target_url / error_code / axtree_snapshot / cliany_version / doctor_output）+ `auto-reproduce` label 触发的复现 workflow。
+  - **维度3 具身浏览器验证**：`tests/embodied/` headless Chromium + CDPConnection + AXTree 集成测试，配套独立 `embodied-ci.yml` CI job。
+  - **维度4 依赖哨兵**：`.github/dependabot.yml`（pip + github-actions，weekly）+ `dep-upgrade-verify.yml` 依赖升级验证 workflow。
+  - **维度5 Agent 守则**：根 `AGENTS.md` 与包级 `src/cliany_site/AGENTS.md` 新增「AUTONOMOUS IMPROVEMENT GUARDRAILS」章节 + `.github/AUTONOMOUS_FIX.md` 自主修复协议总文档。
+- **benchmark 回归并入 PR 门禁**：`ci.yml` 新增 `benchmark-regression` job（零密钥，`CLIANY_QA_OFFLINE=1`，`timeout-minutes: 10`）。
+
 ## [0.14.1] - 2026-05-28
 
 ### Added
