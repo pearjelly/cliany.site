@@ -11,6 +11,7 @@ from cliany_site.commands.browser import browser_group
 from cliany_site.commands.browser._common import print_envelope
 from cliany_site.envelope import Envelope, ErrorCode, err, ok
 from cliany_site.extract import build_extract_js
+from cliany_site.extract_quality import evaluate_extract_quality
 
 
 @browser_group.command("extract")
@@ -110,17 +111,17 @@ async def _run_extract(
             source="builtin",
         )
 
-    return ok(
-        command="browser extract",
-        data={
-            "content": content,
-            "format": fmt,
-            "selector": selector,
-            "mode": mode,
-            "fields": fields or {},
-        },
-        source="builtin",
-    )
+    payload = {
+        "content": content,
+        "format": fmt,
+        "selector": selector,
+        "mode": mode,
+        "fields": fields or {},
+    }
+    if mode:
+        payload["quality"] = evaluate_extract_quality(mode, content, fields).to_dict()
+
+    return ok(command="browser extract", data=payload, source="builtin")
 
 
 async def _do_structured_extract(

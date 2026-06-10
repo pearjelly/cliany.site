@@ -126,6 +126,44 @@ class TestBrowserExtract:
             assert data["data"]["content"] == [{"title": "cliany-site", "url": "https://example.com"}]
             assert data["data"]["mode"] == "list"
             assert data["data"]["fields"] == {"title": "h3", "url": "a@href"}
+            assert data["data"]["quality"]["status"] == "ok"
+            assert data["data"]["quality"]["row_count"] == 1
+
+    def test_structured_extract_reports_empty_quality(self, no_llm, runner):
+        mock_page = MagicMock()
+        mock_page.evaluate = AsyncMock(return_value=[{"title": "", "url": ""}])
+        mock_session = MagicMock()
+        mock_session.get_current_page = AsyncMock(return_value=mock_page)
+        with (
+            patch(
+                "cliany_site.browser.cdp.CDPConnection.check_available",
+                AsyncMock(return_value=True),
+            ),
+            patch(
+                "cliany_site.browser.cdp.CDPConnection.connect",
+                AsyncMock(return_value=mock_session),
+            ),
+            patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+        ):
+            result = runner.invoke(
+                cli,
+                [
+                    "browser",
+                    "extract",
+                    "--selector",
+                    ".result",
+                    "--mode",
+                    "list",
+                    "--fields-json",
+                    '{"title": "h3", "url": "a@href"}',
+                    "--json",
+                ],
+            )
+            assert result.exit_code == 0, result.output
+            data = json.loads(result.output)
+            assert data["ok"] is True
+            assert data["data"]["quality"]["status"] == "empty"
+            assert "all rows are blank" in data["data"]["quality"]["issues"]
 
 
 class TestBrowserEval:
