@@ -129,6 +129,7 @@ class ReadinessReport:
             "release_workflow": self.release_workflow.to_dict(),
             "project_metadata": self.project_metadata.to_dict(),
             "package_gate": self.package_gate.to_dict(),
+            "next_actions": _next_action_lines(self),
         }
 
 

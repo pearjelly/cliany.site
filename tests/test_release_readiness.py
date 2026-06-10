@@ -446,6 +446,22 @@ def test_release_readiness_passes_for_minimal_ready_repo(tmp_path):
     assert report.package_gate.ok is True
     assert report.package_gate.required is False
     assert report.package_gate.checked is False
+    assert report.to_dict()["next_actions"] == []
+
+
+def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+
+    payload = report.to_dict()
+    assert payload["blockers"] == ["commit days 1/3"]
+    assert payload["next_actions"] == [
+        (
+            "- Keep shipping small verified slices until weekly commit days reach `3`; "
+            "use `docs/weekly-maintainer-loop.md` to pick the next slice."
+        )
+    ]
 
 
 def test_release_readiness_writes_markdown_report(tmp_path):

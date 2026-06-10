@@ -21,6 +21,7 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
+- `release_readiness.py --json` 现在会在顶层输出 `next_actions`，方便 CI、agent 或维护脚本自动读取下一步动作。
 - `release_readiness.py` 的默认文本输出现在也会显示 `next_actions`，维护者不生成 Markdown 报告也能看到下一步动作。
 - `release_readiness.py --report` 现在会输出 `Next Actions` 小节，把提交天数、案例库、发布草案、CI、发布 workflow、项目元数据和包校验阻塞映射为维护者下一步动作。
 - `release_readiness.py` 的项目元数据 gate 现在会校验每周维护者循环文档及 roadmap/release cadence 入口，防止持续发布机制在发版前漂移。
