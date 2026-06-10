@@ -42,7 +42,7 @@
 - 如果只是提出候选场景，优先使用 GitHub 的 `Real Demo Case Proposal` issue 模板，说明目标 URL、只读工作流、期望命令、离线样例输出和验证方式。
 - 第三方站点不可用时，将 `status` 标记为 `degraded`，不要直接删除案例。
 - 每个 active 案例至少要有一个 `commands` 示例和一种 `validation` 方式。
-- 每个 active 案例必须提供 `example_output`，指向 `cases/examples/` 下的离线 JSON envelope 样例；样例只展示字段形状和典型数据，不作为第三方站点实时内容承诺。
+- 每个 active/candidate 案例必须提供 `example_output`，指向 `cases/examples/` 下的离线 JSON envelope 样例；样例必须包含 `data.quality.ok=true`、`status=ok` 和正数 `row_count`，只展示字段形状和典型数据，不作为第三方站点实时内容承诺。
 - 已知短板用 `known-gap` 记录，作为路线图输入，而不是藏在聊天记录里。
 - 案例运行产生的 adapter/session/snapshot 仍必须保存在 `~/.cliany-site/`，不能写入 repo。
 

@@ -27,6 +27,7 @@
 - 案例库 candidate 状态现在要求 `promotion` 清单，明确 adapter 包、metadata 校验和在线只读 smoke 三个晋级 active 的条件。
 - `scripts/validate_cases.py` 现在要求 candidate 案例声明 `example_output`，防止候选真实工作流缺少可离线展示的 JSON envelope 样例。
 - `scripts/validate_cases.py` 现在会校验 `example_output.data.command` 是否匹配 manifest 中声明的业务命令，避免样例输出和案例命令漂移。
+- `scripts/validate_cases.py` 现在会校验离线样例输出中的 `data.quality`，要求样例显式展示成功质量状态和正数 `row_count`。
 - `scripts/validate_cases.py` 的终端输出、JSON 和 Markdown 报告现在会展示 candidate 案例的 `promotion` 晋级清单，维护者可直接从 CI artifact 判断候选案例下一步。
 - `release_readiness.py` 的文本与 Markdown 报告现在会显示案例库 active/candidate/known-gap/total 汇总，发版复盘可直接看到候选案例管道。
 - `release_readiness.py --report` 现在会输出 `Candidate Promotions` 小节，把候选案例晋级 active 的三项动作直接带入发版 readiness artifact。

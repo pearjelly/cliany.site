@@ -34,6 +34,7 @@ def _write_cases(root: Path, cases: list[dict]) -> None:
                     "data": {
                         "command": "list-items",
                         "results": [{"ok": True, "data": {"items": [{"name": "Example"}]}}],
+                        "quality": {"ok": True, "status": "ok", "row_count": 1},
                     },
                     "error": None,
                     "meta": {
@@ -324,6 +325,93 @@ def test_cases_report_rejects_example_output_command_mismatch(tmp_path):
     assert report.ok is False
     assert "example_output.data.command must match manifest commands" in report.cases[0].issues[0]
     assert "'other-items' not in list-items" in report.cases[0].issues[0]
+
+
+def test_cases_report_rejects_example_output_without_quality(tmp_path):
+    case = _case("demo-case")
+    _write_cases(tmp_path, [case])
+    (tmp_path / case["example_output"]).write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "data": {
+                    "command": "list-items",
+                    "results": [{"ok": True, "data": {"items": [{"name": "Example"}]}}],
+                },
+                "error": None,
+                "meta": {
+                    "source": "case-example",
+                    "case_id": "demo-case",
+                    "sample": True,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert "example_output.data.quality must be an object" in report.cases[0].issues
+
+
+def test_cases_report_rejects_example_output_failed_quality(tmp_path):
+    case = _case("demo-case")
+    _write_cases(tmp_path, [case])
+    (tmp_path / case["example_output"]).write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "data": {
+                    "command": "list-items",
+                    "results": [{"ok": True, "data": {"items": [{"name": "Example"}]}}],
+                    "quality": {"ok": False, "status": "partial", "row_count": 1},
+                },
+                "error": None,
+                "meta": {
+                    "source": "case-example",
+                    "case_id": "demo-case",
+                    "sample": True,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert "example_output.data.quality.ok must be true" in report.cases[0].issues
+    assert "example_output.data.quality.status must be 'ok'" in report.cases[0].issues
+
+
+def test_cases_report_rejects_example_output_non_positive_quality_row_count(tmp_path):
+    case = _case("demo-case")
+    _write_cases(tmp_path, [case])
+    (tmp_path / case["example_output"]).write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "data": {
+                    "command": "list-items",
+                    "results": [{"ok": True, "data": {"items": [{"name": "Example"}]}}],
+                    "quality": {"ok": True, "status": "ok", "row_count": 0},
+                },
+                "error": None,
+                "meta": {
+                    "source": "case-example",
+                    "case_id": "demo-case",
+                    "sample": True,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert "example_output.data.quality.row_count must be positive" in report.cases[0].issues
 
 
 def test_cases_report_checks_optional_packages_dir(tmp_path):

@@ -232,6 +232,17 @@ def _validate_example_output(
             issues.append(
                 f"example_output.data.command must match manifest commands: {command_name!r} not in {expected}"
             )
+        quality = data.get("quality")
+        if not isinstance(quality, dict):
+            issues.append("example_output.data.quality must be an object")
+        else:
+            if quality.get("ok") is not True:
+                issues.append("example_output.data.quality.ok must be true")
+            if quality.get("status") != "ok":
+                issues.append("example_output.data.quality.status must be 'ok'")
+            row_count = quality.get("row_count")
+            if not isinstance(row_count, int) or row_count <= 0:
+                issues.append("example_output.data.quality.row_count must be positive")
 
     return issues
 

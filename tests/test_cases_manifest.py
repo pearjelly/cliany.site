@@ -60,3 +60,6 @@ def test_active_and_candidate_cases_have_local_example_outputs():
         assert payload["ok"] is True
         assert payload["meta"]["case_id"] == case["id"]
         assert payload["meta"]["sample"] is True
+        assert payload["data"]["quality"]["ok"] is True
+        assert payload["data"]["quality"]["status"] == "ok"
+        assert payload["data"]["quality"]["row_count"] > 0

@@ -39,6 +39,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "candidate",
         "candidate cases to declare `example_output`",
         "example_output.data.command",
+        "data.quality",
         "active/candidate/known-gap/total",
         "promotion",
         "candidate `promotion` checklists",
