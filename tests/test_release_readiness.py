@@ -116,6 +116,7 @@ def _cases_manifest() -> str:
                 "adapter_domain": "demo.example.com",
                 "source_release": "v0.1.0",
                 "docs": "README.md#demo",
+                "example_output": "cases/examples/demo-case.json",
                 "commands": [
                     "cliany-site market install ./demo.example.com.cliany-adapter-v0.1.0.tar.gz",
                     "cliany-site demo.example.com list-items --json",
@@ -186,13 +187,41 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
     )
     (repo / "README.md").write_text("# Demo\n\n## demo\n", encoding="utf-8")
     (repo / "cases" / "manifest.json").write_text(_cases_manifest(), encoding="utf-8")
+    (repo / "cases" / "examples").mkdir()
+    (repo / "cases" / "examples" / "demo-case.json").write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "data": {
+                    "command": "list-items",
+                    "results": [{"ok": True, "data": {"items": [{"name": "Example"}]}}],
+                },
+                "error": None,
+                "meta": {
+                    "source": "case-example",
+                    "case_id": "demo-case",
+                    "sample": True,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
     (repo / ".github" / "workflows" / "ci.yml").write_text(_ci_workflow(), encoding="utf-8")
     if with_draft:
         (repo / "docs" / "releases" / "v0.1.1-draft.md").write_text(
             _release_draft("0.1.1", "0.1.0"),
             encoding="utf-8",
         )
-    _git(repo, "add", "pyproject.toml", "CHANGELOG.md", "README.md", "cases/manifest.json", ".github/workflows/ci.yml")
+    _git(
+        repo,
+        "add",
+        "pyproject.toml",
+        "CHANGELOG.md",
+        "README.md",
+        "cases/manifest.json",
+        "cases/examples/demo-case.json",
+        ".github/workflows/ci.yml",
+    )
     if with_draft:
         _git(repo, "add", "docs/releases/v0.1.1-draft.md")
     env = {

@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "data": {
+    "command": "list-jobs",
+    "args": {},
+    "results": [
+      {
+        "ok": true,
+        "action": "extract",
+        "data": {
+          "jobs": [
+            {
+              "name": "example-main",
+              "status": "passing",
+              "last_build": "#1024"
+            },
+            {
+              "name": "example-nightly",
+              "status": "unstable",
+              "last_build": "#512"
+            }
+          ]
+        }
+      }
+    ],
+    "quality": {
+      "ok": true,
+      "status": "ok",
+      "row_count": 2
+    }
+  },
+  "error": null,
+  "meta": {
+    "source": "case-example",
+    "case_id": "apache-jenkins-jobs",
+    "sample": true
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "ok": true,
+  "data": {
+    "command": "list-accounts",
+    "args": {
+      "limit": 5
+    },
+    "results": [
+      {
+        "ok": true,
+        "action": "extract",
+        "data": {
+          "accounts": [
+            {
+              "name": "Example Manufacturing",
+              "type": "Customer",
+              "city": "New York"
+            },
+            {
+              "name": "Sample Distribution",
+              "type": "Prospect",
+              "city": "San Francisco"
+            }
+          ]
+        }
+      }
+    ],
+    "quality": {
+      "ok": true,
+      "status": "ok",
+      "row_count": 2
+    }
+  },
+  "error": null,
+  "meta": {
+    "source": "case-example",
+    "case_id": "suitecrm-accounts",
+    "sample": true
+  }
+}

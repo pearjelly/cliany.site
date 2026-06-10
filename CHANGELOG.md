@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Added
+- 新增 `cases/examples/*.json` 离线样例输出，让 active 真实案例在不访问第三方站点时也能展示 JSON envelope 形状和典型字段。
 - 新增 `tests/fixtures/search_extraction_gap.html` 和离线回归测试，用最小 HTML 页面固定搜索结果抽取字段缺失应判为 `partial` 的 known-gap 语义。
 - 新增 `docs/adapter-lifecycle.md`，固化 adapter 从生成、验证、打包、安装到回滚的生命周期，以及 `.cliany-adapter.tar.gz` 包格式和安全边界。
 - 新增 `scripts/validate_cases.py`，为 `cases/manifest.json` 提供离线验收报告，并可选检查本地 demo adapter 包 manifest、声明文件哈希和 metadata schema v3 是否与案例声明匹配。
@@ -16,6 +17,7 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
+- `scripts/validate_cases.py` 现在要求 active 案例声明 `example_output`，并校验样例路径、JSON envelope、`meta.case_id` 和非空 `data.results`。
 - `scripts/check_release_cadence.py` / `scripts/release_readiness.py` 现在会校验 `CHANGELOG.md` 的 `[Unreleased]` compare 链接是否从最新 tag 指向 `HEAD`，避免发布说明范围漂移。
 - `scripts/validate_cases.py` 现在会检查 `cases/manifest.json` 中 `docs` 的 Markdown 锚点和 active 案例命令域名一致性，避免真实案例链接或命令漂移。
 - `docs/releases/v0.14.4-draft.md` 新增案例库映射，release notes 会链接 `cases/README.md`、`cases/manifest.json` 和 `search-extraction-gap` 离线复现。

@@ -21,6 +21,30 @@ def _write_cases(root: Path, cases: list[dict]) -> None:
     cases_dir.mkdir(parents=True, exist_ok=True)
     (cases_dir / "manifest.json").write_text(json.dumps(cases), encoding="utf-8")
     (root / "README.md").write_text("# Demo\n", encoding="utf-8")
+    for case in cases:
+        example_output = case.get("example_output")
+        if not example_output:
+            continue
+        example_path = root / example_output
+        example_path.parent.mkdir(parents=True, exist_ok=True)
+        example_path.write_text(
+            json.dumps(
+                {
+                    "ok": True,
+                    "data": {
+                        "command": "list-items",
+                        "results": [{"ok": True, "data": {"items": [{"name": "Example"}]}}],
+                    },
+                    "error": None,
+                    "meta": {
+                        "source": "case-example",
+                        "case_id": case["id"],
+                        "sample": True,
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
 
 
 def _case(case_id: str = "demo-case", *, domain: str = "demo.example.com") -> dict:
@@ -33,6 +57,7 @@ def _case(case_id: str = "demo-case", *, domain: str = "demo.example.com") -> di
         "adapter_domain": domain,
         "source_release": "v0.1.0",
         "docs": "README.md#demo",
+        "example_output": f"cases/examples/{case_id}.json",
         "commands": [
             f"cliany-site market install ./{domain}.cliany-adapter-v0.1.0.tar.gz",
             f"cliany-site {domain} list-items --json",
@@ -148,6 +173,45 @@ def test_cases_report_rejects_adapter_command_domain_mismatch(tmp_path):
 
     assert report.ok is False
     assert "adapter command domain mismatch" in report.cases[0].issues[0]
+
+
+def test_cases_report_rejects_active_case_without_example_output(tmp_path):
+    case = _case()
+    del case["example_output"]
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert "active case requires example_output" in report.cases[0].issues
+
+
+def test_cases_report_rejects_example_output_case_id_mismatch(tmp_path):
+    case = _case("demo-case")
+    _write_cases(tmp_path, [case])
+    (tmp_path / case["example_output"]).write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "data": {
+                    "command": "list-items",
+                    "results": [{"ok": True, "data": {"items": [{"name": "Example"}]}}],
+                },
+                "error": None,
+                "meta": {
+                    "source": "case-example",
+                    "case_id": "other-case",
+                    "sample": True,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert "example_output.meta.case_id must be 'demo-case'" in report.cases[0].issues
 
 
 def test_cases_report_checks_optional_packages_dir(tmp_path):

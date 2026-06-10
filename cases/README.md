@@ -9,6 +9,7 @@
 | 层级 | 用途 | 是否进入默认 CI |
 |------|------|----------------|
 | 离线结构校验 | 校验案例索引、命令、文档链接不腐烂 | 是 |
+| 离线样例输出 | 展示 active 案例的 JSON envelope 形状和典型字段 | 是 |
 | adapter metadata 校验 | 校验本地 demo adapter 包结构、哈希和 metadata schema v3 | 可选，本地 release asset 存在时 |
 | 在线 smoke | 访问第三方 demo 站点并执行只读命令 | 否，第三方站点不稳定 |
 | 完整 explore 回归 | Chrome + LLM 从头探索生成 adapter | 手动或受保护 workflow |
@@ -17,10 +18,10 @@
 
 | ID | 场景 | 状态 | 价值 |
 |----|------|------|------|
-| `suitecrm-accounts` | SuiteCRM demo 账户列表 | active | 企业 CRM 查询，无 API 后台操作 CLI 化 |
-| `apache-jira-issues` | ASF Jira issue 列表 | active | DevOps/项目管理列表读取 |
-| `apache-confluence-search` | ASF Confluence 页面搜索 | active | 团队知识库搜索 |
-| `apache-jenkins-jobs` | ASF Jenkins job 列表 | active | 构建状态查询 |
+| `suitecrm-accounts` | SuiteCRM demo 账户列表 | active | 企业 CRM 查询，无 API 后台操作 CLI 化；样例输出见 [suitecrm-accounts.json](examples/suitecrm-accounts.json) |
+| `apache-jira-issues` | ASF Jira issue 列表 | active | DevOps/项目管理列表读取；样例输出见 [apache-jira-issues.json](examples/apache-jira-issues.json) |
+| `apache-confluence-search` | ASF Confluence 页面搜索 | active | 团队知识库搜索；样例输出见 [apache-confluence-search.json](examples/apache-confluence-search.json) |
+| `apache-jenkins-jobs` | ASF Jenkins job 列表 | active | 构建状态查询；样例输出见 [apache-jenkins-jobs.json](examples/apache-jenkins-jobs.json) |
 | `search-extraction-gap` | 搜索结果抽取复盘 | known-gap | 明确「页面交互强、列表抽取弱」的产品边界 |
 
 ## 维护规则
@@ -28,12 +29,13 @@
 - 新增真实 demo 时，先更新 `manifest.json`，再补充 README/官网展示。
 - 第三方站点不可用时，将 `status` 标记为 `degraded`，不要直接删除案例。
 - 每个 active 案例至少要有一个 `commands` 示例和一种 `validation` 方式。
+- 每个 active 案例必须提供 `example_output`，指向 `cases/examples/` 下的离线 JSON envelope 样例；样例只展示字段形状和典型数据，不作为第三方站点实时内容承诺。
 - 已知短板用 `known-gap` 记录，作为路线图输入，而不是藏在聊天记录里。
 - 案例运行产生的 adapter/session/snapshot 仍必须保存在 `~/.cliany-site/`，不能写入 repo。
 
 ## 离线验收
 
-默认验收只检查索引结构、文档链接和锚点、状态、命令域名一致性和验证说明，不访问第三方站点：
+默认验收只检查索引结构、文档链接和锚点、状态、命令域名一致性、离线样例输出和验证说明，不访问第三方站点：
 
 ```bash
 python scripts/validate_cases.py

@@ -32,6 +32,7 @@ def test_cases_manifest_entries_are_actionable():
             assert case["adapter_domain"]
             assert case["source_release"]
             assert case["commands"]
+            assert case["example_output"]
             assert all(command.startswith("cliany-site ") for command in case["commands"])
 
 
@@ -40,3 +41,15 @@ def test_cases_manifest_docs_links_exist_locally():
         doc_path = case["docs"].split("#", 1)[0]
         assert (ROOT / doc_path).exists(), f"{case['id']} docs path does not exist: {doc_path}"
 
+
+def test_active_cases_have_local_example_outputs():
+    for case in _load_cases():
+        if case["status"] != "active":
+            continue
+
+        path = ROOT / case["example_output"]
+        assert path.exists(), f"{case['id']} example_output does not exist: {case['example_output']}"
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        assert payload["ok"] is True
+        assert payload["meta"]["case_id"] == case["id"]
+        assert payload["meta"]["sample"] is True

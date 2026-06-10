@@ -155,6 +155,52 @@ def _validate_docs_link(root: Path, docs: str) -> list[str]:
     return []
 
 
+def _validate_example_output(root: Path, case_id: str, example_output: str) -> list[str]:
+    path = Path(example_output)
+    if path.is_absolute() or ".." in path.parts:
+        return [f"example_output path is unsafe: {example_output}"]
+    if path.parts[:2] != ("cases", "examples"):
+        return [f"example_output must be under cases/examples/: {example_output}"]
+
+    full_path = root / path
+    if not full_path.exists():
+        return [f"example_output path does not exist: {example_output}"]
+
+    try:
+        payload = json.loads(full_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+        return [f"example_output is not valid JSON: {exc}"]
+
+    issues: list[str] = []
+    if not isinstance(payload, dict):
+        return ["example_output must be a JSON object"]
+    if payload.get("ok") is not True:
+        issues.append("example_output.ok must be true")
+    if payload.get("error") is not None:
+        issues.append("example_output.error must be null")
+
+    meta = payload.get("meta")
+    if not isinstance(meta, dict):
+        issues.append("example_output.meta must be an object")
+    else:
+        if meta.get("case_id") != case_id:
+            issues.append(f"example_output.meta.case_id must be {case_id!r}")
+        if meta.get("sample") is not True:
+            issues.append("example_output.meta.sample must be true")
+
+    data = payload.get("data")
+    if not isinstance(data, dict):
+        issues.append("example_output.data must be an object")
+    else:
+        results = data.get("results")
+        if not isinstance(results, list) or not results:
+            issues.append("example_output.data.results must be a non-empty list")
+        if not data.get("command"):
+            issues.append("example_output.data.command is required")
+
+    return issues
+
+
 def _extract_required_file(tar: tarfile.TarFile, name: str, issues: list[str]) -> bytes | None:
     try:
         extracted = tar.extractfile(name)
@@ -278,6 +324,10 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
     if docs:
         check.issues.extend(_validate_docs_link(root, docs))
 
+    example_output = str(case.get("example_output") or "")
+    if example_output:
+        check.issues.extend(_validate_example_output(root, case_id, example_output))
+
     commands = case.get("commands") or []
     if status == "active":
         adapter_domain = str(case.get("adapter_domain") or "")
@@ -287,6 +337,8 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
             check.issues.append("active case requires source_release")
         if not commands:
             check.issues.append("active case requires commands")
+        if not example_output:
+            check.issues.append("active case requires example_output")
         for command in commands:
             if not str(command).startswith("cliany-site "):
                 check.issues.append(f"command must start with cliany-site: {command}")

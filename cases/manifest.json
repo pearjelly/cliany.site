@@ -8,6 +8,7 @@
     "adapter_domain": "demo.suiteondemand.com",
     "source_release": "v0.14.1",
     "docs": "README.md#suitecrm-demo-enterprise-crm",
+    "example_output": "cases/examples/suitecrm-accounts.json",
     "commands": [
       "cliany-site market install ./demo.suiteondemand.com.cliany-adapter-v0.14.0.tar.gz",
       "cliany-site login https://demo.suiteondemand.com/",
@@ -27,6 +28,7 @@
     "adapter_domain": "issues.apache.org",
     "source_release": "v0.14.1",
     "docs": "README.md#asf-jira-issue-tracker",
+    "example_output": "cases/examples/apache-jira-issues.json",
     "commands": [
       "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
       "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json"
@@ -45,6 +47,7 @@
     "adapter_domain": "cwiki.apache.org",
     "source_release": "v0.14.1",
     "docs": "README.md#asf-confluence-wiki",
+    "example_output": "cases/examples/apache-confluence-search.json",
     "commands": [
       "cliany-site market install ./cwiki.apache.org.cliany-adapter-v0.14.0.tar.gz",
       "cliany-site cwiki.apache.org search-pages --space SPARK --query \"release\" --json"
@@ -63,6 +66,7 @@
     "adapter_domain": "builds.apache.org",
     "source_release": "v0.14.1",
     "docs": "README.md#asf-jenkins-build-status",
+    "example_output": "cases/examples/apache-jenkins-jobs.json",
     "commands": [
       "cliany-site market install ./builds.apache.org.cliany-adapter-v0.14.0.tar.gz",
       "cliany-site builds.apache.org list-jobs --json"

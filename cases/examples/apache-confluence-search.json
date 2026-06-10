@@ -1,0 +1,41 @@
+{
+  "ok": true,
+  "data": {
+    "command": "search-pages",
+    "args": {
+      "space": "SPARK",
+      "query": "release"
+    },
+    "results": [
+      {
+        "ok": true,
+        "action": "extract",
+        "data": {
+          "pages": [
+            {
+              "title": "Example Release Notes",
+              "space": "SPARK",
+              "url": "https://cwiki.apache.org/example-release-notes"
+            },
+            {
+              "title": "Release Process Example",
+              "space": "SPARK",
+              "url": "https://cwiki.apache.org/release-process-example"
+            }
+          ]
+        }
+      }
+    ],
+    "quality": {
+      "ok": true,
+      "status": "ok",
+      "row_count": 2
+    }
+  },
+  "error": null,
+  "meta": {
+    "source": "case-example",
+    "case_id": "apache-confluence-search",
+    "sample": true
+  }
+}

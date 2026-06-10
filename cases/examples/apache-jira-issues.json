@@ -1,0 +1,41 @@
+{
+  "ok": true,
+  "data": {
+    "command": "list-issues",
+    "args": {
+      "project": "SPARK",
+      "limit": 5
+    },
+    "results": [
+      {
+        "ok": true,
+        "action": "extract",
+        "data": {
+          "issues": [
+            {
+              "key": "SPARK-00001",
+              "summary": "Example issue summary",
+              "status": "Open"
+            },
+            {
+              "key": "SPARK-00002",
+              "summary": "Another example issue",
+              "status": "In Progress"
+            }
+          ]
+        }
+      }
+    ],
+    "quality": {
+      "ok": true,
+      "status": "ok",
+      "row_count": 2
+    }
+  },
+  "error": null,
+  "meta": {
+    "source": "case-example",
+    "case_id": "apache-jira-issues",
+    "sample": true
+  }
+}
