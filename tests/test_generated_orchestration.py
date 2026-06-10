@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import types
+
+from click.testing import CliRunner
 
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
 from cliany_site.explorer.models import ActionStep, CommandSuggestion, ExploreResult
@@ -65,6 +68,66 @@ class TestGeneratedNoCdpImport:
         code = gen.generate(_simple_result(), "example.com")
         assert "summarize_extract_quality(results, action_steps)" in code
         assert '"quality": quality' in code
+
+    def test_generated_list_command_fails_when_quality_is_empty(self):
+        actions = [
+            ActionStep(
+                action_type="extract",
+                page_url="https://example.com",
+                selector=".result",
+                extract_mode="list",
+                fields_map={"title": "h3", "url": "a@href"},
+            )
+        ]
+        commands = [
+            CommandSuggestion(name="list-results", description="列出结果", args=[], action_steps=[0]),
+        ]
+        code = AdapterGenerator(domain="example.com").generate(
+            _make_explore_result(actions=actions, commands=commands),
+            "example.com",
+        )
+
+        assert 'if quality.get("status") == "empty":' in code
+        assert '"code": "E_EMPTY_RESULT"' in code
+        assert '"details": quality' in code
+
+    def test_generated_list_command_returns_empty_result_error(self):
+        actions = [
+            ActionStep(
+                action_type="extract",
+                page_url="https://example.com",
+                selector=".result",
+                extract_mode="list",
+                fields_map={"title": "h3", "url": "a@href"},
+            )
+        ]
+        commands = [
+            CommandSuggestion(name="list-results", description="列出结果", args=[], action_steps=[0]),
+        ]
+        code = AdapterGenerator(domain="example.com").generate(
+            _make_explore_result(actions=actions, commands=commands),
+            "example.com",
+        )
+        module = types.ModuleType("generated_adapter")
+        exec(code, module.__dict__)  # noqa: S102 - 测试生成代码的 Click 行为
+        quality = {
+            "status": "empty",
+            "ok": False,
+            "extracts": [{"issues": ["all rows are blank"]}],
+        }
+        module.execute_steps_via_atoms = lambda action_steps, source_url, domain: [  # noqa: ARG005
+            {"ok": True, "command": "browser extract", "data": {"content": [{"title": "", "url": ""}]}}
+        ]
+        module.summarize_extract_quality = lambda results, action_steps: quality  # noqa: ARG005
+
+        result = CliRunner().invoke(module.cli, ["list-results", "--json"])
+
+        assert result.exit_code == 0
+        payload = json.loads(result.output)
+        assert payload["ok"] is False
+        assert payload["error"]["code"] == "E_EMPTY_RESULT"
+        assert payload["error"]["details"] == quality
+        assert payload["data"]["quality"] == quality
 
 
 class TestGeneratedCodeStructure:
