@@ -51,8 +51,13 @@
 python scripts/check_release_cadence.py
 python scripts/check_release_cadence.py --json
 
+# 检查真实案例库（默认离线、不访问第三方站点）
+python scripts/validate_cases.py
+python scripts/validate_cases.py --json
+
 # 严格检查：不满足时 exit 1，适合发版前本地门禁
 python scripts/check_release_cadence.py --strict
+python scripts/validate_cases.py --strict
 
 # 查看本周提交天数
 git log --since='monday' --date=short --pretty=format:'%ad' | sort -u
@@ -72,6 +77,8 @@ git push origin master --tags
 ```
 
 `check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、`CHANGELOG.md` Unreleased 是否有内容，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截。
+
+`validate_cases.py` 会检查 `cases/manifest.json` 的结构、文档链接、active 案例命令和验证说明；传入 `--packages-dir ~/.cliany-site/packages` 时，还会离线检查 demo adapter 包中的 `manifest.json` 是否可读且 domain 匹配。
 
 ## 提交规则
 

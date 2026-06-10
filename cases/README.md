@@ -31,9 +31,24 @@
 - 已知短板用 `known-gap` 记录，作为路线图输入，而不是藏在聊天记录里。
 - 案例运行产生的 adapter/session/snapshot 仍必须保存在 `~/.cliany-site/`，不能写入 repo。
 
+## 离线验收
+
+默认验收只检查索引结构、文档链接、状态、命令和验证说明，不访问第三方站点：
+
+```bash
+python scripts/validate_cases.py
+python scripts/validate_cases.py --json
+python scripts/validate_cases.py --strict
+```
+
+如果本地有从 GitHub Release 下载的 demo adapter 包，可以额外检查 active 案例声明的安装包是否存在、tarball 是否可读取、`manifest.json` 是否与 `adapter_domain` 匹配：
+
+```bash
+python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict
+```
+
 ## 下一步
 
-- 为 4 个 active demo adapter 增加离线 metadata 校验。
+- 将 `scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict` 接入发版前本地门禁。
 - 在 release notes 中链接案例库，说明每个版本新增或修复了哪些真实场景。
 - 将 `search-extraction-gap` 拆成抽取能力设计任务：列表检测、字段映射、任务级验收。
-
