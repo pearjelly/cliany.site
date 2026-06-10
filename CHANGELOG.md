@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Added
+- 新增 GitHub `Real Demo Case Proposal` issue 模板，引导外部用户提交可验证、只读、带离线样例输出的真实案例候选。
 - `scripts/release_readiness.py` 新增 `--report`，可生成下一版发布 readiness Markdown 摘要，便于发版复盘和 release notes 准备。
 - `scripts/validate_cases.py` 新增 `--report`，可生成案例库离线验收 Markdown 报告；CI 会上传 `case-catalog-report` artifact。
 - 新增 `cases/examples/*.json` 离线样例输出，让 active 真实案例在不访问第三方站点时也能展示 JSON envelope 形状和典型字段。

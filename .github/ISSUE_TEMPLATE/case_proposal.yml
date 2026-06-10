@@ -1,0 +1,95 @@
+name: "🧪 Real Demo Case Proposal"
+description: "提交一个可验证的真实 demo 场景 / Propose a verifiable real demo case"
+title: "[Case] "
+labels: ["case-proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢补充真实案例！请优先选择公开、只读、可离线描述结果形状的网页工作流。
+
+        Thanks for proposing a real case. Please prefer public, read-only workflows whose result shape can be described offline.
+
+  - type: textarea
+    id: scenario
+    attributes:
+      label: "场景价值 / Scenario Value"
+      description: "这个案例帮助用户完成什么真实工作？/ What real workflow does this case help users complete?"
+      placeholder: "例如：在公开 Jira 中查询某项目最近的 issue 列表。"
+    validations:
+      required: true
+
+  - type: input
+    id: target_url
+    attributes:
+      label: "目标 URL / Target URL"
+      description: "公开可访问的起始页面。/ Publicly accessible starting page."
+      placeholder: "https://example.com/demo"
+    validations:
+      required: true
+
+  - type: textarea
+    id: workflow
+    attributes:
+      label: "只读工作流 / Read-only Workflow"
+      description: "列出期望执行的页面动作，不要包含写入、删除、付款或提交真实数据。"
+      placeholder: |
+        1. 打开目标页面
+        2. 搜索关键词
+        3. 读取结果标题、链接和摘要
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_command
+    attributes:
+      label: "期望 CLI 命令 / Expected CLI Command"
+      description: "你希望最终生成或维护的命令形态。/ The command shape you expect."
+      placeholder: "cliany-site example.com search-items \"keyword\" --json"
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: example_output
+    attributes:
+      label: "离线样例输出 / Offline Example Output"
+      description: "提供脱敏后的 JSON envelope 示例，帮助维护者判断 data/results 字段形状。"
+      placeholder: |
+        {
+          "ok": true,
+          "data": {
+            "command": "search-items",
+            "results": [{"title": "Example", "url": "https://example.com/item"}]
+          },
+          "error": null
+        }
+      render: json
+    validations:
+      required: true
+
+  - type: textarea
+    id: validation
+    attributes:
+      label: "验证方式 / Validation Plan"
+      description: "说明如何离线或半自动验证该案例不漂移。/ Explain how this case can be validated offline or semi-automatically."
+      placeholder: |
+        - 更新 cases/manifest.json
+        - 新增 cases/examples/<case-id>.json
+        - 运行 python scripts/validate_cases.py --strict
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: "安全与维护边界 / Safety and Maintenance"
+      options:
+        - label: "该案例只读，不会创建、修改、删除、购买或提交真实业务数据。"
+          required: true
+        - label: "样例输出不包含 cookie、token、邮箱、手机号或其他敏感信息。"
+          required: true
+        - label: "我理解第三方站点不可用时，案例应标记为 degraded，而不是静默删除。"
+          required: true
+        - label: "我愿意把案例入口记录到 cases/manifest.json，并提供 cases/examples/ 下的离线样例。"
+          required: true
