@@ -204,6 +204,8 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     assert report.ok is True
     assert report.active == 0
     assert report.candidate == 1
+    assert report.cases[0].promotion == case["promotion"]
+    assert report.cases[0].to_dict()["promotion"]["online_smoke"].startswith("cliany-site demo.example.com")
 
 
 def test_cases_report_rejects_candidate_case_without_expected_commands(tmp_path):
@@ -315,7 +317,17 @@ def test_cases_report_accepts_valid_package(tmp_path):
 
 
 def test_cases_report_writes_markdown_report(tmp_path):
-    _write_cases(tmp_path, [_case("demo-case")])
+    metadata_validation = "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
+    candidate = _case("candidate-case")
+    candidate["status"] = "candidate"
+    candidate["source_release"] = None
+    candidate["commands"] = ["cliany-site demo.example.com list-items --json"]
+    candidate["promotion"] = {
+        "adapter_package": "publish demo.example.com.cliany-adapter-v0.1.0.tar.gz",
+        "metadata_validation": metadata_validation,
+        "online_smoke": "cliany-site demo.example.com list-items --json",
+    }
+    _write_cases(tmp_path, [_case("demo-case"), candidate])
     report = validate_cases.build_report(tmp_path)
     report_path = tmp_path / "reports" / "case-catalog-report.md"
 
@@ -324,8 +336,36 @@ def test_cases_report_writes_markdown_report(tmp_path):
     text = report_path.read_text(encoding="utf-8")
     assert "# cliany-site Case Catalog Validation" in text
     assert "| ok | `true` |" in text
-    assert "| candidate | `0` |" in text
-    assert "| `demo-case` | `active` | `ok` | - | - |" in text
+    assert "| candidate | `1` |" in text
+    assert "| Case | Status | Result | Issues | Package | Promotion |" in text
+    assert "| `demo-case` | `active` | `ok` | - | - | - |" in text
+    assert "| `candidate-case` | `candidate` | `ok` | - | - |" in text
+    assert "adapter_package: publish demo.example.com.cliany-adapter-v0.1.0.tar.gz" in text
+    assert f"metadata_validation: {metadata_validation}" in text
+    assert "online_smoke: cliany-site demo.example.com list-items --json" in text
+
+
+def test_cases_report_prints_candidate_promotion_checklist(tmp_path, capsys):
+    metadata_validation = "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
+    case = _case("candidate-case")
+    case["status"] = "candidate"
+    case["source_release"] = None
+    case["commands"] = ["cliany-site demo.example.com list-items --json"]
+    case["promotion"] = {
+        "adapter_package": "publish demo.example.com.cliany-adapter-v0.1.0.tar.gz",
+        "metadata_validation": metadata_validation,
+        "online_smoke": "cliany-site demo.example.com list-items --json",
+    }
+    _write_cases(tmp_path, [case])
+    report = validate_cases.build_report(tmp_path)
+
+    validate_cases._print_text(report)
+
+    text = capsys.readouterr().out
+    assert "promotion:" in text
+    assert "adapter_package: publish demo.example.com.cliany-adapter-v0.1.0.tar.gz" in text
+    assert f"metadata_validation: {metadata_validation}" in text
+    assert "online_smoke: cliany-site demo.example.com list-items --json" in text
 
 
 def test_cases_report_rejects_package_with_legacy_metadata(tmp_path):

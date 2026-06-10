@@ -26,6 +26,7 @@ class CaseCheck:
     status: str
     issues: list[str] = field(default_factory=list)
     package: dict[str, Any] | None = None
+    promotion: dict[str, Any] | None = None
 
     @property
     def ok(self) -> bool:
@@ -41,6 +42,8 @@ class CaseCheck:
         }
         if self.package is not None:
             data["package"] = self.package
+        if self.promotion is not None:
+            data["promotion"] = self.promotion
         return data
 
 
@@ -365,6 +368,7 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
         if not isinstance(promotion, dict):
             check.issues.append("candidate case requires promotion checklist")
         else:
+            check.promotion = promotion
             for field_name in ("adapter_package", "metadata_validation", "online_smoke"):
                 if not promotion.get(field_name):
                     check.issues.append(f"candidate promotion.{field_name} is required")
@@ -417,10 +421,26 @@ def _print_text(report: CasesReport) -> None:
         print(f"- {check.id}: {status} ({check.status})")
         for issue in check.issues:
             print(f"  issue: {issue}")
+        if check.promotion is not None:
+            print("  promotion:")
+            for field_name in ("adapter_package", "metadata_validation", "online_smoke"):
+                if check.promotion.get(field_name):
+                    print(f"    {field_name}: {check.promotion[field_name]}")
         if check.package is not None and not check.package.get("ok"):
             print(f"  package: {check.package.get('status')} {check.package.get('issue', '')}".rstrip())
             for issue in check.package.get("issues", []):
                 print(f"  package_issue: {issue}")
+
+
+def _promotion_summary(promotion: dict[str, Any] | None) -> str:
+    if promotion is None:
+        return "-"
+    parts = []
+    for field_name in ("adapter_package", "metadata_validation", "online_smoke"):
+        value = promotion.get(field_name)
+        if value:
+            parts.append(f"{field_name}: {value}")
+    return "<br>".join(parts) if parts else "-"
 
 
 def _render_markdown_report(report: CasesReport) -> str:
@@ -436,8 +456,8 @@ def _render_markdown_report(report: CasesReport) -> str:
         f"| known_gap | `{report.known_gap}` |",
         f"| checked_packages | `{str(report.checked_packages).lower()}` |",
         "",
-        "| Case | Status | Result | Issues | Package |",
-        "|------|--------|--------|--------|---------|",
+        "| Case | Status | Result | Issues | Package | Promotion |",
+        "|------|--------|--------|--------|---------|-----------|",
     ]
 
     for check in report.cases:
@@ -447,7 +467,8 @@ def _render_markdown_report(report: CasesReport) -> str:
         if check.package is not None:
             package_status = str(check.package.get("status") or "unknown")
             package = package_status if check.package.get("ok") else f"fail: {package_status}"
-        lines.append(f"| `{check.id}` | `{check.status}` | `{result}` | {issues} | {package} |")
+        promotion = _promotion_summary(check.promotion)
+        lines.append(f"| `{check.id}` | `{check.status}` | `{result}` | {issues} | {package} | {promotion} |")
 
     return "\n".join(lines) + "\n"
 

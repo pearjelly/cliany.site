@@ -38,6 +38,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "candidate",
         "active/candidate/known-gap/total",
         "promotion",
+        "candidate `promotion` checklists",
         "search-extraction-gap",
         "docs/weekly-maintainer-loop.md",
         "weekly maintainer loop",
