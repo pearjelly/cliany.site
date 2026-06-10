@@ -42,6 +42,8 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "Candidate Promotions",
         "search-extraction-gap",
         "docs/weekly-maintainer-loop.md",
+        "docs/good-first-issues.md",
+        "first-time contributors",
         "weekly maintainer loop",
         "Next Actions",
         "next_actions",

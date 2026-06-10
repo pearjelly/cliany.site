@@ -298,6 +298,7 @@ def _readme_content() -> str:
         "E_EMPTY_RESULT\n"
         "scripts/release_readiness.py\n"
         "Real Demo Case Proposal\n"
+        "docs/good-first-issues.md\n"
         "weekly-maintainer-loop.md\n"
         "next_actions\n"
         "## demo\n"
@@ -353,6 +354,15 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "# Release Cadence\n\n[每周维护者循环](weekly-maintainer-loop.md)\n",
         encoding="utf-8",
     )
+    (repo / "docs" / "good-first-issues.md").write_text(
+        "# Good First Issues\n\n"
+        "CLIANY_QA_OFFLINE=1\n"
+        "python scripts/validate_cases.py --strict\n"
+        "python scripts/release_readiness.py --json\n"
+        "promotion\n"
+        "~/.cliany-site/\n",
+        encoding="utf-8",
+    )
     (repo / "docs" / "weekly-maintainer-loop.md").write_text(
         "# 每周维护者循环\n\n"
         "python scripts/release_readiness.py --json\n"
@@ -402,6 +412,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "README.zh.md",
         "docs/roadmap-2026-q3.md",
         "docs/release-cadence.md",
+        "docs/good-first-issues.md",
         "docs/weekly-maintainer-loop.md",
         "cases/manifest.json",
         "cases/examples/demo-case.json",

@@ -407,6 +407,8 @@ cliany-site/src/cliany_site/
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, and PR workflow.
 
+首次贡献者可以从 [贡献者上手地图](docs/contributor-starter.md) 或 [Good First Issues](docs/good-first-issues.md) 候选清单开始；这两条路径默认不需要真实 LLM key，并附带本地验证命令。
+
 ## 限制说明
 
 - 需要 Chrome/Chromium（自动启动或手动 `--remote-debugging-port=9222`）

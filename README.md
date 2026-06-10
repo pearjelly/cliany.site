@@ -399,6 +399,7 @@ The current iteration plan is tracked in [docs/roadmap-2026-q3.md](docs/roadmap-
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, and PR workflow.
+First-time contributors can start from the [contributor starter map](docs/contributor-starter.md) or the curated [Good First Issues](docs/good-first-issues.md) list; both paths avoid real LLM keys by default and include local validation commands.
 
 ## Limitations
 

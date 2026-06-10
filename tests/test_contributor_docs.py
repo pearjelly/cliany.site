@@ -2,6 +2,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DOC = ROOT / "docs" / "contributor-starter.md"
+GOOD_FIRST = ROOT / "docs" / "good-first-issues.md"
 
 
 def test_contributor_starter_doc_has_required_sections():
@@ -26,6 +27,7 @@ def test_contributor_starter_referenced_paths_exist():
         "src/cliany_site/commands/doctor.py",
         "scripts/release_readiness.py",
         "scripts/check_release_cadence.py",
+        "docs/good-first-issues.md",
         "tests/test_cases_manifest.py",
         "tests/test_release_readiness.py",
         "tests/test_release_cadence.py",
@@ -57,6 +59,22 @@ def test_contributor_starter_points_to_issue_and_pr_templates():
         "AXTree snapshot",
         "离线 JSON envelope 样例",
         "CLIANY_QA_OFFLINE=1",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_good_first_issues_doc_is_offline_and_verifiable():
+    text = GOOD_FIRST.read_text(encoding="utf-8")
+
+    required = [
+        "# Good First Issues",
+        "CLIANY_QA_OFFLINE=1",
+        "python scripts/validate_cases.py --strict",
+        "python scripts/release_readiness.py",
+        "promotion",
+        "~/.cliany-site/",
+        "不需要真实 LLM key",
     ]
     for snippet in required:
         assert snippet in text

@@ -29,7 +29,7 @@ pytest tests/test_cases_manifest.py tests/test_release_cadence.py -q --no-cov
 
 ## Issue 与 PR 模板
 
-提交问题或候选案例时，优先使用结构化模板，方便维护者把 issue 转成可复现输入：
+提交问题或候选案例时，优先使用结构化模板，方便维护者把 issue 转成可复现输入；公开只读案例请走 `Real Demo Case Proposal`。
 
 | 场景 | 模板 | 需要准备什么 |
 |------|------|--------------|
@@ -41,6 +41,8 @@ pytest tests/test_cases_manifest.py tests/test_release_cadence.py -q --no-cov
 ## Good First Issues
 
 这些任务适合第一次贡献，通常不需要 Chrome、真实 LLM key 或第三方站点在线。
+
+维护者创建 GitHub issue 时，可以直接从 [Good First Issues](good-first-issues.md) 候选池选择任务；每个任务都带推荐验证命令，便于首次贡献者按 PR 模板提交证据。
 
 | 方向 | 可以做什么 | 主要文件 | 验证 |
 |------|------------|----------|------|

@@ -21,6 +21,7 @@ def test_project_has_open_source_metadata_files():
         "CODE_OF_CONDUCT.md",
         "SECURITY.md",
         "SUPPORT.md",
+        "docs/good-first-issues.md",
         ".github/PULL_REQUEST_TEMPLATE.md",
         ".github/ISSUE_TEMPLATE/bug_report.yml",
         ".github/ISSUE_TEMPLATE/feature_request.yml",
@@ -36,4 +37,5 @@ def test_readmes_have_open_source_entrypoints():
 
         assert "scripts/release_readiness.py" in text
         assert "Real Demo Case Proposal" in text
+        assert "docs/good-first-issues.md" in text
         assert "data.quality" in text
