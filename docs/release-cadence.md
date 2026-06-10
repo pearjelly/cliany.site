@@ -117,6 +117,14 @@ chore(release): bump version to 0.15.0
 - `bash qa/run_all.sh`（如适用）
 ```
 
+## 发布草案
+
+当 `Unreleased` 已累计多个用户可见改动，但本周提交日或 CI 尚未满足正式发版条件时，先在 `docs/releases/` 写发布草案。草案必须说明目标版本、提交范围、用户价值、风险、验证命令和剩余阻塞项。
+
+当前草案：
+
+- [v0.14.4 发布草案](releases/v0.14.4-draft.md)
+
 ## 异常情况
 
 - 如果本周只有文档和流程改进，也发布 patch，保持节奏。
