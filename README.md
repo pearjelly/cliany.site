@@ -300,6 +300,8 @@ cliany-site workflow batch github.com search data.csv --concurrency 3 --json
 
 ### Adapter Marketplace
 
+See [Adapter lifecycle and package format](docs/adapter-lifecycle.md) for the runtime layout, `.cliany-adapter.tar.gz` package contract, compatibility rules, and rollback workflow.
+
 ```bash
 # Pack adapter
 cliany-site market publish github.com --version 1.0.0

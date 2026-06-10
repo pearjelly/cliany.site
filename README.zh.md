@@ -306,6 +306,8 @@ cliany-site workflow batch github.com search data.csv --concurrency 3 --json
 
 ### 适配器市场
 
+运行时目录、`.cliany-adapter.tar.gz` 包格式、兼容性约束与回滚流程见 [Adapter 生命周期与包格式](docs/adapter-lifecycle.md)。
+
 ```bash
 # 打包适配器
 cliany-site market publish github.com --version 1.0.0
