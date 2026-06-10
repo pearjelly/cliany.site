@@ -87,7 +87,7 @@ class TestGeneratedNoCdpImport:
             "example.com",
         )
 
-        assert 'if quality.get("status") == "empty":' in code
+        assert 'if not quality.get("ok", True):' in code
         assert '"code": "E_EMPTY_RESULT"' in code
         assert '"details": quality' in code
 
@@ -126,6 +126,45 @@ class TestGeneratedNoCdpImport:
         payload = json.loads(result.output)
         assert payload["ok"] is False
         assert payload["error"]["code"] == "E_EMPTY_RESULT"
+        assert payload["error"]["details"] == quality
+        assert payload["data"]["quality"] == quality
+
+    def test_generated_list_command_returns_partial_quality_error(self):
+        actions = [
+            ActionStep(
+                action_type="extract",
+                page_url="https://example.com",
+                selector=".result",
+                extract_mode="list",
+                fields_map={"title": "h3", "url": "a@href"},
+            )
+        ]
+        commands = [
+            CommandSuggestion(name="list-results", description="列出结果", args=[], action_steps=[0]),
+        ]
+        code = AdapterGenerator(domain="example.com").generate(
+            _make_explore_result(actions=actions, commands=commands),
+            "example.com",
+        )
+        module = types.ModuleType("generated_adapter")
+        exec(code, module.__dict__)  # noqa: S102 - 测试生成代码的 Click 行为
+        quality = {
+            "status": "partial",
+            "ok": False,
+            "extracts": [{"issues": ["field is blank in 1/2 rows: url"]}],
+        }
+        module.execute_steps_via_atoms = lambda action_steps, source_url, domain: [  # noqa: ARG005
+            {"ok": True, "command": "browser extract", "data": {"content": [{"title": "A", "url": ""}]}}
+        ]
+        module.summarize_extract_quality = lambda results, action_steps: quality  # noqa: ARG005
+
+        result = CliRunner().invoke(module.cli, ["list-results", "--json"])
+
+        assert result.exit_code == 0
+        payload = json.loads(result.output)
+        assert payload["ok"] is False
+        assert payload["error"]["code"] == "E_EMPTY_RESULT"
+        assert payload["error"]["message"] == "list-results 提取结果质量未通过"
         assert payload["error"]["details"] == quality
         assert payload["data"]["quality"] == quality
 

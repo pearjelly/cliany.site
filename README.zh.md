@@ -219,7 +219,7 @@ cliany-site browser extract \
   --json
 ```
 
-结构化抽取响应会包含 `data.quality`。生成的 `list-` 和 `search-` adapter 命令也会输出这份质量摘要，并在抽取质量为空时返回 `E_EMPTY_RESULT`，让自动化脚本能区分“命令执行了”和“确实拿到了可用数据”。
+结构化抽取响应会包含 `data.quality`。生成的 `list-` 和 `search-` adapter 命令也会输出这份质量摘要，并在抽取质量为空或关键字段部分缺失时返回 `E_EMPTY_RESULT`，让自动化脚本能区分“命令执行了”和“确实拿到了可用数据”。
 
 ### 会话式探索（v0.8）
 

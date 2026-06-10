@@ -676,11 +676,15 @@ def _shift_indent(text: str, remove: int = 8) -> str:
 
 def _render_empty_result_check(command_name: str) -> str:
     return (
-        "    # opt-in 空结果检测：list-/search- 命令保守判定，抽取质量为空或聚合 data 为空时返回 E_EMPTY_RESULT\n"
+        "    # opt-in 结果质量检测：list-/search- 命令在抽取为空、字段缺失或聚合 data 为空时返回 E_EMPTY_RESULT\n"
         "    # 如需关闭：在 metadata 中设置 expects_nonempty=False（当前仅占位，未实现）\n"
         "    if failed is None:\n"
-        '        if quality.get("status") == "empty":\n'
-        f'            failed = {{"ok": False, "error": {{"code": "E_EMPTY_RESULT", "message": "{command_name} 提取结果为空", "details": quality}}}}\n'
+        '        if not quality.get("ok", True):\n'
+        '            if quality.get("status") == "empty":\n'
+        f'                _message = "{command_name} 提取结果为空"\n'
+        "            else:\n"
+        f'                _message = "{command_name} 提取结果质量未通过"\n'
+        '            failed = {"ok": False, "error": {"code": "E_EMPTY_RESULT", "message": _message, "details": quality}}\n'
         "        else:\n"
         "            _agg: list = []\n"
         "            for _r in results:\n"
@@ -744,7 +748,7 @@ def render_command_block_v2(
     )
     execution_blocks = _shift_indent(raw_blocks, remove=8)
 
-    # opt-in 空结果检测：list-/search- 命令在聚合 data 为空时注入 E_EMPTY_RESULT 判定
+    # opt-in 结果质量检测：list-/search- 命令在抽取质量未通过或聚合 data 为空时注入 E_EMPTY_RESULT 判定
     empty_result_check = (
         _render_empty_result_check(command_name)
         if command_name.startswith(("list-", "search-"))

@@ -213,7 +213,7 @@ cliany-site browser extract \
   --json
 ```
 
-Structured extraction responses include `data.quality`. Generated `list-` and `search-` adapter commands also include that summary and return `E_EMPTY_RESULT` when extraction quality is empty, so automation can distinguish "command ran" from "useful data was found".
+Structured extraction responses include `data.quality`. Generated `list-` and `search-` adapter commands also include that summary and return `E_EMPTY_RESULT` when extraction quality is empty or partially missing required fields, so automation can distinguish "command ran" from "useful data was found".
 
 ### Conversational Exploration (v0.8)
 
