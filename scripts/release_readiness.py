@@ -559,9 +559,12 @@ def _report_issue_lines(report: ReadinessReport) -> list[str]:
 def _next_action_lines(report: ReadinessReport) -> list[str]:
     lines: list[str] = []
     if report.cadence.commit_day_count < report.cadence.min_commit_days:
+        missing_days = max(report.cadence.min_commit_days - report.cadence.commit_day_count, 0)
         lines.append(
-            "- Keep shipping small verified slices until weekly commit days reach "
-            f"`{report.cadence.min_commit_days}`; use `docs/weekly-maintainer-loop.md` to pick the next slice."
+            "- Ship verified slices on "
+            f"`{missing_days}` more unique commit days this week; current commit days are "
+            f"`{report.cadence.commit_day_count}/{report.cadence.min_commit_days}`. "
+            "Use `docs/weekly-maintainer-loop.md` to pick the next slice."
         )
     if report.cadence.dirty:
         lines.append("- Commit or revert the working tree before tagging a release.")

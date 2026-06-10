@@ -30,6 +30,7 @@
 - `release_readiness.py --report` 现在会输出 `Candidate Promotions` 小节，把候选案例晋级 active 的三项动作直接带入发版 readiness artifact。
 - 官网 quickstart 现在暴露每周维护者循环和 `next_actions` 入口，让网站读者也能从 roadmap 进入可验证发布切片。
 - README 双语路线图入口现在链接每周维护者循环，并说明 `release_readiness.py --json` / `check_release_cadence.py --json` 的 `next_actions` 可用于选择下一块可验证发布切片。
+- `check_release_cadence.py --json` 现在输出 `missing_commit_days`，cadence/readiness 的 `next_actions` 会直接提示本周还差几个独立提交日。
 - `check_release_cadence.py` 的 JSON 与默认文本输出现在包含 `next_actions`，单独检查每周提交节奏时也会提示下一步。
 - `release_readiness.py --json` 现在会在顶层输出 `next_actions`，方便 CI、agent 或维护脚本自动读取下一步动作。
 - `release_readiness.py` 的默认文本输出现在也会显示 `next_actions`，维护者不生成 Markdown 报告也能看到下一步动作。

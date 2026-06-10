@@ -82,6 +82,7 @@ def test_release_cadence_report_passes_with_three_commit_days(tmp_path):
     )
     assert report.changelog_unreleased_compare_actual == report.changelog_unreleased_compare_expected
     assert report.dirty is False
+    assert report.to_dict()["missing_commit_days"] == 0
     assert report.to_dict()["next_actions"] == []
 
 
@@ -93,8 +94,9 @@ def test_release_cadence_report_fails_when_week_has_too_few_days(tmp_path):
     assert report.ok is False
     assert report.commit_day_count == 1
     assert report.min_commit_days == 3
+    assert report.to_dict()["missing_commit_days"] == 2
     assert report.to_dict()["next_actions"] == [
-        "- Keep shipping small verified slices until weekly commit days reach `3`; current commit days are `1/3`."
+        "- Ship verified slices on `2` more unique commit days this week; current commit days are `1/3`."
     ]
 
 
@@ -180,7 +182,7 @@ def test_release_cadence_text_output_includes_next_actions_when_blocked(tmp_path
     output = capsys.readouterr().out
     assert "ok: False" in output
     assert "next_actions:" in output
-    assert "- Keep shipping small verified slices until weekly commit days reach `3`" in output
+    assert "- Ship verified slices on `2` more unique commit days this week" in output
 
 
 def test_release_cadence_text_output_omits_next_actions_when_ready(tmp_path, capsys):

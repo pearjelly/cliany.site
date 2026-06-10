@@ -12,6 +12,7 @@ def test_release_cadence_doc_explains_readiness_triage():
         "Gate Issues",
         "release-readiness-report",
         "next_actions",
+        "missing_commit_days",
         "先修具体 gate 失败原因",
         "python scripts/release_readiness.py --strict",
         "project_metadata",

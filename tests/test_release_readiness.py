@@ -471,8 +471,8 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert payload["blockers"] == ["commit days 1/3"]
     assert payload["next_actions"] == [
         (
-            "- Keep shipping small verified slices until weekly commit days reach `3`; "
-            "use `docs/weekly-maintainer-loop.md` to pick the next slice."
+            "- Ship verified slices on `2` more unique commit days this week; "
+            "current commit days are `1/3`. Use `docs/weekly-maintainer-loop.md` to pick the next slice."
         )
     ]
 
@@ -582,8 +582,8 @@ def test_release_readiness_text_output_includes_next_actions_when_blocked(tmp_pa
     assert "- commit days 1/3" in output
     assert "next_actions:" in output
     assert (
-        "- Keep shipping small verified slices until weekly commit days reach `3`; "
-        "use `docs/weekly-maintainer-loop.md` to pick the next slice."
+        "- Ship verified slices on `2` more unique commit days this week; "
+        "current commit days are `1/3`. Use `docs/weekly-maintainer-loop.md` to pick the next slice."
     ) in output
 
 
@@ -602,8 +602,8 @@ def test_release_readiness_markdown_report_includes_gate_issues_and_next_actions
     assert "- `project_metadata`: open source metadata file is missing: LICENSE" in text
     assert "## Next Actions" in text
     assert (
-        "- Keep shipping small verified slices until weekly commit days reach `3`; "
-        "use `docs/weekly-maintainer-loop.md` to pick the next slice."
+        "- Ship verified slices on `2` more unique commit days this week; "
+        "current commit days are `1/3`. Use `docs/weekly-maintainer-loop.md` to pick the next slice."
     ) in text
     assert "- Update the target release draft under `docs/releases/`" in text
     assert "- Restore PyPI metadata and open-source community entrypoints required by project metadata gate." in text

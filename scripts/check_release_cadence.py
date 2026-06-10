@@ -45,6 +45,7 @@ class CadenceReport:
             "commit_days": self.commit_days,
             "commit_day_count": self.commit_day_count,
             "min_commit_days": self.min_commit_days,
+            "missing_commit_days": _missing_commit_days(self),
             "commits_since_latest_tag": self.commits_since_latest_tag,
             "changelog_unreleased_has_content": self.changelog_unreleased_has_content,
             "changelog_unreleased_compare_ok": self.changelog_unreleased_compare_ok,
@@ -131,6 +132,10 @@ def _is_dirty(root: Path) -> bool:
     return bool(status)
 
 
+def _missing_commit_days(report: CadenceReport) -> int:
+    return max(report.min_commit_days - report.commit_day_count, 0)
+
+
 def build_report(root: Path, today: date, min_commit_days: int) -> CadenceReport:
     version = _project_version(root)
     latest_tag = _latest_tag(root)
@@ -193,9 +198,10 @@ def _print_text(report: CadenceReport) -> None:
 def _next_action_lines(report: CadenceReport) -> list[str]:
     actions: list[str] = []
     if report.commit_day_count < report.min_commit_days:
+        missing_days = _missing_commit_days(report)
         actions.append(
-            "- Keep shipping small verified slices until weekly commit days reach "
-            f"`{report.min_commit_days}`; current commit days are "
+            "- Ship verified slices on "
+            f"`{missing_days}` more unique commit days this week; current commit days are "
             f"`{report.commit_day_count}/{report.min_commit_days}`."
         )
     if not report.tag_matches_version:

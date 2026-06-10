@@ -100,7 +100,7 @@ CI 的 `Release Readiness Report` job 会在 PR/主分支生成 `release-readine
 
 `check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、`CHANGELOG.md` Unreleased 是否有内容、`[Unreleased]` compare 链接是否指向最新 tag 到 `HEAD`，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截。
 
-当 cadence 未满足时，`check_release_cadence.py` 的文本输出和 `--json` 都会包含 `next_actions`，提示维护者继续补足本周提交天数、修正 tag/version、更新 CHANGELOG compare 链接或清理工作区。
+当 cadence 未满足时，`check_release_cadence.py` 的文本输出和 `--json` 都会包含 `next_actions`，提示维护者继续补足本周提交天数、修正 tag/version、更新 CHANGELOG compare 链接或清理工作区。JSON 输出还会包含 `missing_commit_days`，便于维护脚本直接判断本周还差几个独立提交日。
 
 `validate_cases.py` 会检查 `cases/manifest.json` 的结构、文档链接和 Markdown 锚点、active 案例命令域名一致性、离线样例输出和验证说明；传入 `--report` 时会生成 Markdown 验收报告，CI 会上传为 `case-catalog-report` artifact；传入 `--packages-dir ~/.cliany-site/packages` 时，还会离线检查 demo adapter 包中的 `manifest.json`、tarball 安全路径、声明文件哈希和 metadata schema v3。
 
