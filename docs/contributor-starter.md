@@ -17,6 +17,7 @@ cliany-site doctor
 CLIANY_QA_OFFLINE=1 pytest tests/ -q --no-cov
 ruff check src/ tests/
 python scripts/check_release_cadence.py
+python scripts/validate_cases.py --strict
 ```
 
 如果只改文档或案例，可以跑更窄的测试：
@@ -31,7 +32,7 @@ pytest tests/test_cases_manifest.py tests/test_release_cadence.py -q --no-cov
 
 | 方向 | 可以做什么 | 主要文件 | 验证 |
 |------|------------|----------|------|
-| 案例库 | 新增或修正 `cases/manifest.json` 条目、补充案例说明 | `cases/`, `tests/test_cases_manifest.py` | `pytest tests/test_cases_manifest.py -q --no-cov` |
+| 案例库 | 新增或修正 `cases/manifest.json` 条目、补充案例说明 | `cases/`, `scripts/validate_cases.py`, `tests/test_cases_manifest.py` | `python scripts/validate_cases.py --strict` 和 `pytest tests/test_cases_manifest.py tests/test_validate_cases.py -q --no-cov` |
 | 文档路径 | 改进 10 分钟成功路径、贡献指南、发布节奏说明 | `docs/`, `README.md`, `README.zh.md` | `git diff --check` |
 | doctor 提示 | 补充某个 check 的 action 文案或测试 | `src/cliany_site/commands/doctor.py`, `tests/test_doctor_v3.py` | `pytest tests/test_doctor_v3.py -q --no-cov` |
 | 发布节奏 | 改进本地 cadence 检查或 release checklist | `scripts/check_release_cadence.py`, `docs/release-cadence.md` | `pytest tests/test_release_cadence.py -q --no-cov` |
@@ -78,7 +79,7 @@ pytest tests/test_cases_manifest.py tests/test_release_cadence.py -q --no-cov
 | 改动 | 最小验证 |
 |------|----------|
 | 纯文档 | `git diff --check` |
-| 案例索引 | `pytest tests/test_cases_manifest.py -q --no-cov` |
+| 案例索引 | `python scripts/validate_cases.py --strict` 和 `pytest tests/test_cases_manifest.py tests/test_validate_cases.py -q --no-cov` |
 | 发布脚本 | `pytest tests/test_release_cadence.py -q --no-cov` 和 `bash -n scripts/publish.sh` |
 | doctor/CLI | doctor 相关单测 + `ruff check src/cliany_site/commands/doctor.py` |
 | codegen/loader/action_runtime | 相关单测 + `CLIANY_QA_OFFLINE=1 pytest tests/ -q --no-cov` |
@@ -91,4 +92,3 @@ pytest tests/test_cases_manifest.py tests/test_release_cadence.py -q --no-cov
 - 不把真实 LLM key 放进 PR 测试路径。
 - 不新增脆弱 CSS selector 作为默认兜底；优先 AXTree 语义匹配。
 - 不重写现有 CI workflow；需要时扩展或新增独立 job。
-

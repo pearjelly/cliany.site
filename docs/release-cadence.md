@@ -38,6 +38,7 @@
 - [ ] `pyproject.toml` 版本号与 tag 一致。
 - [ ] README/README.zh/官网中受影响的版本文案同步。
 - [ ] 运行离线默认检查：`CLIANY_QA_OFFLINE=1 pytest tests/ -q`。
+- [ ] 运行真实案例库离线验收：`python scripts/validate_cases.py --strict`。
 - [ ] 对 CLI 或 adapter 行为有影响时，运行相关 `qa/*.sh` 脚本。
 - [ ] 对官网有影响时，按 `AGENTS.md` 的 Vercel 步骤部署 `site/`。
 - [ ] tag 使用 `vX.Y.Z` 格式，触发 `.github/workflows/release.yml`。

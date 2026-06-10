@@ -86,6 +86,26 @@ jobs:
       - name: 运行核心测试 (排除 perf/qa)
         run: pytest tests/ -v --tb=short --ignore=tests/perf -k "not qa" --no-cov
 
+  case-catalog:
+    name: Case Catalog Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 安装测试依赖
+        run: uv pip install -e ".[test]" --system
+      - name: 运行案例库离线验收
+        env:
+          CLIANY_QA_OFFLINE: "1"
+        run: |
+          python scripts/validate_cases.py --strict
+          pytest tests/test_validate_cases.py tests/test_cases_manifest.py -q --no-cov
+
   obscura-smoke:
     name: Obscura Smoke (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
