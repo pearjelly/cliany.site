@@ -51,6 +51,24 @@ class CiReport:
 
 
 @dataclass(frozen=True)
+class PackageGateReport:
+    ok: bool
+    required: bool
+    checked: bool
+    packages_dir: str | None
+    issues: list[str]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "ok": self.ok,
+            "required": self.required,
+            "checked": self.checked,
+            "packages_dir": self.packages_dir,
+            "issues": self.issues,
+        }
+
+
+@dataclass(frozen=True)
 class ReadinessReport:
     ok: bool
     current_version: str
@@ -60,6 +78,7 @@ class ReadinessReport:
     cases: CasesReport
     draft: DraftReport
     ci: CiReport
+    package_gate: PackageGateReport
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -71,6 +90,7 @@ class ReadinessReport:
             "cases": self.cases.to_dict(),
             "draft": self.draft.to_dict(),
             "ci": self.ci.to_dict(),
+            "package_gate": self.package_gate.to_dict(),
         }
 
 
@@ -145,6 +165,25 @@ def _build_ci_report(root: Path) -> CiReport:
     return CiReport(ok=not issues, path=str(path), issues=issues)
 
 
+def _build_package_gate_report(
+    *,
+    packages_dir: Path | None,
+    require_packages: bool,
+    checked_packages: bool,
+) -> PackageGateReport:
+    issues: list[str] = []
+    if require_packages and not checked_packages:
+        issues.append("case package validation is required; pass --packages-dir")
+
+    return PackageGateReport(
+        ok=not issues,
+        required=require_packages,
+        checked=checked_packages,
+        packages_dir=str(packages_dir) if packages_dir is not None else None,
+        issues=issues,
+    )
+
+
 def _cadence_blockers(report: CadenceReport) -> list[str]:
     blockers: list[str] = []
     if report.commit_day_count < report.min_commit_days:
@@ -165,6 +204,7 @@ def build_report(
     min_commit_days: int = 3,
     target_version: str | None = None,
     packages_dir: Path | None = None,
+    require_packages: bool = False,
 ) -> ReadinessReport:
     current_version = _project_version(root)
     expected_target = target_version or _next_patch_version(current_version)
@@ -172,6 +212,11 @@ def build_report(
     cases = build_cases_report(root, packages_dir=packages_dir)
     draft = _build_draft_report(root, current_version, expected_target)
     ci = _build_ci_report(root)
+    package_gate = _build_package_gate_report(
+        packages_dir=packages_dir,
+        require_packages=require_packages,
+        checked_packages=cases.checked_packages,
+    )
 
     blockers = _cadence_blockers(cadence)
     if not cases.ok:
@@ -180,6 +225,8 @@ def build_report(
         blockers.append("release draft validation failed")
     if not ci.ok:
         blockers.append("CI release gates validation failed")
+    if not package_gate.ok:
+        blockers.append("case package validation not run")
 
     return ReadinessReport(
         ok=not blockers,
@@ -190,6 +237,7 @@ def build_report(
         cases=cases,
         draft=draft,
         ci=ci,
+        package_gate=package_gate,
     )
 
 
@@ -206,6 +254,7 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"cases: {report.cases.ok}")
     print(f"draft: {report.draft.ok}")
     print(f"ci: {report.ci.ok}")
+    print(f"package_gate: {report.package_gate.ok}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -216,6 +265,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--today", help="Override current date as YYYY-MM-DD, for tests or audits.")
     parser.add_argument("--target-version", help="Target release version. Defaults to next patch version.")
     parser.add_argument("--packages-dir", type=Path, help="Optional directory containing demo adapter packages.")
+    parser.add_argument(
+        "--require-packages",
+        action="store_true",
+        help="Require --packages-dir package validation before reporting release readiness.",
+    )
     args = parser.parse_args(argv)
 
     today = datetime.strptime(args.today, "%Y-%m-%d").date() if args.today else None
@@ -225,6 +279,7 @@ def main(argv: list[str] | None = None) -> int:
         min_commit_days=args.min_days,
         target_version=args.target_version,
         packages_dir=args.packages_dir,
+        require_packages=args.require_packages,
     )
     if args.json:
         print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))

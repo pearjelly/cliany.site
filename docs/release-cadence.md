@@ -52,6 +52,7 @@
 # 汇总检查下一版是否可发布（默认只报告，不失败）
 python scripts/release_readiness.py
 python scripts/release_readiness.py --json
+python scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --require-packages --strict
 
 # 汇总检查发布节奏（默认只报告，不失败）
 python scripts/check_release_cadence.py
@@ -82,7 +83,7 @@ git tag v0.15.0
 git push origin master --tags
 ```
 
-`release_readiness.py` 是发版前总入口，会同时检查下一版草案、每周提交/版本 tag 节奏、`CHANGELOG.md` Unreleased 状态、工作区清洁度、真实案例库离线验收和默认 CI release gates。默认模式用于观察，`--strict` 用于发版前拦截。
+`release_readiness.py` 是发版前总入口，会同时检查下一版草案、每周提交/版本 tag 节奏、`CHANGELOG.md` Unreleased 状态、工作区清洁度、真实案例库离线验收和默认 CI release gates。默认模式用于观察，`--strict` 用于发版前拦截；正式发版前加上 `--packages-dir ~/.cliany-site/packages --require-packages`，确保 demo adapter release assets 也完成离线校验。
 
 `check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、`CHANGELOG.md` Unreleased 是否有内容，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截。
 

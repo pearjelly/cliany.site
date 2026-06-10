@@ -1,8 +1,11 @@
+import hashlib
 import importlib.util
 import json
 import subprocess
 import sys
+import tarfile
 from datetime import date
+from io import BytesIO
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -120,6 +123,43 @@ def _cases_manifest() -> str:
     )
 
 
+def _write_package(packages_dir: Path, filename: str, *, domain: str) -> None:
+    packages_dir.mkdir(parents=True, exist_ok=True)
+    commands_content = b"import click\n\n@click.group()\ndef cli():\n    pass\n"
+    metadata_content = json.dumps(
+        {
+            "schema_version": 3,
+            "domain": domain,
+            "generated_at": "2026-06-10T00:00:00Z",
+            "generator_version": "test",
+            "commands": [{"name": "list-items"}],
+        }
+    ).encode("utf-8")
+    manifest = {
+        "manifest_version": "1",
+        "domain": domain,
+        "files": ["commands.py", "metadata.json"],
+        "file_hashes": {
+            "commands.py": hashlib.sha256(commands_content).hexdigest(),
+            "metadata.json": hashlib.sha256(metadata_content).hexdigest(),
+        },
+    }
+
+    with tarfile.open(packages_dir / filename, "w:gz") as tar:
+        manifest_content = json.dumps(manifest).encode("utf-8")
+        manifest_info = tarfile.TarInfo(name="manifest.json")
+        manifest_info.size = len(manifest_content)
+        tar.addfile(manifest_info, BytesIO(manifest_content))
+
+        commands_info = tarfile.TarInfo(name="commands.py")
+        commands_info.size = len(commands_content)
+        tar.addfile(commands_info, BytesIO(commands_content))
+
+        metadata_info = tarfile.TarInfo(name="metadata.json")
+        metadata_info.size = len(metadata_content)
+        tar.addfile(metadata_info, BytesIO(metadata_content))
+
+
 def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -171,6 +211,9 @@ def test_release_readiness_passes_for_minimal_ready_repo(tmp_path):
     assert report.cases.ok is True
     assert report.draft.ok is True
     assert report.ci.ok is True
+    assert report.package_gate.ok is True
+    assert report.package_gate.required is False
+    assert report.package_gate.checked is False
 
 
 def test_release_readiness_blocks_missing_release_draft(tmp_path):
@@ -197,3 +240,50 @@ def test_release_readiness_blocks_missing_ci_extract_gate(tmp_path):
     assert "CI release gates validation failed" in report.blockers
     assert report.ci.ok is False
     assert any("extract-quality:" in issue for issue in report.ci.issues)
+
+
+def test_release_readiness_blocks_when_required_package_check_not_run(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+
+    report = release_readiness.build_report(
+        repo,
+        today=date(2026, 6, 10),
+        min_commit_days=1,
+        require_packages=True,
+    )
+
+    assert report.ok is False
+    assert "case package validation not run" in report.blockers
+    assert report.package_gate.ok is False
+    assert report.package_gate.required is True
+    assert report.package_gate.checked is False
+    assert report.package_gate.issues == ["case package validation is required; pass --packages-dir"]
+
+
+def test_release_readiness_accepts_required_valid_packages(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    _commit(repo, "notes/tuesday.md", "tuesday", "2026-06-09")
+    _commit(repo, "notes/wednesday.md", "wednesday", "2026-06-10")
+    packages_dir = tmp_path / "packages"
+    _write_package(
+        packages_dir,
+        "demo.example.com.cliany-adapter-v0.1.0.tar.gz",
+        domain="demo.example.com",
+    )
+
+    report = release_readiness.build_report(
+        repo,
+        today=date(2026, 6, 10),
+        min_commit_days=3,
+        packages_dir=packages_dir,
+        require_packages=True,
+    )
+
+    assert report.ok is True
+    assert report.blockers == []
+    assert report.cases.checked_packages is True
+    assert report.cases.cases[0].package["status"] == "ok"
+    assert report.package_gate.ok is True
+    assert report.package_gate.required is True
+    assert report.package_gate.checked is True
+    assert report.package_gate.packages_dir == str(packages_dir)
