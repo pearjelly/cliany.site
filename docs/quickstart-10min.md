@@ -47,6 +47,7 @@ cliany-site doctor --json
 - `must_fix`：先处理，否则关键路径不可用。
 - `should_fix`：建议处理；例如没有 LLM key 时仍可先安装/执行已有 adapter。
 - `info`：诊断信息，通常无需动作。
+- `capabilities`：按 `manage_adapters`、`run_browser_workflows`、`generate_adapters` 展示当前可用路径和 blockers。
 - `recommended_next_step`：和 human 输出中的 `下一步` 一致，可用于脚本判断后续引导。
 
 ### 3. 下载一个 demo adapter

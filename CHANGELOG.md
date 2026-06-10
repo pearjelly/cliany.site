@@ -24,6 +24,7 @@
 
 ### Changed
 - `doctor` 的 summary 现在包含 `recommended_next_step`，human 输出会直接显示 `下一步`，帮助首次运行用户判断先跑 demo adapter、配置 LLM key 还是修复环境。
+- `doctor` 的 summary 现在包含 `capabilities`，按管理已有 adapter、运行浏览器 workflow、生成新 adapter 三条路径展示 ready 状态和 blockers。
 - 案例库 candidate 状态现在要求 `promotion` 清单，明确 adapter 包、metadata 校验和在线只读 smoke 三个晋级 active 的条件。
 - `scripts/validate_cases.py` 现在要求 candidate 案例声明 `example_output`，防止候选真实工作流缺少可离线展示的 JSON envelope 样例。
 - `scripts/validate_cases.py` 现在会校验 `example_output.data.command` 是否匹配 manifest 中声明的业务命令，避免样例输出和案例命令漂移。

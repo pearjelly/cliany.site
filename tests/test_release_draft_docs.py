@@ -31,6 +31,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "market install",
         "verify --json",
         "summary.recommended_next_step",
+        "summary.capabilities",
         "scripts/validate_cases.py",
         "Case Catalog Validation",
         "cases/README.md",

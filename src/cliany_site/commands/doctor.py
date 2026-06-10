@@ -87,6 +87,47 @@ def _severity_for_check(check: dict[str, Any]) -> str:
     return "info"
 
 
+def _build_capabilities(checks: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    statuses = {str(check.get("name")): str(check.get("status")) for check in checks}
+
+    def blocked_by(required_ok: tuple[str, ...], required_not_warning: tuple[str, ...] = ()) -> list[str]:
+        blockers: list[str] = []
+        for name in required_ok:
+            if name not in statuses:
+                continue
+            if statuses.get(name) != "ok":
+                blockers.append(name)
+        for name in required_not_warning:
+            if name not in statuses:
+                continue
+            if statuses.get(name) in {"fail", "warning"}:
+                blockers.append(name)
+        return blockers
+
+    capabilities = {
+        "manage_adapters": {
+            "label": "安装、查看和校验已有 adapter",
+            "blockers": blocked_by(("dirs",)),
+            "next_step": "可以运行 cliany-site market install、list 或 verify。",
+        },
+        "run_browser_workflows": {
+            "label": "执行需要浏览器的已有 adapter 命令",
+            "blockers": blocked_by(("cdp", "dirs")),
+            "next_step": "可以执行已安装 adapter 的只读命令；失败时先看命令返回的 error.code。",
+        },
+        "generate_adapters": {
+            "label": "使用 explore 生成新 adapter",
+            "blockers": blocked_by(("cdp", "dirs", "llm_provider", "openai_base_url"), ("llm",)),
+            "next_step": "可以运行 cliany-site explore 生成自己的站点命令。",
+        },
+    }
+    for capability in capabilities.values():
+        capability["ready"] = not capability["blockers"]
+        if capability["blockers"]:
+            capability["next_step"] = "先处理 blockers 中列出的 doctor check，然后重新运行 cliany-site doctor。"
+    return capabilities
+
+
 def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
     summary: dict[str, Any] = {
         "must_fix": [],
@@ -106,6 +147,7 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
     summary["ready_for_explore"] = not summary["must_fix"] and not any(
         item["name"] == "llm" for item in summary["should_fix"]
     )
+    summary["capabilities"] = _build_capabilities(checks)
     if summary["must_fix"]:
         summary["recommended_next_step"] = "先处理必须修复项，然后重新运行 cliany-site doctor。"
     elif summary["ready_for_explore"]:
@@ -149,6 +191,20 @@ def _print_doctor_human(result: Envelope) -> None:
         recommended_next_step = summary.get("recommended_next_step")
         if recommended_next_step:
             click.echo(f"下一步: {recommended_next_step}")
+
+        capabilities = summary.get("capabilities") if isinstance(summary.get("capabilities"), dict) else {}
+        if capabilities:
+            click.echo("\n可用能力:")
+            for name, capability in capabilities.items():
+                if not isinstance(capability, dict):
+                    continue
+                status = "yes" if capability.get("ready") else "no"
+                label = capability.get("label") or name
+                blockers = capability.get("blockers")
+                suffix = ""
+                if isinstance(blockers, list) and blockers:
+                    suffix = f" (blocked by: {', '.join(str(item) for item in blockers)})"
+                click.echo(f"- {name}: {status} - {label}{suffix}")
 
         labels = (
             ("must_fix", "必须修复"),
