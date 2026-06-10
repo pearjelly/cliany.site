@@ -43,6 +43,10 @@ cd cliany.site
 pip install -e ".[dev,test]"
 ```
 
+首次贡献者建议先阅读 [docs/contributor-starter.md](docs/contributor-starter.md)，其中包含 good-first-issue 清单、模块地图、复现问题的最小包和按风险选择测试的指南。
+
+First-time contributors should start with [docs/contributor-starter.md](docs/contributor-starter.md), which includes good-first-issue ideas, a module map, the smallest useful reproduction bundle, and risk-based test guidance.
+
 ## 运行测试 / Running Tests
 
 ```bash

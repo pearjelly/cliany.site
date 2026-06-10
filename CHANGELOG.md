@@ -15,6 +15,7 @@
 - `doctor --json` 新增 `data.summary` 分层行动建议，并为每个 check 补充 `severity` 与 `action` 字段，帮助新用户区分必须修复、建议优化和诊断信息。
 - `doctor` 非 JSON 输出新增面向人的摘要视图，按“必须修复 / 建议处理 / 诊断信息”展示行动项。
 - 新增 `scripts/check_release_cadence.py`，本地检查版本 tag、本周提交天数、CHANGELOG Unreleased 和工作区状态；`scripts/publish.sh` 改为优先使用 `PYPI_TOKEN` 环境变量。
+- 新增 `docs/contributor-starter.md`，提供 good-first-issue 清单、模块地图、复现问题最小包和按风险选择验证范围的贡献者入口。
 
 ## [0.14.2] - 2026-06-10
 
