@@ -3,7 +3,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "cases" / "manifest.json"
-ALLOWED_STATUSES = {"active", "degraded", "known-gap", "retired"}
+ALLOWED_STATUSES = {"active", "candidate", "degraded", "known-gap", "retired"}
 
 
 def _load_cases() -> list[dict]:
@@ -33,6 +33,9 @@ def test_cases_manifest_entries_are_actionable():
             assert case["source_release"]
             assert case["commands"]
             assert case["example_output"]
+            assert all(command.startswith("cliany-site ") for command in case["commands"])
+        if case["status"] == "candidate":
+            assert case["commands"]
             assert all(command.startswith("cliany-site ") for command in case["commands"])
 
 

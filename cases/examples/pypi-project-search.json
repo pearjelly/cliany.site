@@ -1,0 +1,36 @@
+{
+  "ok": true,
+  "data": {
+    "command": "search-projects",
+    "args": {
+      "query": "cliany-site",
+      "limit": 5
+    },
+    "results": [
+      {
+        "ok": true,
+        "action": "extract",
+        "data": {
+          "projects": [
+            {
+              "name": "cliany-site",
+              "summary": "Example project result",
+              "url": "https://pypi.org/project/cliany-site/"
+            }
+          ]
+        }
+      }
+    ],
+    "quality": {
+      "ok": true,
+      "status": "ok",
+      "row_count": 1
+    }
+  },
+  "error": null,
+  "meta": {
+    "source": "case-example",
+    "case_id": "pypi-project-search",
+    "sample": true
+  }
+}

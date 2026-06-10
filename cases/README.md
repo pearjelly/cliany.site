@@ -22,11 +22,17 @@
 | `apache-jira-issues` | ASF Jira issue 列表 | active | DevOps/项目管理列表读取；样例输出见 [apache-jira-issues.json](examples/apache-jira-issues.json) |
 | `apache-confluence-search` | ASF Confluence 页面搜索 | active | 团队知识库搜索；样例输出见 [apache-confluence-search.json](examples/apache-confluence-search.json) |
 | `apache-jenkins-jobs` | ASF Jenkins job 列表 | active | 构建状态查询；样例输出见 [apache-jenkins-jobs.json](examples/apache-jenkins-jobs.json) |
+| `pypi-project-search` | PyPI 项目搜索 | candidate | Python 包注册表搜索候选；样例输出见 [pypi-project-search.json](examples/pypi-project-search.json)，待生成 adapter 包和在线 smoke 后晋级 active |
 | `search-extraction-gap` | 搜索结果抽取复盘 | known-gap | 明确「页面交互强、列表抽取弱」的产品边界 |
+
+## Candidate Cases
+
+`candidate` 表示真实公开只读工作流已经进入案例管道，但尚未承诺已有 release adapter 包。候选案例必须有期望命令和离线样例输出；当 adapter 包、metadata 校验和在线只读 smoke 都准备好后，再改为 `active`。
 
 ## 维护规则
 
 - 新增真实 demo 时，先更新 `manifest.json`，再补充 README/官网展示。
+- 候选真实 demo 先用 `candidate`，不要在 release asset 准备好之前标记为 `active`。
 - 如果只是提出候选场景，优先使用 GitHub 的 `Real Demo Case Proposal` issue 模板，说明目标 URL、只读工作流、期望命令、离线样例输出和验证方式。
 - 第三方站点不可用时，将 `status` 标记为 `degraded`，不要直接删除案例。
 - 每个 active 案例至少要有一个 `commands` 示例和一种 `validation` 方式。

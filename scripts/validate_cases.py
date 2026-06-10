@@ -15,7 +15,7 @@ from typing import Any
 from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
-ALLOWED_STATUSES = {"active", "degraded", "known-gap", "retired"}
+ALLOWED_STATUSES = {"active", "candidate", "degraded", "known-gap", "retired"}
 INSTALL_RE = re.compile(r"^cliany-site market install (?P<path>\S+)")
 REQUIRED_PACKAGE_FILES = {"commands.py", "metadata.json"}
 
@@ -49,6 +49,7 @@ class CasesReport:
     ok: bool
     total: int
     active: int
+    candidate: int
     known_gap: int
     checked_packages: bool
     cases: list[CaseCheck]
@@ -58,6 +59,7 @@ class CasesReport:
             "ok": self.ok,
             "total": self.total,
             "active": self.active,
+            "candidate": self.candidate,
             "known_gap": self.known_gap,
             "checked_packages": self.checked_packages,
             "cases": [case.to_dict() for case in self.cases],
@@ -353,6 +355,12 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
                     check.issues.append(
                         f"adapter command domain mismatch: expected {adapter_domain!r}, got {command_domain!r}"
                     )
+    elif status == "candidate":
+        if not commands:
+            check.issues.append("candidate case requires expected commands")
+        for command in commands:
+            if not str(command).startswith("cliany-site "):
+                check.issues.append(f"command must start with cliany-site: {command}")
 
     if packages_dir is not None and status == "active":
         package_name = _install_package_name(case)
@@ -382,6 +390,7 @@ def build_report(root: Path = ROOT, packages_dir: Path | None = None) -> CasesRe
         ok=all(check.ok for check in checks),
         total=len(checks),
         active=sum(1 for case in cases if case.get("status") == "active"),
+        candidate=sum(1 for case in cases if case.get("status") == "candidate"),
         known_gap=sum(1 for case in cases if case.get("status") == "known-gap"),
         checked_packages=packages_dir is not None,
         cases=checks,
@@ -392,6 +401,7 @@ def _print_text(report: CasesReport) -> None:
     print("=== cliany-site cases validation ===")
     print(f"total: {report.total}")
     print(f"active: {report.active}")
+    print(f"candidate: {report.candidate}")
     print(f"known_gap: {report.known_gap}")
     print(f"checked_packages: {report.checked_packages}")
     print(f"ok: {report.ok}")
@@ -415,6 +425,7 @@ def _render_markdown_report(report: CasesReport) -> str:
         f"| ok | `{str(report.ok).lower()}` |",
         f"| total | `{report.total}` |",
         f"| active | `{report.active}` |",
+        f"| candidate | `{report.candidate}` |",
         f"| known_gap | `{report.known_gap}` |",
         f"| checked_packages | `{str(report.checked_packages).lower()}` |",
         "",

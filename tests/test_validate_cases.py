@@ -119,6 +119,7 @@ def test_current_cases_manifest_validates_without_packages():
 
     assert report.ok is True
     assert report.active >= 4
+    assert report.candidate >= 1
     assert report.known_gap >= 1
     assert report.checked_packages is False
 
@@ -184,6 +185,32 @@ def test_cases_report_rejects_active_case_without_example_output(tmp_path):
 
     assert report.ok is False
     assert "active case requires example_output" in report.cases[0].issues
+
+
+def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
+    case = _case("candidate-case")
+    case["status"] = "candidate"
+    case["source_release"] = None
+    case["commands"] = ["cliany-site demo.example.com list-items --json"]
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is True
+    assert report.active == 0
+    assert report.candidate == 1
+
+
+def test_cases_report_rejects_candidate_case_without_expected_commands(tmp_path):
+    case = _case("candidate-case")
+    case["status"] = "candidate"
+    case["commands"] = []
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert "candidate case requires expected commands" in report.cases[0].issues
 
 
 def test_cases_report_rejects_example_output_case_id_mismatch(tmp_path):
@@ -261,6 +288,7 @@ def test_cases_report_writes_markdown_report(tmp_path):
     text = report_path.read_text(encoding="utf-8")
     assert "# cliany-site Case Catalog Validation" in text
     assert "| ok | `true` |" in text
+    assert "| candidate | `0` |" in text
     assert "| `demo-case` | `active` | `ok` | - | - |" in text
 
 

@@ -77,6 +77,25 @@
     }
   },
   {
+    "id": "pypi-project-search",
+    "title": "PyPI project search",
+    "category": "package-registry",
+    "status": "candidate",
+    "target_url": "https://pypi.org/search/?q=cliany-site",
+    "adapter_domain": "pypi.org",
+    "source_release": null,
+    "docs": "cases/README.md#candidate-cases",
+    "example_output": "cases/examples/pypi-project-search.json",
+    "commands": [
+      "cliany-site explore \"https://pypi.org\" \"search Python packages for cliany-site and list project names\" --json",
+      "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json"
+    ],
+    "validation": {
+      "offline": "candidate entry and example output validate without release adapter package assets",
+      "online": "read-only PyPI search returns project cards for the query"
+    }
+  },
+  {
     "id": "search-extraction-gap",
     "title": "Search result extraction gap review",
     "category": "known-gap",

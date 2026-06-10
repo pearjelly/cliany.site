@@ -34,6 +34,8 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "Case Catalog Validation",
         "cases/README.md",
         "cases/manifest.json",
+        "pypi-project-search",
+        "candidate",
         "search-extraction-gap",
         "docs/weekly-maintainer-loop.md",
         "weekly maintainer loop",
