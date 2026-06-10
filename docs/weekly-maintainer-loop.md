@@ -24,6 +24,8 @@ python scripts/release_readiness.py --json
 python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 ```
 
+Markdown 报告里的 `Weekly Review` 小节会把本页最后的 6 个复盘问题和当前证据放在一起；发版前优先引用这份报告，避免手工复盘和 readiness gate 脱节。
+
 如果 readiness 只剩 `commit days N/3`，本周继续做小而可验证的增量；如果存在 gate issue，优先关闭具体 gate，再继续新功能。
 
 ## 2. 周中：实现一个可验证切片

@@ -51,6 +51,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "Issue 拆分清单",
         "website quickstart",
         "weekly maintainer loop",
+        "Weekly Review",
         "Next Actions",
         "next_actions",
         "missing_commit_days",

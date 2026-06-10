@@ -15,6 +15,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "## 4. 周复盘问题",
         "python scripts/release_readiness.py --json",
         "python scripts/release_readiness.py --report",
+        "Weekly Review",
         "python scripts/validate_cases.py --strict",
         "CLIANY_QA_OFFLINE=1 pytest tests/ -q --no-cov",
         "commit days N/3",

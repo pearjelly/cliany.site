@@ -609,6 +609,38 @@ def _candidate_promotion_rows(report: ReadinessReport) -> list[str]:
     return rows
 
 
+def _weekly_review_rows(report: ReadinessReport) -> list[str]:
+    next_actions = _next_action_lines(report)
+    next_slice = (
+        next_actions[0].removeprefix("- ")
+        if next_actions
+        else f"Ready to tag `v{report.target_version}` after final validation."
+    )
+    return [
+        (
+            "| Does this release help real users succeed? | "
+            f"cases active `{report.cases.active}`, candidate `{report.cases.candidate}`; "
+            f"release draft `{Path(report.draft.path).name}` |"
+        ),
+        (
+            "| Is there reproducible evidence? | "
+            f"cases `{str(report.cases.ok).lower()}`, ci `{str(report.ci.ok).lower()}`, "
+            f"package gate `{str(report.package_gate.ok).lower()}` |"
+        ),
+        (
+            "| Are docs and release notes synchronized? | "
+            f"draft `{str(report.draft.ok).lower()}`, project metadata `{str(report.project_metadata.ok).lower()}` |"
+        ),
+        f"| Does the PR path stay zero-key by default? | ci `{str(report.ci.ok).lower()}` |",
+        (
+            "| Does the week have enough commit days? | "
+            f"`{report.cadence.commit_day_count}/{report.cadence.min_commit_days}`: "
+            f"{', '.join(report.cadence.commit_days) or '-'} |"
+        ),
+        f"| What is the next smallest release slice? | {_markdown_cell(next_slice)} |",
+    ]
+
+
 def _render_markdown_report(report: ReadinessReport) -> str:
     blockers = "<br>".join(report.blockers) if report.blockers else "-"
     commit_days = ", ".join(report.cadence.commit_days) if report.cadence.commit_days else "-"
@@ -652,6 +684,12 @@ def _render_markdown_report(report: ReadinessReport) -> str:
         "",
         f"- CHANGELOG compare: {report.cadence.changelog_unreleased_compare_actual or '(missing)'}",
         f"- Release draft: `{report.draft.path}`",
+        "",
+        "## Weekly Review",
+        "",
+        "| Question | Evidence |",
+        "|----------|----------|",
+        *_weekly_review_rows(report),
     ]
     issue_lines = _report_issue_lines(report)
     if issue_lines:
