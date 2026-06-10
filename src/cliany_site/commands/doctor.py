@@ -109,6 +109,56 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
     return summary
 
 
+def _doctor_payload(result: Envelope) -> dict[str, Any]:
+    if result.get("ok"):
+        data = result.get("data")
+        return data if isinstance(data, dict) else {}
+    error = result.get("error")
+    if isinstance(error, dict):
+        details = error.get("details")
+        return details if isinstance(details, dict) else {}
+    return {}
+
+
+def _print_doctor_human(result: Envelope) -> None:
+    payload = _doctor_payload(result)
+    summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
+    ok_result = bool(result.get("ok"))
+
+    click.secho("cliany-site doctor", bold=True)
+    if ok_result:
+        click.secho("状态: 可继续", fg="green")
+    else:
+        message = ""
+        error = result.get("error")
+        if isinstance(error, dict):
+            message = str(error.get("message") or "")
+        click.secho(f"状态: 需要修复 {message}".strip(), fg="red")
+
+    if summary:
+        demo_ready = "yes" if summary.get("ready_for_demo_adapters") else "no"
+        explore_ready = "yes" if summary.get("ready_for_explore") else "no"
+        click.echo(f"Demo adapter ready: {demo_ready}")
+        click.echo(f"Explore ready: {explore_ready}")
+
+        labels = (
+            ("must_fix", "必须修复"),
+            ("should_fix", "建议处理"),
+            ("info", "诊断信息"),
+        )
+        for key, label in labels:
+            items = summary.get(key)
+            if not items:
+                continue
+            click.echo(f"\n{label}:")
+            for item in items:
+                name = item.get("name", "unknown")
+                action = item.get("action", "无需处理，仅供诊断参考。")
+                click.echo(f"- {name}: {action}")
+    else:
+        click.echo("未生成诊断摘要，请使用 --json 查看原始检查结果。")
+
+
 @click.command("doctor")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出模式")
 @click.pass_context
@@ -122,7 +172,12 @@ def doctor(ctx: click.Context, json_mode: bool | None):
 
     cdp_conn = cdp_from_context(ctx)
     result = asyncio.run(_run_checks(cdp_conn))
-    print_response(result, json_mode=effective_json_mode, exit_on_error=True)
+    if effective_json_mode:
+        print_response(result, json_mode=True, exit_on_error=True)
+        return
+    _print_doctor_human(result)
+    if not result.get("ok", False):
+        raise SystemExit(1)
 
 
 async def _run_checks(cdp_conn: Any = None) -> Envelope:

@@ -85,6 +85,34 @@ def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):
     assert summary["ready_for_explore"] is False
 
 
+def test_doctor_human_output_groups_action_items(tmp_home, no_llm, monkeypatch):
+    """Test that non-JSON doctor output is readable for first-run users"""
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.delenv("CLIANY_ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("CLIANY_OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["doctor"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert "cliany-site doctor" in result.output
+    assert "状态: 可继续" in result.output
+    assert "Demo adapter ready: yes" in result.output
+    assert "Explore ready: no" in result.output
+    assert "建议处理:" in result.output
+    assert "llm" in result.output
+    assert "只安装/执行已有 adapter 可暂时忽略" in result.output
+
+
 @pytest.mark.asyncio
 async def test_doctor_cdp_failure_includes_must_fix_summary(tmp_home, no_llm, monkeypatch):
     """Test that fatal checks include actionable summary in error details"""
@@ -110,6 +138,28 @@ async def test_doctor_cdp_failure_includes_must_fix_summary(tmp_home, no_llm, mo
     cdp_check = next(c for c in details["checks"] if c["name"] == "cdp")
     assert cdp_check["severity"] == "must_fix"
     assert "CDP" in cdp_check["action"]
+
+
+def test_doctor_human_output_exits_nonzero_for_must_fix(tmp_home, no_llm, monkeypatch):
+    """Test that fatal checks stay obvious in human output"""
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return False
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.setenv("CLIANY_ANTHROPIC_API_KEY", "test")
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["doctor"], catch_exceptions=False)
+
+    assert result.exit_code == 1
+    assert "状态: 需要修复" in result.output
+    assert "必须修复:" in result.output
+    assert "cdp" in result.output
+    assert "CDP" in result.output
 
 
 def test_legacy_adapter_count(tmp_home, no_llm, monkeypatch):

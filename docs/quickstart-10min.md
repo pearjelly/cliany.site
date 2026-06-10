@@ -25,10 +25,21 @@ pip install -e ".[dev,test]"
 ### 2. 检查本机环境
 
 ```bash
+cliany-site doctor
+```
+
+先看 human summary 中的三类提示。Chrome/CDP 或 LLM key 的错误不一定阻塞 demo adapter 的静态安装，但会影响 `login` 和 `explore`。
+
+- `必须修复`：先处理，否则关键路径不可用。
+- `建议处理`：建议处理；例如没有 LLM key 时仍可先安装/执行已有 adapter。
+- `诊断信息`：通常无需动作。
+
+自动化脚本可以使用 JSON：
+
+```bash
 cliany-site doctor --json
 ```
 
-先看 JSON envelope 是否能正常返回。Chrome/CDP 或 LLM key 的错误不一定阻塞 demo adapter 的静态安装，但会影响 `login` 和 `explore`。
 重点看 `data.summary`：
 
 - `must_fix`：先处理，否则关键路径不可用。
@@ -119,7 +130,7 @@ cliany-site github.com search --query "cliany.site" --json
 一次有效的首次成功应满足：
 
 - `cliany-site --version` 正常。
-- `cliany-site doctor --json` 返回结构化 JSON。
+- `cliany-site doctor` 返回可读摘要；`cliany-site doctor --json` 返回结构化 JSON。
 - 至少一个 demo adapter 能安装、列出、验证。
 - 至少一个只读命令返回 JSON envelope。
 - 如果继续使用 `explore`，生成结果能被 `list` 发现，并能用 `--json` 执行。
