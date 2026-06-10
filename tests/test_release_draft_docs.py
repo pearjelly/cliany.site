@@ -29,6 +29,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
     required = [
         "docs/adapter-lifecycle.md",
         "market install",
+        "离线 roundtrip",
         "verify --json",
         "summary.recommended_next_step",
         "summary.capabilities",

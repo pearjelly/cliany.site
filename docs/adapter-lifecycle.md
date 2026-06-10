@@ -140,6 +140,32 @@ cliany-site market info <domain> --json
 | `missing` | 没有 market manifest，多见于本机 `explore` 生成 | 若需要分发，运行 `cliany-site market publish <domain>` |
 | `error` | manifest 解析失败、domain 不匹配、声明缺失或哈希不匹配 | 重新安装可信包，或重新 `market publish` 后再安装 |
 
+## 离线 roundtrip 验证
+
+发版前或评审 adapter 生命周期改动时，优先用临时 HOME 做一次本机 roundtrip，确认包可以从“来源环境”进入“目标环境”，且不会污染真实 `~/.cliany-site/`：
+
+```bash
+SOURCE_HOME="$(mktemp -d)"
+TARGET_HOME="$(mktemp -d)"
+mkdir -p "$SOURCE_HOME/.cliany-site/adapters"
+cp -R "$HOME/.cliany-site/adapters/github.com" "$SOURCE_HOME/.cliany-site/adapters/"
+
+HOME="$SOURCE_HOME" cliany-site market publish github.com --version 1.0.0 --json
+HOME="$SOURCE_HOME" cliany-site market publish github.com --version 1.0.1 --json
+HOME="$TARGET_HOME" cliany-site market install "$SOURCE_HOME/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz" --json
+HOME="$TARGET_HOME" cliany-site verify github.com --json
+HOME="$TARGET_HOME" cliany-site market install "$SOURCE_HOME/.cliany-site/packages/github.com-1.0.1.cliany-adapter.tar.gz" --force --json
+HOME="$TARGET_HOME" cliany-site market backups github.com --json
+HOME="$TARGET_HOME" cliany-site market rollback github.com --index 0 --json
+HOME="$TARGET_HOME" cliany-site verify github.com --json
+```
+
+如果只想做 release asset 离线校验，可以跳过安装流程，直接让案例库 gate 读取本地包目录：
+
+```bash
+python scripts/validate_cases.py --packages-dir "$SOURCE_HOME/.cliany-site/packages" --strict
+```
+
 ## 维护流程
 
 一次高质量 adapter 更新建议按这个顺序提交：

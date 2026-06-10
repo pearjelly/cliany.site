@@ -15,6 +15,7 @@ def test_adapter_lifecycle_doc_has_required_sections():
         "## 安全边界",
         "## 安装故障排查",
         "## 安装后验证",
+        "## 离线 roundtrip 验证",
         "## 维护流程",
         "## 贡献入口",
     ]
@@ -40,6 +41,13 @@ def test_adapter_lifecycle_doc_pins_package_contract():
         "cliany-site market publish",
         "cliany-site market install",
         "cliany-site market rollback",
+        "SOURCE_HOME",
+        "TARGET_HOME",
+        'cp -R "$HOME/.cliany-site/adapters/github.com"',
+        "github.com-1.0.0.cliany-adapter.tar.gz",
+        "github.com-1.0.1.cliany-adapter.tar.gz",
+        "--force --json",
+        "python scripts/validate_cases.py --packages-dir",
     ]
     for term in required_terms:
         assert term in text
