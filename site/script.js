@@ -140,6 +140,19 @@ const I18N = {
   'qs.step2': { zh: 'Step 2: 检查就绪状态', en: 'Step 2: Check Readiness' },
   'qs.step3': { zh: 'Step 3: 运行真实 Demo Adapter', en: 'Step 3: Run a Demo Adapter' },
   'qs.step4': { zh: 'Step 4: 生成你的命令', en: 'Step 4: Generate Your Own' },
+  'qs.contribute.title': { zh: '首次成功之后', en: 'After Your First Success' },
+  'qs.contribute.desc': {
+    zh: '跑通公开只读工作流后，可以通过 Real Demo Case Proposal 路径提交候选场景，让它沉淀为带离线 JSON 样例的可验证案例。',
+    en: 'Ran a real public workflow? Propose it through the Real Demo Case Proposal path so it can become a validated case with an offline JSON example.'
+  },
+  'qs.contribute.case': {
+    zh: '使用 <code>Real Demo Case Proposal</code> issue 模板提交公开、只读工作流。',
+    en: 'Use the <code>Real Demo Case Proposal</code> issue template for public, read-only workflows.'
+  },
+  'qs.contribute.validate': {
+    zh: '候选案例应关联 <code>cases/manifest.json</code>、<code>cases/examples/</code> 和 <code>python scripts/validate_cases.py --strict</code>。',
+    en: 'Candidate cases should point to <code>cases/manifest.json</code>, <code>cases/examples/</code>, and <code>python scripts/validate_cases.py --strict</code>.'
+  },
 
   'obscura.title': { zh: '实验性功能：Obscura Browser Provider', en: 'Experimental: Obscura Browser Provider' },
   'obscura.desc': { zh: 'Obscura 是一个轻量级的浏览器替代方案，目前处于实验阶段。Chrome 仍然是默认 provider。', en: 'Obscura is a lightweight alternative to Chrome, currently in experimental status. Chrome remains the default provider.' },
