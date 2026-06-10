@@ -135,11 +135,11 @@ const I18N = {
   'demo.explore.done': { zh: '✓ 探索完成，已生成适配器', en: '✓ Exploration complete, adapter generated' },
 
   'qs.title': { zh: '快速开始', en: 'Quick Start' },
-  'qs.subtitle': { zh: '五分钟完成安装与配置', en: 'Set up in five minutes' },
+  'qs.subtitle': { zh: '先跑真实 demo，再配置 LLM 生成自己的命令', en: 'Run a real demo first, then configure LLM to generate your own commands' },
   'qs.step1': { zh: 'Step 1: 安装', en: 'Step 1: Install' },
-  'qs.step2': { zh: 'Step 2: 配置 LLM', en: 'Step 2: Configure LLM' },
-  'qs.step3': { zh: 'Step 3: 选择 Provider', en: 'Step 3: Choose Provider' },
-  'qs.step4': { zh: 'Step 4: 开始探索', en: 'Step 4: Start Exploring' },
+  'qs.step2': { zh: 'Step 2: 检查就绪状态', en: 'Step 2: Check Readiness' },
+  'qs.step3': { zh: 'Step 3: 运行真实 Demo Adapter', en: 'Step 3: Run a Demo Adapter' },
+  'qs.step4': { zh: 'Step 4: 生成你的命令', en: 'Step 4: Generate Your Own' },
 
   'obscura.title': { zh: '实验性功能：Obscura Browser Provider', en: 'Experimental: Obscura Browser Provider' },
   'obscura.desc': { zh: 'Obscura 是一个轻量级的浏览器替代方案，目前处于实验阶段。Chrome 仍然是默认 provider。', en: 'Obscura is a lightweight alternative to Chrome, currently in experimental status. Chrome remains the default provider.' },

@@ -412,7 +412,7 @@
       <div class="container">
         <div class="section-header reveal">
           <h2 class="section-title" data-i18n="qs.title">Quick Start</h2>
-          <p class="section-subtitle" data-i18n="qs.subtitle">Set up in five minutes</p>
+          <p class="section-subtitle" data-i18n="qs.subtitle">Run a real demo first, then configure LLM to generate your own commands</p>
         </div>
 
         <div class="qs-grid reveal">
@@ -431,33 +431,36 @@ pip install -e .</code></pre>
           </div>
 
           <div class="qs-card">
-            <h3 class="qs-title" data-i18n="qs.step2">Step 2: Configure LLM</h3>
+            <h3 class="qs-title" data-i18n="qs.step2">Step 2: Check Readiness</h3>
             <div class="code-block-container">
-              <pre class="code-block"><code>export CLIANY_LLM_PROVIDER=anthropic
-export CLIANY_ANTHROPIC_API_KEY="sk-ant-..."</code></pre>
-              <button class="copy-btn" data-clipboard="export CLIANY_LLM_PROVIDER=anthropic&#10;export CLIANY_ANTHROPIC_API_KEY=&#34;sk-ant-...&#34;" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button>
+              <pre class="code-block"><code># Human-readable first-run summary
+cliany-site doctor
+
+# Machine-readable automation output
+cliany-site doctor --json</code></pre>
+              <button class="copy-btn" data-clipboard="cliany-site doctor" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button>
             </div>
           </div>
 
           <div class="qs-card">
-            <h3 class="qs-title" data-i18n="qs.step3">Step 3: Choose Provider</h3>
+            <h3 class="qs-title" data-i18n="qs.step3">Step 3: Run a Demo Adapter</h3>
             <div class="code-block-container">
-              <pre class="code-block"><code># Default: Chrome (Supported: Explore + Run)
-cliany-site doctor --json
-
-# Experimental: Obscura (Supported: Run only)
-cliany-site obscura install 0.1.0 --json
-export CLIANY_BROWSER_PROVIDER=obscura</code></pre>
-              <button class="copy-btn" data-clipboard="cliany-site doctor --json" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button>
+              <pre class="code-block"><code># Download adapter assets from GitHub Release v0.14.1
+cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz
+cliany-site verify issues.apache.org --json
+cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json</code></pre>
+              <button class="copy-btn" data-clipboard="cliany-site verify issues.apache.org --json" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button>
             </div>
           </div>
 
           <div class="qs-card">
-            <h3 class="qs-title" data-i18n="qs.step4">Step 4: Start Exploring</h3>
+            <h3 class="qs-title" data-i18n="qs.step4">Step 4: Generate Your Own</h3>
             <div class="code-block-container">
-              <pre class="code-block"><code># Note: explore requires Chrome provider
+              <pre class="code-block"><code># Configure LLM only when you are ready to explore
+export CLIANY_LLM_PROVIDER=anthropic
+export CLIANY_ANTHROPIC_API_KEY="sk-ant-..."
 cliany-site explore "https://github.com" "search repos" --json</code></pre>
-              <button class="copy-btn" data-clipboard="cliany-site explore &#34;https://github.com&#34; &#34;search repos&#34; --json" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button>
+              <button class="copy-btn" data-clipboard="export CLIANY_LLM_PROVIDER=anthropic&#10;export CLIANY_ANTHROPIC_API_KEY=&#34;sk-ant-...&#34;&#10;cliany-site explore &#34;https://github.com&#34; &#34;search repos&#34; --json" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button>
             </div>
           </div>
         </div>

@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Changed
+- 官网 Quick Start 同步 v0.14.3 首次成功路径：先运行 `doctor` 摘要和真实 demo adapter，再配置 LLM 生成自定义命令。
+
 ## [0.14.3] - 2026-06-10
 
 ### Added
