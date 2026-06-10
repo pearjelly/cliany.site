@@ -480,6 +480,7 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "| ok | `true` |" in text
     assert "| target_version | `0.1.1` |" in text
     assert "| cadence | `true` | commit days `3/3`: 2026-06-08, 2026-06-09, 2026-06-10 |" in text
+    assert "| cases | `true` | active `1`, candidate `0`, known_gap `0`, total `1` |" in text
     assert "| release_workflow | `true` |" in text
     assert "| project_metadata | `true` |" in text
     assert "https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD" in text
@@ -496,6 +497,7 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
 
     output = capsys.readouterr().out
     assert "ok: True" in output
+    assert "cases: True (active 1, candidate 0, known_gap 0, total 1)" in output
     assert "next_actions:" not in output
 
 

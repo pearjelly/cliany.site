@@ -496,7 +496,11 @@ def _print_text(report: ReadinessReport) -> None:
         for blocker in report.blockers:
             print(f"- {blocker}")
     print(f"cadence: {report.cadence.ok}")
-    print(f"cases: {report.cases.ok}")
+    print(
+        f"cases: {report.cases.ok} "
+        f"(active {report.cases.active}, candidate {report.cases.candidate}, "
+        f"known_gap {report.cases.known_gap}, total {report.cases.total})"
+    )
     print(f"draft: {report.draft.ok}")
     print(f"ci: {report.ci.ok}")
     print(f"release_workflow: {report.release_workflow.ok}")
@@ -588,7 +592,11 @@ def _render_markdown_report(report: ReadinessReport) -> str:
             f"| cadence | `{str(report.cadence.ok).lower()}` | "
             f"commit days `{report.cadence.commit_day_count}/{report.cadence.min_commit_days}`: {commit_days} |"
         ),
-        f"| cases | `{str(report.cases.ok).lower()}` | active `{report.cases.active}` / total `{report.cases.total}` |",
+        (
+            f"| cases | `{str(report.cases.ok).lower()}` | "
+            f"active `{report.cases.active}`, candidate `{report.cases.candidate}`, "
+            f"known_gap `{report.cases.known_gap}`, total `{report.cases.total}` |"
+        ),
         f"| draft | `{str(report.draft.ok).lower()}` | `{report.draft.path}` |",
         f"| ci | `{str(report.ci.ok).lower()}` | `{report.ci.path}` |",
         (
