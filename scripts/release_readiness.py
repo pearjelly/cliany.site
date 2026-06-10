@@ -497,6 +497,11 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"release_workflow: {report.release_workflow.ok}")
     print(f"project_metadata: {report.project_metadata.ok}")
     print(f"package_gate: {report.package_gate.ok}")
+    next_actions = _next_action_lines(report)
+    if next_actions:
+        print("next_actions:")
+        for action in next_actions:
+            print(action)
 
 
 def _report_issue_lines(report: ReadinessReport) -> list[str]:

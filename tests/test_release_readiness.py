@@ -468,6 +468,35 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "## Next Actions" not in text
 
 
+def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, capsys):
+    repo = _init_repo(tmp_path, with_draft=True)
+    _commit(repo, "notes/tuesday.md", "tuesday", "2026-06-09")
+    _commit(repo, "notes/wednesday.md", "wednesday", "2026-06-10")
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+
+    release_readiness._print_text(report)
+
+    output = capsys.readouterr().out
+    assert "ok: True" in output
+    assert "next_actions:" not in output
+
+
+def test_release_readiness_text_output_includes_next_actions_when_blocked(tmp_path, capsys):
+    repo = _init_repo(tmp_path, with_draft=True)
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+
+    release_readiness._print_text(report)
+
+    output = capsys.readouterr().out
+    assert "blockers:" in output
+    assert "- commit days 1/3" in output
+    assert "next_actions:" in output
+    assert (
+        "- Keep shipping small verified slices until weekly commit days reach `3`; "
+        "use `docs/weekly-maintainer-loop.md` to pick the next slice."
+    ) in output
+
+
 def test_release_readiness_markdown_report_includes_gate_issues_and_next_actions(tmp_path):
     repo = _init_repo(tmp_path, with_draft=False)
     (repo / "LICENSE").unlink()

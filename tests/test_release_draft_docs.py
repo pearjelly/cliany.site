@@ -38,6 +38,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "docs/weekly-maintainer-loop.md",
         "weekly maintainer loop",
         "Next Actions",
+        "next_actions",
         "python scripts/release_readiness.py --strict",
         "git tag v0.14.4",
     ]
