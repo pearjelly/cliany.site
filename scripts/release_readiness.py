@@ -197,6 +197,12 @@ def _cadence_blockers(report: CadenceReport) -> list[str]:
         blockers.append(f"latest tag {report.latest_tag or '(none)'} != {report.expected_tag}")
     if not report.changelog_ok:
         blockers.append("CHANGELOG Unreleased has no content while HEAD is ahead of latest tag")
+    if not report.changelog_unreleased_compare_ok:
+        actual = report.changelog_unreleased_compare_actual or "(missing)"
+        blockers.append(
+            "CHANGELOG Unreleased compare link is stale: "
+            f"{actual} != {report.changelog_unreleased_compare_expected}"
+        )
     if report.dirty:
         blockers.append("working tree is dirty")
     return blockers

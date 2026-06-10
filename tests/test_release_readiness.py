@@ -176,7 +176,12 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
     (repo / ".github" / "workflows").mkdir(parents=True)
     (repo / "pyproject.toml").write_text('[project]\nname = "demo"\nversion = "0.1.0"\n', encoding="utf-8")
     (repo / "CHANGELOG.md").write_text(
-        "# Changelog\n\n## [Unreleased]\n\n### Added\n- Pending release note.\n\n## [0.1.0] - 2026-06-08\n",
+        "# Changelog\n\n"
+        "## [Unreleased]\n\n"
+        "### Added\n"
+        "- Pending release note.\n\n"
+        "## [0.1.0] - 2026-06-08\n\n"
+        "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD\n",
         encoding="utf-8",
     )
     (repo / "README.md").write_text("# Demo\n\n## demo\n", encoding="utf-8")
@@ -232,6 +237,25 @@ def test_release_readiness_blocks_missing_release_draft(tmp_path):
     assert "release draft validation failed" in report.blockers
     assert report.draft.ok is False
     assert report.draft.issues == ["release draft is missing"]
+
+
+def test_release_readiness_blocks_stale_changelog_compare_link(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "CHANGELOG.md").write_text(
+        "# Changelog\n\n"
+        "## [Unreleased]\n\n"
+        "### Added\n"
+        "- Pending release note.\n\n"
+        "## [0.1.0] - 2026-06-08\n\n"
+        "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.0.9...HEAD\n",
+        encoding="utf-8",
+    )
+
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert any("CHANGELOG Unreleased compare link is stale" in blocker for blocker in report.blockers)
+    assert report.cadence.changelog_unreleased_compare_ok is False
 
 
 def test_release_readiness_blocks_missing_ci_extract_gate(tmp_path):

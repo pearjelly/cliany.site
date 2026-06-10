@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import tomllib
@@ -28,6 +29,9 @@ class CadenceReport:
     min_commit_days: int
     commits_since_latest_tag: int | None
     changelog_unreleased_has_content: bool
+    changelog_unreleased_compare_ok: bool
+    changelog_unreleased_compare_expected: str
+    changelog_unreleased_compare_actual: str | None
     changelog_ok: bool
     dirty: bool
 
@@ -43,6 +47,9 @@ class CadenceReport:
             "min_commit_days": self.min_commit_days,
             "commits_since_latest_tag": self.commits_since_latest_tag,
             "changelog_unreleased_has_content": self.changelog_unreleased_has_content,
+            "changelog_unreleased_compare_ok": self.changelog_unreleased_compare_ok,
+            "changelog_unreleased_compare_expected": self.changelog_unreleased_compare_expected,
+            "changelog_unreleased_compare_actual": self.changelog_unreleased_compare_actual,
             "changelog_ok": self.changelog_ok,
             "dirty": self.dirty,
         }
@@ -105,6 +112,19 @@ def _changelog_unreleased_has_content(root: Path) -> bool:
     return bool(meaningful_lines)
 
 
+def _changelog_unreleased_compare_link(
+    root: Path,
+    latest_tag: str | None,
+    expected_tag: str,
+) -> tuple[bool, str, str | None]:
+    expected_base = latest_tag or expected_tag
+    expected = f"https://github.com/pearjelly/cliany.site/compare/{expected_base}...HEAD"
+    changelog = (root / "CHANGELOG.md").read_text(encoding="utf-8")
+    match = re.search(r"^\[Unreleased\]:\s*(\S+)\s*$", changelog, flags=re.MULTILINE)
+    actual = match.group(1) if match else None
+    return actual == expected, expected, actual
+
+
 def _is_dirty(root: Path) -> bool:
     status = _optional_git(["status", "--short"], root)
     return bool(status)
@@ -119,11 +139,13 @@ def build_report(root: Path, today: date, min_commit_days: int) -> CadenceReport
     dirty = _is_dirty(root)
     commits_since_latest_tag = _commits_since_tag(root, latest_tag)
     tag_matches_version = latest_tag == expected_tag
+    compare_ok, compare_expected, compare_actual = _changelog_unreleased_compare_link(root, latest_tag, expected_tag)
     changelog_ok = changelog_has_content or commits_since_latest_tag == 0
     ok = (
         len(commit_days) >= min_commit_days
         and tag_matches_version
         and changelog_ok
+        and compare_ok
         and not dirty
     )
     return CadenceReport(
@@ -137,6 +159,9 @@ def build_report(root: Path, today: date, min_commit_days: int) -> CadenceReport
         min_commit_days=min_commit_days,
         commits_since_latest_tag=commits_since_latest_tag,
         changelog_unreleased_has_content=changelog_has_content,
+        changelog_unreleased_compare_ok=compare_ok,
+        changelog_unreleased_compare_expected=compare_expected,
+        changelog_unreleased_compare_actual=compare_actual,
         changelog_ok=changelog_ok,
         dirty=dirty,
     )
@@ -151,6 +176,9 @@ def _print_text(report: CadenceReport) -> None:
     print(f"commit_days: {report.commit_day_count}/{report.min_commit_days} {', '.join(report.commit_days)}")
     print(f"commits_since_latest_tag: {report.commits_since_latest_tag}")
     print(f"changelog_unreleased_has_content: {report.changelog_unreleased_has_content}")
+    print(f"changelog_unreleased_compare_ok: {report.changelog_unreleased_compare_ok}")
+    print(f"changelog_unreleased_compare_expected: {report.changelog_unreleased_compare_expected}")
+    print(f"changelog_unreleased_compare_actual: {report.changelog_unreleased_compare_actual or '(missing)'}")
     print(f"changelog_ok: {report.changelog_ok}")
     print(f"dirty: {report.dirty}")
     print(f"ok: {report.ok}")

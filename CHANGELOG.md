@@ -16,6 +16,7 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
+- `scripts/check_release_cadence.py` / `scripts/release_readiness.py` 现在会校验 `CHANGELOG.md` 的 `[Unreleased]` compare 链接是否从最新 tag 指向 `HEAD`，避免发布说明范围漂移。
 - `scripts/validate_cases.py` 现在会检查 `cases/manifest.json` 中 `docs` 的 Markdown 锚点和 active 案例命令域名一致性，避免真实案例链接或命令漂移。
 - `docs/releases/v0.14.4-draft.md` 新增案例库映射，release notes 会链接 `cases/README.md`、`cases/manifest.json` 和 `search-extraction-gap` 离线复现。
 - `scripts/release_readiness.py` 新增 `--require-packages`，正式发版前可强制要求 `--packages-dir` 完成 demo adapter 包离线校验。
@@ -333,6 +334,6 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.14.3...HEAD
 [0.11.0]: https://github.com/pearjelly/cliany.site/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/pearjelly/cliany.site/compare/v0.9.3...v0.10.0

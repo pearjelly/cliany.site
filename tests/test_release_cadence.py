@@ -39,7 +39,12 @@ def _init_repo(tmp_path: Path) -> Path:
     _git(repo, "init")
     (repo / "pyproject.toml").write_text('[project]\nname = "demo"\nversion = "0.1.0"\n', encoding="utf-8")
     (repo / "CHANGELOG.md").write_text(
-        "# Changelog\n\n## [Unreleased]\n\n### Added\n- Pending release note.\n\n## [0.1.0] - 2026-06-01\n",
+        "# Changelog\n\n"
+        "## [Unreleased]\n\n"
+        "### Added\n"
+        "- Pending release note.\n\n"
+        "## [0.1.0] - 2026-06-01\n\n"
+        "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD\n",
         encoding="utf-8",
     )
     _git(repo, "add", "pyproject.toml", "CHANGELOG.md")
@@ -70,6 +75,12 @@ def test_release_cadence_report_passes_with_three_commit_days(tmp_path):
     assert report.commit_days == ["2026-06-08", "2026-06-09", "2026-06-10"]
     assert report.commits_since_latest_tag == 2
     assert report.changelog_unreleased_has_content is True
+    assert report.changelog_unreleased_compare_ok is True
+    assert (
+        report.changelog_unreleased_compare_expected
+        == "https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD"
+    )
+    assert report.changelog_unreleased_compare_actual == report.changelog_unreleased_compare_expected
     assert report.dirty is False
 
 
@@ -86,7 +97,11 @@ def test_release_cadence_report_fails_when_week_has_too_few_days(tmp_path):
 def test_release_cadence_allows_empty_unreleased_when_head_is_tagged(tmp_path):
     repo = _init_repo(tmp_path)
     (repo / "CHANGELOG.md").write_text(
-        "# Changelog\n\n## [Unreleased]\n\n## [0.1.0] - 2026-06-08\n- Released.\n",
+        "# Changelog\n\n"
+        "## [Unreleased]\n\n"
+        "## [0.1.0] - 2026-06-08\n"
+        "- Released.\n\n"
+        "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD\n",
         encoding="utf-8",
     )
     _git(repo, "add", "CHANGELOG.md")
@@ -107,3 +122,40 @@ def test_release_cadence_allows_empty_unreleased_when_head_is_tagged(tmp_path):
     assert report.commits_since_latest_tag == 0
     assert report.changelog_unreleased_has_content is False
     assert report.changelog_ok is True
+
+
+def test_release_cadence_fails_when_unreleased_compare_link_is_stale(tmp_path):
+    repo = _init_repo(tmp_path)
+    (repo / "CHANGELOG.md").write_text(
+        "# Changelog\n\n"
+        "## [Unreleased]\n\n"
+        "### Added\n"
+        "- Pending release note.\n\n"
+        "## [0.1.0] - 2026-06-01\n\n"
+        "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.0.9...HEAD\n",
+        encoding="utf-8",
+    )
+    _git(repo, "add", "CHANGELOG.md")
+    env = {
+        "GIT_AUTHOR_NAME": "Test",
+        "GIT_AUTHOR_EMAIL": "test@example.com",
+        "GIT_COMMITTER_NAME": "Test",
+        "GIT_COMMITTER_EMAIL": "test@example.com",
+        "GIT_AUTHOR_DATE": "2026-06-08T12:00:00+00:00",
+        "GIT_COMMITTER_DATE": "2026-06-08T12:00:00+00:00",
+    }
+    _git(repo, "commit", "--amend", "--no-edit", env=env)
+    _git(repo, "tag", "-f", "v0.1.0")
+
+    report = release_cadence.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert report.changelog_unreleased_compare_ok is False
+    assert (
+        report.changelog_unreleased_compare_expected
+        == "https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD"
+    )
+    assert (
+        report.changelog_unreleased_compare_actual
+        == "https://github.com/pearjelly/cliany.site/compare/v0.0.9...HEAD"
+    )
