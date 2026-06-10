@@ -81,3 +81,29 @@ def test_release_cadence_report_fails_when_week_has_too_few_days(tmp_path):
     assert report.ok is False
     assert report.commit_day_count == 1
     assert report.min_commit_days == 3
+
+
+def test_release_cadence_allows_empty_unreleased_when_head_is_tagged(tmp_path):
+    repo = _init_repo(tmp_path)
+    (repo / "CHANGELOG.md").write_text(
+        "# Changelog\n\n## [Unreleased]\n\n## [0.1.0] - 2026-06-08\n- Released.\n",
+        encoding="utf-8",
+    )
+    _git(repo, "add", "CHANGELOG.md")
+    env = {
+        "GIT_AUTHOR_NAME": "Test",
+        "GIT_AUTHOR_EMAIL": "test@example.com",
+        "GIT_COMMITTER_NAME": "Test",
+        "GIT_COMMITTER_EMAIL": "test@example.com",
+        "GIT_AUTHOR_DATE": "2026-06-08T12:00:00+00:00",
+        "GIT_COMMITTER_DATE": "2026-06-08T12:00:00+00:00",
+    }
+    _git(repo, "commit", "--amend", "--no-edit", env=env)
+    _git(repo, "tag", "-f", "v0.1.0")
+
+    report = release_cadence.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is True
+    assert report.commits_since_latest_tag == 0
+    assert report.changelog_unreleased_has_content is False
+    assert report.changelog_ok is True

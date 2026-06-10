@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.14.3] - 2026-06-10
+
 ### Added
 - 新增 `docs/roadmap-2026-q3.md`，基于 v0.2~v0.14 迭代轨迹制定 2026 Q3 路线图，聚焦新用户可用性、真实案例库、adapter 生命周期、贡献者入口与运行可靠性。
 - 新增 `docs/release-cadence.md`，固化每周至少 1 个版本、每周至少 3 天提交记录的发布与提交节奏。
@@ -16,6 +18,10 @@
 - `doctor` 非 JSON 输出新增面向人的摘要视图，按“必须修复 / 建议处理 / 诊断信息”展示行动项。
 - 新增 `scripts/check_release_cadence.py`，本地检查版本 tag、本周提交天数、CHANGELOG Unreleased 和工作区状态；`scripts/publish.sh` 改为优先使用 `PYPI_TOKEN` 环境变量。
 - 新增 `docs/contributor-starter.md`，提供 good-first-issue 清单、模块地图、复现问题最小包和按风险选择验证范围的贡献者入口。
+
+### Verification
+- `.venv/bin/python -m pytest tests/test_doctor.py tests/test_doctor_checks.py tests/test_doctor_v3.py tests/test_obscura_integration_entrypoints.py tests/test_cases_manifest.py tests/test_release_cadence.py tests/test_contributor_docs.py -q --no-cov`
+- `.venv/bin/ruff check src/cliany_site/commands/doctor.py scripts/check_release_cadence.py tests/test_doctor_v3.py tests/test_cases_manifest.py tests/test_release_cadence.py tests/test_contributor_docs.py`
 
 ## [0.14.2] - 2026-06-10
 
