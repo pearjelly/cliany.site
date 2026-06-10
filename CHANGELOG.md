@@ -36,6 +36,7 @@
 - `release_readiness.py` 的项目元数据 gate 现在会校验每周维护者循环文档及 roadmap/release cadence 入口，防止持续发布机制在发版前漂移。
 - `release_readiness.py` 的项目元数据 gate 现在会校验 `docs/good-first-issues.md`、README good-first-issue 入口和贡献者上手地图链接，防止首次贡献路径漂移。
 - `docs/roadmap-2026-q3.md` 与 `docs/release-cadence.md` 现在链接每周维护者循环，帮助维护者把路线图切成可发布、可验证的小版本。
+- 官网 quickstart 现在在首次成功路径后提示 `docs/good-first-issues.md`，把首次贡献者引导到默认离线、可本地验证的任务池。
 - 官网 quickstart 现在在首次成功路径后提示 `Real Demo Case Proposal`，把公开只读真实工作流引导到案例库贡献和离线验收路径。
 - `release_readiness.py` 的项目元数据 gate 现在会校验 README 双语首页是否保留 10 分钟成功路径、抽取质量、release readiness 和真实案例贡献入口。
 - `README.md` / `README.zh.md` 的 quickstart 入口现在说明首次成功后可通过 `Real Demo Case Proposal` 贡献新的公开只读真实案例。

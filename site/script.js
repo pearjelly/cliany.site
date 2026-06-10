@@ -153,6 +153,10 @@ const I18N = {
     zh: '候选案例应关联 <code>cases/manifest.json</code>、<code>cases/examples/</code> 和 <code>python scripts/validate_cases.py --strict</code>。',
     en: 'Candidate cases should point to <code>cases/manifest.json</code>, <code>cases/examples/</code>, and <code>python scripts/validate_cases.py --strict</code>.'
   },
+  'qs.contribute.goodfirst': {
+    zh: '首次贡献者可以从 <code>docs/good-first-issues.md</code> 开始，选择默认离线、可本地验证的任务。',
+    en: 'First-time contributors can start from <code>docs/good-first-issues.md</code> for offline, locally verifiable tasks.'
+  },
   'qs.maintainer.title': { zh: '维护者循环', en: 'Maintainer Loop' },
   'qs.maintainer.desc': {
     zh: '使用每周维护者循环和 release readiness 的 next_actions，把路线图拆成小而可验证的发布切片。',
