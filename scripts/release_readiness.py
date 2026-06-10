@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 import tomllib
 from dataclasses import dataclass
@@ -18,6 +19,11 @@ from validate_cases import CasesReport
 from validate_cases import build_report as build_cases_report
 
 ROOT = Path(__file__).resolve().parents[1]
+RELEASE_PREFLIGHT_COMMAND = (
+    "python scripts/release_readiness.py --strict "
+    '--release-tag "${{ github.ref_name }}" '
+    "--report release-readiness-report.md"
+)
 
 
 @dataclass(frozen=True)
@@ -115,6 +121,13 @@ def _project_version(root: Path) -> str:
     return str(data["project"]["version"])
 
 
+def _optional_git(args: list[str], cwd: Path) -> str | None:
+    try:
+        return subprocess.check_output(["git", *args], cwd=cwd, text=True, stderr=subprocess.DEVNULL).strip()
+    except subprocess.CalledProcessError:
+        return None
+
+
 def _next_patch_version(version: str) -> str:
     parts = version.split(".")
     if len(parts) != 3:
@@ -122,6 +135,15 @@ def _next_patch_version(version: str) -> str:
         raise ValueError(msg)
     major, minor, patch = parts
     return f"{major}.{minor}.{int(patch) + 1}"
+
+
+def _strip_v_prefix(version_or_tag: str) -> str:
+    return version_or_tag[1:] if version_or_tag.startswith("v") else version_or_tag
+
+
+def _previous_tag_version(root: Path, release_tag: str) -> str | None:
+    previous_tag = _optional_git(["describe", "--tags", "--abbrev=0", f"{release_tag}^"], root)
+    return _strip_v_prefix(previous_tag) if previous_tag else None
 
 
 def _draft_path(root: Path, target_version: str) -> Path:
@@ -210,7 +232,7 @@ def _build_release_workflow_report(root: Path) -> ReleaseWorkflowReport:
         "release-preflight:",
         "Release Preflight",
         "fetch-depth: 0",
-        "python scripts/release_readiness.py --strict --report release-readiness-report.md",
+        RELEASE_PREFLIGHT_COMMAND,
         "release-readiness-report",
         "needs: [ci, release-preflight]",
         "Build Distribution",
@@ -274,14 +296,18 @@ def build_report(
     today: date | None = None,
     min_commit_days: int = 3,
     target_version: str | None = None,
+    release_tag: str | None = None,
     packages_dir: Path | None = None,
     require_packages: bool = False,
 ) -> ReadinessReport:
     current_version = _project_version(root)
-    expected_target = target_version or _next_patch_version(current_version)
+    expected_target = target_version or (
+        _strip_v_prefix(release_tag) if release_tag else _next_patch_version(current_version)
+    )
+    draft_base_version = _previous_tag_version(root, release_tag) if release_tag else current_version
     cadence = build_cadence_report(root, today=today or date.today(), min_commit_days=min_commit_days)
     cases = build_cases_report(root, packages_dir=packages_dir)
-    draft = _build_draft_report(root, current_version, expected_target)
+    draft = _build_draft_report(root, draft_base_version or current_version, expected_target)
     ci = _build_ci_report(root)
     release_workflow = _build_release_workflow_report(root)
     package_gate = _build_package_gate_report(
@@ -291,6 +317,10 @@ def build_report(
     )
 
     blockers = _cadence_blockers(cadence)
+    if release_tag and current_version != expected_target:
+        blockers.append(f"release tag {release_tag} != pyproject version {current_version}")
+    if release_tag and draft_base_version is None:
+        blockers.append(f"previous tag for release {release_tag} could not be determined")
     if not cases.ok:
         blockers.append("case catalog validation failed")
     if not draft.ok:
@@ -387,6 +417,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--min-days", type=int, default=3, help="Minimum unique commit days expected this week.")
     parser.add_argument("--today", help="Override current date as YYYY-MM-DD, for tests or audits.")
     parser.add_argument("--target-version", help="Target release version. Defaults to next patch version.")
+    parser.add_argument("--release-tag", help="Validate an already tagged release, e.g. v0.14.4.")
     parser.add_argument("--packages-dir", type=Path, help="Optional directory containing demo adapter packages.")
     parser.add_argument("--report", type=Path, help="Optional Markdown report path for release review.")
     parser.add_argument(
@@ -395,6 +426,8 @@ def main(argv: list[str] | None = None) -> int:
         help="Require --packages-dir package validation before reporting release readiness.",
     )
     args = parser.parse_args(argv)
+    if args.release_tag and args.target_version:
+        parser.error("--release-tag and --target-version are mutually exclusive")
 
     today = datetime.strptime(args.today, "%Y-%m-%d").date() if args.today else None
     report = build_report(
@@ -402,6 +435,7 @@ def main(argv: list[str] | None = None) -> int:
         today=today,
         min_commit_days=args.min_days,
         target_version=args.target_version,
+        release_tag=args.release_tag,
         packages_dir=args.packages_dir,
         require_packages=args.require_packages,
     )

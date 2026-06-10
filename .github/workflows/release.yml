@@ -27,7 +27,7 @@ jobs:
         env:
           CLIANY_QA_OFFLINE: "1"
         run: |
-          python scripts/release_readiness.py --strict --report release-readiness-report.md
+          python scripts/release_readiness.py --strict --release-tag "${{ github.ref_name }}" --report release-readiness-report.md
       - name: Upload release readiness report
         if: always()
         uses: actions/upload-artifact@v4

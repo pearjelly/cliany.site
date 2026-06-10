@@ -19,7 +19,8 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
-- `.github/workflows/release.yml` 在构建和发布前新增 `Release Preflight`，会运行 `release_readiness.py --strict --report`，防止 tag 发布绕过本地 readiness 门禁。
+- `release_readiness.py --release-tag` 支持校验已打 tag 的发布状态，避免 tag workflow 把当前 tag 误判成“下一版”。
+- `.github/workflows/release.yml` 在构建和发布前新增 `Release Preflight`，会运行 `release_readiness.py --strict --release-tag ... --report`，防止 tag 发布绕过 readiness 门禁。
 - `scripts/release_readiness.py` 现在会校验 `.github/workflows/release.yml` 的 tag 触发、CI 复用、构建、GitHub Release 和 PyPI 发布链路，避免正式发版 workflow 漂移。
 - CI 新增 `Release Readiness Report` job，在 PR/主分支生成并上传 `release-readiness-report` artifact，便于持续观察下一版发版阻塞项。
 - `scripts/validate_cases.py` 现在要求 active 案例声明 `example_output`，并校验样例路径、JSON envelope、`meta.case_id` 和非空 `data.results`。

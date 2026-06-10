@@ -20,6 +20,12 @@ assert SPEC.loader is not None
 sys.modules[SPEC.name] = release_readiness
 SPEC.loader.exec_module(release_readiness)
 
+RELEASE_PREFLIGHT_COMMAND = (
+    "python scripts/release_readiness.py --strict "
+    '--release-tag "${{ github.ref_name }}" '
+    "--report release-readiness-report.md"
+)
+
 
 def _git(repo: Path, *args: str, env: dict[str, str] | None = None) -> None:
     subprocess.check_call(["git", *args], cwd=repo, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -146,7 +152,7 @@ jobs:
         with:
           fetch-depth: 0
       - run: |
-          python scripts/release_readiness.py --strict --report release-readiness-report.md
+          __RELEASE_PREFLIGHT_COMMAND__
         env:
           CLIANY_QA_OFFLINE: "1"
       - uses: actions/upload-artifact@v4
@@ -178,7 +184,7 @@ jobs:
       url: https://pypi.org/p/cliany-site
     steps:
       - uses: pypa/gh-action-pypi-publish@release/v1
-"""
+""".replace("__RELEASE_PREFLIGHT_COMMAND__", RELEASE_PREFLIGHT_COMMAND)
 
 
 def _cases_manifest() -> str:
@@ -418,7 +424,7 @@ def test_release_readiness_blocks_missing_release_workflow_pypi_publish(tmp_path
 def test_release_readiness_blocks_release_workflow_without_strict_preflight(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     release_workflow = _release_workflow().replace(
-        "python scripts/release_readiness.py --strict --report release-readiness-report.md",
+        RELEASE_PREFLIGHT_COMMAND,
         "python scripts/release_readiness.py --json --report release-readiness-report.md",
     )
     (repo / ".github" / "workflows" / "release.yml").write_text(release_workflow, encoding="utf-8")
@@ -427,7 +433,44 @@ def test_release_readiness_blocks_release_workflow_without_strict_preflight(tmp_
 
     assert report.ok is False
     assert "release workflow validation failed" in report.blockers
-    assert any("--strict --report release-readiness-report.md" in issue for issue in report.release_workflow.issues)
+    assert any("--strict --release-tag" in issue for issue in report.release_workflow.issues)
+
+
+def test_release_readiness_accepts_tagged_release_mode(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    _commit(repo, "notes/tuesday.md", "tuesday", "2026-06-09")
+    (repo / "pyproject.toml").write_text('[project]\nname = "demo"\nversion = "0.1.1"\n', encoding="utf-8")
+    (repo / "CHANGELOG.md").write_text(
+        "# Changelog\n\n"
+        "## [Unreleased]\n\n"
+        "## [0.1.1] - 2026-06-10\n\n"
+        "### Added\n"
+        "- Pending release note.\n\n"
+        "## [0.1.0] - 2026-06-08\n\n"
+        "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.1.1...HEAD\n",
+        encoding="utf-8",
+    )
+    _git(repo, "add", "pyproject.toml", "CHANGELOG.md")
+    env = {
+        "GIT_AUTHOR_NAME": "Test",
+        "GIT_AUTHOR_EMAIL": "test@example.com",
+        "GIT_COMMITTER_NAME": "Test",
+        "GIT_COMMITTER_EMAIL": "test@example.com",
+        "GIT_AUTHOR_DATE": "2026-06-10T12:00:00+00:00",
+        "GIT_COMMITTER_DATE": "2026-06-10T12:00:00+00:00",
+    }
+    _git(repo, "commit", "-m", "release 0.1.1", env=env)
+    _git(repo, "tag", "v0.1.1")
+
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3, release_tag="v0.1.1")
+
+    assert report.ok is True
+    assert report.current_version == "0.1.1"
+    assert report.target_version == "0.1.1"
+    assert report.blockers == []
+    assert report.cadence.latest_tag == "v0.1.1"
+    assert report.cadence.commits_since_latest_tag == 0
+    assert report.draft.ok is True
 
 
 def test_release_readiness_blocks_when_required_package_check_not_run(tmp_path):

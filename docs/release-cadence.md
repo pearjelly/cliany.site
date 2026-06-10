@@ -90,7 +90,7 @@ git push origin master --tags
 
 CI 的 `Release Readiness Report` job 会在 PR/主分支生成 `release-readiness-report` artifact。该 job 不使用 `--strict`，用于持续观察下一版距离发版还差什么；真正发版仍以本地 `python scripts/release_readiness.py --strict` 为准。
 
-`.github/workflows/release.yml` 的 tag 发布流程还会在构建前运行 `Release Preflight`，执行 `python scripts/release_readiness.py --strict --report release-readiness-report.md`。因此正式 tag 发布会再次拦截版本号、CHANGELOG、发布草案、CI gate、release workflow 和工作区状态问题。
+`.github/workflows/release.yml` 的 tag 发布流程还会在构建前运行 `Release Preflight`，执行 `python scripts/release_readiness.py --strict --release-tag "${{ github.ref_name }}" --report release-readiness-report.md`。`--release-tag` 用于校验“当前 tag 正在发布”的状态，避免把已 bump 的版本误判成下一版；正式 tag 发布会再次拦截版本号、CHANGELOG、发布草案、CI gate、release workflow 和工作区状态问题。
 
 `check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、`CHANGELOG.md` Unreleased 是否有内容、`[Unreleased]` compare 链接是否指向最新 tag 到 `HEAD`，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截。
 
