@@ -524,6 +524,39 @@ def _report_issue_lines(report: ReadinessReport) -> list[str]:
     return lines
 
 
+def _next_action_lines(report: ReadinessReport) -> list[str]:
+    lines: list[str] = []
+    if report.cadence.commit_day_count < report.cadence.min_commit_days:
+        lines.append(
+            "- Keep shipping small verified slices until weekly commit days reach "
+            f"`{report.cadence.min_commit_days}`; use `docs/weekly-maintainer-loop.md` to pick the next slice."
+        )
+    if report.cadence.dirty:
+        lines.append("- Commit or revert the working tree before tagging a release.")
+    if not report.cadence.tag_matches_version:
+        lines.append("- Align `pyproject.toml` version and the latest release tag before publishing.")
+    if not report.cadence.changelog_ok:
+        lines.append("- Update `CHANGELOG.md` Unreleased content and compare link before release.")
+    if not report.cases.ok:
+        lines.append("- Run `python scripts/validate_cases.py --strict` and fix the listed case catalog issues.")
+    if not report.draft.ok:
+        lines.append(
+            "- Update the target release draft under `docs/releases/` with value, risks, validation, and blockers."
+        )
+    if not report.ci.ok:
+        lines.append("- Restore the default zero-key CI release gates before merging.")
+    if not report.release_workflow.ok:
+        lines.append("- Restore tag release preflight, build, GitHub Release, and PyPI publishing checks.")
+    if not report.project_metadata.ok:
+        lines.append("- Restore PyPI metadata and open-source community entrypoints required by project metadata gate.")
+    if not report.package_gate.ok:
+        lines.append(
+            "- Re-run release readiness with `--packages-dir ~/.cliany-site/packages --require-packages` "
+            "after demo adapter packages are available."
+        )
+    return lines
+
+
 def _render_markdown_report(report: ReadinessReport) -> str:
     blockers = "<br>".join(report.blockers) if report.blockers else "-"
     commit_days = ", ".join(report.cadence.commit_days) if report.cadence.commit_days else "-"
@@ -572,6 +605,16 @@ def _render_markdown_report(report: ReadinessReport) -> str:
                 "## Gate Issues",
                 "",
                 *issue_lines,
+            ]
+        )
+    next_actions = _next_action_lines(report)
+    if next_actions:
+        lines.extend(
+            [
+                "",
+                "## Next Actions",
+                "",
+                *next_actions,
             ]
         )
     return "\n".join(lines) + "\n"

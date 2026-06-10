@@ -21,6 +21,7 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
+- `release_readiness.py --report` 现在会输出 `Next Actions` 小节，把提交天数、案例库、发布草案、CI、发布 workflow、项目元数据和包校验阻塞映射为维护者下一步动作。
 - `release_readiness.py` 的项目元数据 gate 现在会校验每周维护者循环文档及 roadmap/release cadence 入口，防止持续发布机制在发版前漂移。
 - `docs/roadmap-2026-q3.md` 与 `docs/release-cadence.md` 现在链接每周维护者循环，帮助维护者把路线图切成可发布、可验证的小版本。
 - 官网 quickstart 现在在首次成功路径后提示 `Real Demo Case Proposal`，把公开只读真实工作流引导到案例库贡献和离线验收路径。

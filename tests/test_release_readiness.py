@@ -465,9 +465,10 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "| release_workflow | `true` |" in text
     assert "| project_metadata | `true` |" in text
     assert "https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD" in text
+    assert "## Next Actions" not in text
 
 
-def test_release_readiness_markdown_report_includes_gate_issues(tmp_path):
+def test_release_readiness_markdown_report_includes_gate_issues_and_next_actions(tmp_path):
     repo = _init_repo(tmp_path, with_draft=False)
     (repo / "LICENSE").unlink()
     report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
@@ -480,6 +481,13 @@ def test_release_readiness_markdown_report_includes_gate_issues(tmp_path):
     assert "- `cadence`: commit days 1/3" in text
     assert "- `draft`: release draft is missing" in text
     assert "- `project_metadata`: open source metadata file is missing: LICENSE" in text
+    assert "## Next Actions" in text
+    assert (
+        "- Keep shipping small verified slices until weekly commit days reach `3`; "
+        "use `docs/weekly-maintainer-loop.md` to pick the next slice."
+    ) in text
+    assert "- Update the target release draft under `docs/releases/`" in text
+    assert "- Restore PyPI metadata and open-source community entrypoints required by project metadata gate." in text
 
 
 def test_release_readiness_blocks_missing_release_draft(tmp_path):
