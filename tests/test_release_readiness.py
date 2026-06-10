@@ -164,7 +164,9 @@ jobs:
     name: Build Distribution
     needs: [ci, release-preflight]
     steps:
+      - run: rm -rf dist
       - run: uv build
+      - run: uvx twine check dist/*
       - uses: actions/upload-artifact@v4
         with:
           name: dist
@@ -434,6 +436,30 @@ def test_release_readiness_blocks_release_workflow_without_strict_preflight(tmp_
     assert report.ok is False
     assert "release workflow validation failed" in report.blockers
     assert any("--strict --release-tag" in issue for issue in report.release_workflow.issues)
+
+
+def test_release_readiness_blocks_release_workflow_without_distribution_check(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    release_workflow = _release_workflow().replace("      - run: uvx twine check dist/*\n", "")
+    (repo / ".github" / "workflows" / "release.yml").write_text(release_workflow, encoding="utf-8")
+
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "release workflow validation failed" in report.blockers
+    assert any("uvx twine check dist/*" in issue for issue in report.release_workflow.issues)
+
+
+def test_release_readiness_blocks_release_workflow_without_clean_dist(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    release_workflow = _release_workflow().replace("      - run: rm -rf dist\n", "")
+    (repo / ".github" / "workflows" / "release.yml").write_text(release_workflow, encoding="utf-8")
+
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "release workflow validation failed" in report.blockers
+    assert any("rm -rf dist" in issue for issue in report.release_workflow.issues)
 
 
 def test_release_readiness_accepts_tagged_release_mode(tmp_path):

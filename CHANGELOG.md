@@ -19,6 +19,8 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
+- `.github/workflows/release.yml` 在发布构建前清理 `dist/`，并在 `uv build` 后运行 `uvx twine check dist/*` 校验本次 wheel/sdist 元数据。
+- `pyproject.toml` 新增 PyPI `description` 和 `readme` 元数据，让发布包包含 README long description。
 - `release_readiness.py --release-tag` 支持校验已打 tag 的发布状态，避免 tag workflow 把当前 tag 误判成“下一版”。
 - `.github/workflows/release.yml` 在构建和发布前新增 `Release Preflight`，会运行 `release_readiness.py --strict --release-tag ... --report`，防止 tag 发布绕过 readiness 门禁。
 - `scripts/release_readiness.py` 现在会校验 `.github/workflows/release.yml` 的 tag 触发、CI 复用、构建、GitHub Release 和 PyPI 发布链路，避免正式发版 workflow 漂移。
