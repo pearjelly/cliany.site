@@ -6,6 +6,7 @@ from typing import Any, cast
 from click.testing import CliRunner
 
 from cliany_site.envelope import Envelope
+from cliany_site.extract_quality import evaluate_extract_quality
 
 
 def run_atom(
@@ -116,6 +117,9 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
         mode = step.get("extract_mode")
         if mode:
             args.extend(["--mode", str(mode)])
+        fields = step.get("fields")
+        if isinstance(fields, dict) and fields:
+            args.extend(["--fields-json", json.dumps(fields, ensure_ascii=False)])
         return run_atom(args, session=domain)
 
     return _err(
@@ -124,6 +128,45 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
         message=f"未知操作类型: {action_type!r}",
         source="builtin",
     )
+
+
+def summarize_extract_quality(
+    results: list[Envelope],
+    action_steps: list[dict[str, Any]],
+) -> dict[str, Any]:
+    extracts: list[dict[str, Any]] = []
+    result_index = 1 if results and results[0].get("command") == "browser navigate" else 0
+
+    for step_index, step in enumerate(action_steps):
+        if result_index >= len(results):
+            break
+        result = results[result_index]
+        result_index += 1
+        if (step.get("type") or "").lower() != "extract":
+            continue
+
+        data = result.get("data") if isinstance(result.get("data"), dict) else {}
+        content = data.get("content") if isinstance(data, dict) else None
+        fields = step.get("fields") if isinstance(step.get("fields"), dict) else None
+        quality = evaluate_extract_quality(str(step.get("extract_mode") or "text"), content, fields).to_dict()
+        quality["step_index"] = step_index
+        if step.get("description"):
+            quality["description"] = str(step.get("description"))
+        extracts.append(quality)
+
+    if not extracts:
+        return {"status": "not_applicable", "ok": True, "extracts": []}
+    if all(item.get("ok") for item in extracts):
+        status = "ok"
+    elif any(item.get("status") == "empty" for item in extracts):
+        status = "empty"
+    else:
+        status = "partial"
+    return {
+        "status": status,
+        "ok": status == "ok",
+        "extracts": extracts,
+    }
 
 
 def diagnose_if_enabled(ctx, failure_context: dict) -> dict:
@@ -154,4 +197,10 @@ def diagnose_if_enabled(ctx, failure_context: dict) -> dict:
         return {}
 
 
-__all__ = ["run_atom", "execute_steps_via_atoms", "_execute_single_step", "diagnose_if_enabled"]
+__all__ = [
+    "run_atom",
+    "execute_steps_via_atoms",
+    "_execute_single_step",
+    "summarize_extract_quality",
+    "diagnose_if_enabled",
+]

@@ -2,10 +2,17 @@ from __future__ import annotations
 
 import json
 
-import pytest
-
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
 from cliany_site.explorer.models import ActionStep, CommandSuggestion, ExploreResult
+
+MINIMAL_CODE = (
+    "# 自动生成 — DO NOT EDIT\n"
+    "# 来源 URL: https://example.com\n"
+    "# 工作流: test\n"
+    "import click\n"
+    "@click.group()\n"
+    "def cli(): pass\n"
+)
 
 
 def _make_explore_result(
@@ -53,6 +60,12 @@ class TestGeneratedNoCdpImport:
         code = gen.generate(_simple_result(), "example.com")
         assert "execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)" in code
 
+    def test_generated_json_payload_includes_quality_summary(self):
+        gen = AdapterGenerator(domain="example.com")
+        code = gen.generate(_simple_result(), "example.com")
+        assert "summarize_extract_quality(results, action_steps)" in code
+        assert '"quality": quality' in code
+
 
 class TestGeneratedCodeStructure:
 
@@ -90,8 +103,7 @@ class TestCanonicalActionsPopulated:
             ActionStep(action_type="click", page_url="https://example.com", target_ref="ref-1", target_name="按钮"),
         ]
         result = _make_explore_result(actions=actions)
-        code = "# 自动生成 — DO NOT EDIT\n# 来源 URL: https://example.com\n# 工作流: test\nimport click\n@click.group()\ndef cli(): pass\n"
-        save_adapter("example.com", code, explore_result=result)
+        save_adapter("example.com", MINIMAL_CODE, explore_result=result)
         meta_path = tmp_home / ".cliany-site" / "adapters" / "example.com" / "metadata.json"
         meta = json.loads(meta_path.read_text())
         assert len(meta["canonical_actions"]) == 2
@@ -100,8 +112,7 @@ class TestCanonicalActionsPopulated:
         assert meta["canonical_actions"][1]["target_ref"] == "ref-1"
 
     def test_canonical_actions_empty_without_explore_result(self, tmp_home):
-        code = "# 自动生成 — DO NOT EDIT\n# 来源 URL: https://example.com\n# 工作流: test\nimport click\n@click.group()\ndef cli(): pass\n"
-        save_adapter("example.com", code)
+        save_adapter("example.com", MINIMAL_CODE)
         meta_path = tmp_home / ".cliany-site" / "adapters" / "example.com" / "metadata.json"
         meta = json.loads(meta_path.read_text())
         assert meta["canonical_actions"] == []
@@ -112,8 +123,7 @@ class TestCanonicalActionsPopulated:
             ActionStep(action_type="", page_url="https://example.com"),
         ]
         result = _make_explore_result(actions=actions)
-        code = "# 自动生成 — DO NOT EDIT\n# 来源 URL: https://example.com\n# 工作流: test\nimport click\n@click.group()\ndef cli(): pass\n"
-        save_adapter("example.com", code, explore_result=result)
+        save_adapter("example.com", MINIMAL_CODE, explore_result=result)
         meta_path = tmp_home / ".cliany-site" / "adapters" / "example.com" / "metadata.json"
         meta = json.loads(meta_path.read_text())
         assert len(meta["canonical_actions"]) == 1

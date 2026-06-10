@@ -113,7 +113,7 @@ def _normalize_atom_actions(actions):
 
 import json
 import click
-from cliany_site.codegen.runtime_helpers import execute_steps_via_atoms, diagnose_if_enabled
+from cliany_site.codegen.runtime_helpers import execute_steps_via_atoms, summarize_extract_quality, diagnose_if_enabled
 from cliany_site.envelope import ok, err, ErrorCode{atom_imports}{substitute_import}
 
 DOMAIN = {domain!r}

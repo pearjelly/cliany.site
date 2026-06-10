@@ -88,6 +88,45 @@ class TestBrowserExtract:
             assert data["data"]["selector"] == "main"
             assert data["data"]["format"] == "markdown"
 
+    def test_structured_extract_list_with_fields(self, no_llm, runner):
+        mock_page = MagicMock()
+        mock_page.evaluate = AsyncMock(
+            return_value=[{"title": "cliany-site", "url": "https://example.com"}]
+        )
+        mock_session = MagicMock()
+        mock_session.get_current_page = AsyncMock(return_value=mock_page)
+        with (
+            patch(
+                "cliany_site.browser.cdp.CDPConnection.check_available",
+                AsyncMock(return_value=True),
+            ),
+            patch(
+                "cliany_site.browser.cdp.CDPConnection.connect",
+                AsyncMock(return_value=mock_session),
+            ),
+            patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+        ):
+            result = runner.invoke(
+                cli,
+                [
+                    "browser",
+                    "extract",
+                    "--selector",
+                    ".result",
+                    "--mode",
+                    "list",
+                    "--fields-json",
+                    '{"title": "h3", "url": "a@href"}',
+                    "--json",
+                ],
+            )
+            assert result.exit_code == 0, result.output
+            data = json.loads(result.output)
+            assert data["ok"] is True
+            assert data["data"]["content"] == [{"title": "cliany-site", "url": "https://example.com"}]
+            assert data["data"]["mode"] == "list"
+            assert data["data"]["fields"] == {"title": "h3", "url": "a@href"}
+
 
 class TestBrowserEval:
     def test_eval_disabled_by_default(self, no_llm, runner):

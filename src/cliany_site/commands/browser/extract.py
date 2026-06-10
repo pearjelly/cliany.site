@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import re
 
 import click
@@ -9,6 +10,7 @@ from cliany_site.browser.cdp import cdp_from_context
 from cliany_site.commands.browser import browser_group
 from cliany_site.commands.browser._common import print_envelope
 from cliany_site.envelope import Envelope, ErrorCode, err, ok
+from cliany_site.extract import build_extract_js
 
 
 @browser_group.command("extract")
@@ -20,6 +22,13 @@ from cliany_site.envelope import Envelope, ErrorCode, err, ok
     default="text",
     help="输出格式（text/markdown/json）",
 )
+@click.option(
+    "--mode",
+    type=click.Choice(["text", "list", "table", "attribute"], case_sensitive=False),
+    default=None,
+    help="结构化提取模式（text/list/table/attribute），生成 adapter 使用",
+)
+@click.option("--fields-json", default=None, help="结构化字段映射 JSON，仅用于 list/table/attribute")
 @click.option("--session", default=None, help="会话名称")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出模式")
 @click.pass_context
@@ -27,6 +36,8 @@ def extract(
     ctx: click.Context,
     selector: str | None,
     fmt: str,
+    mode: str | None,
+    fields_json: str | None,
     session: str | None,
     json_mode: bool | None,
 ) -> None:
@@ -34,13 +45,45 @@ def extract(
     root_obj = ctx.find_root().obj if isinstance(ctx.find_root().obj, dict) else {}
     effective_json = json_mode if json_mode is not None else bool(root_obj.get("json_mode"))
     cdp = cdp_from_context(ctx)
-    result = asyncio.run(_run_extract(cdp, selector, fmt))
+    fields = _parse_fields_json(fields_json)
+    if isinstance(fields, dict) and fields.get("ok") is False:
+        print_envelope(fields, effective_json)
+        ctx.exit(1)
+    result = asyncio.run(_run_extract(cdp, selector, fmt, mode, fields))
     print_envelope(result, effective_json)
     if not result.get("ok"):
         ctx.exit(1)
 
 
-async def _run_extract(cdp, selector: str | None, fmt: str) -> Envelope:
+def _parse_fields_json(fields_json: str | None) -> dict | None | Envelope:
+    if not fields_json:
+        return None
+    try:
+        data = json.loads(fields_json)
+    except json.JSONDecodeError as exc:
+        return err(
+            command="browser extract",
+            code=ErrorCode.E_INVALID_PARAM,
+            message=f"--fields-json 不是合法 JSON: {exc.msg}",
+            source="builtin",
+        )
+    if not isinstance(data, dict):
+        return err(
+            command="browser extract",
+            code=ErrorCode.E_INVALID_PARAM,
+            message="--fields-json 必须是对象",
+            source="builtin",
+        )
+    return data
+
+
+async def _run_extract(
+    cdp,
+    selector: str | None,
+    fmt: str,
+    mode: str | None = None,
+    fields: dict | None = None,
+) -> Envelope:
     if not await cdp.check_available():
         return err(
             command="browser extract",
@@ -51,7 +94,10 @@ async def _run_extract(cdp, selector: str | None, fmt: str) -> Envelope:
     try:
         browser_session = await cdp.connect()
         try:
-            content = await _do_extract(browser_session, selector, fmt)
+            if mode:
+                content = await _do_structured_extract(browser_session, selector, mode, fields)
+            else:
+                content = await _do_extract(browser_session, selector, fmt)
         finally:
             await cdp.disconnect()
         if isinstance(content, dict) and not content.get("ok", True):
@@ -66,9 +112,48 @@ async def _run_extract(cdp, selector: str | None, fmt: str) -> Envelope:
 
     return ok(
         command="browser extract",
-        data={"content": content, "format": fmt, "selector": selector},
+        data={
+            "content": content,
+            "format": fmt,
+            "selector": selector,
+            "mode": mode,
+            "fields": fields or {},
+        },
         source="builtin",
     )
+
+
+async def _do_structured_extract(
+    browser_session,
+    selector: str | None,
+    mode: str,
+    fields: dict | None,
+) -> object | Envelope:
+    if not selector:
+        return err(
+            command="browser extract",
+            code=ErrorCode.E_INVALID_PARAM,
+            message="结构化提取需要 --selector",
+            source="builtin",
+        )
+    try:
+        js_expr = build_extract_js(selector, mode, fields)
+        page = await browser_session.get_current_page()
+        if page is None:
+            return err(
+                command="browser extract",
+                code=ErrorCode.E_PARSE_FAILED,
+                message="无法获取当前页面",
+                details={"selector": selector, "mode": mode},
+            )
+        return await page.evaluate(js_expr)
+    except (OSError, RuntimeError, ValueError) as exc:
+        return err(
+            command="browser extract",
+            code=ErrorCode.E_PARSE_FAILED,
+            message=str(exc)[:200],
+            details={"selector": selector, "mode": mode},
+        )
 
 
 async def _do_extract(browser_session, selector: str | None, fmt: str) -> str | Envelope:

@@ -15,6 +15,7 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
+- 生成 adapter 的 JSON 输出新增 `data.quality` 汇总，并修复 extract 步骤调用 `browser extract --mode` 时内置命令不识别该参数的问题。
 - 官网 Quick Start 同步 v0.14.3 首次成功路径：先运行 `doctor` 摘要和真实 demo adapter，再配置 LLM 生成自定义命令。
 - CI 新增 `Case Catalog Validation` job，在 PR/主分支默认离线运行 `scripts/validate_cases.py --strict` 与案例库结构测试，防止真实案例索引漂移。
 - `market install` 收紧包内容校验：拒绝缺失声明文件、缺失哈希和未声明额外文件，并在覆盖安装前先完成完整校验，避免坏包产生无意义备份。

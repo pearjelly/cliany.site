@@ -754,10 +754,11 @@ def {function_name}({function_signature}):
 {execution_blocks}
     results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)
     failed = next((r for r in results if not r.get("ok")), None)
+    quality = summarize_extract_quality(results, action_steps)
 {empty_result_check}    if _resolve_json_mode(json_mode):
         click.echo(json.dumps({{
             "ok": failed is None,
-            "data": {{"results": results, "command": "{command_name}", "args": {args_payload}}},
+            "data": {{"results": results, "quality": quality, "command": "{command_name}", "args": {args_payload}}},
             "error": (failed or {{}}).get("error"),
             "meta": {{"source": "adapter"}},
         }}, ensure_ascii=False))
@@ -780,10 +781,11 @@ def run_workflow(ctx: click.Context, json_mode: bool | None):
     action_steps = []
     results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)
     failed = next((r for r in results if not r.get("ok")), None)
+    quality = summarize_extract_quality(results, action_steps)
     if _resolve_json_mode(json_mode):
         click.echo(json.dumps({
             "ok": failed is None,
-            "data": {"results": results, "command": "run-workflow", "args": {}},
+            "data": {"results": results, "quality": quality, "command": "run-workflow", "args": {}},
             "error": (failed or {}).get("error"),
             "meta": {"source": "adapter"},
         }, ensure_ascii=False))
