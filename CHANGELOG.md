@@ -9,6 +9,7 @@
 
 ### Added
 - 案例库新增 `candidate` 状态和 `pypi-project-search` 候选案例，用离线 JSON 样例承接真实公开只读工作流，待 adapter 包准备好后再晋级 active。
+- 新增 `docs/module-ownership.md`，把 owner area、主要路径、典型改动和最小验证命令整理成贡献者模块地图。
 - 新增 `docs/weekly-maintainer-loop.md`，把路线图、release readiness、案例库验证和发布节奏串成每周选题、实现、复盘的维护者循环。
 - 新增 `docs/good-first-issues.md`，把首次贡献任务整理成默认离线、带验证命令的候选池。
 - 新增 GitHub `Real Demo Case Proposal` issue 模板，引导外部用户提交可验证、只读、带离线样例输出的真实案例候选。

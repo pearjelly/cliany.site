@@ -3,6 +3,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DOC = ROOT / "docs" / "contributor-starter.md"
 GOOD_FIRST = ROOT / "docs" / "good-first-issues.md"
+OWNERSHIP = ROOT / "docs" / "module-ownership.md"
 
 
 def test_contributor_starter_doc_has_required_sections():
@@ -28,6 +29,7 @@ def test_contributor_starter_referenced_paths_exist():
         "scripts/release_readiness.py",
         "scripts/check_release_cadence.py",
         "docs/good-first-issues.md",
+        "docs/module-ownership.md",
         "tests/test_cases_manifest.py",
         "tests/test_release_readiness.py",
         "tests/test_release_cadence.py",
@@ -59,6 +61,38 @@ def test_contributor_starter_points_to_issue_and_pr_templates():
         "AXTree snapshot",
         "离线 JSON envelope 样例",
         "CLIANY_QA_OFFLINE=1",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_contributor_starter_links_module_ownership_map():
+    text = DOC.read_text(encoding="utf-8")
+
+    assert "module-ownership.md" in text
+    assert "模块 Ownership 与验证地图" in text
+
+
+def test_module_ownership_doc_maps_owner_areas_to_validation():
+    text = OWNERSHIP.read_text(encoding="utf-8")
+
+    required = [
+        "# 模块 Ownership 与验证地图",
+        "Owner area",
+        "CLI contract",
+        "First-run diagnostics",
+        "Browser and replay runtime",
+        "Adapter lifecycle",
+        "Case catalog",
+        "Release operations",
+        "Contributor experience",
+        "Website and public docs",
+        "CLIANY_QA_OFFLINE=1",
+        "python scripts/validate_cases.py --strict",
+        "pytest tests/test_release_readiness.py tests/test_release_cadence.py -q --no-cov",
+        "Owner area:",
+        "Risk boundary:",
+        "~/.cliany-site/",
     ]
     for snippet in required:
         assert snippet in text

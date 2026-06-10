@@ -299,6 +299,7 @@ def _readme_content() -> str:
         "scripts/release_readiness.py\n"
         "Real Demo Case Proposal\n"
         "docs/good-first-issues.md\n"
+        "docs/module-ownership.md\n"
         "weekly-maintainer-loop.md\n"
         "next_actions\n"
         "github.com-1.0.0.cliany-adapter.tar.gz\n"
@@ -366,6 +367,18 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "~/.cliany-site/\n",
         encoding="utf-8",
     )
+    (repo / "docs" / "module-ownership.md").write_text(
+        "# 模块 Ownership 与验证地图\n\n"
+        "Owner area\n"
+        "Adapter lifecycle\n"
+        "Case catalog\n"
+        "Release operations\n"
+        "Contributor experience\n"
+        "CLIANY_QA_OFFLINE=1\n"
+        "python scripts/validate_cases.py --strict\n"
+        "~/.cliany-site/\n",
+        encoding="utf-8",
+    )
     (repo / "docs" / "weekly-maintainer-loop.md").write_text(
         "# 每周维护者循环\n\n"
         "python scripts/release_readiness.py --json\n"
@@ -417,6 +430,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "docs/roadmap-2026-q3.md",
         "docs/release-cadence.md",
         "docs/good-first-issues.md",
+        "docs/module-ownership.md",
         "docs/weekly-maintainer-loop.md",
         "cases/manifest.json",
         "cases/examples/demo-case.json",

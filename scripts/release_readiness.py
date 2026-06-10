@@ -301,6 +301,7 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         "SECURITY.md",
         "SUPPORT.md",
         "docs/good-first-issues.md",
+        "docs/module-ownership.md",
         "docs/weekly-maintainer-loop.md",
         ".github/PULL_REQUEST_TEMPLATE.md",
         ".github/ISSUE_TEMPLATE/bug_report.yml",
@@ -339,9 +340,20 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         ],
         "docs/contributor-starter.md": [
             "good-first-issues.md",
+            "module-ownership.md",
             "CLIANY_QA_OFFLINE=1",
             "Real Demo Case Proposal",
             "AXTree snapshot",
+        ],
+        "docs/module-ownership.md": [
+            "Owner area",
+            "Adapter lifecycle",
+            "Case catalog",
+            "Release operations",
+            "Contributor experience",
+            "CLIANY_QA_OFFLINE=1",
+            "python scripts/validate_cases.py --strict",
+            "~/.cliany-site/",
         ],
         "docs/good-first-issues.md": [
             "Good First Issues",

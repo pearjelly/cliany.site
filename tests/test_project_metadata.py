@@ -22,6 +22,7 @@ def test_project_has_open_source_metadata_files():
         "SECURITY.md",
         "SUPPORT.md",
         "docs/good-first-issues.md",
+        "docs/module-ownership.md",
         ".github/PULL_REQUEST_TEMPLATE.md",
         ".github/ISSUE_TEMPLATE/bug_report.yml",
         ".github/ISSUE_TEMPLATE/feature_request.yml",

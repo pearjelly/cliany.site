@@ -63,6 +63,8 @@ pytest tests/test_cases_manifest.py tests/test_release_cadence.py -q --no-cov
 
 ## 模块地图
 
+更完整的 owner area、路径和验证命令见 [模块 Ownership 与验证地图](module-ownership.md)。下面是首次定位问题时的快速入口。
+
 | 你想改 | 先看哪里 | 注意事项 |
 |--------|----------|----------|
 | CLI 命令入口 | `src/cliany_site/cli.py`, `src/cliany_site/commands/` | 根 `--json` contract 不要破坏 |
