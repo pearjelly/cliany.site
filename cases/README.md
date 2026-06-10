@@ -51,4 +51,4 @@ python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict
 
 - 将 `scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict` 接入发版前本地门禁。
 - 在 release notes 中链接案例库，说明每个版本新增或修复了哪些真实场景。
-- 将 `search-extraction-gap` 拆成抽取能力设计任务：列表检测、字段映射、任务级验收。当前已先在保存的抽取 Markdown 报告和生成 adapter 的 JSON 输出中标记空结果、全空字段和部分缺字段，并让 `list-` / `search-` 数据命令在质量为空时返回 `E_EMPTY_RESULT`；后续继续收紧部分缺字段的验收语义。
+- 将 `search-extraction-gap` 拆成抽取能力设计任务：列表检测、字段映射、任务级验收。当前已先在保存的抽取 Markdown 报告和生成 adapter 的 JSON 输出中标记空结果、全空字段和部分缺字段，并让 `browser extract --strict-quality` 可把空结果或字段缺失判为失败、`list-` / `search-` 数据命令在质量为空时返回 `E_EMPTY_RESULT`；后续继续收紧生成命令的部分缺字段验收语义。

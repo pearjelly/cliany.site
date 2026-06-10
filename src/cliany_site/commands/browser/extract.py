@@ -30,7 +30,7 @@ from cliany_site.extract_quality import evaluate_extract_quality
     help="结构化提取模式（text/list/table/attribute），生成 adapter 使用",
 )
 @click.option("--fields-json", default=None, help="结构化字段映射 JSON，仅用于 list/table/attribute")
-@click.option("--strict-quality", is_flag=True, default=False, help="结构化提取质量为空时返回 E_EMPTY_RESULT")
+@click.option("--strict-quality", is_flag=True, default=False, help="结构化提取质量未通过时返回 E_EMPTY_RESULT")
 @click.option("--session", default=None, help="会话名称")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出模式")
 @click.pass_context
@@ -124,11 +124,11 @@ async def _run_extract(
     if mode:
         quality = evaluate_extract_quality(mode, content, fields).to_dict()
         payload["quality"] = quality
-        if strict_quality and quality.get("status") == "empty":
+        if strict_quality and not quality.get("ok", False):
             return err(
                 command="browser extract",
                 code=ErrorCode.E_EMPTY_RESULT,
-                message="结构化提取结果为空",
+                message="结构化提取质量未通过",
                 details={"quality": quality, "selector": selector, "mode": mode},
                 source="builtin",
             )

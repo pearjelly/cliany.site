@@ -17,7 +17,7 @@
 ### Changed
 - 生成 adapter 的 JSON 输出新增 `data.quality` 汇总，并修复 extract 步骤调用 `browser extract --mode` 时内置命令不识别该参数的问题。
 - `browser extract --mode ... --json` 在结构化提取时新增 `data.quality`，便于手动调试 list/table/attribute 结果是否为空或字段缺失。
-- `browser extract --mode ... --strict-quality` 可在结构化提取质量为空时返回 `E_EMPTY_RESULT`，便于本地脚本和 CI 将空抽取判为失败。
+- `browser extract --mode ... --strict-quality` 可在结构化提取质量未通过时返回 `E_EMPTY_RESULT`，便于本地脚本和 CI 将空抽取或关键字段缺失判为失败。
 - 生成的 `list-` / `search-` 数据命令现在会在抽取质量为 `empty` 时返回 `E_EMPTY_RESULT`，避免“命令成功但字段全空”的误判。
 - 官网 Quick Start 同步 v0.14.3 首次成功路径：先运行 `doctor` 摘要和真实 demo adapter，再配置 LLM 生成自定义命令。
 - CI 新增 `Case Catalog Validation` job，在 PR/主分支默认离线运行 `scripts/validate_cases.py --strict` 与案例库结构测试，防止真实案例索引漂移。
