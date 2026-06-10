@@ -261,6 +261,23 @@ def test_release_readiness_passes_for_minimal_ready_repo(tmp_path):
     assert report.package_gate.checked is False
 
 
+def test_release_readiness_writes_markdown_report(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    _commit(repo, "notes/tuesday.md", "tuesday", "2026-06-09")
+    _commit(repo, "notes/wednesday.md", "wednesday", "2026-06-10")
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+    report_path = tmp_path / "reports" / "release-readiness.md"
+
+    release_readiness._write_markdown_report(report, report_path)
+
+    text = report_path.read_text(encoding="utf-8")
+    assert "# cliany-site Release Readiness" in text
+    assert "| ok | `true` |" in text
+    assert "| target_version | `0.1.1` |" in text
+    assert "| cadence | `true` | commit days `3/3`: 2026-06-08, 2026-06-09, 2026-06-10 |" in text
+    assert "https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD" in text
+
+
 def test_release_readiness_blocks_missing_release_draft(tmp_path):
     repo = _init_repo(tmp_path, with_draft=False)
 

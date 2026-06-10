@@ -270,6 +270,49 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"package_gate: {report.package_gate.ok}")
 
 
+def _render_markdown_report(report: ReadinessReport) -> str:
+    blockers = "<br>".join(report.blockers) if report.blockers else "-"
+    commit_days = ", ".join(report.cadence.commit_days) if report.cadence.commit_days else "-"
+    lines = [
+        "# cliany-site Release Readiness",
+        "",
+        "| Metric | Value |",
+        "|--------|-------|",
+        f"| ok | `{str(report.ok).lower()}` |",
+        f"| current_version | `{report.current_version}` |",
+        f"| target_version | `{report.target_version}` |",
+        f"| blockers | {blockers} |",
+        "",
+        "## Gates",
+        "",
+        "| Gate | Result | Detail |",
+        "|------|--------|--------|",
+        (
+            f"| cadence | `{str(report.cadence.ok).lower()}` | "
+            f"commit days `{report.cadence.commit_day_count}/{report.cadence.min_commit_days}`: {commit_days} |"
+        ),
+        f"| cases | `{str(report.cases.ok).lower()}` | active `{report.cases.active}` / total `{report.cases.total}` |",
+        f"| draft | `{str(report.draft.ok).lower()}` | `{report.draft.path}` |",
+        f"| ci | `{str(report.ci.ok).lower()}` | `{report.ci.path}` |",
+        (
+            f"| package_gate | `{str(report.package_gate.ok).lower()}` | "
+            f"required `{str(report.package_gate.required).lower()}`, "
+            f"checked `{str(report.package_gate.checked).lower()}` |"
+        ),
+        "",
+        "## Release Links",
+        "",
+        f"- CHANGELOG compare: {report.cadence.changelog_unreleased_compare_actual or '(missing)'}",
+        f"- Release draft: `{report.draft.path}`",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def _write_markdown_report(report: ReadinessReport, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(_render_markdown_report(report), encoding="utf-8")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Check readiness for the next cliany-site release.")
     parser.add_argument("--json", action="store_true", help="Output machine-readable JSON.")
@@ -278,6 +321,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--today", help="Override current date as YYYY-MM-DD, for tests or audits.")
     parser.add_argument("--target-version", help="Target release version. Defaults to next patch version.")
     parser.add_argument("--packages-dir", type=Path, help="Optional directory containing demo adapter packages.")
+    parser.add_argument("--report", type=Path, help="Optional Markdown report path for release review.")
     parser.add_argument(
         "--require-packages",
         action="store_true",
@@ -294,6 +338,8 @@ def main(argv: list[str] | None = None) -> int:
         packages_dir=args.packages_dir,
         require_packages=args.require_packages,
     )
+    if args.report is not None:
+        _write_markdown_report(report, args.report)
     if args.json:
         print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
     else:
