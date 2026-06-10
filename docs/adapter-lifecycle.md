@@ -64,7 +64,7 @@ adapter 分发包后缀为 `.cliany-adapter.tar.gz`，由 `src/cliany_site/marke
 | `manifest.json` | 是 | 分发 manifest，当前 `manifest_version: "1"` |
 | `commands.py` | 是 | adapter 的 Click 命令代码 |
 | `metadata.json` | 是 | codegen 元数据，当前 `schema_version: 3` |
-| 其他快照文件 | 否 | 未来可用于诊断或回放，必须是普通文件 |
+| 其他快照文件 | 否 | 未来可用于诊断或回放，必须是普通文件，并列入 `files` 与 `file_hashes` |
 
 `manifest.json` 的关键字段：
 
@@ -87,7 +87,7 @@ adapter 分发包后缀为 `.cliany-adapter.tar.gz`，由 `src/cliany_site/marke
 }
 ```
 
-当前实现会校验 `file_hashes` 中列出的文件内容哈希。`checksum` 字段保留在 manifest 数据结构中，尚未作为安装门禁。
+当前实现会要求包内载荷文件与 `files` / `file_hashes` 完全一致，并校验所有声明文件的内容哈希。`checksum` 字段保留在 manifest 数据结构中，尚未作为安装门禁。
 
 ## 兼容性矩阵
 
@@ -105,6 +105,7 @@ adapter 分发包后缀为 `.cliany-adapter.tar.gz`，由 `src/cliany_site/marke
 - 禁止在生成的 adapter 代码中使用 `eval`、`exec`、`os.system` 等危险调用。
 - 安装 tarball 时拒绝绝对路径和 `..` 路径穿越成员。
 - 安装时按 `manifest.file_hashes` 校验文件哈希，哈希不匹配直接失败。
+- 安装时拒绝缺失声明文件、缺失哈希和未在 manifest 中声明的额外文件。
 - adapter 动作回放必须基于 AXTree 语义信息和 `selector_map` 做模糊匹配，不能新增脆弱 CSS selector 兜底。
 - 分发包不应包含真实账号 cookies、API key、私有截图或业务数据。
 

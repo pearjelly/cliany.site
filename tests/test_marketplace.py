@@ -59,6 +59,8 @@ def _make_tarball(
     *,
     version: str = "0.1.0",
     bad_hash: bool = False,
+    missing_declared_file: bool = False,
+    extra_file: bool = False,
     path_traversal: bool = False,
     no_manifest: bool = False,
 ) -> Path:
@@ -98,9 +100,16 @@ def _make_tarball(
         info_cmd.size = len(commands_content)
         tar.addfile(info_cmd, BytesIO(commands_content))
 
-        info_meta = tarfile.TarInfo(name="metadata.json")
-        info_meta.size = len(metadata_content)
-        tar.addfile(info_meta, BytesIO(metadata_content))
+        if not missing_declared_file:
+            info_meta = tarfile.TarInfo(name="metadata.json")
+            info_meta.size = len(metadata_content)
+            tar.addfile(info_meta, BytesIO(metadata_content))
+
+        if extra_file:
+            extra_info = tarfile.TarInfo(name="unlisted.txt")
+            extra_content = b"not declared in manifest"
+            extra_info.size = len(extra_content)
+            tar.addfile(extra_info, BytesIO(extra_content))
 
         if path_traversal:
             evil_info = tarfile.TarInfo(name="../../../etc/passwd")
@@ -315,6 +324,26 @@ class TestInstallAdapter:
         ):
             install_adapter(pack_path)
 
+    def test_install_missing_declared_file_raises(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        pack_path = _make_tarball(tmp_path / "packs", "missing-file.com", missing_declared_file=True)
+
+        with (
+            patch("cliany_site.marketplace.get_config", return_value=cfg),
+            pytest.raises(ValueError, match="缺少声明文件: metadata.json"),
+        ):
+            install_adapter(pack_path)
+
+    def test_install_unlisted_file_raises(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        pack_path = _make_tarball(tmp_path / "packs", "extra.com", extra_file=True)
+
+        with (
+            patch("cliany_site.marketplace.get_config", return_value=cfg),
+            pytest.raises(ValueError, match="未声明文件: unlisted.txt"),
+        ):
+            install_adapter(pack_path)
+
     def test_install_path_traversal_blocked(self, tmp_path: Path) -> None:
         cfg = _make_config(tmp_path)
         pack_path = _make_tarball(tmp_path / "packs", "evil.com", path_traversal=True)
@@ -366,6 +395,18 @@ class TestInstallAdapter:
             backups = list_backups("bak.com")
 
         assert len(backups) >= 1
+
+    def test_install_force_bad_package_does_not_create_backup(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        _create_adapter(cfg.adapters_dir, "safe-bak.com")
+        pack_path = _make_tarball(tmp_path / "packs", "safe-bak.com", bad_hash=True)
+
+        with patch("cliany_site.marketplace.get_config", return_value=cfg):
+            with pytest.raises(ValueError, match="文件校验失败"):
+                install_adapter(pack_path, force=True)
+            backups = list_backups("safe-bak.com")
+
+        assert backups == []
 
     def test_install_nonexistent_pack_raises(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match="安装包不存在"):
