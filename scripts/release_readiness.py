@@ -298,6 +298,10 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         "CODE_OF_CONDUCT.md",
         "SECURITY.md",
         "SUPPORT.md",
+        ".github/PULL_REQUEST_TEMPLATE.md",
+        ".github/ISSUE_TEMPLATE/bug_report.yml",
+        ".github/ISSUE_TEMPLATE/feature_request.yml",
+        ".github/ISSUE_TEMPLATE/case_proposal.yml",
     ]
     for filename in required_files:
         if not (root / filename).exists():
