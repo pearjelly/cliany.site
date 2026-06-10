@@ -343,6 +343,22 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
     )
     (repo / "README.md").write_text(_readme_content(), encoding="utf-8")
     (repo / "README.zh.md").write_text(_readme_content(), encoding="utf-8")
+    (repo / "docs" / "roadmap-2026-q3.md").write_text(
+        "# Roadmap\n\n[每周维护者循环](weekly-maintainer-loop.md)\n",
+        encoding="utf-8",
+    )
+    (repo / "docs" / "release-cadence.md").write_text(
+        "# Release Cadence\n\n[每周维护者循环](weekly-maintainer-loop.md)\n",
+        encoding="utf-8",
+    )
+    (repo / "docs" / "weekly-maintainer-loop.md").write_text(
+        "# 每周维护者循环\n\n"
+        "python scripts/release_readiness.py --json\n"
+        "python scripts/validate_cases.py --strict\n"
+        "CLIANY_QA_OFFLINE=1\n"
+        "commit days N/3\n",
+        encoding="utf-8",
+    )
     (repo / "cases" / "manifest.json").write_text(_cases_manifest(), encoding="utf-8")
     (repo / "cases" / "examples").mkdir()
     (repo / "cases" / "examples" / "demo-case.json").write_text(
@@ -382,6 +398,9 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "SUPPORT.md",
         "README.md",
         "README.zh.md",
+        "docs/roadmap-2026-q3.md",
+        "docs/release-cadence.md",
+        "docs/weekly-maintainer-loop.md",
         "cases/manifest.json",
         "cases/examples/demo-case.json",
         ".github/workflows/ci.yml",
@@ -586,6 +605,32 @@ def test_release_readiness_blocks_incomplete_readme_entrypoint(tmp_path):
     assert report.ok is False
     assert "project metadata validation failed" in report.blockers
     assert "open source metadata file missing snippet: README.md: Real Demo Case Proposal" in (
+        report.project_metadata.issues
+    )
+
+
+def test_release_readiness_blocks_missing_weekly_maintainer_loop_doc(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "docs" / "weekly-maintainer-loop.md").unlink()
+
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert "open source metadata file is missing: docs/weekly-maintainer-loop.md" in (
+        report.project_metadata.issues
+    )
+
+
+def test_release_readiness_blocks_missing_weekly_loop_link(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "docs" / "roadmap-2026-q3.md").write_text("# Roadmap\n", encoding="utf-8")
+
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert "open source metadata file missing snippet: docs/roadmap-2026-q3.md: weekly-maintainer-loop.md" in (
         report.project_metadata.issues
     )
 

@@ -298,6 +298,7 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         "CODE_OF_CONDUCT.md",
         "SECURITY.md",
         "SUPPORT.md",
+        "docs/weekly-maintainer-loop.md",
         ".github/PULL_REQUEST_TEMPLATE.md",
         ".github/ISSUE_TEMPLATE/bug_report.yml",
         ".github/ISSUE_TEMPLATE/feature_request.yml",
@@ -324,6 +325,20 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "E_EMPTY_RESULT",
             "scripts/release_readiness.py",
             "Real Demo Case Proposal",
+        ],
+        "docs/roadmap-2026-q3.md": [
+            "weekly-maintainer-loop.md",
+            "每周维护者循环",
+        ],
+        "docs/release-cadence.md": [
+            "weekly-maintainer-loop.md",
+            "每周维护者循环",
+        ],
+        "docs/weekly-maintainer-loop.md": [
+            "python scripts/release_readiness.py --json",
+            "python scripts/validate_cases.py --strict",
+            "CLIANY_QA_OFFLINE=1",
+            "commit days N/3",
         ],
         ".github/PULL_REQUEST_TEMPLATE.md": [
             "python scripts/validate_cases.py --strict",
