@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "cases" / "manifest.json"
 ALLOWED_STATUSES = {"active", "degraded", "known-gap", "retired"}

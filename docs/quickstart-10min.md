@@ -29,6 +29,11 @@ cliany-site doctor --json
 ```
 
 先看 JSON envelope 是否能正常返回。Chrome/CDP 或 LLM key 的错误不一定阻塞 demo adapter 的静态安装，但会影响 `login` 和 `explore`。
+重点看 `data.summary`：
+
+- `must_fix`：先处理，否则关键路径不可用。
+- `should_fix`：建议处理；例如没有 LLM key 时仍可先安装/执行已有 adapter。
+- `info`：诊断信息，通常无需动作。
 
 ### 3. 下载一个 demo adapter
 
@@ -118,4 +123,3 @@ cliany-site github.com search --query "cliany.site" --json
 - 至少一个 demo adapter 能安装、列出、验证。
 - 至少一个只读命令返回 JSON envelope。
 - 如果继续使用 `explore`，生成结果能被 `list` 发现，并能用 `--json` 执行。
-

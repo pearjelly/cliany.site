@@ -1,8 +1,10 @@
 import json
+
 import pytest
 from click.testing import CliRunner
 
 from cliany_site.cli import cli
+from cliany_site.commands.doctor import _run_checks
 
 
 def test_doctor_has_schema_version(tmp_home, no_llm, monkeypatch):
@@ -73,6 +75,41 @@ def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):
     checks = data["data"]["checks"]
     llm_check = next(c for c in checks if c["name"] == "llm")
     assert llm_check["status"] == "warning"
+    assert llm_check["severity"] == "should_fix"
+    assert "只安装/执行已有 adapter 可暂时忽略" in llm_check["action"]
+
+    summary = data["data"]["summary"]
+    assert summary["counts"]["must_fix"] == 0
+    assert any(item["name"] == "llm" for item in summary["should_fix"])
+    assert summary["ready_for_demo_adapters"] is True
+    assert summary["ready_for_explore"] is False
+
+
+@pytest.mark.asyncio
+async def test_doctor_cdp_failure_includes_must_fix_summary(tmp_home, no_llm, monkeypatch):
+    """Test that fatal checks include actionable summary in error details"""
+    class UnavailableCDP:
+        async def check_available(self):
+            return False
+
+    monkeypatch.setenv("CLIANY_ANTHROPIC_API_KEY", "test")
+
+    result = await _run_checks(UnavailableCDP())
+
+    assert result["ok"] is False
+    assert result["error"] is not None
+    details = result["error"]["details"]
+    assert details is not None
+    summary = details["summary"]
+    assert summary["counts"]["must_fix"] >= 1
+    assert summary["ready_for_demo_adapters"] is False
+    assert summary["ready_for_explore"] is False
+    cdp_item = next(item for item in summary["must_fix"] if item["name"] == "cdp")
+    assert "CDP" in cdp_item["action"]
+
+    cdp_check = next(c for c in details["checks"] if c["name"] == "cdp")
+    assert cdp_check["severity"] == "must_fix"
+    assert "CDP" in cdp_check["action"]
 
 
 def test_legacy_adapter_count(tmp_home, no_llm, monkeypatch):

@@ -25,6 +25,90 @@ except ImportError:
     pass
 
 
+_CHECK_ACTIONS: dict[str, dict[str, str]] = {
+    "cdp": {
+        "fail": "启动 Chrome/Chromium，并开放 CDP 调试端口；或使用 --cdp-url 指向可用浏览器。",
+        "ok": "Chrome/CDP 可用，可以执行 login、explore 和浏览器 replay。",
+    },
+    "llm": {
+        "warning": (
+            "如果要生成新 adapter，请配置 CLIANY_ANTHROPIC_API_KEY 或 "
+            "CLIANY_OPENAI_API_KEY；只安装/执行已有 adapter 可暂时忽略。"
+        ),
+        "ok": "LLM key 已配置，可以执行 explore 生成新 adapter。",
+    },
+    "llm_provider": {
+        "fail": "将 CLIANY_LLM_PROVIDER 设置为 anthropic 或 openai。",
+        "ok": "LLM provider 配置有效。",
+    },
+    "openai_base_url": {
+        "fail": "检查 CLIANY_OPENAI_BASE_URL，需是可规范化为 /v1 的 OpenAI-compatible base URL。",
+        "ok": "OpenAI-compatible base URL 配置有效。",
+    },
+    "dirs": {
+        "fail": "创建 ~/.cliany-site/adapters 与 ~/.cliany-site/sessions，或检查当前用户的目录权限。",
+        "ok": "运行时目录可用。",
+    },
+    "registry": {
+        "warning": "存在命令注册冲突，请检查 details.conflicts 并重命名冲突 adapter 命令。",
+        "ok": "命令注册表无冲突。",
+    },
+    "legacy_adapters": {
+        "warning": "运行 cliany-site migrate --json，或重新 explore 生成 schema v3 adapter。",
+        "ok": "未发现 legacy adapter。",
+    },
+    "agent_md": {
+        "warning": "运行一次 explore 让 cliany-site 生成/更新 AGENTS.md，或手动补齐 sentinel。",
+        "ok": "Agent 契约文档可识别。",
+    },
+    "healed_pending": {
+        "warning": "检查 metadata.healed.json 后运行 cliany-site adapter accept-heal <domain> 接受修复。",
+        "ok": "没有待接受的自愈结果。",
+    },
+    "provider": {
+        "warning": "检查 CLIANY_BROWSER_PROVIDER；探索新 workflow 时建议使用默认 Chrome provider。",
+        "ok": "浏览器 provider 可加载，能力快照可读取。",
+    },
+}
+
+
+def _action_for_check(check: dict[str, Any]) -> str:
+    status = str(check.get("status", ""))
+    name = str(check.get("name", ""))
+    return _CHECK_ACTIONS.get(name, {}).get(status, "无需处理，仅供诊断参考。")
+
+
+def _severity_for_check(check: dict[str, Any]) -> str:
+    status = check.get("status")
+    if status == "fail":
+        return "must_fix"
+    if status == "warning":
+        return "should_fix"
+    return "info"
+
+
+def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
+    summary: dict[str, Any] = {
+        "must_fix": [],
+        "should_fix": [],
+        "info": [],
+        "counts": {"must_fix": 0, "should_fix": 0, "info": 0},
+    }
+    for check in checks:
+        severity = _severity_for_check(check)
+        action = _action_for_check(check)
+        check["severity"] = severity
+        check["action"] = action
+        item = {"name": check["name"], "status": check["status"], "action": action}
+        summary[severity].append(item)
+        summary["counts"][severity] += 1
+    summary["ready_for_demo_adapters"] = not summary["must_fix"]
+    summary["ready_for_explore"] = not summary["must_fix"] and not any(
+        item["name"] == "llm" for item in summary["should_fix"]
+    )
+    return summary
+
+
 @click.command("doctor")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出模式")
 @click.pass_context
@@ -214,10 +298,11 @@ async def _run_checks(cdp_conn: Any = None) -> Envelope:
             "details": {"provider_name": provider_name, "provider_capabilities": None, "error": str(exc)},
         })
 
+    summary = _enrich_checks(checks)
     failed = [c["name"] for c in checks if c["status"] == "fail"]
     if failed:
         return err("doctor", ErrorCode.E_UNKNOWN, f"检查失败: {', '.join(failed)}",
-                   details={"checks": checks}, source="builtin")
+                   details={"checks": checks, "summary": summary}, source="builtin")
 
     python_ver = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
     try:
@@ -241,29 +326,33 @@ async def _run_checks(cdp_conn: Any = None) -> Envelope:
                 if meta_path.exists():
                     adapter_count += 1
                     try:
-                        with open(meta_path, "r", encoding="utf-8") as f:
-                            meta = json.load(f)
+                        meta = json.loads(meta_path.read_text(encoding="utf-8"))
                         command_count += len(meta.get("commands", {}))
                     except (json.JSONDecodeError, OSError):
                         pass
-    checks.append({"name": "adapter_stats", "status": "ok", "duration_ms": 0, "details": {"adapter_count": adapter_count, "command_count": command_count}})
+    checks.append({
+        "name": "adapter_stats",
+        "status": "ok",
+        "duration_ms": 0,
+        "details": {"adapter_count": adapter_count, "command_count": command_count},
+    })
+    summary = _enrich_checks(checks)
 
     # 新增字段
-    data = {"checks": checks}
+    data = {"checks": checks, "summary": summary}
     data["schema_version"] = 3
-    
+
     # manifest_status
     manifest_path = Path.home() / ".cliany-site" / "cli-manifest.json"
     if not manifest_path.exists():
         data["manifest_status"] = "missing"
     else:
         try:
-            with open(manifest_path, "r", encoding="utf-8") as f:
-                json.load(f)
+            json.loads(manifest_path.read_text(encoding="utf-8"))
             data["manifest_status"] = "ok"
         except (json.JSONDecodeError, OSError):
             data["manifest_status"] = "corrupt"
-    
+
     # legacy_adapter_count
     legacy_count = 0
     if adapters_dir.exists():
@@ -272,17 +361,16 @@ async def _run_checks(cdp_conn: Any = None) -> Envelope:
                 meta_path = d / "metadata.json"
                 if meta_path.exists():
                     try:
-                        with open(meta_path, "r", encoding="utf-8") as f:
-                            meta = json.load(f)
+                        meta = json.loads(meta_path.read_text(encoding="utf-8"))
                         if meta.get("schema_version") != 3:
                             legacy_count += 1
                     except (json.JSONDecodeError, OSError):
                         pass  # 忽略损坏的 metadata
     data["legacy_adapter_count"] = legacy_count
-    
+
     data["capability_router"] = "enabled"
     data["network_capture"] = os.environ.get("CLIANY_CAPTURE_NETWORK", "1") != "0"
     data["console_capture"] = os.environ.get("CLIANY_CAPTURE_CONSOLE", "1") != "0"
     data["diagnose_llm"] = os.environ.get("CLIANY_DIAGNOSE_LLM", "1") != "0"
-    
+
     return ok("doctor", data, source="builtin")
