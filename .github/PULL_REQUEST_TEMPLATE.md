@@ -24,7 +24,11 @@
 
 <!-- 如何验证这个改动？/ How did you test this change? -->
 
-- [ ] 本地运行 `pytest tests/ -v` 通过 / Ran `pytest tests/ -v` locally and it passes
+- [ ] 本地运行相关 pytest 通过 / Ran relevant pytest locally
+- [ ] 本地运行相关 `ruff check ...` 通过 / Ran relevant `ruff check ...`
+- [ ] 如涉及真实案例库，已运行 `python scripts/validate_cases.py --strict`
+- [ ] 如涉及发布脚本、发布文档或 CI gate，已运行 `python scripts/release_readiness.py --json`
+- [ ] 如涉及默认 PR 门禁，已确认路径使用 `CLIANY_QA_OFFLINE=1`，不依赖真实 LLM key
 - [ ] 手动测试了以下场景 / Manually tested the following scenarios:
   <!-- 描述测试场景 / Describe your test scenarios -->
 
@@ -32,8 +36,9 @@
 
 ## 提交前检查清单 / Pre-submission Checklist
 
-- [ ] 代码通过 `ruff check src/` 检查 / Code passes `ruff check src/`
-- [ ] 代码通过 `mypy src/cliany_site/` 类型检查 / Code passes `mypy src/cliany_site/`
-- [ ] 所有测试通过 `pytest tests/ -v` / All tests pass with `pytest tests/ -v`
+- [ ] 改动范围与关联 Issue 或路线图目标一致 / Scope matches the related issue or roadmap goal
+- [ ] 已按改动风险选择验证范围，而不是只跑无关测试 / Validation matches the changed area
 - [ ] 文档已更新（如有必要）/ Documentation updated (if necessary)
+- [ ] CHANGELOG 或 release draft 已更新（如有用户可见变化）/ CHANGELOG or release draft updated for user-visible changes
+- [ ] 未提交 `~/.cliany-site/`、adapter/session/snapshot 运行时状态 / No runtime state committed
 - [ ] 如有破坏性变更，已在描述中明确说明 / Breaking changes are clearly documented
