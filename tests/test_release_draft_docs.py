@@ -38,6 +38,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "pypi-project-search",
         "candidate",
         "candidate cases to declare `example_output`",
+        "example_output.data.command",
         "active/candidate/known-gap/total",
         "promotion",
         "candidate `promotion` checklists",

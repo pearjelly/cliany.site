@@ -297,6 +297,35 @@ def test_cases_report_rejects_example_output_case_id_mismatch(tmp_path):
     assert "example_output.meta.case_id must be 'demo-case'" in report.cases[0].issues
 
 
+def test_cases_report_rejects_example_output_command_mismatch(tmp_path):
+    case = _case("demo-case")
+    _write_cases(tmp_path, [case])
+    (tmp_path / case["example_output"]).write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "data": {
+                    "command": "other-items",
+                    "results": [{"ok": True, "data": {"items": [{"name": "Example"}]}}],
+                },
+                "error": None,
+                "meta": {
+                    "source": "case-example",
+                    "case_id": "demo-case",
+                    "sample": True,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert "example_output.data.command must match manifest commands" in report.cases[0].issues[0]
+    assert "'other-items' not in list-items" in report.cases[0].issues[0]
+
+
 def test_cases_report_checks_optional_packages_dir(tmp_path):
     case = _case(domain="demo.example.com")
     _write_cases(tmp_path, [case])

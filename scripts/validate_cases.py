@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import re
+import shlex
 import sys
 import tarfile
 from dataclasses import dataclass, field
@@ -18,6 +19,22 @@ ROOT = Path(__file__).resolve().parents[1]
 ALLOWED_STATUSES = {"active", "candidate", "degraded", "known-gap", "retired"}
 INSTALL_RE = re.compile(r"^cliany-site market install (?P<path>\S+)")
 REQUIRED_PACKAGE_FILES = {"commands.py", "metadata.json"}
+BUILTIN_GROUPS = {
+    "browser",
+    "check",
+    "doctor",
+    "list",
+    "login",
+    "market",
+    "migrate",
+    "obscura",
+    "replay",
+    "report",
+    "serve",
+    "tui",
+    "verify",
+    "workflow",
+}
 
 
 @dataclass
@@ -85,32 +102,34 @@ def _install_package_name(case: dict[str, Any]) -> str | None:
     return None
 
 
+def _command_parts(command: Any) -> list[str]:
+    try:
+        return shlex.split(str(command))
+    except ValueError:
+        return str(command).split()
+
+
 def _adapter_command_domains(commands: list[Any]) -> list[str]:
-    builtin_groups = {
-        "browser",
-        "check",
-        "doctor",
-        "list",
-        "login",
-        "market",
-        "migrate",
-        "obscura",
-        "replay",
-        "report",
-        "serve",
-        "tui",
-        "verify",
-        "workflow",
-    }
     domains: list[str] = []
     for command in commands:
-        parts = str(command).split()
+        parts = _command_parts(command)
         if len(parts) < 2 or parts[0] != "cliany-site":
             continue
         group = parts[1]
-        if group not in builtin_groups:
+        if group not in BUILTIN_GROUPS:
             domains.append(group)
     return domains
+
+
+def _adapter_command_names(commands: list[Any]) -> set[str]:
+    names: set[str] = set()
+    for command in commands:
+        parts = _command_parts(command)
+        if len(parts) < 3 or parts[0] != "cliany-site":
+            continue
+        if parts[1] not in BUILTIN_GROUPS:
+            names.add(parts[2])
+    return names
 
 
 def _sha256_bytes(data: bytes) -> str:
@@ -160,7 +179,12 @@ def _validate_docs_link(root: Path, docs: str) -> list[str]:
     return []
 
 
-def _validate_example_output(root: Path, case_id: str, example_output: str) -> list[str]:
+def _validate_example_output(
+    root: Path,
+    case_id: str,
+    example_output: str,
+    expected_commands: set[str],
+) -> list[str]:
     path = Path(example_output)
     if path.is_absolute() or ".." in path.parts:
         return [f"example_output path is unsafe: {example_output}"]
@@ -200,8 +224,14 @@ def _validate_example_output(root: Path, case_id: str, example_output: str) -> l
         results = data.get("results")
         if not isinstance(results, list) or not results:
             issues.append("example_output.data.results must be a non-empty list")
-        if not data.get("command"):
+        command_name = str(data.get("command") or "")
+        if not command_name:
             issues.append("example_output.data.command is required")
+        elif expected_commands and command_name not in expected_commands:
+            expected = ", ".join(sorted(expected_commands))
+            issues.append(
+                f"example_output.data.command must match manifest commands: {command_name!r} not in {expected}"
+            )
 
     return issues
 
@@ -329,11 +359,11 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
     if docs:
         check.issues.extend(_validate_docs_link(root, docs))
 
+    commands = case.get("commands") or []
+    expected_commands = _adapter_command_names(commands)
     example_output = str(case.get("example_output") or "")
     if example_output:
-        check.issues.extend(_validate_example_output(root, case_id, example_output))
-
-    commands = case.get("commands") or []
+        check.issues.extend(_validate_example_output(root, case_id, example_output, expected_commands))
     if status == "active":
         adapter_domain = str(case.get("adapter_domain") or "")
         if not adapter_domain:
