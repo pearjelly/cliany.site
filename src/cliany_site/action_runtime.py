@@ -808,6 +808,7 @@ async def execute_action_steps(
                                         "step_index": idx,
                                         "extract_mode": extract_mode,
                                         "description": description,
+                                        "fields": fields,
                                         "data": data,
                                     }
                                 )

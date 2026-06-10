@@ -7,6 +7,8 @@ from pathlib import Path
 
 import click
 
+from cliany_site.extract_quality import evaluate_extract_quality
+
 
 def _sanitize_filename(description: str) -> str:
     name = description[:50]
@@ -105,8 +107,15 @@ def _format_markdown(
         description = str(result.get("description", f"提取 {i}"))
         extract_mode = str(result.get("extract_mode", ""))
         data = result.get("data")
+        fields = result.get("fields") if isinstance(result.get("fields"), dict) else None
+        quality = evaluate_extract_quality(extract_mode, data, fields)
 
         lines.append(f"## 提取 {i}: {description}")
+        lines.append("")
+        lines.append(f"**质量：** {quality.status}")
+        if quality.issues:
+            lines.append("")
+            lines.append("> 质量问题：" + "；".join(quality.issues))
         lines.append("")
 
         if extract_mode == "text":
