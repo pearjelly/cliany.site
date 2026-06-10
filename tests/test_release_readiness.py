@@ -260,7 +260,18 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
     (repo / "cases").mkdir()
     (repo / "docs" / "releases").mkdir(parents=True)
     (repo / ".github" / "workflows").mkdir(parents=True)
-    (repo / "pyproject.toml").write_text('[project]\nname = "demo"\nversion = "0.1.0"\n', encoding="utf-8")
+    (repo / "pyproject.toml").write_text(
+        '[project]\n'
+        'name = "demo"\n'
+        'version = "0.1.0"\n'
+        'description = "Demo package."\n'
+        'readme = "README.md"\n\n'
+        '[project.urls]\n'
+        'Homepage = "https://demo.example.com"\n'
+        'Repository = "https://github.com/example/demo"\n'
+        'Changelog = "https://github.com/example/demo/blob/main/CHANGELOG.md"\n',
+        encoding="utf-8",
+    )
     (repo / "CHANGELOG.md").write_text(
         "# Changelog\n\n"
         "## [Unreleased]\n\n"
@@ -340,6 +351,7 @@ def test_release_readiness_passes_for_minimal_ready_repo(tmp_path):
     assert report.draft.ok is True
     assert report.ci.ok is True
     assert report.release_workflow.ok is True
+    assert report.project_metadata.ok is True
     assert report.package_gate.ok is True
     assert report.package_gate.required is False
     assert report.package_gate.checked is False
@@ -360,6 +372,7 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "| target_version | `0.1.1` |" in text
     assert "| cadence | `true` | commit days `3/3`: 2026-06-08, 2026-06-09, 2026-06-10 |" in text
     assert "| release_workflow | `true` |" in text
+    assert "| project_metadata | `true` |" in text
     assert "https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD" in text
 
 
@@ -423,6 +436,18 @@ def test_release_readiness_blocks_missing_release_workflow_pypi_publish(tmp_path
     assert any("pypa/gh-action-pypi-publish@release/v1" in issue for issue in report.release_workflow.issues)
 
 
+def test_release_readiness_blocks_missing_project_description(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "pyproject.toml").write_text('[project]\nname = "demo"\nversion = "0.1.0"\n', encoding="utf-8")
+
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert report.project_metadata.ok is False
+    assert "project.description is required for PyPI" in report.project_metadata.issues
+
+
 def test_release_readiness_blocks_release_workflow_without_strict_preflight(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     release_workflow = _release_workflow().replace(
@@ -465,7 +490,18 @@ def test_release_readiness_blocks_release_workflow_without_clean_dist(tmp_path):
 def test_release_readiness_accepts_tagged_release_mode(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     _commit(repo, "notes/tuesday.md", "tuesday", "2026-06-09")
-    (repo / "pyproject.toml").write_text('[project]\nname = "demo"\nversion = "0.1.1"\n', encoding="utf-8")
+    (repo / "pyproject.toml").write_text(
+        '[project]\n'
+        'name = "demo"\n'
+        'version = "0.1.1"\n'
+        'description = "Demo package."\n'
+        'readme = "README.md"\n\n'
+        '[project.urls]\n'
+        'Homepage = "https://demo.example.com"\n'
+        'Repository = "https://github.com/example/demo"\n'
+        'Changelog = "https://github.com/example/demo/blob/main/CHANGELOG.md"\n',
+        encoding="utf-8",
+    )
     (repo / "CHANGELOG.md").write_text(
         "# Changelog\n\n"
         "## [Unreleased]\n\n"

@@ -88,7 +88,7 @@ git tag v0.15.0
 git push origin master --tags
 ```
 
-`release_readiness.py` 是发版前总入口，会同时检查下一版草案、每周提交/版本 tag 节奏、`CHANGELOG.md` Unreleased 状态与 compare 链接、工作区清洁度、真实案例库离线验收、默认 CI release gates 和 tag 发布 workflow。默认模式用于观察，`--strict` 用于发版前拦截，`--report` 可生成 Markdown readiness 摘要供发版复盘引用；正式发版前加上 `--packages-dir ~/.cliany-site/packages --require-packages`，确保 demo adapter release assets 也完成离线校验。
+`release_readiness.py` 是发版前总入口，会同时检查下一版草案、每周提交/版本 tag 节奏、`CHANGELOG.md` Unreleased 状态与 compare 链接、工作区清洁度、真实案例库离线验收、默认 CI release gates、tag 发布 workflow 和 PyPI 项目元数据。默认模式用于观察，`--strict` 用于发版前拦截，`--report` 可生成 Markdown readiness 摘要供发版复盘引用；正式发版前加上 `--packages-dir ~/.cliany-site/packages --require-packages`，确保 demo adapter release assets 也完成离线校验。
 
 CI 的 `Release Readiness Report` job 会在 PR/主分支生成 `release-readiness-report` artifact。该 job 不使用 `--strict`，用于持续观察下一版距离发版还差什么；真正发版仍以本地 `python scripts/release_readiness.py --strict` 为准。
 
