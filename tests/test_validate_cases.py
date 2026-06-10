@@ -225,6 +225,24 @@ def test_cases_report_rejects_candidate_case_without_expected_commands(tmp_path)
     assert "candidate case requires expected commands" in report.cases[0].issues
 
 
+def test_cases_report_rejects_candidate_case_without_example_output(tmp_path):
+    case = _case("candidate-case")
+    case["status"] = "candidate"
+    case["commands"] = ["cliany-site demo.example.com list-items --json"]
+    del case["example_output"]
+    case["promotion"] = {
+        "adapter_package": "publish demo.example.com.cliany-adapter-v0.1.0.tar.gz",
+        "metadata_validation": "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict",
+        "online_smoke": "cliany-site demo.example.com list-items --json",
+    }
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert "candidate case requires example_output" in report.cases[0].issues
+
+
 def test_cases_report_rejects_candidate_case_without_promotion_checklist(tmp_path):
     case = _case("candidate-case")
     case["status"] = "candidate"

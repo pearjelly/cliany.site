@@ -361,6 +361,8 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
     elif status == "candidate":
         if not commands:
             check.issues.append("candidate case requires expected commands")
+        if not example_output:
+            check.issues.append("candidate case requires example_output")
         for command in commands:
             if not str(command).startswith("cliany-site "):
                 check.issues.append(f"command must start with cliany-site: {command}")

@@ -37,6 +37,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "cases/manifest.json",
         "pypi-project-search",
         "candidate",
+        "candidate cases to declare `example_output`",
         "active/candidate/known-gap/total",
         "promotion",
         "candidate `promotion` checklists",

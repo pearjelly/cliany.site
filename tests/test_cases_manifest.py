@@ -36,6 +36,7 @@ def test_cases_manifest_entries_are_actionable():
             assert all(command.startswith("cliany-site ") for command in case["commands"])
         if case["status"] == "candidate":
             assert case["commands"]
+            assert case["example_output"]
             assert all(command.startswith("cliany-site ") for command in case["commands"])
             assert case["promotion"]["adapter_package"]
             assert case["promotion"]["metadata_validation"]
@@ -48,9 +49,9 @@ def test_cases_manifest_docs_links_exist_locally():
         assert (ROOT / doc_path).exists(), f"{case['id']} docs path does not exist: {doc_path}"
 
 
-def test_active_cases_have_local_example_outputs():
+def test_active_and_candidate_cases_have_local_example_outputs():
     for case in _load_cases():
-        if case["status"] != "active":
+        if case["status"] not in {"active", "candidate"}:
             continue
 
         path = ROOT / case["example_output"]
