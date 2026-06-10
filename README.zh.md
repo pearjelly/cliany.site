@@ -369,6 +369,10 @@ cliany-site/src/cliany_site/
 - **沙箱模式**：`--sandbox` 限制 navigate 同域、禁止 `javascript:` / `file://` / `data:` URL、禁止文件下载；本轮闭环优先覆盖 CLI adapter 执行路径
 - **代码审计**：codegen 输出自动 AST 扫描，检测 `eval` / `exec` / `os.system` / `subprocess` 等危险调用
 
+## 路线图 / Roadmap
+
+当前迭代计划见 [docs/roadmap-2026-q3.md](docs/roadmap-2026-q3.md)。发布与提交节奏见 [docs/release-cadence.md](docs/release-cadence.md)：至少每周一个版本，每周至少三天有提交记录。
+
 ## 贡献指南 / Contributing
 
 欢迎参与贡献！请查阅 [CONTRIBUTING.md](CONTRIBUTING.md) 了解开发环境搭建、代码规范和 PR 流程。

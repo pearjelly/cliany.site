@@ -364,6 +364,10 @@ cliany-site/src/cliany_site/
 - **Sandbox Mode**: `--sandbox` limits navigation to the same origin, forbids `javascript:` / `file://` / `data:` URLs, and prevents file downloads.
 - **Code Audit**: Automatic AST scanning of codegen output to detect dangerous calls like `eval` / `exec`.
 
+## Roadmap
+
+The current iteration plan is tracked in [docs/roadmap-2026-q3.md](docs/roadmap-2026-q3.md). Release and commit cadence is defined in [docs/release-cadence.md](docs/release-cadence.md): at least one version per week and commits on at least three days each week.
+
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, code style, and PR workflow.
