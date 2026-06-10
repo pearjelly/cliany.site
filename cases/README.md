@@ -54,5 +54,4 @@ python scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --req
 ## 下一步
 
 - 在正式发版前，把 GitHub Release 候选 demo adapter 包下载到 `~/.cliany-site/packages`，再运行 `scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --require-packages --strict`。
-- 在 release notes 中链接案例库，说明每个版本新增或修复了哪些真实场景。
 - 将 `search-extraction-gap` 继续拆成更细的抽取能力设计任务：列表检测、字段映射、任务级验收。当前已用最小 HTML fixture 固定 partial 字段缺失语义，并让 `browser extract --strict-quality` 与生成的 `list-` / `search-` 数据命令都能把空结果或字段缺失判为 `E_EMPTY_RESULT`。

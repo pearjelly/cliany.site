@@ -52,6 +52,12 @@ def _release_draft(target_version: str, current_version: str) -> str:
 
 - Demo release value.
 
+## 案例库映射
+
+- cases/README.md
+- cases/manifest.json
+- search-extraction-gap
+
 ## 风险与兼容性
 
 - No compatibility risk.
