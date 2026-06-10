@@ -18,3 +18,19 @@ def test_ci_runs_case_catalog_validation():
     ]
     for snippet in required:
         assert snippet in text
+
+
+def test_ci_uploads_release_readiness_report():
+    text = CI.read_text(encoding="utf-8")
+
+    required = [
+        "release-readiness:",
+        "Release Readiness Report",
+        "fetch-depth: 0",
+        "CLIANY_QA_OFFLINE",
+        "python scripts/release_readiness.py --json --report release-readiness-report.md",
+        "release-readiness-report",
+        "release-readiness-report.md",
+    ]
+    for snippet in required:
+        assert snippet in text

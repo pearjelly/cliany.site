@@ -19,6 +19,7 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
+- CI 新增 `Release Readiness Report` job，在 PR/主分支生成并上传 `release-readiness-report` artifact，便于持续观察下一版发版阻塞项。
 - `scripts/validate_cases.py` 现在要求 active 案例声明 `example_output`，并校验样例路径、JSON envelope、`meta.case_id` 和非空 `data.results`。
 - `scripts/check_release_cadence.py` / `scripts/release_readiness.py` 现在会校验 `CHANGELOG.md` 的 `[Unreleased]` compare 链接是否从最新 tag 指向 `HEAD`，避免发布说明范围漂移。
 - `scripts/validate_cases.py` 现在会检查 `cases/manifest.json` 中 `docs` 的 Markdown 锚点和 active 案例命令域名一致性，避免真实案例链接或命令漂移。

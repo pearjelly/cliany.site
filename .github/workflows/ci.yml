@@ -113,6 +113,29 @@ jobs:
           path: case-catalog-report.md
           if-no-files-found: warn
 
+  release-readiness:
+    name: Release Readiness Report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 生成发布 readiness 摘要
+        env:
+          CLIANY_QA_OFFLINE: "1"
+        run: |
+          python scripts/release_readiness.py --json --report release-readiness-report.md
+      - name: 上传发布 readiness 报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-readiness-report
+          path: release-readiness-report.md
+          if-no-files-found: warn
+
   extract-quality:
     name: Extract Quality Regression
     runs-on: ubuntu-latest

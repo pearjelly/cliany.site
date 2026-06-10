@@ -88,6 +88,8 @@ git push origin master --tags
 
 `release_readiness.py` 是发版前总入口，会同时检查下一版草案、每周提交/版本 tag 节奏、`CHANGELOG.md` Unreleased 状态与 compare 链接、工作区清洁度、真实案例库离线验收和默认 CI release gates。默认模式用于观察，`--strict` 用于发版前拦截，`--report` 可生成 Markdown readiness 摘要供发版复盘引用；正式发版前加上 `--packages-dir ~/.cliany-site/packages --require-packages`，确保 demo adapter release assets 也完成离线校验。
 
+CI 的 `Release Readiness Report` job 会在 PR/主分支生成 `release-readiness-report` artifact。该 job 不使用 `--strict`，用于持续观察下一版距离发版还差什么；真正发版仍以本地 `python scripts/release_readiness.py --strict` 为准。
+
 `check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、`CHANGELOG.md` Unreleased 是否有内容、`[Unreleased]` compare 链接是否指向最新 tag 到 `HEAD`，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截。
 
 `validate_cases.py` 会检查 `cases/manifest.json` 的结构、文档链接和 Markdown 锚点、active 案例命令域名一致性、离线样例输出和验证说明；传入 `--report` 时会生成 Markdown 验收报告，CI 会上传为 `case-catalog-report` artifact；传入 `--packages-dir ~/.cliany-site/packages` 时，还会离线检查 demo adapter 包中的 `manifest.json`、tarball 安全路径、声明文件哈希和 metadata schema v3。

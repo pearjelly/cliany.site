@@ -91,6 +91,21 @@ jobs:
           name: case-catalog-report
           path: case-catalog-report.md
 
+  release-readiness:
+    name: Release Readiness Report
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: |
+          python scripts/release_readiness.py --json --report release-readiness-report.md
+        env:
+          CLIANY_QA_OFFLINE: "1"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-readiness-report
+          path: release-readiness-report.md
+
   extract-quality:
     name: Extract Quality Regression
     steps:
