@@ -20,7 +20,7 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
-- `release_readiness.py` 的项目元数据 gate 现在会校验 GitHub PR 模板与 bug/feature/case issue 模板是否存在，避免关键开源协作入口在发版前漂移。
+- `release_readiness.py` 的项目元数据 gate 现在会校验 GitHub PR 模板与 bug/feature/case issue 模板是否存在且包含关键字段，避免关键开源协作入口在发版前漂移。
 - `.github/PULL_REQUEST_TEMPLATE.md` 更新为按改动类型提示案例库、release readiness 和零密钥 PR 门禁验证，减少贡献者跑错检查的概率。
 - `docs/release-cadence.md` 新增 readiness 报告排障流程，要求维护者优先读取 `Gate Issues` 并逐项关闭 gate 失败原因。
 - `docs/contributor-starter.md` 的发布脚本验证路径改为优先使用 `release_readiness.py` 总入口，并用测试固定贡献者文档不会退回单点 cadence 检查。

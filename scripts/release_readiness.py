@@ -307,6 +307,42 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         if not (root / filename).exists():
             issues.append(f"open source metadata file is missing: {filename}")
 
+    template_snippets = {
+        ".github/PULL_REQUEST_TEMPLATE.md": [
+            "python scripts/validate_cases.py --strict",
+            "python scripts/release_readiness.py --json",
+            "CLIANY_QA_OFFLINE=1",
+            "~/.cliany-site/",
+        ],
+        ".github/ISSUE_TEMPLATE/bug_report.yml": [
+            "id: target_url",
+            "id: error_code",
+            "id: axtree_snapshot",
+            "id: doctor_output",
+        ],
+        ".github/ISSUE_TEMPLATE/feature_request.yml": [
+            "id: problem",
+            "id: solution",
+            "id: checklist",
+        ],
+        ".github/ISSUE_TEMPLATE/case_proposal.yml": [
+            'labels: ["case-proposal"]',
+            "id: target_url",
+            "id: expected_command",
+            "id: example_output",
+            "python scripts/validate_cases.py --strict",
+            "degraded",
+        ],
+    }
+    for filename, snippets in template_snippets.items():
+        full_path = root / filename
+        if not full_path.exists():
+            continue
+        text = full_path.read_text(encoding="utf-8")
+        for snippet in snippets:
+            if snippet not in text:
+                issues.append(f"open source metadata file missing snippet: {filename}: {snippet}")
+
     return ProjectMetadataReport(ok=not issues, path=str(path), issues=issues)
 
 

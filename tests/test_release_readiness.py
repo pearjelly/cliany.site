@@ -253,6 +253,36 @@ def _write_package(packages_dir: Path, filename: str, *, domain: str) -> None:
         tar.addfile(metadata_info, BytesIO(metadata_content))
 
 
+def _template_content(filename: str) -> str:
+    return {
+        ".github/PULL_REQUEST_TEMPLATE.md": (
+            "python scripts/validate_cases.py --strict\n"
+            "python scripts/release_readiness.py --json\n"
+            "CLIANY_QA_OFFLINE=1\n"
+            "~/.cliany-site/\n"
+        ),
+        ".github/ISSUE_TEMPLATE/bug_report.yml": (
+            "id: target_url\n"
+            "id: error_code\n"
+            "id: axtree_snapshot\n"
+            "id: doctor_output\n"
+        ),
+        ".github/ISSUE_TEMPLATE/feature_request.yml": (
+            "id: problem\n"
+            "id: solution\n"
+            "id: checklist\n"
+        ),
+        ".github/ISSUE_TEMPLATE/case_proposal.yml": (
+            'labels: ["case-proposal"]\n'
+            "id: target_url\n"
+            "id: expected_command\n"
+            "id: example_output\n"
+            "python scripts/validate_cases.py --strict\n"
+            "degraded\n"
+        ),
+    }[filename]
+
+
 def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -269,7 +299,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         ".github/ISSUE_TEMPLATE/feature_request.yml",
         ".github/ISSUE_TEMPLATE/case_proposal.yml",
     ):
-        (repo / filename).write_text(f"# {filename}\n", encoding="utf-8")
+        (repo / filename).write_text(_template_content(filename), encoding="utf-8")
     (repo / "pyproject.toml").write_text(
         '[project]\n'
         'name = "demo"\n'
@@ -505,6 +535,23 @@ def test_release_readiness_blocks_missing_open_source_template(tmp_path):
         "open source metadata file is missing: .github/ISSUE_TEMPLATE/case_proposal.yml"
         in report.project_metadata.issues
     )
+
+
+def test_release_readiness_blocks_incomplete_open_source_template(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / ".github" / "PULL_REQUEST_TEMPLATE.md").write_text(
+        "python scripts/validate_cases.py --strict\n",
+        encoding="utf-8",
+    )
+
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file missing snippet: .github/PULL_REQUEST_TEMPLATE.md: "
+        "python scripts/release_readiness.py --json"
+    ) in report.project_metadata.issues
 
 
 def test_release_readiness_blocks_release_workflow_without_strict_preflight(tmp_path):
