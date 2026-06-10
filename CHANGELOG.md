@@ -15,6 +15,7 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
+- CI 新增 `Extract Quality Regression` job，在零真实 LLM key 环境中显式运行抽取质量、结构化 `browser extract` 和生成数据命令回归。
 - 生成 adapter 的 JSON 输出新增 `data.quality` 汇总，并修复 extract 步骤调用 `browser extract --mode` 时内置命令不识别该参数的问题。
 - `browser extract --mode ... --json` 在结构化提取时新增 `data.quality`，便于手动调试 list/table/attribute 结果是否为空或字段缺失。
 - `browser extract --mode ... --strict-quality` 可在结构化提取质量未通过时返回 `E_EMPTY_RESULT`，便于本地脚本和 CI 将空抽取或关键字段缺失判为失败。
