@@ -302,6 +302,7 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         ".github/ISSUE_TEMPLATE/bug_report.yml",
         ".github/ISSUE_TEMPLATE/feature_request.yml",
         ".github/ISSUE_TEMPLATE/case_proposal.yml",
+        ".github/ISSUE_TEMPLATE/config.yml",
     ]
     for filename in required_files:
         if not (root / filename).exists():
@@ -332,6 +333,11 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "id: example_output",
             "python scripts/validate_cases.py --strict",
             "degraded",
+        ],
+        ".github/ISSUE_TEMPLATE/config.yml": [
+            "blank_issues_enabled: false",
+            "security/advisories/new",
+            "Documentation",
         ],
     }
     for filename, snippets in template_snippets.items():

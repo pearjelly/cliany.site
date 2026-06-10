@@ -25,5 +25,6 @@ def test_project_has_open_source_metadata_files():
         ".github/ISSUE_TEMPLATE/bug_report.yml",
         ".github/ISSUE_TEMPLATE/feature_request.yml",
         ".github/ISSUE_TEMPLATE/case_proposal.yml",
+        ".github/ISSUE_TEMPLATE/config.yml",
     ):
         assert (ROOT / filename).exists(), f"{filename} is required for open source readiness"

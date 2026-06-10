@@ -280,6 +280,11 @@ def _template_content(filename: str) -> str:
             "python scripts/validate_cases.py --strict\n"
             "degraded\n"
         ),
+        ".github/ISSUE_TEMPLATE/config.yml": (
+            "blank_issues_enabled: false\n"
+            "url: https://github.com/pearjelly/cliany.site/security/advisories/new\n"
+            "name: Documentation\n"
+        ),
     }[filename]
 
 
@@ -298,6 +303,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         ".github/ISSUE_TEMPLATE/bug_report.yml",
         ".github/ISSUE_TEMPLATE/feature_request.yml",
         ".github/ISSUE_TEMPLATE/case_proposal.yml",
+        ".github/ISSUE_TEMPLATE/config.yml",
     ):
         (repo / filename).write_text(_template_content(filename), encoding="utf-8")
     (repo / "pyproject.toml").write_text(
@@ -368,6 +374,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         ".github/ISSUE_TEMPLATE/bug_report.yml",
         ".github/ISSUE_TEMPLATE/feature_request.yml",
         ".github/ISSUE_TEMPLATE/case_proposal.yml",
+        ".github/ISSUE_TEMPLATE/config.yml",
     )
     if with_draft:
         _git(repo, "add", "docs/releases/v0.1.1-draft.md")
