@@ -540,7 +540,7 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
                 "online": "read-only search returns rows",
             },
             "promotion": {
-                "adapter_package": "publish demo.example.com.cliany-adapter-v0.1.1.tar.gz",
+                "adapter_package": "publish demo.example.com-0.1.1.cliany-adapter.tar.gz",
                 "metadata_validation": metadata_validation,
                 "online_smoke": "cliany-site demo.example.com search-items --query demo --json",
             },
@@ -573,7 +573,7 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
     text = report_path.read_text(encoding="utf-8")
     assert "## Candidate Promotions" in text
     assert "| `candidate-case` |" in text
-    assert "publish demo.example.com.cliany-adapter-v0.1.1.tar.gz" in text
+    assert "publish demo.example.com-0.1.1.cliany-adapter.tar.gz" in text
     assert metadata_validation in text
     assert "cliany-site demo.example.com search-items --query demo --json" in text
 

@@ -32,7 +32,7 @@
 
 `promotion` 至少包含：
 
-- `adapter_package`：要生成或发布的 adapter 包资产。
+- `adapter_package`：要生成或发布的 adapter 包资产，候选新包名应沿用 `market publish` 生成的 `<domain>-<version>.cliany-adapter.tar.gz` 格式。
 - `metadata_validation`：包资产准备好后要运行的离线 metadata 校验。
 - `online_smoke`：晋级前需要手动确认的公开只读 smoke 命令或结果。
 

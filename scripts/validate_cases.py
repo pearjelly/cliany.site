@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ALLOWED_STATUSES = {"active", "candidate", "degraded", "known-gap", "retired"}
 INSTALL_RE = re.compile(r"^cliany-site market install (?P<path>\S+)")
 REQUIRED_PACKAGE_FILES = {"commands.py", "metadata.json"}
+PACKAGE_EXTENSION = ".cliany-adapter.tar.gz"
 BUILTIN_GROUPS = {
     "browser",
     "check",
@@ -346,6 +347,28 @@ def _check_package(package_path: Path, expected_domain: str | None) -> dict[str,
     }
 
 
+def _market_package_name_hint(domain: str) -> str:
+    safe_domain = domain.replace("/", "_").replace(":", "_")
+    return f"{safe_domain}-<version>{PACKAGE_EXTENSION}"
+
+
+def _validate_candidate_promotion(promotion: dict[str, Any], adapter_domain: str) -> list[str]:
+    issues: list[str] = []
+    for field_name in ("adapter_package", "metadata_validation", "online_smoke"):
+        if not promotion.get(field_name):
+            issues.append(f"candidate promotion.{field_name} is required")
+
+    adapter_package = str(promotion.get("adapter_package") or "")
+    if adapter_domain and adapter_package:
+        expected_hint = _market_package_name_hint(adapter_domain)
+        if f"{adapter_domain}.cliany-adapter-" in adapter_package:
+            issues.append(f"candidate promotion.adapter_package uses legacy package naming; expected {expected_hint}")
+        elif PACKAGE_EXTENSION in adapter_package and f"{adapter_domain}-" not in adapter_package:
+            issues.append(f"candidate promotion.adapter_package missing market package name hint: {expected_hint}")
+
+    return issues
+
+
 def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> CaseCheck:
     case_id = str(case.get("id") or "(missing-id)")
     status = str(case.get("status") or "")
@@ -400,6 +423,9 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
                         f"adapter command domain mismatch: expected {adapter_domain!r}, got {command_domain!r}"
                     )
     elif status == "candidate":
+        adapter_domain = str(case.get("adapter_domain") or "")
+        if not adapter_domain:
+            check.issues.append("candidate case requires adapter_domain")
         if not commands:
             check.issues.append("candidate case requires expected commands")
         if not example_output:
@@ -412,9 +438,7 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
             check.issues.append("candidate case requires promotion checklist")
         else:
             check.promotion = promotion
-            for field_name in ("adapter_package", "metadata_validation", "online_smoke"):
-                if not promotion.get(field_name):
-                    check.issues.append(f"candidate promotion.{field_name} is required")
+            check.issues.extend(_validate_candidate_promotion(promotion, adapter_domain))
 
     if packages_dir is not None and status == "active":
         package_name = _install_package_name(case)

@@ -95,7 +95,7 @@
       "online": "read-only PyPI search returns project cards for the query"
     },
     "promotion": {
-      "adapter_package": "Generate and publish pypi.org.cliany-adapter-v0.14.x.tar.gz in a future release.",
+      "adapter_package": "Generate and publish pypi.org-0.14.x.cliany-adapter.tar.gz in a future release.",
       "metadata_validation": "Run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict once the package exists.",
       "online_smoke": "Run cliany-site pypi.org search-projects --query cliany-site --limit 5 --json against PyPI and confirm non-empty project rows."
     }
@@ -119,7 +119,7 @@
       "online": "read-only npm search returns package result rows for the query"
     },
     "promotion": {
-      "adapter_package": "Generate and publish www.npmjs.com.cliany-adapter-v0.14.x.tar.gz in a future release.",
+      "adapter_package": "Generate and publish www.npmjs.com-0.14.x.cliany-adapter.tar.gz in a future release.",
       "metadata_validation": "Run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict once the package exists.",
       "online_smoke": "Run cliany-site www.npmjs.com search-packages --query playwright --limit 5 --json against npm and confirm non-empty package rows."
     }
