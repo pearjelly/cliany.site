@@ -40,6 +40,7 @@
 - `release_readiness.py --report` 现在会输出 `Next Actions` 小节，把提交天数、案例库、发布草案、CI、发布 workflow、项目元数据和包校验阻塞映射为维护者下一步动作。
 - `release_readiness.py` 的项目元数据 gate 现在会校验每周维护者循环文档及 roadmap/release cadence 入口，防止持续发布机制在发版前漂移。
 - `release_readiness.py` 的项目元数据 gate 现在会校验 `docs/good-first-issues.md`、README good-first-issue 入口和贡献者上手地图链接，防止首次贡献路径漂移。
+- `docs/good-first-issues.md` 新增 `Issue 拆分清单`，并用文档测试要求每个候选任务保留具体文件和本地验证命令，方便维护者把任务池转成可复现的 `good first issue`。
 - `docs/roadmap-2026-q3.md` 与 `docs/release-cadence.md` 现在链接每周维护者循环，帮助维护者把路线图切成可发布、可验证的小版本。
 - 官网 quickstart 现在在首次成功路径后提示 `docs/good-first-issues.md`，把首次贡献者引导到默认离线、可本地验证的任务池。
 - 官网 quickstart 现在在首次成功路径后提示 `Real Demo Case Proposal`，把公开只读真实工作流引导到案例库贡献和离线验收路径。

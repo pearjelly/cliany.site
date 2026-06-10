@@ -360,6 +360,8 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "python scripts/validate_cases.py --strict\n"
         "python scripts/release_readiness.py --json\n"
         "promotion\n"
+        "Issue 拆分清单\n"
+        "推荐验证命令\n"
         "~/.cliany-site/\n",
         encoding="utf-8",
     )
@@ -380,6 +382,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
                 "data": {
                     "command": "list-items",
                     "results": [{"ok": True, "data": {"items": [{"name": "Example"}]}}],
+                    "quality": {"ok": True, "status": "ok", "row_count": 1},
                 },
                 "error": None,
                 "meta": {

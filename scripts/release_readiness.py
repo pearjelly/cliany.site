@@ -347,6 +347,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "python scripts/validate_cases.py --strict",
             "python scripts/release_readiness.py",
             "promotion",
+            "Issue 拆分清单",
+            "推荐验证命令",
             "~/.cliany-site/",
         ],
         "docs/roadmap-2026-q3.md": [

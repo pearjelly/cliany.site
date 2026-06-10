@@ -48,6 +48,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "docs/weekly-maintainer-loop.md",
         "docs/good-first-issues.md",
         "first-time contributors",
+        "Issue 拆分清单",
         "website quickstart",
         "weekly maintainer loop",
         "Next Actions",

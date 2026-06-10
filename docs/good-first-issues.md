@@ -24,6 +24,16 @@
 | `extract` | 为抽取质量补一个空结果、全空字段或部分缺字段的离线 fixture 回归 | `tests/fixtures/`, `tests/test_extract_quality.py` | `pytest tests/test_extract_quality.py tests/test_search_extraction_gap_fixture.py -q --no-cov` |
 | `metadata` | 为 adapter metadata 或 package manifest 增加一个离线校验用例 | `src/cliany_site/metadata.py`, `scripts/validate_cases.py`, `tests/` | 相关 pytest + `ruff check` |
 
+## Issue 拆分清单
+
+维护者把上表任务转成 GitHub issue 时，至少保留这些字段，避免 `good first issue` 变成不可复现的泛泛建议：
+
+- **期望改动范围**：明确要改的文件、模块或文档段落，避免顺手重构。
+- **推荐验证命令**：复制上表验证列中的命令，并说明是否需要 `CLIANY_QA_OFFLINE=1`。
+- **相关文件链接**：指向主要文件、fixture、issue 模板或案例 manifest。
+- **验收证据**：要求 PR 描述粘贴本地命令结果，文档改动至少包含 `git diff --check`。
+- **明确非目标**：写清不需要真实 LLM key、不要访问第三方站点、不要写入 `~/.cliany-site/` 运行时状态。
+
 ## 不适合第一次贡献
 
 - 需要真实 OpenAI/Obscura key 的 explore 成功率调优。
