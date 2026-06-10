@@ -20,6 +20,7 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
+- `docs/quickstart-10min.md` 新增首次成功后的贡献路径，指向 `Real Demo Case Proposal`、`cases/manifest.json`、`cases/examples/` 和案例库离线验收命令。
 - `docs/contributor-starter.md` 新增 Issue 与 PR 模板入口，说明 bug、feature、真实 demo 候选和 PR 提交分别应准备的可复现信息。
 - `release_readiness.py` 的项目元数据 gate 现在会校验 GitHub PR 模板、issue 模板与 issue template config 是否存在且包含关键字段，避免关键开源协作入口和安全上报入口在发版前漂移。
 - `.github/PULL_REQUEST_TEMPLATE.md` 更新为按改动类型提示案例库、release readiness 和零密钥 PR 门禁验证，减少贡献者跑错检查的概率。

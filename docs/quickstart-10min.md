@@ -134,3 +134,9 @@ cliany-site github.com search --query "cliany.site" --json
 - 至少一个 demo adapter 能安装、列出、验证。
 - 至少一个只读命令返回 JSON envelope。
 - 如果继续使用 `explore`，生成结果能被 `list` 发现，并能用 `--json` 执行。
+
+## 跑通后的下一步
+
+- 想贡献新的公开只读场景：使用 GitHub 的 `Real Demo Case Proposal` issue 模板，准备目标 URL、只读工作流、期望 CLI 命令、离线 JSON envelope 样例和验证方式。
+- 想把候选场景变成案例库条目：更新 [cases/manifest.json](../cases/manifest.json)，补充 `cases/examples/` 下的样例输出，再运行 `python scripts/validate_cases.py --strict`。
+- 想提交 PR：参考 [贡献者上手地图](contributor-starter.md)，按改动类型选择最小验证范围。
