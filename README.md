@@ -95,6 +95,8 @@ cliany-site is built on browser-use and Large Language Models (LLMs), enabling f
 
 ## Quick Start (v0.11.0+)
 
+For a guided first run, see [10-minute success path](docs/quickstart-10min.md). It starts with a real demo adapter before requiring LLM setup.
+
 ### Installation
 
 ```bash

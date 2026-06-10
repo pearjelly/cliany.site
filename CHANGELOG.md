@@ -11,6 +11,7 @@
 - 新增 `docs/roadmap-2026-q3.md`，基于 v0.2~v0.14 迭代轨迹制定 2026 Q3 路线图，聚焦新用户可用性、真实案例库、adapter 生命周期、贡献者入口与运行可靠性。
 - 新增 `docs/release-cadence.md`，固化每周至少 1 个版本、每周至少 3 天提交记录的发布与提交节奏。
 - 新增 `cases/manifest.json` 与 `cases/README.md`，把 v0.14 真实 demo 和搜索抽取短板复盘沉淀为可维护案例库，并新增离线结构校验测试。
+- 新增 `docs/quickstart-10min.md`，提供不依赖 LLM key 的 demo adapter 首次成功路径，以及生成自定义 adapter 的后续路径。
 
 ## [0.14.2] - 2026-06-10
 
