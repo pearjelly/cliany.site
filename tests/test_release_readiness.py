@@ -288,6 +288,20 @@ def _template_content(filename: str) -> str:
     }[filename]
 
 
+def _readme_content() -> str:
+    return (
+        "# Demo\n\n"
+        "10-minute success path\n"
+        "10 分钟成功路径\n"
+        "data.quality\n"
+        "--strict-quality\n"
+        "E_EMPTY_RESULT\n"
+        "scripts/release_readiness.py\n"
+        "Real Demo Case Proposal\n"
+        "## demo\n"
+    )
+
+
 def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -327,7 +341,8 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD\n",
         encoding="utf-8",
     )
-    (repo / "README.md").write_text("# Demo\n\n## demo\n", encoding="utf-8")
+    (repo / "README.md").write_text(_readme_content(), encoding="utf-8")
+    (repo / "README.zh.md").write_text(_readme_content(), encoding="utf-8")
     (repo / "cases" / "manifest.json").write_text(_cases_manifest(), encoding="utf-8")
     (repo / "cases" / "examples").mkdir()
     (repo / "cases" / "examples" / "demo-case.json").write_text(
@@ -366,6 +381,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "SECURITY.md",
         "SUPPORT.md",
         "README.md",
+        "README.zh.md",
         "cases/manifest.json",
         "cases/examples/demo-case.json",
         ".github/workflows/ci.yml",
@@ -559,6 +575,19 @@ def test_release_readiness_blocks_incomplete_open_source_template(tmp_path):
         "open source metadata file missing snippet: .github/PULL_REQUEST_TEMPLATE.md: "
         "python scripts/release_readiness.py --json"
     ) in report.project_metadata.issues
+
+
+def test_release_readiness_blocks_incomplete_readme_entrypoint(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "README.md").write_text("# Demo\n", encoding="utf-8")
+
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert "open source metadata file missing snippet: README.md: Real Demo Case Proposal" in (
+        report.project_metadata.issues
+    )
 
 
 def test_release_readiness_blocks_release_workflow_without_strict_preflight(tmp_path):

@@ -20,6 +20,7 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
+- `release_readiness.py` 的项目元数据 gate 现在会校验 README 双语首页是否保留 10 分钟成功路径、抽取质量、release readiness 和真实案例贡献入口。
 - `README.md` / `README.zh.md` 的 quickstart 入口现在说明首次成功后可通过 `Real Demo Case Proposal` 贡献新的公开只读真实案例。
 - `docs/quickstart-10min.md` 新增首次成功后的贡献路径，指向 `Real Demo Case Proposal`、`cases/manifest.json`、`cases/examples/` 和案例库离线验收命令。
 - `docs/contributor-starter.md` 新增 Issue 与 PR 模板入口，说明 bug、feature、真实 demo 候选和 PR 提交分别应准备的可复现信息。

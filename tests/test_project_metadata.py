@@ -28,3 +28,12 @@ def test_project_has_open_source_metadata_files():
         ".github/ISSUE_TEMPLATE/config.yml",
     ):
         assert (ROOT / filename).exists(), f"{filename} is required for open source readiness"
+
+
+def test_readmes_have_open_source_entrypoints():
+    for filename in ("README.md", "README.zh.md"):
+        text = (ROOT / filename).read_text(encoding="utf-8")
+
+        assert "scripts/release_readiness.py" in text
+        assert "Real Demo Case Proposal" in text
+        assert "data.quality" in text

@@ -309,6 +309,22 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             issues.append(f"open source metadata file is missing: {filename}")
 
     template_snippets = {
+        "README.md": [
+            "10-minute success path",
+            "data.quality",
+            "--strict-quality",
+            "E_EMPTY_RESULT",
+            "scripts/release_readiness.py",
+            "Real Demo Case Proposal",
+        ],
+        "README.zh.md": [
+            "10 分钟成功路径",
+            "data.quality",
+            "--strict-quality",
+            "E_EMPTY_RESULT",
+            "scripts/release_readiness.py",
+            "Real Demo Case Proposal",
+        ],
         ".github/PULL_REQUEST_TEMPLATE.md": [
             "python scripts/validate_cases.py --strict",
             "python scripts/release_readiness.py --json",
