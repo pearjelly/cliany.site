@@ -51,6 +51,20 @@ class CiReport:
 
 
 @dataclass(frozen=True)
+class ReleaseWorkflowReport:
+    ok: bool
+    path: str
+    issues: list[str]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "ok": self.ok,
+            "path": self.path,
+            "issues": self.issues,
+        }
+
+
+@dataclass(frozen=True)
 class PackageGateReport:
     ok: bool
     required: bool
@@ -78,6 +92,7 @@ class ReadinessReport:
     cases: CasesReport
     draft: DraftReport
     ci: CiReport
+    release_workflow: ReleaseWorkflowReport
     package_gate: PackageGateReport
 
     def to_dict(self) -> dict[str, Any]:
@@ -90,6 +105,7 @@ class ReadinessReport:
             "cases": self.cases.to_dict(),
             "draft": self.draft.to_dict(),
             "ci": self.ci.to_dict(),
+            "release_workflow": self.release_workflow.to_dict(),
             "package_gate": self.package_gate.to_dict(),
         }
 
@@ -178,6 +194,36 @@ def _build_ci_report(root: Path) -> CiReport:
     return CiReport(ok=not issues, path=str(path), issues=issues)
 
 
+def _build_release_workflow_report(root: Path) -> ReleaseWorkflowReport:
+    path = root / ".github" / "workflows" / "release.yml"
+    issues: list[str] = []
+    if not path.exists():
+        issues.append("release workflow is missing")
+        return ReleaseWorkflowReport(ok=False, path=str(path), issues=issues)
+
+    text = path.read_text(encoding="utf-8")
+    required_snippets = [
+        'tags: ["v*"]',
+        "contents: write",
+        "id-token: write",
+        "uses: ./.github/workflows/ci.yml",
+        "Build Distribution",
+        "uv build",
+        "actions/upload-artifact@v4",
+        "GitHub Release",
+        "gh release create",
+        "Publish to PyPI",
+        "name: pypi",
+        "https://pypi.org/p/cliany-site",
+        "pypa/gh-action-pypi-publish@release/v1",
+    ]
+    for snippet in required_snippets:
+        if snippet not in text:
+            issues.append(f"release workflow missing snippet: {snippet}")
+
+    return ReleaseWorkflowReport(ok=not issues, path=str(path), issues=issues)
+
+
 def _build_package_gate_report(
     *,
     packages_dir: Path | None,
@@ -231,6 +277,7 @@ def build_report(
     cases = build_cases_report(root, packages_dir=packages_dir)
     draft = _build_draft_report(root, current_version, expected_target)
     ci = _build_ci_report(root)
+    release_workflow = _build_release_workflow_report(root)
     package_gate = _build_package_gate_report(
         packages_dir=packages_dir,
         require_packages=require_packages,
@@ -244,6 +291,8 @@ def build_report(
         blockers.append("release draft validation failed")
     if not ci.ok:
         blockers.append("CI release gates validation failed")
+    if not release_workflow.ok:
+        blockers.append("release workflow validation failed")
     if not package_gate.ok:
         blockers.append("case package validation not run")
 
@@ -256,6 +305,7 @@ def build_report(
         cases=cases,
         draft=draft,
         ci=ci,
+        release_workflow=release_workflow,
         package_gate=package_gate,
     )
 
@@ -273,6 +323,7 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"cases: {report.cases.ok}")
     print(f"draft: {report.draft.ok}")
     print(f"ci: {report.ci.ok}")
+    print(f"release_workflow: {report.release_workflow.ok}")
     print(f"package_gate: {report.package_gate.ok}")
 
 
@@ -300,6 +351,10 @@ def _render_markdown_report(report: ReadinessReport) -> str:
         f"| cases | `{str(report.cases.ok).lower()}` | active `{report.cases.active}` / total `{report.cases.total}` |",
         f"| draft | `{str(report.draft.ok).lower()}` | `{report.draft.path}` |",
         f"| ci | `{str(report.ci.ok).lower()}` | `{report.ci.path}` |",
+        (
+            f"| release_workflow | `{str(report.release_workflow.ok).lower()}` | "
+            f"`{report.release_workflow.path}` |"
+        ),
         (
             f"| package_gate | `{str(report.package_gate.ok).lower()}` | "
             f"required `{str(report.package_gate.required).lower()}`, "

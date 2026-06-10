@@ -123,6 +123,48 @@ jobs:
 """
 
 
+def _release_workflow() -> str:
+    return """name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    name: Build Distribution
+    needs: ci
+    steps:
+      - run: uv build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  github-release:
+    name: GitHub Release
+    needs: build
+    steps:
+      - run: gh release create "${{ github.ref_name }}" dist/* --generate-notes
+
+  pypi-publish:
+    name: Publish to PyPI
+    needs: build
+    environment:
+      name: pypi
+      url: https://pypi.org/p/cliany-site
+    steps:
+      - uses: pypa/gh-action-pypi-publish@release/v1
+"""
+
+
 def _cases_manifest() -> str:
     return json.dumps(
         [
@@ -226,6 +268,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         encoding="utf-8",
     )
     (repo / ".github" / "workflows" / "ci.yml").write_text(_ci_workflow(), encoding="utf-8")
+    (repo / ".github" / "workflows" / "release.yml").write_text(_release_workflow(), encoding="utf-8")
     if with_draft:
         (repo / "docs" / "releases" / "v0.1.1-draft.md").write_text(
             _release_draft("0.1.1", "0.1.0"),
@@ -240,6 +283,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "cases/manifest.json",
         "cases/examples/demo-case.json",
         ".github/workflows/ci.yml",
+        ".github/workflows/release.yml",
     )
     if with_draft:
         _git(repo, "add", "docs/releases/v0.1.1-draft.md")
@@ -271,6 +315,7 @@ def test_release_readiness_passes_for_minimal_ready_repo(tmp_path):
     assert report.cases.ok is True
     assert report.draft.ok is True
     assert report.ci.ok is True
+    assert report.release_workflow.ok is True
     assert report.package_gate.ok is True
     assert report.package_gate.required is False
     assert report.package_gate.checked is False
@@ -290,6 +335,7 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "| ok | `true` |" in text
     assert "| target_version | `0.1.1` |" in text
     assert "| cadence | `true` | commit days `3/3`: 2026-06-08, 2026-06-09, 2026-06-10 |" in text
+    assert "| release_workflow | `true` |" in text
     assert "https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD" in text
 
 
@@ -336,6 +382,21 @@ def test_release_readiness_blocks_missing_ci_extract_gate(tmp_path):
     assert "CI release gates validation failed" in report.blockers
     assert report.ci.ok is False
     assert any("extract-quality:" in issue for issue in report.ci.issues)
+
+
+def test_release_readiness_blocks_missing_release_workflow_pypi_publish(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / ".github" / "workflows" / "release.yml").write_text(
+        "name: Release\non:\n  push:\n    tags: [\"v*\"]\n",
+        encoding="utf-8",
+    )
+
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "release workflow validation failed" in report.blockers
+    assert report.release_workflow.ok is False
+    assert any("pypa/gh-action-pypi-publish@release/v1" in issue for issue in report.release_workflow.issues)
 
 
 def test_release_readiness_blocks_when_required_package_check_not_run(tmp_path):
