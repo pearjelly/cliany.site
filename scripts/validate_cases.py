@@ -80,6 +80,34 @@ def _install_package_name(case: dict[str, Any]) -> str | None:
     return None
 
 
+def _adapter_command_domains(commands: list[Any]) -> list[str]:
+    builtin_groups = {
+        "browser",
+        "check",
+        "doctor",
+        "list",
+        "login",
+        "market",
+        "migrate",
+        "obscura",
+        "replay",
+        "report",
+        "serve",
+        "tui",
+        "verify",
+        "workflow",
+    }
+    domains: list[str] = []
+    for command in commands:
+        parts = str(command).split()
+        if len(parts) < 2 or parts[0] != "cliany-site":
+            continue
+        group = parts[1]
+        if group not in builtin_groups:
+            domains.append(group)
+    return domains
+
+
 def _sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
@@ -252,7 +280,8 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
 
     commands = case.get("commands") or []
     if status == "active":
-        if not case.get("adapter_domain"):
+        adapter_domain = str(case.get("adapter_domain") or "")
+        if not adapter_domain:
             check.issues.append("active case requires adapter_domain")
         if not case.get("source_release"):
             check.issues.append("active case requires source_release")
@@ -261,6 +290,17 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
         for command in commands:
             if not str(command).startswith("cliany-site "):
                 check.issues.append(f"command must start with cliany-site: {command}")
+        if adapter_domain:
+            package_name = _install_package_name(case)
+            if package_name and not package_name.startswith(f"{adapter_domain}."):
+                check.issues.append(
+                    f"install package domain mismatch: expected prefix {adapter_domain!r}, got {package_name!r}"
+                )
+            for command_domain in _adapter_command_domains(commands):
+                if command_domain != adapter_domain:
+                    check.issues.append(
+                        f"adapter command domain mismatch: expected {adapter_domain!r}, got {command_domain!r}"
+                    )
 
     if packages_dir is not None and status == "active":
         package_name = _install_package_name(case)

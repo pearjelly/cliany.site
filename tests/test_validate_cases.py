@@ -128,6 +128,28 @@ def test_cases_report_rejects_missing_docs_anchor(tmp_path):
     assert "docs anchor does not exist: README.md#demo" in report.cases[0].issues
 
 
+def test_cases_report_rejects_install_package_domain_mismatch(tmp_path):
+    case = _case(domain="demo.example.com")
+    case["commands"][0] = "cliany-site market install ./other.example.com.cliany-adapter-v0.1.0.tar.gz"
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert "install package domain mismatch" in report.cases[0].issues[0]
+
+
+def test_cases_report_rejects_adapter_command_domain_mismatch(tmp_path):
+    case = _case(domain="demo.example.com")
+    case["commands"][1] = "cliany-site other.example.com list-items --json"
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert "adapter command domain mismatch" in report.cases[0].issues[0]
+
+
 def test_cases_report_checks_optional_packages_dir(tmp_path):
     case = _case(domain="demo.example.com")
     _write_cases(tmp_path, [case])
