@@ -151,8 +151,10 @@ def _build_ci_report(root: Path) -> CiReport:
     required_snippets = [
         "case-catalog:",
         "Case Catalog Validation",
-        "python scripts/validate_cases.py --strict",
+        "python scripts/validate_cases.py --strict --report case-catalog-report.md",
         "pytest tests/test_validate_cases.py tests/test_cases_manifest.py -q --no-cov",
+        "case-catalog-report",
+        "case-catalog-report.md",
         "extract-quality:",
         "Extract Quality Regression",
         "CLIANY_QA_OFFLINE",

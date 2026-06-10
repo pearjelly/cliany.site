@@ -82,10 +82,14 @@ jobs:
     name: Case Catalog Validation
     steps:
       - run: |
-          python scripts/validate_cases.py --strict
+          python scripts/validate_cases.py --strict --report case-catalog-report.md
           pytest tests/test_validate_cases.py tests/test_cases_manifest.py -q --no-cov
         env:
           CLIANY_QA_OFFLINE: "1"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: case-catalog-report
+          path: case-catalog-report.md
 
   extract-quality:
     name: Extract Quality Regression

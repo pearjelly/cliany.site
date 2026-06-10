@@ -11,8 +11,10 @@ def test_ci_runs_case_catalog_validation():
         "case-catalog:",
         "Case Catalog Validation",
         "CLIANY_QA_OFFLINE",
-        "python scripts/validate_cases.py --strict",
+        "python scripts/validate_cases.py --strict --report case-catalog-report.md",
         "pytest tests/test_validate_cases.py tests/test_cases_manifest.py -q --no-cov",
+        "case-catalog-report",
+        "case-catalog-report.md",
     ]
     for snippet in required:
         assert snippet in text

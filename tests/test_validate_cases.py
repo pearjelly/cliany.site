@@ -251,6 +251,19 @@ def test_cases_report_accepts_valid_package(tmp_path):
     assert report.cases[0].package["status"] == "ok"
 
 
+def test_cases_report_writes_markdown_report(tmp_path):
+    _write_cases(tmp_path, [_case("demo-case")])
+    report = validate_cases.build_report(tmp_path)
+    report_path = tmp_path / "reports" / "case-catalog-report.md"
+
+    validate_cases._write_markdown_report(report, report_path)
+
+    text = report_path.read_text(encoding="utf-8")
+    assert "# cliany-site Case Catalog Validation" in text
+    assert "| ok | `true` |" in text
+    assert "| `demo-case` | `active` | `ok` | - | - |" in text
+
+
 def test_cases_report_rejects_package_with_legacy_metadata(tmp_path):
     case = _case(domain="demo.example.com")
     _write_cases(tmp_path, [case])

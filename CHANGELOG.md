@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Added
+- `scripts/validate_cases.py` 新增 `--report`，可生成案例库离线验收 Markdown 报告；CI 会上传 `case-catalog-report` artifact。
 - 新增 `cases/examples/*.json` 离线样例输出，让 active 真实案例在不访问第三方站点时也能展示 JSON envelope 形状和典型字段。
 - 新增 `tests/fixtures/search_extraction_gap.html` 和离线回归测试，用最小 HTML 页面固定搜索结果抽取字段缺失应判为 `partial` 的 known-gap 语义。
 - 新增 `docs/adapter-lifecycle.md`，固化 adapter 从生成、验证、打包、安装到回滚的生命周期，以及 `.cliany-adapter.tar.gz` 包格式和安全边界。

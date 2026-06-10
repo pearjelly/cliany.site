@@ -406,14 +406,50 @@ def _print_text(report: CasesReport) -> None:
                 print(f"  package_issue: {issue}")
 
 
+def _render_markdown_report(report: CasesReport) -> str:
+    lines = [
+        "# cliany-site Case Catalog Validation",
+        "",
+        "| Metric | Value |",
+        "|--------|-------|",
+        f"| ok | `{str(report.ok).lower()}` |",
+        f"| total | `{report.total}` |",
+        f"| active | `{report.active}` |",
+        f"| known_gap | `{report.known_gap}` |",
+        f"| checked_packages | `{str(report.checked_packages).lower()}` |",
+        "",
+        "| Case | Status | Result | Issues | Package |",
+        "|------|--------|--------|--------|---------|",
+    ]
+
+    for check in report.cases:
+        result = "ok" if check.ok else "fail"
+        issues = "<br>".join(check.issues) if check.issues else "-"
+        package = "-"
+        if check.package is not None:
+            package_status = str(check.package.get("status") or "unknown")
+            package = package_status if check.package.get("ok") else f"fail: {package_status}"
+        lines.append(f"| `{check.id}` | `{check.status}` | `{result}` | {issues} | {package} |")
+
+    return "\n".join(lines) + "\n"
+
+
+def _write_markdown_report(report: CasesReport, path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(_render_markdown_report(report), encoding="utf-8")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate cases/manifest.json and optional adapter packages.")
     parser.add_argument("--json", action="store_true", help="Output machine-readable JSON.")
     parser.add_argument("--strict", action="store_true", help="Exit non-zero when validation fails.")
     parser.add_argument("--packages-dir", type=Path, help="Optional directory containing .cliany-adapter.tar.gz files.")
+    parser.add_argument("--report", type=Path, help="Optional Markdown report path for CI artifacts.")
     args = parser.parse_args(argv)
 
     report = build_report(ROOT, packages_dir=args.packages_dir)
+    if args.report is not None:
+        _write_markdown_report(report, args.report)
     if args.json:
         print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
     else:

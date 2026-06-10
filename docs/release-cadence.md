@@ -62,6 +62,7 @@ python scripts/check_release_cadence.py --json
 # 检查真实案例库（默认离线、不访问第三方站点）
 python scripts/validate_cases.py
 python scripts/validate_cases.py --json
+python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md
 
 # 严格检查：不满足时 exit 1，适合发版前本地门禁
 python scripts/release_readiness.py --strict
@@ -88,7 +89,7 @@ git push origin master --tags
 
 `check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、`CHANGELOG.md` Unreleased 是否有内容、`[Unreleased]` compare 链接是否指向最新 tag 到 `HEAD`，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截。
 
-`validate_cases.py` 会检查 `cases/manifest.json` 的结构、文档链接和 Markdown 锚点、active 案例命令域名一致性、离线样例输出和验证说明；传入 `--packages-dir ~/.cliany-site/packages` 时，还会离线检查 demo adapter 包中的 `manifest.json`、tarball 安全路径、声明文件哈希和 metadata schema v3。
+`validate_cases.py` 会检查 `cases/manifest.json` 的结构、文档链接和 Markdown 锚点、active 案例命令域名一致性、离线样例输出和验证说明；传入 `--report` 时会生成 Markdown 验收报告，CI 会上传为 `case-catalog-report` artifact；传入 `--packages-dir ~/.cliany-site/packages` 时，还会离线检查 demo adapter 包中的 `manifest.json`、tarball 安全路径、声明文件哈希和 metadata schema v3。
 
 ## 提交规则
 

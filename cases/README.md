@@ -40,9 +40,12 @@
 ```bash
 python scripts/validate_cases.py
 python scripts/validate_cases.py --json
+python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md
 python scripts/validate_cases.py --strict
 pytest tests/test_search_extraction_gap_fixture.py -q --no-cov
 ```
+
+CI 的 `Case Catalog Validation` job 会上传 `case-catalog-report` artifact，供 PR 诊断和 release notes 复盘引用。
 
 `search-extraction-gap` 的最小复现页面固定在 [tests/fixtures/search_extraction_gap.html](../tests/fixtures/search_extraction_gap.html)，用于离线验证搜索结果列表中链接或摘要缺失时应被判为 `partial` 质量问题。
 
