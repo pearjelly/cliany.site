@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.resources as importlib_resources
 import json
 import logging
@@ -10,11 +11,13 @@ import click
 
 from cliany_site.config import get_config
 from cliany_site.envelope import ok
+from cliany_site.marketplace import MANIFEST_VERSION
 from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
 
 logger = logging.getLogger(__name__)
 
 BANNED_PATTERNS = ["eval(", "exec(", "__import__(", "subprocess.", "os.system("]
+REQUIRED_MANIFEST_FILES = {"commands.py", "metadata.json"}
 
 
 def _load_schema() -> dict:
@@ -39,6 +42,95 @@ def _scan_security(commands_py: Path) -> list[str]:
             if pattern in line:
                 issues.append(f"第 {lineno} 行包含禁用模式: {pattern!r}")
     return issues
+
+
+def _sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _verify_manifest(adapter_dir: Path, domain: str) -> dict[str, Any]:
+    manifest_path = adapter_dir / "manifest.json"
+    if not manifest_path.exists():
+        return {
+            "status": "missing",
+            "issues": [],
+            "action": "未检测到 market manifest；若需要分发，请运行 cliany-site market publish <domain>。",
+        }
+
+    issues: list[str] = []
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        return {
+            "status": "error",
+            "issues": [f"manifest.json 解析失败: {exc}"],
+            "action": "请重新安装该 adapter，或在来源环境重新运行 cliany-site market publish <domain>。",
+        }
+
+    manifest_version = str(manifest.get("manifest_version", ""))
+    if manifest_version != MANIFEST_VERSION:
+        issues.append(f"manifest_version 应为 {MANIFEST_VERSION!r}，实际为 {manifest_version!r}")
+
+    manifest_domain = str(manifest.get("domain", ""))
+    if manifest_domain != domain:
+        issues.append(f"manifest.domain 应为 {domain!r}，实际为 {manifest_domain!r}")
+
+    files = manifest.get("files")
+    file_hashes = manifest.get("file_hashes")
+    if not isinstance(files, list):
+        issues.append("manifest.files 必须是数组")
+        files = []
+    if not isinstance(file_hashes, dict):
+        issues.append("manifest.file_hashes 必须是对象")
+        file_hashes = {}
+
+    manifest_files = {str(f) for f in files}
+    hash_files = {str(f) for f in file_hashes}
+
+    missing_required = sorted(REQUIRED_MANIFEST_FILES - manifest_files)
+    if missing_required:
+        issues.append(f"manifest.files 缺少必要文件: {', '.join(missing_required)}")
+
+    missing_hashes = sorted(manifest_files - hash_files)
+    if missing_hashes:
+        issues.append(f"manifest.file_hashes 缺少文件: {', '.join(missing_hashes)}")
+
+    unknown_hashes = sorted(hash_files - manifest_files)
+    if unknown_hashes:
+        issues.append(f"manifest.file_hashes 包含未声明文件: {', '.join(unknown_hashes)}")
+
+    for filename in sorted(manifest_files):
+        if Path(filename).name != filename:
+            issues.append(f"manifest.files 包含不安全文件名: {filename}")
+            continue
+
+        file_path = adapter_dir / filename
+        if not file_path.is_file():
+            issues.append(f"已安装 adapter 缺少声明文件: {filename}")
+            continue
+
+        expected_hash = str(file_hashes.get(filename, ""))
+        if expected_hash:
+            actual_hash = _sha256_file(file_path)
+            if actual_hash != expected_hash:
+                issues.append(f"文件哈希不匹配: {filename}")
+
+    if issues:
+        return {
+            "status": "error",
+            "issues": issues,
+            "action": "请重新安装可信 adapter 包，或在来源环境重新运行 cliany-site market publish <domain> 后再安装。",
+        }
+
+    return {
+        "status": "ok",
+        "issues": [],
+        "action": "manifest 与已安装文件一致。",
+    }
 
 
 def _verify_single(domain: str, schema: dict) -> dict:
@@ -84,6 +176,13 @@ def _verify_single(domain: str, schema: dict) -> dict:
             result["issues"] = security_issues
             return result
 
+    manifest_result = _verify_manifest(adapter_dir, domain)
+    result["manifest"] = manifest_result
+    if manifest_result["status"] == "error":
+        result["verdict"] = "manifest_error"
+        result["issues"] = manifest_result["issues"]
+        return result
+
     return result
 
 
@@ -112,6 +211,7 @@ def _print_human(results: list[dict]) -> None:
         domain = r["domain"]
         issues = r.get("issues", [])
         smoke = r.get("smoke")
+        manifest = r.get("manifest")
 
         if verdict == "ok":
             icon = "✓"
@@ -125,6 +225,8 @@ def _print_human(results: list[dict]) -> None:
             parts.append(f"issues={issues}")
         if smoke is not None:
             parts.append(f"smoke={'pass' if smoke else 'fail'}")
+        if isinstance(manifest, dict):
+            parts.append(f"manifest={manifest.get('status')}")
 
         click.echo("  ".join(parts))
 

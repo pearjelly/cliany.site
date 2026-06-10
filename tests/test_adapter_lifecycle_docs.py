@@ -14,6 +14,7 @@ def test_adapter_lifecycle_doc_has_required_sections():
         "## 兼容性矩阵",
         "## 安全边界",
         "## 安装故障排查",
+        "## 安装后验证",
         "## 维护流程",
         "## 贡献入口",
     ]
@@ -34,6 +35,8 @@ def test_adapter_lifecycle_doc_pins_package_contract():
         "file_hashes",
         "INSTALL_FAILED",
         "error.fix",
+        "manifest.status",
+        "cliany-site verify <domain> --json",
         "cliany-site market publish",
         "cliany-site market install",
         "cliany-site market rollback",

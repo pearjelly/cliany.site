@@ -89,6 +89,8 @@ adapter 分发包后缀为 `.cliany-adapter.tar.gz`，由 `src/cliany_site/marke
 
 当前实现会要求包内载荷文件与 `files` / `file_hashes` 完全一致，并校验所有声明文件的内容哈希。`checksum` 字段保留在 manifest 数据结构中，尚未作为安装门禁。
 
+`cliany-site verify <domain> --json` 会在已安装 adapter 存在 `manifest.json` 时检查 manifest v1、domain、`files` / `file_hashes` 和已安装文件哈希；直接由 `explore` 生成、尚未经过 market 安装的 adapter 会显示 `manifest.status = "missing"`，但不因此判定失败。
+
 ## 兼容性矩阵
 
 | 维度 | 当前约束 |
@@ -121,12 +123,29 @@ adapter 分发包后缀为 `.cliany-adapter.tar.gz`，由 `src/cliany_site/marke
 | `未声明文件` | tarball 中夹带了 manifest 未列出的文件 | 移除额外文件后重新打包，确认不会分发私密数据 |
 | `不安全路径` | tarball 包含绝对路径或 `..` 路径穿越 | 丢弃该包，从可信来源重新获取 |
 
+## 安装后验证
+
+安装或覆盖 adapter 后，建议立即执行：
+
+```bash
+cliany-site verify <domain> --json
+cliany-site market info <domain> --json
+```
+
+`verify` 的 `manifest` 字段用于判断分发包落盘后是否仍与 manifest 一致：
+
+| status | 含义 | 处理 |
+|--------|------|------|
+| `ok` | `manifest.json` 与已安装文件一致 | 可以继续执行业务命令或 `check` |
+| `missing` | 没有 market manifest，多见于本机 `explore` 生成 | 若需要分发，运行 `cliany-site market publish <domain>` |
+| `error` | manifest 解析失败、domain 不匹配、声明缺失或哈希不匹配 | 重新安装可信包，或重新 `market publish` 后再安装 |
+
 ## 维护流程
 
 一次高质量 adapter 更新建议按这个顺序提交：
 
 1. 用真实站点或 demo 站点生成/扩展 adapter。
-2. 运行 `cliany-site verify <domain> --json`，确认 metadata schema、签名和依赖完整性。
+2. 运行 `cliany-site verify <domain> --json`，确认 metadata schema、安全扫描和 market manifest 完整性。
 3. 运行最小业务命令，保留失败时的 `doctor --json`、`check --json` 或执行报告。
 4. 用 `market publish` 生成包，并在临时 HOME 中执行 `market install` 回归安装流程。
 5. 更新 `cases/manifest.json` 或相关文档，说明适用站点、能力边界和验证命令。
