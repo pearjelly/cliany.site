@@ -52,6 +52,7 @@ class CadenceReport:
             "changelog_unreleased_compare_actual": self.changelog_unreleased_compare_actual,
             "changelog_ok": self.changelog_ok,
             "dirty": self.dirty,
+            "next_actions": _next_action_lines(self),
         }
 
 
@@ -182,6 +183,36 @@ def _print_text(report: CadenceReport) -> None:
     print(f"changelog_ok: {report.changelog_ok}")
     print(f"dirty: {report.dirty}")
     print(f"ok: {report.ok}")
+    next_actions = _next_action_lines(report)
+    if next_actions:
+        print("next_actions:")
+        for action in next_actions:
+            print(action)
+
+
+def _next_action_lines(report: CadenceReport) -> list[str]:
+    actions: list[str] = []
+    if report.commit_day_count < report.min_commit_days:
+        actions.append(
+            "- Keep shipping small verified slices until weekly commit days reach "
+            f"`{report.min_commit_days}`; current commit days are "
+            f"`{report.commit_day_count}/{report.min_commit_days}`."
+        )
+    if not report.tag_matches_version:
+        actions.append(
+            f"- Align the latest tag `{report.latest_tag or '(none)'}` with pyproject version `{report.version}` "
+            f"or publish the expected tag `{report.expected_tag}`."
+        )
+    if not report.changelog_ok:
+        actions.append("- Add an Unreleased CHANGELOG entry before cutting the next release.")
+    if not report.changelog_unreleased_compare_ok:
+        actions.append(
+            "- Update the CHANGELOG `[Unreleased]` compare link to "
+            f"`{report.changelog_unreleased_compare_expected}`."
+        )
+    if report.dirty:
+        actions.append("- Commit or revert the working tree before tagging a release.")
+    return actions
 
 
 def main(argv: list[str] | None = None) -> int:

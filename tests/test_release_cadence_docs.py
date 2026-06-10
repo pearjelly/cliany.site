@@ -11,6 +11,7 @@ def test_release_cadence_doc_explains_readiness_triage():
         "python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md",
         "Gate Issues",
         "release-readiness-report",
+        "next_actions",
         "先修具体 gate 失败原因",
         "python scripts/release_readiness.py --strict",
         "project_metadata",

@@ -82,6 +82,7 @@ def test_release_cadence_report_passes_with_three_commit_days(tmp_path):
     )
     assert report.changelog_unreleased_compare_actual == report.changelog_unreleased_compare_expected
     assert report.dirty is False
+    assert report.to_dict()["next_actions"] == []
 
 
 def test_release_cadence_report_fails_when_week_has_too_few_days(tmp_path):
@@ -92,6 +93,9 @@ def test_release_cadence_report_fails_when_week_has_too_few_days(tmp_path):
     assert report.ok is False
     assert report.commit_day_count == 1
     assert report.min_commit_days == 3
+    assert report.to_dict()["next_actions"] == [
+        "- Keep shipping small verified slices until weekly commit days reach `3`; current commit days are `1/3`."
+    ]
 
 
 def test_release_cadence_allows_empty_unreleased_when_head_is_tagged(tmp_path):
@@ -159,3 +163,34 @@ def test_release_cadence_fails_when_unreleased_compare_link_is_stale(tmp_path):
         report.changelog_unreleased_compare_actual
         == "https://github.com/pearjelly/cliany.site/compare/v0.0.9...HEAD"
     )
+    assert report.to_dict()["next_actions"] == [
+        (
+            "- Update the CHANGELOG `[Unreleased]` compare link to "
+            "`https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD`."
+        )
+    ]
+
+
+def test_release_cadence_text_output_includes_next_actions_when_blocked(tmp_path, capsys):
+    repo = _init_repo(tmp_path)
+    report = release_cadence.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+
+    release_cadence._print_text(report)
+
+    output = capsys.readouterr().out
+    assert "ok: False" in output
+    assert "next_actions:" in output
+    assert "- Keep shipping small verified slices until weekly commit days reach `3`" in output
+
+
+def test_release_cadence_text_output_omits_next_actions_when_ready(tmp_path, capsys):
+    repo = _init_repo(tmp_path)
+    _commit(repo, "a.txt", "a", "2026-06-09")
+    _commit(repo, "b.txt", "b", "2026-06-10")
+    report = release_cadence.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+
+    release_cadence._print_text(report)
+
+    output = capsys.readouterr().out
+    assert "ok: True" in output
+    assert "next_actions:" not in output
