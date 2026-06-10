@@ -16,6 +16,7 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
+- `scripts/validate_cases.py` 现在会检查 `cases/manifest.json` 中 `docs` 的 Markdown 锚点是否存在，避免真实案例链接腐烂。
 - `docs/releases/v0.14.4-draft.md` 新增案例库映射，release notes 会链接 `cases/README.md`、`cases/manifest.json` 和 `search-extraction-gap` 离线复现。
 - `scripts/release_readiness.py` 新增 `--require-packages`，正式发版前可强制要求 `--packages-dir` 完成 demo adapter 包离线校验。
 - `README.md` / `README.zh.md` 同步 v0.14.4 抽取质量与 release readiness 入口，说明 `data.quality`、`--strict-quality` 和 `E_EMPTY_RESULT` 的用户含义。

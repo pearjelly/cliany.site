@@ -12,6 +12,7 @@ import tarfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 ALLOWED_STATUSES = {"active", "degraded", "known-gap", "retired"}
@@ -87,6 +88,43 @@ def _safe_member_names(tar: tarfile.TarFile) -> tuple[list[str], list[str]]:
     names = [member.name for member in tar.getmembers()]
     unsafe = [name for name in names if name.startswith("/") or ".." in Path(name).parts]
     return names, unsafe
+
+
+def _github_heading_anchor(text: str) -> str:
+    chars: list[str] = []
+    for char in text.strip().lower():
+        if char.isalnum() or char in {" ", "-"}:
+            chars.append("-" if char.isspace() else char)
+    return re.sub(r"-+", "-", "".join(chars)).strip("-")
+
+
+def _markdown_heading_anchors(path: Path) -> set[str]:
+    anchors: set[str] = set()
+    counts: dict[str, int] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        match = re.match(r"^(#{1,6})\s+(.+?)\s*$", line)
+        if not match:
+            continue
+        heading = match.group(2).strip().strip("#").strip()
+        anchor = _github_heading_anchor(heading)
+        if not anchor:
+            continue
+        duplicate_count = counts.get(anchor, 0)
+        counts[anchor] = duplicate_count + 1
+        anchors.add(anchor if duplicate_count == 0 else f"{anchor}-{duplicate_count}")
+    return anchors
+
+
+def _validate_docs_link(root: Path, docs: str) -> list[str]:
+    doc_path, _, raw_anchor = docs.partition("#")
+    path = root / doc_path
+    if not path.exists():
+        return [f"docs path does not exist: {doc_path}"]
+    if raw_anchor:
+        anchor = unquote(raw_anchor).strip().lower()
+        if anchor not in _markdown_heading_anchors(path):
+            return [f"docs anchor does not exist: {docs}"]
+    return []
 
 
 def _extract_required_file(tar: tarfile.TarFile, name: str, issues: list[str]) -> bytes | None:
@@ -210,9 +248,7 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
 
     docs = str(case.get("docs") or "")
     if docs:
-        doc_path = docs.split("#", 1)[0]
-        if not (root / doc_path).exists():
-            check.issues.append(f"docs path does not exist: {doc_path}")
+        check.issues.extend(_validate_docs_link(root, docs))
 
     commands = case.get("commands") or []
     if status == "active":

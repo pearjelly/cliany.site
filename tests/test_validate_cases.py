@@ -107,6 +107,27 @@ def test_cases_report_flags_duplicate_ids(tmp_path):
     assert all("duplicate case id" in case.issues for case in report.cases)
 
 
+def test_cases_report_accepts_existing_docs_anchor(tmp_path):
+    case = _case()
+    case["docs"] = "README.md#suitecrm-demo-enterprise-crm"
+    _write_cases(tmp_path, [case])
+    (tmp_path / "README.md").write_text("# Demo\n\n### SuiteCRM Demo (Enterprise CRM)\n", encoding="utf-8")
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is True
+
+
+def test_cases_report_rejects_missing_docs_anchor(tmp_path):
+    _write_cases(tmp_path, [_case()])
+    (tmp_path / "README.md").write_text("# Other project\n\n## Other heading\n", encoding="utf-8")
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert "docs anchor does not exist: README.md#demo" in report.cases[0].issues
+
+
 def test_cases_report_checks_optional_packages_dir(tmp_path):
     case = _case(domain="demo.example.com")
     _write_cases(tmp_path, [case])
