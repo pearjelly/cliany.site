@@ -78,7 +78,7 @@ git push origin master --tags
 
 `check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、`CHANGELOG.md` Unreleased 是否有内容，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截。
 
-`validate_cases.py` 会检查 `cases/manifest.json` 的结构、文档链接、active 案例命令和验证说明；传入 `--packages-dir ~/.cliany-site/packages` 时，还会离线检查 demo adapter 包中的 `manifest.json` 是否可读且 domain 匹配。
+`validate_cases.py` 会检查 `cases/manifest.json` 的结构、文档链接、active 案例命令和验证说明；传入 `--packages-dir ~/.cliany-site/packages` 时，还会离线检查 demo adapter 包中的 `manifest.json`、tarball 安全路径、声明文件哈希和 metadata schema v3。
 
 ## 提交规则
 

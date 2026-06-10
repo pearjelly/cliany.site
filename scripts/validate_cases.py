@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -15,6 +16,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 ALLOWED_STATUSES = {"active", "degraded", "known-gap", "retired"}
 INSTALL_RE = re.compile(r"^cliany-site market install (?P<path>\S+)")
+REQUIRED_PACKAGE_FILES = {"commands.py", "metadata.json"}
 
 
 @dataclass
@@ -77,6 +79,27 @@ def _install_package_name(case: dict[str, Any]) -> str | None:
     return None
 
 
+def _sha256_bytes(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _safe_member_names(tar: tarfile.TarFile) -> tuple[list[str], list[str]]:
+    names = [member.name for member in tar.getmembers()]
+    unsafe = [name for name in names if name.startswith("/") or ".." in Path(name).parts]
+    return names, unsafe
+
+
+def _extract_required_file(tar: tarfile.TarFile, name: str, issues: list[str]) -> bytes | None:
+    try:
+        extracted = tar.extractfile(name)
+    except KeyError:
+        extracted = None
+    if extracted is None:
+        issues.append(f"{name} missing")
+        return None
+    return extracted.read()
+
+
 def _check_package(package_path: Path, expected_domain: str | None) -> dict[str, Any]:
     if not package_path.exists():
         return {
@@ -86,17 +109,56 @@ def _check_package(package_path: Path, expected_domain: str | None) -> dict[str,
             "issue": "package file not found",
         }
 
+    issues: list[str] = []
     try:
         with tarfile.open(package_path, "r:gz") as tar:
-            manifest_file = tar.extractfile("manifest.json")
-            if manifest_file is None:
-                return {
-                    "ok": False,
-                    "path": str(package_path),
-                    "status": "invalid",
-                    "issue": "manifest.json missing",
-                }
-            manifest = json.loads(manifest_file.read().decode("utf-8"))
+            member_names, unsafe_names = _safe_member_names(tar)
+            if unsafe_names:
+                issues.append(f"unsafe archive paths: {', '.join(unsafe_names)}")
+
+            manifest_bytes = _extract_required_file(tar, "manifest.json", issues)
+            manifest = json.loads(manifest_bytes.decode("utf-8")) if manifest_bytes else {}
+            metadata_bytes = _extract_required_file(tar, "metadata.json", issues)
+            _extract_required_file(tar, "commands.py", issues)
+
+            payload_files = {name for name in member_names if name != "manifest.json"}
+            manifest_files = {str(item) for item in manifest.get("files") or []}
+            hash_files = {str(item) for item in (manifest.get("file_hashes") or {})}
+
+            undeclared_files = sorted(payload_files - manifest_files)
+            if undeclared_files:
+                issues.append(f"undeclared package files: {', '.join(undeclared_files)}")
+
+            missing_files = sorted(manifest_files - payload_files)
+            if missing_files:
+                issues.append(f"manifest.files missing from package: {', '.join(missing_files)}")
+
+            missing_hashes = sorted(manifest_files - hash_files)
+            if missing_hashes:
+                issues.append(f"manifest.file_hashes missing: {', '.join(missing_hashes)}")
+
+            unknown_hashes = sorted(hash_files - manifest_files)
+            if unknown_hashes:
+                issues.append(f"manifest.file_hashes has undeclared files: {', '.join(unknown_hashes)}")
+
+            for filename in sorted(manifest_files & payload_files):
+                if Path(filename).name != filename:
+                    issues.append(f"unsafe manifest file name: {filename}")
+                    continue
+                expected_hash = str((manifest.get("file_hashes") or {}).get(filename, ""))
+                if not expected_hash:
+                    continue
+                file_obj = tar.extractfile(filename)
+                if file_obj is None:
+                    continue
+                actual_hash = _sha256_bytes(file_obj.read())
+                if actual_hash != expected_hash:
+                    issues.append(f"file hash mismatch: {filename}")
+
+            if metadata_bytes:
+                metadata = json.loads(metadata_bytes.decode("utf-8"))
+                if metadata.get("schema_version") != 3:
+                    issues.append("metadata.schema_version must be 3")
     except (OSError, tarfile.TarError, json.JSONDecodeError, UnicodeDecodeError) as exc:
         return {
             "ok": False,
@@ -105,13 +167,16 @@ def _check_package(package_path: Path, expected_domain: str | None) -> dict[str,
             "issue": str(exc),
         }
 
-    issues: list[str] = []
     if manifest.get("manifest_version") != "1":
         issues.append("manifest_version must be '1'")
     if expected_domain and manifest.get("domain") != expected_domain:
         issues.append(f"domain mismatch: expected {expected_domain!r}, got {manifest.get('domain')!r}")
-    if not manifest.get("files"):
+    manifest_files = {str(item) for item in manifest.get("files") or []}
+    if not manifest_files:
         issues.append("manifest.files is empty")
+    missing_required = sorted(REQUIRED_PACKAGE_FILES - manifest_files)
+    if missing_required:
+        issues.append(f"manifest.files missing required files: {', '.join(missing_required)}")
     if not manifest.get("file_hashes"):
         issues.append("manifest.file_hashes is empty")
 
@@ -209,6 +274,8 @@ def _print_text(report: CasesReport) -> None:
             print(f"  issue: {issue}")
         if check.package is not None and not check.package.get("ok"):
             print(f"  package: {check.package.get('status')} {check.package.get('issue', '')}".rstrip())
+            for issue in check.package.get("issues", []):
+                print(f"  package_issue: {issue}")
 
 
 def main(argv: list[str] | None = None) -> int:
