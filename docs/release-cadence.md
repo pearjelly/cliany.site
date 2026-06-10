@@ -20,6 +20,8 @@
 
 允许周末发布补丁，但补丁不能替代下一周的正式 release train。
 
+维护者每周选题、实现和复盘的操作顺序见 [每周维护者循环](weekly-maintainer-loop.md)。当 readiness 只剩提交天数不足时，继续做小而可验证的增量；当存在具体 gate issue 时，优先关闭 gate issue 再扩展新功能。
+
 ## 版本类型
 
 | 类型 | 何时使用 | 示例 |

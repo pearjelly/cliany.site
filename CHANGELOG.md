@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Added
+- 新增 `docs/weekly-maintainer-loop.md`，把路线图、release readiness、案例库验证和发布节奏串成每周选题、实现、复盘的维护者循环。
 - 新增 GitHub `Real Demo Case Proposal` issue 模板，引导外部用户提交可验证、只读、带离线样例输出的真实案例候选。
 - `scripts/release_readiness.py` 新增 `--report`，可生成下一版发布 readiness Markdown 摘要，便于发版复盘和 release notes 准备。
 - `scripts/validate_cases.py` 新增 `--report`，可生成案例库离线验收 Markdown 报告；CI 会上传 `case-catalog-report` artifact。
@@ -20,6 +21,7 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
+- `docs/roadmap-2026-q3.md` 与 `docs/release-cadence.md` 现在链接每周维护者循环，帮助维护者把路线图切成可发布、可验证的小版本。
 - 官网 quickstart 现在在首次成功路径后提示 `Real Demo Case Proposal`，把公开只读真实工作流引导到案例库贡献和离线验收路径。
 - `release_readiness.py` 的项目元数据 gate 现在会校验 README 双语首页是否保留 10 分钟成功路径、抽取质量、release readiness 和真实案例贡献入口。
 - `README.md` / `README.zh.md` 的 quickstart 入口现在说明首次成功后可通过 `Real Demo Case Proposal` 贡献新的公开只读真实案例。

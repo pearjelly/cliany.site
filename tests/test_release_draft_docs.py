@@ -35,6 +35,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "cases/README.md",
         "cases/manifest.json",
         "search-extraction-gap",
+        "docs/weekly-maintainer-loop.md",
         "python scripts/release_readiness.py --strict",
         "git tag v0.14.4",
     ]
