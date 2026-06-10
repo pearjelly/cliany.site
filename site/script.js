@@ -153,6 +153,19 @@ const I18N = {
     zh: '候选案例应关联 <code>cases/manifest.json</code>、<code>cases/examples/</code> 和 <code>python scripts/validate_cases.py --strict</code>。',
     en: 'Candidate cases should point to <code>cases/manifest.json</code>, <code>cases/examples/</code>, and <code>python scripts/validate_cases.py --strict</code>.'
   },
+  'qs.maintainer.title': { zh: '维护者循环', en: 'Maintainer Loop' },
+  'qs.maintainer.desc': {
+    zh: '使用每周维护者循环和 release readiness 的 next_actions，把路线图拆成小而可验证的发布切片。',
+    en: 'Use the weekly maintainer loop and release readiness next_actions to turn the roadmap into small verified releases.'
+  },
+  'qs.maintainer.loop': {
+    zh: '选择下一块发布切片时，从 <code>docs/weekly-maintainer-loop.md</code> 开始。',
+    en: 'Start from <code>docs/weekly-maintainer-loop.md</code> when choosing the next release slice.'
+  },
+  'qs.maintainer.actions': {
+    zh: '读取 <code>python scripts/release_readiness.py --json</code> 或 <code>python scripts/check_release_cadence.py --json</code> 输出的 <code>next_actions</code>。',
+    en: 'Read <code>next_actions</code> from <code>python scripts/release_readiness.py --json</code> or <code>python scripts/check_release_cadence.py --json</code>.'
+  },
 
   'obscura.title': { zh: '实验性功能：Obscura Browser Provider', en: 'Experimental: Obscura Browser Provider' },
   'obscura.desc': { zh: 'Obscura 是一个轻量级的浏览器替代方案，目前处于实验阶段。Chrome 仍然是默认 provider。', en: 'Obscura is a lightweight alternative to Chrome, currently in experimental status. Chrome remains the default provider.' },

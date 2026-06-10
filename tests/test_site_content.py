@@ -13,6 +13,11 @@ def test_site_quickstart_matches_v0143_first_run_path():
     assert "Real Demo Case Proposal" in index
     assert "cases/manifest.json" in index
     assert "python scripts/validate_cases.py --strict" in index
+    assert "docs/weekly-maintainer-loop.md" in index
+    assert "python scripts/release_readiness.py --json" in index
+    assert "python scripts/check_release_cadence.py --json" in index
+    assert "next_actions" in index
     assert "Run a real demo first" in script
     assert "Generate Your Own" in script
     assert "After Your First Success" in script
+    assert "Maintainer Loop" in script
