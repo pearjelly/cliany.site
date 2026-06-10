@@ -422,6 +422,31 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"package_gate: {report.package_gate.ok}")
 
 
+def _report_issue_lines(report: ReadinessReport) -> list[str]:
+    lines: list[str] = []
+    for issue in _cadence_blockers(report.cadence):
+        lines.append(f"- `cadence`: {issue}")
+    for case in report.cases.cases:
+        for issue in case.issues:
+            lines.append(f"- `cases/{case.id}`: {issue}")
+        if case.package is not None:
+            package_issues = case.package.get("issues") or []
+            if case.package.get("issue"):
+                package_issues = [*package_issues, str(case.package["issue"])]
+            for issue in package_issues:
+                lines.append(f"- `cases/{case.id}/package`: {issue}")
+    for gate_name, gate in (
+        ("draft", report.draft),
+        ("ci", report.ci),
+        ("release_workflow", report.release_workflow),
+        ("project_metadata", report.project_metadata),
+        ("package_gate", report.package_gate),
+    ):
+        for issue in gate.issues:
+            lines.append(f"- `{gate_name}`: {issue}")
+    return lines
+
+
 def _render_markdown_report(report: ReadinessReport) -> str:
     blockers = "<br>".join(report.blockers) if report.blockers else "-"
     commit_days = ", ".join(report.cadence.commit_days) if report.cadence.commit_days else "-"
@@ -462,6 +487,16 @@ def _render_markdown_report(report: ReadinessReport) -> str:
         f"- CHANGELOG compare: {report.cadence.changelog_unreleased_compare_actual or '(missing)'}",
         f"- Release draft: `{report.draft.path}`",
     ]
+    issue_lines = _report_issue_lines(report)
+    if issue_lines:
+        lines.extend(
+            [
+                "",
+                "## Gate Issues",
+                "",
+                *issue_lines,
+            ]
+        )
     return "\n".join(lines) + "\n"
 
 

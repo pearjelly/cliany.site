@@ -19,6 +19,7 @@
 - 新增 `docs/releases/v0.14.4-draft.md`，提前整理下一版 patch release 的用户价值、风险、验证命令和发版阻塞项。
 
 ### Changed
+- `release_readiness.py --report` 现在会在 Markdown 报告中列出各 gate 的具体失败原因，CI artifact 可直接用于定位发版阻塞项。
 - `release_readiness.py` 新增项目元数据 gate，发布前会校验 PyPI `description` / `readme` / project URLs，以及 LICENSE、贡献、安全和支持入口文件。
 - `.github/workflows/release.yml` 在发布构建前清理 `dist/`，并在 `uv build` 后运行 `uvx twine check dist/*` 校验本次 wheel/sdist 元数据。
 - `pyproject.toml` 新增 PyPI `description` 和 `readme` 元数据，让发布包包含 README long description。

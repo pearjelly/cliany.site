@@ -383,6 +383,21 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD" in text
 
 
+def test_release_readiness_markdown_report_includes_gate_issues(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=False)
+    (repo / "LICENSE").unlink()
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+    report_path = tmp_path / "reports" / "release-readiness.md"
+
+    release_readiness._write_markdown_report(report, report_path)
+
+    text = report_path.read_text(encoding="utf-8")
+    assert "## Gate Issues" in text
+    assert "- `cadence`: commit days 1/3" in text
+    assert "- `draft`: release draft is missing" in text
+    assert "- `project_metadata`: open source metadata file is missing: LICENSE" in text
+
+
 def test_release_readiness_blocks_missing_release_draft(tmp_path):
     repo = _init_repo(tmp_path, with_draft=False)
 
