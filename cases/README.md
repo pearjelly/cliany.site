@@ -23,6 +23,7 @@
 | `apache-confluence-search` | ASF Confluence 页面搜索 | active | 团队知识库搜索；样例输出见 [apache-confluence-search.json](examples/apache-confluence-search.json) |
 | `apache-jenkins-jobs` | ASF Jenkins job 列表 | active | 构建状态查询；样例输出见 [apache-jenkins-jobs.json](examples/apache-jenkins-jobs.json) |
 | `pypi-project-search` | PyPI 项目搜索 | candidate | Python 包注册表搜索候选；样例输出见 [pypi-project-search.json](examples/pypi-project-search.json)，待生成 adapter 包和在线 smoke 后晋级 active |
+| `npm-package-search` | npm 包搜索 | candidate | JavaScript 包注册表搜索候选；样例输出见 [npm-package-search.json](examples/npm-package-search.json)，待生成 adapter 包和在线 smoke 后晋级 active |
 | `search-extraction-gap` | 搜索结果抽取复盘 | known-gap | 明确「页面交互强、列表抽取弱」的产品边界 |
 
 ## Candidate Cases

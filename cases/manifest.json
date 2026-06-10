@@ -101,6 +101,30 @@
     }
   },
   {
+    "id": "npm-package-search",
+    "title": "npm package search",
+    "category": "package-registry",
+    "status": "candidate",
+    "target_url": "https://www.npmjs.com/search?q=playwright",
+    "adapter_domain": "www.npmjs.com",
+    "source_release": null,
+    "docs": "cases/README.md#candidate-cases",
+    "example_output": "cases/examples/npm-package-search.json",
+    "commands": [
+      "cliany-site explore \"https://www.npmjs.com\" \"search npm packages for playwright and list package names\" --json",
+      "cliany-site www.npmjs.com search-packages --query playwright --limit 5 --json"
+    ],
+    "validation": {
+      "offline": "candidate entry and example output validate without release adapter package assets",
+      "online": "read-only npm search returns package result rows for the query"
+    },
+    "promotion": {
+      "adapter_package": "Generate and publish www.npmjs.com.cliany-adapter-v0.14.x.tar.gz in a future release.",
+      "metadata_validation": "Run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict once the package exists.",
+      "online_smoke": "Run cliany-site www.npmjs.com search-packages --query playwright --limit 5 --json against npm and confirm non-empty package rows."
+    }
+  },
+  {
     "id": "search-extraction-gap",
     "title": "Search result extraction gap review",
     "category": "known-gap",

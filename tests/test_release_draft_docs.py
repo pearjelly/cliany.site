@@ -39,6 +39,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "cases/README.md",
         "cases/manifest.json",
         "pypi-project-search",
+        "npm-package-search",
         "candidate",
         "candidate cases to declare `example_output`",
         "example_output.data.command",

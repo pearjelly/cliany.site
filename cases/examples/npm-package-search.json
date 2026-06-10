@@ -1,0 +1,36 @@
+{
+  "ok": true,
+  "data": {
+    "command": "search-packages",
+    "args": {
+      "query": "playwright",
+      "limit": 5
+    },
+    "results": [
+      {
+        "ok": true,
+        "action": "extract",
+        "data": {
+          "packages": [
+            {
+              "name": "playwright",
+              "description": "Example npm package result",
+              "url": "https://www.npmjs.com/package/playwright"
+            }
+          ]
+        }
+      }
+    ],
+    "quality": {
+      "ok": true,
+      "status": "ok",
+      "row_count": 1
+    }
+  },
+  "error": null,
+  "meta": {
+    "source": "case-example",
+    "case_id": "npm-package-search",
+    "sample": true
+  }
+}
