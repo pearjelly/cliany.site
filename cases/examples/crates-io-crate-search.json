@@ -1,0 +1,36 @@
+{
+  "ok": true,
+  "data": {
+    "command": "search-crates",
+    "args": {
+      "query": "serde",
+      "limit": 5
+    },
+    "results": [
+      {
+        "ok": true,
+        "action": "extract",
+        "data": {
+          "crates": [
+            {
+              "name": "serde",
+              "description": "Example Rust serialization crate result",
+              "url": "https://crates.io/crates/serde"
+            }
+          ]
+        }
+      }
+    ],
+    "quality": {
+      "ok": true,
+      "status": "ok",
+      "row_count": 1
+    }
+  },
+  "error": null,
+  "meta": {
+    "source": "case-example",
+    "case_id": "crates-io-crate-search",
+    "sample": true
+  }
+}

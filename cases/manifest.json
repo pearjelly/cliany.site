@@ -125,6 +125,30 @@
     }
   },
   {
+    "id": "crates-io-crate-search",
+    "title": "crates.io crate search",
+    "category": "package-registry",
+    "status": "candidate",
+    "target_url": "https://crates.io/search?q=serde",
+    "adapter_domain": "crates.io",
+    "source_release": null,
+    "docs": "cases/README.md#candidate-cases",
+    "example_output": "cases/examples/crates-io-crate-search.json",
+    "commands": [
+      "cliany-site explore \"https://crates.io\" \"search Rust crates for serde and list crate names\" --json",
+      "cliany-site crates.io search-crates --query serde --limit 5 --json"
+    ],
+    "validation": {
+      "offline": "candidate entry and example output validate without release adapter package assets",
+      "online": "read-only crates.io search returns crate result rows for the query"
+    },
+    "promotion": {
+      "adapter_package": "Generate and publish crates.io-0.14.x.cliany-adapter.tar.gz in a future release.",
+      "metadata_validation": "Run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict once the package exists.",
+      "online_smoke": "Run cliany-site crates.io search-crates --query serde --limit 5 --json against crates.io and confirm non-empty crate rows."
+    }
+  },
+  {
     "id": "search-extraction-gap",
     "title": "Search result extraction gap review",
     "category": "known-gap",
