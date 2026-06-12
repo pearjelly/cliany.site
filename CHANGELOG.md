@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.217] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `publication_handoff_key_preview_count`、`publication_handoff_key_preview` 和 `publication_handoff_key_preview_sha256`，让只读取整包摘要的维护工具能检查 `publication-handoff.json` 字段清单前窗口。
+- `artifact_bundle_summary` 现在输出 `publication_handoff_key_tail_count`、`publication_handoff_key_tail` 和 `publication_handoff_key_tail_sha256`，让 publication handoff 字段清单尾部窗口也可审计。
+- 新增 `docs/releases/v0.16.217-draft.md`，把下一版 patch release 聚焦到 publication handoff key preview/tail 可见性。
+
 ## [0.16.216] - 2026-06-13
 
 ### Added
@@ -1917,7 +1924,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.216...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.217...HEAD
+[0.16.217]: https://github.com/pearjelly/cliany.site/compare/v0.16.216...v0.16.217
 [0.16.216]: https://github.com/pearjelly/cliany.site/compare/v0.16.215...v0.16.216
 [0.16.215]: https://github.com/pearjelly/cliany.site/compare/v0.16.214...v0.16.215
 [0.16.214]: https://github.com/pearjelly/cliany.site/compare/v0.16.213...v0.16.214
