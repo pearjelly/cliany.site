@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.191] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `blocker_first_item`、`blocker_last_item` 和 `blocker_boundary_sha256`，让只读取整包摘要的维护工具能检查 blockers 列表首尾边界。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 blocker first/last item 与 boundary hash，并继续展示 blocker preview、blocker tail、blocker count 与完整 hash。
+- 新增 `docs/releases/v0.16.191-draft.md`，把下一版 patch release 聚焦到 blocker boundary 可见性。
+
 ## [0.16.190] - 2026-06-13
 
 ### Added
@@ -1735,7 +1742,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.190...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.191...HEAD
+[0.16.191]: https://github.com/pearjelly/cliany.site/compare/v0.16.190...v0.16.191
 [0.16.190]: https://github.com/pearjelly/cliany.site/compare/v0.16.189...v0.16.190
 [0.16.189]: https://github.com/pearjelly/cliany.site/compare/v0.16.188...v0.16.189
 [0.16.188]: https://github.com/pearjelly/cliany.site/compare/v0.16.187...v0.16.188
