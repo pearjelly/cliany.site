@@ -638,6 +638,12 @@ Generated for target version `{plan.target_version}`.
 
 {_issue_artifact_publication_next_actions(plan)}
 
+### Publication Publish Script
+
+```bash
+{plan.publication_publish_script_command}
+```
+
 ```bash
 {_issue_artifact_publication_commands(plan)}
 ```

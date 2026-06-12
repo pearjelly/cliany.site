@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --issues-dir` 生成的 artifacts `README.md` 现在会在 `Publication Handoff` 中展示 `Publication Publish Script` 命令，方便维护者先生成并审阅发布脚本。
+- 新增 `docs/releases/v0.16.26-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts README 的 publish script 入口。
+
 ## [0.16.25] - 2026-06-12
 
 ### Added
