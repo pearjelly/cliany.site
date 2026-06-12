@@ -690,6 +690,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         separators=(",", ":"),
     ).encode()
     review_order_sha256 = hashlib.sha256(review_order_bytes).hexdigest()
+    review_order_boundary = {
+        "first_item": review_order[0],
+        "last_item": review_order[-1],
+    }
     review_order_preview = review_order[:8]
     review_order_tail = review_order[-8:]
     candidate_issue_gate_evidence = _blocked_candidate_issue_gate()["evidence"]
@@ -869,6 +873,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "issue_body_summary_sha256": _stable_json_sha256(issue_body_summary),
         "review_item_count": len(review_order),
         "review_order_sha256": review_order_sha256,
+        "review_order_first_item": review_order_boundary["first_item"],
+        "review_order_last_item": review_order_boundary["last_item"],
+        "review_order_boundary_sha256": _stable_json_sha256(
+            review_order_boundary
+        ),
         "review_order_preview_count": len(review_order_preview),
         "review_order_preview": list(review_order_preview),
         "review_order_preview_sha256": _stable_json_sha256(review_order_preview),
@@ -1260,6 +1269,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ]
     ]
     assert artifact_manifest["artifact_bundle_summary"][
+        "review_order_first_item"
+    ] == artifact_manifest["review_order"][0]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "review_order_last_item"
+    ] == artifact_manifest["review_order"][-1]
+    assert artifact_manifest["artifact_bundle_summary"][
         "review_order_tail"
     ] == artifact_manifest["review_order"][
         -artifact_manifest["artifact_bundle_summary"][
@@ -1512,6 +1527,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert f"issue_body_summary_sha256: `{artifact_bundle_summary['issue_body_summary_sha256']}`" in readme
     assert "review_item_count: `7`" in readme
     assert f"review_order_sha256: `{review_order_sha256}`" in readme
+    assert (
+        "review_order_first_item: "
+        f"`{artifact_bundle_summary['review_order_first_item']}`"
+    ) in readme
+    assert (
+        "review_order_last_item: "
+        f"`{artifact_bundle_summary['review_order_last_item']}`"
+    ) in readme
+    assert (
+        "review_order_boundary_sha256: "
+        f"`{artifact_bundle_summary['review_order_boundary_sha256']}`"
+    ) in readme
     assert (
         "review_order_preview_count: "
         f"`{artifact_bundle_summary['review_order_preview_count']}`"

@@ -191,6 +191,7 @@ V016175_DRAFT = ROOT / "docs" / "releases" / "v0.16.175-draft.md"
 V016176_DRAFT = ROOT / "docs" / "releases" / "v0.16.176-draft.md"
 V016177_DRAFT = ROOT / "docs" / "releases" / "v0.16.177-draft.md"
 V016178_DRAFT = ROOT / "docs" / "releases" / "v0.16.178-draft.md"
+V016179_DRAFT = ROOT / "docs" / "releases" / "v0.16.179-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -8483,6 +8484,53 @@ def test_v016178_release_draft_tracks_review_order_tail():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.178 --issues-dir",
         "git tag v0.16.178",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016179_release_draft_has_required_sections():
+    text = V016179_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.179 发布草案",
+        "**目标版本：** `0.16.179`",
+        "**提交范围：** `v0.16.178..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016179_release_draft_tracks_review_order_boundary():
+    text = V016179_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "artifact_bundle_summary",
+        "Artifact Bundle Summary",
+        "review_order_first_item",
+        "review_order_last_item",
+        "review_order_boundary_sha256",
+        "review_order_preview",
+        "review_order_tail",
+        "review_order_sha256",
+        "review_order",
+        "artifact-manifest.json",
+        "scripts/plan_next_iteration.py",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.179 --issues-dir",
+        "git tag v0.16.179",
     ]
     for snippet in required:
         assert snippet in text
