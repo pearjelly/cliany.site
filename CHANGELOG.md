@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.52] - 2026-06-12
+
+### Added
+- `candidate_issue_gate` 现在包含 `evidence`，记录 publication visibility、latest tag、ahead count 和 release draft issue count 等判定输入。
+- Next iteration Markdown report 和 candidate issue artifacts README 现在展示 candidate issue gate evidence，方便维护者审计为什么候选 issue 创建被阻塞或需要人工审阅。
+- 新增 `docs/releases/v0.16.52-draft.md`，把下一版 patch release 聚焦到 candidate issue gate 的机器可读判定证据。
+
 ## [0.16.51] - 2026-06-12
 
 ### Added
@@ -766,7 +773,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.51...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.52...HEAD
+[0.16.52]: https://github.com/pearjelly/cliany.site/compare/v0.16.51...v0.16.52
 [0.16.51]: https://github.com/pearjelly/cliany.site/compare/v0.16.50...v0.16.51
 [0.16.50]: https://github.com/pearjelly/cliany.site/compare/v0.16.49...v0.16.50
 [0.16.49]: https://github.com/pearjelly/cliany.site/compare/v0.16.48...v0.16.49
