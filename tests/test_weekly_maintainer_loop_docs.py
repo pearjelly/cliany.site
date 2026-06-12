@@ -44,6 +44,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "candidate_issue_gate_required_actions_sha256",
         "publication_visibility_status",
         "release_draft_issue_count",
+        "candidate_issue_gate_summary_sha256",
         "candidate_issue_gate_evidence_key_count",
         "candidate_issue_gate_evidence_sha256",
         "blocker_count",
