@@ -560,6 +560,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "first_entry": issue_body_inventory[0],
         "last_entry": issue_body_inventory[-1],
     }
+    issue_body_summary_keys = list(issue_body_summary)
+    issue_body_summary_key_boundary = {
+        "first_key": issue_body_summary_keys[0],
+        "last_key": issue_body_summary_keys[-1],
+    }
     stable_issue_metadata = [
         {
             "case_id": item["case_id"],
@@ -838,7 +843,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "issue_body_summary_key_count": len(issue_body_summary),
         "issue_body_summary_keys_sha256": _stable_json_sha256(
-            list(issue_body_summary)
+            issue_body_summary_keys
+        ),
+        "issue_body_summary_first_key": issue_body_summary_key_boundary[
+            "first_key"
+        ],
+        "issue_body_summary_last_key": issue_body_summary_key_boundary["last_key"],
+        "issue_body_summary_key_boundary_sha256": _stable_json_sha256(
+            issue_body_summary_key_boundary
         ),
         "issue_body_summary_sha256": _stable_json_sha256(issue_body_summary),
         "review_item_count": len(review_order),
@@ -1200,6 +1212,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert artifact_manifest["artifact_bundle_summary"][
         "issue_body_summary_key_count"
     ] == len(artifact_manifest["issue_body_summary"])
+    assert artifact_manifest["artifact_bundle_summary"][
+        "issue_body_summary_first_key"
+    ] == list(artifact_manifest["issue_body_summary"])[0]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "issue_body_summary_last_key"
+    ] == list(artifact_manifest["issue_body_summary"])[-1]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1412,6 +1430,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "issue_body_summary_keys_sha256: "
         f"`{artifact_bundle_summary['issue_body_summary_keys_sha256']}`"
+    ) in readme
+    assert (
+        "issue_body_summary_first_key: "
+        f"`{artifact_bundle_summary['issue_body_summary_first_key']}`"
+    ) in readme
+    assert (
+        "issue_body_summary_last_key: "
+        f"`{artifact_bundle_summary['issue_body_summary_last_key']}`"
+    ) in readme
+    assert (
+        "issue_body_summary_key_boundary_sha256: "
+        f"`{artifact_bundle_summary['issue_body_summary_key_boundary_sha256']}`"
     ) in readme
     assert f"issue_body_summary_sha256: `{artifact_bundle_summary['issue_body_summary_sha256']}`" in readme
     assert "review_item_count: `7`" in readme

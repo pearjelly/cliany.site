@@ -73,6 +73,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `issue_body_summary_key_count` 和 `issue_body_summary_keys_sha256`，让工具只读整包摘要就能检查 issue body summary 的字段集合是否漂移。
 
+`artifact_bundle_summary` 还会带上 `issue_body_summary_first_key`、`issue_body_summary_last_key` 和 `issue_body_summary_key_boundary_sha256`，让工具只读整包摘要就能确认 issue body summary 字段集合首尾边界是否符合预期。
+
 `artifact_bundle_summary` 也会带上 `issue_body_summary_sha256`，让工具只读整包摘要就能判断 issue body summary 是否漂移。
 
 `artifact_bundle_summary` 也会带上 `issue_metadata_count` 和 `issue_metadata_sha256`，让工具只读整包摘要就能判断 issue metadata 是否漂移；这个摘要覆盖 case、title、labels、target URL、commands、offline commands 和 body 文件名，不包含本机输出路径。

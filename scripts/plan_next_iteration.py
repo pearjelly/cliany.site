@@ -109,6 +109,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "issue_body_inventory_tail_sha256",
     "issue_body_summary_key_count",
     "issue_body_summary_keys_sha256",
+    "issue_body_summary_first_key",
+    "issue_body_summary_last_key",
+    "issue_body_summary_key_boundary_sha256",
     "issue_body_summary_sha256",
     "review_item_count",
     "review_order_sha256",
@@ -1946,6 +1949,11 @@ def _issue_artifact_bundle_summary(
         "first_entry": issue_body_inventory[0] if issue_body_inventory else None,
         "last_entry": issue_body_inventory[-1] if issue_body_inventory else None,
     }
+    issue_body_summary_keys = list(issue_body_summary)
+    issue_body_summary_key_boundary = {
+        "first_key": issue_body_summary_keys[0] if issue_body_summary_keys else None,
+        "last_key": issue_body_summary_keys[-1] if issue_body_summary_keys else None,
+    }
     return {
         "artifact_bundle_summary_key_count": len(ARTIFACT_BUNDLE_SUMMARY_KEYS),
         "artifact_bundle_summary_keys_sha256": _stable_json_sha256(ARTIFACT_BUNDLE_SUMMARY_KEYS),
@@ -2048,7 +2056,14 @@ def _issue_artifact_bundle_summary(
         ),
         "issue_body_summary_key_count": len(issue_body_summary),
         "issue_body_summary_keys_sha256": _stable_json_sha256(
-            list(issue_body_summary)
+            issue_body_summary_keys
+        ),
+        "issue_body_summary_first_key": issue_body_summary_key_boundary[
+            "first_key"
+        ],
+        "issue_body_summary_last_key": issue_body_summary_key_boundary["last_key"],
+        "issue_body_summary_key_boundary_sha256": _stable_json_sha256(
+            issue_body_summary_key_boundary
         ),
         "issue_body_summary_sha256": _stable_json_sha256(issue_body_summary),
         "review_item_count": len(review_order),
@@ -2290,6 +2305,10 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['issue_body_inventory_tail_sha256']}`",
             f"- issue_body_summary_key_count: `{summary['issue_body_summary_key_count']}`",
             f"- issue_body_summary_keys_sha256: `{summary['issue_body_summary_keys_sha256']}`",
+            f"- issue_body_summary_first_key: `{summary['issue_body_summary_first_key']}`",
+            f"- issue_body_summary_last_key: `{summary['issue_body_summary_last_key']}`",
+            "- issue_body_summary_key_boundary_sha256: "
+            f"`{summary['issue_body_summary_key_boundary_sha256']}`",
             f"- issue_body_summary_sha256: `{summary['issue_body_summary_sha256']}`",
             f"- review_item_count: `{summary['review_item_count']}`",
             f"- review_order_sha256: `{summary['review_order_sha256']}`",
