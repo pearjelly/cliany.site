@@ -267,6 +267,12 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "review_checklist_first_item",
     "review_checklist_last_item",
     "review_checklist_boundary_sha256",
+    "review_checklist_preview_count",
+    "review_checklist_preview",
+    "review_checklist_preview_sha256",
+    "review_checklist_tail_count",
+    "review_checklist_tail",
+    "review_checklist_tail_sha256",
     "create_issues_safety_contract_key_count",
     "create_issues_safety_contract_sha256",
     "create_issues_safety_contract_first_key",
@@ -2124,6 +2130,8 @@ def _issue_artifact_bundle_summary(
         "first_item": review_checklist[0] if review_checklist else None,
         "last_item": review_checklist[-1] if review_checklist else None,
     }
+    review_checklist_preview = review_checklist[:8]
+    review_checklist_tail = review_checklist[-8:]
     create_issues_safety_contract_keys = list(create_issues_safety_contract)
     create_issues_safety_contract_key_boundary = {
         "first_key": create_issues_safety_contract_keys[0]
@@ -2604,6 +2612,14 @@ def _issue_artifact_bundle_summary(
         "review_checklist_first_item": review_checklist_boundary["first_item"],
         "review_checklist_last_item": review_checklist_boundary["last_item"],
         "review_checklist_boundary_sha256": _stable_json_sha256(review_checklist_boundary),
+        "review_checklist_preview_count": len(review_checklist_preview),
+        "review_checklist_preview": list(review_checklist_preview),
+        "review_checklist_preview_sha256": _stable_json_sha256(
+            review_checklist_preview
+        ),
+        "review_checklist_tail_count": len(review_checklist_tail),
+        "review_checklist_tail": list(review_checklist_tail),
+        "review_checklist_tail_sha256": _stable_json_sha256(review_checklist_tail),
         "create_issues_safety_contract_key_count": len(create_issues_safety_contract),
         "create_issues_safety_contract_sha256": _stable_json_sha256(create_issues_safety_contract),
         "create_issues_safety_contract_first_key": create_issues_safety_contract_key_boundary[
@@ -3055,6 +3071,18 @@ def _issue_artifact_bundle_summary_markdown(
             f"{_summary_inline_code(summary['review_checklist_last_item'])}",
             "- review_checklist_boundary_sha256: "
             f"`{summary['review_checklist_boundary_sha256']}`",
+            "- review_checklist_preview_count: "
+            f"`{summary['review_checklist_preview_count']}`",
+            "- review_checklist_preview: "
+            f"`{json.dumps(summary['review_checklist_preview'], ensure_ascii=False)}`",
+            "- review_checklist_preview_sha256: "
+            f"`{summary['review_checklist_preview_sha256']}`",
+            "- review_checklist_tail_count: "
+            f"`{summary['review_checklist_tail_count']}`",
+            "- review_checklist_tail: "
+            f"`{json.dumps(summary['review_checklist_tail'], ensure_ascii=False)}`",
+            "- review_checklist_tail_sha256: "
+            f"`{summary['review_checklist_tail_sha256']}`",
             f"- create_issues_safety_contract_key_count: `{summary['create_issues_safety_contract_key_count']}`",
             f"- create_issues_safety_contract_sha256: `{summary['create_issues_safety_contract_sha256']}`",
             "- create_issues_safety_contract_first_key: "

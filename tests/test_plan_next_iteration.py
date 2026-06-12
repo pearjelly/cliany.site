@@ -727,6 +727,27 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "python scripts/check_release_publication.py --json",
         "python scripts/validate_cases.py --strict",
     ]
+    expected_review_checklist = [
+        "Confirm the latest local release has been published before creating new candidate work.",
+        (
+            "Confirm release draft issues are resolved or intentionally deferred before tagging the "
+            "target version."
+        ),
+        (
+            "Confirm Publication Next Actions are resolved or intentionally deferred before running "
+            "create-issues.sh."
+        ),
+        (
+            "Confirm issue-metadata.json has the expected target URL, candidate commands, "
+            "and offline validation commands for each case."
+        ),
+        "Review each body file for scope, tasks, validation evidence, and non-goals.",
+        (
+            "Keep cases as candidate until adapter package, metadata validation, "
+            "and online smoke evidence are complete."
+        ),
+        "Do not use real LLM keys or write runtime state into the repository.",
+    ]
     review_order = [
         "README.md",
         "publication-handoff.json",
@@ -1193,29 +1214,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             expected_validation_commands[-8:]
         ),
         "review_checklist_count": 7,
-        "review_checklist_sha256": _stable_json_sha256(
-            [
-                "Confirm the latest local release has been published before creating new candidate work.",
-                (
-                    "Confirm release draft issues are resolved or intentionally deferred before tagging the "
-                    "target version."
-                ),
-                (
-                    "Confirm Publication Next Actions are resolved or intentionally deferred before running "
-                    "create-issues.sh."
-                ),
-                (
-                    "Confirm issue-metadata.json has the expected target URL, candidate commands, "
-                    "and offline validation commands for each case."
-                ),
-                "Review each body file for scope, tasks, validation evidence, and non-goals.",
-                (
-                    "Keep cases as candidate until adapter package, metadata validation, "
-                    "and online smoke evidence are complete."
-                ),
-                "Do not use real LLM keys or write runtime state into the repository.",
-            ]
-        ),
+        "review_checklist_sha256": _stable_json_sha256(expected_review_checklist),
         "review_checklist_first_item": (
             "Confirm the latest local release has been published before creating new candidate work."
         ),
@@ -1229,6 +1228,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 ),
                 "last_item": "Do not use real LLM keys or write runtime state into the repository.",
             }
+        ),
+        "review_checklist_preview_count": len(expected_review_checklist[:8]),
+        "review_checklist_preview": list(expected_review_checklist[:8]),
+        "review_checklist_preview_sha256": _stable_json_sha256(
+            expected_review_checklist[:8]
+        ),
+        "review_checklist_tail_count": len(expected_review_checklist[-8:]),
+        "review_checklist_tail": list(expected_review_checklist[-8:]),
+        "review_checklist_tail_sha256": _stable_json_sha256(
+            expected_review_checklist[-8:]
         ),
         "create_issues_safety_contract_key_count": 5,
         "create_issues_safety_contract_sha256": _stable_json_sha256(
@@ -2362,6 +2371,30 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "review_checklist_boundary_sha256: "
         f"`{artifact_bundle_summary['review_checklist_boundary_sha256']}`"
+    ) in readme
+    assert (
+        "review_checklist_preview_count: "
+        f"`{artifact_bundle_summary['review_checklist_preview_count']}`"
+    ) in readme
+    assert (
+        "review_checklist_preview: "
+        f"`{json.dumps(artifact_bundle_summary['review_checklist_preview'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "review_checklist_preview_sha256: "
+        f"`{artifact_bundle_summary['review_checklist_preview_sha256']}`"
+    ) in readme
+    assert (
+        "review_checklist_tail_count: "
+        f"`{artifact_bundle_summary['review_checklist_tail_count']}`"
+    ) in readme
+    assert (
+        "review_checklist_tail: "
+        f"`{json.dumps(artifact_bundle_summary['review_checklist_tail'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "review_checklist_tail_sha256: "
+        f"`{artifact_bundle_summary['review_checklist_tail_sha256']}`"
     ) in readme
     assert "create_issues_safety_contract_key_count: `5`" in readme
     assert (

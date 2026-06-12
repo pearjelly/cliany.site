@@ -217,6 +217,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 还会带上 `review_checklist_count`、`review_checklist_sha256`、`review_checklist_first_item`、`review_checklist_last_item` 和 `review_checklist_boundary_sha256`，让工具只读整包摘要就能判断 review checklist 是否漂移，并快速检查首尾边界。
 
+`artifact_bundle_summary` 还会带上 `review_checklist_preview_count`、`review_checklist_preview`、`review_checklist_preview_sha256`、`review_checklist_tail_count`、`review_checklist_tail` 和 `review_checklist_tail_sha256`，让工具只读整包摘要就能检查 review checklist 的前后窗口。
+
 `artifact_bundle_summary` 还会带上 `create_issues_safety_contract_key_count`、`create_issues_safety_contract_sha256`、`create_issues_safety_contract_first_key`、`create_issues_safety_contract_last_key` 和 `create_issues_safety_contract_key_boundary_sha256`，让工具只读整包摘要就能判断 create issues safety contract 是否漂移，并快速检查契约 key 首尾边界；这个摘要只覆盖 dry-run/preflight 契约，不包含本机脚本路径。
 
 `artifact-manifest.json` 中的 publication ref context、publication worktree status 和 publication publish script command 会复用 `publication-handoff.json` 的同源字段，方便工具先读取 manifest 再决定是否继续展开详细 handoff。
