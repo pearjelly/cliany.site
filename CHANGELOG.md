@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.103] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `publication_local_head` 和 `publication_upstream_head`，方便工具只读候选 issue artifacts 整包摘要就定位本地 HEAD 与上游 HEAD。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示 publication local/upstream HEAD。
+- 新增 `docs/releases/v0.16.103-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 publication head 可见性。
+
 ## [0.16.102] - 2026-06-12
 
 ### Added
@@ -1119,7 +1126,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.102...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.103...HEAD
+[0.16.103]: https://github.com/pearjelly/cliany.site/compare/v0.16.102...v0.16.103
 [0.16.102]: https://github.com/pearjelly/cliany.site/compare/v0.16.101...v0.16.102
 [0.16.101]: https://github.com/pearjelly/cliany.site/compare/v0.16.100...v0.16.101
 [0.16.100]: https://github.com/pearjelly/cliany.site/compare/v0.16.99...v0.16.100

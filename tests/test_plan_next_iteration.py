@@ -686,6 +686,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_remote": "origin",
         "publication_latest_tag": "v0.16.1",
         "publication_tag_commit": "abc123",
+        "publication_local_head": "abc123",
+        "publication_upstream_head": "def456",
         "publication_remote_checked": False,
         "publication_ahead_count": 2,
         "publication_behind_count": 0,
@@ -974,6 +976,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "publication_remote: `origin`" in readme
     assert "publication_latest_tag: `v0.16.1`" in readme
     assert "publication_tag_commit: `abc123`" in readme
+    assert "publication_local_head: `abc123`" in readme
+    assert "publication_upstream_head: `def456`" in readme
     assert "publication_remote_checked: `false`" in readme
     assert "publication_ahead_count: `2`" in readme
     assert "publication_behind_count: `0`" in readme
