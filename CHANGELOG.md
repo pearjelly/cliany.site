@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.42] - 2026-06-12
+
 ### Added
 - `artifact-manifest.json` 现在包含 `blockers` 和 `next_actions`，让候选任务产物包有单文件可读的交接摘要。
 - 新增 `docs/releases/v0.16.42-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts manifest 的 blocker/next action 摘要。
@@ -709,7 +711,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.41...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.42...HEAD
+[0.16.42]: https://github.com/pearjelly/cliany.site/compare/v0.16.41...v0.16.42
 [0.16.41]: https://github.com/pearjelly/cliany.site/compare/v0.16.40...v0.16.41
 [0.16.40]: https://github.com/pearjelly/cliany.site/compare/v0.16.39...v0.16.40
 [0.16.39]: https://github.com/pearjelly/cliany.site/compare/v0.16.38...v0.16.39
