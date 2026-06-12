@@ -783,6 +783,24 @@ def test_release_readiness_blocks_incomplete_readme_entrypoint(tmp_path):
     )
 
 
+def test_release_readiness_blocks_stale_website_quickstart(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "site" / "docs").mkdir(parents=True)
+    (repo / "site" / "index.html").write_text("<h2>Quick Start</h2>\n", encoding="utf-8")
+    (repo / "site" / "docs" / "index.html").write_text("<h2>5 分钟快速开始</h2>\n", encoding="utf-8")
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert "open source metadata file missing snippet: site/index.html: 10-Minute Success Path" in (
+        report.project_metadata.issues
+    )
+    assert "open source metadata file missing snippet: site/docs/index.html: 10 分钟成功路径" in (
+        report.project_metadata.issues
+    )
+
+
 def test_release_readiness_blocks_stale_readme_marketplace_package_name(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     text = (repo / "README.md").read_text(encoding="utf-8")

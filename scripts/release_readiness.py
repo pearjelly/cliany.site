@@ -388,6 +388,21 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "CLIANY_QA_OFFLINE=1",
             "commit days N/3",
         ],
+        "site/index.html": [
+            "10-Minute Success Path",
+            "issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
+            "cliany-site verify issues.apache.org --json",
+            "Real Demo Case Proposal",
+            "docs/weekly-maintainer-loop.md",
+            "next_actions",
+        ],
+        "site/docs/index.html": [
+            "10 分钟成功路径",
+            "不需要先配置 LLM key",
+            "issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
+            "cliany-site verify issues.apache.org --json",
+            "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json",
+        ],
         ".github/PULL_REQUEST_TEMPLATE.md": [
             "python scripts/validate_cases.py --strict",
             "python scripts/release_readiness.py --json",
