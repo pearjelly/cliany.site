@@ -226,6 +226,7 @@ V016210_DRAFT = ROOT / "docs" / "releases" / "v0.16.210-draft.md"
 V016211_DRAFT = ROOT / "docs" / "releases" / "v0.16.211-draft.md"
 V016212_DRAFT = ROOT / "docs" / "releases" / "v0.16.212-draft.md"
 V016213_DRAFT = ROOT / "docs" / "releases" / "v0.16.213-draft.md"
+V016214_DRAFT = ROOT / "docs" / "releases" / "v0.16.214-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -10183,6 +10184,52 @@ def test_v016213_release_draft_tracks_tagged_release_next_step():
         "tests/test_release_draft_docs.py",
         "python scripts/release_readiness.py --strict --target-version 0.16.213",
         "git tag v0.16.213",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016214_release_draft_has_required_sections():
+    text = V016214_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.214 发布草案",
+        "**目标版本：** `0.16.214`",
+        "**提交范围：** `v0.16.213..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016214_release_draft_tracks_release_mode_contract():
+    text = V016214_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "release_readiness.py",
+        "release_mode",
+        "release_tag",
+        "release_mode=tagged",
+        "release_mode=target",
+        "Ready to publish verified tag",
+        "Ready to tag",
+        "--release-tag v0.16.214",
+        "--target-version 0.16.214",
+        "tests/test_release_readiness.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/release_readiness.py --strict --target-version 0.16.214",
+        "python scripts/release_readiness.py --strict --release-tag v0.16.214",
+        "git tag v0.16.214",
     ]
     for snippet in required:
         assert snippet in text

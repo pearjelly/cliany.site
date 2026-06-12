@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.214] - 2026-06-13
+
+### Added
+- `release_readiness.py` 的 JSON 和 Markdown report 现在输出 `release_mode` 与 `release_tag`，让维护者和自动化能区分普通 target-version readiness 与 tagged release preflight。
+- `Weekly Review` 的发布已验证 tag 文案现在只在显式 `--release-tag` 模式通过时出现；普通 `--target-version` readiness 继续提示准备打 tag。
+- 新增 `docs/releases/v0.16.214-draft.md`，把下一版 patch release 聚焦到 release readiness mode 可见性。
+
 ## [0.16.213] - 2026-06-13
 
 ### Added
@@ -1896,7 +1903,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.213...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.214...HEAD
+[0.16.214]: https://github.com/pearjelly/cliany.site/compare/v0.16.213...v0.16.214
 [0.16.213]: https://github.com/pearjelly/cliany.site/compare/v0.16.212...v0.16.213
 [0.16.212]: https://github.com/pearjelly/cliany.site/compare/v0.16.211...v0.16.212
 [0.16.211]: https://github.com/pearjelly/cliany.site/compare/v0.16.210...v0.16.211
