@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.40] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --issues-dir` 现在会写出 `artifact-manifest.json`，列出 candidate issue artifacts 的文件名、review order 和 validation commands。
 - 新增 `docs/releases/v0.16.40-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts 的结构化 manifest。
@@ -697,7 +699,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.39...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.40...HEAD
+[0.16.40]: https://github.com/pearjelly/cliany.site/compare/v0.16.39...v0.16.40
 [0.16.39]: https://github.com/pearjelly/cliany.site/compare/v0.16.38...v0.16.39
 [0.16.38]: https://github.com/pearjelly/cliany.site/compare/v0.16.37...v0.16.38
 [0.16.37]: https://github.com/pearjelly/cliany.site/compare/v0.16.36...v0.16.37
