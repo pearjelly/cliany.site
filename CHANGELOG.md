@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --issues-dir` 生成的 `issue-metadata.json` 现在包含 `target_url`、`commands` 和 `offline_commands`，方便维护者机器可读地审阅候选 issue 复现上下文。
+- 新增 `docs/releases/v0.16.18-draft.md`，把下一版 patch release 聚焦到 candidate issue metadata 的结构化复现上下文。
+
 ## [0.16.17] - 2026-06-12
 
 ### Changed

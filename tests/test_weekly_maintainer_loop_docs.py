@@ -43,6 +43,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "GitHub issue body",
         "issue title",
         "labels",
+        "target URL",
         "adapter_package",
         "metadata_validation",
         "online_smoke",

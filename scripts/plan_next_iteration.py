@@ -528,6 +528,9 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "case_id": promotion.case_id,
                 "issue_title": promotion.issue_title,
                 "issue_labels": labels,
+                "target_url": promotion.target_url,
+                "commands": promotion.commands,
+                "offline_commands": promotion.offline_commands,
                 "issue_body_file": str(body_path),
                 "create_command": _gh_issue_create_command(promotion, body_path),
             }
@@ -560,7 +563,8 @@ Generated for target version `{plan.target_version}`.
 
 ## Files
 
-- `issue-metadata.json`: structured issue title, labels, body file path, and `gh issue create` command.
+- `issue-metadata.json`: structured issue title, labels, reproduction context, body file path,
+  and `gh issue create` command.
 - `publication-handoff.json`: publication status, next actions, and publish commands to review first.
 - `create-issues.sh`: reviewable shell script with a release publication preflight and
   one `gh issue create` command per candidate.

@@ -242,6 +242,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert metadata[0]["case_id"] == "pypi-project-search"
     assert metadata[0]["issue_title"] == "Promote candidate case `pypi-project-search` toward active"
     assert metadata[0]["issue_labels"] == ["case-proposal", "good first issue"]
+    assert metadata[0]["target_url"] == "https://pypi.org/search/?q=cliany-site"
+    assert metadata[0]["commands"] == [
+        'cliany-site explore "https://pypi.org" "search Python packages" --json',
+        "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json",
+    ]
+    assert metadata[0]["offline_commands"] == [
+        "python scripts/validate_cases.py --strict",
+        "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md",
+    ]
     assert metadata[0]["issue_body_file"].endswith("pypi-project-search.md")
     assert "gh issue create" in metadata[0]["create_command"]
     assert "--label case-proposal" in metadata[0]["create_command"]
@@ -274,7 +283,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert oct((issues_dir / "create-issues.sh").stat().st_mode & 0o777) == "0o755"
     assert "# cliany-site Candidate Issue Artifacts" in readme
     assert "Generated for target version `0.16.2`." in readme
-    assert "`issue-metadata.json`: structured issue title, labels, body file path" in readme
+    assert "`issue-metadata.json`: structured issue title, labels, reproduction context" in readme
     assert "`publication-handoff.json`: publication status, next actions" in readme
     assert "## Publication Handoff" in readme
     assert "publication_ok: `false`" in readme
