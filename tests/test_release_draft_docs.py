@@ -141,6 +141,7 @@ V016125_DRAFT = ROOT / "docs" / "releases" / "v0.16.125-draft.md"
 V016126_DRAFT = ROOT / "docs" / "releases" / "v0.16.126-draft.md"
 V016127_DRAFT = ROOT / "docs" / "releases" / "v0.16.127-draft.md"
 V016128_DRAFT = ROOT / "docs" / "releases" / "v0.16.128-draft.md"
+V016129_DRAFT = ROOT / "docs" / "releases" / "v0.16.129-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -6172,6 +6173,49 @@ def test_v016128_release_draft_tracks_quick_summary_publish_script_command():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.128 --issues-dir",
         "git tag v0.16.128",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016129_release_draft_has_required_sections():
+    text = V016129_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.129 发布草案",
+        "**目标版本：** `0.16.129`",
+        "**提交范围：** `v0.16.128..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016129_release_draft_tracks_publish_script_path():
+    text = V016129_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "publication_publish_script_path",
+        "publication publish script path",
+        "publish_script_path",
+        "publication_publish_script_path_sha256",
+        "/tmp/cliany-publish-release.sh",
+        "Publication Publish Script",
+        "scripts/plan_next_iteration.py",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.129 --issues-dir",
+        "git tag v0.16.129",
     ]
     for snippet in required:
         assert snippet in text

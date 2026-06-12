@@ -328,6 +328,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         == "python scripts/check_release_publication.py --json "
         "--publish-script /tmp/cliany-publish-release.sh"
     )
+    assert data["publication_publish_script_path"] == "/tmp/cliany-publish-release.sh"
     assert data["publication_next_actions"] == [
         "Commit, stash, or discard local worktree changes before publishing release refs.",
         "Push `master` to `origin`; local branch is ahead by `2` commits.",
@@ -440,6 +441,8 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "Push tag `v0.16.1` after the branch is published." in text
     assert "python scripts/check_release_publication.py --json" in text
     assert "## Publication Publish Script" in text
+    assert "| publication_publish_script_path | `/tmp/cliany-publish-release.sh` |" in text
+    assert "- path: `/tmp/cliany-publish-release.sh`" in text
     assert "python scripts/check_release_publication.py --json --publish-script /tmp/cliany-publish-release.sh" in text
     assert "## Release Draft" in text
     assert "`docs/releases/v0.16.2-draft.md`" in text
@@ -591,6 +594,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "worktree_clean": False,
         "worktree_status": [" M CHANGELOG.md"],
         "publish_commands": ["python scripts/check_release_publication.py --json"],
+        "publish_script_path": "/tmp/cliany-publish-release.sh",
         "publish_script_command": (
             "python scripts/check_release_publication.py --json "
             "--publish-script /tmp/cliany-publish-release.sh"
@@ -653,6 +657,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
         "publication_publish_command_count": plan.publication_publish_command_count,
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
+        "publication_publish_script_path_sha256": _stable_json_sha256(
+            plan.publication_publish_script_path
+        ),
         "publication_publish_script_command_sha256": _stable_json_sha256(
             plan.publication_publish_script_command
         ),
@@ -824,6 +831,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         },
         "publication_worktree_clean": False,
         "publication_worktree_status": [" M CHANGELOG.md"],
+        "publication_publish_script_path": "/tmp/cliany-publish-release.sh",
         "publication_publish_script_command": (
             "python scripts/check_release_publication.py --json "
             "--publish-script /tmp/cliany-publish-release.sh"
@@ -960,7 +968,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"publication_next_actions_sha256: "
         f"`{_stable_json_sha256(plan.publication_next_actions)}`"
     ) in readme
-    assert "publication_handoff_key_count: `10`" in readme
+    assert "publication_handoff_key_count: `11`" in readme
     assert (
         f"publication_handoff_sha256: "
         f"`{artifact_bundle_summary['publication_handoff_sha256']}`"
@@ -980,6 +988,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"publication_publish_commands_sha256: "
         f"`{_stable_json_sha256(plan.publication_publish_commands)}`"
+    ) in readme
+    assert (
+        f"publication_publish_script_path_sha256: "
+        f"`{artifact_bundle_summary['publication_publish_script_path_sha256']}`"
     ) in readme
     assert (
         f"publication_publish_script_command_sha256: "
@@ -1091,6 +1103,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert f"- next_action_count: `{len(plan.next_actions)}`" in readme
     assert "- publication_next_action_count: `3`" in readme
     assert "- publication_publish_command_count: `1`" in readme
+    assert "- publication_publish_script_path: `/tmp/cliany-publish-release.sh`" in readme
     assert (
         "- publication_publish_script_command: "
         "`python scripts/check_release_publication.py --json --publish-script /tmp/cliany-publish-release.sh`"
@@ -1159,11 +1172,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "latest_tag: `v0.16.1`" in readme
     assert "local_head: `abc123`" in readme
     assert "worktree_clean: `false`" in readme
+    assert "publish_script_path: `/tmp/cliany-publish-release.sh`" in readme
     assert "### Publication Next Actions" in readme
     assert "Commit, stash, or discard local worktree changes" in readme
     assert "Push `master` to `origin`; local branch is ahead by `2` commits." in readme
     assert "Push tag `v0.16.1` after the branch is published." in readme
     assert "### Publication Publish Script" in readme
+    assert "- path: `/tmp/cliany-publish-release.sh`" in readme
     assert (
         "python scripts/check_release_publication.py --json "
         "--publish-script /tmp/cliany-publish-release.sh"

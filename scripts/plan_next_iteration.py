@@ -16,6 +16,7 @@ from typing import Any
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
+PUBLICATION_PUBLISH_SCRIPT_PATH = "/tmp/cliany-publish-release.sh"
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
@@ -75,6 +76,7 @@ class IterationPlan:
     publication_ref_context: dict[str, Any]
     publication_worktree_clean: bool
     publication_worktree_status: list[str]
+    publication_publish_script_path: str
     publication_publish_script_command: str
     issue_artifacts_command: str
     release_draft_path: str
@@ -104,6 +106,7 @@ class IterationPlan:
             "publication_ref_context": self.publication_ref_context,
             "publication_worktree_clean": self.publication_worktree_clean,
             "publication_worktree_status": self.publication_worktree_status,
+            "publication_publish_script_path": self.publication_publish_script_path,
             "publication_publish_script_command": self.publication_publish_script_command,
             "issue_artifacts_command": self.issue_artifacts_command,
             "release_draft_path": self.release_draft_path,
@@ -566,7 +569,7 @@ def build_plan(
     )
     publication_publish_script_command = (
         "python scripts/check_release_publication.py --json "
-        "--publish-script /tmp/cliany-publish-release.sh"
+        f"--publish-script {PUBLICATION_PUBLISH_SCRIPT_PATH}"
     )
     return IterationPlan(
         current_version=current_version,
@@ -594,6 +597,7 @@ def build_plan(
         publication_ref_context=_publication_ref_context(publication),
         publication_worktree_clean=_publication_worktree_clean(publication),
         publication_worktree_status=_publication_worktree_status(publication),
+        publication_publish_script_path=PUBLICATION_PUBLISH_SCRIPT_PATH,
         publication_publish_script_command=publication_publish_script_command,
         issue_artifacts_command=issue_artifacts_command,
         release_draft_path=f"docs/releases/v{readiness.target_version}-draft.md",
@@ -666,6 +670,7 @@ def _print_text(plan: IterationPlan) -> None:
         print("publication_worktree_status:")
         for line in plan.publication_worktree_status:
             print(f"- {line}")
+    print(f"publication_publish_script_path: {plan.publication_publish_script_path}")
     print(f"publication_publish_script_command: {plan.publication_publish_script_command}")
     print(f"issue_artifacts_command: {plan.issue_artifacts_command}")
 
@@ -698,7 +703,10 @@ def _render_markdown(plan: IterationPlan) -> str:
         plan.publication_worktree_status,
     )
     publication_commands = _publication_commands_markdown(plan.publication_publish_commands)
-    publication_script = _publication_script_markdown(plan.publication_publish_script_command)
+    publication_script = _publication_script_markdown(
+        plan.publication_publish_script_path,
+        plan.publication_publish_script_command,
+    )
     promotion_lines = _candidate_promotion_markdown(plan.candidate_promotions)
     release_draft_issues = _release_draft_issues_markdown(plan.release_draft_issues)
     return f"""# cliany-site Next Iteration Plan
@@ -712,6 +720,7 @@ def _render_markdown(plan: IterationPlan) -> str:
 | publication_ok | `{str(plan.publication_ok).lower()}` |
 | publication_next_action_count | `{plan.publication_next_action_count}` |
 | publication_publish_command_count | `{plan.publication_publish_command_count}` |
+| publication_publish_script_path | `{plan.publication_publish_script_path}` |
 | commit_days | `{plan.commit_days}` |
 | case_assets | {plan.case_assets} |
 | candidate_cases | {candidate_cases} |
@@ -851,8 +860,10 @@ def _publication_visibility_markdown(visibility: dict[str, str]) -> str:
 - summary: {summary}"""
 
 
-def _publication_script_markdown(command: str) -> str:
+def _publication_script_markdown(path: str, command: str) -> str:
     return f"""## Publication Publish Script
+
+- path: `{path}`
 
 ```bash
 {command}
@@ -1026,6 +1037,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "publication_ref_context": plan.publication_ref_context,
         "publication_worktree_clean": plan.publication_worktree_clean,
         "publication_worktree_status": plan.publication_worktree_status,
+        "publication_publish_script_path": plan.publication_publish_script_path,
         "publication_publish_script_command": plan.publication_publish_script_command,
         "release_draft_path": plan.release_draft_path,
         "release_draft_issues": plan.release_draft_issues,
@@ -1164,6 +1176,7 @@ Generated for target version `{plan.target_version}`.
 - latest_tag: `{_format_context_value(plan.publication_ref_context.get("latest_tag"))}`
 - local_head: `{_format_context_value(plan.publication_ref_context.get("local_head"))}`
 - worktree_clean: `{str(plan.publication_worktree_clean).lower()}`
+- publish_script_path: `{plan.publication_publish_script_path}`
 - Review `publication-handoff.json` before running `create-issues.sh`.
 
 ### Publication Next Actions
@@ -1171,6 +1184,8 @@ Generated for target version `{plan.target_version}`.
 {_issue_artifact_publication_next_actions(plan)}
 
 ### Publication Publish Script
+
+- path: `{plan.publication_publish_script_path}`
 
 ```bash
 {plan.publication_publish_script_command}
@@ -1251,6 +1266,8 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
             f"- next_action_count: `{len(plan.next_actions)}`",
             f"- publication_next_action_count: `{plan.publication_next_action_count}`",
             f"- publication_publish_command_count: `{plan.publication_publish_command_count}`",
+            "- publication_publish_script_path: "
+            f"{_summary_inline_code(plan.publication_publish_script_path)}",
             "- publication_publish_script_command: "
             f"{_summary_inline_code(plan.publication_publish_script_command)}",
             "- reason_code_count: "
@@ -1431,6 +1448,7 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "worktree_clean": plan.publication_worktree_clean,
         "worktree_status": plan.publication_worktree_status,
         "publish_commands": plan.publication_publish_commands,
+        "publish_script_path": plan.publication_publish_script_path,
         "publish_script_command": plan.publication_publish_script_command,
     }
 
@@ -1605,6 +1623,9 @@ def _issue_artifact_bundle_summary(
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
         "publication_publish_command_count": plan.publication_publish_command_count,
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
+        "publication_publish_script_path_sha256": _stable_json_sha256(
+            plan.publication_publish_script_path
+        ),
         "publication_publish_script_command_sha256": _stable_json_sha256(
             plan.publication_publish_script_command
         ),
@@ -1727,6 +1748,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- publication_ref_context_sha256: `{summary['publication_ref_context_sha256']}`",
             f"- publication_publish_command_count: `{summary['publication_publish_command_count']}`",
             f"- publication_publish_commands_sha256: `{summary['publication_publish_commands_sha256']}`",
+            "- publication_publish_script_path_sha256: "
+            f"`{summary['publication_publish_script_path_sha256']}`",
             "- publication_publish_script_command_sha256: "
             f"`{summary['publication_publish_script_command_sha256']}`",
             f"- publication_worktree_status_count: `{summary['publication_worktree_status_count']}`",
