@@ -41,6 +41,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact-manifest.json` 的 `validation_commands` 也会包含 `python scripts/release_readiness.py --target-version <version> --json`，方便维护者在同一入口复核下一版 release gate。
 
+artifacts `README.md` 的 `Validation Commands` 会和 `artifact-manifest.json.validation_commands` 保持同源，列出 `plan_next_iteration.py --json`、`release_readiness.py --target-version <version> --json`、`check_release_publication.py --json` 和 `validate_cases.py --strict`，避免维护者只照 README 操作时漏跑 release readiness 或 publication audit。
+
 `artifact-manifest.json` 还会包含 `review_checklist`，把 README 里的候选任务审阅清单同步为机器可读字段。
 
 `artifact-manifest.json` 的 `candidate_issue_gate` 会和 `publication-handoff.json` 同源，用 `can_create_issues` 把硬性 publication preflight 和 release draft 人工审阅区分开，并用 `evidence` 保留 gate 判定所用的 release/publication 证据。

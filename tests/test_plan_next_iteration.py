@@ -686,6 +686,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "python scripts/plan_next_iteration.py --target-version 0.16.2 "
         "--issues-dir /tmp/cliany-candidate-issues"
     ) in readme
+    assert "python scripts/plan_next_iteration.py --target-version 0.16.2 --json" in readme
+    assert "python scripts/release_readiness.py --target-version 0.16.2 --json" in readme
+    assert "python scripts/check_release_publication.py --json" in readme
     assert "python scripts/validate_cases.py --strict" in readme
 
 

@@ -981,13 +981,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
             "create-issues.sh",
         ],
         "review_checklist": _issue_artifact_review_checklist(),
-        "validation_commands": [
-            plan.issue_artifacts_command,
-            f"python scripts/plan_next_iteration.py --target-version {plan.target_version} --json",
-            f"python scripts/release_readiness.py --target-version {plan.target_version} --json",
-            "python scripts/check_release_publication.py --json",
-            "python scripts/validate_cases.py --strict",
-        ],
+        "validation_commands": _issue_artifact_validation_commands(plan),
     }
     (directory / "artifact-manifest.json").write_text(
         json.dumps(artifact_manifest, ensure_ascii=False, indent=2) + "\n",
@@ -1107,9 +1101,7 @@ Generated for target version `{plan.target_version}`.
 ## Validation Commands
 
 ```bash
-{plan.issue_artifacts_command}
-python scripts/plan_next_iteration.py --target-version {plan.target_version} --json
-python scripts/validate_cases.py --strict
+{_issue_artifact_validation_commands_text(plan)}
 ```
 
 ## Create Issues
@@ -1189,6 +1181,20 @@ def _issue_artifact_publication_next_actions(plan: IterationPlan) -> str:
     if not plan.publication_next_actions:
         return "- No publication next actions are needed."
     return "\n".join(f"- {action}" for action in plan.publication_next_actions)
+
+
+def _issue_artifact_validation_commands(plan: IterationPlan) -> list[str]:
+    return [
+        plan.issue_artifacts_command,
+        f"python scripts/plan_next_iteration.py --target-version {plan.target_version} --json",
+        f"python scripts/release_readiness.py --target-version {plan.target_version} --json",
+        "python scripts/check_release_publication.py --json",
+        "python scripts/validate_cases.py --strict",
+    ]
+
+
+def _issue_artifact_validation_commands_text(plan: IterationPlan) -> str:
+    return "\n".join(_issue_artifact_validation_commands(plan))
 
 
 def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> str:
