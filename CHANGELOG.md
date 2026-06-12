@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.31] - 2026-06-12
+
 ### Added
 - `scripts/check_release_publication.py` 的 publication report 现在包含 `repo_root`，生成的 publish script 会先进入该仓库根目录并校验 `git rev-parse --show-toplevel`，避免从错误目录执行时作用到错误工作区。
 - 新增 `docs/releases/v0.16.31-draft.md`，把下一版 patch release 聚焦到 publish script 的 repo root 固定。
@@ -643,7 +645,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.30...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.31...HEAD
+[0.16.31]: https://github.com/pearjelly/cliany.site/compare/v0.16.30...v0.16.31
 [0.16.30]: https://github.com/pearjelly/cliany.site/compare/v0.16.29...v0.16.30
 [0.16.29]: https://github.com/pearjelly/cliany.site/compare/v0.16.28...v0.16.29
 [0.16.28]: https://github.com/pearjelly/cliany.site/compare/v0.16.27...v0.16.28
