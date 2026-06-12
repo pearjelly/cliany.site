@@ -708,6 +708,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     }
     publication_visibility_key_preview = publication_visibility_keys[:8]
     publication_visibility_key_tail = publication_visibility_keys[-8:]
+    publication_ref_context_keys = list(plan.publication_ref_context)
+    publication_ref_context_key_preview = publication_ref_context_keys[:8]
+    publication_ref_context_key_tail = publication_ref_context_keys[-8:]
     blocker_boundary = {
         "first_item": plan.blockers[0] if plan.blockers else None,
         "last_item": plan.blockers[-1] if plan.blockers else None,
@@ -1097,6 +1100,22 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 "first_key": "repo_root",
                 "last_key": "remote_checked",
             }
+        ),
+        "publication_ref_context_key_preview_count": len(
+            publication_ref_context_key_preview
+        ),
+        "publication_ref_context_key_preview": list(
+            publication_ref_context_key_preview
+        ),
+        "publication_ref_context_key_preview_sha256": _stable_json_sha256(
+            publication_ref_context_key_preview
+        ),
+        "publication_ref_context_key_tail_count": len(
+            publication_ref_context_key_tail
+        ),
+        "publication_ref_context_key_tail": list(publication_ref_context_key_tail),
+        "publication_ref_context_key_tail_sha256": _stable_json_sha256(
+            publication_ref_context_key_tail
         ),
         "publication_publish_command_count": plan.publication_publish_command_count,
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
@@ -2204,6 +2223,30 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "publication_ref_context_key_boundary_sha256: "
         f"`{artifact_bundle_summary['publication_ref_context_key_boundary_sha256']}`"
+    ) in readme
+    assert (
+        "publication_ref_context_key_preview_count: "
+        f"`{artifact_bundle_summary['publication_ref_context_key_preview_count']}`"
+    ) in readme
+    assert (
+        "publication_ref_context_key_preview: "
+        f"`{json.dumps(artifact_bundle_summary['publication_ref_context_key_preview'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "publication_ref_context_key_preview_sha256: "
+        f"`{artifact_bundle_summary['publication_ref_context_key_preview_sha256']}`"
+    ) in readme
+    assert (
+        "publication_ref_context_key_tail_count: "
+        f"`{artifact_bundle_summary['publication_ref_context_key_tail_count']}`"
+    ) in readme
+    assert (
+        "publication_ref_context_key_tail: "
+        f"`{json.dumps(artifact_bundle_summary['publication_ref_context_key_tail'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "publication_ref_context_key_tail_sha256: "
+        f"`{artifact_bundle_summary['publication_ref_context_key_tail_sha256']}`"
     ) in readme
     assert (
         f"publication_publish_command_count: "
