@@ -1181,6 +1181,7 @@ Generated for target version `{plan.target_version}`.
 
 ## Publication Handoff
 
+- schema_version: `1`
 - publication_ok: `{str(plan.publication_ok).lower()}`
 - candidate_issue_gate: `{_format_context_value(plan.candidate_issue_gate.get("status"))}`
 - can_create_issues: `{str(bool(plan.candidate_issue_gate.get("can_create_issues", False))).lower()}`
@@ -1493,6 +1494,7 @@ def _issue_artifact_files(issue_body_names: list[str]) -> dict[str, Any]:
 
 def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
     return {
+        "schema_version": 1,
         "publication_ok": plan.publication_ok,
         "candidate_issue_gate": plan.candidate_issue_gate,
         "visibility": plan.publication_visibility,

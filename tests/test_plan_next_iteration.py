@@ -604,6 +604,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "target_version": "0.16.2",
     }
     expected_publication_handoff = {
+        "schema_version": 1,
         "publication_ok": False,
         "candidate_issue_gate": _blocked_candidate_issue_gate(),
         "visibility": {
@@ -1043,7 +1044,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_primary_next_action: "
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
-    assert "publication_handoff_key_count: `16`" in readme
+    assert "publication_handoff_key_count: `17`" in readme
     assert (
         f"publication_handoff_sha256: "
         f"`{artifact_bundle_summary['publication_handoff_sha256']}`"
@@ -1255,6 +1256,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "dry_run_supported: `true`" in readme
     assert "preflight_required: `true`" in readme
     assert "## Publication Handoff" in readme
+    assert "schema_version: `1`" in readme
     assert "publication_ok: `false`" in readme
     assert "candidate_issue_gate: `blocked_by_publication`" in readme
     assert "can_create_issues: `false`" in readme
