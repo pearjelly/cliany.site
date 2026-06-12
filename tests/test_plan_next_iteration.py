@@ -1093,6 +1093,20 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 "python scripts/validate_cases.py --strict",
             ]
         ),
+        "validation_first_command": (
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+            "--issues-dir /tmp/cliany-candidate-issues"
+        ),
+        "validation_last_command": "python scripts/validate_cases.py --strict",
+        "validation_command_boundary_sha256": _stable_json_sha256(
+            {
+                "first_command": (
+                    "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+                    "--issues-dir /tmp/cliany-candidate-issues"
+                ),
+                "last_command": "python scripts/validate_cases.py --strict",
+            }
+        ),
         "review_checklist_count": 7,
         "review_checklist_sha256": _stable_json_sha256(
             [
@@ -2086,6 +2100,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "validation_commands_sha256: "
         f"`{artifact_bundle_summary['validation_commands_sha256']}`"
+    ) in readme
+    assert (
+        "validation_first_command: "
+        f"{plan_next_iteration._summary_inline_code(artifact_bundle_summary['validation_first_command'])}"
+    ) in readme
+    assert (
+        "validation_last_command: "
+        f"{plan_next_iteration._summary_inline_code(artifact_bundle_summary['validation_last_command'])}"
+    ) in readme
+    assert (
+        "validation_command_boundary_sha256: "
+        f"`{artifact_bundle_summary['validation_command_boundary_sha256']}`"
     ) in readme
     assert "review_checklist_count: `7`" in readme
     assert (

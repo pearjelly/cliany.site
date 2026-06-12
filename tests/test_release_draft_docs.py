@@ -211,6 +211,7 @@ V016195_DRAFT = ROOT / "docs" / "releases" / "v0.16.195-draft.md"
 V016196_DRAFT = ROOT / "docs" / "releases" / "v0.16.196-draft.md"
 V016197_DRAFT = ROOT / "docs" / "releases" / "v0.16.197-draft.md"
 V016198_DRAFT = ROOT / "docs" / "releases" / "v0.16.198-draft.md"
+V016199_DRAFT = ROOT / "docs" / "releases" / "v0.16.199-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -9451,6 +9452,52 @@ def test_v016198_release_draft_tracks_release_draft_required_action_boundary():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.198 --issues-dir",
         "git tag v0.16.198",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016199_release_draft_has_required_sections():
+    text = V016199_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.199 发布草案",
+        "**目标版本：** `0.16.199`",
+        "**提交范围：** `v0.16.198..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016199_release_draft_tracks_validation_command_boundary():
+    text = V016199_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "artifact_bundle_summary",
+        "Artifact Bundle Summary",
+        "validation_first_command",
+        "validation_last_command",
+        "validation_command_boundary_sha256",
+        "validation_command_count",
+        "validation_commands_sha256",
+        "validation_commands",
+        "artifact-manifest.json",
+        "scripts/plan_next_iteration.py",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.199 --issues-dir",
+        "git tag v0.16.199",
     ]
     for snippet in required:
         assert snippet in text

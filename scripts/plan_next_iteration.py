@@ -223,6 +223,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "release_draft_issue_boundary_sha256",
     "validation_command_count",
     "validation_commands_sha256",
+    "validation_first_command",
+    "validation_last_command",
+    "validation_command_boundary_sha256",
     "review_checklist_count",
     "review_checklist_sha256",
     "create_issues_safety_contract_key_count",
@@ -2058,6 +2061,11 @@ def _issue_artifact_bundle_summary(
         if plan.release_draft_issues
         else None,
     }
+    validation_commands = _issue_artifact_validation_commands(plan)
+    validation_command_boundary = {
+        "first_command": validation_commands[0] if validation_commands else None,
+        "last_command": validation_commands[-1] if validation_commands else None,
+    }
     artifact_file_keys = list(artifact_files)
     artifact_files_key_boundary = {
         "first_key": artifact_file_keys[0] if artifact_file_keys else None,
@@ -2387,8 +2395,13 @@ def _issue_artifact_bundle_summary(
         "release_draft_issue_boundary_sha256": _stable_json_sha256(
             release_draft_issue_boundary
         ),
-        "validation_command_count": len(_issue_artifact_validation_commands(plan)),
-        "validation_commands_sha256": _stable_json_sha256(_issue_artifact_validation_commands(plan)),
+        "validation_command_count": len(validation_commands),
+        "validation_commands_sha256": _stable_json_sha256(validation_commands),
+        "validation_first_command": validation_command_boundary["first_command"],
+        "validation_last_command": validation_command_boundary["last_command"],
+        "validation_command_boundary_sha256": _stable_json_sha256(
+            validation_command_boundary
+        ),
         "review_checklist_count": len(_issue_artifact_review_checklist()),
         "review_checklist_sha256": _stable_json_sha256(_issue_artifact_review_checklist()),
         "create_issues_safety_contract_key_count": len(create_issues_safety_contract),
@@ -2747,6 +2760,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['release_draft_issue_boundary_sha256']}`",
             f"- validation_command_count: `{summary['validation_command_count']}`",
             f"- validation_commands_sha256: `{summary['validation_commands_sha256']}`",
+            "- validation_first_command: "
+            f"{_summary_inline_code(summary['validation_first_command'])}",
+            "- validation_last_command: "
+            f"{_summary_inline_code(summary['validation_last_command'])}",
+            "- validation_command_boundary_sha256: "
+            f"`{summary['validation_command_boundary_sha256']}`",
             f"- review_checklist_count: `{summary['review_checklist_count']}`",
             f"- review_checklist_sha256: `{summary['review_checklist_sha256']}`",
             f"- create_issues_safety_contract_key_count: `{summary['create_issues_safety_contract_key_count']}`",
