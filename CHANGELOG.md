@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.34] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py` 现在会输出 `publication_worktree_clean` / `publication_worktree_status`，并在 Markdown plan、`publication-handoff.json` 和 artifacts `README.md` 中展示 publication worktree 状态。
 - 新增 `docs/releases/v0.16.34-draft.md`，把下一版 patch release 聚焦到 next iteration plan 的 publication worktree 状态交接。
@@ -661,7 +663,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.33...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.34...HEAD
+[0.16.34]: https://github.com/pearjelly/cliany.site/compare/v0.16.33...v0.16.34
 [0.16.33]: https://github.com/pearjelly/cliany.site/compare/v0.16.32...v0.16.33
 [0.16.32]: https://github.com/pearjelly/cliany.site/compare/v0.16.31...v0.16.32
 [0.16.31]: https://github.com/pearjelly/cliany.site/compare/v0.16.30...v0.16.31
