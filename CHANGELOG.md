@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.85] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `requires_maintainer_review`，方便工具只读整包摘要就判断候选 issue gate 是否仍需人工审阅。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示 maintainer review flag。
+- 新增 `docs/releases/v0.16.85-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的人工审阅标记。
+
 ## [0.16.84] - 2026-06-12
 
 ### Added
@@ -995,7 +1002,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.84...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.85...HEAD
+[0.16.85]: https://github.com/pearjelly/cliany.site/compare/v0.16.84...v0.16.85
 [0.16.84]: https://github.com/pearjelly/cliany.site/compare/v0.16.83...v0.16.84
 [0.16.83]: https://github.com/pearjelly/cliany.site/compare/v0.16.82...v0.16.83
 [0.16.82]: https://github.com/pearjelly/cliany.site/compare/v0.16.81...v0.16.82
