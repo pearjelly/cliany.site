@@ -24,14 +24,18 @@ from release_readiness import build_report as build_readiness_report  # noqa: E4
 @dataclass(frozen=True)
 class CandidatePromotion:
     case_id: str
+    issue_title: str
+    issue_labels: list[str]
     adapter_package: str
     metadata_validation: str
     online_smoke: str
     issue_body: str
 
-    def to_dict(self) -> dict[str, str]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "case_id": self.case_id,
+            "issue_title": self.issue_title,
+            "issue_labels": self.issue_labels,
             "adapter_package": self.adapter_package,
             "metadata_validation": self.metadata_validation,
             "online_smoke": self.online_smoke,
@@ -154,6 +158,8 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
         promotions.append(
             CandidatePromotion(
                 case_id=str(case.id),
+                issue_title=_candidate_issue_title(str(case.id)),
+                issue_labels=["case-proposal", "good first issue"],
                 adapter_package=_promotion_value(promotion, "adapter_package"),
                 metadata_validation=_promotion_value(promotion, "metadata_validation"),
                 online_smoke=_promotion_value(promotion, "online_smoke"),
@@ -166,6 +172,10 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
             )
         )
     return promotions
+
+
+def _candidate_issue_title(case_id: str) -> str:
+    return f"Promote candidate case `{case_id}` toward active"
 
 
 def _candidate_issue_body(
@@ -275,6 +285,8 @@ def _print_text(plan: IterationPlan) -> None:
         print("candidate_promotions:")
         for promotion in plan.candidate_promotions:
             print(f"- {promotion.case_id}")
+            print(f"  issue_title: {promotion.issue_title}")
+            print(f"  issue_labels: {', '.join(promotion.issue_labels)}")
             print(f"  adapter_package: {promotion.adapter_package}")
             print(f"  metadata_validation: {promotion.metadata_validation}")
             print(f"  online_smoke: {promotion.online_smoke}")
@@ -338,14 +350,32 @@ def _render_markdown(plan: IterationPlan) -> str:
 
 def _candidate_promotion_markdown(promotions: list[CandidatePromotion]) -> str:
     if not promotions:
-        return "## Candidate Promotion Tasks\n\n- No candidate promotion tasks are available."
+        return (
+            "## Candidate Issue Metadata\n\n"
+            "- No candidate issue metadata is available.\n\n"
+            "## Candidate Promotion Tasks\n\n"
+            "- No candidate promotion tasks are available."
+        )
 
     lines = [
-        "## Candidate Promotion Tasks",
+        "## Candidate Issue Metadata",
         "",
-        "| Case | Adapter Package | Metadata Validation | Online Smoke |",
-        "|------|-----------------|---------------------|--------------|",
+        "| Case | Issue Title | Labels |",
+        "|------|-------------|--------|",
     ]
+    for promotion in promotions:
+        labels = ", ".join(f"`{label}`" for label in promotion.issue_labels)
+        lines.append(f"| `{promotion.case_id}` | {promotion.issue_title} | {labels} |")
+
+    lines.extend(
+        [
+            "",
+            "## Candidate Promotion Tasks",
+            "",
+            "| Case | Adapter Package | Metadata Validation | Online Smoke |",
+            "|------|-----------------|---------------------|--------------|",
+        ]
+    )
     for promotion in promotions:
         lines.append(
             f"| `{promotion.case_id}` | {promotion.adapter_package} | "

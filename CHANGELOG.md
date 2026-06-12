@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py` 的 `candidate_promotions` 现在包含 `issue_title` 和 `issue_labels`，Markdown report 新增 `Candidate Issue Metadata` 表，便于维护者直接创建候选案例晋级 issue。
+- 新增 `docs/releases/v0.16.5-draft.md`，把下一版 patch release 聚焦到计划器生成候选案例 issue 标题和标签。
+
 ## [0.16.4] - 2026-06-12
 
 ### Added

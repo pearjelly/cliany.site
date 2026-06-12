@@ -111,6 +111,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     assert any("push `master`" in action for action in data["next_actions"])
     assert data["candidate_promotions"][0] == {
         "case_id": "pypi-project-search",
+        "issue_title": "Promote candidate case `pypi-project-search` toward active",
+        "issue_labels": ["case-proposal", "good first issue"],
         "adapter_package": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
         "metadata_validation": "Run validate_cases with --packages-dir.",
         "online_smoke": "Run read-only PyPI search smoke.",
@@ -144,6 +146,9 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     plan_next_iteration._write_markdown_report(plan, report_path)
 
     text = report_path.read_text(encoding="utf-8")
+    assert "## Candidate Issue Metadata" in text
+    assert "| `pypi-project-search` | Promote candidate case `pypi-project-search` toward active |" in text
+    assert "`case-proposal`, `good first issue`" in text
     assert "## Candidate Promotion Tasks" in text
     assert "## Candidate Issue Body Templates" in text
     assert "| `pypi-project-search` | Generate pypi.org-<version>.cliany-adapter.tar.gz." in text
