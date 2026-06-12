@@ -759,6 +759,35 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         )
         script_lines.extend(["", _gh_issue_create_command(promotion, body_path)])
 
+    issue_body_names = [f"{promotion.case_id}.md" for promotion in plan.candidate_promotions]
+    artifact_manifest = {
+        "target_version": plan.target_version,
+        "files": {
+            "readme": "README.md",
+            "issue_metadata": "issue-metadata.json",
+            "publication_handoff": "publication-handoff.json",
+            "release_draft_handoff": "release-draft-handoff.json",
+            "create_issues_script": "create-issues.sh",
+            "issue_bodies": issue_body_names,
+        },
+        "review_order": [
+            "README.md",
+            "publication-handoff.json",
+            "release-draft-handoff.json",
+            "issue-metadata.json",
+            *issue_body_names,
+            "create-issues.sh",
+        ],
+        "validation_commands": [
+            plan.issue_artifacts_command,
+            f"python scripts/plan_next_iteration.py --target-version {plan.target_version} --json",
+            "python scripts/validate_cases.py --strict",
+        ],
+    }
+    (directory / "artifact-manifest.json").write_text(
+        json.dumps(artifact_manifest, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     (directory / "issue-metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
     publication_handoff = {
         "publication_ok": plan.publication_ok,
@@ -802,6 +831,8 @@ Generated for target version `{plan.target_version}`.
 
 - `issue-metadata.json`: structured issue title, labels, reproduction context, body file name,
   body file path, and `gh issue create` command.
+- `artifact-manifest.json`: file names, review order, and validation commands for this
+  candidate issue artifact bundle.
 - `publication-handoff.json`: publication status, visibility, next actions, publication next actions,
   ref context, worktree status, and publish commands to review first.
 - `release-draft-handoff.json`: target version, release draft path, and release draft issues

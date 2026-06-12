@@ -295,6 +295,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     plan_next_iteration._write_candidate_issue_files(plan, issues_dir)
 
     body = (issues_dir / "pypi-project-search.md").read_text(encoding="utf-8")
+    artifact_manifest = json.loads((issues_dir / "artifact-manifest.json").read_text(encoding="utf-8"))
     metadata = json.loads((issues_dir / "issue-metadata.json").read_text(encoding="utf-8"))
     publication_handoff = json.loads((issues_dir / "publication-handoff.json").read_text(encoding="utf-8"))
     release_draft_handoff = json.loads((issues_dir / "release-draft-handoff.json").read_text(encoding="utf-8"))
@@ -325,6 +326,34 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "gh issue create" in metadata[0]["create_command"]
     assert "--label case-proposal" in metadata[0]["create_command"]
     assert "--label 'good first issue'" in metadata[0]["create_command"]
+    assert artifact_manifest == {
+        "target_version": "0.16.2",
+        "files": {
+            "readme": "README.md",
+            "issue_metadata": "issue-metadata.json",
+            "publication_handoff": "publication-handoff.json",
+            "release_draft_handoff": "release-draft-handoff.json",
+            "create_issues_script": "create-issues.sh",
+            "issue_bodies": ["pypi-project-search.md", "npm-package-search.md"],
+        },
+        "review_order": [
+            "README.md",
+            "publication-handoff.json",
+            "release-draft-handoff.json",
+            "issue-metadata.json",
+            "pypi-project-search.md",
+            "npm-package-search.md",
+            "create-issues.sh",
+        ],
+        "validation_commands": [
+            (
+                "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+                "--issues-dir /tmp/cliany-candidate-issues"
+            ),
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 --json",
+            "python scripts/validate_cases.py --strict",
+        ],
+    }
     assert publication_handoff == {
         "publication_ok": False,
         "visibility": {
@@ -382,6 +411,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "# cliany-site Candidate Issue Artifacts" in readme
     assert "Generated for target version `0.16.2`." in readme
     assert "`issue-metadata.json`: structured issue title, labels, reproduction context" in readme
+    assert "`artifact-manifest.json`: file names, review order, and validation commands" in readme
     assert "body file name" in readme
     assert "`publication-handoff.json`: publication status, visibility, next actions" in readme
     assert "`release-draft-handoff.json`: target version, release draft path" in readme

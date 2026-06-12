@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --issues-dir` 现在会写出 `artifact-manifest.json`，列出 candidate issue artifacts 的文件名、review order 和 validation commands。
+- 新增 `docs/releases/v0.16.40-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts 的结构化 manifest。
+
 ## [0.16.39] - 2026-06-12
 
 ### Added
