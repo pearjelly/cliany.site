@@ -182,6 +182,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "next_action_preview_count",
     "next_action_preview",
     "next_action_preview_sha256",
+    "next_action_tail_count",
+    "next_action_tail",
+    "next_action_tail_sha256",
     "publication_next_action_count",
     "publication_next_actions_sha256",
     "publication_primary_next_action",
@@ -2033,6 +2036,7 @@ def _issue_artifact_bundle_summary(
     blocker_preview = plan.blockers[:8]
     blocker_tail = plan.blockers[-8:]
     next_action_preview = plan.next_actions[:8]
+    next_action_tail = plan.next_actions[-8:]
     artifact_manifest_payload = _artifact_manifest_payload_without_summary(
         plan=plan,
         candidate_cases=candidate_cases,
@@ -2273,6 +2277,9 @@ def _issue_artifact_bundle_summary(
         "next_action_preview_count": len(next_action_preview),
         "next_action_preview": list(next_action_preview),
         "next_action_preview_sha256": _stable_json_sha256(next_action_preview),
+        "next_action_tail_count": len(next_action_tail),
+        "next_action_tail": list(next_action_tail),
+        "next_action_tail_sha256": _stable_json_sha256(next_action_tail),
         "publication_next_action_count": len(plan.publication_next_actions),
         "publication_next_actions_sha256": _stable_json_sha256(plan.publication_next_actions),
         "publication_primary_next_action": (
@@ -2594,6 +2601,10 @@ def _issue_artifact_bundle_summary_markdown(
             "- next_action_preview: "
             f"`{json.dumps(summary['next_action_preview'], ensure_ascii=False)}`",
             f"- next_action_preview_sha256: `{summary['next_action_preview_sha256']}`",
+            f"- next_action_tail_count: `{summary['next_action_tail_count']}`",
+            "- next_action_tail: "
+            f"`{json.dumps(summary['next_action_tail'], ensure_ascii=False)}`",
+            f"- next_action_tail_sha256: `{summary['next_action_tail_sha256']}`",
             f"- publication_next_action_count: `{summary['publication_next_action_count']}`",
             f"- publication_next_actions_sha256: `{summary['publication_next_actions_sha256']}`",
             "- publication_primary_next_action: "
