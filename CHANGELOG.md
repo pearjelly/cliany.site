@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- 新增 `scripts/check_release_publication.py`，用于检查最新本地 release commit/tag 是否已经被 upstream 或远端 refs 看见，并输出可执行 `next_actions`。
+- 新增 `docs/releases/v0.15.2-draft.md`，把下一版 patch release 聚焦到发布可见性检查，避免本地 tag 与公开 GitHub/PyPI 发布状态脱节。
+
 ## [0.15.1] - 2026-06-12
 
 ### Added

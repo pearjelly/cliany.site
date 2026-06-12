@@ -49,7 +49,7 @@ pytest tests/test_cases_manifest.py tests/test_release_cadence.py -q --no-cov
 | 案例库 | 新增或修正 `cases/manifest.json` 条目、补充案例说明 | `cases/`, `scripts/validate_cases.py`, `tests/test_cases_manifest.py` | `python scripts/validate_cases.py --strict` 和 `pytest tests/test_cases_manifest.py tests/test_validate_cases.py -q --no-cov` |
 | 文档路径 | 改进 10 分钟成功路径、贡献指南、发布节奏说明 | `docs/`, `README.md`, `README.zh.md` | `git diff --check` |
 | doctor 提示 | 补充某个 check 的 action 文案或测试 | `src/cliany_site/commands/doctor.py`, `tests/test_doctor_v3.py` | `pytest tests/test_doctor_v3.py -q --no-cov` |
-| 发布节奏 | 改进本地 readiness/cadence 检查或 release checklist | `scripts/release_readiness.py`, `scripts/check_release_cadence.py`, `docs/release-cadence.md` | `pytest tests/test_release_readiness.py tests/test_release_cadence.py -q --no-cov` |
+| 发布节奏 | 改进本地 readiness/cadence/publication 检查或 release checklist | `scripts/release_readiness.py`, `scripts/check_release_cadence.py`, `scripts/check_release_publication.py`, `docs/release-cadence.md` | `pytest tests/test_release_readiness.py tests/test_release_cadence.py tests/test_release_publication.py -q --no-cov` |
 | 错误语义 | 为已有错误码补测试或提示，不改 contract | `src/cliany_site/envelope.py`, `src/cliany_site/errors.py`, `tests/test_error_uniformity.py` | 相关单测 + `ruff check` |
 | 抽取质量 | 补充 list/table/attribute 的空结果、字段缺失和 Markdown/JSON 报告回归 | `src/cliany_site/extract_quality.py`, `src/cliany_site/commands/browser/extract.py`, `tests/test_extract_quality.py` | `pytest tests/test_extract_quality.py tests/test_extract_writer_quality.py tests/test_runtime_helpers_extract_quality.py tests/test_browser_part_c.py tests/test_search_extraction_gap_fixture.py -q --no-cov` |
 | 静态校验 | 扩展 schema/metadata/manifest 的离线校验 | `src/cliany_site/metadata.py`, `schemas/`, `tests/test_metadata.py` | 相关单测 |
@@ -97,7 +97,7 @@ pytest tests/test_cases_manifest.py tests/test_release_cadence.py -q --no-cov
 |------|----------|
 | 纯文档 | `git diff --check` |
 | 案例索引 | `python scripts/validate_cases.py --strict` 和 `pytest tests/test_cases_manifest.py tests/test_validate_cases.py -q --no-cov` |
-| 发布脚本 | `python scripts/release_readiness.py --json`、`pytest tests/test_release_readiness.py tests/test_release_cadence.py -q --no-cov` 和 `bash -n scripts/publish.sh` |
+| 发布脚本 | `python scripts/release_readiness.py --json`、`python scripts/check_release_publication.py --json`、`pytest tests/test_release_readiness.py tests/test_release_cadence.py tests/test_release_publication.py -q --no-cov` 和 `bash -n scripts/publish.sh` |
 | doctor/CLI | doctor 相关单测 + `ruff check src/cliany_site/commands/doctor.py` |
 | codegen/loader/action_runtime | 相关单测 + `CLIANY_QA_OFFLINE=1 pytest tests/ -q --no-cov` |
 | 抽取质量 / 数据命令 | `pytest tests/test_extract_quality.py tests/test_extract_writer_quality.py tests/test_runtime_helpers_extract_quality.py tests/test_browser_part_c.py tests/test_generated_orchestration.py tests/test_search_extraction_gap_fixture.py -q --no-cov` |

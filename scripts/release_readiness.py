@@ -381,6 +381,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         "docs/release-cadence.md": [
             "weekly-maintainer-loop.md",
             "每周维护者循环",
+            "scripts/check_release_publication.py",
+            "python scripts/check_release_publication.py --remote --json",
         ],
         "docs/weekly-maintainer-loop.md": [
             "python scripts/release_readiness.py --json",

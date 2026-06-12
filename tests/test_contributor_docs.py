@@ -28,6 +28,7 @@ def test_contributor_starter_referenced_paths_exist():
         "src/cliany_site/commands/doctor.py",
         "scripts/release_readiness.py",
         "scripts/check_release_cadence.py",
+        "scripts/check_release_publication.py",
         "docs/good-first-issues.md",
         "docs/module-ownership.md",
         "tests/test_cases_manifest.py",
@@ -46,7 +47,11 @@ def test_contributor_starter_uses_release_readiness_as_release_entrypoint():
     text = DOC.read_text(encoding="utf-8")
 
     assert "python scripts/release_readiness.py --json" in text
-    assert "pytest tests/test_release_readiness.py tests/test_release_cadence.py -q --no-cov" in text
+    assert "python scripts/check_release_publication.py --json" in text
+    assert (
+        "pytest tests/test_release_readiness.py tests/test_release_cadence.py tests/test_release_publication.py "
+        "-q --no-cov"
+    ) in text
 
 
 def test_contributor_starter_points_to_issue_and_pr_templates():

@@ -357,7 +357,10 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         encoding="utf-8",
     )
     (repo / "docs" / "release-cadence.md").write_text(
-        "# Release Cadence\n\n[每周维护者循环](weekly-maintainer-loop.md)\n",
+        "# Release Cadence\n\n"
+        "[每周维护者循环](weekly-maintainer-loop.md)\n"
+        "scripts/check_release_publication.py\n"
+        "python scripts/check_release_publication.py --remote --json\n",
         encoding="utf-8",
     )
     (repo / "docs" / "good-first-issues.md").write_text(

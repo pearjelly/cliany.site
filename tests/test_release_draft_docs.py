@@ -4,6 +4,7 @@ ROOT = Path(__file__).resolve().parents[1]
 V0144_DRAFT = ROOT / "docs" / "releases" / "v0.14.4-draft.md"
 V0150_DRAFT = ROOT / "docs" / "releases" / "v0.15.0-draft.md"
 V0151_DRAFT = ROOT / "docs" / "releases" / "v0.15.1-draft.md"
+V0152_DRAFT = ROOT / "docs" / "releases" / "v0.15.2-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -157,6 +158,47 @@ def test_v0151_release_draft_tracks_candidate_promotion_version_placeholder():
         "scripts/validate_cases.py --strict",
         "release_readiness.py --target-version 0.15.1",
         "git tag v0.15.1",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v0152_release_draft_has_required_sections():
+    text = V0152_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.15.2 发布草案",
+        "**目标版本：** `0.15.2`",
+        "**提交范围：** `v0.15.1..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v0152_release_draft_tracks_publication_audit():
+    text = V0152_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "scripts/check_release_publication.py",
+        "python scripts/check_release_publication.py --json",
+        "python scripts/check_release_publication.py --remote --json",
+        "ahead/behind",
+        "tag 是否指向 HEAD",
+        "next_actions",
+        "git ls-remote",
+        "tests/test_release_publication.py",
+        "release_readiness.py --target-version 0.15.2",
+        "git tag v0.15.2",
     ]
     for snippet in required:
         assert snippet in text
