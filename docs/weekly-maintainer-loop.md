@@ -51,6 +51,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 也会带上 `artifact_manifest_payload_key_count` 和 `artifact_manifest_payload_sha256`，让工具只读整包摘要就能判断除 summary 自身之外的 manifest payload 是否漂移，避免递归 hash。
 
+`artifact_bundle_summary` 还会带上 `artifact_manifest_payload_key_preview_count`、`artifact_manifest_payload_key_preview` 和 `artifact_manifest_payload_key_preview_sha256`，让工具只读整包摘要就能检查除 summary 自身之外的 manifest payload 前几个字段的顺序与内容。
+
 `artifact_bundle_summary` 也会带上 `candidate_cases_sha256`，让工具只读整包摘要就能判断 candidate case 列表是否漂移。
 
 `artifact_bundle_summary` 也会带上 `issue_body_summary_sha256`，让工具只读整包摘要就能判断 issue body summary 是否漂移。
