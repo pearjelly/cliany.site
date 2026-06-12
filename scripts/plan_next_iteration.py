@@ -1336,11 +1336,18 @@ def _issue_artifact_bundle_summary(
     issue_body_summary: dict[str, Any],
     create_issues_safety: dict[str, Any],
 ) -> dict[str, Any]:
+    review_order_digest_source = json.dumps(
+        review_order,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
     return {
         "target_version": plan.target_version,
         "candidate_count": len(candidate_cases),
         "body_count": issue_body_summary["body_count"],
         "review_item_count": len(review_order),
+        "review_order_sha256": hashlib.sha256(review_order_digest_source).hexdigest(),
         "inventory_sha256": issue_body_summary["inventory_sha256"],
         "candidate_issue_gate_status": plan.candidate_issue_gate.get("status"),
         "can_create_issues": bool(plan.candidate_issue_gate.get("can_create_issues", False)),
@@ -1375,6 +1382,7 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- candidate_count: `{summary['candidate_count']}`",
             f"- body_count: `{summary['body_count']}`",
             f"- review_item_count: `{summary['review_item_count']}`",
+            f"- review_order_sha256: `{summary['review_order_sha256']}`",
             f"- inventory_sha256: `{summary['inventory_sha256']}`",
             f"- candidate_issue_gate_status: `{summary['candidate_issue_gate_status']}`",
             f"- can_create_issues: `{str(summary['can_create_issues']).lower()}`",

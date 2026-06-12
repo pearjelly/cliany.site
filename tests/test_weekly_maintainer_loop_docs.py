@@ -129,6 +129,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "issue_body_inventory",
         "issue_body_summary",
         "artifact_bundle_summary",
+        "review_order_sha256",
+        "review order hash",
         "byte_count",
         "sha256",
         "body_count",

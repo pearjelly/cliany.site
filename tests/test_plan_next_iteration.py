@@ -481,11 +481,19 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "npm-package-search.md",
         "create-issues.sh",
     ]
+    review_order_bytes = json.dumps(
+        review_order,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    review_order_sha256 = hashlib.sha256(review_order_bytes).hexdigest()
     artifact_bundle_summary = {
         "target_version": "0.16.2",
         "candidate_count": 2,
         "body_count": 2,
         "review_item_count": len(review_order),
+        "review_order_sha256": review_order_sha256,
         "inventory_sha256": issue_body_summary["inventory_sha256"],
         "candidate_issue_gate_status": "blocked_by_publication",
         "can_create_issues": False,
@@ -701,6 +709,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "target_version: `0.16.2`" in readme
     assert "candidate_count: `2`" in readme
     assert "review_item_count: `7`" in readme
+    assert f"review_order_sha256: `{review_order_sha256}`" in readme
     assert "candidate_issue_gate_status: `blocked_by_publication`" in readme
     assert "can_create_issues: `false`" in readme
     assert "dry_run_supported: `true`" in readme
