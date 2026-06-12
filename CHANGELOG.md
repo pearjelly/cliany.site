@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.122] - 2026-06-12
+
+### Added
+- Candidate issue artifacts `README.md` 的 `Candidate Issue Gate Quick Summary` 现在展示 `publication_upstream_head`、`publication_tag_points_at_head`、`publication_tag_commit_in_upstream`、`publication_branch_published`、`publication_tag_published`、`publication_remote_branch_head` 和 `publication_remote_tag_commit`。
+- `tests/test_plan_next_iteration.py` 覆盖 quick summary 的 upstream HEAD、tag state、published state 和 remote refs。
+- 新增 `docs/releases/v0.16.122-draft.md`，把下一版 patch release 聚焦到 candidate issue gate quick summary 的发布状态字段落地。
+
 ## [0.16.121] - 2026-06-12
 
 ### Added
@@ -1252,7 +1259,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.121...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.122...HEAD
+[0.16.122]: https://github.com/pearjelly/cliany.site/compare/v0.16.121...v0.16.122
 [0.16.121]: https://github.com/pearjelly/cliany.site/compare/v0.16.120...v0.16.121
 [0.16.120]: https://github.com/pearjelly/cliany.site/compare/v0.16.119...v0.16.120
 [0.16.119]: https://github.com/pearjelly/cliany.site/compare/v0.16.118...v0.16.119
