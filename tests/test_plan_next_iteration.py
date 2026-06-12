@@ -705,6 +705,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     }
     publication_visibility_key_preview = publication_visibility_keys[:8]
     publication_visibility_key_tail = publication_visibility_keys[-8:]
+    blocker_boundary = {
+        "first_item": plan.blockers[0] if plan.blockers else None,
+        "last_item": plan.blockers[-1] if plan.blockers else None,
+    }
     blocker_preview = plan.blockers[:8]
     blocker_tail = plan.blockers[-8:]
     review_order = [
@@ -989,6 +993,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "blocker_count": 2,
         "blockers_sha256": _stable_json_sha256(plan.blockers),
+        "blocker_first_item": blocker_boundary["first_item"],
+        "blocker_last_item": blocker_boundary["last_item"],
+        "blocker_boundary_sha256": _stable_json_sha256(blocker_boundary),
         "blocker_preview_count": len(blocker_preview),
         "blocker_preview": list(blocker_preview),
         "blocker_preview_sha256": _stable_json_sha256(blocker_preview),
@@ -1441,6 +1448,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ] == artifact_manifest["blockers"][
         -artifact_manifest["artifact_bundle_summary"]["blocker_tail_count"] :
     ]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "blocker_first_item"
+    ] == artifact_manifest["blockers"][0]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "blocker_last_item"
+    ] == artifact_manifest["blockers"][-1]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1823,6 +1836,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "blocker_count: `2`" in readme
     assert f"blockers_sha256: `{_stable_json_sha256(plan.blockers)}`" in readme
+    assert (
+        "blocker_first_item: "
+        f"`{artifact_bundle_summary['blocker_first_item']}`"
+    ) in readme
+    assert (
+        "blocker_last_item: "
+        f"`{artifact_bundle_summary['blocker_last_item']}`"
+    ) in readme
+    assert (
+        "blocker_boundary_sha256: "
+        f"`{artifact_bundle_summary['blocker_boundary_sha256']}`"
+    ) in readme
     assert (
         "blocker_preview_count: "
         f"`{artifact_bundle_summary['blocker_preview_count']}`"

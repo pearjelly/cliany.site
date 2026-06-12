@@ -168,6 +168,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "publication_visibility_summary_sha256",
     "blocker_count",
     "blockers_sha256",
+    "blocker_first_item",
+    "blocker_last_item",
+    "blocker_boundary_sha256",
     "blocker_preview_count",
     "blocker_preview",
     "blocker_preview_sha256",
@@ -2020,6 +2023,10 @@ def _issue_artifact_bundle_summary(
     }
     publication_visibility_key_preview = publication_visibility_keys[:8]
     publication_visibility_key_tail = publication_visibility_keys[-8:]
+    blocker_boundary = {
+        "first_item": plan.blockers[0] if plan.blockers else None,
+        "last_item": plan.blockers[-1] if plan.blockers else None,
+    }
     blocker_preview = plan.blockers[:8]
     blocker_tail = plan.blockers[-8:]
     artifact_manifest_payload = _artifact_manifest_payload_without_summary(
@@ -2248,6 +2255,9 @@ def _issue_artifact_bundle_summary(
         ),
         "blocker_count": len(plan.blockers),
         "blockers_sha256": _stable_json_sha256(plan.blockers),
+        "blocker_first_item": blocker_boundary["first_item"],
+        "blocker_last_item": blocker_boundary["last_item"],
+        "blocker_boundary_sha256": _stable_json_sha256(blocker_boundary),
         "blocker_preview_count": len(blocker_preview),
         "blocker_preview": list(blocker_preview),
         "blocker_preview_sha256": _stable_json_sha256(blocker_preview),
@@ -2558,6 +2568,11 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['publication_visibility_summary_sha256']}`",
             f"- blocker_count: `{summary['blocker_count']}`",
             f"- blockers_sha256: `{summary['blockers_sha256']}`",
+            "- blocker_first_item: "
+            f"{_summary_inline_code(summary['blocker_first_item'])}",
+            "- blocker_last_item: "
+            f"{_summary_inline_code(summary['blocker_last_item'])}",
+            f"- blocker_boundary_sha256: `{summary['blocker_boundary_sha256']}`",
             f"- blocker_preview_count: `{summary['blocker_preview_count']}`",
             "- blocker_preview: "
             f"`{json.dumps(summary['blocker_preview'], ensure_ascii=False)}`",
