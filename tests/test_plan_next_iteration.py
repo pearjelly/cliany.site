@@ -575,6 +575,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         separators=(",", ":"),
     ).encode()
     review_order_sha256 = hashlib.sha256(review_order_bytes).hexdigest()
+    candidate_issue_gate_evidence = _blocked_candidate_issue_gate()["evidence"]
     artifact_bundle_summary = {
         "target_version": "0.16.2",
         "candidate_count": 2,
@@ -652,6 +653,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "release_draft_issue_count": 2,
         "candidate_issue_gate_status": "blocked_by_publication",
         "can_create_issues": False,
+        "candidate_issue_gate_evidence_key_count": len(candidate_issue_gate_evidence),
+        "candidate_issue_gate_evidence_sha256": _stable_json_sha256(candidate_issue_gate_evidence),
         "candidate_issue_gate_reason_code_count": _blocked_candidate_issue_gate()["reason_code_count"],
         "candidate_issue_gate_reason_codes_sha256": _blocked_candidate_issue_gate()["reason_codes_sha256"],
         "candidate_issue_gate_required_action_count": _blocked_candidate_issue_gate()["required_action_count"],
@@ -887,6 +890,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "release_draft_issue_count: `2`" in readme
     assert "candidate_issue_gate_status: `blocked_by_publication`" in readme
     assert "can_create_issues: `false`" in readme
+    assert "candidate_issue_gate_evidence_key_count: `10`" in readme
+    assert (
+        f"candidate_issue_gate_evidence_sha256: "
+        f"`{artifact_bundle_summary['candidate_issue_gate_evidence_sha256']}`"
+    ) in readme
     assert "candidate_issue_gate_reason_code_count: `3`" in readme
     assert (
         f"candidate_issue_gate_reason_codes_sha256: "

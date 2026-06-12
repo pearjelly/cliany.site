@@ -1442,6 +1442,9 @@ def _issue_artifact_bundle_summary(
     create_issues_safety_contract = _issue_artifact_create_issues_safety_contract(create_issues_safety)
     publication_handoff = _publication_handoff(plan)
     release_draft_handoff = _release_draft_handoff(plan)
+    candidate_issue_gate_evidence = plan.candidate_issue_gate.get("evidence")
+    if not isinstance(candidate_issue_gate_evidence, dict):
+        candidate_issue_gate_evidence = {}
     return {
         "target_version": plan.target_version,
         "candidate_count": len(candidate_cases),
@@ -1478,6 +1481,8 @@ def _issue_artifact_bundle_summary(
         "release_draft_issue_count": len(plan.release_draft_issues),
         "candidate_issue_gate_status": plan.candidate_issue_gate.get("status"),
         "can_create_issues": bool(plan.candidate_issue_gate.get("can_create_issues", False)),
+        "candidate_issue_gate_evidence_key_count": len(candidate_issue_gate_evidence),
+        "candidate_issue_gate_evidence_sha256": _stable_json_sha256(candidate_issue_gate_evidence),
         "candidate_issue_gate_reason_code_count": plan.candidate_issue_gate.get("reason_code_count"),
         "candidate_issue_gate_reason_codes_sha256": plan.candidate_issue_gate.get("reason_codes_sha256"),
         "candidate_issue_gate_required_action_count": plan.candidate_issue_gate.get("required_action_count"),
@@ -1545,6 +1550,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- release_draft_issue_count: `{summary['release_draft_issue_count']}`",
             f"- candidate_issue_gate_status: `{summary['candidate_issue_gate_status']}`",
             f"- can_create_issues: `{str(summary['can_create_issues']).lower()}`",
+            f"- candidate_issue_gate_evidence_key_count: `{summary['candidate_issue_gate_evidence_key_count']}`",
+            f"- candidate_issue_gate_evidence_sha256: `{summary['candidate_issue_gate_evidence_sha256']}`",
             f"- candidate_issue_gate_reason_code_count: `{summary['candidate_issue_gate_reason_code_count']}`",
             f"- candidate_issue_gate_reason_codes_sha256: `{summary['candidate_issue_gate_reason_codes_sha256']}`",
             f"- candidate_issue_gate_required_action_count: `{summary['candidate_issue_gate_required_action_count']}`",
