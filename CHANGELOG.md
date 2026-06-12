@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.166] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `artifact_manifest_payload_first_key`、`artifact_manifest_payload_last_key` 和 `artifact_manifest_payload_key_boundary_sha256`，让只读取整包摘要的维护工具能检查 `artifact-manifest.json` payload 字段首尾边界。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 artifact manifest payload first/last key 和 boundary hash，并继续展示 payload key preview/tail。
+- 新增 `docs/releases/v0.16.166-draft.md`，把下一版 patch release 聚焦到 artifact manifest payload 字段边界可见性。
+
 ## [0.16.165] - 2026-06-13
 
 ### Added
@@ -1560,7 +1567,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.165...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.166...HEAD
+[0.16.166]: https://github.com/pearjelly/cliany.site/compare/v0.16.165...v0.16.166
 [0.16.165]: https://github.com/pearjelly/cliany.site/compare/v0.16.164...v0.16.165
 [0.16.164]: https://github.com/pearjelly/cliany.site/compare/v0.16.163...v0.16.164
 [0.16.163]: https://github.com/pearjelly/cliany.site/compare/v0.16.162...v0.16.163
