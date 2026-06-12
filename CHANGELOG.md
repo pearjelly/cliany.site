@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.172] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `issue_body_inventory_first_entry`、`issue_body_inventory_last_entry` 和 `issue_body_inventory_boundary_sha256`，让只读取整包摘要的维护工具能检查 issue body inventory 首尾边界。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 issue body inventory first/last entry 和 boundary hash，并继续展示 preview/tail 与完整 inventory hash。
+- 新增 `docs/releases/v0.16.172-draft.md`，把下一版 patch release 聚焦到 issue body inventory 首尾边界可见性。
+
 ## [0.16.171] - 2026-06-13
 
 ### Added
@@ -1602,7 +1609,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.171...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.172...HEAD
+[0.16.172]: https://github.com/pearjelly/cliany.site/compare/v0.16.171...v0.16.172
 [0.16.171]: https://github.com/pearjelly/cliany.site/compare/v0.16.170...v0.16.171
 [0.16.170]: https://github.com/pearjelly/cliany.site/compare/v0.16.169...v0.16.170
 [0.16.169]: https://github.com/pearjelly/cliany.site/compare/v0.16.168...v0.16.169
