@@ -206,9 +206,13 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     assert report.ok is True
     assert report.active == 0
     assert report.candidate == 1
+    assert report.cases[0].target_url == "https://demo.example.com/"
+    assert report.cases[0].commands == ["cliany-site demo.example.com list-items --json"]
     assert report.cases[0].promotion == case["promotion"]
     assert report.cases[0].to_dict()["promotion"]["online_smoke"].startswith("cliany-site demo.example.com")
     assert report.cases[0].to_dict()["offline_commands"] == ["python scripts/validate_cases.py --strict"]
+    assert report.cases[0].to_dict()["target_url"] == "https://demo.example.com/"
+    assert report.cases[0].to_dict()["commands"] == ["cliany-site demo.example.com list-items --json"]
 
 
 def test_cases_report_rejects_case_without_offline_commands(tmp_path):
@@ -556,6 +560,9 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "online_smoke: cliany-site demo.example.com list-items --json" in text
     assert "## Offline Validation Commands" in text
     assert "| `candidate-case` | python scripts/validate_cases.py --strict |" in text
+    assert "## Candidate Handoff Matrix" in text
+    assert "| `candidate-case` | https://demo.example.com/ | cliany-site demo.example.com list-items --json |" in text
+    assert "without reopening `cases/manifest.json`" in text
     assert "## Candidate Promotion Tasks" in text
     assert "### `candidate-case`" in text
     assert "- [ ] `adapter_package`: publish demo.example.com-<version>.cliany-adapter.tar.gz" in text

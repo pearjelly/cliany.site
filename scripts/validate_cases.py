@@ -42,6 +42,8 @@ BUILTIN_GROUPS = {
 class CaseCheck:
     id: str
     status: str
+    target_url: str | None = None
+    commands: list[str] = field(default_factory=list)
     issues: list[str] = field(default_factory=list)
     package: dict[str, Any] | None = None
     promotion: dict[str, Any] | None = None
@@ -57,6 +59,8 @@ class CaseCheck:
             "id": self.id,
             "status": self.status,
             "ok": self.ok,
+            "target_url": self.target_url,
+            "commands": self.commands,
             "issues": self.issues,
         }
         if self.package is not None:
@@ -432,7 +436,9 @@ def _validate_offline_commands(validation: dict[str, Any]) -> tuple[list[str], l
 def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> CaseCheck:
     case_id = str(case.get("id") or "(missing-id)")
     status = str(case.get("status") or "")
-    check = CaseCheck(id=case_id, status=status)
+    target_url = str(case.get("target_url") or "")
+    commands = [str(command) for command in case.get("commands") or []]
+    check = CaseCheck(id=case_id, status=status, target_url=target_url or None, commands=commands)
 
     for field_name in ("id", "title", "category", "status", "target_url", "docs", "validation"):
         if not case.get(field_name):
@@ -441,7 +447,6 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
     if status and status not in ALLOWED_STATUSES:
         check.issues.append(f"invalid status: {status}")
 
-    target_url = str(case.get("target_url") or "")
     if target_url and not target_url.startswith("https://"):
         check.issues.append("target_url must start with https://")
 
@@ -456,7 +461,6 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
     if docs:
         check.issues.extend(_validate_docs_link(root, docs))
 
-    commands = case.get("commands") or []
     expected_commands = _adapter_command_names(commands)
     example_output = str(case.get("example_output") or "")
     if example_output:
@@ -577,6 +581,10 @@ def _offline_command_summary(commands: list[str]) -> str:
     return "<br>".join(commands) if commands else "-"
 
 
+def _command_summary(commands: list[str]) -> str:
+    return "<br>".join(commands) if commands else "-"
+
+
 def _package_summary(package: dict[str, Any] | None) -> str:
     if package is None:
         return "-"
@@ -647,6 +655,28 @@ def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
     return lines
 
 
+def _candidate_handoff_lines(report: CasesReport) -> list[str]:
+    candidates = [case for case in report.cases if case.status == "candidate"]
+    if not candidates:
+        return []
+    lines = [
+        "",
+        "## Candidate Handoff Matrix",
+        "",
+        "Use this matrix to turn candidate cases into focused contributor tasks without reopening "
+        "`cases/manifest.json` for the basic reproduction context.",
+        "",
+        "| Case | Target URL | Commands | Offline Validation |",
+        "|------|------------|----------|--------------------|",
+    ]
+    for case in candidates:
+        lines.append(
+            f"| `{case.id}` | {case.target_url or '-'} | {_command_summary(case.commands)} | "
+            f"{_offline_command_summary(case.offline_commands)} |"
+        )
+    return lines
+
+
 def _render_markdown_report(report: CasesReport) -> str:
     lines = [
         "# cliany-site Case Catalog Validation",
@@ -683,6 +713,7 @@ def _render_markdown_report(report: CasesReport) -> str:
     for check in report.cases:
         lines.append(f"| `{check.id}` | {_offline_command_summary(check.offline_commands)} |")
 
+    lines.extend(_candidate_handoff_lines(report))
     lines.extend(_candidate_promotion_task_lines(report))
     return "\n".join(lines) + "\n"
 

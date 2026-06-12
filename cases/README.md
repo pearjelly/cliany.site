@@ -80,6 +80,8 @@ CI 的 `Case Catalog Validation` job 会上传 `case-catalog-report` artifact，
 
 报告中的 `Offline Validation Commands` 小节会汇总每个案例声明的 `validation.offline_commands`，维护者可以直接复制这些命令作为 PR 或 release 证据。
 
+报告中的 `Candidate Handoff Matrix` 小节会把 candidate 的 target URL、推荐命令和离线验证命令放到同一张表里，方便贡献者不打开 `cases/manifest.json` 也能获得基本复现上下文。
+
 报告中的 `Candidate Promotion Tasks` 小节会把 candidate 的 `promotion` 清单转成可复制 issue body，包括 package asset、metadata validation、online smoke 三类验收证据，以及“不要提前标记 active”“不要依赖真实 LLM key 或写入 repo runtime 状态”等非目标。
 
 `search-extraction-gap` 的最小复现页面固定在 [tests/fixtures/search_extraction_gap.html](../tests/fixtures/search_extraction_gap.html)，用于离线验证搜索结果列表中链接或摘要缺失时应被判为 `partial` 质量问题。
