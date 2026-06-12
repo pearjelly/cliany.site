@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.120] - 2026-06-12
+
+### Added
+- Candidate issue artifacts `README.md` 的 `Candidate Issue Gate Quick Summary` 现在展示 `publication_tag_commit`，方便维护者先核对最新 tag 指向的提交。
+- [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 说明 quick summary 会展示 publication local HEAD/tag commit。
+- 新增 `docs/releases/v0.16.120-draft.md`，把下一版 patch release 聚焦到 candidate issue gate quick summary 的 tag commit 可见性。
+
 ## [0.16.119] - 2026-06-12
 
 ### Added
@@ -1238,7 +1245,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.119...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.120...HEAD
+[0.16.120]: https://github.com/pearjelly/cliany.site/compare/v0.16.119...v0.16.120
 [0.16.119]: https://github.com/pearjelly/cliany.site/compare/v0.16.118...v0.16.119
 [0.16.118]: https://github.com/pearjelly/cliany.site/compare/v0.16.117...v0.16.118
 [0.16.117]: https://github.com/pearjelly/cliany.site/compare/v0.16.116...v0.16.117
