@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.101] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `publication_branch`、`publication_upstream` 和 `publication_remote`，方便工具只读候选 issue artifacts 整包摘要就定位发布分支、上游和远端。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示 publication branch/upstream/remote。
+- 新增 `docs/releases/v0.16.101-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 publication ref names 可见性。
+
 ## [0.16.100] - 2026-06-12
 
 ### Added
@@ -1105,7 +1112,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.100...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.101...HEAD
+[0.16.101]: https://github.com/pearjelly/cliany.site/compare/v0.16.100...v0.16.101
 [0.16.100]: https://github.com/pearjelly/cliany.site/compare/v0.16.99...v0.16.100
 [0.16.99]: https://github.com/pearjelly/cliany.site/compare/v0.16.98...v0.16.99
 [0.16.98]: https://github.com/pearjelly/cliany.site/compare/v0.16.97...v0.16.98

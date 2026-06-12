@@ -681,6 +681,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "publication_ok": False,
         "publication_visibility_status": "dirty_worktree",
+        "publication_branch": "master",
+        "publication_upstream": "origin/master",
+        "publication_remote": "origin",
         "publication_remote_checked": False,
         "publication_ahead_count": 2,
         "publication_behind_count": 0,
@@ -964,6 +967,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "publication_ok: `false`" in readme
     assert "publication_visibility_status: `dirty_worktree`" in readme
+    assert "publication_branch: `master`" in readme
+    assert "publication_upstream: `origin/master`" in readme
+    assert "publication_remote: `origin`" in readme
     assert "publication_remote_checked: `false`" in readme
     assert "publication_ahead_count: `2`" in readme
     assert "publication_behind_count: `0`" in readme

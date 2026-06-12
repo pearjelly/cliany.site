@@ -61,6 +61,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `publication_remote_checked`、`publication_ahead_count` 和 `publication_behind_count`，让工具只读整包摘要就能判断本轮发布审计是否做过远端复核，以及本地分支领先/落后远端多少提交。
 
+`artifact_bundle_summary` 还会带上 `publication_branch`、`publication_upstream` 和 `publication_remote`，让工具只读整包摘要就能判断候选 artifacts 对应的发布分支、上游和远端名称。
+
 `artifact_bundle_summary` 还会带上 `requires_maintainer_review`，让工具只读整包摘要就能判断候选 issue gate 是否仍需人工审阅。
 
 `artifact_bundle_summary` 还会带上 `candidate_issue_gate_summary_sha256`，让工具只读整包摘要就能判断 gate summary 是否漂移。
