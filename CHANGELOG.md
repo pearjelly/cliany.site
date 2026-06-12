@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.56] - 2026-06-12
+
+### Added
+- `candidate_issue_gate` 现在包含 `reason_codes`，用 `publication_not_published`、`local_release_only`、`release_draft_issues` 等稳定原因码解释 gate 结论。
+- Next iteration Markdown report 和 candidate issue artifacts README 现在展示 gate reason codes，方便维护者和自动化无需解析 summary。
+- 新增 `docs/releases/v0.16.56-draft.md`，把下一版 patch release 聚焦到 candidate issue gate 的机器可读原因码。
+
 ## [0.16.55] - 2026-06-12
 
 ### Added
@@ -792,7 +799,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.55...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.56...HEAD
+[0.16.56]: https://github.com/pearjelly/cliany.site/compare/v0.16.55...v0.16.56
 [0.16.55]: https://github.com/pearjelly/cliany.site/compare/v0.16.54...v0.16.55
 [0.16.54]: https://github.com/pearjelly/cliany.site/compare/v0.16.53...v0.16.54
 [0.16.53]: https://github.com/pearjelly/cliany.site/compare/v0.16.52...v0.16.53
