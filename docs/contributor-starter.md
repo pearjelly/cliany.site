@@ -97,7 +97,7 @@ pytest tests/test_cases_manifest.py tests/test_release_cadence.py -q --no-cov
 |------|----------|
 | 纯文档 | `git diff --check` |
 | 案例索引 | `python scripts/validate_cases.py --strict` 和 `pytest tests/test_cases_manifest.py tests/test_validate_cases.py -q --no-cov` |
-| 发布脚本 | `python scripts/release_readiness.py --json`、`python scripts/check_release_publication.py --json`、`pytest tests/test_release_readiness.py tests/test_release_cadence.py tests/test_release_publication.py -q --no-cov` 和 `bash -n scripts/publish.sh` |
+| 发布脚本 | `python scripts/release_readiness.py --json`、`python scripts/check_release_publication.py --json --report /tmp/cliany-release-publication.md`、`pytest tests/test_release_readiness.py tests/test_release_cadence.py tests/test_release_publication.py -q --no-cov` 和 `bash -n scripts/publish.sh` |
 | doctor/CLI | doctor 相关单测 + `ruff check src/cliany_site/commands/doctor.py` |
 | codegen/loader/action_runtime | 相关单测 + `CLIANY_QA_OFFLINE=1 pytest tests/ -q --no-cov` |
 | 抽取质量 / 数据命令 | `pytest tests/test_extract_quality.py tests/test_extract_writer_quality.py tests/test_runtime_helpers_extract_quality.py tests/test_browser_part_c.py tests/test_generated_orchestration.py tests/test_search_extraction_gap_fixture.py -q --no-cov` |

@@ -106,3 +106,36 @@ def test_release_publication_text_output_includes_next_actions(tmp_path, capsys)
     assert "latest_tag: v0.1.1" in output
     assert "next_actions:" in output
     assert "Push `master` to `origin`" in output
+
+
+def test_release_publication_writes_markdown_report(tmp_path):
+    repo = _init_repo_with_origin(tmp_path)
+    _commit(repo, "CHANGELOG.md", "released\n", "release")
+    _git(repo, "tag", "v0.1.1")
+    report = release_publication.build_report(repo, remote_check=True)
+    report_path = tmp_path / "reports" / "publication.md"
+
+    release_publication._write_markdown_report(report, report_path)
+
+    text = report_path.read_text(encoding="utf-8")
+    assert "# cliany-site Release Publication" in text
+    assert "| ok | `false` |" in text
+    assert "| latest_tag | `v0.1.1` |" in text
+    assert "| remote_checked | `true` |" in text
+    assert "## Refs" in text
+    assert "## Next Actions" in text
+    assert "- Push tag `v0.1.1` to `origin`; remote tag is missing or stale." in text
+
+
+def test_release_publication_main_writes_report_with_json(tmp_path, monkeypatch, capsys):
+    repo = _init_repo_with_origin(tmp_path)
+    report_path = tmp_path / "publication.md"
+    monkeypatch.setattr(release_publication, "ROOT", repo)
+
+    exit_code = release_publication.main(["--json", "--report", str(report_path)])
+
+    payload = capsys.readouterr().out
+    assert exit_code == 0
+    assert '"ok": true' in payload
+    assert report_path.exists()
+    assert "| ok | `true` |" in report_path.read_text(encoding="utf-8")

@@ -383,6 +383,7 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "每周维护者循环",
             "scripts/check_release_publication.py",
             "python scripts/check_release_publication.py --remote --json",
+            "python scripts/check_release_publication.py --remote --report",
         ],
         "docs/weekly-maintainer-loop.md": [
             "python scripts/release_readiness.py --json",

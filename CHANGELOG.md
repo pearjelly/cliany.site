@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/check_release_publication.py` 新增 `--report`，可生成 release publication Markdown 报告，保存 branch/tag 发布可见性、refs 和 next actions。
+- 新增 `docs/releases/v0.15.3-draft.md`，把下一版 patch release 聚焦到发布可见性报告 artifact。
+
 ## [0.15.2] - 2026-06-12
 
 ### Added

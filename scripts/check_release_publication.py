@@ -220,6 +220,56 @@ def _print_text(report: PublicationReport) -> None:
             print(action)
 
 
+def _format_bool(value: bool | None) -> str:
+    if value is None:
+        return "unknown"
+    return "true" if value else "false"
+
+
+def _format_value(value: object) -> str:
+    if value is None:
+        return "(none)"
+    return str(value)
+
+
+def _write_markdown_report(report: PublicationReport, path: Path) -> None:
+    next_actions = _next_action_lines(report)
+    lines = [
+        "# cliany-site Release Publication",
+        "",
+        "| Metric | Value |",
+        "|--------|-------|",
+        f"| ok | `{_format_bool(report.ok)}` |",
+        f"| branch | `{_format_value(report.branch)}` |",
+        f"| upstream | `{_format_value(report.upstream)}` |",
+        f"| remote | `{report.remote}` |",
+        f"| ahead_count | `{_format_value(report.ahead_count)}` |",
+        f"| behind_count | `{_format_value(report.behind_count)}` |",
+        f"| latest_tag | `{_format_value(report.latest_tag)}` |",
+        f"| tag_points_at_head | `{_format_bool(report.tag_points_at_head)}` |",
+        f"| branch_published | `{_format_bool(report.branch_published)}` |",
+        f"| tag_published | `{_format_bool(report.tag_published)}` |",
+        f"| remote_checked | `{_format_bool(report.remote_checked)}` |",
+        "",
+        "## Refs",
+        "",
+        "| Ref | Commit |",
+        "|-----|--------|",
+        f"| local HEAD | `{_format_value(report.local_head)}` |",
+        f"| upstream HEAD | `{_format_value(report.upstream_head)}` |",
+        f"| latest tag commit | `{_format_value(report.tag_commit)}` |",
+        f"| remote branch HEAD | `{_format_value(report.remote_branch_head)}` |",
+        f"| remote tag commit | `{_format_value(report.remote_tag_commit)}` |",
+    ]
+    if next_actions:
+        lines.extend(["", "## Next Actions", "", *next_actions])
+    else:
+        lines.extend(["", "## Next Actions", "", "- Release branch and tag are published."])
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Check whether the latest local release has been published.")
     parser.add_argument("--json", action="store_true", help="Output machine-readable JSON.")
@@ -234,9 +284,12 @@ def main(argv: list[str] | None = None) -> int:
         help="Check live remote branch and tag refs with git ls-remote.",
     )
     parser.add_argument("--remote-name", default="origin", help="Fallback remote name when no upstream is configured.")
+    parser.add_argument("--report", type=Path, help="Write a Markdown publication report to this path.")
     args = parser.parse_args(argv)
 
     report = build_report(ROOT, remote_check=args.remote, remote=args.remote_name)
+    if args.report:
+        _write_markdown_report(report, args.report)
     if args.json:
         print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
     else:

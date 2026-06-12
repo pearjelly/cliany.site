@@ -5,6 +5,7 @@ V0144_DRAFT = ROOT / "docs" / "releases" / "v0.14.4-draft.md"
 V0150_DRAFT = ROOT / "docs" / "releases" / "v0.15.0-draft.md"
 V0151_DRAFT = ROOT / "docs" / "releases" / "v0.15.1-draft.md"
 V0152_DRAFT = ROOT / "docs" / "releases" / "v0.15.2-draft.md"
+V0153_DRAFT = ROOT / "docs" / "releases" / "v0.15.3-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -199,6 +200,48 @@ def test_v0152_release_draft_tracks_publication_audit():
         "tests/test_release_publication.py",
         "release_readiness.py --target-version 0.15.2",
         "git tag v0.15.2",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v0153_release_draft_has_required_sections():
+    text = V0153_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.15.3 发布草案",
+        "**目标版本：** `0.15.3`",
+        "**提交范围：** `v0.15.2..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v0153_release_draft_tracks_publication_markdown_report():
+    text = V0153_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "scripts/check_release_publication.py",
+        "--report /tmp/cliany-release-publication.md",
+        "Summary",
+        "Refs",
+        "Next Actions",
+        "next_actions",
+        "remote branch HEAD",
+        "remote tag commit",
+        "release-readiness-report.md",
+        "release_readiness.py --target-version 0.15.3",
+        "git tag v0.15.3",
     ]
     for snippet in required:
         assert snippet in text

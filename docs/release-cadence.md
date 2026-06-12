@@ -67,6 +67,7 @@ python scripts/check_release_cadence.py --json
 python scripts/check_release_publication.py
 python scripts/check_release_publication.py --json
 python scripts/check_release_publication.py --remote --json
+python scripts/check_release_publication.py --remote --report /tmp/cliany-release-publication.md
 
 # 检查真实案例库（默认离线、不访问第三方站点）
 python scripts/validate_cases.py
@@ -104,7 +105,7 @@ CI 的 `Release Readiness Report` job 会在 PR/主分支生成 `release-readine
 
 发布 workflow 会先清理 `dist/`，再运行 `uv build` 和 `uvx twine check dist/*`，用于在 GitHub Release 和 PyPI 发布前发现 wheel/sdist 元数据问题，并避免历史构建产物污染检查结果。
 
-`check_release_publication.py` 用于发布后的本地审计：默认只读取本地 upstream 跟踪信息，不访问网络；传入 `--remote` 时会用 `git ls-remote` 检查实时远端 branch 和 tag refs。它会报告当前分支相对 upstream 的 ahead/behind、最新 tag 是否指向 HEAD、tag commit 是否已进入 upstream，以及需要执行的 `next_actions`。当本地已经完成 tag 但尚未公开发布时，先运行 `python scripts/check_release_publication.py --json`，确认需要 push 的 branch/tag，再由维护者手动决定是否触发真实 GitHub Release/PyPI 流程。
+`check_release_publication.py` 用于发布后的本地审计：默认只读取本地 upstream 跟踪信息，不访问网络；传入 `--remote` 时会用 `git ls-remote` 检查实时远端 branch 和 tag refs。它会报告当前分支相对 upstream 的 ahead/behind、最新 tag 是否指向 HEAD、tag commit 是否已进入 upstream，以及需要执行的 `next_actions`。传入 `--report /tmp/cliany-release-publication.md` 时会保存 Markdown 报告，便于发版复盘或 CI artifact 留档。当本地已经完成 tag 但尚未公开发布时，先运行 `python scripts/check_release_publication.py --json`，确认需要 push 的 branch/tag，再由维护者手动决定是否触发真实 GitHub Release/PyPI 流程。
 
 `check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、`CHANGELOG.md` Unreleased 是否有内容、`[Unreleased]` compare 链接是否指向最新 tag 到 `HEAD`，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截。
 
@@ -158,6 +159,7 @@ chore(release): bump version to 0.15.0
 - [v0.15.0 发布草案](releases/v0.15.0-draft.md)
 - [v0.15.1 发布草案](releases/v0.15.1-draft.md)
 - [v0.15.2 发布草案](releases/v0.15.2-draft.md)
+- [v0.15.3 发布草案](releases/v0.15.3-draft.md)
 
 如果下一版是 minor，而不是默认的下一 patch，运行 readiness 时显式传入目标版本，例如：
 

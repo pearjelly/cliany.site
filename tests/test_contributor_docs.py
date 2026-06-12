@@ -47,7 +47,7 @@ def test_contributor_starter_uses_release_readiness_as_release_entrypoint():
     text = DOC.read_text(encoding="utf-8")
 
     assert "python scripts/release_readiness.py --json" in text
-    assert "python scripts/check_release_publication.py --json" in text
+    assert "python scripts/check_release_publication.py --json --report /tmp/cliany-release-publication.md" in text
     assert (
         "pytest tests/test_release_readiness.py tests/test_release_cadence.py tests/test_release_publication.py "
         "-q --no-cov"

@@ -360,7 +360,8 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "# Release Cadence\n\n"
         "[每周维护者循环](weekly-maintainer-loop.md)\n"
         "scripts/check_release_publication.py\n"
-        "python scripts/check_release_publication.py --remote --json\n",
+        "python scripts/check_release_publication.py --remote --json\n"
+        "python scripts/check_release_publication.py --remote --report\n",
         encoding="utf-8",
     )
     (repo / "docs" / "good-first-issues.md").write_text(
