@@ -35,7 +35,7 @@ pytest tests/test_cases_manifest.py tests/test_release_cadence.py -q --no-cov
 |------|------|--------------|
 | Bug / 回归 | `.github/ISSUE_TEMPLATE/bug_report.yml` | 复现步骤、目标 URL、错误码、`doctor --json`、AXTree snapshot 或最小 HTML fixture |
 | 功能建议 | `.github/ISSUE_TEMPLATE/feature_request.yml` | 真实问题、期望行为、替代方案 |
-| 真实 demo 候选 | `.github/ISSUE_TEMPLATE/case_proposal.yml` | 只读工作流、期望 CLI 命令、离线 JSON envelope 样例、验证方式 |
+| 真实 demo 候选 | `.github/ISSUE_TEMPLATE/case_proposal.yml` | 只读工作流、期望 CLI 命令、离线 JSON envelope 样例、验证方式；如果要推进 active，参考 `Candidate Promotion Tasks` / `Issue Body Template` 补充 `adapter_package`、`metadata_validation`、`online_smoke` 证据 |
 | PR 提交 | `.github/PULL_REQUEST_TEMPLATE.md` | 按改动类型选择 `validate_cases.py`、`release_readiness.py`、`CLIANY_QA_OFFLINE=1` 或相关 pytest |
 
 ## Good First Issues

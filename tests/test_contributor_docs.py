@@ -65,6 +65,11 @@ def test_contributor_starter_points_to_issue_and_pr_templates():
         "doctor --json",
         "AXTree snapshot",
         "离线 JSON envelope 样例",
+        "Candidate Promotion Tasks",
+        "Issue Body Template",
+        "adapter_package",
+        "metadata_validation",
+        "online_smoke",
         "CLIANY_QA_OFFLINE=1",
     ]
     for snippet in required:

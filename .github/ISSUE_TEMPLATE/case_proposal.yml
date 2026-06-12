@@ -80,6 +80,25 @@ body:
     validations:
       required: true
 
+  - type: textarea
+    id: promotion
+    attributes:
+      label: "晋级证据 / Promotion Evidence"
+      description: "如果希望该候选案例后续晋级 active，请按 Candidate Promotion Tasks / Issue Body Template 结构说明包资产、metadata 校验和在线只读 smoke 证据。"
+      placeholder: |
+        adapter_package:
+        - 期望包名：example.com-<version>.cliany-adapter.tar.gz
+
+        metadata_validation:
+        - python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict
+
+        online_smoke:
+        - cliany-site example.com search-items --query demo --json
+        - 期望证据：data.quality.ok=true, row_count>0
+      render: markdown
+    validations:
+      required: false
+
   - type: checkboxes
     id: safety
     attributes:

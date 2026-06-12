@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Changed
+- `Real Demo Case Proposal` issue 模板现在包含 candidate 晋级证据字段，并指向 `Candidate Promotion Tasks` / `Issue Body Template`，让外部案例提案沿用后续 active 晋级结构。
+
 ## [0.15.8] - 2026-06-12
 
 ### Changed

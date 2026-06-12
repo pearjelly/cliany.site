@@ -281,6 +281,12 @@ def _template_content(filename: str) -> str:
             "id: target_url\n"
             "id: expected_command\n"
             "id: example_output\n"
+            "id: promotion\n"
+            "Candidate Promotion Tasks\n"
+            "Issue Body Template\n"
+            "adapter_package\n"
+            "metadata_validation\n"
+            "online_smoke\n"
             "python scripts/validate_cases.py --strict\n"
             "degraded\n"
         ),
@@ -371,9 +377,22 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "python scripts/validate_cases.py --strict\n"
         "python scripts/release_readiness.py --json\n"
         "promotion\n"
+        "Candidate Promotion Tasks\n"
+        "Issue Body Template\n"
         "Issue 拆分清单\n"
         "推荐验证命令\n"
         "~/.cliany-site/\n",
+        encoding="utf-8",
+    )
+    (repo / "docs" / "contributor-starter.md").write_text(
+        "# 贡献者上手地图\n\n"
+        "good-first-issues.md\n"
+        "module-ownership.md\n"
+        "CLIANY_QA_OFFLINE=1\n"
+        "Real Demo Case Proposal\n"
+        "Candidate Promotion Tasks\n"
+        "Issue Body Template\n"
+        "AXTree snapshot\n",
         encoding="utf-8",
     )
     (repo / "docs" / "module-ownership.md").write_text(
@@ -440,6 +459,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "README.zh.md",
         "docs/roadmap-2026-q3.md",
         "docs/release-cadence.md",
+        "docs/contributor-starter.md",
         "docs/good-first-issues.md",
         "docs/module-ownership.md",
         "docs/weekly-maintainer-loop.md",
