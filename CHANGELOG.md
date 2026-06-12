@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.199] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `validation_first_command`、`validation_last_command` 和 `validation_command_boundary_sha256`，让只读取整包摘要的维护工具能检查 validation commands 首尾边界。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 validation command first/last command 与 boundary hash，并继续展示 validation command count 和完整 hash。
+- 新增 `docs/releases/v0.16.199-draft.md`，把下一版 patch release 聚焦到 validation command boundary 可见性。
+
 ## [0.16.198] - 2026-06-13
 
 ### Added
@@ -1791,7 +1798,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.198...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.199...HEAD
+[0.16.199]: https://github.com/pearjelly/cliany.site/compare/v0.16.198...v0.16.199
 [0.16.198]: https://github.com/pearjelly/cliany.site/compare/v0.16.197...v0.16.198
 [0.16.197]: https://github.com/pearjelly/cliany.site/compare/v0.16.196...v0.16.197
 [0.16.196]: https://github.com/pearjelly/cliany.site/compare/v0.16.195...v0.16.196
