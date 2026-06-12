@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.202] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `publication_ref_context_first_key`、`publication_ref_context_last_key` 和 `publication_ref_context_key_boundary_sha256`，让只读取整包摘要的维护工具能检查 publication ref context 的 key 首尾边界。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 publication ref context first/last key 与 boundary hash，并继续展示 ref context key count 和完整 hash。
+- 新增 `docs/releases/v0.16.202-draft.md`，把下一版 patch release 聚焦到 publication ref context boundary 可见性。
+
 ## [0.16.201] - 2026-06-13
 
 ### Added
@@ -1812,7 +1819,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.201...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.202...HEAD
+[0.16.202]: https://github.com/pearjelly/cliany.site/compare/v0.16.201...v0.16.202
 [0.16.201]: https://github.com/pearjelly/cliany.site/compare/v0.16.200...v0.16.201
 [0.16.200]: https://github.com/pearjelly/cliany.site/compare/v0.16.199...v0.16.200
 [0.16.199]: https://github.com/pearjelly/cliany.site/compare/v0.16.198...v0.16.199
