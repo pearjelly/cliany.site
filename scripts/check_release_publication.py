@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -54,6 +55,7 @@ class PublicationReport:
             "branch_published": self.branch_published,
             "tag_published": self.tag_published,
             "next_actions": _next_action_lines(self),
+            "publish_commands": _publish_command_lines(self),
         }
 
 
@@ -200,6 +202,26 @@ def _next_action_lines(report: PublicationReport) -> list[str]:
     return actions
 
 
+def _publish_command_lines(report: PublicationReport) -> list[str]:
+    commands: list[str] = []
+    branch = report.branch
+    remote = shlex.quote(report.remote)
+    if branch and not report.upstream:
+        commands.append(f"git push -u {remote} {shlex.quote(branch)}")
+    elif branch and (
+        (report.ahead_count is not None and report.ahead_count > 0)
+        or report.branch_published is False
+    ):
+        commands.append(f"git push {remote} {shlex.quote(branch)}")
+
+    if report.latest_tag and report.tag_points_at_head and report.tag_published is False:
+        commands.append(f"git push {remote} {shlex.quote(report.latest_tag)}")
+
+    if commands or not report.remote_checked:
+        commands.append("python scripts/check_release_publication.py --remote --json")
+    return commands
+
+
 def _print_text(report: PublicationReport) -> None:
     print("=== cliany-site release publication ===")
     print(f"ok: {report.ok}")
@@ -218,6 +240,11 @@ def _print_text(report: PublicationReport) -> None:
         print("next_actions:")
         for action in next_actions:
             print(action)
+    publish_commands = _publish_command_lines(report)
+    if publish_commands:
+        print("publish_commands:")
+        for command in publish_commands:
+            print(f"- {command}")
 
 
 def _format_bool(value: bool | None) -> str:
@@ -234,6 +261,7 @@ def _format_value(value: object) -> str:
 
 def _write_markdown_report(report: PublicationReport, path: Path) -> None:
     next_actions = _next_action_lines(report)
+    publish_commands = _publish_command_lines(report)
     lines = [
         "# cliany-site Release Publication",
         "",
@@ -265,6 +293,10 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
         lines.extend(["", "## Next Actions", "", *next_actions])
     else:
         lines.extend(["", "## Next Actions", "", "- Release branch and tag are published."])
+    if publish_commands:
+        lines.extend(["", "## Publish Commands", "", "```bash", *publish_commands, "```"])
+    else:
+        lines.extend(["", "## Publish Commands", "", "- No publish commands are needed."])
 
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/check_release_publication.py` 现在输出 `publish_commands`，把需要维护者审阅执行的 branch/tag push 和远端复核命令集中到 JSON、文本和 Markdown report。
+- 新增 `docs/releases/v0.16.9-draft.md`，把下一版 patch release 聚焦到 release publication handoff 命令。
+
 ## [0.16.8] - 2026-06-12
 
 ### Added

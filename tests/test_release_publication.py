@@ -73,6 +73,11 @@ def test_release_publication_reports_unpushed_release_commit_and_tag(tmp_path):
         ),
         "- Rerun with `--remote` when network access is available to verify live remote refs.",
     ]
+    assert report.to_dict()["publish_commands"] == [
+        "git push origin master",
+        "git push origin v0.1.1",
+        "python scripts/check_release_publication.py --remote --json",
+    ]
 
 
 def test_release_publication_remote_check_reports_missing_remote_tag(tmp_path):
@@ -91,6 +96,10 @@ def test_release_publication_remote_check_reports_missing_remote_tag(tmp_path):
     assert report.to_dict()["next_actions"] == [
         "- Push tag `v0.1.1` to `origin`; remote tag is missing or stale."
     ]
+    assert report.to_dict()["publish_commands"] == [
+        "git push origin v0.1.1",
+        "python scripts/check_release_publication.py --remote --json",
+    ]
 
 
 def test_release_publication_text_output_includes_next_actions(tmp_path, capsys):
@@ -106,6 +115,8 @@ def test_release_publication_text_output_includes_next_actions(tmp_path, capsys)
     assert "latest_tag: v0.1.1" in output
     assert "next_actions:" in output
     assert "Push `master` to `origin`" in output
+    assert "publish_commands:" in output
+    assert "git push origin master" in output
 
 
 def test_release_publication_writes_markdown_report(tmp_path):
@@ -124,6 +135,9 @@ def test_release_publication_writes_markdown_report(tmp_path):
     assert "| remote_checked | `true` |" in text
     assert "## Refs" in text
     assert "## Next Actions" in text
+    assert "## Publish Commands" in text
+    assert "git push origin v0.1.1" in text
+    assert "python scripts/check_release_publication.py --remote --json" in text
     assert "- Push tag `v0.1.1` to `origin`; remote tag is missing or stale." in text
 
 
