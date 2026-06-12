@@ -17,6 +17,39 @@ from typing import Any
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
 ARTIFACT_MANIFEST_SCHEMA_VERSION = 1
+ARTIFACT_MANIFEST_KEYS = (
+    "schema_version",
+    "target_version",
+    "artifact_bundle_summary",
+    "candidate_count",
+    "candidate_cases",
+    "blockers",
+    "next_actions",
+    "candidate_issue_gate",
+    "publication_ok",
+    "publication_visibility",
+    "publication_next_actions",
+    "publication_publish_commands",
+    "publication_ref_context",
+    "publication_worktree_clean",
+    "publication_worktree_status",
+    "publication_publish_script_path",
+    "publication_publish_script_path_sha256",
+    "publication_publish_script_command",
+    "publication_publish_script_command_sha256",
+    "release_draft_path",
+    "release_draft_issues",
+    "issue_artifacts_command",
+    "create_issues_dry_run_command",
+    "create_issues_safety",
+    "issue_body_inventory",
+    "issue_body_summary",
+    "issue_metadata_summary",
+    "files",
+    "review_order",
+    "review_checklist",
+    "validation_commands",
+)
 PUBLICATION_PUBLISH_SCRIPT_PATH = "/tmp/cliany-publish-release.sh"
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
@@ -1689,6 +1722,8 @@ def _issue_artifact_bundle_summary(
     release_draft_required_actions = _release_draft_required_actions(plan.release_draft_issues)
     return {
         "artifact_manifest_schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
+        "artifact_manifest_key_count": len(ARTIFACT_MANIFEST_KEYS),
+        "artifact_manifest_keys_sha256": _stable_json_sha256(ARTIFACT_MANIFEST_KEYS),
         "target_version": plan.target_version,
         "candidate_count": len(candidate_cases),
         "candidate_cases_sha256": _stable_json_sha256(candidate_cases),
@@ -1837,6 +1872,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             "",
             "- artifact_manifest_schema_version: "
             f"`{summary['artifact_manifest_schema_version']}`",
+            f"- artifact_manifest_key_count: `{summary['artifact_manifest_key_count']}`",
+            f"- artifact_manifest_keys_sha256: `{summary['artifact_manifest_keys_sha256']}`",
             f"- target_version: `{summary['target_version']}`",
             f"- candidate_count: `{summary['candidate_count']}`",
             f"- candidate_cases_sha256: `{summary['candidate_cases_sha256']}`",

@@ -681,6 +681,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     candidate_issue_gate_reason_descriptions = _blocked_candidate_issue_gate()["reason_descriptions"]
     artifact_bundle_summary = {
         "artifact_manifest_schema_version": plan_next_iteration.ARTIFACT_MANIFEST_SCHEMA_VERSION,
+        "artifact_manifest_key_count": len(plan_next_iteration.ARTIFACT_MANIFEST_KEYS),
+        "artifact_manifest_keys_sha256": _stable_json_sha256(
+            plan_next_iteration.ARTIFACT_MANIFEST_KEYS
+        ),
         "target_version": "0.16.2",
         "candidate_count": 2,
         "candidate_cases_sha256": _stable_json_sha256(["pypi-project-search", "npm-package-search"]),
@@ -965,6 +969,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "python scripts/validate_cases.py --strict",
         ],
     }
+    assert list(artifact_manifest) == list(plan_next_iteration.ARTIFACT_MANIFEST_KEYS)
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1014,6 +1019,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "artifact_manifest_schema_version: "
         f"`{plan_next_iteration.ARTIFACT_MANIFEST_SCHEMA_VERSION}`"
+    ) in readme
+    assert (
+        f"artifact_manifest_key_count: `{len(plan_next_iteration.ARTIFACT_MANIFEST_KEYS)}`"
+    ) in readme
+    assert (
+        "artifact_manifest_keys_sha256: "
+        f"`{_stable_json_sha256(plan_next_iteration.ARTIFACT_MANIFEST_KEYS)}`"
     ) in readme
     assert "target_version: `0.16.2`" in readme
     assert "candidate_count: `2`" in readme
