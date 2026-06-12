@@ -13,6 +13,7 @@
 ### Changed
 - 官网首页和文档页的 quickstart 现在明确展示 `10 分钟成功路径`，优先引导用户安装、验证并执行真实 demo adapter，而不是先配置 LLM 后 explore。
 - `release_readiness.py` 的项目元数据 gate 现在会检查官网首页和官网 docs 是否保留 10 分钟成功路径，防止网站入口退回旧 quickstart。
+- `release_readiness.py` 的项目元数据 gate 现在会检查 `docs/quickstart-10min.md` 是否保留 doctor、demo adapter install/verify/只读命令和无 LLM key 分叉提示。
 - `docs/release-cadence.md` 现在说明 minor release 应使用 `release_readiness.py --target-version 0.15.0` 跟踪目标版本，避免默认下一 patch 草案与路线图目标脱节。
 - `release_readiness.py --release-tag` 现在要求目标 tag 指向当前 HEAD，避免在 tag 后继续提交时误把后续工作区当作已打 tag 的发布状态。
 

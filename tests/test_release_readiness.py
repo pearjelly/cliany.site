@@ -845,6 +845,26 @@ def test_release_readiness_blocks_missing_weekly_loop_link(tmp_path):
     )
 
 
+def test_release_readiness_blocks_stale_quickstart_path(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "docs" / "quickstart-10min.md").write_text(
+        "# 快速开始\n\ncliany-site explore \"https://github.com\" \"search repos\" --json\n",
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert "open source metadata file missing snippet: docs/quickstart-10min.md: 10 分钟成功路径" in (
+        report.project_metadata.issues
+    )
+    assert (
+        "open source metadata file missing snippet: docs/quickstart-10min.md: "
+        "cliany-site verify issues.apache.org --json"
+    ) in report.project_metadata.issues
+
+
 def test_release_readiness_blocks_release_workflow_without_strict_preflight(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     release_workflow = _release_workflow().replace(
