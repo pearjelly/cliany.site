@@ -59,6 +59,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "artifact_bundle_summary_key_tail_count",
     "artifact_bundle_summary_key_tail",
     "artifact_bundle_summary_key_tail_sha256",
+    "artifact_bundle_summary_first_key",
+    "artifact_bundle_summary_last_key",
+    "artifact_bundle_summary_key_boundary_sha256",
     "artifact_manifest_schema_version",
     "artifact_manifest_key_count",
     "artifact_manifest_keys_sha256",
@@ -159,6 +162,10 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
 )
 ARTIFACT_BUNDLE_SUMMARY_KEY_PREVIEW = ARTIFACT_BUNDLE_SUMMARY_KEYS[:8]
 ARTIFACT_BUNDLE_SUMMARY_KEY_TAIL = ARTIFACT_BUNDLE_SUMMARY_KEYS[-8:]
+ARTIFACT_BUNDLE_SUMMARY_KEY_BOUNDARY = {
+    "first_key": ARTIFACT_BUNDLE_SUMMARY_KEYS[0],
+    "last_key": ARTIFACT_BUNDLE_SUMMARY_KEYS[-1],
+}
 PUBLICATION_PUBLISH_SCRIPT_PATH = "/tmp/cliany-publish-release.sh"
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
@@ -1893,6 +1900,11 @@ def _issue_artifact_bundle_summary(
         "artifact_bundle_summary_key_tail_sha256": _stable_json_sha256(
             ARTIFACT_BUNDLE_SUMMARY_KEY_TAIL
         ),
+        "artifact_bundle_summary_first_key": ARTIFACT_BUNDLE_SUMMARY_KEY_BOUNDARY["first_key"],
+        "artifact_bundle_summary_last_key": ARTIFACT_BUNDLE_SUMMARY_KEY_BOUNDARY["last_key"],
+        "artifact_bundle_summary_key_boundary_sha256": _stable_json_sha256(
+            ARTIFACT_BUNDLE_SUMMARY_KEY_BOUNDARY
+        ),
         "artifact_manifest_schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "artifact_manifest_key_count": len(ARTIFACT_MANIFEST_KEYS),
         "artifact_manifest_keys_sha256": _stable_json_sha256(ARTIFACT_MANIFEST_KEYS),
@@ -2065,6 +2077,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{json.dumps(summary['artifact_bundle_summary_key_tail'], ensure_ascii=False)}`",
             "- artifact_bundle_summary_key_tail_sha256: "
             f"`{summary['artifact_bundle_summary_key_tail_sha256']}`",
+            "- artifact_bundle_summary_first_key: "
+            f"`{summary['artifact_bundle_summary_first_key']}`",
+            "- artifact_bundle_summary_last_key: "
+            f"`{summary['artifact_bundle_summary_last_key']}`",
+            "- artifact_bundle_summary_key_boundary_sha256: "
+            f"`{summary['artifact_bundle_summary_key_boundary_sha256']}`",
             "- artifact_manifest_schema_version: "
             f"`{summary['artifact_manifest_schema_version']}`",
             f"- artifact_manifest_key_count: `{summary['artifact_manifest_key_count']}`",

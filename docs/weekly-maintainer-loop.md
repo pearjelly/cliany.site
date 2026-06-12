@@ -37,6 +37,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `artifact_bundle_summary_key_tail_count`、`artifact_bundle_summary_key_tail` 和 `artifact_bundle_summary_key_tail_sha256`，让工具只读整包摘要就能检查 summary 末尾字段的顺序与内容，避免只看前缀时遗漏尾部字段漂移。
 
+`artifact_bundle_summary` 还会带上 `artifact_bundle_summary_first_key`、`artifact_bundle_summary_last_key` 和 `artifact_bundle_summary_key_boundary_sha256`，让工具不展开完整字段清单也能先确认 summary 首尾字段边界是否符合预期。
+
 `artifact_bundle_summary.review_order_sha256` 会对 `review_order` 做稳定 SHA-256 摘要；artifacts `README.md` 的 `Artifact Bundle Summary` 也会展示 `review_order_sha256`，让工具能先检查 review order hash，再决定是否展开完整 manifest。
 
 `artifact_bundle_summary` 还会带上 `artifact_manifest_schema_version`、`artifact_manifest_key_count` 和 `artifact_manifest_keys_sha256`，让工具只读整包摘要就能判断 `artifact-manifest.json` 的字段语义版本、顶层字段规模和字段清单是否漂移，再决定是否展开完整 manifest。
