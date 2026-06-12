@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.15.6] - 2026-06-12
+
 ### Changed
 - 候选案例文档和 Good First Issues 现在把 `adapter_package`、`metadata_validation`、`online_smoke` 拆成独立可验收子任务，帮助贡献者推进 candidate 案例晋级 active。
 
@@ -437,7 +439,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.5...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.6...HEAD
+[0.15.6]: https://github.com/pearjelly/cliany.site/compare/v0.15.5...v0.15.6
 [0.15.5]: https://github.com/pearjelly/cliany.site/compare/v0.15.4...v0.15.5
 [0.15.4]: https://github.com/pearjelly/cliany.site/compare/v0.15.3...v0.15.4
 [0.15.3]: https://github.com/pearjelly/cliany.site/compare/v0.15.2...v0.15.3
