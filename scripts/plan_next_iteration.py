@@ -1392,6 +1392,10 @@ def _issue_artifact_bundle_summary(
         "inventory_sha256": issue_body_summary["inventory_sha256"],
         "candidate_issue_gate_status": plan.candidate_issue_gate.get("status"),
         "can_create_issues": bool(plan.candidate_issue_gate.get("can_create_issues", False)),
+        "candidate_issue_gate_reason_code_count": plan.candidate_issue_gate.get("reason_code_count"),
+        "candidate_issue_gate_reason_codes_sha256": plan.candidate_issue_gate.get("reason_codes_sha256"),
+        "candidate_issue_gate_required_action_count": plan.candidate_issue_gate.get("required_action_count"),
+        "candidate_issue_gate_required_actions_sha256": plan.candidate_issue_gate.get("required_actions_sha256"),
         "dry_run_supported": bool(create_issues_safety["dry_run_supported"]),
         "preflight_required": bool(create_issues_safety["preflight_required"]),
     }
@@ -1427,6 +1431,11 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- inventory_sha256: `{summary['inventory_sha256']}`",
             f"- candidate_issue_gate_status: `{summary['candidate_issue_gate_status']}`",
             f"- can_create_issues: `{str(summary['can_create_issues']).lower()}`",
+            f"- candidate_issue_gate_reason_code_count: `{summary['candidate_issue_gate_reason_code_count']}`",
+            f"- candidate_issue_gate_reason_codes_sha256: `{summary['candidate_issue_gate_reason_codes_sha256']}`",
+            f"- candidate_issue_gate_required_action_count: `{summary['candidate_issue_gate_required_action_count']}`",
+            "- candidate_issue_gate_required_actions_sha256: "
+            f"`{summary['candidate_issue_gate_required_actions_sha256']}`",
             f"- dry_run_supported: `{str(summary['dry_run_supported']).lower()}`",
             f"- preflight_required: `{str(summary['preflight_required']).lower()}`",
         ]

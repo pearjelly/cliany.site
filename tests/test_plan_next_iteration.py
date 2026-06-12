@@ -526,6 +526,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "inventory_sha256": issue_body_summary["inventory_sha256"],
         "candidate_issue_gate_status": "blocked_by_publication",
         "can_create_issues": False,
+        "candidate_issue_gate_reason_code_count": _blocked_candidate_issue_gate()["reason_code_count"],
+        "candidate_issue_gate_reason_codes_sha256": _blocked_candidate_issue_gate()["reason_codes_sha256"],
+        "candidate_issue_gate_required_action_count": _blocked_candidate_issue_gate()["required_action_count"],
+        "candidate_issue_gate_required_actions_sha256": _blocked_candidate_issue_gate()["required_actions_sha256"],
         "dry_run_supported": True,
         "preflight_required": True,
     }
@@ -741,6 +745,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert f"review_order_sha256: `{review_order_sha256}`" in readme
     assert "candidate_issue_gate_status: `blocked_by_publication`" in readme
     assert "can_create_issues: `false`" in readme
+    assert "candidate_issue_gate_reason_code_count: `3`" in readme
+    assert (
+        f"candidate_issue_gate_reason_codes_sha256: "
+        f"`{_blocked_candidate_issue_gate()['reason_codes_sha256']}`"
+    ) in readme
+    assert "candidate_issue_gate_required_action_count: `5`" in readme
+    assert (
+        f"candidate_issue_gate_required_actions_sha256: "
+        f"`{_blocked_candidate_issue_gate()['required_actions_sha256']}`"
+    ) in readme
     assert "dry_run_supported: `true`" in readme
     assert "preflight_required: `true`" in readme
     assert "## Publication Handoff" in readme
