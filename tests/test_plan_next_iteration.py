@@ -384,6 +384,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "## Publication Handoff" in readme
     assert "publication_ok: `false`" in readme
     assert "visibility: `dirty_worktree`" in readme
+    assert (
+        "visibility_summary: Worktree has uncommitted changes; "
+        "resolve them before publishing release refs."
+    ) in readme
     assert "latest_tag: `v0.16.1`" in readme
     assert "local_head: `abc123`" in readme
     assert "worktree_clean: `false`" in readme

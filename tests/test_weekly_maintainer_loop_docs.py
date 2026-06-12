@@ -54,6 +54,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "Candidate Summary",
         "Publication Handoff",
         "visibility",
+        "visibility summary",
         "Publication Next Actions",
         "ref context",
         "worktree_clean",

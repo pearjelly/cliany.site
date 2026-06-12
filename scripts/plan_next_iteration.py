@@ -805,6 +805,7 @@ Generated for target version `{plan.target_version}`.
 
 - publication_ok: `{str(plan.publication_ok).lower()}`
 - visibility: `{_format_context_value(plan.publication_visibility.get("status"))}`
+- visibility_summary: {_format_context_value(plan.publication_visibility.get("summary"))}
 - latest_tag: `{_format_context_value(plan.publication_ref_context.get("latest_tag"))}`
 - local_head: `{_format_context_value(plan.publication_ref_context.get("local_head"))}`
 - worktree_clean: `{str(plan.publication_worktree_clean).lower()}`
