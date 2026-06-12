@@ -1048,11 +1048,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         json.dumps(publication_handoff, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
-    release_draft_handoff = {
-        "release_draft_path": plan.release_draft_path,
-        "release_draft_issues": plan.release_draft_issues,
-        "target_version": plan.target_version,
-    }
+    release_draft_handoff = _release_draft_handoff(plan)
     (directory / "release-draft-handoff.json").write_text(
         json.dumps(release_draft_handoff, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -1325,6 +1321,14 @@ def _issue_artifact_create_issues_safety_contract(create_issues_safety: dict[str
     }
 
 
+def _release_draft_handoff(plan: IterationPlan) -> dict[str, Any]:
+    return {
+        "release_draft_path": plan.release_draft_path,
+        "release_draft_issues": plan.release_draft_issues,
+        "target_version": plan.target_version,
+    }
+
+
 def _issue_body_inventory(promotions: list[CandidatePromotion]) -> list[dict[str, Any]]:
     inventory: list[dict[str, Any]] = []
     for promotion in promotions:
@@ -1432,6 +1436,7 @@ def _issue_artifact_bundle_summary(
         separators=(",", ":"),
     ).encode()
     create_issues_safety_contract = _issue_artifact_create_issues_safety_contract(create_issues_safety)
+    release_draft_handoff = _release_draft_handoff(plan)
     return {
         "target_version": plan.target_version,
         "candidate_count": len(candidate_cases),
@@ -1453,6 +1458,8 @@ def _issue_artifact_bundle_summary(
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
         "publication_worktree_status_count": len(plan.publication_worktree_status),
         "publication_worktree_status_sha256": _stable_json_sha256(plan.publication_worktree_status),
+        "release_draft_handoff_key_count": len(release_draft_handoff),
+        "release_draft_handoff_sha256": _stable_json_sha256(release_draft_handoff),
         "validation_command_count": len(_issue_artifact_validation_commands(plan)),
         "validation_commands_sha256": _stable_json_sha256(_issue_artifact_validation_commands(plan)),
         "review_checklist_count": len(_issue_artifact_review_checklist()),
@@ -1516,6 +1523,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- publication_publish_commands_sha256: `{summary['publication_publish_commands_sha256']}`",
             f"- publication_worktree_status_count: `{summary['publication_worktree_status_count']}`",
             f"- publication_worktree_status_sha256: `{summary['publication_worktree_status_sha256']}`",
+            f"- release_draft_handoff_key_count: `{summary['release_draft_handoff_key_count']}`",
+            f"- release_draft_handoff_sha256: `{summary['release_draft_handoff_sha256']}`",
             f"- validation_command_count: `{summary['validation_command_count']}`",
             f"- validation_commands_sha256: `{summary['validation_commands_sha256']}`",
             f"- review_checklist_count: `{summary['review_checklist_count']}`",

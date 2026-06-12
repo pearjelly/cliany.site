@@ -517,6 +517,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "metadata_count": len(stable_issue_metadata),
         "metadata_sha256": _stable_json_sha256(stable_issue_metadata),
     }
+    expected_release_draft_handoff = {
+        "release_draft_path": "docs/releases/v0.16.2-draft.md",
+        "release_draft_issues": [
+            "release draft is missing",
+            "release draft missing snippet: ## 发版前验证",
+        ],
+        "target_version": "0.16.2",
+    }
     review_order = [
         "README.md",
         "publication-handoff.json",
@@ -554,6 +562,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
         "publication_worktree_status_count": len(plan.publication_worktree_status),
         "publication_worktree_status_sha256": _stable_json_sha256(plan.publication_worktree_status),
+        "release_draft_handoff_key_count": len(expected_release_draft_handoff),
+        "release_draft_handoff_sha256": _stable_json_sha256(expected_release_draft_handoff),
         "validation_command_count": 5,
         "validation_commands_sha256": _stable_json_sha256(
             [
@@ -768,14 +778,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "--publish-script /tmp/cliany-publish-release.sh"
         ),
     }
-    assert release_draft_handoff == {
-        "release_draft_path": "docs/releases/v0.16.2-draft.md",
-        "release_draft_issues": [
-            "release draft is missing",
-            "release draft missing snippet: ## 发版前验证",
-        ],
-        "target_version": "0.16.2",
-    }
+    assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
     assert 'REPO_ROOT="$(git rev-parse --show-toplevel)"' in script
     assert 'cd "$REPO_ROOT"' in script
@@ -850,6 +853,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"publication_worktree_status_sha256: "
         f"`{_stable_json_sha256(plan.publication_worktree_status)}`"
+    ) in readme
+    assert "release_draft_handoff_key_count: `3`" in readme
+    assert (
+        f"release_draft_handoff_sha256: "
+        f"`{artifact_bundle_summary['release_draft_handoff_sha256']}`"
     ) in readme
     assert "validation_command_count: `5`" in readme
     assert (

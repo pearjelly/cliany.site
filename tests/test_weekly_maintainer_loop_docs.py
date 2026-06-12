@@ -52,6 +52,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "publication_publish_commands_sha256",
         "publication_worktree_status_count",
         "publication_worktree_status_sha256",
+        "release_draft_handoff_key_count",
+        "release_draft_handoff_sha256",
         "validation_command_count",
         "validation_commands_sha256",
         "review_checklist_count",
