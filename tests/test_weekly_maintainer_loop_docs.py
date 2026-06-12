@@ -184,6 +184,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "artifact_files_key_count",
         "artifact_files_sha256",
         "issue_artifacts_command_sha256",
+        "publication_visibility_key_count",
         "publication_visibility_sha256",
         "publication_visibility_summary_sha256",
         "byte_count",

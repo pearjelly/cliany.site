@@ -605,6 +605,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "artifact_files_key_count": len(expected_artifact_files),
         "artifact_files_sha256": _stable_json_sha256(expected_artifact_files),
         "issue_artifacts_command_sha256": _stable_json_sha256(plan.issue_artifacts_command),
+        "publication_visibility_key_count": len(plan.publication_visibility),
         "publication_visibility_sha256": _stable_json_sha256(plan.publication_visibility),
         "publication_visibility_summary_sha256": _stable_json_sha256(
             plan.publication_visibility["summary"]
@@ -873,6 +874,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"issue_artifacts_command_sha256: "
         f"`{artifact_bundle_summary['issue_artifacts_command_sha256']}`"
+    ) in readme
+    assert (
+        f"publication_visibility_key_count: "
+        f"`{artifact_bundle_summary['publication_visibility_key_count']}`"
     ) in readme
     assert (
         f"publication_visibility_sha256: "

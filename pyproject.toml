@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cliany-site"
-version = "0.16.94"
+version = "0.16.95"
 description = "Turn browser workflows into reusable site-specific CLI commands."
 readme = "README.md"
 requires-python = ">=3.11"

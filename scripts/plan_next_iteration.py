@@ -1482,6 +1482,7 @@ def _issue_artifact_bundle_summary(
         "artifact_files_key_count": len(artifact_files),
         "artifact_files_sha256": _stable_json_sha256(artifact_files),
         "issue_artifacts_command_sha256": _stable_json_sha256(plan.issue_artifacts_command),
+        "publication_visibility_key_count": len(plan.publication_visibility),
         "publication_visibility_sha256": _stable_json_sha256(plan.publication_visibility),
         "publication_visibility_summary_sha256": _stable_json_sha256(
             plan.publication_visibility.get("summary")
@@ -1572,6 +1573,7 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- artifact_files_key_count: `{summary['artifact_files_key_count']}`",
             f"- artifact_files_sha256: `{summary['artifact_files_sha256']}`",
             f"- issue_artifacts_command_sha256: `{summary['issue_artifacts_command_sha256']}`",
+            f"- publication_visibility_key_count: `{summary['publication_visibility_key_count']}`",
             f"- publication_visibility_sha256: `{summary['publication_visibility_sha256']}`",
             "- publication_visibility_summary_sha256: "
             f"`{summary['publication_visibility_summary_sha256']}`",
