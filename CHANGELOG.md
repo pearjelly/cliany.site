@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.215] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `release_draft_handoff_key_preview_count`、`release_draft_handoff_key_preview` 和 `release_draft_handoff_key_preview_sha256`，让只读取整包摘要的维护工具能检查 `release-draft-handoff.json` 字段清单前窗口。
+- `artifact_bundle_summary` 现在输出 `release_draft_handoff_key_tail_count`、`release_draft_handoff_key_tail` 和 `release_draft_handoff_key_tail_sha256`，让 release draft handoff 字段清单尾部窗口也可审计。
+- 新增 `docs/releases/v0.16.215-draft.md`，把下一版 patch release 聚焦到 release draft handoff key preview/tail 可见性。
+
 ## [0.16.214] - 2026-06-13
 
 ### Added
@@ -1903,7 +1910,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.214...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.215...HEAD
+[0.16.215]: https://github.com/pearjelly/cliany.site/compare/v0.16.214...v0.16.215
 [0.16.214]: https://github.com/pearjelly/cliany.site/compare/v0.16.213...v0.16.214
 [0.16.213]: https://github.com/pearjelly/cliany.site/compare/v0.16.212...v0.16.213
 [0.16.212]: https://github.com/pearjelly/cliany.site/compare/v0.16.211...v0.16.212
