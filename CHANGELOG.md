@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.55] - 2026-06-12
+
+### Added
+- `candidate_issue_gate.evidence` 现在包含 `publication_worktree_clean` 和 `release_draft_ok`，让维护者和自动化能直接审计 worktree 与 release draft 门禁状态。
+- Next iteration Markdown report 和 candidate issue artifacts README 现在展示这两个布尔 gate evidence 字段。
+- 新增 `docs/releases/v0.16.55-draft.md`，把下一版 patch release 聚焦到 candidate issue gate 的布尔判定证据。
+
 ## [0.16.54] - 2026-06-12
 
 ### Changed
@@ -785,7 +792,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.54...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.55...HEAD
+[0.16.55]: https://github.com/pearjelly/cliany.site/compare/v0.16.54...v0.16.55
 [0.16.54]: https://github.com/pearjelly/cliany.site/compare/v0.16.53...v0.16.54
 [0.16.53]: https://github.com/pearjelly/cliany.site/compare/v0.16.52...v0.16.53
 [0.16.52]: https://github.com/pearjelly/cliany.site/compare/v0.16.51...v0.16.52
