@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.48] - 2026-06-12
+
+### Added
+- `artifact-manifest.json` 的 `validation_commands` 现在包含 `python scripts/check_release_publication.py --json`，让候选任务产物包直接给出发布可见性复核命令。
+- 新增 `docs/releases/v0.16.48-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts manifest 的 publication audit 验证命令。
+
 ## [0.16.47] - 2026-06-12
 
 ### Added
@@ -741,7 +747,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.47...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.48...HEAD
+[0.16.48]: https://github.com/pearjelly/cliany.site/compare/v0.16.47...v0.16.48
 [0.16.47]: https://github.com/pearjelly/cliany.site/compare/v0.16.46...v0.16.47
 [0.16.46]: https://github.com/pearjelly/cliany.site/compare/v0.16.45...v0.16.46
 [0.16.45]: https://github.com/pearjelly/cliany.site/compare/v0.16.44...v0.16.45
