@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.29] - 2026-06-12
+
 ### Added
 - `scripts/check_release_publication.py --publish-script` 生成的发布脚本现在会带 `Publication context` 注释，展示 branch、tag、HEAD、ahead/behind 和 remote check 状态，方便维护者审阅脚本是否对应当前本地 release。
 - 新增 `docs/releases/v0.16.29-draft.md`，把下一版 patch release 聚焦到 publish script 的发布上下文注释。
@@ -631,7 +633,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.28...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.29...HEAD
+[0.16.29]: https://github.com/pearjelly/cliany.site/compare/v0.16.28...v0.16.29
 [0.16.28]: https://github.com/pearjelly/cliany.site/compare/v0.16.27...v0.16.28
 [0.16.27]: https://github.com/pearjelly/cliany.site/compare/v0.16.26...v0.16.27
 [0.16.26]: https://github.com/pearjelly/cliany.site/compare/v0.16.25...v0.16.26
