@@ -149,6 +149,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 还会带上 `candidate_issue_gate_evidence_key_count` 和 `candidate_issue_gate_evidence_sha256`，让工具只读整包摘要就能判断 gate evidence 是否漂移。
 
+`artifact_bundle_summary` 还会带上 `candidate_issue_gate_evidence_first_key`、`candidate_issue_gate_evidence_last_key` 和 `candidate_issue_gate_evidence_key_boundary_sha256`，让工具只读整包摘要就能检查 gate evidence key 首尾边界。
+
 `artifact_bundle_summary` 还会带上 `blocker_count`、`next_action_count` 和 `publication_next_action_count`，让工具只读整包摘要就能判断本轮待办规模。
 
 `scripts/check_release_publication.py` 的 JSON、默认文本输出和 Markdown report 会展示 `next_action_count` 与 `publish_command_count`，让维护者先判断发布待办规模，再展开具体 next actions 和 publish commands。

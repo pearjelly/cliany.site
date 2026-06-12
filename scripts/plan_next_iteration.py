@@ -312,6 +312,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "candidate_issue_gate_summary_sha256",
     "candidate_issue_gate_evidence_key_count",
     "candidate_issue_gate_evidence_sha256",
+    "candidate_issue_gate_evidence_first_key",
+    "candidate_issue_gate_evidence_last_key",
+    "candidate_issue_gate_evidence_key_boundary_sha256",
     "candidate_issue_gate_reason_description_count",
     "candidate_issue_gate_reason_descriptions_sha256",
     "candidate_issue_gate_reason_code_count",
@@ -2103,6 +2106,15 @@ def _issue_artifact_bundle_summary(
             candidate_issue_gate_primary_reason_code
         )
     candidate_issue_gate_summary = plan.candidate_issue_gate.get("summary")
+    candidate_issue_gate_evidence_keys = list(candidate_issue_gate_evidence)
+    candidate_issue_gate_evidence_key_boundary = {
+        "first_key": candidate_issue_gate_evidence_keys[0]
+        if candidate_issue_gate_evidence_keys
+        else None,
+        "last_key": candidate_issue_gate_evidence_keys[-1]
+        if candidate_issue_gate_evidence_keys
+        else None,
+    }
     release_draft_required_actions = _release_draft_required_actions(plan.release_draft_issues)
     release_draft_required_action_boundary = {
         "first_action": release_draft_required_actions[0]
@@ -2685,6 +2697,15 @@ def _issue_artifact_bundle_summary(
         "candidate_issue_gate_summary_sha256": _stable_json_sha256(candidate_issue_gate_summary),
         "candidate_issue_gate_evidence_key_count": len(candidate_issue_gate_evidence),
         "candidate_issue_gate_evidence_sha256": _stable_json_sha256(candidate_issue_gate_evidence),
+        "candidate_issue_gate_evidence_first_key": candidate_issue_gate_evidence_key_boundary[
+            "first_key"
+        ],
+        "candidate_issue_gate_evidence_last_key": candidate_issue_gate_evidence_key_boundary[
+            "last_key"
+        ],
+        "candidate_issue_gate_evidence_key_boundary_sha256": _stable_json_sha256(
+            candidate_issue_gate_evidence_key_boundary
+        ),
         "candidate_issue_gate_reason_description_count": len(candidate_issue_gate_reason_descriptions),
         "candidate_issue_gate_reason_descriptions_sha256": _stable_json_sha256(
             candidate_issue_gate_reason_descriptions
@@ -3159,6 +3180,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"- candidate_issue_gate_summary_sha256: `{summary['candidate_issue_gate_summary_sha256']}`",
             f"- candidate_issue_gate_evidence_key_count: `{summary['candidate_issue_gate_evidence_key_count']}`",
             f"- candidate_issue_gate_evidence_sha256: `{summary['candidate_issue_gate_evidence_sha256']}`",
+            "- candidate_issue_gate_evidence_first_key: "
+            f"`{summary['candidate_issue_gate_evidence_first_key']}`",
+            "- candidate_issue_gate_evidence_last_key: "
+            f"`{summary['candidate_issue_gate_evidence_last_key']}`",
+            "- candidate_issue_gate_evidence_key_boundary_sha256: "
+            f"`{summary['candidate_issue_gate_evidence_key_boundary_sha256']}`",
             "- candidate_issue_gate_reason_description_count: "
             f"`{summary['candidate_issue_gate_reason_description_count']}`",
             "- candidate_issue_gate_reason_descriptions_sha256: "

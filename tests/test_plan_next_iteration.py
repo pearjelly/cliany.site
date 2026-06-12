@@ -779,6 +779,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     review_order_preview = review_order[:8]
     review_order_tail = review_order[-8:]
     candidate_issue_gate_evidence = _blocked_candidate_issue_gate()["evidence"]
+    candidate_issue_gate_evidence_keys = list(candidate_issue_gate_evidence)
+    candidate_issue_gate_evidence_key_boundary = {
+        "first_key": candidate_issue_gate_evidence_keys[0],
+        "last_key": candidate_issue_gate_evidence_keys[-1],
+    }
     candidate_issue_gate_reason_descriptions = _blocked_candidate_issue_gate()["reason_descriptions"]
     create_issues_safety = {
         "script": str(issues_dir / "create-issues.sh"),
@@ -1307,6 +1312,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "candidate_issue_gate_evidence_key_count": len(candidate_issue_gate_evidence),
         "candidate_issue_gate_evidence_sha256": _stable_json_sha256(candidate_issue_gate_evidence),
+        "candidate_issue_gate_evidence_first_key": candidate_issue_gate_evidence_key_boundary[
+            "first_key"
+        ],
+        "candidate_issue_gate_evidence_last_key": candidate_issue_gate_evidence_key_boundary[
+            "last_key"
+        ],
+        "candidate_issue_gate_evidence_key_boundary_sha256": _stable_json_sha256(
+            candidate_issue_gate_evidence_key_boundary
+        ),
         "candidate_issue_gate_reason_description_count": len(candidate_issue_gate_reason_descriptions),
         "candidate_issue_gate_reason_descriptions_sha256": _stable_json_sha256(
             candidate_issue_gate_reason_descriptions
@@ -2487,6 +2501,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"candidate_issue_gate_evidence_sha256: "
         f"`{artifact_bundle_summary['candidate_issue_gate_evidence_sha256']}`"
+    ) in readme
+    assert (
+        "candidate_issue_gate_evidence_first_key: "
+        f"`{artifact_bundle_summary['candidate_issue_gate_evidence_first_key']}`"
+    ) in readme
+    assert (
+        "candidate_issue_gate_evidence_last_key: "
+        f"`{artifact_bundle_summary['candidate_issue_gate_evidence_last_key']}`"
+    ) in readme
+    assert (
+        "candidate_issue_gate_evidence_key_boundary_sha256: "
+        f"`{artifact_bundle_summary['candidate_issue_gate_evidence_key_boundary_sha256']}`"
     ) in readme
     assert "candidate_issue_gate_reason_description_count: `3`" in readme
     assert (
