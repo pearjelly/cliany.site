@@ -260,6 +260,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "candidate_issue_gate_primary_reason_description",
     "candidate_issue_gate_required_action_count",
     "candidate_issue_gate_required_actions_sha256",
+    "candidate_issue_gate_first_required_action",
+    "candidate_issue_gate_last_required_action",
+    "candidate_issue_gate_required_action_boundary_sha256",
     "candidate_issue_gate_primary_required_action",
     "dry_run_supported",
     "preflight_required",
@@ -2018,6 +2021,14 @@ def _issue_artifact_bundle_summary(
         if candidate_issue_gate_reason_codes
         else None,
     }
+    candidate_issue_gate_required_action_boundary = {
+        "first_action": candidate_issue_gate_required_actions[0]
+        if candidate_issue_gate_required_actions
+        else None,
+        "last_action": candidate_issue_gate_required_actions[-1]
+        if candidate_issue_gate_required_actions
+        else None,
+    }
     candidate_issue_gate_primary_reason_description = None
     if candidate_issue_gate_primary_reason_code is not None:
         candidate_issue_gate_primary_reason_description = candidate_issue_gate_reason_descriptions.get(
@@ -2393,6 +2404,15 @@ def _issue_artifact_bundle_summary(
         "candidate_issue_gate_primary_reason_description": candidate_issue_gate_primary_reason_description,
         "candidate_issue_gate_required_action_count": plan.candidate_issue_gate.get("required_action_count"),
         "candidate_issue_gate_required_actions_sha256": plan.candidate_issue_gate.get("required_actions_sha256"),
+        "candidate_issue_gate_first_required_action": candidate_issue_gate_required_action_boundary[
+            "first_action"
+        ],
+        "candidate_issue_gate_last_required_action": candidate_issue_gate_required_action_boundary[
+            "last_action"
+        ],
+        "candidate_issue_gate_required_action_boundary_sha256": _stable_json_sha256(
+            candidate_issue_gate_required_action_boundary
+        ),
         "candidate_issue_gate_primary_required_action": (
             candidate_issue_gate_required_actions[0] if candidate_issue_gate_required_actions else None
         ),
@@ -2732,6 +2752,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"- candidate_issue_gate_required_action_count: `{summary['candidate_issue_gate_required_action_count']}`",
             "- candidate_issue_gate_required_actions_sha256: "
             f"`{summary['candidate_issue_gate_required_actions_sha256']}`",
+            "- candidate_issue_gate_first_required_action: "
+            f"{_summary_inline_code(summary['candidate_issue_gate_first_required_action'])}",
+            "- candidate_issue_gate_last_required_action: "
+            f"{_summary_inline_code(summary['candidate_issue_gate_last_required_action'])}",
+            "- candidate_issue_gate_required_action_boundary_sha256: "
+            f"`{summary['candidate_issue_gate_required_action_boundary_sha256']}`",
             "- candidate_issue_gate_primary_required_action: "
             f"{_summary_inline_code(summary['candidate_issue_gate_primary_required_action'])}",
             f"- dry_run_supported: `{str(summary['dry_run_supported']).lower()}`",

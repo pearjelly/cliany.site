@@ -1155,6 +1155,22 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "candidate_issue_gate_required_action_count": _blocked_candidate_issue_gate()["required_action_count"],
         "candidate_issue_gate_required_actions_sha256": _blocked_candidate_issue_gate()["required_actions_sha256"],
+        "candidate_issue_gate_first_required_action": (
+            "Commit, stash, or discard local worktree changes before publishing release refs."
+        ),
+        "candidate_issue_gate_last_required_action": (
+            "Resolve release draft issue: release draft missing snippet: ## 发版前验证"
+        ),
+        "candidate_issue_gate_required_action_boundary_sha256": _stable_json_sha256(
+            {
+                "first_action": (
+                    "Commit, stash, or discard local worktree changes before publishing release refs."
+                ),
+                "last_action": (
+                    "Resolve release draft issue: release draft missing snippet: ## 发版前验证"
+                ),
+            }
+        ),
         "candidate_issue_gate_primary_required_action": (
             "Commit, stash, or discard local worktree changes before publishing release refs."
         ),
@@ -2100,6 +2116,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"candidate_issue_gate_required_actions_sha256: "
         f"`{_blocked_candidate_issue_gate()['required_actions_sha256']}`"
+    ) in readme
+    assert (
+        "candidate_issue_gate_first_required_action: "
+        f"{plan_next_iteration._summary_inline_code(artifact_bundle_summary['candidate_issue_gate_first_required_action'])}"
+    ) in readme
+    assert (
+        "candidate_issue_gate_last_required_action: "
+        f"{plan_next_iteration._summary_inline_code(artifact_bundle_summary['candidate_issue_gate_last_required_action'])}"
+    ) in readme
+    assert (
+        "candidate_issue_gate_required_action_boundary_sha256: "
+        f"`{artifact_bundle_summary['candidate_issue_gate_required_action_boundary_sha256']}`"
     ) in readme
     assert (
         "candidate_issue_gate_primary_required_action: "
