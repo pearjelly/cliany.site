@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.15.7] - 2026-06-12
+
 ### Changed
 - `scripts/validate_cases.py --report` 现在会输出 `Candidate Promotion Tasks` 小节，把 candidate 案例的 `promotion` 清单转成可复制的 GitHub issue 任务。
 
@@ -442,7 +444,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.6...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.7...HEAD
+[0.15.7]: https://github.com/pearjelly/cliany.site/compare/v0.15.6...v0.15.7
 [0.15.6]: https://github.com/pearjelly/cliany.site/compare/v0.15.5...v0.15.6
 [0.15.5]: https://github.com/pearjelly/cliany.site/compare/v0.15.4...v0.15.5
 [0.15.4]: https://github.com/pearjelly/cliany.site/compare/v0.15.3...v0.15.4
