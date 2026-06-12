@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.60] - 2026-06-12
+
+### Added
+- `artifact-manifest.json` 现在包含 `create_issues_safety`，结构化说明候选 issue 创建脚本的 dry-run 和 publication preflight 行为。
+- Candidate issue artifacts `README.md` 现在展示 `Create Issues Safety` 小节，让维护者直接看到 dry-run、preflight command 和 preflight JSON 路径。
+- 新增 `docs/releases/v0.16.60-draft.md`，把下一版 patch release 聚焦到 candidate issue 创建脚本安全语义的机器可读交接。
+
 ## [0.16.59] - 2026-06-12
 
 ### Added
@@ -820,7 +827,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.59...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.60...HEAD
+[0.16.60]: https://github.com/pearjelly/cliany.site/compare/v0.16.59...v0.16.60
 [0.16.59]: https://github.com/pearjelly/cliany.site/compare/v0.16.58...v0.16.59
 [0.16.58]: https://github.com/pearjelly/cliany.site/compare/v0.16.57...v0.16.58
 [0.16.57]: https://github.com/pearjelly/cliany.site/compare/v0.16.56...v0.16.57
