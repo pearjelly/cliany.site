@@ -47,6 +47,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "publication_visibility_status",
         "publication_remote_checked",
         "publication_ahead_count",
+        "publication_behind_count",
         "release_draft_ok",
         "release_draft_issue_count",
         "candidate_issue_gate_summary_sha256",

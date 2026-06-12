@@ -683,6 +683,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_visibility_status": "dirty_worktree",
         "publication_remote_checked": False,
         "publication_ahead_count": 2,
+        "publication_behind_count": 0,
         "release_draft_ok": False,
         "release_draft_issue_count": 2,
         "candidate_issue_gate_key_count": len(_blocked_candidate_issue_gate()),
@@ -965,6 +966,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "publication_visibility_status: `dirty_worktree`" in readme
     assert "publication_remote_checked: `false`" in readme
     assert "publication_ahead_count: `2`" in readme
+    assert "publication_behind_count: `0`" in readme
     assert "release_draft_ok: `false`" in readme
     assert "release_draft_issue_count: `2`" in readme
     assert f"candidate_issue_gate_key_count: `{len(_blocked_candidate_issue_gate())}`" in readme
