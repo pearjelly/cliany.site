@@ -580,12 +580,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         for item in metadata
     ]
     issue_metadata_preview = stable_issue_metadata[:8]
+    issue_metadata_tail = stable_issue_metadata[-8:]
     issue_metadata_summary = {
         "metadata_count": len(stable_issue_metadata),
         "metadata_sha256": _stable_json_sha256(stable_issue_metadata),
         "metadata_preview_count": len(issue_metadata_preview),
         "metadata_preview": list(issue_metadata_preview),
         "metadata_preview_sha256": _stable_json_sha256(issue_metadata_preview),
+        "metadata_tail_count": len(issue_metadata_tail),
+        "metadata_tail": list(issue_metadata_tail),
+        "metadata_tail_sha256": _stable_json_sha256(issue_metadata_tail),
     }
     expected_release_draft_handoff = {
         "schema_version": 1,
@@ -897,6 +901,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "issue_metadata_preview": list(issue_metadata_summary["metadata_preview"]),
         "issue_metadata_preview_sha256": issue_metadata_summary[
             "metadata_preview_sha256"
+        ],
+        "issue_metadata_tail_count": issue_metadata_summary[
+            "metadata_tail_count"
+        ],
+        "issue_metadata_tail": list(issue_metadata_summary["metadata_tail"]),
+        "issue_metadata_tail_sha256": issue_metadata_summary[
+            "metadata_tail_sha256"
         ],
         "artifact_files_key_count": len(expected_artifact_files),
         "artifact_files_sha256": _stable_json_sha256(expected_artifact_files),
@@ -1295,6 +1306,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert artifact_manifest["artifact_bundle_summary"][
         "issue_metadata_preview"
     ] == artifact_manifest["issue_metadata_summary"]["metadata_preview"]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "issue_metadata_tail"
+    ] == artifact_manifest["issue_metadata_summary"]["metadata_tail"]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1581,6 +1595,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "issue_metadata_preview_sha256: "
         f"`{artifact_bundle_summary['issue_metadata_preview_sha256']}`"
+    ) in readme
+    assert (
+        "issue_metadata_tail_count: "
+        f"`{artifact_bundle_summary['issue_metadata_tail_count']}`"
+    ) in readme
+    assert "issue_metadata_tail: " in readme
+    assert (
+        "issue_metadata_tail_sha256: "
+        f"`{artifact_bundle_summary['issue_metadata_tail_sha256']}`"
     ) in readme
     assert "artifact_files_key_count: `6`" in readme
     assert f"artifact_files_sha256: `{artifact_bundle_summary['artifact_files_sha256']}`" in readme

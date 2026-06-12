@@ -91,6 +91,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `issue_metadata_preview_count`、`issue_metadata_preview` 和 `issue_metadata_preview_sha256`，让工具只读整包摘要就能看到 issue metadata 入口，并判断 metadata preview 是否漂移。
 
+`artifact_bundle_summary` 也会带上 `issue_metadata_tail_count`、`issue_metadata_tail` 和 `issue_metadata_tail_sha256`，让工具只读整包摘要就能检查 issue metadata 末尾入口，并判断 metadata tail 是否漂移。
+
 `artifact_bundle_summary` 还会带上 `artifact_files_key_count` 和 `artifact_files_sha256`，让工具只读整包摘要就能判断 artifacts 文件映射是否漂移。
 
 `artifact_bundle_summary` 还会带上 `issue_artifacts_command_sha256`，让工具只读整包摘要就能判断 artifacts 复现命令是否漂移。

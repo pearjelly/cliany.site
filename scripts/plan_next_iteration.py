@@ -136,6 +136,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "issue_metadata_preview_count",
     "issue_metadata_preview",
     "issue_metadata_preview_sha256",
+    "issue_metadata_tail_count",
+    "issue_metadata_tail",
+    "issue_metadata_tail_sha256",
     "artifact_files_key_count",
     "artifact_files_sha256",
     "issue_artifacts_command_sha256",
@@ -1810,6 +1813,7 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
         for item in metadata
     ]
     metadata_preview = stable_metadata[:8]
+    metadata_tail = stable_metadata[-8:]
     digest_source = json.dumps(stable_metadata, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
     return {
         "metadata_count": len(stable_metadata),
@@ -1817,6 +1821,9 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
         "metadata_preview_count": len(metadata_preview),
         "metadata_preview": list(metadata_preview),
         "metadata_preview_sha256": _stable_json_sha256(metadata_preview),
+        "metadata_tail_count": len(metadata_tail),
+        "metadata_tail": list(metadata_tail),
+        "metadata_tail_sha256": _stable_json_sha256(metadata_tail),
     }
 
 
@@ -2127,6 +2134,13 @@ def _issue_artifact_bundle_summary(
         "issue_metadata_preview_sha256": issue_metadata_summary[
             "metadata_preview_sha256"
         ],
+        "issue_metadata_tail_count": issue_metadata_summary[
+            "metadata_tail_count"
+        ],
+        "issue_metadata_tail": list(issue_metadata_summary["metadata_tail"]),
+        "issue_metadata_tail_sha256": issue_metadata_summary[
+            "metadata_tail_sha256"
+        ],
         "artifact_files_key_count": len(artifact_files),
         "artifact_files_sha256": _stable_json_sha256(artifact_files),
         "issue_artifacts_command_sha256": _stable_json_sha256(plan.issue_artifacts_command),
@@ -2396,6 +2410,10 @@ def _issue_artifact_bundle_summary_markdown(
             "- issue_metadata_preview: "
             f"`{json.dumps(summary['issue_metadata_preview'], ensure_ascii=False)}`",
             f"- issue_metadata_preview_sha256: `{summary['issue_metadata_preview_sha256']}`",
+            f"- issue_metadata_tail_count: `{summary['issue_metadata_tail_count']}`",
+            "- issue_metadata_tail: "
+            f"`{json.dumps(summary['issue_metadata_tail'], ensure_ascii=False)}`",
+            f"- issue_metadata_tail_sha256: `{summary['issue_metadata_tail_sha256']}`",
             f"- artifact_files_key_count: `{summary['artifact_files_key_count']}`",
             f"- artifact_files_sha256: `{summary['artifact_files_sha256']}`",
             f"- issue_artifacts_command_sha256: `{summary['issue_artifacts_command_sha256']}`",
