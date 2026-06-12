@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.129] - 2026-06-13
+
+### Added
+- `scripts/plan_next_iteration.py` 现在输出 `publication_publish_script_path`，让计划 JSON、文本输出和 Markdown report 直接展示可审阅发布脚本的默认路径。
+- Candidate issue artifacts `README.md`、`artifact-manifest.json` 和 `publication-handoff.json` 现在保留发布脚本路径；`artifact_bundle_summary` 新增 `publication_publish_script_path_sha256` 便于检测路径漂移。
+- 新增 `docs/releases/v0.16.129-draft.md`，把下一版 patch release 聚焦到 publication publish script path 的结构化可见性。
+
 ## [0.16.128] - 2026-06-12
 
 ### Added
@@ -1301,7 +1308,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.128...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.129...HEAD
+[0.16.129]: https://github.com/pearjelly/cliany.site/compare/v0.16.128...v0.16.129
 [0.16.128]: https://github.com/pearjelly/cliany.site/compare/v0.16.127...v0.16.128
 [0.16.127]: https://github.com/pearjelly/cliany.site/compare/v0.16.126...v0.16.127
 [0.16.126]: https://github.com/pearjelly/cliany.site/compare/v0.16.125...v0.16.126
