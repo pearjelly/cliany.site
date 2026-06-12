@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.127] - 2026-06-12
+
+### Added
+- Candidate issue artifacts `README.md` 的 `Candidate Issue Gate Quick Summary` 现在展示 `publication_publish_command_count`，方便维护者先判断发布命令规模。
+- [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 说明 quick summary 会展示 publication publish command 数量。
+- 新增 `docs/releases/v0.16.127-draft.md`，把下一版 patch release 聚焦到 candidate issue gate quick summary 的发布命令数量可见性。
+
 ## [0.16.126] - 2026-06-12
 
 ### Fixed
@@ -1287,7 +1294,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.126...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.127...HEAD
+[0.16.127]: https://github.com/pearjelly/cliany.site/compare/v0.16.126...v0.16.127
 [0.16.126]: https://github.com/pearjelly/cliany.site/compare/v0.16.125...v0.16.126
 [0.16.125]: https://github.com/pearjelly/cliany.site/compare/v0.16.124...v0.16.125
 [0.16.124]: https://github.com/pearjelly/cliany.site/compare/v0.16.123...v0.16.124
