@@ -52,6 +52,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "blocker_count",
         "next_action_count",
         "publication_next_action_count",
+        "publication_publish_command_count",
         "blockers_sha256",
         "next_actions_sha256",
         "publication_next_actions_sha256",

@@ -68,7 +68,9 @@ class IterationPlan:
     validation_commands: list[str]
     candidate_issue_gate: dict[str, Any]
     publication_visibility: dict[str, str]
+    publication_next_action_count: int
     publication_next_actions: list[str]
+    publication_publish_command_count: int
     publication_publish_commands: list[str]
     publication_ref_context: dict[str, Any]
     publication_worktree_clean: bool
@@ -95,7 +97,9 @@ class IterationPlan:
             "validation_commands": self.validation_commands,
             "candidate_issue_gate": self.candidate_issue_gate,
             "publication_visibility": self.publication_visibility,
+            "publication_next_action_count": self.publication_next_action_count,
             "publication_next_actions": self.publication_next_actions,
+            "publication_publish_command_count": self.publication_publish_command_count,
             "publication_publish_commands": self.publication_publish_commands,
             "publication_ref_context": self.publication_ref_context,
             "publication_worktree_clean": self.publication_worktree_clean,
@@ -533,6 +537,8 @@ def build_plan(
     publication = publication_report or build_publication_report(root)
     theme, release_slice = _recommended_slice(readiness, publication)
     candidate_promotions = _candidate_promotions(readiness)
+    publication_next_actions = _publication_next_actions(publication)
+    publication_publish_commands = _publication_publish_commands(publication)
     candidate_cases = [
         str(case.id)
         for case in readiness.cases.cases
@@ -575,8 +581,10 @@ def build_plan(
         validation_commands=validation_commands,
         candidate_issue_gate=_candidate_issue_gate(readiness, publication),
         publication_visibility=_publication_visibility(publication),
-        publication_next_actions=_publication_next_actions(publication),
-        publication_publish_commands=_publication_publish_commands(publication),
+        publication_next_action_count=len(publication_next_actions),
+        publication_next_actions=publication_next_actions,
+        publication_publish_command_count=len(publication_publish_commands),
+        publication_publish_commands=publication_publish_commands,
         publication_ref_context=_publication_ref_context(publication),
         publication_worktree_clean=_publication_worktree_clean(publication),
         publication_worktree_status=_publication_worktree_status(publication),
@@ -634,10 +642,12 @@ def _print_text(plan: IterationPlan) -> None:
     print("publication_visibility:")
     for key, value in plan.publication_visibility.items():
         print(f"- {key}: {value}")
+    print(f"publication_next_action_count: {plan.publication_next_action_count}")
     if plan.publication_next_actions:
         print("publication_next_actions:")
         for action in plan.publication_next_actions:
             print(f"- {action}")
+    print(f"publication_publish_command_count: {plan.publication_publish_command_count}")
     if plan.publication_publish_commands:
         print("publication_publish_commands:")
         for command in plan.publication_publish_commands:
@@ -694,6 +704,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 | recommended_theme | {plan.recommended_theme} |
 | readiness_ok | `{str(plan.readiness_ok).lower()}` |
 | publication_ok | `{str(plan.publication_ok).lower()}` |
+| publication_next_action_count | `{plan.publication_next_action_count}` |
+| publication_publish_command_count | `{plan.publication_publish_command_count}` |
 | commit_days | `{plan.commit_days}` |
 | case_assets | {plan.case_assets} |
 | candidate_cases | {candidate_cases} |

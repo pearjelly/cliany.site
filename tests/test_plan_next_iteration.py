@@ -278,6 +278,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     assert data["publication_publish_commands"] == [
         "python scripts/check_release_publication.py --json",
     ]
+    assert data["publication_publish_command_count"] == 1
     assert data["publication_visibility"] == {
         "status": "dirty_worktree",
         "summary": "Worktree has uncommitted changes; resolve them before publishing release refs.",
@@ -307,6 +308,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "Push `master` to `origin`; local branch is ahead by `2` commits.",
         "Push tag `v0.16.1` after the branch is published.",
     ]
+    assert data["publication_next_action_count"] == 3
     assert any("push `master`" in action for action in data["next_actions"])
     assert data["candidate_promotions"][0] == {
         "case_id": "pypi-project-search",
@@ -368,6 +370,8 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "## Candidate Promotion Tasks" in text
     assert "## Candidate Issue Body Templates" in text
     assert "## Publication Publish Commands" in text
+    assert "| publication_next_action_count | `3` |" in text
+    assert "| publication_publish_command_count | `1` |" in text
     assert "## Candidate Issue Gate" in text
     assert "status: `blocked_by_publication`" in text
     assert "can_create_issues: `false`" in text
@@ -439,6 +443,8 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
 
     text = capsys.readouterr().out
     assert "candidate_issue_gate:" in text
+    assert "publication_next_action_count: 3" in text
+    assert "publication_publish_command_count: 1" in text
     assert "- reason_code_count: 3" in text
     assert f"- reason_codes_sha256: {_blocked_candidate_issue_gate()['reason_codes_sha256']}" in text
     assert "- required_action_count: 5" in text
