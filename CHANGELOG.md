@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.28] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 `issue-metadata.json` 现在为每个 candidate 增加 `issue_body_name`，方便下游工具不解析绝对路径也能定位 body 文件。
 - 新增 `docs/releases/v0.16.28-draft.md`，把下一版 patch release 聚焦到 candidate issue metadata 的 body 文件名字段。
@@ -625,7 +627,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.27...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.28...HEAD
+[0.16.28]: https://github.com/pearjelly/cliany.site/compare/v0.16.27...v0.16.28
 [0.16.27]: https://github.com/pearjelly/cliany.site/compare/v0.16.26...v0.16.27
 [0.16.26]: https://github.com/pearjelly/cliany.site/compare/v0.16.25...v0.16.26
 [0.16.25]: https://github.com/pearjelly/cliany.site/compare/v0.16.24...v0.16.25
