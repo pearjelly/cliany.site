@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import sys
 import tomllib
 from dataclasses import dataclass
@@ -401,6 +402,51 @@ def _write_markdown_report(plan: IterationPlan, path: Path) -> None:
     path.write_text(_render_markdown(plan), encoding="utf-8")
 
 
+def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
+    directory.mkdir(parents=True, exist_ok=True)
+    metadata: list[dict[str, Any]] = []
+    script_lines = [
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        "",
+        "# Review these commands before running; they create GitHub issues in the current repository.",
+    ]
+    for promotion in plan.candidate_promotions:
+        body_path = directory / f"{promotion.case_id}.md"
+        body_path.write_text(promotion.issue_body + "\n", encoding="utf-8")
+        labels = [*promotion.issue_labels]
+        metadata.append(
+            {
+                "case_id": promotion.case_id,
+                "issue_title": promotion.issue_title,
+                "issue_labels": labels,
+                "issue_body_file": str(body_path),
+                "create_command": _gh_issue_create_command(promotion, body_path),
+            }
+        )
+        script_lines.extend(["", _gh_issue_create_command(promotion, body_path)])
+
+    (directory / "issue-metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
+    script_path = directory / "create-issues.sh"
+    script_path.write_text("\n".join(script_lines) + "\n", encoding="utf-8")
+    script_path.chmod(0o755)
+
+
+def _gh_issue_create_command(promotion: CandidatePromotion, body_path: Path) -> str:
+    parts = [
+        "gh",
+        "issue",
+        "create",
+        "--title",
+        promotion.issue_title,
+        "--body-file",
+        str(body_path),
+    ]
+    for label in promotion.issue_labels:
+        parts.extend(["--label", label])
+    return " ".join(shlex.quote(part) for part in parts)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Plan the next verified cliany-site release slice.")
     parser.add_argument("--json", action="store_true", help="Output machine-readable JSON.")
@@ -409,6 +455,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--min-case-assets", type=int, default=8, help="Minimum tracked case assets expected.")
     parser.add_argument("--today", help="Override current date as YYYY-MM-DD, for audits.")
     parser.add_argument("--report", type=Path, help="Optional Markdown plan report path.")
+    parser.add_argument(
+        "--issues-dir",
+        type=Path,
+        help="Optional directory for candidate issue body files, metadata JSON, and a reviewable gh script.",
+    )
     args = parser.parse_args(argv)
 
     today = datetime.strptime(args.today, "%Y-%m-%d").date() if args.today else None
@@ -421,6 +472,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     if args.report:
         _write_markdown_report(plan, args.report)
+    if args.issues_dir:
+        _write_candidate_issue_files(plan, args.issues_dir)
     if args.json:
         print(json.dumps(plan.to_dict(), ensure_ascii=False, indent=2))
     else:

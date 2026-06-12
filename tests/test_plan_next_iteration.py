@@ -157,6 +157,35 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "Run read-only npm search smoke." in text
 
 
+def test_plan_writes_candidate_issue_files(tmp_path):
+    _write_pyproject(tmp_path)
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=_readiness_report(),
+        publication_report=_publication_report(),
+    )
+    issues_dir = tmp_path / "issue-artifacts"
+
+    plan_next_iteration._write_candidate_issue_files(plan, issues_dir)
+
+    body = (issues_dir / "pypi-project-search.md").read_text(encoding="utf-8")
+    metadata = json.loads((issues_dir / "issue-metadata.json").read_text(encoding="utf-8"))
+    script = (issues_dir / "create-issues.sh").read_text(encoding="utf-8")
+
+    assert "## Scope: promote candidate case `pypi-project-search`" in body
+    assert metadata[0]["case_id"] == "pypi-project-search"
+    assert metadata[0]["issue_title"] == "Promote candidate case `pypi-project-search` toward active"
+    assert metadata[0]["issue_labels"] == ["case-proposal", "good first issue"]
+    assert metadata[0]["issue_body_file"].endswith("pypi-project-search.md")
+    assert "gh issue create" in metadata[0]["create_command"]
+    assert "--label case-proposal" in metadata[0]["create_command"]
+    assert "--label 'good first issue'" in metadata[0]["create_command"]
+    assert "gh issue create" in script
+    assert "--body-file" in script
+    assert "pypi-project-search.md" in script
+    assert oct((issues_dir / "create-issues.sh").stat().st_mode & 0o777) == "0o755"
+
+
 def test_plan_cli_writes_json_for_current_repo(capsys):
     exit_code = plan_next_iteration.main(["--json", "--target-version", "0.16.2"])
 
