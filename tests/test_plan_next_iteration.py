@@ -579,9 +579,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         }
         for item in metadata
     ]
+    issue_metadata_preview = stable_issue_metadata[:8]
     issue_metadata_summary = {
         "metadata_count": len(stable_issue_metadata),
         "metadata_sha256": _stable_json_sha256(stable_issue_metadata),
+        "metadata_preview_count": len(issue_metadata_preview),
+        "metadata_preview": list(issue_metadata_preview),
+        "metadata_preview_sha256": _stable_json_sha256(issue_metadata_preview),
     }
     expected_release_draft_handoff = {
         "schema_version": 1,
@@ -887,6 +891,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "inventory_sha256": issue_body_summary["inventory_sha256"],
         "issue_metadata_count": issue_metadata_summary["metadata_count"],
         "issue_metadata_sha256": issue_metadata_summary["metadata_sha256"],
+        "issue_metadata_preview_count": issue_metadata_summary[
+            "metadata_preview_count"
+        ],
+        "issue_metadata_preview": list(issue_metadata_summary["metadata_preview"]),
+        "issue_metadata_preview_sha256": issue_metadata_summary[
+            "metadata_preview_sha256"
+        ],
         "artifact_files_key_count": len(expected_artifact_files),
         "artifact_files_sha256": _stable_json_sha256(expected_artifact_files),
         "issue_artifacts_command_sha256": _stable_json_sha256(plan.issue_artifacts_command),
@@ -1281,6 +1292,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "review_order_tail_count"
         ] :
     ]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "issue_metadata_preview"
+    ] == artifact_manifest["issue_metadata_summary"]["metadata_preview"]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1559,6 +1573,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert f"issue_metadata_count: `{issue_metadata_summary['metadata_count']}`" in readme
     assert f"issue_metadata_sha256: `{issue_metadata_summary['metadata_sha256']}`" in readme
+    assert (
+        "issue_metadata_preview_count: "
+        f"`{artifact_bundle_summary['issue_metadata_preview_count']}`"
+    ) in readme
+    assert "issue_metadata_preview: " in readme
+    assert (
+        "issue_metadata_preview_sha256: "
+        f"`{artifact_bundle_summary['issue_metadata_preview_sha256']}`"
+    ) in readme
     assert "artifact_files_key_count: `6`" in readme
     assert f"artifact_files_sha256: `{artifact_bundle_summary['artifact_files_sha256']}`" in readme
     assert (

@@ -133,6 +133,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "inventory_sha256",
     "issue_metadata_count",
     "issue_metadata_sha256",
+    "issue_metadata_preview_count",
+    "issue_metadata_preview",
+    "issue_metadata_preview_sha256",
     "artifact_files_key_count",
     "artifact_files_sha256",
     "issue_artifacts_command_sha256",
@@ -1806,10 +1809,14 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
         }
         for item in metadata
     ]
+    metadata_preview = stable_metadata[:8]
     digest_source = json.dumps(stable_metadata, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
     return {
         "metadata_count": len(stable_metadata),
         "metadata_sha256": hashlib.sha256(digest_source).hexdigest(),
+        "metadata_preview_count": len(metadata_preview),
+        "metadata_preview": list(metadata_preview),
+        "metadata_preview_sha256": _stable_json_sha256(metadata_preview),
     }
 
 
@@ -2113,6 +2120,13 @@ def _issue_artifact_bundle_summary(
         "inventory_sha256": issue_body_summary["inventory_sha256"],
         "issue_metadata_count": issue_metadata_summary["metadata_count"],
         "issue_metadata_sha256": issue_metadata_summary["metadata_sha256"],
+        "issue_metadata_preview_count": issue_metadata_summary[
+            "metadata_preview_count"
+        ],
+        "issue_metadata_preview": list(issue_metadata_summary["metadata_preview"]),
+        "issue_metadata_preview_sha256": issue_metadata_summary[
+            "metadata_preview_sha256"
+        ],
         "artifact_files_key_count": len(artifact_files),
         "artifact_files_sha256": _stable_json_sha256(artifact_files),
         "issue_artifacts_command_sha256": _stable_json_sha256(plan.issue_artifacts_command),
@@ -2378,6 +2392,10 @@ def _issue_artifact_bundle_summary_markdown(
             f"- inventory_sha256: `{summary['inventory_sha256']}`",
             f"- issue_metadata_count: `{summary['issue_metadata_count']}`",
             f"- issue_metadata_sha256: `{summary['issue_metadata_sha256']}`",
+            f"- issue_metadata_preview_count: `{summary['issue_metadata_preview_count']}`",
+            "- issue_metadata_preview: "
+            f"`{json.dumps(summary['issue_metadata_preview'], ensure_ascii=False)}`",
+            f"- issue_metadata_preview_sha256: `{summary['issue_metadata_preview_sha256']}`",
             f"- artifact_files_key_count: `{summary['artifact_files_key_count']}`",
             f"- artifact_files_sha256: `{summary['artifact_files_sha256']}`",
             f"- issue_artifacts_command_sha256: `{summary['issue_artifacts_command_sha256']}`",
