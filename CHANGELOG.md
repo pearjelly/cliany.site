@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.209] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `validation_command_preview_count`、`validation_command_preview` 和 `validation_command_preview_sha256`，让只读取整包摘要的维护工具能检查 validation commands 前窗口。
+- `artifact_bundle_summary` 现在输出 `validation_command_tail_count`、`validation_command_tail` 和 `validation_command_tail_sha256`，让 validation commands 的尾部窗口与 blockers、next actions 和 release draft windows 的可见性保持一致。
+- 新增 `docs/releases/v0.16.209-draft.md`，把下一版 patch release 聚焦到 validation command preview/tail 可见性。
+
 ## [0.16.208] - 2026-06-13
 
 ### Added
@@ -1861,7 +1868,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.208...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.209...HEAD
+[0.16.209]: https://github.com/pearjelly/cliany.site/compare/v0.16.208...v0.16.209
 [0.16.208]: https://github.com/pearjelly/cliany.site/compare/v0.16.207...v0.16.208
 [0.16.207]: https://github.com/pearjelly/cliany.site/compare/v0.16.206...v0.16.207
 [0.16.206]: https://github.com/pearjelly/cliany.site/compare/v0.16.205...v0.16.206
