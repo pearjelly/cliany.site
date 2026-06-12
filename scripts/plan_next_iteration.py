@@ -557,6 +557,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
 def _render_issue_artifacts_readme(plan: IterationPlan) -> str:
     body_files = "\n".join(f"- `{promotion.case_id}.md`" for promotion in plan.candidate_promotions)
     body_files = body_files or "- No candidate issue body files were generated."
+    candidate_summary = _issue_artifact_candidate_summary(plan.candidate_promotions)
     return f"""# cliany-site Candidate Issue Artifacts
 
 Generated for target version `{plan.target_version}`.
@@ -569,6 +570,8 @@ Generated for target version `{plan.target_version}`.
 - `create-issues.sh`: reviewable shell script with a release publication preflight and
   one `gh issue create` command per candidate.
 {body_files}
+
+{candidate_summary}
 
 ## Publication Handoff
 
@@ -610,6 +613,23 @@ def _issue_artifact_publication_commands(plan: IterationPlan) -> str:
     if plan.publication_publish_commands:
         return "\n".join(plan.publication_publish_commands)
     return "python scripts/check_release_publication.py --json"
+
+
+def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> str:
+    if not promotions:
+        return "## Candidate Summary\n\n- No candidate issue metadata is available."
+    lines = [
+        "## Candidate Summary",
+        "",
+        "| Case | Target URL | Candidate Commands | Offline Validation Commands |",
+        "|------|------------|--------------------|-----------------------------|",
+    ]
+    for promotion in promotions:
+        lines.append(
+            f"| `{promotion.case_id}` | {promotion.target_url or 'Not declared.'} | "
+            f"{len(promotion.commands)} | {len(promotion.offline_commands)} |"
+        )
+    return "\n".join(lines)
 
 
 def _gh_issue_create_command(promotion: CandidatePromotion, body_path: Path) -> str:

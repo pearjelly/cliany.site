@@ -33,6 +33,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "issue-metadata.json",
         "publication-handoff.json",
         "README.md",
+        "Candidate Summary",
         "create-issues.sh",
         "publish commands",
         "python scripts/check_release_publication.py --strict --json",
