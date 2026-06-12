@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.141] - 2026-06-13
+
+### Added
+- `release-draft-handoff.json` 现在输出 `release_draft_required_action_count`、`release_draft_required_actions_sha256` 和 `release_draft_required_actions`，让只读取 handoff 的维护工具也能直接拿到完整草案处理动作列表。
+- Candidate issue artifacts `README.md` 的 `Release Draft Handoff` 段落现在展示 release draft required actions 的数量、hash 和列表。
+- 新增 `docs/releases/v0.16.141-draft.md`，把下一版 patch release 聚焦到 release draft handoff 的完整 required actions 可见性。
+
 ## [0.16.140] - 2026-06-13
 
 ### Added
@@ -1385,7 +1392,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.140...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.141...HEAD
+[0.16.141]: https://github.com/pearjelly/cliany.site/compare/v0.16.140...v0.16.141
 [0.16.140]: https://github.com/pearjelly/cliany.site/compare/v0.16.139...v0.16.140
 [0.16.139]: https://github.com/pearjelly/cliany.site/compare/v0.16.138...v0.16.139
 [0.16.138]: https://github.com/pearjelly/cliany.site/compare/v0.16.137...v0.16.138
