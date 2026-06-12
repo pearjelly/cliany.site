@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.3] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --json` 和 `--report` 现在输出 `candidate_promotions` / `Candidate Promotion Tasks`，直接列出 candidate 案例晋级所需的 `adapter_package`、`metadata_validation` 和 `online_smoke` 证据。
 - 新增 `docs/releases/v0.16.3-draft.md`，把下一版 patch release 聚焦到计划器中的 candidate 晋级任务表。
@@ -474,7 +476,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.2...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.3...HEAD
+[0.16.3]: https://github.com/pearjelly/cliany.site/compare/v0.16.2...v0.16.3
 [0.16.2]: https://github.com/pearjelly/cliany.site/compare/v0.16.1...v0.16.2
 [0.16.1]: https://github.com/pearjelly/cliany.site/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/pearjelly/cliany.site/compare/v0.15.9...v0.16.0
