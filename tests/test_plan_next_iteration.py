@@ -538,6 +538,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "candidate_count": 2,
         "candidate_cases_sha256": _stable_json_sha256(["pypi-project-search", "npm-package-search"]),
         "body_count": 2,
+        "issue_body_summary_sha256": _stable_json_sha256(issue_body_summary),
         "review_item_count": len(review_order),
         "review_order_sha256": review_order_sha256,
         "inventory_sha256": issue_body_summary["inventory_sha256"],
@@ -823,6 +824,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "candidate_count: `2`" in readme
     assert "candidate_cases_sha256: `" in readme
     assert f"candidate_cases_sha256: `{artifact_bundle_summary['candidate_cases_sha256']}`" in readme
+    assert f"issue_body_summary_sha256: `{artifact_bundle_summary['issue_body_summary_sha256']}`" in readme
     assert "review_item_count: `7`" in readme
     assert f"review_order_sha256: `{review_order_sha256}`" in readme
     assert f"issue_metadata_count: `{issue_metadata_summary['metadata_count']}`" in readme
