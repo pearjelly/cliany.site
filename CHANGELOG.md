@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.144] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `release_draft_primary_issue`，让只读取整包摘要的维护工具也能直接展示第一条 release draft 阻塞原因。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 `release_draft_primary_issue`，并在无阻塞原因时使用 `(none)`。
+- 新增 `docs/releases/v0.16.144-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 release draft primary issue 可见性。
+
 ## [0.16.143] - 2026-06-13
 
 ### Added
@@ -1406,7 +1413,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.143...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.144...HEAD
+[0.16.144]: https://github.com/pearjelly/cliany.site/compare/v0.16.143...v0.16.144
 [0.16.143]: https://github.com/pearjelly/cliany.site/compare/v0.16.142...v0.16.143
 [0.16.142]: https://github.com/pearjelly/cliany.site/compare/v0.16.141...v0.16.142
 [0.16.141]: https://github.com/pearjelly/cliany.site/compare/v0.16.140...v0.16.141
