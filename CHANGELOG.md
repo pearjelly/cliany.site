@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/check_release_publication.py` 的 JSON、文本和 Markdown report 现在会展示 `worktree_clean` / `worktree_status`，dirty worktree 时优先提示清理本地改动并收敛 `publish_commands`。
+- 新增 `docs/releases/v0.16.33-draft.md`，把下一版 patch release 聚焦到 publication audit 的 worktree 状态可见性。
+
 ## [0.16.32] - 2026-06-12
 
 ### Added

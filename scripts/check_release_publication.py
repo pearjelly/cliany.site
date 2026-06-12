@@ -19,6 +19,8 @@ ROOT = Path(__file__).resolve().parents[1]
 class PublicationReport:
     ok: bool
     repo_root: str
+    worktree_clean: bool
+    worktree_status: list[str]
     branch: str | None
     upstream: str | None
     remote: str
@@ -40,6 +42,8 @@ class PublicationReport:
         return {
             "ok": self.ok,
             "repo_root": self.repo_root,
+            "worktree_clean": self.worktree_clean,
+            "worktree_status": self.worktree_status,
             "branch": self.branch,
             "upstream": self.upstream,
             "remote": self.remote,
@@ -116,10 +120,17 @@ def _ls_remote_ref(root: Path, remote: str, ref: str) -> str | None:
     return None
 
 
+def _worktree_status(root: Path) -> list[str]:
+    status = _optional_git(["status", "--porcelain"], root)
+    return status.splitlines() if status else []
+
+
 def build_report(root: Path = ROOT, *, remote_check: bool = False, remote: str = "origin") -> PublicationReport:
     branch = _branch_name(root)
     upstream = _upstream_name(root)
     remote_name = _remote_from_upstream(upstream, remote)
+    worktree_status = _worktree_status(root)
+    worktree_clean = not worktree_status
     local_head = _optional_git(["rev-parse", "HEAD"], root)
     upstream_head = _optional_git(["rev-parse", upstream], root) if upstream else None
     ahead_count = _optional_int_git(["rev-list", "--count", f"{upstream}..HEAD"], root) if upstream else None
@@ -146,12 +157,15 @@ def build_report(root: Path = ROOT, *, remote_check: bool = False, remote: str =
         branch_published is True
         and tag_published is True
         and tag_points_at_head
+        and worktree_clean
         and latest_tag
     )
 
     return PublicationReport(
         ok=ok,
         repo_root=str(root.resolve()),
+        worktree_clean=worktree_clean,
+        worktree_status=worktree_status,
         branch=branch,
         upstream=upstream,
         remote=remote_name,
@@ -174,6 +188,8 @@ def build_report(root: Path = ROOT, *, remote_check: bool = False, remote: str =
 def _next_action_lines(report: PublicationReport) -> list[str]:
     actions: list[str] = []
     branch = report.branch or "HEAD"
+    if not report.worktree_clean:
+        actions.append("- Commit, stash, or discard local worktree changes before publishing release refs.")
     if not report.upstream:
         actions.append(f"- Set an upstream branch for `{branch}` before checking publication status.")
     if report.ahead_count and report.ahead_count > 0:
@@ -206,6 +222,9 @@ def _next_action_lines(report: PublicationReport) -> list[str]:
 
 
 def _publish_command_lines(report: PublicationReport) -> list[str]:
+    if not report.worktree_clean:
+        return ["python scripts/check_release_publication.py --json"]
+
     commands: list[str] = []
     branch = report.branch
     remote = shlex.quote(report.remote)
@@ -229,6 +248,7 @@ def _print_text(report: PublicationReport) -> None:
     print("=== cliany-site release publication ===")
     print(f"ok: {report.ok}")
     print(f"repo_root: {report.repo_root}")
+    print(f"worktree_clean: {report.worktree_clean}")
     print(f"branch: {report.branch or '(detached)'}")
     print(f"upstream: {report.upstream or '(none)'}")
     print(f"remote: {report.remote}")
@@ -239,6 +259,10 @@ def _print_text(report: PublicationReport) -> None:
     print(f"branch_published: {report.branch_published}")
     print(f"tag_published: {report.tag_published}")
     print(f"remote_checked: {report.remote_checked}")
+    if report.worktree_status:
+        print("worktree_status:")
+        for line in report.worktree_status:
+            print(f"- {line}")
     next_actions = _next_action_lines(report)
     if next_actions:
         print("next_actions:")
@@ -273,6 +297,7 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
         "|--------|-------|",
         f"| ok | `{_format_bool(report.ok)}` |",
         f"| repo_root | `{report.repo_root}` |",
+        f"| worktree_clean | `{_format_bool(report.worktree_clean)}` |",
         f"| branch | `{_format_value(report.branch)}` |",
         f"| upstream | `{_format_value(report.upstream)}` |",
         f"| remote | `{report.remote}` |",
@@ -298,6 +323,10 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
         lines.extend(["", "## Next Actions", "", *next_actions])
     else:
         lines.extend(["", "## Next Actions", "", "- Release branch and tag are published."])
+    if report.worktree_status:
+        lines.extend(["", "## Worktree Status", "", "```text", *report.worktree_status, "```"])
+    else:
+        lines.extend(["", "## Worktree Status", "", "- Worktree is clean."])
     if publish_commands:
         lines.extend(["", "## Publish Commands", "", "```bash", *publish_commands, "```"])
     else:

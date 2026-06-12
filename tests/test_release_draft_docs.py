@@ -45,6 +45,7 @@ V01629_DRAFT = ROOT / "docs" / "releases" / "v0.16.29-draft.md"
 V01630_DRAFT = ROOT / "docs" / "releases" / "v0.16.30-draft.md"
 V01631_DRAFT = ROOT / "docs" / "releases" / "v0.16.31-draft.md"
 V01632_DRAFT = ROOT / "docs" / "releases" / "v0.16.32-draft.md"
+V01633_DRAFT = ROOT / "docs" / "releases" / "v0.16.33-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -1975,6 +1976,47 @@ def test_v01632_release_draft_tracks_publish_script_dirty_worktree_preflight():
         "tests/test_release_draft_docs.py",
         "python scripts/check_release_publication.py --json --publish-script",
         "git tag v0.16.32",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v01633_release_draft_has_required_sections():
+    text = V01633_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.33 发布草案",
+        "**目标版本：** `0.16.33`",
+        "**提交范围：** `v0.16.32..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v01633_release_draft_tracks_publication_worktree_report():
+    text = V01633_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "scripts/check_release_publication.py",
+        "worktree_clean",
+        "worktree_status",
+        "git status --porcelain",
+        "publish_commands",
+        "python scripts/check_release_publication.py --json",
+        "tests/test_release_publication.py",
+        "tests/test_release_cadence_docs.py",
+        "tests/test_release_draft_docs.py",
+        "git tag v0.16.33",
     ]
     for snippet in required:
         assert snippet in text

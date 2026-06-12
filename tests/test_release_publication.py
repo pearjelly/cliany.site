@@ -46,6 +46,9 @@ def test_release_publication_passes_when_branch_and_tag_are_pushed(tmp_path):
     assert report.ok is True
     assert report.repo_root == str(repo.resolve())
     assert report.to_dict()["repo_root"] == str(repo.resolve())
+    assert report.worktree_clean is True
+    assert report.to_dict()["worktree_clean"] is True
+    assert report.to_dict()["worktree_status"] == []
     assert report.branch == "master"
     assert report.upstream == "origin/master"
     assert report.latest_tag == "v0.1.0"
@@ -62,6 +65,7 @@ def test_release_publication_reports_unpushed_release_commit_and_tag(tmp_path):
     report = release_publication.build_report(repo)
 
     assert report.ok is False
+    assert report.worktree_clean is True
     assert report.ahead_count == 1
     assert report.latest_tag == "v0.1.1"
     assert report.tag_points_at_head is True
@@ -80,6 +84,26 @@ def test_release_publication_reports_unpushed_release_commit_and_tag(tmp_path):
         "git push origin v0.1.1",
         "python scripts/check_release_publication.py --remote --json",
     ]
+
+
+def test_release_publication_reports_dirty_worktree_before_publish_commands(tmp_path):
+    repo = _init_repo_with_origin(tmp_path)
+    _commit(repo, "CHANGELOG.md", "released\n", "release")
+    _git(repo, "tag", "v0.1.1")
+    (repo / "scratch.txt").write_text("uncommitted\n", encoding="utf-8")
+
+    report = release_publication.build_report(repo)
+
+    assert report.ok is False
+    assert report.worktree_clean is False
+    assert report.worktree_status == ["?? scratch.txt"]
+    payload = report.to_dict()
+    assert payload["worktree_clean"] is False
+    assert payload["worktree_status"] == ["?? scratch.txt"]
+    assert payload["next_actions"][0] == (
+        "- Commit, stash, or discard local worktree changes before publishing release refs."
+    )
+    assert payload["publish_commands"] == ["python scripts/check_release_publication.py --json"]
 
 
 def test_release_publication_remote_check_reports_missing_remote_tag(tmp_path):
@@ -115,6 +139,7 @@ def test_release_publication_text_output_includes_next_actions(tmp_path, capsys)
     output = capsys.readouterr().out
     assert "ok: False" in output
     assert f"repo_root: {repo.resolve()}" in output
+    assert "worktree_clean: True" in output
     assert "latest_tag: v0.1.1" in output
     assert "next_actions:" in output
     assert "Push `master` to `origin`" in output
@@ -135,10 +160,13 @@ def test_release_publication_writes_markdown_report(tmp_path):
     assert "# cliany-site Release Publication" in text
     assert "| ok | `false` |" in text
     assert f"| repo_root | `{repo.resolve()}` |" in text
+    assert "| worktree_clean | `true` |" in text
     assert "| latest_tag | `v0.1.1` |" in text
     assert "| remote_checked | `true` |" in text
     assert "## Refs" in text
     assert "## Next Actions" in text
+    assert "## Worktree Status" in text
+    assert "- Worktree is clean." in text
     assert "## Publish Commands" in text
     assert "git push origin v0.1.1" in text
     assert "python scripts/check_release_publication.py --remote --json" in text
