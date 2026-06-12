@@ -909,25 +909,12 @@ def _write_markdown_report(plan: IterationPlan, path: Path) -> None:
 def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     directory.mkdir(parents=True, exist_ok=True)
     metadata: list[dict[str, Any]] = []
-    script_lines = [
-        "#!/usr/bin/env bash",
-        "set -euo pipefail",
-        "",
-        "# Review these commands before running; they create GitHub issues in the current repository.",
-        "# Stop early if the latest local release is not publicly visible yet.",
-        'REPO_ROOT="$(git rev-parse --show-toplevel)"',
-        'cd "$REPO_ROOT"',
-        'PREFLIGHT_JSON="/tmp/cliany-issue-publication-check.json"',
-        'if ! python scripts/check_release_publication.py --strict --json >"$PREFLIGHT_JSON"; then',
-        '  echo "Release publication preflight failed; review $PREFLIGHT_JSON before creating candidate issues." >&2',
-        '  cat "$PREFLIGHT_JSON" >&2',
-        "  exit 1",
-        "fi",
-    ]
+    issue_commands: list[str] = []
     for promotion in plan.candidate_promotions:
         body_path = directory / f"{promotion.case_id}.md"
         body_path.write_text(promotion.issue_body + "\n", encoding="utf-8")
         labels = [*promotion.issue_labels]
+        create_command = _gh_issue_create_command(promotion, body_path)
         metadata.append(
             {
                 "case_id": promotion.case_id,
@@ -938,13 +925,14 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "offline_commands": promotion.offline_commands,
                 "issue_body_name": body_path.name,
                 "issue_body_file": str(body_path),
-                "create_command": _gh_issue_create_command(promotion, body_path),
+                "create_command": create_command,
             }
         )
-        script_lines.extend(["", _gh_issue_create_command(promotion, body_path)])
+        issue_commands.append(create_command)
 
     issue_body_names = [f"{promotion.case_id}.md" for promotion in plan.candidate_promotions]
     candidate_cases = [promotion.case_id for promotion in plan.candidate_promotions]
+    script_path = directory / "create-issues.sh"
     artifact_manifest = {
         "schema_version": 1,
         "target_version": plan.target_version,
@@ -964,6 +952,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "release_draft_path": plan.release_draft_path,
         "release_draft_issues": plan.release_draft_issues,
         "issue_artifacts_command": plan.issue_artifacts_command,
+        "create_issues_dry_run_command": f"CLIANY_CREATE_ISSUES_DRY_RUN=1 {script_path}",
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -1013,10 +1002,42 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         json.dumps(release_draft_handoff, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
-    script_path = directory / "create-issues.sh"
-    script_path.write_text("\n".join(script_lines) + "\n", encoding="utf-8")
+    script_path.write_text("\n".join(_candidate_issue_script_lines(issue_commands)) + "\n", encoding="utf-8")
     script_path.chmod(0o755)
     (directory / "README.md").write_text(_render_issue_artifacts_readme(plan), encoding="utf-8")
+
+
+def _candidate_issue_script_lines(issue_commands: list[str]) -> list[str]:
+    lines = [
+        "#!/usr/bin/env bash",
+        "set -euo pipefail",
+        "",
+        "# Review these commands before running; they create GitHub issues in the current repository.",
+        "# Set CLIANY_CREATE_ISSUES_DRY_RUN=1 to print commands without running the preflight or gh.",
+        "# Stop early if the latest local release is not publicly visible yet.",
+        'REPO_ROOT="$(git rev-parse --show-toplevel)"',
+        'cd "$REPO_ROOT"',
+        'if [[ "${CLIANY_CREATE_ISSUES_DRY_RUN:-0}" == "1" ]]; then',
+        '  echo "Dry run: publication preflight and gh issue create are not executed."',
+        "  cat <<'CLIANY_ISSUE_COMMANDS'",
+    ]
+    lines.extend(issue_commands)
+    lines.extend(
+        [
+            "CLIANY_ISSUE_COMMANDS",
+            "  exit 0",
+            "fi",
+            'PREFLIGHT_JSON="/tmp/cliany-issue-publication-check.json"',
+            'if ! python scripts/check_release_publication.py --strict --json >"$PREFLIGHT_JSON"; then',
+            '  echo "Release publication preflight failed; review $PREFLIGHT_JSON '
+            'before creating candidate issues." >&2',
+            '  cat "$PREFLIGHT_JSON" >&2',
+            "  exit 1",
+            "fi",
+        ]
+    )
+    lines.extend(f"\n{command}" for command in issue_commands)
+    return lines
 
 
 def _render_issue_artifacts_readme(plan: IterationPlan) -> str:
@@ -1049,7 +1070,8 @@ Generated for target version `{plan.target_version}`.
 - `release-draft-handoff.json`: target version, release draft path, and release draft issues
   to review before tagging the target version.
 - `create-issues.sh`: reviewable shell script with a release publication preflight and
-  one `gh issue create` command per candidate.
+  one `gh issue create` command per candidate. Set `CLIANY_CREATE_ISSUES_DRY_RUN=1`
+  to print the commands without running the preflight or creating issues.
 {body_files}
 
 {candidate_summary}
@@ -1111,6 +1133,12 @@ Run it only after checking `issue-metadata.json` and the body files. The script 
 `python scripts/check_release_publication.py --strict --json` before creating issues and
 writes the preflight JSON to `/tmp/cliany-issue-publication-check.json`. If the preflight
 fails, it prints that JSON before exiting.
+
+Preview the issue commands without running the publication preflight or creating issues:
+
+```bash
+CLIANY_CREATE_ISSUES_DRY_RUN=1 ./create-issues.sh
+```
 """
 
 

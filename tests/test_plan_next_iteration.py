@@ -521,6 +521,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "python scripts/plan_next_iteration.py --target-version 0.16.2 "
             "--issues-dir /tmp/cliany-candidate-issues"
         ),
+        "create_issues_dry_run_command": f"CLIANY_CREATE_ISSUES_DRY_RUN=1 {issues_dir / 'create-issues.sh'}",
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -609,6 +610,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "gh issue create" in script
     assert 'REPO_ROOT="$(git rev-parse --show-toplevel)"' in script
     assert 'cd "$REPO_ROOT"' in script
+    assert "CLIANY_CREATE_ISSUES_DRY_RUN" in script
+    assert "Dry run: publication preflight and gh issue create are not executed." in script
+    assert "cat <<'CLIANY_ISSUE_COMMANDS'" in script
+    assert "CLIANY_ISSUE_COMMANDS" in script
     assert 'PREFLIGHT_JSON="/tmp/cliany-issue-publication-check.json"' in script
     assert (
         'if ! python scripts/check_release_publication.py --strict --json >"$PREFLIGHT_JSON"; then'
@@ -686,6 +691,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "python scripts/plan_next_iteration.py --target-version 0.16.2 "
         "--issues-dir /tmp/cliany-candidate-issues"
     ) in readme
+    assert "CLIANY_CREATE_ISSUES_DRY_RUN=1 ./create-issues.sh" in readme
     assert "python scripts/plan_next_iteration.py --target-version 0.16.2 --json" in readme
     assert "python scripts/release_readiness.py --target-version 0.16.2 --json" in readme
     assert "python scripts/check_release_publication.py --json" in readme
