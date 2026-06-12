@@ -53,6 +53,9 @@ ARTIFACT_MANIFEST_KEYS = (
 ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "artifact_bundle_summary_key_count",
     "artifact_bundle_summary_keys_sha256",
+    "artifact_bundle_summary_key_preview_count",
+    "artifact_bundle_summary_key_preview",
+    "artifact_bundle_summary_key_preview_sha256",
     "artifact_manifest_schema_version",
     "artifact_manifest_key_count",
     "artifact_manifest_keys_sha256",
@@ -151,6 +154,7 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "dry_run_supported",
     "preflight_required",
 )
+ARTIFACT_BUNDLE_SUMMARY_KEY_PREVIEW = ARTIFACT_BUNDLE_SUMMARY_KEYS[:8]
 PUBLICATION_PUBLISH_SCRIPT_PATH = "/tmp/cliany-publish-release.sh"
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
@@ -1875,6 +1879,11 @@ def _issue_artifact_bundle_summary(
     return {
         "artifact_bundle_summary_key_count": len(ARTIFACT_BUNDLE_SUMMARY_KEYS),
         "artifact_bundle_summary_keys_sha256": _stable_json_sha256(ARTIFACT_BUNDLE_SUMMARY_KEYS),
+        "artifact_bundle_summary_key_preview_count": len(ARTIFACT_BUNDLE_SUMMARY_KEY_PREVIEW),
+        "artifact_bundle_summary_key_preview": list(ARTIFACT_BUNDLE_SUMMARY_KEY_PREVIEW),
+        "artifact_bundle_summary_key_preview_sha256": _stable_json_sha256(
+            ARTIFACT_BUNDLE_SUMMARY_KEY_PREVIEW
+        ),
         "artifact_manifest_schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "artifact_manifest_key_count": len(ARTIFACT_MANIFEST_KEYS),
         "artifact_manifest_keys_sha256": _stable_json_sha256(ARTIFACT_MANIFEST_KEYS),
@@ -2035,6 +2044,12 @@ def _issue_artifact_bundle_summary_markdown(
             "",
             f"- artifact_bundle_summary_key_count: `{summary['artifact_bundle_summary_key_count']}`",
             f"- artifact_bundle_summary_keys_sha256: `{summary['artifact_bundle_summary_keys_sha256']}`",
+            "- artifact_bundle_summary_key_preview_count: "
+            f"`{summary['artifact_bundle_summary_key_preview_count']}`",
+            "- artifact_bundle_summary_key_preview: "
+            f"`{json.dumps(summary['artifact_bundle_summary_key_preview'], ensure_ascii=False)}`",
+            "- artifact_bundle_summary_key_preview_sha256: "
+            f"`{summary['artifact_bundle_summary_key_preview_sha256']}`",
             "- artifact_manifest_schema_version: "
             f"`{summary['artifact_manifest_schema_version']}`",
             f"- artifact_manifest_key_count: `{summary['artifact_manifest_key_count']}`",
