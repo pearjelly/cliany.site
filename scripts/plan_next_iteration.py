@@ -1313,6 +1313,16 @@ def _issue_artifact_create_issues_safety(script_path: Path) -> dict[str, Any]:
     }
 
 
+def _issue_artifact_create_issues_safety_contract(create_issues_safety: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "dry_run_supported": create_issues_safety["dry_run_supported"],
+        "dry_run_env": create_issues_safety["dry_run_env"],
+        "preflight_required": create_issues_safety["preflight_required"],
+        "preflight_command": create_issues_safety["preflight_command"],
+        "preflight_json": create_issues_safety["preflight_json"],
+    }
+
+
 def _issue_body_inventory(promotions: list[CandidatePromotion]) -> list[dict[str, Any]]:
     inventory: list[dict[str, Any]] = []
     for promotion in promotions:
@@ -1383,6 +1393,7 @@ def _issue_artifact_bundle_summary(
         sort_keys=True,
         separators=(",", ":"),
     ).encode()
+    create_issues_safety_contract = _issue_artifact_create_issues_safety_contract(create_issues_safety)
     return {
         "target_version": plan.target_version,
         "candidate_count": len(candidate_cases),
@@ -1404,6 +1415,8 @@ def _issue_artifact_bundle_summary(
         "validation_commands_sha256": _stable_json_sha256(_issue_artifact_validation_commands(plan)),
         "review_checklist_count": len(_issue_artifact_review_checklist()),
         "review_checklist_sha256": _stable_json_sha256(_issue_artifact_review_checklist()),
+        "create_issues_safety_contract_key_count": len(create_issues_safety_contract),
+        "create_issues_safety_contract_sha256": _stable_json_sha256(create_issues_safety_contract),
         "publication_ok": plan.publication_ok,
         "publication_visibility_status": plan.publication_visibility.get("status"),
         "release_draft_issue_count": len(plan.release_draft_issues),
@@ -1460,6 +1473,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- validation_commands_sha256: `{summary['validation_commands_sha256']}`",
             f"- review_checklist_count: `{summary['review_checklist_count']}`",
             f"- review_checklist_sha256: `{summary['review_checklist_sha256']}`",
+            f"- create_issues_safety_contract_key_count: `{summary['create_issues_safety_contract_key_count']}`",
+            f"- create_issues_safety_contract_sha256: `{summary['create_issues_safety_contract_sha256']}`",
             f"- publication_ok: `{str(summary['publication_ok']).lower()}`",
             f"- publication_visibility_status: `{summary['publication_visibility_status']}`",
             f"- release_draft_issue_count: `{summary['release_draft_issue_count']}`",

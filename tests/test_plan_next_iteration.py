@@ -571,6 +571,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 "Do not use real LLM keys or write runtime state into the repository.",
             ]
         ),
+        "create_issues_safety_contract_key_count": 5,
+        "create_issues_safety_contract_sha256": _stable_json_sha256(
+            {
+                "dry_run_supported": True,
+                "dry_run_env": "CLIANY_CREATE_ISSUES_DRY_RUN=1",
+                "preflight_required": True,
+                "preflight_command": "python scripts/check_release_publication.py --strict --json",
+                "preflight_json": "/tmp/cliany-issue-publication-check.json",
+            }
+        ),
         "publication_ok": False,
         "publication_visibility_status": "dirty_worktree",
         "release_draft_issue_count": 2,
@@ -824,6 +834,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "review_checklist_sha256: "
         f"`{artifact_bundle_summary['review_checklist_sha256']}`"
+    ) in readme
+    assert "create_issues_safety_contract_key_count: `5`" in readme
+    assert (
+        "create_issues_safety_contract_sha256: "
+        f"`{artifact_bundle_summary['create_issues_safety_contract_sha256']}`"
     ) in readme
     assert "publication_ok: `false`" in readme
     assert "publication_visibility_status: `dirty_worktree`" in readme
