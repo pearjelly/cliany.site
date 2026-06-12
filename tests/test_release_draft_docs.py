@@ -223,6 +223,7 @@ V016207_DRAFT = ROOT / "docs" / "releases" / "v0.16.207-draft.md"
 V016208_DRAFT = ROOT / "docs" / "releases" / "v0.16.208-draft.md"
 V016209_DRAFT = ROOT / "docs" / "releases" / "v0.16.209-draft.md"
 V016210_DRAFT = ROOT / "docs" / "releases" / "v0.16.210-draft.md"
+V016211_DRAFT = ROOT / "docs" / "releases" / "v0.16.211-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -10040,6 +10041,58 @@ def test_v016210_release_draft_tracks_review_checklist_windows():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.210 --issues-dir",
         "git tag v0.16.210",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016211_release_draft_has_required_sections():
+    text = V016211_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.211 发布草案",
+        "**目标版本：** `0.16.211`",
+        "**提交范围：** `v0.16.210..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016211_release_draft_tracks_create_issues_safety_contract_key_windows():
+    text = V016211_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "artifact_bundle_summary",
+        "Artifact Bundle Summary",
+        "create_issues_safety_contract_key_preview_count",
+        "create_issues_safety_contract_key_preview",
+        "create_issues_safety_contract_key_preview_sha256",
+        "create_issues_safety_contract_key_tail_count",
+        "create_issues_safety_contract_key_tail",
+        "create_issues_safety_contract_key_tail_sha256",
+        "create_issues_safety_contract_key_count",
+        "create_issues_safety_contract_sha256",
+        "create_issues_safety_contract_first_key",
+        "create_issues_safety_contract_last_key",
+        "create_issues_safety_contract_key_boundary_sha256",
+        "create issues safety contract",
+        "artifact-manifest.json",
+        "scripts/plan_next_iteration.py",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.211 --issues-dir",
+        "git tag v0.16.211",
     ]
     for snippet in required:
         assert snippet in text

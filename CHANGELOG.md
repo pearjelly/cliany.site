@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.211] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `create_issues_safety_contract_key_preview_count`、`create_issues_safety_contract_key_preview` 和 `create_issues_safety_contract_key_preview_sha256`，让只读取整包摘要的维护工具能检查 create issues safety contract key 前窗口。
+- `artifact_bundle_summary` 现在输出 `create_issues_safety_contract_key_tail_count`、`create_issues_safety_contract_key_tail` 和 `create_issues_safety_contract_key_tail_sha256`，让 create issues safety contract keys 的尾部窗口与 review checklist、validation commands 和 blockers 的可见性保持一致。
+- 新增 `docs/releases/v0.16.211-draft.md`，把下一版 patch release 聚焦到 create issues safety contract key preview/tail 可见性。
+
 ## [0.16.210] - 2026-06-13
 
 ### Added
@@ -1875,7 +1882,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.210...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.211...HEAD
+[0.16.211]: https://github.com/pearjelly/cliany.site/compare/v0.16.210...v0.16.211
 [0.16.210]: https://github.com/pearjelly/cliany.site/compare/v0.16.209...v0.16.210
 [0.16.209]: https://github.com/pearjelly/cliany.site/compare/v0.16.208...v0.16.209
 [0.16.208]: https://github.com/pearjelly/cliany.site/compare/v0.16.207...v0.16.208
