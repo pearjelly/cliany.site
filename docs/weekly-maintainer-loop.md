@@ -169,7 +169,7 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 还会带上 `publication_primary_next_action`，让工具只读整包摘要就能展示第一条发布同步待办。
 
-`artifact_bundle_summary` 还会带上 `publication_handoff_key_count`、`publication_handoff_schema_version` 和 `publication_handoff_sha256`，让工具只读整包摘要就能判断 publication handoff 字段规模、语义版本或内容是否漂移。
+`artifact_bundle_summary` 还会带上 `publication_handoff_key_count`、`publication_handoff_schema_version`、`publication_handoff_first_key`、`publication_handoff_last_key`、`publication_handoff_key_boundary_sha256` 和 `publication_handoff_sha256`，让工具只读整包摘要就能判断 publication handoff 字段规模、语义版本、key 首尾边界或内容是否漂移。
 
 `publication-handoff.json` 和 artifacts `README.md` 的 `Publication Handoff` 也会展示 `schema_version`，让只读取 handoff 的维护工具能先判断 publication handoff 的字段语义版本。
 
