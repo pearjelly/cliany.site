@@ -55,6 +55,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "publication_tag_commit",
         "publication_local_head",
         "publication_upstream_head",
+        "publication_tag_points_at_head",
+        "publication_tag_commit_in_upstream",
         "release_draft_ok",
         "release_draft_issue_count",
         "candidate_issue_gate_summary_sha256",

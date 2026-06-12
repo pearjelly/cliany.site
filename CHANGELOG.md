@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.104] - 2026-06-12
+
+### Added
+- `publication_ref_context` 现在包含 `tag_points_at_head` 和 `tag_commit_in_upstream`，方便候选 issue artifacts 保留 tag 状态判断。
+- `artifact_bundle_summary` 现在包含 `publication_tag_points_at_head` 和 `publication_tag_commit_in_upstream`，方便工具只读整包摘要就判断最新本地 tag 是否指向 HEAD 以及 tag commit 是否在上游。
+- 新增 `docs/releases/v0.16.104-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 publication tag state 可见性。
+
 ## [0.16.103] - 2026-06-12
 
 ### Added
@@ -1126,7 +1133,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.103...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.104...HEAD
+[0.16.104]: https://github.com/pearjelly/cliany.site/compare/v0.16.103...v0.16.104
 [0.16.103]: https://github.com/pearjelly/cliany.site/compare/v0.16.102...v0.16.103
 [0.16.102]: https://github.com/pearjelly/cliany.site/compare/v0.16.101...v0.16.102
 [0.16.101]: https://github.com/pearjelly/cliany.site/compare/v0.16.100...v0.16.101
