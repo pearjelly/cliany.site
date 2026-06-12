@@ -726,6 +726,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     }
     next_action_preview = plan.next_actions[:8]
     next_action_tail = plan.next_actions[-8:]
+    publication_next_action_preview = plan.publication_next_actions[:8]
+    publication_next_action_tail = plan.publication_next_actions[-8:]
     expected_validation_commands = [
         (
             "python scripts/plan_next_iteration.py --target-version 0.16.2 "
@@ -1081,6 +1083,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 "first_item": plan.publication_next_actions[0],
                 "last_item": plan.publication_next_actions[-1],
             }
+        ),
+        "publication_next_action_preview_count": len(publication_next_action_preview),
+        "publication_next_action_preview": list(publication_next_action_preview),
+        "publication_next_action_preview_sha256": _stable_json_sha256(
+            publication_next_action_preview
+        ),
+        "publication_next_action_tail_count": len(publication_next_action_tail),
+        "publication_next_action_tail": list(publication_next_action_tail),
+        "publication_next_action_tail_sha256": _stable_json_sha256(
+            publication_next_action_tail
         ),
         "publication_primary_next_action": plan.publication_next_actions[0],
         "publication_handoff_key_count": len(expected_publication_handoff),
@@ -2206,6 +2218,30 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "publication_next_action_boundary_sha256: "
         f"`{artifact_bundle_summary['publication_next_action_boundary_sha256']}`"
+    ) in readme
+    assert (
+        "publication_next_action_preview_count: "
+        f"`{artifact_bundle_summary['publication_next_action_preview_count']}`"
+    ) in readme
+    assert (
+        "publication_next_action_preview: "
+        f"`{json.dumps(artifact_bundle_summary['publication_next_action_preview'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "publication_next_action_preview_sha256: "
+        f"`{artifact_bundle_summary['publication_next_action_preview_sha256']}`"
+    ) in readme
+    assert (
+        "publication_next_action_tail_count: "
+        f"`{artifact_bundle_summary['publication_next_action_tail_count']}`"
+    ) in readme
+    assert (
+        "publication_next_action_tail: "
+        f"`{json.dumps(artifact_bundle_summary['publication_next_action_tail'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "publication_next_action_tail_sha256: "
+        f"`{artifact_bundle_summary['publication_next_action_tail_sha256']}`"
     ) in readme
     assert (
         "publication_primary_next_action: "

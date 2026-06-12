@@ -175,7 +175,7 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 也会带上 `blocker_tail_count`、`blocker_tail` 和 `blocker_tail_sha256`，让工具只读整包摘要就能看到 blockers 末尾入口，并判断 blocker tail 是否漂移。
 
-`artifact_bundle_summary` 还会带上 `publication_primary_next_action`、`publication_next_action_first_item`、`publication_next_action_last_item` 和 `publication_next_action_boundary_sha256`，让工具只读整包摘要就能展示第一条发布同步待办，并检查 publication next actions 首尾边界。
+`artifact_bundle_summary` 还会带上 `publication_primary_next_action`、`publication_next_action_first_item`、`publication_next_action_last_item` 和 `publication_next_action_boundary_sha256`，让工具只读整包摘要就能展示第一条发布同步待办，并检查 publication next actions 首尾边界。它也会带上 `publication_next_action_preview_count`、`publication_next_action_preview`、`publication_next_action_preview_sha256`、`publication_next_action_tail_count`、`publication_next_action_tail` 和 `publication_next_action_tail_sha256`，让工具只读整包摘要就能看到发布待办的前后窗口。
 
 `artifact_bundle_summary` 还会带上 `publication_handoff_key_count`、`publication_handoff_schema_version`、`publication_handoff_first_key`、`publication_handoff_last_key`、`publication_handoff_key_boundary_sha256` 和 `publication_handoff_sha256`，让工具只读整包摘要就能判断 publication handoff 字段规模、语义版本、key 首尾边界或内容是否漂移。它也会带上 `publication_handoff_key_preview_count`、`publication_handoff_key_preview`、`publication_handoff_key_preview_sha256`、`publication_handoff_key_tail_count`、`publication_handoff_key_tail` 和 `publication_handoff_key_tail_sha256`，让工具不用展开完整 `publication-handoff.json` 也能检查字段清单前后窗口。
 
