@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.59] - 2026-06-12
+
+### Added
+- 生成的 candidate issue `create-issues.sh` 现在支持 `CLIANY_CREATE_ISSUES_DRY_RUN=1` 预览模式，只打印 `gh issue create` 命令，不运行 preflight 或创建 issue。
+- `artifact-manifest.json` 现在包含 `create_issues_dry_run_command`，方便工具和维护者展示安全预览入口。
+- 新增 `docs/releases/v0.16.59-draft.md`，把下一版 patch release 聚焦到 candidate issue 创建脚本的 dry-run 预览能力。
+
 ## [0.16.58] - 2026-06-12
 
 ### Changed
@@ -813,7 +820,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.58...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.59...HEAD
+[0.16.59]: https://github.com/pearjelly/cliany.site/compare/v0.16.58...v0.16.59
 [0.16.58]: https://github.com/pearjelly/cliany.site/compare/v0.16.57...v0.16.58
 [0.16.57]: https://github.com/pearjelly/cliany.site/compare/v0.16.56...v0.16.57
 [0.16.56]: https://github.com/pearjelly/cliany.site/compare/v0.16.55...v0.16.56
