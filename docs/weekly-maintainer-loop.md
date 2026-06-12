@@ -81,6 +81,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `release_draft_handoff_key_count` 和 `release_draft_handoff_sha256`，让工具只读整包摘要就能判断 release draft handoff 是否漂移。
 
+`artifact_bundle_summary` 还会带上 `release_draft_issues_sha256`，让工具只读整包摘要就能判断 release draft issues 列表是否漂移。
+
 `artifact_bundle_summary` 还会带上 `validation_command_count` 和 `validation_commands_sha256`，让工具只读整包摘要就能判断 validation commands 是否漂移。
 
 `artifact_bundle_summary` 还会带上 `review_checklist_count` 和 `review_checklist_sha256`，让工具只读整包摘要就能判断 review checklist 是否漂移。
