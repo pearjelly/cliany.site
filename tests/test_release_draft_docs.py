@@ -73,6 +73,7 @@ V01657_DRAFT = ROOT / "docs" / "releases" / "v0.16.57-draft.md"
 V01658_DRAFT = ROOT / "docs" / "releases" / "v0.16.58-draft.md"
 V01659_DRAFT = ROOT / "docs" / "releases" / "v0.16.59-draft.md"
 V01660_DRAFT = ROOT / "docs" / "releases" / "v0.16.60-draft.md"
+V01661_DRAFT = ROOT / "docs" / "releases" / "v0.16.61-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -3199,6 +3200,51 @@ def test_v01660_release_draft_tracks_create_issues_safety_metadata():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.60 --issues-dir",
         "git tag v0.16.60",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v01661_release_draft_has_required_sections():
+    text = V01661_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.61 发布草案",
+        "**目标版本：** `0.16.61`",
+        "**提交范围：** `v0.16.60..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v01661_release_draft_tracks_issue_body_inventory():
+    text = V01661_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "issue_body_inventory",
+        "Issue Body Inventory",
+        "case_id",
+        "issue_body_name",
+        "byte_count",
+        "sha256",
+        "SHA-256",
+        "artifact-manifest.json",
+        "README.md",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.61 --issues-dir",
+        "git tag v0.16.61",
     ]
     for snippet in required:
         assert snippet in text

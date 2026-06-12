@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import shlex
 import sys
@@ -910,6 +911,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     directory.mkdir(parents=True, exist_ok=True)
     metadata: list[dict[str, Any]] = []
     issue_commands: list[str] = []
+    issue_body_inventory = _issue_body_inventory(plan.candidate_promotions)
     for promotion in plan.candidate_promotions:
         body_path = directory / f"{promotion.case_id}.md"
         body_path.write_text(promotion.issue_body + "\n", encoding="utf-8")
@@ -955,6 +957,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "issue_artifacts_command": plan.issue_artifacts_command,
         "create_issues_dry_run_command": create_issues_safety["dry_run_command"],
         "create_issues_safety": create_issues_safety,
+        "issue_body_inventory": issue_body_inventory,
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -1046,6 +1049,7 @@ def _render_issue_artifacts_readme(plan: IterationPlan) -> str:
     body_files = "\n".join(f"- `{promotion.case_id}.md`" for promotion in plan.candidate_promotions)
     body_files = body_files or "- No candidate issue body files were generated."
     candidate_summary = _issue_artifact_candidate_summary(plan.candidate_promotions)
+    body_inventory = _issue_artifact_body_inventory_markdown(plan.candidate_promotions)
     gate_reason_codes = _issue_artifact_gate_reason_codes(plan)
     gate_reason_descriptions = _issue_artifact_gate_reason_descriptions(plan)
     gate_latest_tag = _format_context_value(_candidate_issue_gate_evidence_value(plan, "publication_latest_tag"))
@@ -1078,6 +1082,8 @@ Generated for target version `{plan.target_version}`.
 {body_files}
 
 {candidate_summary}
+
+{body_inventory}
 
 ## Publication Handoff
 
@@ -1247,6 +1253,40 @@ def _issue_artifact_create_issues_safety(script_path: Path) -> dict[str, Any]:
         "preflight_command": "python scripts/check_release_publication.py --strict --json",
         "preflight_json": "/tmp/cliany-issue-publication-check.json",
     }
+
+
+def _issue_body_inventory(promotions: list[CandidatePromotion]) -> list[dict[str, Any]]:
+    inventory: list[dict[str, Any]] = []
+    for promotion in promotions:
+        body_name = f"{promotion.case_id}.md"
+        body_bytes = f"{promotion.issue_body}\n".encode()
+        inventory.append(
+            {
+                "case_id": promotion.case_id,
+                "issue_body_name": body_name,
+                "byte_count": len(body_bytes),
+                "sha256": hashlib.sha256(body_bytes).hexdigest(),
+            }
+        )
+    return inventory
+
+
+def _issue_artifact_body_inventory_markdown(promotions: list[CandidatePromotion]) -> str:
+    inventory = _issue_body_inventory(promotions)
+    if not inventory:
+        return "## Issue Body Inventory\n\n- No issue body inventory is available."
+    lines = [
+        "## Issue Body Inventory",
+        "",
+        "| Case | Issue Body | Bytes | SHA-256 |",
+        "|------|------------|-------|---------|",
+    ]
+    for item in inventory:
+        lines.append(
+            f"| `{item['case_id']}` | `{item['issue_body_name']}` | "
+            f"{item['byte_count']} | `{item['sha256']}` |"
+        )
+    return "\n".join(lines)
 
 
 def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> str:

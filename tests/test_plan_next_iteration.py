@@ -1,3 +1,4 @@
+import hashlib
 import importlib.util
 import json
 import sys
@@ -449,6 +450,17 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     release_draft_handoff = json.loads((issues_dir / "release-draft-handoff.json").read_text(encoding="utf-8"))
     script = (issues_dir / "create-issues.sh").read_text(encoding="utf-8")
     readme = (issues_dir / "README.md").read_text(encoding="utf-8")
+    issue_body_inventory = []
+    for body_name in ("pypi-project-search.md", "npm-package-search.md"):
+        body_bytes = (issues_dir / body_name).read_bytes()
+        issue_body_inventory.append(
+            {
+                "case_id": body_name.removesuffix(".md"),
+                "issue_body_name": body_name,
+                "byte_count": len(body_bytes),
+                "sha256": hashlib.sha256(body_bytes).hexdigest(),
+            }
+        )
 
     assert "## Scope: promote candidate case `pypi-project-search`" in body
     assert "## Reproduction Context" in body
@@ -531,6 +543,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "preflight_command": "python scripts/check_release_publication.py --strict --json",
             "preflight_json": "/tmp/cliany-issue-publication-check.json",
         },
+        "issue_body_inventory": issue_body_inventory,
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -648,6 +661,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "| `pypi-project-search` | `pypi-project-search.md` | "
         "https://pypi.org/search/?q=cliany-site | 2 | 2 |"
+    ) in readme
+    assert "## Issue Body Inventory" in readme
+    assert "| Case | Issue Body | Bytes | SHA-256 |" in readme
+    assert (
+        f"| `pypi-project-search` | `pypi-project-search.md` | "
+        f"{issue_body_inventory[0]['byte_count']} | `{issue_body_inventory[0]['sha256']}` |"
     ) in readme
     assert "## Publication Handoff" in readme
     assert "publication_ok: `false`" in readme
