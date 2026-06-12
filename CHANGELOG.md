@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.121] - 2026-06-12
+
+### Added
+- [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在明确说明 `Candidate Issue Gate Quick Summary` 会展示 publication upstream HEAD、tag state、published state 和 remote refs。
+- `tests/test_weekly_maintainer_loop_docs.py` 固定 quick summary 文档契约，避免维护者循环说明遗漏现有发布状态字段。
+- 新增 `docs/releases/v0.16.121-draft.md`，把下一版 patch release 聚焦到 candidate issue gate quick summary 的文档契约完整性。
+
 ## [0.16.120] - 2026-06-12
 
 ### Added
@@ -1245,7 +1252,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.120...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.121...HEAD
+[0.16.121]: https://github.com/pearjelly/cliany.site/compare/v0.16.120...v0.16.121
 [0.16.120]: https://github.com/pearjelly/cliany.site/compare/v0.16.119...v0.16.120
 [0.16.119]: https://github.com/pearjelly/cliany.site/compare/v0.16.118...v0.16.119
 [0.16.118]: https://github.com/pearjelly/cliany.site/compare/v0.16.117...v0.16.118
