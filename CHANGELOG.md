@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.86] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `candidate_issue_gate_key_count` 和 `candidate_issue_gate_sha256`，方便工具只读整包摘要就检测整个 candidate issue gate 是否漂移。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示 candidate issue gate key count 和 hash。
+- 新增 `docs/releases/v0.16.86-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 candidate issue gate 整体漂移检测。
+
 ## [0.16.85] - 2026-06-12
 
 ### Added
@@ -1002,7 +1009,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.85...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.86...HEAD
+[0.16.86]: https://github.com/pearjelly/cliany.site/compare/v0.16.85...v0.16.86
 [0.16.85]: https://github.com/pearjelly/cliany.site/compare/v0.16.84...v0.16.85
 [0.16.84]: https://github.com/pearjelly/cliany.site/compare/v0.16.83...v0.16.84
 [0.16.83]: https://github.com/pearjelly/cliany.site/compare/v0.16.82...v0.16.83
