@@ -153,6 +153,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 还会带上 `blocker_preview_count`、`blocker_preview` 和 `blocker_preview_sha256`，让工具只读整包摘要就能看到 blockers 入口，并判断 blocker preview 是否漂移。
 
+`artifact_bundle_summary` 也会带上 `blocker_tail_count`、`blocker_tail` 和 `blocker_tail_sha256`，让工具只读整包摘要就能看到 blockers 末尾入口，并判断 blocker tail 是否漂移。
+
 `artifact_bundle_summary` 还会带上 `publication_primary_next_action`，让工具只读整包摘要就能展示第一条发布同步待办。
 
 `artifact_bundle_summary` 还会带上 `publication_handoff_key_count`、`publication_handoff_schema_version` 和 `publication_handoff_sha256`，让工具只读整包摘要就能判断 publication handoff 字段规模、语义版本或内容是否漂移。

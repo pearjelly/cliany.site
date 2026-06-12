@@ -706,6 +706,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     publication_visibility_key_preview = publication_visibility_keys[:8]
     publication_visibility_key_tail = publication_visibility_keys[-8:]
     blocker_preview = plan.blockers[:8]
+    blocker_tail = plan.blockers[-8:]
     review_order = [
         "README.md",
         "publication-handoff.json",
@@ -991,6 +992,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "blocker_preview_count": len(blocker_preview),
         "blocker_preview": list(blocker_preview),
         "blocker_preview_sha256": _stable_json_sha256(blocker_preview),
+        "blocker_tail_count": len(blocker_tail),
+        "blocker_tail": list(blocker_tail),
+        "blocker_tail_sha256": _stable_json_sha256(blocker_tail),
         "next_action_count": len(plan.next_actions),
         "next_actions_sha256": _stable_json_sha256(plan.next_actions),
         "publication_next_action_count": 3,
@@ -1432,6 +1436,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ] == artifact_manifest["blockers"][
         : artifact_manifest["artifact_bundle_summary"]["blocker_preview_count"]
     ]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "blocker_tail"
+    ] == artifact_manifest["blockers"][
+        -artifact_manifest["artifact_bundle_summary"]["blocker_tail_count"] :
+    ]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1822,6 +1831,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "blocker_preview_sha256: "
         f"`{artifact_bundle_summary['blocker_preview_sha256']}`"
+    ) in readme
+    assert (
+        "blocker_tail_count: "
+        f"`{artifact_bundle_summary['blocker_tail_count']}`"
+    ) in readme
+    assert "blocker_tail: " in readme
+    assert (
+        "blocker_tail_sha256: "
+        f"`{artifact_bundle_summary['blocker_tail_sha256']}`"
     ) in readme
     assert f"next_action_count: `{len(plan.next_actions)}`" in readme
     assert f"next_actions_sha256: `{_stable_json_sha256(plan.next_actions)}`" in readme
