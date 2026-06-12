@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.194] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `next_action_first_item`、`next_action_last_item` 和 `next_action_boundary_sha256`，让只读取整包摘要的维护工具能检查 next actions 列表首尾边界。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 next action first/last item 与 boundary hash，并继续展示 next action preview、next action tail、next action count 与完整 hash。
+- 新增 `docs/releases/v0.16.194-draft.md`，把下一版 patch release 聚焦到 next action boundary 可见性。
+
 ## [0.16.193] - 2026-06-13
 
 ### Added
@@ -1756,7 +1763,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.193...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.194...HEAD
+[0.16.194]: https://github.com/pearjelly/cliany.site/compare/v0.16.193...v0.16.194
 [0.16.193]: https://github.com/pearjelly/cliany.site/compare/v0.16.192...v0.16.193
 [0.16.192]: https://github.com/pearjelly/cliany.site/compare/v0.16.191...v0.16.192
 [0.16.191]: https://github.com/pearjelly/cliany.site/compare/v0.16.190...v0.16.191
