@@ -105,7 +105,7 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `issue_artifacts_command_sha256`，让工具只读整包摘要就能判断 artifacts 复现命令是否漂移。
 
-`artifact_bundle_summary` 还会带上 `publication_visibility_key_count`、`publication_visibility_sha256` 和 `publication_visibility_summary_sha256`，让工具只读整包摘要就能判断发布可见性对象结构/内容或 summary 文本是否漂移。
+`artifact_bundle_summary` 还会带上 `publication_visibility_key_count`、`publication_visibility_sha256`、`publication_visibility_first_key`、`publication_visibility_last_key`、`publication_visibility_key_boundary_sha256` 和 `publication_visibility_summary_sha256`，让工具只读整包摘要就能判断发布可见性对象结构、首尾边界、内容或 summary 文本是否漂移。
 
 当 `candidate_issue_gate.reason_codes` 同时包含 publication 阻塞和 `release_draft_issues` 时，`required_actions` 会先列 publication 待办，再列 `Resolve release draft issue: ...`，让维护者无需交叉读取 release draft handoff 才能知道下一步修什么。
 

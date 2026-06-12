@@ -698,6 +698,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     }
     artifact_files_key_preview = artifact_file_keys[:8]
     artifact_files_key_tail = artifact_file_keys[-8:]
+    publication_visibility_keys = list(plan.publication_visibility)
+    publication_visibility_key_boundary = {
+        "first_key": publication_visibility_keys[0],
+        "last_key": publication_visibility_keys[-1],
+    }
     review_order = [
         "README.md",
         "publication-handoff.json",
@@ -952,6 +957,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "issue_artifacts_command_sha256": _stable_json_sha256(plan.issue_artifacts_command),
         "publication_visibility_key_count": len(plan.publication_visibility),
         "publication_visibility_sha256": _stable_json_sha256(plan.publication_visibility),
+        "publication_visibility_first_key": publication_visibility_key_boundary[
+            "first_key"
+        ],
+        "publication_visibility_last_key": publication_visibility_key_boundary[
+            "last_key"
+        ],
+        "publication_visibility_key_boundary_sha256": _stable_json_sha256(
+            publication_visibility_key_boundary
+        ),
         "publication_visibility_summary_sha256": _stable_json_sha256(
             plan.publication_visibility["summary"]
         ),
@@ -1373,6 +1387,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "artifact_files_key_tail_count"
         ] :
     ]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "publication_visibility_first_key"
+    ] == list(artifact_manifest["publication_visibility"])[0]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "publication_visibility_last_key"
+    ] == list(artifact_manifest["publication_visibility"])[-1]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1718,6 +1738,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"publication_visibility_sha256: "
         f"`{artifact_bundle_summary['publication_visibility_sha256']}`"
+    ) in readme
+    assert (
+        "publication_visibility_first_key: "
+        f"`{artifact_bundle_summary['publication_visibility_first_key']}`"
+    ) in readme
+    assert (
+        "publication_visibility_last_key: "
+        f"`{artifact_bundle_summary['publication_visibility_last_key']}`"
+    ) in readme
+    assert (
+        "publication_visibility_key_boundary_sha256: "
+        f"`{artifact_bundle_summary['publication_visibility_key_boundary_sha256']}`"
     ) in readme
     assert (
         f"publication_visibility_summary_sha256: "

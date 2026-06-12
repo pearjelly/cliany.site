@@ -156,6 +156,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "issue_artifacts_command_sha256",
     "publication_visibility_key_count",
     "publication_visibility_sha256",
+    "publication_visibility_first_key",
+    "publication_visibility_last_key",
+    "publication_visibility_key_boundary_sha256",
     "publication_visibility_summary_sha256",
     "blocker_count",
     "blockers_sha256",
@@ -1994,6 +1997,15 @@ def _issue_artifact_bundle_summary(
     }
     artifact_files_key_preview = artifact_file_keys[:8]
     artifact_files_key_tail = artifact_file_keys[-8:]
+    publication_visibility_keys = list(plan.publication_visibility)
+    publication_visibility_key_boundary = {
+        "first_key": publication_visibility_keys[0]
+        if publication_visibility_keys
+        else None,
+        "last_key": publication_visibility_keys[-1]
+        if publication_visibility_keys
+        else None,
+    }
     artifact_manifest_payload = _artifact_manifest_payload_without_summary(
         plan=plan,
         candidate_cases=candidate_cases,
@@ -2192,6 +2204,15 @@ def _issue_artifact_bundle_summary(
         "issue_artifacts_command_sha256": _stable_json_sha256(plan.issue_artifacts_command),
         "publication_visibility_key_count": len(plan.publication_visibility),
         "publication_visibility_sha256": _stable_json_sha256(plan.publication_visibility),
+        "publication_visibility_first_key": publication_visibility_key_boundary[
+            "first_key"
+        ],
+        "publication_visibility_last_key": publication_visibility_key_boundary[
+            "last_key"
+        ],
+        "publication_visibility_key_boundary_sha256": _stable_json_sha256(
+            publication_visibility_key_boundary
+        ),
         "publication_visibility_summary_sha256": _stable_json_sha256(
             plan.publication_visibility.get("summary")
         ),
@@ -2481,6 +2502,10 @@ def _issue_artifact_bundle_summary_markdown(
             f"- issue_artifacts_command_sha256: `{summary['issue_artifacts_command_sha256']}`",
             f"- publication_visibility_key_count: `{summary['publication_visibility_key_count']}`",
             f"- publication_visibility_sha256: `{summary['publication_visibility_sha256']}`",
+            f"- publication_visibility_first_key: `{summary['publication_visibility_first_key']}`",
+            f"- publication_visibility_last_key: `{summary['publication_visibility_last_key']}`",
+            "- publication_visibility_key_boundary_sha256: "
+            f"`{summary['publication_visibility_key_boundary_sha256']}`",
             "- publication_visibility_summary_sha256: "
             f"`{summary['publication_visibility_summary_sha256']}`",
             f"- blocker_count: `{summary['blocker_count']}`",
