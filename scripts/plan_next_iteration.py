@@ -1256,6 +1256,8 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
             f"`{_format_context_value(_candidate_issue_gate_evidence_value(plan, 'publication_latest_tag'))}`",
             "- publication_ahead_count: "
             f"`{_format_context_value(_candidate_issue_gate_evidence_value(plan, 'publication_ahead_count'))}`",
+            "- publication_behind_count: "
+            f"`{_format_context_value(plan.publication_ref_context.get('behind_count'))}`",
             "- publication_remote_checked: "
             f"`{_format_context_value(_candidate_issue_gate_evidence_value(plan, 'publication_remote_checked'))}`",
             "- release_draft_issue_count: "
