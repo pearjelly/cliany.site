@@ -798,6 +798,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "candidate_cases_preview_sha256": _stable_json_sha256(
             ["pypi-project-search", "npm-package-search"]
         ),
+        "candidate_cases_tail_count": 2,
+        "candidate_cases_tail": ["pypi-project-search", "npm-package-search"],
+        "candidate_cases_tail_sha256": _stable_json_sha256(
+            ["pypi-project-search", "npm-package-search"]
+        ),
         "candidate_cases_sha256": _stable_json_sha256(["pypi-project-search", "npm-package-search"]),
         "body_count": 2,
         "issue_body_summary_sha256": _stable_json_sha256(issue_body_summary),
@@ -1130,6 +1135,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert artifact_manifest["artifact_bundle_summary"]["candidate_cases_preview"] == artifact_manifest[
         "candidate_cases"
     ][: artifact_manifest["artifact_bundle_summary"]["candidate_cases_preview_count"]]
+    assert artifact_manifest["artifact_bundle_summary"]["candidate_cases_tail"] == artifact_manifest[
+        "candidate_cases"
+    ][-artifact_manifest["artifact_bundle_summary"]["candidate_cases_tail_count"] :]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1295,6 +1303,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "candidate_cases_preview: " in readme
     assert (
         "candidate_cases_preview_sha256: "
+        f"`{_stable_json_sha256(['pypi-project-search', 'npm-package-search'])}`"
+    ) in readme
+    assert "candidate_cases_tail_count: `2`" in readme
+    assert "candidate_cases_tail: " in readme
+    assert (
+        "candidate_cases_tail_sha256: "
         f"`{_stable_json_sha256(['pypi-project-search', 'npm-package-search'])}`"
     ) in readme
     assert "candidate_cases_sha256: `" in readme

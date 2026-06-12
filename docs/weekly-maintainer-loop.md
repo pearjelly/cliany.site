@@ -61,6 +61,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `candidate_cases_preview_count`、`candidate_cases_preview` 和 `candidate_cases_preview_sha256`，让工具只读整包摘要就能看到 candidate case 列表入口，并判断 preview 是否漂移。
 
+`artifact_bundle_summary` 也会带上 `candidate_cases_tail_count`、`candidate_cases_tail` 和 `candidate_cases_tail_sha256`，让工具只读整包摘要就能检查 candidate case 列表末尾入口，并判断 tail 是否漂移。
+
 `artifact_bundle_summary` 也会带上 `issue_body_summary_sha256`，让工具只读整包摘要就能判断 issue body summary 是否漂移。
 
 `artifact_bundle_summary` 也会带上 `issue_metadata_count` 和 `issue_metadata_sha256`，让工具只读整包摘要就能判断 issue metadata 是否漂移；这个摘要覆盖 case、title、labels、target URL、commands、offline commands 和 body 文件名，不包含本机输出路径。
