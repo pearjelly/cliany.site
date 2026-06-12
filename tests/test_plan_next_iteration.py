@@ -343,6 +343,25 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "Push tag `v0.16.1` after the branch is published.",
         ],
         "publication_publish_commands": ["python scripts/check_release_publication.py --json"],
+        "publication_ref_context": {
+            "repo_root": "/repo/cliany.site",
+            "branch": "master",
+            "upstream": "origin/master",
+            "remote": "origin",
+            "local_head": "abc123",
+            "upstream_head": "def456",
+            "ahead_count": 2,
+            "behind_count": 0,
+            "latest_tag": "v0.16.1",
+            "tag_commit": "abc123",
+            "remote_checked": False,
+        },
+        "publication_worktree_clean": False,
+        "publication_worktree_status": [" M CHANGELOG.md"],
+        "publication_publish_script_command": (
+            "python scripts/check_release_publication.py --json "
+            "--publish-script /tmp/cliany-publish-release.sh"
+        ),
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -427,7 +446,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "Generated for target version `0.16.2`." in readme
     assert "`issue-metadata.json`: structured issue title, labels, reproduction context" in readme
     assert "`artifact-manifest.json`: candidate cases, blockers, next actions" in readme
-    assert "publication status, publication next actions, publish commands" in readme
+    assert "publication status, publication ref context, worktree status" in readme
     assert "body file name" in readme
     assert "`publication-handoff.json`: publication status, visibility, next actions" in readme
     assert "`release-draft-handoff.json`: target version, release draft path" in readme
