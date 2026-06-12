@@ -159,6 +159,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "publication_visibility_first_key",
     "publication_visibility_last_key",
     "publication_visibility_key_boundary_sha256",
+    "publication_visibility_key_preview_count",
+    "publication_visibility_key_preview",
+    "publication_visibility_key_preview_sha256",
     "publication_visibility_summary_sha256",
     "blocker_count",
     "blockers_sha256",
@@ -2006,6 +2009,7 @@ def _issue_artifact_bundle_summary(
         if publication_visibility_keys
         else None,
     }
+    publication_visibility_key_preview = publication_visibility_keys[:8]
     artifact_manifest_payload = _artifact_manifest_payload_without_summary(
         plan=plan,
         candidate_cases=candidate_cases,
@@ -2212,6 +2216,13 @@ def _issue_artifact_bundle_summary(
         ],
         "publication_visibility_key_boundary_sha256": _stable_json_sha256(
             publication_visibility_key_boundary
+        ),
+        "publication_visibility_key_preview_count": len(
+            publication_visibility_key_preview
+        ),
+        "publication_visibility_key_preview": list(publication_visibility_key_preview),
+        "publication_visibility_key_preview_sha256": _stable_json_sha256(
+            publication_visibility_key_preview
         ),
         "publication_visibility_summary_sha256": _stable_json_sha256(
             plan.publication_visibility.get("summary")
@@ -2506,6 +2517,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"- publication_visibility_last_key: `{summary['publication_visibility_last_key']}`",
             "- publication_visibility_key_boundary_sha256: "
             f"`{summary['publication_visibility_key_boundary_sha256']}`",
+            "- publication_visibility_key_preview_count: "
+            f"`{summary['publication_visibility_key_preview_count']}`",
+            "- publication_visibility_key_preview: "
+            f"`{json.dumps(summary['publication_visibility_key_preview'], ensure_ascii=False)}`",
+            "- publication_visibility_key_preview_sha256: "
+            f"`{summary['publication_visibility_key_preview_sha256']}`",
             "- publication_visibility_summary_sha256: "
             f"`{summary['publication_visibility_summary_sha256']}`",
             f"- blocker_count: `{summary['blocker_count']}`",

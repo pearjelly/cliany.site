@@ -703,6 +703,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "first_key": publication_visibility_keys[0],
         "last_key": publication_visibility_keys[-1],
     }
+    publication_visibility_key_preview = publication_visibility_keys[:8]
     review_order = [
         "README.md",
         "publication-handoff.json",
@@ -965,6 +966,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ],
         "publication_visibility_key_boundary_sha256": _stable_json_sha256(
             publication_visibility_key_boundary
+        ),
+        "publication_visibility_key_preview_count": len(
+            publication_visibility_key_preview
+        ),
+        "publication_visibility_key_preview": list(publication_visibility_key_preview),
+        "publication_visibility_key_preview_sha256": _stable_json_sha256(
+            publication_visibility_key_preview
         ),
         "publication_visibility_summary_sha256": _stable_json_sha256(
             plan.publication_visibility["summary"]
@@ -1393,6 +1401,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert artifact_manifest["artifact_bundle_summary"][
         "publication_visibility_last_key"
     ] == list(artifact_manifest["publication_visibility"])[-1]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "publication_visibility_key_preview"
+    ] == list(artifact_manifest["publication_visibility"])[
+        : artifact_manifest["artifact_bundle_summary"][
+            "publication_visibility_key_preview_count"
+        ]
+    ]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1750,6 +1765,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "publication_visibility_key_boundary_sha256: "
         f"`{artifact_bundle_summary['publication_visibility_key_boundary_sha256']}`"
+    ) in readme
+    assert (
+        "publication_visibility_key_preview_count: "
+        f"`{artifact_bundle_summary['publication_visibility_key_preview_count']}`"
+    ) in readme
+    assert "publication_visibility_key_preview: " in readme
+    assert (
+        "publication_visibility_key_preview_sha256: "
+        f"`{artifact_bundle_summary['publication_visibility_key_preview_sha256']}`"
     ) in readme
     assert (
         f"publication_visibility_summary_sha256: "
