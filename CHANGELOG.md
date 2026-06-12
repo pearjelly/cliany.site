@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.22] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py` 的 JSON、文本和 Markdown report 现在会输出 `release_draft_issues`，把下一版 release draft 缺失或 snippet 校验失败的具体原因直接带到周初计划里。
 - 新增 `docs/releases/v0.16.22-draft.md`，把下一版 patch release 聚焦到 next iteration plan 的 release draft 诊断细节。
@@ -588,7 +590,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.21...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.22...HEAD
+[0.16.22]: https://github.com/pearjelly/cliany.site/compare/v0.16.21...v0.16.22
 [0.16.21]: https://github.com/pearjelly/cliany.site/compare/v0.16.20...v0.16.21
 [0.16.20]: https://github.com/pearjelly/cliany.site/compare/v0.16.19...v0.16.20
 [0.16.19]: https://github.com/pearjelly/cliany.site/compare/v0.16.18...v0.16.19
