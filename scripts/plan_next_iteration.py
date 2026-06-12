@@ -101,6 +101,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "issue_body_inventory_preview_count",
     "issue_body_inventory_preview",
     "issue_body_inventory_preview_sha256",
+    "issue_body_inventory_first_entry",
+    "issue_body_inventory_last_entry",
+    "issue_body_inventory_boundary_sha256",
     "issue_body_inventory_tail_count",
     "issue_body_inventory_tail",
     "issue_body_inventory_tail_sha256",
@@ -1937,6 +1940,10 @@ def _issue_artifact_bundle_summary(
     )
     issue_body_inventory_preview = issue_body_inventory[:8]
     issue_body_inventory_tail = issue_body_inventory[-8:]
+    issue_body_inventory_boundary = {
+        "first_entry": issue_body_inventory[0] if issue_body_inventory else None,
+        "last_entry": issue_body_inventory[-1] if issue_body_inventory else None,
+    }
     return {
         "artifact_bundle_summary_key_count": len(ARTIFACT_BUNDLE_SUMMARY_KEYS),
         "artifact_bundle_summary_keys_sha256": _stable_json_sha256(ARTIFACT_BUNDLE_SUMMARY_KEYS),
@@ -2024,6 +2031,13 @@ def _issue_artifact_bundle_summary(
         "issue_body_inventory_preview": list(issue_body_inventory_preview),
         "issue_body_inventory_preview_sha256": _stable_json_sha256(
             issue_body_inventory_preview
+        ),
+        "issue_body_inventory_first_entry": issue_body_inventory_boundary[
+            "first_entry"
+        ],
+        "issue_body_inventory_last_entry": issue_body_inventory_boundary["last_entry"],
+        "issue_body_inventory_boundary_sha256": _stable_json_sha256(
+            issue_body_inventory_boundary
         ),
         "issue_body_inventory_tail_count": len(issue_body_inventory_tail),
         "issue_body_inventory_tail": list(issue_body_inventory_tail),
@@ -2257,6 +2271,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{json.dumps(summary['issue_body_inventory_preview'], ensure_ascii=False)}`",
             "- issue_body_inventory_preview_sha256: "
             f"`{summary['issue_body_inventory_preview_sha256']}`",
+            "- issue_body_inventory_first_entry: "
+            f"`{json.dumps(summary['issue_body_inventory_first_entry'], ensure_ascii=False)}`",
+            "- issue_body_inventory_last_entry: "
+            f"`{json.dumps(summary['issue_body_inventory_last_entry'], ensure_ascii=False)}`",
+            "- issue_body_inventory_boundary_sha256: "
+            f"`{summary['issue_body_inventory_boundary_sha256']}`",
             f"- issue_body_inventory_tail_count: `{summary['issue_body_inventory_tail_count']}`",
             "- issue_body_inventory_tail: "
             f"`{json.dumps(summary['issue_body_inventory_tail'], ensure_ascii=False)}`",

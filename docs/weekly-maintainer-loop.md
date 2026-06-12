@@ -67,6 +67,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `issue_body_inventory_preview_count`、`issue_body_inventory_preview` 和 `issue_body_inventory_preview_sha256`，让工具只读整包摘要就能看到 issue body inventory 入口，并判断 inventory preview 是否漂移。
 
+`artifact_bundle_summary` 还会带上 `issue_body_inventory_first_entry`、`issue_body_inventory_last_entry` 和 `issue_body_inventory_boundary_sha256`，让工具只读整包摘要就能确认 issue body inventory 首尾边界是否符合预期。
+
 `artifact_bundle_summary` 也会带上 `issue_body_inventory_tail_count`、`issue_body_inventory_tail` 和 `issue_body_inventory_tail_sha256`，让工具只读整包摘要就能检查 issue body inventory 末尾入口，并判断 inventory tail 是否漂移。
 
 `artifact_bundle_summary` 也会带上 `issue_body_summary_sha256`，让工具只读整包摘要就能判断 issue body summary 是否漂移。

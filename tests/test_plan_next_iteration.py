@@ -556,6 +556,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     }
     issue_body_inventory_preview = issue_body_inventory[:8]
     issue_body_inventory_tail = issue_body_inventory[-8:]
+    issue_body_inventory_boundary = {
+        "first_entry": issue_body_inventory[0],
+        "last_entry": issue_body_inventory[-1],
+    }
     stable_issue_metadata = [
         {
             "case_id": item["case_id"],
@@ -819,6 +823,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "issue_body_inventory_preview": list(issue_body_inventory_preview),
         "issue_body_inventory_preview_sha256": _stable_json_sha256(
             issue_body_inventory_preview
+        ),
+        "issue_body_inventory_first_entry": issue_body_inventory_boundary[
+            "first_entry"
+        ],
+        "issue_body_inventory_last_entry": issue_body_inventory_boundary["last_entry"],
+        "issue_body_inventory_boundary_sha256": _stable_json_sha256(
+            issue_body_inventory_boundary
         ),
         "issue_body_inventory_tail_count": len(issue_body_inventory_tail),
         "issue_body_inventory_tail": list(issue_body_inventory_tail),
@@ -1176,6 +1187,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ] == artifact_manifest["issue_body_inventory"][
         -artifact_manifest["artifact_bundle_summary"]["issue_body_inventory_tail_count"] :
     ]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "issue_body_inventory_first_entry"
+    ] == artifact_manifest["issue_body_inventory"][0]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "issue_body_inventory_last_entry"
+    ] == artifact_manifest["issue_body_inventory"][-1]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1365,6 +1382,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "issue_body_inventory_preview_sha256: "
         f"`{artifact_bundle_summary['issue_body_inventory_preview_sha256']}`"
+    ) in readme
+    assert "issue_body_inventory_first_entry: " in readme
+    assert "issue_body_inventory_last_entry: " in readme
+    assert (
+        "issue_body_inventory_boundary_sha256: "
+        f"`{artifact_bundle_summary['issue_body_inventory_boundary_sha256']}`"
     ) in readme
     assert (
         "issue_body_inventory_tail_count: "
