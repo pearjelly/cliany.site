@@ -691,6 +691,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ).encode()
     review_order_sha256 = hashlib.sha256(review_order_bytes).hexdigest()
     review_order_preview = review_order[:8]
+    review_order_tail = review_order[-8:]
     candidate_issue_gate_evidence = _blocked_candidate_issue_gate()["evidence"]
     candidate_issue_gate_reason_descriptions = _blocked_candidate_issue_gate()["reason_descriptions"]
     create_issues_safety = {
@@ -871,6 +872,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "review_order_preview_count": len(review_order_preview),
         "review_order_preview": list(review_order_preview),
         "review_order_preview_sha256": _stable_json_sha256(review_order_preview),
+        "review_order_tail_count": len(review_order_tail),
+        "review_order_tail": list(review_order_tail),
+        "review_order_tail_sha256": _stable_json_sha256(review_order_tail),
         "inventory_sha256": issue_body_summary["inventory_sha256"],
         "issue_metadata_count": issue_metadata_summary["metadata_count"],
         "issue_metadata_sha256": issue_metadata_summary["metadata_sha256"],
@@ -1255,6 +1259,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "review_order_preview_count"
         ]
     ]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "review_order_tail"
+    ] == artifact_manifest["review_order"][
+        -artifact_manifest["artifact_bundle_summary"][
+            "review_order_tail_count"
+        ] :
+    ]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1509,6 +1520,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "review_order_preview_sha256: "
         f"`{artifact_bundle_summary['review_order_preview_sha256']}`"
+    ) in readme
+    assert (
+        "review_order_tail_count: "
+        f"`{artifact_bundle_summary['review_order_tail_count']}`"
+    ) in readme
+    assert "review_order_tail: " in readme
+    assert (
+        "review_order_tail_sha256: "
+        f"`{artifact_bundle_summary['review_order_tail_sha256']}`"
     ) in readme
     assert f"issue_metadata_count: `{issue_metadata_summary['metadata_count']}`" in readme
     assert f"issue_metadata_sha256: `{issue_metadata_summary['metadata_sha256']}`" in readme
