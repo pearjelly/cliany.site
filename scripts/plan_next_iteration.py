@@ -1251,6 +1251,8 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
             f"- next_action_count: `{len(plan.next_actions)}`",
             f"- publication_next_action_count: `{plan.publication_next_action_count}`",
             f"- publication_publish_command_count: `{plan.publication_publish_command_count}`",
+            "- publication_publish_script_command: "
+            f"{_summary_inline_code(plan.publication_publish_script_command)}",
             "- reason_code_count: "
             f"`{_format_context_value(plan.candidate_issue_gate.get('reason_code_count'))}`",
             "- required_action_count: "

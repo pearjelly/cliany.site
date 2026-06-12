@@ -1091,6 +1091,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert f"- next_action_count: `{len(plan.next_actions)}`" in readme
     assert "- publication_next_action_count: `3`" in readme
     assert "- publication_publish_command_count: `1`" in readme
+    assert (
+        "- publication_publish_script_command: "
+        "`python scripts/check_release_publication.py --json --publish-script /tmp/cliany-publish-release.sh`"
+    ) in readme
     assert "- reason_code_count: `3`" in readme
     assert "- required_action_count: `5`" in readme
     assert "- primary_reason_code: `publication_not_published`" in readme
