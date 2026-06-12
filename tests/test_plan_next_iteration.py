@@ -34,6 +34,26 @@ version = "{version}"
     )
 
 
+def _promotion_evidence(package_next_action: str, smoke_next_action: str) -> dict[str, dict[str, str | None]]:
+    return {
+        "adapter_package": {
+            "status": "pending",
+            "evidence": None,
+            "next_action": package_next_action,
+        },
+        "metadata_validation": {
+            "status": "pending",
+            "evidence": None,
+            "next_action": "Run validate_cases with --packages-dir.",
+        },
+        "online_smoke": {
+            "status": "pending",
+            "evidence": None,
+            "next_action": smoke_next_action,
+        },
+    }
+
+
 def _readiness_report() -> SimpleNamespace:
     return SimpleNamespace(
         ok=False,
@@ -76,6 +96,10 @@ def _readiness_report() -> SimpleNamespace:
                         "metadata_validation": "Run validate_cases with --packages-dir.",
                         "online_smoke": "Run read-only PyPI search smoke.",
                     },
+                    promotion_evidence=_promotion_evidence(
+                        "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
+                        "Run read-only PyPI search smoke.",
+                    ),
                 ),
                 SimpleNamespace(
                     id="npm-package-search",
@@ -90,6 +114,10 @@ def _readiness_report() -> SimpleNamespace:
                         "metadata_validation": "Run validate_cases with --packages-dir.",
                         "online_smoke": "Run read-only npm search smoke.",
                     },
+                    promotion_evidence=_promotion_evidence(
+                        "Generate www.npmjs.com-<version>.cliany-adapter.tar.gz.",
+                        "Run read-only npm search smoke.",
+                    ),
                 ),
                 SimpleNamespace(id="search-extraction-gap", status="known-gap"),
             ],
@@ -359,6 +387,10 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "adapter_package": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
         "metadata_validation": "Run validate_cases with --packages-dir.",
         "online_smoke": "Run read-only PyPI search smoke.",
+        "promotion_evidence": _promotion_evidence(
+            "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
+            "Run read-only PyPI search smoke.",
+        ),
         "issue_body": (
             "## Scope: promote candidate case `pypi-project-search`\n\n"
             "Move this candidate case one step closer to `active` without changing its status early.\n\n"
@@ -372,8 +404,17 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "  - `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md`\n\n"
             "## Tasks\n"
             "- [ ] `adapter_package`: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n"
+            "  - Current status: `pending`\n"
+            "  - Current evidence: Not attached yet.\n"
+            "  - Next action: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n"
             "- [ ] `metadata_validation`: Run validate_cases with --packages-dir.\n"
-            "- [ ] `online_smoke`: Run read-only PyPI search smoke.\n\n"
+            "  - Current status: `pending`\n"
+            "  - Current evidence: Not attached yet.\n"
+            "  - Next action: Run validate_cases with --packages-dir.\n"
+            "- [ ] `online_smoke`: Run read-only PyPI search smoke.\n"
+            "  - Current status: `pending`\n"
+            "  - Current evidence: Not attached yet.\n"
+            "  - Next action: Run read-only PyPI search smoke.\n\n"
             "## Validation Evidence\n"
             "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.\n"
             "- Paste the local `scripts/validate_cases.py --packages-dir` result.\n"
@@ -401,7 +442,11 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "| `pypi-project-search` | Promote candidate case `pypi-project-search` toward active |" in text
     assert "`case-proposal`, `good first issue`" in text
     assert "## Candidate Promotion Tasks" in text
+    assert "| Case | Adapter Package | Metadata Validation | Online Smoke | Promotion Evidence |" in text
+    assert "adapter_package: pending; next: Generate pypi.org-<version>.cliany-adapter.tar.gz." in text
     assert "## Candidate Issue Body Templates" in text
+    assert "  - Current status: `pending`" in text
+    assert "  - Current evidence: Not attached yet." in text
     assert "## Publication Publish Commands" in text
     assert "| publication_next_action_count | `3` |" in text
     assert "| publication_publish_command_count | `1` |" in text
@@ -575,6 +620,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "target_url": item["target_url"],
             "commands": item["commands"],
             "offline_commands": item["offline_commands"],
+            "promotion_evidence": item["promotion_evidence"],
             "issue_body_name": item["issue_body_name"],
         }
         for item in metadata
@@ -1446,6 +1492,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "python scripts/validate_cases.py --strict",
         "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md",
     ]
+    assert metadata[0]["promotion_evidence"] == _promotion_evidence(
+        "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
+        "Run read-only PyPI search smoke.",
+    )
     assert metadata[0]["issue_body_name"] == "pypi-project-search.md"
     assert metadata[0]["issue_body_file"].endswith("pypi-project-search.md")
     assert "gh issue create" in metadata[0]["create_command"]

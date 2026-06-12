@@ -20,6 +20,8 @@ ALLOWED_STATUSES = {"active", "candidate", "degraded", "known-gap", "retired"}
 INSTALL_RE = re.compile(r"^cliany-site market install (?P<path>\S+)")
 REQUIRED_PACKAGE_FILES = {"commands.py", "metadata.json"}
 PACKAGE_EXTENSION = ".cliany-adapter.tar.gz"
+PROMOTION_FIELDS = ("adapter_package", "metadata_validation", "online_smoke")
+PROMOTION_EVIDENCE_STATUSES = {"pending", "complete", "blocked"}
 BUILTIN_GROUPS = {
     "browser",
     "check",
@@ -47,6 +49,7 @@ class CaseCheck:
     issues: list[str] = field(default_factory=list)
     package: dict[str, Any] | None = None
     promotion: dict[str, Any] | None = None
+    promotion_evidence: dict[str, Any] | None = None
     offline_commands: list[str] = field(default_factory=list)
 
     @property
@@ -67,6 +70,8 @@ class CaseCheck:
             data["package"] = self.package
         if self.promotion is not None:
             data["promotion"] = self.promotion
+        if self.promotion_evidence is not None:
+            data["promotion_evidence"] = self.promotion_evidence
         if self.offline_commands:
             data["offline_commands"] = self.offline_commands
         return data
@@ -393,7 +398,7 @@ def _market_package_name_hint(domain: str) -> str:
 
 def _validate_candidate_promotion(promotion: dict[str, Any], adapter_domain: str) -> list[str]:
     issues: list[str] = []
-    for field_name in ("adapter_package", "metadata_validation", "online_smoke"):
+    for field_name in PROMOTION_FIELDS:
         if not promotion.get(field_name):
             issues.append(f"candidate promotion.{field_name} is required")
 
@@ -404,6 +409,39 @@ def _validate_candidate_promotion(promotion: dict[str, Any], adapter_domain: str
             issues.append(f"candidate promotion.adapter_package uses legacy package naming; expected {expected_hint}")
         elif PACKAGE_EXTENSION in adapter_package and expected_hint not in adapter_package:
             issues.append(f"candidate promotion.adapter_package must use version placeholder: {expected_hint}")
+
+    return issues
+
+
+def _validate_candidate_promotion_evidence(evidence: dict[str, Any]) -> list[str]:
+    issues: list[str] = []
+    unknown_tasks = sorted(str(task_name) for task_name in evidence if task_name not in PROMOTION_FIELDS)
+    if unknown_tasks:
+        issues.append(f"candidate promotion_evidence has unknown tasks: {', '.join(unknown_tasks)}")
+
+    for task_name in PROMOTION_FIELDS:
+        task = evidence.get(task_name)
+        if not isinstance(task, dict):
+            issues.append(f"candidate promotion_evidence.{task_name} is required")
+            continue
+
+        status = task.get("status")
+        if status not in PROMOTION_EVIDENCE_STATUSES:
+            allowed = ", ".join(sorted(PROMOTION_EVIDENCE_STATUSES))
+            issues.append(f"candidate promotion_evidence.{task_name}.status must be one of: {allowed}")
+
+        evidence_value = task.get("evidence")
+        if evidence_value is not None and not isinstance(evidence_value, str):
+            issues.append(f"candidate promotion_evidence.{task_name}.evidence must be a string or null")
+
+        next_action = task.get("next_action")
+        if next_action is not None and not isinstance(next_action, str):
+            issues.append(f"candidate promotion_evidence.{task_name}.next_action must be a string or null")
+
+        if status == "complete" and not evidence_value:
+            issues.append(f"candidate promotion_evidence.{task_name}.evidence is required when status is complete")
+        if status in {"pending", "blocked"} and not next_action:
+            issues.append(f"candidate promotion_evidence.{task_name}.next_action is required when status is {status}")
 
     return issues
 
@@ -506,6 +544,12 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
         else:
             check.promotion = promotion
             check.issues.extend(_validate_candidate_promotion(promotion, adapter_domain))
+        promotion_evidence = case.get("promotion_evidence")
+        if not isinstance(promotion_evidence, dict):
+            check.issues.append("candidate case requires promotion_evidence")
+        else:
+            check.promotion_evidence = promotion_evidence
+            check.issues.extend(_validate_candidate_promotion_evidence(promotion_evidence))
 
     if packages_dir is not None and status == "active":
         package_name = _install_package_name(case)
@@ -557,9 +601,15 @@ def _print_text(report: CasesReport) -> None:
             print(f"  issue: {issue}")
         if check.promotion is not None:
             print("  promotion:")
-            for field_name in ("adapter_package", "metadata_validation", "online_smoke"):
+            for field_name in PROMOTION_FIELDS:
                 if check.promotion.get(field_name):
                     print(f"    {field_name}: {check.promotion[field_name]}")
+        if check.promotion_evidence is not None:
+            print("  promotion_evidence:")
+            for field_name in PROMOTION_FIELDS:
+                task = check.promotion_evidence.get(field_name)
+                if isinstance(task, dict):
+                    print(f"    {field_name}: {task.get('status')}")
         if check.package is not None and not check.package.get("ok"):
             print(f"  package: {check.package.get('status')} {check.package.get('issue', '')}".rstrip())
             for issue in check.package.get("issues", []):
@@ -570,10 +620,30 @@ def _promotion_summary(promotion: dict[str, Any] | None) -> str:
     if promotion is None:
         return "-"
     parts = []
-    for field_name in ("adapter_package", "metadata_validation", "online_smoke"):
+    for field_name in PROMOTION_FIELDS:
         value = promotion.get(field_name)
         if value:
             parts.append(f"{field_name}: {value}")
+    return "<br>".join(parts) if parts else "-"
+
+
+def _promotion_evidence_summary(evidence: dict[str, Any] | None) -> str:
+    if evidence is None:
+        return "-"
+    parts = []
+    for field_name in PROMOTION_FIELDS:
+        task = evidence.get(field_name)
+        if not isinstance(task, dict):
+            continue
+        status = str(task.get("status") or "unknown")
+        next_action = task.get("next_action")
+        evidence_value = task.get("evidence")
+        details = [f"{field_name}: {status}"]
+        if evidence_value:
+            details.append(f"evidence: {evidence_value}")
+        if next_action:
+            details.append(f"next: {next_action}")
+        parts.append("; ".join(details))
     return "<br>".join(parts) if parts else "-"
 
 
@@ -612,22 +682,42 @@ def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
         "## Candidate Promotion Tasks",
         "",
         "Use these issue-ready tasks to move candidate cases toward active status without bundling "
-        "package creation, metadata validation, and online smoke evidence into one PR.",
+        "package creation, metadata validation, and online smoke evidence into one PR. "
+        "Each task includes the current structured evidence status from `promotion_evidence`.",
     ]
     for case in candidates:
         promotion = case.promotion or {}
+        evidence = case.promotion_evidence or {}
+        task_lines: list[str] = []
+        issue_task_lines: list[str] = []
+        for field_name in PROMOTION_FIELDS:
+            task = evidence.get(field_name) if isinstance(evidence, dict) else {}
+            task = task if isinstance(task, dict) else {}
+            status = task.get("status") or "unknown"
+            next_action = task.get("next_action") or "Not declared."
+            evidence_value = task.get("evidence") or "Not attached yet."
+            task_lines.extend(
+                [
+                    f"- [ ] `{field_name}`: {promotion.get(field_name)}",
+                    f"  - Status: `{status}`",
+                    f"  - Evidence: {evidence_value}",
+                    f"  - Next action: {next_action}",
+                ]
+            )
+            issue_task_lines.extend(
+                [
+                    f"- [ ] `{field_name}`: {promotion.get(field_name)}",
+                    f"  - Current status: `{status}`",
+                    f"  - Current evidence: {evidence_value}",
+                    f"  - Next action: {next_action}",
+                ]
+            )
         lines.extend(
             [
                 "",
                 f"### `{case.id}`",
                 "",
-                f"- [ ] `adapter_package`: {promotion.get('adapter_package')}",
-                "  - Validation: attach the generated `.cliany-adapter.tar.gz` path or release asset name.",
-                f"- [ ] `metadata_validation`: {promotion.get('metadata_validation')}",
-                "  - Validation: paste the local `scripts/validate_cases.py --packages-dir` result.",
-                f"- [ ] `online_smoke`: {promotion.get('online_smoke')}",
-                "  - Validation: paste the read-only JSON envelope summary with "
-                "`data.quality.ok=true` and `row_count>0`.",
+                *task_lines,
                 "",
                 "#### Issue Body Template",
                 "",
@@ -637,9 +727,7 @@ def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
                 "Move this candidate case one step closer to `active` without changing its status early.",
                 "",
                 "## Tasks",
-                f"- [ ] `adapter_package`: {promotion.get('adapter_package')}",
-                f"- [ ] `metadata_validation`: {promotion.get('metadata_validation')}",
-                f"- [ ] `online_smoke`: {promotion.get('online_smoke')}",
+                *issue_task_lines,
                 "",
                 "## Validation Evidence",
                 "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.",
@@ -690,8 +778,8 @@ def _render_markdown_report(report: CasesReport) -> str:
         f"| known_gap | `{report.known_gap}` |",
         f"| checked_packages | `{str(report.checked_packages).lower()}` |",
         "",
-        "| Case | Status | Result | Issues | Package | Promotion |",
-        "|------|--------|--------|--------|---------|-----------|",
+        "| Case | Status | Result | Issues | Package | Promotion | Promotion Evidence |",
+        "|------|--------|--------|--------|---------|-----------|--------------------|",
     ]
 
     for check in report.cases:
@@ -699,7 +787,11 @@ def _render_markdown_report(report: CasesReport) -> str:
         issues = "<br>".join(check.issues) if check.issues else "-"
         package = _package_summary(check.package)
         promotion = _promotion_summary(check.promotion)
-        lines.append(f"| `{check.id}` | `{check.status}` | `{result}` | {issues} | {package} | {promotion} |")
+        promotion_evidence = _promotion_evidence_summary(check.promotion_evidence)
+        lines.append(
+            f"| `{check.id}` | `{check.status}` | `{result}` | {issues} | "
+            f"{package} | {promotion} | {promotion_evidence} |"
+        )
 
     lines.extend(
         [

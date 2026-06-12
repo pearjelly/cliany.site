@@ -17,6 +17,7 @@ from typing import Any
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
 ARTIFACT_MANIFEST_SCHEMA_VERSION = 1
+CANDIDATE_PROMOTION_FIELDS = ("adapter_package", "metadata_validation", "online_smoke")
 ARTIFACT_MANIFEST_KEYS = (
     "schema_version",
     "target_version",
@@ -397,6 +398,7 @@ class CandidatePromotion:
     adapter_package: str
     metadata_validation: str
     online_smoke: str
+    promotion_evidence: dict[str, Any]
     issue_body: str
 
     def to_dict(self) -> dict[str, Any]:
@@ -410,6 +412,7 @@ class CandidatePromotion:
             "adapter_package": self.adapter_package,
             "metadata_validation": self.metadata_validation,
             "online_smoke": self.online_smoke,
+            "promotion_evidence": self.promotion_evidence,
             "issue_body": self.issue_body,
         }
 
@@ -813,6 +816,13 @@ def _case_string_value(case: Any, field_name: str) -> str:
     return str(value or "")
 
 
+def _case_dict_value(case: Any, field_name: str) -> dict[str, Any]:
+    value = getattr(case, field_name, None)
+    if value is None and isinstance(case, dict):
+        value = case.get(field_name)
+    return value if isinstance(value, dict) else {}
+
+
 def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
     promotions: list[CandidatePromotion] = []
     for case in readiness.cases.cases:
@@ -821,6 +831,7 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
         promotion = getattr(case, "promotion", None)
         if promotion is None:
             continue
+        promotion_evidence = _case_dict_value(case, "promotion_evidence")
         promotions.append(
             CandidatePromotion(
                 case_id=str(case.id),
@@ -832,6 +843,7 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 adapter_package=_promotion_value(promotion, "adapter_package"),
                 metadata_validation=_promotion_value(promotion, "metadata_validation"),
                 online_smoke=_promotion_value(promotion, "online_smoke"),
+                promotion_evidence=promotion_evidence,
                 issue_body=_candidate_issue_body(
                     case_id=str(case.id),
                     target_url=_case_string_value(case, "target_url"),
@@ -840,6 +852,7 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                     adapter_package=_promotion_value(promotion, "adapter_package"),
                     metadata_validation=_promotion_value(promotion, "metadata_validation"),
                     online_smoke=_promotion_value(promotion, "online_smoke"),
+                    promotion_evidence=promotion_evidence,
                 ),
             )
         )
@@ -859,9 +872,30 @@ def _candidate_issue_body(
     adapter_package: str,
     metadata_validation: str,
     online_smoke: str,
+    promotion_evidence: dict[str, Any],
 ) -> str:
     command_lines = [f"  - `{command}`" for command in commands] or ["  - Not declared."]
     offline_command_lines = [f"  - `{command}`" for command in offline_commands] or ["  - Not declared."]
+    task_descriptions = {
+        "adapter_package": adapter_package,
+        "metadata_validation": metadata_validation,
+        "online_smoke": online_smoke,
+    }
+    task_lines: list[str] = []
+    for task_name in CANDIDATE_PROMOTION_FIELDS:
+        task = promotion_evidence.get(task_name)
+        task = task if isinstance(task, dict) else {}
+        status = task.get("status") or "unknown"
+        evidence = task.get("evidence") or "Not attached yet."
+        next_action = task.get("next_action") or "Not declared."
+        task_lines.extend(
+            [
+                f"- [ ] `{task_name}`: {task_descriptions[task_name]}",
+                f"  - Current status: `{status}`",
+                f"  - Current evidence: {evidence}",
+                f"  - Next action: {next_action}",
+            ]
+        )
     return "\n".join(
         [
             f"## Scope: promote candidate case `{case_id}`",
@@ -876,9 +910,7 @@ def _candidate_issue_body(
             *offline_command_lines,
             "",
             "## Tasks",
-            f"- [ ] `adapter_package`: {adapter_package}",
-            f"- [ ] `metadata_validation`: {metadata_validation}",
-            f"- [ ] `online_smoke`: {online_smoke}",
+            *task_lines,
             "",
             "## Validation Evidence",
             "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.",
@@ -1323,14 +1355,15 @@ def _candidate_promotion_markdown(promotions: list[CandidatePromotion]) -> str:
             "",
             "## Candidate Promotion Tasks",
             "",
-            "| Case | Adapter Package | Metadata Validation | Online Smoke |",
-            "|------|-----------------|---------------------|--------------|",
+            "| Case | Adapter Package | Metadata Validation | Online Smoke | Promotion Evidence |",
+            "|------|-----------------|---------------------|--------------|--------------------|",
         ]
     )
     for promotion in promotions:
+        evidence = _candidate_promotion_evidence_summary(promotion.promotion_evidence)
         lines.append(
             f"| `{promotion.case_id}` | {promotion.adapter_package} | "
-            f"{promotion.metadata_validation} | {promotion.online_smoke} |"
+            f"{promotion.metadata_validation} | {promotion.online_smoke} | {evidence} |"
         )
     lines.extend(["", "## Candidate Issue Body Templates"])
     for promotion in promotions:
@@ -1345,6 +1378,24 @@ def _candidate_promotion_markdown(promotions: list[CandidatePromotion]) -> str:
             ]
         )
     return "\n".join(lines)
+
+
+def _candidate_promotion_evidence_summary(evidence: dict[str, Any]) -> str:
+    parts: list[str] = []
+    for field_name in CANDIDATE_PROMOTION_FIELDS:
+        task = evidence.get(field_name)
+        if not isinstance(task, dict):
+            continue
+        status = task.get("status") or "unknown"
+        next_action = task.get("next_action")
+        evidence_value = task.get("evidence")
+        details = [f"{field_name}: {status}"]
+        if evidence_value:
+            details.append(f"evidence: {evidence_value}")
+        if next_action:
+            details.append(f"next: {next_action}")
+        parts.append("; ".join(details))
+    return "<br>".join(parts) if parts else "-"
 
 
 def _write_markdown_report(plan: IterationPlan, path: Path) -> None:
@@ -1371,6 +1422,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "target_url": promotion.target_url,
                 "commands": promotion.commands,
                 "offline_commands": promotion.offline_commands,
+                "promotion_evidence": promotion.promotion_evidence,
                 "issue_body_name": body_path.name,
                 "issue_body_file": str(body_path),
                 "create_command": create_command,
@@ -1943,6 +1995,7 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
             "target_url": item["target_url"],
             "commands": item["commands"],
             "offline_commands": item["offline_commands"],
+            "promotion_evidence": item["promotion_evidence"],
             "issue_body_name": item["issue_body_name"],
         }
         for item in metadata
@@ -1978,6 +2031,7 @@ def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[di
             "target_url": promotion.target_url,
             "commands": promotion.commands,
             "offline_commands": promotion.offline_commands,
+            "promotion_evidence": promotion.promotion_evidence,
             "issue_body_name": f"{promotion.case_id}.md",
         }
         for promotion in promotions

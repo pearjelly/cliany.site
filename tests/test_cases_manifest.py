@@ -46,6 +46,10 @@ def test_cases_manifest_entries_are_actionable():
             assert case["promotion"]["adapter_package"]
             assert case["promotion"]["metadata_validation"]
             assert case["promotion"]["online_smoke"]
+            assert set(case["promotion_evidence"]) == {"adapter_package", "metadata_validation", "online_smoke"}
+            for evidence in case["promotion_evidence"].values():
+                assert evidence["status"] in {"pending", "complete", "blocked"}
+                assert evidence.get("evidence") or evidence.get("next_action")
 
 
 def test_cases_manifest_docs_links_exist_locally():

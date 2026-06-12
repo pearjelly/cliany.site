@@ -71,6 +71,26 @@ def _case(case_id: str = "demo-case", *, domain: str = "demo.example.com") -> di
     }
 
 
+def _promotion_evidence() -> dict:
+    return {
+        "adapter_package": {
+            "status": "pending",
+            "evidence": None,
+            "next_action": "Generate the adapter package.",
+        },
+        "metadata_validation": {
+            "status": "pending",
+            "evidence": None,
+            "next_action": "Run validate_cases with --packages-dir.",
+        },
+        "online_smoke": {
+            "status": "pending",
+            "evidence": None,
+            "next_action": "Run the read-only smoke command.",
+        },
+    }
+
+
 def _write_package(
     packages_dir: Path,
     filename: str,
@@ -199,6 +219,8 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         "metadata_validation": "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict",
         "online_smoke": "cliany-site demo.example.com list-items --json",
     }
+    case["promotion_evidence"] = _promotion_evidence()
+    case["promotion_evidence"] = _promotion_evidence()
     _write_cases(tmp_path, [case])
 
     report = validate_cases.build_report(tmp_path)
@@ -209,7 +231,9 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     assert report.cases[0].target_url == "https://demo.example.com/"
     assert report.cases[0].commands == ["cliany-site demo.example.com list-items --json"]
     assert report.cases[0].promotion == case["promotion"]
+    assert report.cases[0].promotion_evidence == case["promotion_evidence"]
     assert report.cases[0].to_dict()["promotion"]["online_smoke"].startswith("cliany-site demo.example.com")
+    assert report.cases[0].to_dict()["promotion_evidence"]["adapter_package"]["status"] == "pending"
     assert report.cases[0].to_dict()["offline_commands"] == ["python scripts/validate_cases.py --strict"]
     assert report.cases[0].to_dict()["target_url"] == "https://demo.example.com/"
     assert report.cases[0].to_dict()["commands"] == ["cliany-site demo.example.com list-items --json"]
@@ -249,6 +273,7 @@ def test_cases_report_rejects_candidate_case_without_expected_commands(tmp_path)
         "metadata_validation": "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict",
         "online_smoke": "cliany-site demo.example.com list-items --json",
     }
+    case["promotion_evidence"] = _promotion_evidence()
     _write_cases(tmp_path, [case])
 
     report = validate_cases.build_report(tmp_path)
@@ -287,11 +312,29 @@ def test_cases_report_rejects_candidate_case_without_promotion_checklist(tmp_pat
     assert "candidate case requires promotion checklist" in report.cases[0].issues
 
 
+def test_cases_report_rejects_candidate_case_without_promotion_evidence(tmp_path):
+    case = _case("candidate-case")
+    case["status"] = "candidate"
+    case["commands"] = ["cliany-site demo.example.com list-items --json"]
+    case["promotion"] = {
+        "adapter_package": "publish demo.example.com-<version>.cliany-adapter.tar.gz",
+        "metadata_validation": "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict",
+        "online_smoke": "cliany-site demo.example.com list-items --json",
+    }
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert "candidate case requires promotion_evidence" in report.cases[0].issues
+
+
 def test_cases_report_rejects_incomplete_candidate_promotion_checklist(tmp_path):
     case = _case("candidate-case")
     case["status"] = "candidate"
     case["commands"] = ["cliany-site demo.example.com list-items --json"]
     case["promotion"] = {"adapter_package": "publish package"}
+    case["promotion_evidence"] = _promotion_evidence()
     _write_cases(tmp_path, [case])
 
     report = validate_cases.build_report(tmp_path)
@@ -299,6 +342,34 @@ def test_cases_report_rejects_incomplete_candidate_promotion_checklist(tmp_path)
     assert report.ok is False
     assert "candidate promotion.metadata_validation is required" in report.cases[0].issues
     assert "candidate promotion.online_smoke is required" in report.cases[0].issues
+
+
+def test_cases_report_rejects_invalid_candidate_promotion_evidence(tmp_path):
+    case = _case("candidate-case")
+    case["status"] = "candidate"
+    case["commands"] = ["cliany-site demo.example.com list-items --json"]
+    case["promotion"] = {
+        "adapter_package": "publish demo.example.com-<version>.cliany-adapter.tar.gz",
+        "metadata_validation": "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict",
+        "online_smoke": "cliany-site demo.example.com list-items --json",
+    }
+    evidence = _promotion_evidence()
+    evidence["adapter_package"] = {"status": "complete", "evidence": None, "next_action": None}
+    evidence["metadata_validation"] = {"status": "waiting", "evidence": None, "next_action": "Run validation."}
+    evidence["online_smoke"] = {"status": "pending", "evidence": None, "next_action": ""}
+    case["promotion_evidence"] = evidence
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    issues = report.cases[0].issues
+    assert "candidate promotion_evidence.adapter_package.evidence is required when status is complete" in issues
+    assert (
+        "candidate promotion_evidence.metadata_validation.status must be one of: blocked, complete, pending"
+        in issues
+    )
+    assert "candidate promotion_evidence.online_smoke.next_action is required when status is pending" in issues
 
 
 def test_cases_report_rejects_candidate_legacy_package_hint(tmp_path):
@@ -312,6 +383,7 @@ def test_cases_report_rejects_candidate_legacy_package_hint(tmp_path):
         "metadata_validation": metadata_validation,
         "online_smoke": "cliany-site demo.example.com list-items --json",
     }
+    case["promotion_evidence"] = _promotion_evidence()
     _write_cases(tmp_path, [case])
 
     report = validate_cases.build_report(tmp_path)
@@ -334,6 +406,7 @@ def test_cases_report_rejects_candidate_version_pinned_package_hint(tmp_path):
         "metadata_validation": metadata_validation,
         "online_smoke": "cliany-site demo.example.com list-items --json",
     }
+    case["promotion_evidence"] = _promotion_evidence()
     _write_cases(tmp_path, [case])
 
     report = validate_cases.build_report(tmp_path)
@@ -542,6 +615,7 @@ def test_cases_report_writes_markdown_report(tmp_path):
         "metadata_validation": metadata_validation,
         "online_smoke": "cliany-site demo.example.com list-items --json",
     }
+    candidate["promotion_evidence"] = _promotion_evidence()
     _write_cases(tmp_path, [_case("demo-case"), candidate])
     report = validate_cases.build_report(tmp_path)
     report_path = tmp_path / "reports" / "case-catalog-report.md"
@@ -552,10 +626,11 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "# cliany-site Case Catalog Validation" in text
     assert "| ok | `true` |" in text
     assert "| candidate | `1` |" in text
-    assert "| Case | Status | Result | Issues | Package | Promotion |" in text
-    assert "| `demo-case` | `active` | `ok` | - | - | - |" in text
+    assert "| Case | Status | Result | Issues | Package | Promotion | Promotion Evidence |" in text
+    assert "| `demo-case` | `active` | `ok` | - | - | - | - |" in text
     assert "| `candidate-case` | `candidate` | `ok` | - | - |" in text
     assert "adapter_package: publish demo.example.com-<version>.cliany-adapter.tar.gz" in text
+    assert "adapter_package: pending; next: Generate the adapter package." in text
     assert f"metadata_validation: {metadata_validation}" in text
     assert "online_smoke: cliany-site demo.example.com list-items --json" in text
     assert "## Offline Validation Commands" in text
@@ -566,12 +641,17 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "## Candidate Promotion Tasks" in text
     assert "### `candidate-case`" in text
     assert "- [ ] `adapter_package`: publish demo.example.com-<version>.cliany-adapter.tar.gz" in text
+    assert "  - Status: `pending`" in text
+    assert "  - Evidence: Not attached yet." in text
+    assert "  - Next action: Generate the adapter package." in text
     assert f"- [ ] `metadata_validation`: {metadata_validation}" in text
     assert "- [ ] `online_smoke`: cliany-site demo.example.com list-items --json" in text
     assert "data.quality.ok=true" in text
     assert "row_count>0" in text
     assert "#### Issue Body Template" in text
     assert "## Scope: promote candidate case `candidate-case`" in text
+    assert "  - Current status: `pending`" in text
+    assert "  - Current evidence: Not attached yet." in text
     assert "## Validation Evidence" in text
     assert "## Non-goals" in text
     assert "Do not mark the case `active` until all three promotion tasks are complete." in text
@@ -589,6 +669,7 @@ def test_cases_report_prints_candidate_promotion_checklist(tmp_path, capsys):
         "metadata_validation": metadata_validation,
         "online_smoke": "cliany-site demo.example.com list-items --json",
     }
+    case["promotion_evidence"] = _promotion_evidence()
     _write_cases(tmp_path, [case])
     report = validate_cases.build_report(tmp_path)
 
@@ -599,6 +680,8 @@ def test_cases_report_prints_candidate_promotion_checklist(tmp_path, capsys):
     assert "adapter_package: publish demo.example.com-<version>.cliany-adapter.tar.gz" in text
     assert f"metadata_validation: {metadata_validation}" in text
     assert "online_smoke: cliany-site demo.example.com list-items --json" in text
+    assert "promotion_evidence:" in text
+    assert "adapter_package: pending" in text
 
 
 def test_cases_report_rejects_package_with_legacy_metadata(tmp_path):

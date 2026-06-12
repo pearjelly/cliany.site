@@ -30,13 +30,19 @@
 
 ## Candidate Cases
 
-`candidate` 表示真实公开只读工作流已经进入案例管道，但尚未承诺已有 release adapter 包。候选案例必须有期望命令、离线样例输出和 `promotion` 清单；当 adapter 包、metadata 校验和在线只读 smoke 都准备好后，再改为 `active`。
+`candidate` 表示真实公开只读工作流已经进入案例管道，但尚未承诺已有 release adapter 包。候选案例必须有期望命令、离线样例输出、`promotion` 清单和 `promotion_evidence` 状态；当 adapter 包、metadata 校验和在线只读 smoke 都准备好后，再改为 `active`。
 
 `promotion` 至少包含：
 
 - `adapter_package`：要生成或发布的 adapter 包资产，候选新包名应沿用 `market publish` 生成的 `<domain>-<version>.cliany-adapter.tar.gz` 格式。
 - `metadata_validation`：包资产准备好后要运行的离线 metadata 校验。
 - `online_smoke`：晋级前需要手动确认的公开只读 smoke 命令或结果。
+
+`promotion_evidence` 必须为同样三项任务记录结构化状态：
+
+- `status`：只能是 `pending`、`complete` 或 `blocked`。
+- `evidence`：任务完成时必须记录证据，例如 release asset 名、`validate_cases.py --packages-dir` 结果或在线 JSON envelope 摘要。
+- `next_action`：任务仍为 `pending` / `blocked` 时必须记录下一步动作。
 
 ### Candidate 晋级任务拆分
 
@@ -48,9 +54,9 @@
 | `metadata_validation` | 首次贡献者或文档/测试贡献者 | 运行 `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict`，确认目标 active 包通过 schema v3、manifest hash 和 domain 校验 |
 | `online_smoke` | 能手动访问第三方公开站点的维护者 | 运行 candidate 声明的只读命令，保存 JSON envelope 摘要，并确认 `data.quality.ok=true` 和 `row_count>0` |
 
-每个 issue 都应引用对应 case id、`promotion` 字段和推荐验证命令；如果任一子任务还没完成，案例继续保持 `candidate`，不要提前改成 `active`。
+每个 issue 都应引用对应 case id、`promotion` 字段、`promotion_evidence` 状态和推荐验证命令；如果任一子任务还没完成，案例继续保持 `candidate`，不要提前改成 `active`。
 
-运行 `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md` 会在 Markdown 报告中生成 `Candidate Promotion Tasks` 小节，维护者可以直接把其中的 `Issue Body Template` 复制到 GitHub issue。模板会保留 `adapter_package`、`metadata_validation`、`online_smoke` 三类任务、验收证据和非目标边界。
+运行 `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md` 会在 Markdown 报告中生成 `Candidate Promotion Tasks` 小节，维护者可以直接把其中的 `Issue Body Template` 复制到 GitHub issue。模板会保留 `adapter_package`、`metadata_validation`、`online_smoke` 三类任务、`promotion_evidence` 当前状态、验收证据和非目标边界。
 
 ## 维护规则
 
@@ -61,6 +67,7 @@
 - 每个 active 案例至少要有一个 `commands` 示例和一种 `validation` 方式。
 - 每个案例必须提供 `validation.offline_commands`，命令应保持本地可运行，例如 `python scripts/validate_cases.py --strict`、`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict` 或相关 pytest。
 - 每个 active/candidate 案例必须提供 `example_output`，指向 `cases/examples/` 下的离线 JSON envelope 样例；样例必须包含 `data.quality.ok=true`、`status=ok` 和正数 `row_count`，只展示字段形状和典型数据，不作为第三方站点实时内容承诺。
+- 每个 candidate 案例必须提供 `promotion_evidence`，并为 `adapter_package`、`metadata_validation`、`online_smoke` 记录当前状态；`pending` / `blocked` 必须写明 `next_action`，`complete` 必须写明 `evidence`。
 - 已知短板用 `known-gap` 记录，作为路线图输入，而不是藏在聊天记录里。
 - 案例运行产生的 adapter/session/snapshot 仍必须保存在 `~/.cliany-site/`，不能写入 repo。
 
@@ -82,7 +89,7 @@ CI 的 `Case Catalog Validation` job 会上传 `case-catalog-report` artifact，
 
 报告中的 `Candidate Handoff Matrix` 小节会把 candidate 的 target URL、推荐命令和离线验证命令放到同一张表里，方便贡献者不打开 `cases/manifest.json` 也能获得基本复现上下文。
 
-报告中的 `Candidate Promotion Tasks` 小节会把 candidate 的 `promotion` 清单转成可复制 issue body，包括 package asset、metadata validation、online smoke 三类验收证据，以及“不要提前标记 active”“不要依赖真实 LLM key 或写入 repo runtime 状态”等非目标。
+报告中的 `Candidate Promotion Tasks` 小节会把 candidate 的 `promotion` 清单和 `promotion_evidence` 状态转成可复制 issue body，包括 package asset、metadata validation、online smoke 三类验收证据、当前状态、下一步动作，以及“不要提前标记 active”“不要依赖真实 LLM key 或写入 repo runtime 状态”等非目标。
 
 `search-extraction-gap` 的最小复现页面固定在 [tests/fixtures/search_extraction_gap.html](../tests/fixtures/search_extraction_gap.html)，用于离线验证搜索结果列表中链接或摘要缺失时应被判为 `partial` 质量问题。
 

@@ -114,6 +114,23 @@
       "adapter_package": "Generate and publish pypi.org-<version>.cliany-adapter.tar.gz in a future release.",
       "metadata_validation": "Run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict once the package exists.",
       "online_smoke": "Run cliany-site pypi.org search-projects --query cliany-site --limit 5 --json against PyPI and confirm non-empty project rows."
+    },
+    "promotion_evidence": {
+      "adapter_package": {
+        "status": "pending",
+        "evidence": null,
+        "next_action": "Generate pypi.org-<version>.cliany-adapter.tar.gz with cliany-site explore and market publish, then attach the package path or release asset name."
+      },
+      "metadata_validation": {
+        "status": "pending",
+        "evidence": null,
+        "next_action": "After the package exists, run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict and paste the result."
+      },
+      "online_smoke": {
+        "status": "pending",
+        "evidence": null,
+        "next_action": "Run cliany-site pypi.org search-projects --query cliany-site --limit 5 --json and attach a JSON envelope summary with data.quality.ok=true and row_count>0."
+      }
     }
   },
   {
@@ -142,6 +159,23 @@
       "adapter_package": "Generate and publish www.npmjs.com-<version>.cliany-adapter.tar.gz in a future release.",
       "metadata_validation": "Run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict once the package exists.",
       "online_smoke": "Run cliany-site www.npmjs.com search-packages --query playwright --limit 5 --json against npm and confirm non-empty package rows."
+    },
+    "promotion_evidence": {
+      "adapter_package": {
+        "status": "pending",
+        "evidence": null,
+        "next_action": "Generate www.npmjs.com-<version>.cliany-adapter.tar.gz with cliany-site explore and market publish, then attach the package path or release asset name."
+      },
+      "metadata_validation": {
+        "status": "pending",
+        "evidence": null,
+        "next_action": "After the package exists, run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict and paste the result."
+      },
+      "online_smoke": {
+        "status": "pending",
+        "evidence": null,
+        "next_action": "Run cliany-site www.npmjs.com search-packages --query playwright --limit 5 --json and attach a JSON envelope summary with data.quality.ok=true and row_count>0."
+      }
     }
   },
   {
@@ -170,6 +204,23 @@
       "adapter_package": "Generate and publish crates.io-<version>.cliany-adapter.tar.gz in a future release.",
       "metadata_validation": "Run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict once the package exists.",
       "online_smoke": "Run cliany-site crates.io search-crates --query serde --limit 5 --json against crates.io and confirm non-empty crate rows."
+    },
+    "promotion_evidence": {
+      "adapter_package": {
+        "status": "pending",
+        "evidence": null,
+        "next_action": "Generate crates.io-<version>.cliany-adapter.tar.gz with cliany-site explore and market publish, then attach the package path or release asset name."
+      },
+      "metadata_validation": {
+        "status": "pending",
+        "evidence": null,
+        "next_action": "After the package exists, run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict and paste the result."
+      },
+      "online_smoke": {
+        "status": "pending",
+        "evidence": null,
+        "next_action": "Run cliany-site crates.io search-crates --query serde --limit 5 --json and attach a JSON envelope summary with data.quality.ok=true and row_count>0."
+      }
     }
   },
   {
