@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.46] - 2026-06-12
+
+### Added
+- `artifact-manifest.json` 现在包含 `issue_artifacts_command`，让候选任务产物包的机器可读入口也能直接展示重新生成同一批 artifacts 的命令。
+- 新增 `docs/releases/v0.16.46-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts manifest 的复现命令。
+
 ## [0.16.45] - 2026-06-12
 
 ### Added
@@ -729,7 +735,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.45...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.46...HEAD
+[0.16.46]: https://github.com/pearjelly/cliany.site/compare/v0.16.45...v0.16.46
 [0.16.45]: https://github.com/pearjelly/cliany.site/compare/v0.16.44...v0.16.45
 [0.16.44]: https://github.com/pearjelly/cliany.site/compare/v0.16.43...v0.16.44
 [0.16.43]: https://github.com/pearjelly/cliany.site/compare/v0.16.42...v0.16.43
