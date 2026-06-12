@@ -60,6 +60,7 @@ class IterationPlan:
     next_actions: list[str]
     validation_commands: list[str]
     publication_publish_commands: list[str]
+    publication_publish_script_command: str
     issue_artifacts_command: str
     release_draft_path: str
 
@@ -79,6 +80,7 @@ class IterationPlan:
             "next_actions": self.next_actions,
             "validation_commands": self.validation_commands,
             "publication_publish_commands": self.publication_publish_commands,
+            "publication_publish_script_command": self.publication_publish_script_command,
             "issue_artifacts_command": self.issue_artifacts_command,
             "release_draft_path": self.release_draft_path,
         }
@@ -265,6 +267,10 @@ def build_plan(
         f"python scripts/plan_next_iteration.py --target-version {readiness.target_version} "
         "--issues-dir /tmp/cliany-candidate-issues"
     )
+    publication_publish_script_command = (
+        "python scripts/check_release_publication.py --json "
+        "--publish-script /tmp/cliany-publish-release.sh"
+    )
     return IterationPlan(
         current_version=current_version,
         target_version=str(readiness.target_version),
@@ -283,6 +289,7 @@ def build_plan(
         next_actions=_next_action_lines(readiness, publication),
         validation_commands=validation_commands,
         publication_publish_commands=_publication_publish_commands(publication),
+        publication_publish_script_command=publication_publish_script_command,
         issue_artifacts_command=issue_artifacts_command,
         release_draft_path=f"docs/releases/v{readiness.target_version}-draft.md",
     )
@@ -329,6 +336,7 @@ def _print_text(plan: IterationPlan) -> None:
         print("publication_publish_commands:")
         for command in plan.publication_publish_commands:
             print(f"- {command}")
+    print(f"publication_publish_script_command: {plan.publication_publish_script_command}")
     print(f"issue_artifacts_command: {plan.issue_artifacts_command}")
 
 
@@ -338,6 +346,7 @@ def _render_markdown(plan: IterationPlan) -> str:
     next_actions = "\n".join(f"- {action}" for action in plan.next_actions)
     validation = "\n".join(f"- `{command}`" for command in plan.validation_commands)
     publication_commands = _publication_commands_markdown(plan.publication_publish_commands)
+    publication_script = _publication_script_markdown(plan.publication_publish_script_command)
     promotion_lines = _candidate_promotion_markdown(plan.candidate_promotions)
     return f"""# cliany-site Next Iteration Plan
 
@@ -372,10 +381,20 @@ def _render_markdown(plan: IterationPlan) -> str:
 
 {publication_commands}
 
+{publication_script}
+
 ## Release Draft
 
 - `{plan.release_draft_path}`
 """
+
+
+def _publication_script_markdown(command: str) -> str:
+    return f"""## Publication Publish Script
+
+```bash
+{command}
+```"""
 
 
 def _publication_commands_markdown(commands: list[str]) -> str:

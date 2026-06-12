@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py` 现在输出 `publication_publish_script_command`，周初计划可直接给出生成 `/tmp/cliany-publish-release.sh` 的命令。
+- 新增 `docs/releases/v0.16.12-draft.md`，把下一版 patch release 聚焦到 next iteration plan 的 publish script 生成命令。
+
 ## [0.16.11] - 2026-06-12
 
 ### Added
