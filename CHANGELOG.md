@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.27] - 2026-06-12
+
 ### Changed
 - `scripts/plan_next_iteration.py` 生成的 candidate issue body 现在会把 candidate commands 和 offline validation commands 渲染为 `Reproduction Context` 下的子列表，提升 GitHub issue 可读性。
 - 新增 `docs/releases/v0.16.27-draft.md`，把下一版 patch release 聚焦到 candidate issue body 的复现命令层级。
@@ -619,7 +621,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.26...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.27...HEAD
+[0.16.27]: https://github.com/pearjelly/cliany.site/compare/v0.16.26...v0.16.27
 [0.16.26]: https://github.com/pearjelly/cliany.site/compare/v0.16.25...v0.16.26
 [0.16.25]: https://github.com/pearjelly/cliany.site/compare/v0.16.24...v0.16.25
 [0.16.24]: https://github.com/pearjelly/cliany.site/compare/v0.16.23...v0.16.24
