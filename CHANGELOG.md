@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.146] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `publication_primary_publish_command`，让只读取整包摘要的维护工具也能直接展示第一条发布同步命令。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 `publication_primary_publish_command`，并在无 publish command 时使用 `(none)`。
+- 新增 `docs/releases/v0.16.146-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 publication primary publish command 可见性。
+
 ## [0.16.145] - 2026-06-13
 
 ### Added
@@ -1420,7 +1427,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.145...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.146...HEAD
+[0.16.146]: https://github.com/pearjelly/cliany.site/compare/v0.16.145...v0.16.146
 [0.16.145]: https://github.com/pearjelly/cliany.site/compare/v0.16.144...v0.16.145
 [0.16.144]: https://github.com/pearjelly/cliany.site/compare/v0.16.143...v0.16.144
 [0.16.143]: https://github.com/pearjelly/cliany.site/compare/v0.16.142...v0.16.143
