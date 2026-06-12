@@ -128,6 +128,19 @@ def _build_capabilities(checks: list[dict[str, Any]]) -> dict[str, dict[str, Any
     return capabilities
 
 
+def _demo_adapter_quickstart() -> dict[str, Any]:
+    return {
+        "label": "先跑一个真实只读 demo adapter",
+        "commands": [
+            "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
+            "cliany-site list --json",
+            "cliany-site verify issues.apache.org --json",
+            "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json",
+        ],
+        "docs": "docs/quickstart-10min.md",
+    }
+
+
 def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
     summary: dict[str, Any] = {
         "must_fix": [],
@@ -148,6 +161,7 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
         item["name"] == "llm" for item in summary["should_fix"]
     )
     summary["capabilities"] = _build_capabilities(checks)
+    summary["demo_adapter_quickstart"] = _demo_adapter_quickstart()
     if summary["must_fix"]:
         summary["recommended_next_step"] = "先处理必须修复项，然后重新运行 cliany-site doctor。"
     elif summary["ready_for_explore"]:
@@ -191,6 +205,13 @@ def _print_doctor_human(result: Envelope) -> None:
         recommended_next_step = summary.get("recommended_next_step")
         if recommended_next_step:
             click.echo(f"下一步: {recommended_next_step}")
+        demo_quickstart = summary.get("demo_adapter_quickstart")
+        demo_quickstart = demo_quickstart if isinstance(demo_quickstart, dict) else {}
+        demo_commands = demo_quickstart.get("commands")
+        if summary.get("ready_for_demo_adapters") and isinstance(demo_commands, list) and demo_commands:
+            click.echo("\nDemo adapter 快速路径:")
+            for command in demo_commands:
+                click.echo(f"- {command}")
 
         capabilities = summary.get("capabilities") if isinstance(summary.get("capabilities"), dict) else {}
         if capabilities:

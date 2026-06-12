@@ -49,6 +49,7 @@ cliany-site doctor --json
 - `info`：诊断信息，通常无需动作。
 - `capabilities`：按 `manage_adapters`、`run_browser_workflows`、`generate_adapters` 展示当前可用路径和 blockers。
 - `recommended_next_step`：和 human 输出中的 `下一步` 一致，可用于脚本判断后续引导。
+- `demo_adapter_quickstart`：列出本页路径 A 使用的 demo adapter 安装、列出、验证和只读执行命令，方便 UI 或脚本直接展示同一组命令。
 
 ### 3. 下载一个 demo adapter
 

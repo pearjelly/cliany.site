@@ -393,6 +393,7 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "cliany-site doctor",
             "capabilities",
             "recommended_next_step",
+            "demo_adapter_quickstart",
             "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
             "cliany-site verify issues.apache.org --json",
             "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json",

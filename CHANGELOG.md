@@ -11,6 +11,7 @@
 - 新增 `docs/releases/v0.15.0-draft.md`，把下一版 minor release 聚焦到 10 分钟成功路径、doctor 下一步提示和 demo adapter 静态验证闭环。
 
 ### Changed
+- `doctor --json` 的 `data.summary` 现在包含 `demo_adapter_quickstart` 命令清单，human 输出也会展示 demo adapter 安装、list、verify 和只读执行路径。
 - 官网首页和文档页的 quickstart 现在明确展示 `10 分钟成功路径`，优先引导用户安装、验证并执行真实 demo adapter，而不是先配置 LLM 后 explore。
 - `release_readiness.py` 的项目元数据 gate 现在会检查官网首页和官网 docs 是否保留 10 分钟成功路径，防止网站入口退回旧 quickstart。
 - `release_readiness.py` 的项目元数据 gate 现在会检查 `docs/quickstart-10min.md` 是否保留 doctor、demo adapter install/verify/只读命令和无 LLM key 分叉提示。

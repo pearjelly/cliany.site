@@ -103,6 +103,7 @@ def test_v0150_release_draft_tracks_ten_minute_success_path():
         "doctor",
         "data.summary.recommended_next_step",
         "data.summary.capabilities",
+        "data.summary.demo_adapter_quickstart",
         "manage_adapters",
         "run_browser_workflows",
         "generate_adapters",

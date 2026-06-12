@@ -89,6 +89,14 @@ def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):
     assert capabilities["run_browser_workflows"]["ready"] is True
     assert capabilities["generate_adapters"]["ready"] is False
     assert capabilities["generate_adapters"]["blockers"] == ["llm"]
+    demo_quickstart = summary["demo_adapter_quickstart"]
+    assert demo_quickstart["docs"] == "docs/quickstart-10min.md"
+    assert demo_quickstart["commands"] == [
+        "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
+        "cliany-site list --json",
+        "cliany-site verify issues.apache.org --json",
+        "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json",
+    ]
 
 
 def test_doctor_human_output_groups_action_items(tmp_home, no_llm, monkeypatch):
@@ -115,6 +123,10 @@ def test_doctor_human_output_groups_action_items(tmp_home, no_llm, monkeypatch):
     assert "Demo adapter ready: yes" in result.output
     assert "Explore ready: no" in result.output
     assert "下一步: 先运行真实 demo adapter；需要生成新 adapter 时再配置 LLM key。" in result.output
+    assert "Demo adapter 快速路径:" in result.output
+    assert "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz" in result.output
+    assert "cliany-site verify issues.apache.org --json" in result.output
+    assert "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json" in result.output
     assert "可用能力:" in result.output
     assert "manage_adapters: yes" in result.output
     assert "run_browser_workflows: yes" in result.output
@@ -209,6 +221,9 @@ def test_doctor_recommends_explore_when_llm_and_cdp_are_ready(tmp_home, no_llm, 
     assert capabilities["run_browser_workflows"]["ready"] is True
     assert capabilities["generate_adapters"]["ready"] is True
     assert capabilities["generate_adapters"]["blockers"] == []
+    assert summary["demo_adapter_quickstart"]["commands"][0] == (
+        "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz"
+    )
 
 
 def test_legacy_adapter_count(tmp_home, no_llm, monkeypatch):
