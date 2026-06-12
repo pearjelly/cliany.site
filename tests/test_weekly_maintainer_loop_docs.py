@@ -29,6 +29,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "target URL",
         "candidate commands",
         "offline validation commands",
+        "审阅清单",
         "issue-metadata.json",
         "publication-handoff.json",
         "README.md",

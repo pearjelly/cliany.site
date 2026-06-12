@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --issues-dir` 生成的 artifacts `README.md` 现在会要求维护者审阅 `issue-metadata.json` 中的 target URL、candidate commands 和 offline validation commands。
+- 新增 `docs/releases/v0.16.19-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts 的 metadata 复现字段审阅清单。
+
 ## [0.16.18] - 2026-06-12
 
 ### Added

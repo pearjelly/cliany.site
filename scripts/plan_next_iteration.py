@@ -582,6 +582,8 @@ Generated for target version `{plan.target_version}`.
 ## Review Checklist
 
 - Confirm the latest local release has been published before creating new candidate work.
+- Confirm `issue-metadata.json` has the expected target URL, candidate commands, and
+  offline validation commands for each case.
 - Review each body file for scope, tasks, validation evidence, and non-goals.
 - Keep cases as `candidate` until adapter package, metadata validation, and online smoke evidence are complete.
 - Do not use real LLM keys or write runtime state into the repository.
