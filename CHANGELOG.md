@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.19] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 artifacts `README.md` 现在会要求维护者审阅 `issue-metadata.json` 中的 target URL、candidate commands 和 offline validation commands。
 - 新增 `docs/releases/v0.16.19-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts 的 metadata 复现字段审阅清单。
@@ -570,7 +572,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.18...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.19...HEAD
+[0.16.19]: https://github.com/pearjelly/cliany.site/compare/v0.16.18...v0.16.19
 [0.16.18]: https://github.com/pearjelly/cliany.site/compare/v0.16.17...v0.16.18
 [0.16.17]: https://github.com/pearjelly/cliany.site/compare/v0.16.16...v0.16.17
 [0.16.16]: https://github.com/pearjelly/cliany.site/compare/v0.16.15...v0.16.16
