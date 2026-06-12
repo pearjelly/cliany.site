@@ -75,6 +75,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "artifact_manifest_key_tail",
     "artifact_manifest_key_tail_sha256",
     "artifact_manifest_payload_key_count",
+    "artifact_manifest_payload_first_key",
+    "artifact_manifest_payload_last_key",
+    "artifact_manifest_payload_key_boundary_sha256",
     "artifact_manifest_payload_key_preview_count",
     "artifact_manifest_payload_key_preview",
     "artifact_manifest_payload_key_preview_sha256",
@@ -190,6 +193,10 @@ ARTIFACT_MANIFEST_KEY_TAIL = ARTIFACT_MANIFEST_KEYS[-8:]
 ARTIFACT_MANIFEST_PAYLOAD_KEYS = tuple(
     key for key in ARTIFACT_MANIFEST_KEYS if key != "artifact_bundle_summary"
 )
+ARTIFACT_MANIFEST_PAYLOAD_KEY_BOUNDARY = {
+    "first_key": ARTIFACT_MANIFEST_PAYLOAD_KEYS[0],
+    "last_key": ARTIFACT_MANIFEST_PAYLOAD_KEYS[-1],
+}
 ARTIFACT_MANIFEST_PAYLOAD_KEY_PREVIEW = ARTIFACT_MANIFEST_PAYLOAD_KEYS[:8]
 ARTIFACT_MANIFEST_PAYLOAD_KEY_TAIL = ARTIFACT_MANIFEST_PAYLOAD_KEYS[-8:]
 PUBLICATION_PUBLISH_SCRIPT_PATH = "/tmp/cliany-publish-release.sh"
@@ -1950,6 +1957,15 @@ def _issue_artifact_bundle_summary(
             ARTIFACT_MANIFEST_KEY_TAIL
         ),
         "artifact_manifest_payload_key_count": len(artifact_manifest_payload),
+        "artifact_manifest_payload_first_key": ARTIFACT_MANIFEST_PAYLOAD_KEY_BOUNDARY[
+            "first_key"
+        ],
+        "artifact_manifest_payload_last_key": ARTIFACT_MANIFEST_PAYLOAD_KEY_BOUNDARY[
+            "last_key"
+        ],
+        "artifact_manifest_payload_key_boundary_sha256": _stable_json_sha256(
+            ARTIFACT_MANIFEST_PAYLOAD_KEY_BOUNDARY
+        ),
         "artifact_manifest_payload_key_preview_count": len(
             ARTIFACT_MANIFEST_PAYLOAD_KEY_PREVIEW
         ),
@@ -2161,6 +2177,12 @@ def _issue_artifact_bundle_summary_markdown(
             "- artifact_manifest_key_tail_sha256: "
             f"`{summary['artifact_manifest_key_tail_sha256']}`",
             f"- artifact_manifest_payload_key_count: `{summary['artifact_manifest_payload_key_count']}`",
+            "- artifact_manifest_payload_first_key: "
+            f"`{summary['artifact_manifest_payload_first_key']}`",
+            "- artifact_manifest_payload_last_key: "
+            f"`{summary['artifact_manifest_payload_last_key']}`",
+            "- artifact_manifest_payload_key_boundary_sha256: "
+            f"`{summary['artifact_manifest_payload_key_boundary_sha256']}`",
             "- artifact_manifest_payload_key_preview_count: "
             f"`{summary['artifact_manifest_payload_key_preview_count']}`",
             "- artifact_manifest_payload_key_preview: "
