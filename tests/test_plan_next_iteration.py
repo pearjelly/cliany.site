@@ -525,8 +525,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "review_order_sha256": review_order_sha256,
         "inventory_sha256": issue_body_summary["inventory_sha256"],
         "blocker_count": 2,
+        "blockers_sha256": _stable_json_sha256(plan.blockers),
         "next_action_count": len(plan.next_actions),
+        "next_actions_sha256": _stable_json_sha256(plan.next_actions),
         "publication_next_action_count": 3,
+        "publication_next_actions_sha256": _stable_json_sha256(plan.publication_next_actions),
         "publication_ok": False,
         "publication_visibility_status": "dirty_worktree",
         "release_draft_issue_count": 2,
@@ -750,8 +753,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "review_item_count: `7`" in readme
     assert f"review_order_sha256: `{review_order_sha256}`" in readme
     assert "blocker_count: `2`" in readme
+    assert f"blockers_sha256: `{_stable_json_sha256(plan.blockers)}`" in readme
     assert f"next_action_count: `{len(plan.next_actions)}`" in readme
+    assert f"next_actions_sha256: `{_stable_json_sha256(plan.next_actions)}`" in readme
     assert "publication_next_action_count: `3`" in readme
+    assert (
+        f"publication_next_actions_sha256: "
+        f"`{_stable_json_sha256(plan.publication_next_actions)}`"
+    ) in readme
     assert "publication_ok: `false`" in readme
     assert "publication_visibility_status: `dirty_worktree`" in readme
     assert "release_draft_issue_count: `2`" in readme
