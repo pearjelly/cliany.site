@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.179] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `review_order_first_item`、`review_order_last_item` 和 `review_order_boundary_sha256`，让只读取整包摘要的维护工具能检查 candidate issue artifacts 审阅顺序首尾边界。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 review order first/last item 与 boundary hash，并继续展示 review order preview、tail 和完整 hash。
+- 新增 `docs/releases/v0.16.179-draft.md`，把下一版 patch release 聚焦到 review order boundary 可见性。
+
 ## [0.16.178] - 2026-06-13
 
 ### Added
@@ -1651,7 +1658,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.178...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.179...HEAD
+[0.16.179]: https://github.com/pearjelly/cliany.site/compare/v0.16.178...v0.16.179
 [0.16.178]: https://github.com/pearjelly/cliany.site/compare/v0.16.177...v0.16.178
 [0.16.177]: https://github.com/pearjelly/cliany.site/compare/v0.16.176...v0.16.177
 [0.16.176]: https://github.com/pearjelly/cliany.site/compare/v0.16.175...v0.16.176
