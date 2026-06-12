@@ -78,6 +78,7 @@ def test_good_first_issues_include_case_report_issue_draft_task():
     required = [
         "case-catalog-report",
         "Candidate Promotion Tasks",
+        "Issue Body Template",
         "GitHub issue 草稿",
         "scripts/validate_cases.py",
         "cases/README.md",

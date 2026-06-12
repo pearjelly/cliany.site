@@ -536,6 +536,28 @@ def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
                 f"- [ ] `online_smoke`: {promotion.get('online_smoke')}",
                 "  - Validation: paste the read-only JSON envelope summary with "
                 "`data.quality.ok=true` and `row_count>0`.",
+                "",
+                "#### Issue Body Template",
+                "",
+                "```markdown",
+                f"## Scope: promote candidate case `{case.id}`",
+                "",
+                "Move this candidate case one step closer to `active` without changing its status early.",
+                "",
+                "## Tasks",
+                f"- [ ] `adapter_package`: {promotion.get('adapter_package')}",
+                f"- [ ] `metadata_validation`: {promotion.get('metadata_validation')}",
+                f"- [ ] `online_smoke`: {promotion.get('online_smoke')}",
+                "",
+                "## Validation Evidence",
+                "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.",
+                "- Paste the local `scripts/validate_cases.py --packages-dir` result.",
+                "- Paste the read-only JSON envelope summary with `data.quality.ok=true` and `row_count>0`.",
+                "",
+                "## Non-goals",
+                "- Do not mark the case `active` until all three promotion tasks are complete.",
+                "- Do not require real LLM keys or write runtime state into the repository.",
+                "```",
             ]
         )
     return lines

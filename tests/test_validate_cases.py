@@ -529,6 +529,12 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "- [ ] `online_smoke`: cliany-site demo.example.com list-items --json" in text
     assert "data.quality.ok=true" in text
     assert "row_count>0" in text
+    assert "#### Issue Body Template" in text
+    assert "## Scope: promote candidate case `candidate-case`" in text
+    assert "## Validation Evidence" in text
+    assert "## Non-goals" in text
+    assert "Do not mark the case `active` until all three promotion tasks are complete." in text
+    assert "Do not require real LLM keys or write runtime state into the repository." in text
 
 
 def test_cases_report_prints_candidate_promotion_checklist(tmp_path, capsys):

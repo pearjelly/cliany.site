@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Changed
+- `scripts/validate_cases.py --report` 的 `Candidate Promotion Tasks` 现在会为每个 candidate 输出可复制的 `Issue Body Template`，包含任务、验收证据和非目标边界。
+
 ## [0.15.7] - 2026-06-12
 
 ### Changed

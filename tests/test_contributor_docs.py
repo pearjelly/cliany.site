@@ -117,6 +117,7 @@ def test_good_first_issues_doc_is_offline_and_verifiable():
         "python scripts/release_readiness.py",
         "promotion",
         "Candidate Promotion Tasks",
+        "Issue Body Template",
         "adapter_package",
         "metadata_validation",
         "online_smoke",
