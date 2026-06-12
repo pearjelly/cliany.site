@@ -108,6 +108,11 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     assert data["release_draft_path"] == "docs/releases/v0.16.2-draft.md"
     assert "python scripts/check_release_publication.py --json" in data["validation_commands"]
     assert "python scripts/validate_cases.py --strict" in data["validation_commands"]
+    assert (
+        data["issue_artifacts_command"]
+        == "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+        "--issues-dir /tmp/cliany-candidate-issues"
+    )
     assert any("push `master`" in action for action in data["next_actions"])
     assert data["candidate_promotions"][0] == {
         "case_id": "pypi-project-search",
@@ -189,6 +194,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "Generated for target version `0.16.2`." in readme
     assert "`issue-metadata.json`: structured issue title, labels, body file path" in readme
     assert "`create-issues.sh` is generated for review. It is not executed" in readme
+    assert (
+        "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+        "--issues-dir /tmp/cliany-candidate-issues"
+    ) in readme
     assert "python scripts/validate_cases.py --strict" in readme
 
 

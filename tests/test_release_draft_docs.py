@@ -20,6 +20,7 @@ V0164_DRAFT = ROOT / "docs" / "releases" / "v0.16.4-draft.md"
 V0165_DRAFT = ROOT / "docs" / "releases" / "v0.16.5-draft.md"
 V0166_DRAFT = ROOT / "docs" / "releases" / "v0.16.6-draft.md"
 V0167_DRAFT = ROOT / "docs" / "releases" / "v0.16.7-draft.md"
+V0168_DRAFT = ROOT / "docs" / "releases" / "v0.16.8-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -846,6 +847,52 @@ def test_v0167_release_draft_tracks_candidate_issue_artifact_readme():
         "tests/test_weekly_maintainer_loop_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.7 --issues-dir",
         "git tag v0.16.7",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v0168_release_draft_has_required_sections():
+    text = V0168_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.8 发布草案",
+        "**目标版本：** `0.16.8`",
+        "**提交范围：** `v0.16.7..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v0168_release_draft_tracks_issue_artifacts_regeneration_command():
+    text = V0168_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "scripts/plan_next_iteration.py",
+        "issue_artifacts_command",
+        "--issues-dir",
+        "/tmp/cliany-candidate-issues",
+        "README.md",
+        "issue-metadata.json",
+        "create-issues.sh",
+        "复现命令",
+        "pypi-project-search",
+        "npm-package-search",
+        "crates-io-crate-search",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.8 --issues-dir",
+        "git tag v0.16.8",
     ]
     for snippet in required:
         assert snippet in text

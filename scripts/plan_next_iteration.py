@@ -59,6 +59,7 @@ class IterationPlan:
     blockers: list[str]
     next_actions: list[str]
     validation_commands: list[str]
+    issue_artifacts_command: str
     release_draft_path: str
 
     def to_dict(self) -> dict[str, Any]:
@@ -76,6 +77,7 @@ class IterationPlan:
             "blockers": self.blockers,
             "next_actions": self.next_actions,
             "validation_commands": self.validation_commands,
+            "issue_artifacts_command": self.issue_artifacts_command,
             "release_draft_path": self.release_draft_path,
         }
 
@@ -246,6 +248,10 @@ def build_plan(
         "python scripts/check_release_publication.py --json",
         "python scripts/validate_cases.py --strict",
     ]
+    issue_artifacts_command = (
+        f"python scripts/plan_next_iteration.py --target-version {readiness.target_version} "
+        "--issues-dir /tmp/cliany-candidate-issues"
+    )
     return IterationPlan(
         current_version=current_version,
         target_version=str(readiness.target_version),
@@ -263,6 +269,7 @@ def build_plan(
         blockers=blockers,
         next_actions=_next_action_lines(readiness, publication),
         validation_commands=validation_commands,
+        issue_artifacts_command=issue_artifacts_command,
         release_draft_path=f"docs/releases/v{readiness.target_version}-draft.md",
     )
 
@@ -304,6 +311,7 @@ def _print_text(plan: IterationPlan) -> None:
     print("validation_commands:")
     for command in plan.validation_commands:
         print(f"- {command}")
+    print(f"issue_artifacts_command: {plan.issue_artifacts_command}")
 
 
 def _render_markdown(plan: IterationPlan) -> str:
@@ -456,6 +464,7 @@ Generated for target version `{plan.target_version}`.
 ## Validation Commands
 
 ```bash
+{plan.issue_artifacts_command}
 python scripts/plan_next_iteration.py --target-version {plan.target_version} --json
 python scripts/validate_cases.py --strict
 ```

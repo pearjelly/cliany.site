@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --json` 现在输出 `issue_artifacts_command`，`--issues-dir` 生成的 `README.md` 也会展示同一条候选 issue artifacts 复现命令。
+- 新增 `docs/releases/v0.16.8-draft.md`，把下一版 patch release 聚焦到候选 issue artifacts 可复现生成命令。
+
 ## [0.16.7] - 2026-06-12
 
 ### Added
