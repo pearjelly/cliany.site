@@ -735,6 +735,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "artifact_manifest_keys_sha256": _stable_json_sha256(
             plan_next_iteration.ARTIFACT_MANIFEST_KEYS
         ),
+        "artifact_manifest_first_key": plan_next_iteration.ARTIFACT_MANIFEST_KEY_BOUNDARY[
+            "first_key"
+        ],
+        "artifact_manifest_last_key": plan_next_iteration.ARTIFACT_MANIFEST_KEY_BOUNDARY[
+            "last_key"
+        ],
+        "artifact_manifest_key_boundary_sha256": _stable_json_sha256(
+            plan_next_iteration.ARTIFACT_MANIFEST_KEY_BOUNDARY
+        ),
         "artifact_manifest_payload_key_count": len(artifact_manifest_payload),
         "artifact_manifest_payload_sha256": _stable_json_sha256(artifact_manifest_payload),
         "target_version": "0.16.2",
@@ -1033,6 +1042,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert artifact_manifest["artifact_bundle_summary"]["artifact_bundle_summary_last_key"] == list(
         artifact_manifest["artifact_bundle_summary"]
     )[-1]
+    assert artifact_manifest["artifact_bundle_summary"]["artifact_manifest_first_key"] == list(
+        artifact_manifest
+    )[0]
+    assert artifact_manifest["artifact_bundle_summary"]["artifact_manifest_last_key"] == list(
+        artifact_manifest
+    )[-1]
     assert {
         key: value for key, value in artifact_manifest.items() if key != "artifact_bundle_summary"
     } == artifact_manifest_payload
@@ -1129,6 +1144,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "artifact_manifest_keys_sha256: "
         f"`{_stable_json_sha256(plan_next_iteration.ARTIFACT_MANIFEST_KEYS)}`"
+    ) in readme
+    assert (
+        "artifact_manifest_first_key: "
+        f"`{plan_next_iteration.ARTIFACT_MANIFEST_KEY_BOUNDARY['first_key']}`"
+    ) in readme
+    assert (
+        "artifact_manifest_last_key: "
+        f"`{plan_next_iteration.ARTIFACT_MANIFEST_KEY_BOUNDARY['last_key']}`"
+    ) in readme
+    assert (
+        "artifact_manifest_key_boundary_sha256: "
+        f"`{_stable_json_sha256(plan_next_iteration.ARTIFACT_MANIFEST_KEY_BOUNDARY)}`"
     ) in readme
     assert f"artifact_manifest_payload_key_count: `{len(artifact_manifest_payload)}`" in readme
     assert (
