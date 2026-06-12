@@ -221,6 +221,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 还会带上 `create_issues_safety_contract_key_count`、`create_issues_safety_contract_sha256`、`create_issues_safety_contract_first_key`、`create_issues_safety_contract_last_key` 和 `create_issues_safety_contract_key_boundary_sha256`，让工具只读整包摘要就能判断 create issues safety contract 是否漂移，并快速检查契约 key 首尾边界；这个摘要只覆盖 dry-run/preflight 契约，不包含本机脚本路径。
 
+`artifact_bundle_summary` 还会带上 `create_issues_safety_contract_key_preview_count`、`create_issues_safety_contract_key_preview`、`create_issues_safety_contract_key_preview_sha256`、`create_issues_safety_contract_key_tail_count`、`create_issues_safety_contract_key_tail` 和 `create_issues_safety_contract_key_tail_sha256`，让工具只读整包摘要就能检查 create issues safety contract keys 的前后窗口。
+
 `artifact-manifest.json` 中的 publication ref context、publication worktree status 和 publication publish script command 会复用 `publication-handoff.json` 的同源字段，方便工具先读取 manifest 再决定是否继续展开详细 handoff。
 
 `release-draft-handoff.json` 和 artifacts `README.md` 的 `Release Draft Handoff` 也会展示 `schema_version`，让只读取 handoff 的维护工具能先判断 release draft handoff 的字段语义版本。

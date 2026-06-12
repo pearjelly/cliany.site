@@ -278,6 +278,12 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "create_issues_safety_contract_first_key",
     "create_issues_safety_contract_last_key",
     "create_issues_safety_contract_key_boundary_sha256",
+    "create_issues_safety_contract_key_preview_count",
+    "create_issues_safety_contract_key_preview",
+    "create_issues_safety_contract_key_preview_sha256",
+    "create_issues_safety_contract_key_tail_count",
+    "create_issues_safety_contract_key_tail",
+    "create_issues_safety_contract_key_tail_sha256",
     "publication_ok",
     "publication_visibility_status",
     "publication_branch",
@@ -2141,6 +2147,8 @@ def _issue_artifact_bundle_summary(
         if create_issues_safety_contract_keys
         else None,
     }
+    create_issues_safety_contract_key_preview = create_issues_safety_contract_keys[:8]
+    create_issues_safety_contract_key_tail = create_issues_safety_contract_keys[-8:]
     publication_ref_context_keys = list(plan.publication_ref_context)
     publication_ref_context_key_boundary = {
         "first_key": publication_ref_context_keys[0]
@@ -2631,6 +2639,24 @@ def _issue_artifact_bundle_summary(
         "create_issues_safety_contract_key_boundary_sha256": _stable_json_sha256(
             create_issues_safety_contract_key_boundary
         ),
+        "create_issues_safety_contract_key_preview_count": len(
+            create_issues_safety_contract_key_preview
+        ),
+        "create_issues_safety_contract_key_preview": list(
+            create_issues_safety_contract_key_preview
+        ),
+        "create_issues_safety_contract_key_preview_sha256": _stable_json_sha256(
+            create_issues_safety_contract_key_preview
+        ),
+        "create_issues_safety_contract_key_tail_count": len(
+            create_issues_safety_contract_key_tail
+        ),
+        "create_issues_safety_contract_key_tail": list(
+            create_issues_safety_contract_key_tail
+        ),
+        "create_issues_safety_contract_key_tail_sha256": _stable_json_sha256(
+            create_issues_safety_contract_key_tail
+        ),
         "publication_ok": plan.publication_ok,
         "publication_visibility_status": plan.publication_visibility.get("status"),
         "publication_branch": plan.publication_ref_context.get("branch"),
@@ -3091,6 +3117,18 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['create_issues_safety_contract_last_key']}`",
             "- create_issues_safety_contract_key_boundary_sha256: "
             f"`{summary['create_issues_safety_contract_key_boundary_sha256']}`",
+            "- create_issues_safety_contract_key_preview_count: "
+            f"`{summary['create_issues_safety_contract_key_preview_count']}`",
+            "- create_issues_safety_contract_key_preview: "
+            f"`{json.dumps(summary['create_issues_safety_contract_key_preview'], ensure_ascii=False)}`",
+            "- create_issues_safety_contract_key_preview_sha256: "
+            f"`{summary['create_issues_safety_contract_key_preview_sha256']}`",
+            "- create_issues_safety_contract_key_tail_count: "
+            f"`{summary['create_issues_safety_contract_key_tail_count']}`",
+            "- create_issues_safety_contract_key_tail: "
+            f"`{json.dumps(summary['create_issues_safety_contract_key_tail'], ensure_ascii=False)}`",
+            "- create_issues_safety_contract_key_tail_sha256: "
+            f"`{summary['create_issues_safety_contract_key_tail_sha256']}`",
             f"- publication_ok: `{str(summary['publication_ok']).lower()}`",
             f"- publication_visibility_status: `{summary['publication_visibility_status']}`",
             f"- publication_branch: `{summary['publication_branch']}`",
