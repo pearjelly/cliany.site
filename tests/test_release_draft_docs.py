@@ -1,11 +1,12 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DRAFT = ROOT / "docs" / "releases" / "v0.14.4-draft.md"
+V0144_DRAFT = ROOT / "docs" / "releases" / "v0.14.4-draft.md"
+V0150_DRAFT = ROOT / "docs" / "releases" / "v0.15.0-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
-    text = DRAFT.read_text(encoding="utf-8")
+    text = V0144_DRAFT.read_text(encoding="utf-8")
 
     required = [
         "# v0.14.4 发布草案",
@@ -24,7 +25,7 @@ def test_v0144_release_draft_has_required_sections():
 
 
 def test_v0144_release_draft_tracks_current_workstreams():
-    text = DRAFT.read_text(encoding="utf-8")
+    text = V0144_DRAFT.read_text(encoding="utf-8")
 
     required = [
         "docs/adapter-lifecycle.md",
@@ -66,6 +67,53 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "market publish` 包名",
         "python scripts/release_readiness.py --strict",
         "git tag v0.14.4",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v0150_release_draft_has_required_sections():
+    text = V0150_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.15.0 发布草案",
+        "**目标版本：** `0.15.0`",
+        "**提交范围：** `v0.14.4..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v0150_release_draft_tracks_ten_minute_success_path():
+    text = V0150_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "10 分钟成功路径",
+        "docs/quickstart-10min.md",
+        "doctor",
+        "data.summary.recommended_next_step",
+        "data.summary.capabilities",
+        "manage_adapters",
+        "run_browser_workflows",
+        "generate_adapters",
+        "demo adapter",
+        "install/list/verify",
+        "Real Demo Case Proposal",
+        "python scripts/release_readiness.py --target-version 0.15.0 --strict",
+        "CLIANY_QA_OFFLINE=1",
+        "tests/test_quickstart_docs.py",
+        "tests/test_doctor_v3.py",
+        "git tag v0.15.0",
     ]
     for snippet in required:
         assert snippet in text

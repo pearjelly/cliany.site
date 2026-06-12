@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+### Added
+- 新增 `docs/releases/v0.15.0-draft.md`，把下一版 minor release 聚焦到 10 分钟成功路径、doctor 下一步提示和 demo adapter 静态验证闭环。
+
+### Changed
+- `docs/release-cadence.md` 现在说明 minor release 应使用 `release_readiness.py --target-version 0.15.0` 跟踪目标版本，避免默认下一 patch 草案与路线图目标脱节。
+
 ## [0.14.4] - 2026-06-12
 
 ### Added

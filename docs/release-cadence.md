@@ -56,6 +56,7 @@
 python scripts/release_readiness.py
 python scripts/release_readiness.py --json
 python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
+python scripts/release_readiness.py --target-version 0.15.0 --json
 python scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --require-packages --strict
 
 # 汇总检查发布节奏（默认只报告，不失败）
@@ -147,6 +148,14 @@ chore(release): bump version to 0.15.0
 当前草案：
 
 - [v0.14.4 发布草案](releases/v0.14.4-draft.md)
+- [v0.15.0 发布草案](releases/v0.15.0-draft.md)
+
+如果下一版是 minor，而不是默认的下一 patch，运行 readiness 时显式传入目标版本，例如：
+
+```bash
+python scripts/release_readiness.py --target-version 0.15.0 --json
+python scripts/release_readiness.py --target-version 0.15.0 --strict
+```
 
 ## 异常情况
 
