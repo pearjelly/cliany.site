@@ -134,8 +134,8 @@ const I18N = {
   'demo.login.saved': { zh: '✓ Session 已保存至 ~/.cliany-site/sessions/', en: '✓ Session saved to ~/.cliany-site/sessions/' },
   'demo.explore.done': { zh: '✓ 探索完成，已生成适配器', en: '✓ Exploration complete, adapter generated' },
 
-  'qs.title': { zh: '快速开始', en: 'Quick Start' },
-  'qs.subtitle': { zh: '先跑真实 demo，再配置 LLM 生成自己的命令', en: 'Run a real demo first, then configure LLM to generate your own commands' },
+  'qs.title': { zh: '10 分钟成功路径', en: '10-Minute Success Path' },
+  'qs.subtitle': { zh: '先跑真实 demo adapter，再配置 LLM 生成自己的命令', en: 'Run a real demo adapter first, then configure LLM to generate your own commands' },
   'qs.step1': { zh: 'Step 1: 安装', en: 'Step 1: Install' },
   'qs.step2': { zh: 'Step 2: 检查就绪状态', en: 'Step 2: Check Readiness' },
   'qs.step3': { zh: 'Step 3: 运行真实 Demo Adapter', en: 'Step 3: Run a Demo Adapter' },

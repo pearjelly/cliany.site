@@ -86,7 +86,7 @@
           <span class="section-label">起步</span>
           <a href="#install">安装</a>
           <a href="#config">配置 LLM</a>
-          <a href="#quickstart">5 分钟快速开始</a>
+          <a href="#quickstart">10 分钟成功路径</a>
           <span class="section-label">命令参考</span>
           <a href="#doctor">doctor</a>
           <a href="#login">login</a>
@@ -130,18 +130,20 @@ export CLIANY_LLM_PROVIDER=openai
 export CLIANY_OPENAI_API_KEY="sk-..."</code></pre>
         <p>也可以写入 <code>.env</code> 文件，查找顺序：<code>~/.config/cliany-site/.env</code> → <code>~/.cliany-site/.env</code> → 项目目录 <code>.env</code> → 系统环境变量。</p>
 
-        <h2 id="quickstart">5 分钟快速开始</h2>
-        <pre><code># 1. 验证环境
-cliany-site doctor --json
+        <h2 id="quickstart">10 分钟成功路径</h2>
+        <p>首次运行先验证一个真实只读 demo adapter；不需要先配置 LLM key。跑通后再进入 <a href="#config">配置 LLM</a> 和 <a href="#explore">explore</a>。</p>
+        <pre><code># 1. 查看 human 摘要和下一步
+cliany-site doctor
 
-# 2. 探索目标网站（此处以 GitHub 为例）
-cliany-site explore "https://github.com" "搜索仓库并查看 README" --json
+# 2. 安装 GitHub Release 中的只读 demo adapter
+cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz
 
-# 3. 查看已生成的适配器
+# 3. 查看并验证 adapter
 cliany-site list --json
+cliany-site verify issues.apache.org --json
 
-# 4. 执行生成的命令
-cliany-site github.com search --query "browser-use" --json</code></pre>
+# 4. 执行只读命令
+cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json</code></pre>
 
         <h2 id="doctor">doctor — 环境检查</h2>
         <p>检查 Chrome CDP 连通性、LLM Key 有效性、目录结构。</p>
