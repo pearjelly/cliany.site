@@ -430,6 +430,41 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     script_path = directory / "create-issues.sh"
     script_path.write_text("\n".join(script_lines) + "\n", encoding="utf-8")
     script_path.chmod(0o755)
+    (directory / "README.md").write_text(_render_issue_artifacts_readme(plan), encoding="utf-8")
+
+
+def _render_issue_artifacts_readme(plan: IterationPlan) -> str:
+    body_files = "\n".join(f"- `{promotion.case_id}.md`" for promotion in plan.candidate_promotions)
+    body_files = body_files or "- No candidate issue body files were generated."
+    return f"""# cliany-site Candidate Issue Artifacts
+
+Generated for target version `{plan.target_version}`.
+
+## Files
+
+- `issue-metadata.json`: structured issue title, labels, body file path, and `gh issue create` command.
+- `create-issues.sh`: reviewable shell script with one `gh issue create` command per candidate.
+{body_files}
+
+## Review Checklist
+
+- Confirm the latest local release has been published before creating new candidate work.
+- Review each body file for scope, tasks, validation evidence, and non-goals.
+- Keep cases as `candidate` until adapter package, metadata validation, and online smoke evidence are complete.
+- Do not use real LLM keys or write runtime state into the repository.
+
+## Validation Commands
+
+```bash
+python scripts/plan_next_iteration.py --target-version {plan.target_version} --json
+python scripts/validate_cases.py --strict
+```
+
+## Create Issues
+
+`create-issues.sh` is generated for review. It is not executed by `plan_next_iteration.py`.
+Run it only after checking `issue-metadata.json` and the body files.
+"""
 
 
 def _gh_issue_create_command(promotion: CandidatePromotion, body_path: Path) -> str:

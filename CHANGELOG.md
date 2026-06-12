@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --issues-dir` 现在会写出 `README.md`，说明 candidate issue artifacts 的文件用途、审阅清单、验证命令和 `create-issues.sh` 不会自动执行的边界。
+- 新增 `docs/releases/v0.16.7-draft.md`，把下一版 patch release 聚焦到候选案例 issue artifact README。
+
 ## [0.16.6] - 2026-06-12
 
 ### Added

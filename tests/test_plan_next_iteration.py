@@ -171,6 +171,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     body = (issues_dir / "pypi-project-search.md").read_text(encoding="utf-8")
     metadata = json.loads((issues_dir / "issue-metadata.json").read_text(encoding="utf-8"))
     script = (issues_dir / "create-issues.sh").read_text(encoding="utf-8")
+    readme = (issues_dir / "README.md").read_text(encoding="utf-8")
 
     assert "## Scope: promote candidate case `pypi-project-search`" in body
     assert metadata[0]["case_id"] == "pypi-project-search"
@@ -184,6 +185,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "--body-file" in script
     assert "pypi-project-search.md" in script
     assert oct((issues_dir / "create-issues.sh").stat().st_mode & 0o777) == "0o755"
+    assert "# cliany-site Candidate Issue Artifacts" in readme
+    assert "Generated for target version `0.16.2`." in readme
+    assert "`issue-metadata.json`: structured issue title, labels, body file path" in readme
+    assert "`create-issues.sh` is generated for review. It is not executed" in readme
+    assert "python scripts/validate_cases.py --strict" in readme
 
 
 def test_plan_cli_writes_json_for_current_repo(capsys):

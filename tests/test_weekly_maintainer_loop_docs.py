@@ -21,6 +21,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "Candidate Issue Metadata",
         "Candidate Issue Body Templates",
         "issue-metadata.json",
+        "README.md",
         "create-issues.sh",
         "GitHub issue body",
         "issue title",
