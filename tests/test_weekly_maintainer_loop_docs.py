@@ -309,6 +309,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "issue_body_inventory_tail_count",
         "issue_body_inventory_tail",
         "issue_body_inventory_tail_sha256",
+        "issue_body_summary_key_count",
+        "issue_body_summary_keys_sha256",
         "issue_body_summary_sha256",
         "issue_metadata_count",
         "issue_metadata_sha256",

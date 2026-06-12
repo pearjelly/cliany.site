@@ -836,6 +836,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "issue_body_inventory_tail_sha256": _stable_json_sha256(
             issue_body_inventory_tail
         ),
+        "issue_body_summary_key_count": len(issue_body_summary),
+        "issue_body_summary_keys_sha256": _stable_json_sha256(
+            list(issue_body_summary)
+        ),
         "issue_body_summary_sha256": _stable_json_sha256(issue_body_summary),
         "review_item_count": len(review_order),
         "review_order_sha256": review_order_sha256,
@@ -1193,6 +1197,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert artifact_manifest["artifact_bundle_summary"][
         "issue_body_inventory_last_entry"
     ] == artifact_manifest["issue_body_inventory"][-1]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "issue_body_summary_key_count"
+    ] == len(artifact_manifest["issue_body_summary"])
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1397,6 +1404,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "issue_body_inventory_tail_sha256: "
         f"`{artifact_bundle_summary['issue_body_inventory_tail_sha256']}`"
+    ) in readme
+    assert (
+        "issue_body_summary_key_count: "
+        f"`{artifact_bundle_summary['issue_body_summary_key_count']}`"
+    ) in readme
+    assert (
+        "issue_body_summary_keys_sha256: "
+        f"`{artifact_bundle_summary['issue_body_summary_keys_sha256']}`"
     ) in readme
     assert f"issue_body_summary_sha256: `{artifact_bundle_summary['issue_body_summary_sha256']}`" in readme
     assert "review_item_count: `7`" in readme
