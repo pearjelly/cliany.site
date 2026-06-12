@@ -522,6 +522,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "--issues-dir /tmp/cliany-candidate-issues"
         ),
         "create_issues_dry_run_command": f"CLIANY_CREATE_ISSUES_DRY_RUN=1 {issues_dir / 'create-issues.sh'}",
+        "create_issues_safety": {
+            "script": str(issues_dir / "create-issues.sh"),
+            "dry_run_supported": True,
+            "dry_run_env": "CLIANY_CREATE_ISSUES_DRY_RUN=1",
+            "dry_run_command": f"CLIANY_CREATE_ISSUES_DRY_RUN=1 {issues_dir / 'create-issues.sh'}",
+            "preflight_required": True,
+            "preflight_command": "python scripts/check_release_publication.py --strict --json",
+            "preflight_json": "/tmp/cliany-issue-publication-check.json",
+        },
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -686,6 +695,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "python scripts/check_release_publication.py --strict --json" in readme
     assert "/tmp/cliany-issue-publication-check.json" in readme
     assert "prints that JSON before exiting" in readme
+    assert "### Create Issues Safety" in readme
+    assert "dry_run_supported: `true`" in readme
+    assert "dry_run_env: `CLIANY_CREATE_ISSUES_DRY_RUN=1`" in readme
+    assert "dry_run_command: `CLIANY_CREATE_ISSUES_DRY_RUN=1 create-issues.sh`" in readme
+    assert "preflight_required: `true`" in readme
+    assert "preflight_command: `python scripts/check_release_publication.py --strict --json`" in readme
+    assert "preflight_json: `/tmp/cliany-issue-publication-check.json`" in readme
     assert "`create-issues.sh` is generated for review. It is not executed" in readme
     assert (
         "python scripts/plan_next_iteration.py --target-version 0.16.2 "

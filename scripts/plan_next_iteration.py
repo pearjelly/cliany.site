@@ -933,6 +933,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     issue_body_names = [f"{promotion.case_id}.md" for promotion in plan.candidate_promotions]
     candidate_cases = [promotion.case_id for promotion in plan.candidate_promotions]
     script_path = directory / "create-issues.sh"
+    create_issues_safety = _issue_artifact_create_issues_safety(script_path)
     artifact_manifest = {
         "schema_version": 1,
         "target_version": plan.target_version,
@@ -952,7 +953,8 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "release_draft_path": plan.release_draft_path,
         "release_draft_issues": plan.release_draft_issues,
         "issue_artifacts_command": plan.issue_artifacts_command,
-        "create_issues_dry_run_command": f"CLIANY_CREATE_ISSUES_DRY_RUN=1 {script_path}",
+        "create_issues_dry_run_command": create_issues_safety["dry_run_command"],
+        "create_issues_safety": create_issues_safety,
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -1053,6 +1055,7 @@ def _render_issue_artifacts_readme(plan: IterationPlan) -> str:
     )
     gate_draft_ok = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_ok"))
     gate_draft_issues = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_issue_count"))
+    create_issues_safety = _issue_artifact_create_issues_safety(Path("create-issues.sh"))
     return f"""# cliany-site Candidate Issue Artifacts
 
 Generated for target version `{plan.target_version}`.
@@ -1133,6 +1136,15 @@ Run it only after checking `issue-metadata.json` and the body files. The script 
 `python scripts/check_release_publication.py --strict --json` before creating issues and
 writes the preflight JSON to `/tmp/cliany-issue-publication-check.json`. If the preflight
 fails, it prints that JSON before exiting.
+
+### Create Issues Safety
+
+- dry_run_supported: `{str(create_issues_safety["dry_run_supported"]).lower()}`
+- dry_run_env: `{create_issues_safety["dry_run_env"]}`
+- dry_run_command: `{create_issues_safety["dry_run_command"]}`
+- preflight_required: `{str(create_issues_safety["preflight_required"]).lower()}`
+- preflight_command: `{create_issues_safety["preflight_command"]}`
+- preflight_json: `{create_issues_safety["preflight_json"]}`
 
 Preview the issue commands without running the publication preflight or creating issues:
 
@@ -1223,6 +1235,18 @@ def _issue_artifact_validation_commands(plan: IterationPlan) -> list[str]:
 
 def _issue_artifact_validation_commands_text(plan: IterationPlan) -> str:
     return "\n".join(_issue_artifact_validation_commands(plan))
+
+
+def _issue_artifact_create_issues_safety(script_path: Path) -> dict[str, Any]:
+    return {
+        "script": str(script_path),
+        "dry_run_supported": True,
+        "dry_run_env": "CLIANY_CREATE_ISSUES_DRY_RUN=1",
+        "dry_run_command": f"CLIANY_CREATE_ISSUES_DRY_RUN=1 {script_path}",
+        "preflight_required": True,
+        "preflight_command": "python scripts/check_release_publication.py --strict --json",
+        "preflight_json": "/tmp/cliany-issue-publication-check.json",
+    }
 
 
 def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> str:
