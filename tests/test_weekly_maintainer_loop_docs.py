@@ -61,6 +61,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "publication remote checked",
         "release draft issue 数",
         "release draft path",
+        "visibility summary",
         "publication_visibility_status",
         "publication_remote_checked",
         "publication_ahead_count",

@@ -1296,6 +1296,7 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
             "- release_draft_path: "
             f"`{_format_context_value(_candidate_issue_gate_evidence_value(plan, 'release_draft_path'))}`",
             f"- visibility: `{_format_context_value(plan.publication_visibility.get('status'))}`",
+            f"- visibility_summary: {_summary_inline_code(plan.publication_visibility.get('summary'))}",
         ]
     )
 

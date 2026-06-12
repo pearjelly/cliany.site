@@ -1118,6 +1118,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "- release_draft_issue_count: `2`" in readme
     assert "- release_draft_path: `docs/releases/v0.16.2-draft.md`" in readme
     assert "- visibility: `dirty_worktree`" in readme
+    assert (
+        "- visibility_summary: "
+        "`Worktree has uncommitted changes; resolve them before publishing release refs.`"
+    ) in readme
     assert "dry_run_supported: `true`" in readme
     assert "preflight_required: `true`" in readme
     assert "## Publication Handoff" in readme
