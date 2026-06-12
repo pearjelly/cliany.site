@@ -19,6 +19,7 @@ from validate_cases import CasesReport
 from validate_cases import build_report as build_cases_report
 
 ROOT = Path(__file__).resolve().parents[1]
+MIN_CASE_ASSETS = 8
 RELEASE_PREFLIGHT_COMMAND = (
     "python scripts/release_readiness.py --strict "
     '--release-tag "${{ github.ref_name }}" '
@@ -109,6 +110,7 @@ class ReadinessReport:
     current_version: str
     target_version: str
     blockers: list[str]
+    min_case_assets: int
     cadence: CadenceReport
     cases: CasesReport
     draft: DraftReport
@@ -123,6 +125,7 @@ class ReadinessReport:
             "current_version": self.current_version,
             "target_version": self.target_version,
             "blockers": self.blockers,
+            "min_case_assets": self.min_case_assets,
             "cadence": self.cadence.to_dict(),
             "cases": self.cases.to_dict(),
             "draft": self.draft.to_dict(),
@@ -465,6 +468,7 @@ def build_report(
     *,
     today: date | None = None,
     min_commit_days: int = 3,
+    min_case_assets: int = MIN_CASE_ASSETS,
     target_version: str | None = None,
     release_tag: str | None = None,
     packages_dir: Path | None = None,
@@ -494,6 +498,8 @@ def build_report(
         blockers.append(f"previous tag for release {release_tag} could not be determined")
     if not cases.ok:
         blockers.append("case catalog validation failed")
+    if cases.total < min_case_assets:
+        blockers.append(f"case assets {cases.total}/{min_case_assets}")
     if not draft.ok:
         blockers.append("release draft validation failed")
     if not ci.ok:
@@ -510,6 +516,7 @@ def build_report(
         current_version=current_version,
         target_version=expected_target,
         blockers=blockers,
+        min_case_assets=min_case_assets,
         cadence=cadence,
         cases=cases,
         draft=draft,
@@ -533,7 +540,8 @@ def _print_text(report: ReadinessReport) -> None:
     print(
         f"cases: {report.cases.ok} "
         f"(active {report.cases.active}, candidate {report.cases.candidate}, "
-        f"known_gap {report.cases.known_gap}, total {report.cases.total})"
+        f"known_gap {report.cases.known_gap}, total {report.cases.total}, "
+        f"min_assets {report.min_case_assets})"
     )
     print(f"draft: {report.draft.ok}")
     print(f"ci: {report.ci.ok}")
@@ -560,6 +568,8 @@ def _report_issue_lines(report: ReadinessReport) -> list[str]:
                 package_issues = [*package_issues, str(case.package["issue"])]
             for issue in package_issues:
                 lines.append(f"- `cases/{case.id}/package`: {issue}")
+    if report.cases.total < report.min_case_assets:
+        lines.append(f"- `cases`: case assets {report.cases.total}/{report.min_case_assets}")
     for gate_name, gate in (
         ("draft", report.draft),
         ("ci", report.ci),
@@ -590,6 +600,11 @@ def _next_action_lines(report: ReadinessReport) -> list[str]:
         lines.append("- Update `CHANGELOG.md` Unreleased content and compare link before release.")
     if not report.cases.ok:
         lines.append("- Run `python scripts/validate_cases.py --strict` and fix the listed case catalog issues.")
+    if report.cases.total < report.min_case_assets:
+        lines.append(
+            "- Add verified active or candidate case assets until the catalog reaches "
+            f"`{report.min_case_assets}` tracked cases."
+        )
     if not report.draft.ok:
         lines.append(
             "- Update the target release draft under `docs/releases/` with value, risks, validation, and blockers."
@@ -634,6 +649,7 @@ def _weekly_review_rows(report: ReadinessReport) -> list[str]:
         (
             "| Does this release help real users succeed? | "
             f"cases active `{report.cases.active}`, candidate `{report.cases.candidate}`; "
+            f"total `{report.cases.total}/{report.min_case_assets}`; "
             f"release draft `{Path(report.draft.path).name}` |"
         ),
         (
@@ -679,7 +695,8 @@ def _render_markdown_report(report: ReadinessReport) -> str:
         (
             f"| cases | `{str(report.cases.ok).lower()}` | "
             f"active `{report.cases.active}`, candidate `{report.cases.candidate}`, "
-            f"known_gap `{report.cases.known_gap}`, total `{report.cases.total}` |"
+            f"known_gap `{report.cases.known_gap}`, total `{report.cases.total}`, "
+            f"min_assets `{report.min_case_assets}` |"
         ),
         f"| draft | `{str(report.draft.ok).lower()}` | `{report.draft.path}` |",
         f"| ci | `{str(report.ci.ok).lower()}` | `{report.ci.path}` |",
@@ -750,6 +767,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="Output machine-readable JSON.")
     parser.add_argument("--strict", action="store_true", help="Exit non-zero when release readiness fails.")
     parser.add_argument("--min-days", type=int, default=3, help="Minimum unique commit days expected this week.")
+    parser.add_argument(
+        "--min-case-assets",
+        type=int,
+        default=MIN_CASE_ASSETS,
+        help="Minimum tracked active/candidate/known-gap case assets expected before release.",
+    )
     parser.add_argument("--today", help="Override current date as YYYY-MM-DD, for tests or audits.")
     parser.add_argument("--target-version", help="Target release version. Defaults to next patch version.")
     parser.add_argument("--release-tag", help="Validate an already tagged release, e.g. v0.14.4.")
@@ -769,6 +792,7 @@ def main(argv: list[str] | None = None) -> int:
         ROOT,
         today=today,
         min_commit_days=args.min_days,
+        min_case_assets=args.min_case_assets,
         target_version=args.target_version,
         release_tag=args.release_tag,
         packages_dir=args.packages_dir,

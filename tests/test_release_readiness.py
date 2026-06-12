@@ -47,6 +47,10 @@ def _commit(repo: Path, filename: str, content: str, day: str) -> None:
     _git(repo, "commit", "-m", f"test {day}", env=env)
 
 
+def _build_report(repo: Path, **kwargs):
+    return release_readiness.build_report(repo, min_case_assets=1, **kwargs)
+
+
 def _release_draft(target_version: str, current_version: str) -> str:
     return f"""# v{target_version} 发布草案
 
@@ -462,7 +466,7 @@ def test_release_readiness_passes_for_minimal_ready_repo(tmp_path):
     _commit(repo, "notes/tuesday.md", "tuesday", "2026-06-09")
     _commit(repo, "notes/wednesday.md", "wednesday", "2026-06-10")
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
 
     assert report.ok is True
     assert report.current_version == "0.1.0"
@@ -483,7 +487,7 @@ def test_release_readiness_passes_for_minimal_ready_repo(tmp_path):
 def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
 
     payload = report.to_dict()
     assert payload["blockers"] == ["commit days 1/3"]
@@ -495,11 +499,28 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     ]
 
 
+def test_release_readiness_default_requires_eight_case_assets(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    _commit(repo, "notes/tuesday.md", "tuesday", "2026-06-09")
+    _commit(repo, "notes/wednesday.md", "wednesday", "2026-06-10")
+
+    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+
+    assert report.ok is False
+    assert report.min_case_assets == 8
+    assert "case assets 1/8" in report.blockers
+    assert report.to_dict()["min_case_assets"] == 8
+    assert (
+        "- Add verified active or candidate case assets until the catalog reaches `8` tracked cases."
+        in report.to_dict()["next_actions"]
+    )
+
+
 def test_release_readiness_writes_markdown_report(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     _commit(repo, "notes/tuesday.md", "tuesday", "2026-06-09")
     _commit(repo, "notes/wednesday.md", "wednesday", "2026-06-10")
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
     report_path = tmp_path / "reports" / "release-readiness.md"
 
     release_readiness._write_markdown_report(report, report_path)
@@ -509,7 +530,7 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "| ok | `true` |" in text
     assert "| target_version | `0.1.1` |" in text
     assert "| cadence | `true` | commit days `3/3`: 2026-06-08, 2026-06-09, 2026-06-10 |" in text
-    assert "| cases | `true` | active `1`, candidate `0`, known_gap `0`, total `1` |" in text
+    assert "| cases | `true` | active `1`, candidate `0`, known_gap `0`, total `1`, min_assets `1` |" in text
     assert "| release_workflow | `true` |" in text
     assert "| project_metadata | `true` |" in text
     assert "https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD" in text
@@ -565,7 +586,7 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
         ),
         encoding="utf-8",
     )
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
     report_path = tmp_path / "reports" / "release-readiness.md"
 
     release_readiness._write_markdown_report(report, report_path)
@@ -582,19 +603,19 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     repo = _init_repo(tmp_path, with_draft=True)
     _commit(repo, "notes/tuesday.md", "tuesday", "2026-06-09")
     _commit(repo, "notes/wednesday.md", "wednesday", "2026-06-10")
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
 
     release_readiness._print_text(report)
 
     output = capsys.readouterr().out
     assert "ok: True" in output
-    assert "cases: True (active 1, candidate 0, known_gap 0, total 1)" in output
+    assert "cases: True (active 1, candidate 0, known_gap 0, total 1, min_assets 1)" in output
     assert "next_actions:" not in output
 
 
 def test_release_readiness_text_output_includes_next_actions_when_blocked(tmp_path, capsys):
     repo = _init_repo(tmp_path, with_draft=True)
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
 
     release_readiness._print_text(report)
 
@@ -611,7 +632,7 @@ def test_release_readiness_text_output_includes_next_actions_when_blocked(tmp_pa
 def test_release_readiness_markdown_report_includes_gate_issues_and_next_actions(tmp_path):
     repo = _init_repo(tmp_path, with_draft=False)
     (repo / "LICENSE").unlink()
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
     report_path = tmp_path / "reports" / "release-readiness.md"
 
     release_readiness._write_markdown_report(report, report_path)
@@ -638,7 +659,7 @@ def test_release_readiness_markdown_report_includes_gate_issues_and_next_actions
 def test_release_readiness_blocks_missing_release_draft(tmp_path):
     repo = _init_repo(tmp_path, with_draft=False)
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert "release draft validation failed" in report.blockers
@@ -658,7 +679,7 @@ def test_release_readiness_blocks_stale_changelog_compare_link(tmp_path):
         encoding="utf-8",
     )
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert any("CHANGELOG Unreleased compare link is stale" in blocker for blocker in report.blockers)
@@ -672,7 +693,7 @@ def test_release_readiness_blocks_missing_ci_extract_gate(tmp_path):
         encoding="utf-8",
     )
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert "CI release gates validation failed" in report.blockers
@@ -687,7 +708,7 @@ def test_release_readiness_blocks_missing_release_workflow_pypi_publish(tmp_path
         encoding="utf-8",
     )
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert "release workflow validation failed" in report.blockers
@@ -699,7 +720,7 @@ def test_release_readiness_blocks_missing_project_description(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     (repo / "pyproject.toml").write_text('[project]\nname = "demo"\nversion = "0.1.0"\n', encoding="utf-8")
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert "project metadata validation failed" in report.blockers
@@ -711,7 +732,7 @@ def test_release_readiness_blocks_missing_open_source_metadata_file(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     (repo / "LICENSE").unlink()
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert "project metadata validation failed" in report.blockers
@@ -722,7 +743,7 @@ def test_release_readiness_blocks_missing_open_source_template(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     (repo / ".github" / "ISSUE_TEMPLATE" / "case_proposal.yml").unlink()
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert "project metadata validation failed" in report.blockers
@@ -739,7 +760,7 @@ def test_release_readiness_blocks_incomplete_open_source_template(tmp_path):
         encoding="utf-8",
     )
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert "project metadata validation failed" in report.blockers
@@ -753,7 +774,7 @@ def test_release_readiness_blocks_incomplete_readme_entrypoint(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     (repo / "README.md").write_text("# Demo\n", encoding="utf-8")
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert "project metadata validation failed" in report.blockers
@@ -770,7 +791,7 @@ def test_release_readiness_blocks_stale_readme_marketplace_package_name(tmp_path
         encoding="utf-8",
     )
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert "project metadata validation failed" in report.blockers
@@ -784,7 +805,7 @@ def test_release_readiness_blocks_missing_weekly_maintainer_loop_doc(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     (repo / "docs" / "weekly-maintainer-loop.md").unlink()
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert "project metadata validation failed" in report.blockers
@@ -797,7 +818,7 @@ def test_release_readiness_blocks_missing_weekly_loop_link(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     (repo / "docs" / "roadmap-2026-q3.md").write_text("# Roadmap\n", encoding="utf-8")
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert "project metadata validation failed" in report.blockers
@@ -814,7 +835,7 @@ def test_release_readiness_blocks_release_workflow_without_strict_preflight(tmp_
     )
     (repo / ".github" / "workflows" / "release.yml").write_text(release_workflow, encoding="utf-8")
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert "release workflow validation failed" in report.blockers
@@ -826,7 +847,7 @@ def test_release_readiness_blocks_release_workflow_without_distribution_check(tm
     release_workflow = _release_workflow().replace("      - run: uvx twine check dist/*\n", "")
     (repo / ".github" / "workflows" / "release.yml").write_text(release_workflow, encoding="utf-8")
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert "release workflow validation failed" in report.blockers
@@ -838,7 +859,7 @@ def test_release_readiness_blocks_release_workflow_without_clean_dist(tmp_path):
     release_workflow = _release_workflow().replace("      - run: rm -rf dist\n", "")
     (repo / ".github" / "workflows" / "release.yml").write_text(release_workflow, encoding="utf-8")
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
 
     assert report.ok is False
     assert "release workflow validation failed" in report.blockers
@@ -882,7 +903,7 @@ def test_release_readiness_accepts_tagged_release_mode(tmp_path):
     _git(repo, "commit", "-m", "release 0.1.1", env=env)
     _git(repo, "tag", "v0.1.1")
 
-    report = release_readiness.build_report(repo, today=date(2026, 6, 10), min_commit_days=3, release_tag="v0.1.1")
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=3, release_tag="v0.1.1")
 
     assert report.ok is True
     assert report.current_version == "0.1.1"
@@ -896,7 +917,7 @@ def test_release_readiness_accepts_tagged_release_mode(tmp_path):
 def test_release_readiness_blocks_when_required_package_check_not_run(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
 
-    report = release_readiness.build_report(
+    report = _build_report(
         repo,
         today=date(2026, 6, 10),
         min_commit_days=1,
@@ -922,7 +943,7 @@ def test_release_readiness_accepts_required_valid_packages(tmp_path):
         domain="demo.example.com",
     )
 
-    report = release_readiness.build_report(
+    report = _build_report(
         repo,
         today=date(2026, 6, 10),
         min_commit_days=3,

@@ -46,6 +46,7 @@ def test_v0144_release_draft_tracks_current_workstreams():
         "example_output.data.command",
         "data.quality",
         "active/candidate/known-gap/total",
+        "至少保留 8 个",
         "promotion",
         "candidate `promotion` checklists",
         "Candidate Promotions",
