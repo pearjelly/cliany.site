@@ -98,6 +98,10 @@ def _publication_report() -> SimpleNamespace:
         ahead_count=2,
         latest_tag="v0.16.1",
         tag_published=False,
+        next_actions=[
+            "- Push `master` to `origin`; local branch is ahead by `2` commits.",
+            "- Push tag `v0.16.1` after the branch is published.",
+        ],
         publish_commands=[
             "git push origin master",
             "git push origin v0.16.1",
@@ -155,6 +159,10 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         == "python scripts/check_release_publication.py --json "
         "--publish-script /tmp/cliany-publish-release.sh"
     )
+    assert data["publication_next_actions"] == [
+        "Push `master` to `origin`; local branch is ahead by `2` commits.",
+        "Push tag `v0.16.1` after the branch is published.",
+    ]
     assert any("push `master`" in action for action in data["next_actions"])
     assert data["candidate_promotions"][0] == {
         "case_id": "pypi-project-search",
@@ -216,6 +224,9 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "## Candidate Promotion Tasks" in text
     assert "## Candidate Issue Body Templates" in text
     assert "## Publication Publish Commands" in text
+    assert "## Publication Next Actions" in text
+    assert "Push `master` to `origin`; local branch is ahead by `2` commits." in text
+    assert "Push tag `v0.16.1` after the branch is published." in text
     assert "git push origin master" in text
     assert "python scripts/check_release_publication.py --remote --json" in text
     assert "## Publication Publish Script" in text
@@ -276,6 +287,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert publication_handoff == {
         "publication_ok": False,
         "next_actions": plan.next_actions,
+        "publication_next_actions": [
+            "Push `master` to `origin`; local branch is ahead by `2` commits.",
+            "Push tag `v0.16.1` after the branch is published.",
+        ],
         "publish_commands": [
             "git push origin master",
             "git push origin v0.16.1",
@@ -302,7 +317,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "# cliany-site Candidate Issue Artifacts" in readme
     assert "Generated for target version `0.16.2`." in readme
     assert "`issue-metadata.json`: structured issue title, labels, reproduction context" in readme
-    assert "`publication-handoff.json`: publication status, next actions" in readme
+    assert "`publication-handoff.json`: publication status, next actions, publication next actions" in readme
     assert "## Candidate Summary" in readme
     assert "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands |" in readme
     assert (

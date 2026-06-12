@@ -7,6 +7,11 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py` 的 JSON、文本和 Markdown report 现在会输出 `publication_next_actions`，直接透传 publication audit 的具体发布待办。
+- `scripts/plan_next_iteration.py --issues-dir` 写出的 `publication-handoff.json` 现在包含 `publication_next_actions`，方便候选 issue 派发前审阅发布阻塞。
+- 新增 `docs/releases/v0.16.23-draft.md`，把下一版 patch release 聚焦到 next iteration plan 的 publication audit 待办交接。
+
 ## [0.16.22] - 2026-06-12
 
 ### Added

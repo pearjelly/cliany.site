@@ -65,6 +65,7 @@ class IterationPlan:
     blockers: list[str]
     next_actions: list[str]
     validation_commands: list[str]
+    publication_next_actions: list[str]
     publication_publish_commands: list[str]
     publication_publish_script_command: str
     issue_artifacts_command: str
@@ -86,6 +87,7 @@ class IterationPlan:
             "blockers": self.blockers,
             "next_actions": self.next_actions,
             "validation_commands": self.validation_commands,
+            "publication_next_actions": self.publication_next_actions,
             "publication_publish_commands": self.publication_publish_commands,
             "publication_publish_script_command": self.publication_publish_script_command,
             "issue_artifacts_command": self.issue_artifacts_command,
@@ -117,6 +119,17 @@ def _publication_publish_commands(publication: Any) -> list[str]:
         return []
     payload = to_dict()
     return [str(command) for command in payload.get("publish_commands", [])]
+
+
+def _publication_next_actions(publication: Any) -> list[str]:
+    actions = getattr(publication, "next_actions", None)
+    if actions is not None:
+        return [str(action).removeprefix("- ") for action in actions]
+    to_dict = getattr(publication, "to_dict", None)
+    if not callable(to_dict):
+        return []
+    payload = to_dict()
+    return [str(action).removeprefix("- ") for action in payload.get("next_actions", [])]
 
 
 def _release_draft_issues(readiness: Any) -> list[str]:
@@ -338,6 +351,7 @@ def build_plan(
         blockers=blockers,
         next_actions=_next_action_lines(readiness, publication),
         validation_commands=validation_commands,
+        publication_next_actions=_publication_next_actions(publication),
         publication_publish_commands=_publication_publish_commands(publication),
         publication_publish_script_command=publication_publish_script_command,
         issue_artifacts_command=issue_artifacts_command,
@@ -387,6 +401,10 @@ def _print_text(plan: IterationPlan) -> None:
     print("validation_commands:")
     for command in plan.validation_commands:
         print(f"- {command}")
+    if plan.publication_next_actions:
+        print("publication_next_actions:")
+        for action in plan.publication_next_actions:
+            print(f"- {action}")
     if plan.publication_publish_commands:
         print("publication_publish_commands:")
         for command in plan.publication_publish_commands:
@@ -400,6 +418,7 @@ def _render_markdown(plan: IterationPlan) -> str:
     blockers = "\n".join(f"- {blocker}" for blocker in plan.blockers) or "- None."
     next_actions = "\n".join(f"- {action}" for action in plan.next_actions)
     validation = "\n".join(f"- `{command}`" for command in plan.validation_commands)
+    publication_actions = _publication_next_actions_markdown(plan.publication_next_actions)
     publication_commands = _publication_commands_markdown(plan.publication_publish_commands)
     publication_script = _publication_script_markdown(plan.publication_publish_script_command)
     promotion_lines = _candidate_promotion_markdown(plan.candidate_promotions)
@@ -435,6 +454,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 
 {validation}
 
+{publication_actions}
+
 {publication_commands}
 
 {publication_script}
@@ -451,6 +472,15 @@ def _release_draft_issues_markdown(issues: list[str]) -> str:
         return ""
     issue_lines = "\n".join(f"- {issue}" for issue in issues)
     return f"\n\n### Release Draft Issues\n\n{issue_lines}"
+
+
+def _publication_next_actions_markdown(actions: list[str]) -> str:
+    if not actions:
+        return "## Publication Next Actions\n\n- No publication next actions are needed."
+    action_lines = "\n".join(f"- {action}" for action in actions)
+    return f"""## Publication Next Actions
+
+{action_lines}"""
 
 
 def _publication_script_markdown(command: str) -> str:
@@ -565,6 +595,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     publication_handoff = {
         "publication_ok": plan.publication_ok,
         "next_actions": plan.next_actions,
+        "publication_next_actions": plan.publication_next_actions,
         "publish_commands": plan.publication_publish_commands,
         "publish_script_command": plan.publication_publish_script_command,
     }
@@ -590,7 +621,8 @@ Generated for target version `{plan.target_version}`.
 
 - `issue-metadata.json`: structured issue title, labels, reproduction context, body file path,
   and `gh issue create` command.
-- `publication-handoff.json`: publication status, next actions, and publish commands to review first.
+- `publication-handoff.json`: publication status, next actions, publication next actions,
+  and publish commands to review first.
 - `create-issues.sh`: reviewable shell script with a release publication preflight and
   one `gh issue create` command per candidate.
 {body_files}
