@@ -1054,6 +1054,20 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "release_draft_required_actions_sha256": _stable_json_sha256(
             expected_release_draft_handoff["release_draft_required_actions"]
         ),
+        "release_draft_first_required_action": (
+            "Resolve release draft issue: release draft is missing"
+        ),
+        "release_draft_last_required_action": (
+            "Resolve release draft issue: release draft missing snippet: ## 发版前验证"
+        ),
+        "release_draft_required_action_boundary_sha256": _stable_json_sha256(
+            {
+                "first_action": "Resolve release draft issue: release draft is missing",
+                "last_action": (
+                    "Resolve release draft issue: release draft missing snippet: ## 发版前验证"
+                ),
+            }
+        ),
         "release_draft_primary_required_action": (
             expected_release_draft_handoff["release_draft_required_actions"][0]
         ),
@@ -2034,6 +2048,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"release_draft_required_actions_sha256: "
         f"`{artifact_bundle_summary['release_draft_required_actions_sha256']}`"
+    ) in readme
+    assert (
+        "release_draft_first_required_action: "
+        "`Resolve release draft issue: release draft is missing`"
+    ) in readme
+    assert (
+        "release_draft_last_required_action: "
+        "`Resolve release draft issue: release draft missing snippet: ## 发版前验证`"
+    ) in readme
+    assert (
+        "release_draft_required_action_boundary_sha256: "
+        f"`{artifact_bundle_summary['release_draft_required_action_boundary_sha256']}`"
     ) in readme
     assert (
         "release_draft_primary_required_action: "

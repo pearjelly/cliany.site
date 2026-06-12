@@ -213,6 +213,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "release_draft_primary_issue",
     "release_draft_required_action_count",
     "release_draft_required_actions_sha256",
+    "release_draft_first_required_action",
+    "release_draft_last_required_action",
+    "release_draft_required_action_boundary_sha256",
     "release_draft_primary_required_action",
     "release_draft_issues_sha256",
     "release_draft_first_issue",
@@ -2039,6 +2042,14 @@ def _issue_artifact_bundle_summary(
         )
     candidate_issue_gate_summary = plan.candidate_issue_gate.get("summary")
     release_draft_required_actions = _release_draft_required_actions(plan.release_draft_issues)
+    release_draft_required_action_boundary = {
+        "first_action": release_draft_required_actions[0]
+        if release_draft_required_actions
+        else None,
+        "last_action": release_draft_required_actions[-1]
+        if release_draft_required_actions
+        else None,
+    }
     release_draft_issue_boundary = {
         "first_issue": plan.release_draft_issues[0]
         if plan.release_draft_issues
@@ -2358,6 +2369,15 @@ def _issue_artifact_bundle_summary(
         "release_draft_primary_issue": _release_draft_primary_issue(plan),
         "release_draft_required_action_count": len(release_draft_required_actions),
         "release_draft_required_actions_sha256": _stable_json_sha256(release_draft_required_actions),
+        "release_draft_first_required_action": release_draft_required_action_boundary[
+            "first_action"
+        ],
+        "release_draft_last_required_action": release_draft_required_action_boundary[
+            "last_action"
+        ],
+        "release_draft_required_action_boundary_sha256": _stable_json_sha256(
+            release_draft_required_action_boundary
+        ),
         "release_draft_primary_required_action": (
             release_draft_required_actions[0] if release_draft_required_actions else None
         ),
@@ -2710,6 +2730,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"- release_draft_required_action_count: `{summary['release_draft_required_action_count']}`",
             "- release_draft_required_actions_sha256: "
             f"`{summary['release_draft_required_actions_sha256']}`",
+            "- release_draft_first_required_action: "
+            f"{_summary_inline_code(summary['release_draft_first_required_action'])}",
+            "- release_draft_last_required_action: "
+            f"{_summary_inline_code(summary['release_draft_last_required_action'])}",
+            "- release_draft_required_action_boundary_sha256: "
+            f"`{summary['release_draft_required_action_boundary_sha256']}`",
             "- release_draft_primary_required_action: "
             f"{_summary_inline_code(summary['release_draft_primary_required_action'])}",
             f"- release_draft_issues_sha256: `{summary['release_draft_issues_sha256']}`",
