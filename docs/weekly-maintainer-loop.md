@@ -59,6 +59,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 也会带上 `candidate_cases_sha256`，让工具只读整包摘要就能判断 candidate case 列表是否漂移。
 
+`artifact_bundle_summary` 还会带上 `candidate_cases_first_case`、`candidate_cases_last_case` 和 `candidate_cases_boundary_sha256`，让工具只读整包摘要就能确认 candidate case 列表首尾边界是否符合预期。
+
 `artifact_bundle_summary` 还会带上 `candidate_cases_preview_count`、`candidate_cases_preview` 和 `candidate_cases_preview_sha256`，让工具只读整包摘要就能看到 candidate case 列表入口，并判断 preview 是否漂移。
 
 `artifact_bundle_summary` 也会带上 `candidate_cases_tail_count`、`candidate_cases_tail` 和 `candidate_cases_tail_sha256`，让工具只读整包摘要就能检查 candidate case 列表末尾入口，并判断 tail 是否漂移。

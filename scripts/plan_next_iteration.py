@@ -87,6 +87,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "artifact_manifest_payload_sha256",
     "target_version",
     "candidate_count",
+    "candidate_cases_first_case",
+    "candidate_cases_last_case",
+    "candidate_cases_boundary_sha256",
     "candidate_cases_preview_count",
     "candidate_cases_preview",
     "candidate_cases_preview_sha256",
@@ -1993,6 +1996,14 @@ def _issue_artifact_bundle_summary(
         "artifact_manifest_payload_sha256": _stable_json_sha256(artifact_manifest_payload),
         "target_version": plan.target_version,
         "candidate_count": len(candidate_cases),
+        "candidate_cases_first_case": candidate_cases[0] if candidate_cases else None,
+        "candidate_cases_last_case": candidate_cases[-1] if candidate_cases else None,
+        "candidate_cases_boundary_sha256": _stable_json_sha256(
+            {
+                "first_case": candidate_cases[0] if candidate_cases else None,
+                "last_case": candidate_cases[-1] if candidate_cases else None,
+            }
+        ),
         "candidate_cases_preview_count": len(candidate_cases[:8]),
         "candidate_cases_preview": list(candidate_cases[:8]),
         "candidate_cases_preview_sha256": _stable_json_sha256(candidate_cases[:8]),
@@ -2210,6 +2221,9 @@ def _issue_artifact_bundle_summary_markdown(
             f"- artifact_manifest_payload_sha256: `{summary['artifact_manifest_payload_sha256']}`",
             f"- target_version: `{summary['target_version']}`",
             f"- candidate_count: `{summary['candidate_count']}`",
+            f"- candidate_cases_first_case: `{summary['candidate_cases_first_case']}`",
+            f"- candidate_cases_last_case: `{summary['candidate_cases_last_case']}`",
+            f"- candidate_cases_boundary_sha256: `{summary['candidate_cases_boundary_sha256']}`",
             f"- candidate_cases_preview_count: `{summary['candidate_cases_preview_count']}`",
             "- candidate_cases_preview: "
             f"`{json.dumps(summary['candidate_cases_preview'], ensure_ascii=False)}`",

@@ -793,6 +793,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "artifact_manifest_payload_sha256": _stable_json_sha256(artifact_manifest_payload),
         "target_version": "0.16.2",
         "candidate_count": 2,
+        "candidate_cases_first_case": "pypi-project-search",
+        "candidate_cases_last_case": "npm-package-search",
+        "candidate_cases_boundary_sha256": _stable_json_sha256(
+            {
+                "first_case": "pypi-project-search",
+                "last_case": "npm-package-search",
+            }
+        ),
         "candidate_cases_preview_count": 2,
         "candidate_cases_preview": ["pypi-project-search", "npm-package-search"],
         "candidate_cases_preview_sha256": _stable_json_sha256(
@@ -1138,6 +1146,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert artifact_manifest["artifact_bundle_summary"]["candidate_cases_tail"] == artifact_manifest[
         "candidate_cases"
     ][-artifact_manifest["artifact_bundle_summary"]["candidate_cases_tail_count"] :]
+    assert artifact_manifest["artifact_bundle_summary"]["candidate_cases_first_case"] == artifact_manifest[
+        "candidate_cases"
+    ][0]
+    assert artifact_manifest["artifact_bundle_summary"]["candidate_cases_last_case"] == artifact_manifest[
+        "candidate_cases"
+    ][-1]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1299,6 +1313,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "target_version: `0.16.2`" in readme
     assert "candidate_count: `2`" in readme
+    assert "candidate_cases_first_case: `pypi-project-search`" in readme
+    assert "candidate_cases_last_case: `npm-package-search`" in readme
+    assert (
+        "candidate_cases_boundary_sha256: "
+        f"`{_stable_json_sha256({'first_case': 'pypi-project-search', 'last_case': 'npm-package-search'})}`"
+    ) in readme
     assert "candidate_cases_preview_count: `2`" in readme
     assert "candidate_cases_preview: " in readme
     assert (
