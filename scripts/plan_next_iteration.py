@@ -65,6 +65,7 @@ class IterationPlan:
     blockers: list[str]
     next_actions: list[str]
     validation_commands: list[str]
+    publication_visibility: dict[str, str]
     publication_next_actions: list[str]
     publication_publish_commands: list[str]
     publication_ref_context: dict[str, Any]
@@ -90,6 +91,7 @@ class IterationPlan:
             "blockers": self.blockers,
             "next_actions": self.next_actions,
             "validation_commands": self.validation_commands,
+            "publication_visibility": self.publication_visibility,
             "publication_next_actions": self.publication_next_actions,
             "publication_publish_commands": self.publication_publish_commands,
             "publication_ref_context": self.publication_ref_context,
@@ -166,6 +168,49 @@ def _publication_ref_context(publication: Any) -> dict[str, Any]:
     to_dict = getattr(publication, "to_dict", None)
     payload = to_dict() if callable(to_dict) else {}
     return {field: getattr(publication, field, payload.get(field, None)) for field in fields}
+
+
+def _publication_visibility(publication: Any) -> dict[str, str]:
+    if not _publication_worktree_clean(publication):
+        return {
+            "status": "dirty_worktree",
+            "summary": "Worktree has uncommitted changes; resolve them before publishing release refs.",
+        }
+    if bool(getattr(publication, "ok", False)):
+        return {
+            "status": "published",
+            "summary": "Latest local release branch and tag are published.",
+        }
+
+    branch = str(getattr(publication, "branch", "") or "HEAD")
+    remote = str(getattr(publication, "remote", "") or "upstream")
+    latest_tag = str(getattr(publication, "latest_tag", "") or "(no tag)")
+    ahead_count = getattr(publication, "ahead_count", None)
+    tag_published = getattr(publication, "tag_published", None)
+    remote_checked = bool(getattr(publication, "remote_checked", False))
+
+    if isinstance(ahead_count, int) and ahead_count > 0:
+        return {
+            "status": "local_only",
+            "summary": (
+                f"`{branch}` is ahead of `{remote}` by {ahead_count} commits; "
+                f"publish `{branch}` and `{latest_tag}` after maintainer approval."
+            ),
+        }
+    if tag_published is False:
+        check_note = (
+            "remote check confirmed the tag is missing or stale"
+            if remote_checked
+            else "remote check has not run yet"
+        )
+        return {
+            "status": "tag_not_visible",
+            "summary": f"`{latest_tag}` is not visible on `{remote}`; {check_note}.",
+        }
+    return {
+        "status": "needs_remote_check",
+        "summary": "Publication visibility is inconclusive; rerun with `--remote` to verify live refs.",
+    }
 
 
 def _publication_worktree_status(publication: Any) -> list[str]:
@@ -398,6 +443,7 @@ def build_plan(
         blockers=blockers,
         next_actions=_next_action_lines(readiness, publication),
         validation_commands=validation_commands,
+        publication_visibility=_publication_visibility(publication),
         publication_next_actions=_publication_next_actions(publication),
         publication_publish_commands=_publication_publish_commands(publication),
         publication_ref_context=_publication_ref_context(publication),
@@ -451,6 +497,9 @@ def _print_text(plan: IterationPlan) -> None:
     print("validation_commands:")
     for command in plan.validation_commands:
         print(f"- {command}")
+    print("publication_visibility:")
+    for key, value in plan.publication_visibility.items():
+        print(f"- {key}: {value}")
     if plan.publication_next_actions:
         print("publication_next_actions:")
         for action in plan.publication_next_actions:
@@ -476,6 +525,7 @@ def _render_markdown(plan: IterationPlan) -> str:
     blockers = "\n".join(f"- {blocker}" for blocker in plan.blockers) or "- None."
     next_actions = "\n".join(f"- {action}" for action in plan.next_actions)
     validation = "\n".join(f"- `{command}`" for command in plan.validation_commands)
+    publication_visibility = _publication_visibility_markdown(plan.publication_visibility)
     publication_actions = _publication_next_actions_markdown(plan.publication_next_actions)
     publication_refs = _publication_ref_context_markdown(plan.publication_ref_context)
     publication_worktree = _publication_worktree_markdown(
@@ -517,6 +567,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 
 {validation}
 
+{publication_visibility}
+
 {publication_actions}
 
 {publication_refs}
@@ -548,6 +600,15 @@ def _publication_next_actions_markdown(actions: list[str]) -> str:
     return f"""## Publication Next Actions
 
 {action_lines}"""
+
+
+def _publication_visibility_markdown(visibility: dict[str, str]) -> str:
+    status = visibility.get("status") or "(unknown)"
+    summary = visibility.get("summary") or "Publication visibility has not been summarized."
+    return f"""## Publication Visibility
+
+- status: `{status}`
+- summary: {summary}"""
 
 
 def _publication_script_markdown(command: str) -> str:
@@ -701,6 +762,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     (directory / "issue-metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
     publication_handoff = {
         "publication_ok": plan.publication_ok,
+        "visibility": plan.publication_visibility,
         "next_actions": plan.next_actions,
         "publication_next_actions": plan.publication_next_actions,
         "ref_context": plan.publication_ref_context,
@@ -731,7 +793,7 @@ Generated for target version `{plan.target_version}`.
 
 - `issue-metadata.json`: structured issue title, labels, reproduction context, body file name,
   body file path, and `gh issue create` command.
-- `publication-handoff.json`: publication status, next actions, publication next actions,
+- `publication-handoff.json`: publication status, visibility, next actions, publication next actions,
   ref context, worktree status, and publish commands to review first.
 - `create-issues.sh`: reviewable shell script with a release publication preflight and
   one `gh issue create` command per candidate.
@@ -742,6 +804,7 @@ Generated for target version `{plan.target_version}`.
 ## Publication Handoff
 
 - publication_ok: `{str(plan.publication_ok).lower()}`
+- visibility: `{_format_context_value(plan.publication_visibility.get("status"))}`
 - latest_tag: `{_format_context_value(plan.publication_ref_context.get("latest_tag"))}`
 - local_head: `{_format_context_value(plan.publication_ref_context.get("local_head"))}`
 - worktree_clean: `{str(plan.publication_worktree_clean).lower()}`
