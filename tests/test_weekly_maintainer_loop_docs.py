@@ -34,6 +34,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "publication-handoff.json",
         "README.md",
         "Candidate Summary",
+        "issue body 文件",
         "create-issues.sh",
         "publish commands",
         "python scripts/check_release_publication.py --strict --json",

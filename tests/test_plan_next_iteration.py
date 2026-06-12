@@ -286,8 +286,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "`issue-metadata.json`: structured issue title, labels, reproduction context" in readme
     assert "`publication-handoff.json`: publication status, next actions" in readme
     assert "## Candidate Summary" in readme
-    assert "| Case | Target URL | Candidate Commands | Offline Validation Commands |" in readme
-    assert "| `pypi-project-search` | https://pypi.org/search/?q=cliany-site | 2 | 2 |" in readme
+    assert "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands |" in readme
+    assert (
+        "| `pypi-project-search` | `pypi-project-search.md` | "
+        "https://pypi.org/search/?q=cliany-site | 2 | 2 |"
+    ) in readme
     assert "## Publication Handoff" in readme
     assert "publication_ok: `false`" in readme
     assert "git push origin master" in readme

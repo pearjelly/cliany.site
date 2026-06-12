@@ -621,12 +621,12 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
     lines = [
         "## Candidate Summary",
         "",
-        "| Case | Target URL | Candidate Commands | Offline Validation Commands |",
-        "|------|------------|--------------------|-----------------------------|",
+        "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands |",
+        "|------|------------|------------|--------------------|-----------------------------|",
     ]
     for promotion in promotions:
         lines.append(
-            f"| `{promotion.case_id}` | {promotion.target_url or 'Not declared.'} | "
+            f"| `{promotion.case_id}` | `{promotion.case_id}.md` | {promotion.target_url or 'Not declared.'} | "
             f"{len(promotion.commands)} | {len(promotion.offline_commands)} |"
         )
     return "\n".join(lines)

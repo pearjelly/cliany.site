@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Changed
+- `scripts/plan_next_iteration.py --issues-dir` 生成的 artifacts `README.md` 中，`Candidate Summary` 表现在包含每个 candidate 对应的 issue body 文件名。
+- 新增 `docs/releases/v0.16.21-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts 摘要表的 body 文件入口。
+
 ## [0.16.20] - 2026-06-12
 
 ### Added
