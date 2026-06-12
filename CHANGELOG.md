@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.25] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 artifacts `README.md` 审阅清单现在要求先确认 `Publication Next Actions` 已处理或明确延后，再运行 `create-issues.sh`。
 - 新增 `docs/releases/v0.16.25-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts README 的 publication next actions 审阅门禁。
@@ -607,7 +609,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.24...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.25...HEAD
+[0.16.25]: https://github.com/pearjelly/cliany.site/compare/v0.16.24...v0.16.25
 [0.16.24]: https://github.com/pearjelly/cliany.site/compare/v0.16.23...v0.16.24
 [0.16.23]: https://github.com/pearjelly/cliany.site/compare/v0.16.22...v0.16.23
 [0.16.22]: https://github.com/pearjelly/cliany.site/compare/v0.16.21...v0.16.22
