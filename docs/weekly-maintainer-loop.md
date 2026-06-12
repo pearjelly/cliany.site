@@ -59,7 +59,7 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `candidate_issue_gate_primary_reason_code`、`candidate_issue_gate_primary_reason_description` 和 `candidate_issue_gate_primary_required_action`，让工具只读整包摘要就能展示首要阻塞原因、原因说明和首个维护动作。
 
-Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示 `Candidate Issue Gate Quick Summary`，把 gate status、`can_create_issues`、`requires_maintainer_review`、reason/action 数量、primary reason/action、latest tag、publication ahead 数、release draft issue 数、release draft path 和 visibility 放到维护者最容易先读到的位置。
+Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示 `Candidate Issue Gate Quick Summary`，把 gate status、`can_create_issues`、`requires_maintainer_review`、reason/action 数量、primary reason/action、latest tag、publication ahead 数、publication remote checked、release draft issue 数、release draft path 和 visibility 放到维护者最容易先读到的位置。
 
 `artifact_bundle_summary` 还会带上 `publication_ok`、`publication_visibility_status`、`release_draft_ok` 和 `release_draft_issue_count`，让工具只读整包摘要就能分辨发布阻塞和 release draft 阻塞分别来自哪里。
 
