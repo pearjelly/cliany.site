@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --issues-dir` 生成的 artifacts `README.md` 现在会展示 `Release Draft Handoff`，包含下一版草案路径和 release draft issues。
+- 新增 `docs/releases/v0.16.38-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts README 的 release draft handoff。
+
 ## [0.16.37] - 2026-06-12
 
 ### Added

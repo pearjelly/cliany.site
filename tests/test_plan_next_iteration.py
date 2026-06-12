@@ -401,6 +401,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "--publish-script /tmp/cliany-publish-release.sh"
     ) in readme
     assert "python scripts/check_release_publication.py --json" in readme
+    assert "## Release Draft Handoff" in readme
+    assert "release_draft_path: `docs/releases/v0.16.2-draft.md`" in readme
+    assert "- release draft is missing" in readme
+    assert "- release draft missing snippet: ## 发版前验证" in readme
+    assert "Confirm release draft issues are resolved or intentionally deferred" in readme
     assert "Confirm `Publication Next Actions` are resolved or intentionally deferred" in readme
     assert "before running `create-issues.sh`" in readme
     assert "expected target URL, candidate commands" in readme

@@ -825,9 +825,16 @@ Generated for target version `{plan.target_version}`.
 {_issue_artifact_publication_commands(plan)}
 ```
 
+## Release Draft Handoff
+
+- release_draft_path: `{plan.release_draft_path}`
+- release_draft_issues:
+{_issue_artifact_release_draft_issues(plan)}
+
 ## Review Checklist
 
 - Confirm the latest local release has been published before creating new candidate work.
+- Confirm release draft issues are resolved or intentionally deferred before tagging the target version.
 - Confirm `Publication Next Actions` are resolved or intentionally deferred before running `create-issues.sh`.
 - Confirm `issue-metadata.json` has the expected target URL, candidate commands, and
   offline validation commands for each case.
@@ -851,6 +858,12 @@ Run it only after checking `issue-metadata.json` and the body files. The script 
 writes the preflight JSON to `/tmp/cliany-issue-publication-check.json`. If the preflight
 fails, it prints that JSON before exiting.
 """
+
+
+def _issue_artifact_release_draft_issues(plan: IterationPlan) -> str:
+    if not plan.release_draft_issues:
+        return "  - No release draft issues are reported."
+    return "\n".join(f"  - {issue}" for issue in plan.release_draft_issues)
 
 
 def _issue_artifact_publication_commands(plan: IterationPlan) -> str:
