@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.58] - 2026-06-12
+
+### Changed
+- Candidate issue artifacts `README.md` 的 `Validation Commands` 现在复用 `artifact-manifest.json.validation_commands` 的完整命令列表。
+- Artifacts README 现在直接展示 release readiness 与 publication audit 复核命令，减少维护者只照 README 操作时漏跑门禁的风险。
+- 新增 `docs/releases/v0.16.58-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts README 与 manifest 的验证命令对齐。
+
 ## [0.16.57] - 2026-06-12
 
 ### Added
@@ -806,7 +813,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.57...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.58...HEAD
+[0.16.58]: https://github.com/pearjelly/cliany.site/compare/v0.16.57...v0.16.58
 [0.16.57]: https://github.com/pearjelly/cliany.site/compare/v0.16.56...v0.16.57
 [0.16.56]: https://github.com/pearjelly/cliany.site/compare/v0.16.55...v0.16.56
 [0.16.55]: https://github.com/pearjelly/cliany.site/compare/v0.16.54...v0.16.55
