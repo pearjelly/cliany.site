@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.155] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `artifact_manifest_key_count` 和 `artifact_manifest_keys_sha256`，让只读取整包摘要的维护工具能判断 `artifact-manifest.json` 顶层字段规模和字段清单是否漂移。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 artifact manifest key count/hash，并继续展示 manifest schema version。
+- 新增 `docs/releases/v0.16.155-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 artifact manifest key summary 可见性。
+
 ## [0.16.154] - 2026-06-13
 
 ### Added
@@ -1483,7 +1490,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.154...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.155...HEAD
+[0.16.155]: https://github.com/pearjelly/cliany.site/compare/v0.16.154...v0.16.155
 [0.16.154]: https://github.com/pearjelly/cliany.site/compare/v0.16.153...v0.16.154
 [0.16.153]: https://github.com/pearjelly/cliany.site/compare/v0.16.152...v0.16.153
 [0.16.152]: https://github.com/pearjelly/cliany.site/compare/v0.16.151...v0.16.152
