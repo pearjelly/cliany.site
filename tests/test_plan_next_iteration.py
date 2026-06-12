@@ -566,6 +566,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "last_key": issue_body_summary_keys[-1],
     }
     issue_body_summary_key_preview = issue_body_summary_keys[:8]
+    issue_body_summary_key_tail = issue_body_summary_keys[-8:]
     stable_issue_metadata = [
         {
             "case_id": item["case_id"],
@@ -857,6 +858,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "issue_body_summary_key_preview": list(issue_body_summary_key_preview),
         "issue_body_summary_key_preview_sha256": _stable_json_sha256(
             issue_body_summary_key_preview
+        ),
+        "issue_body_summary_key_tail_count": len(issue_body_summary_key_tail),
+        "issue_body_summary_key_tail": list(issue_body_summary_key_tail),
+        "issue_body_summary_key_tail_sha256": _stable_json_sha256(
+            issue_body_summary_key_tail
         ),
         "issue_body_summary_sha256": _stable_json_sha256(issue_body_summary),
         "review_item_count": len(review_order),
@@ -1231,6 +1237,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "issue_body_summary_key_preview_count"
         ]
     ]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "issue_body_summary_key_tail"
+    ] == list(artifact_manifest["issue_body_summary"])[
+        -artifact_manifest["artifact_bundle_summary"][
+            "issue_body_summary_key_tail_count"
+        ] :
+    ]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1464,6 +1477,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "issue_body_summary_key_preview_sha256: "
         f"`{artifact_bundle_summary['issue_body_summary_key_preview_sha256']}`"
+    ) in readme
+    assert (
+        "issue_body_summary_key_tail_count: "
+        f"`{artifact_bundle_summary['issue_body_summary_key_tail_count']}`"
+    ) in readme
+    assert "issue_body_summary_key_tail: " in readme
+    assert (
+        "issue_body_summary_key_tail_sha256: "
+        f"`{artifact_bundle_summary['issue_body_summary_key_tail_sha256']}`"
     ) in readme
     assert f"issue_body_summary_sha256: `{artifact_bundle_summary['issue_body_summary_sha256']}`" in readme
     assert "review_item_count: `7`" in readme

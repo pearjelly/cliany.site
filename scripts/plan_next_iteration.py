@@ -115,6 +115,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "issue_body_summary_key_preview_count",
     "issue_body_summary_key_preview",
     "issue_body_summary_key_preview_sha256",
+    "issue_body_summary_key_tail_count",
+    "issue_body_summary_key_tail",
+    "issue_body_summary_key_tail_sha256",
     "issue_body_summary_sha256",
     "review_item_count",
     "review_order_sha256",
@@ -1958,6 +1961,7 @@ def _issue_artifact_bundle_summary(
         "last_key": issue_body_summary_keys[-1] if issue_body_summary_keys else None,
     }
     issue_body_summary_key_preview = issue_body_summary_keys[:8]
+    issue_body_summary_key_tail = issue_body_summary_keys[-8:]
     return {
         "artifact_bundle_summary_key_count": len(ARTIFACT_BUNDLE_SUMMARY_KEYS),
         "artifact_bundle_summary_keys_sha256": _stable_json_sha256(ARTIFACT_BUNDLE_SUMMARY_KEYS),
@@ -2073,6 +2077,11 @@ def _issue_artifact_bundle_summary(
         "issue_body_summary_key_preview": list(issue_body_summary_key_preview),
         "issue_body_summary_key_preview_sha256": _stable_json_sha256(
             issue_body_summary_key_preview
+        ),
+        "issue_body_summary_key_tail_count": len(issue_body_summary_key_tail),
+        "issue_body_summary_key_tail": list(issue_body_summary_key_tail),
+        "issue_body_summary_key_tail_sha256": _stable_json_sha256(
+            issue_body_summary_key_tail
         ),
         "issue_body_summary_sha256": _stable_json_sha256(issue_body_summary),
         "review_item_count": len(review_order),
@@ -2323,6 +2332,11 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{json.dumps(summary['issue_body_summary_key_preview'], ensure_ascii=False)}`",
             "- issue_body_summary_key_preview_sha256: "
             f"`{summary['issue_body_summary_key_preview_sha256']}`",
+            f"- issue_body_summary_key_tail_count: `{summary['issue_body_summary_key_tail_count']}`",
+            "- issue_body_summary_key_tail: "
+            f"`{json.dumps(summary['issue_body_summary_key_tail'], ensure_ascii=False)}`",
+            "- issue_body_summary_key_tail_sha256: "
+            f"`{summary['issue_body_summary_key_tail_sha256']}`",
             f"- issue_body_summary_sha256: `{summary['issue_body_summary_sha256']}`",
             f"- review_item_count: `{summary['review_item_count']}`",
             f"- review_order_sha256: `{summary['review_order_sha256']}`",
