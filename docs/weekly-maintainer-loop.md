@@ -97,6 +97,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `artifact_files_key_count` 和 `artifact_files_sha256`，让工具只读整包摘要就能判断 artifacts 文件映射是否漂移。
 
+`artifact_bundle_summary` 还会带上 `artifact_files_first_key`、`artifact_files_last_key` 和 `artifact_files_key_boundary_sha256`，让工具只读整包摘要就能检查 artifacts 文件映射首尾边界，并判断 files key boundary 是否漂移。
+
 `artifact_bundle_summary` 还会带上 `artifact_files_key_preview_count`、`artifact_files_key_preview` 和 `artifact_files_key_preview_sha256`，让工具只读整包摘要就能看到 artifacts 文件映射字段入口，并判断 files key preview 是否漂移。
 
 `artifact_bundle_summary` 还会带上 `artifact_files_key_tail_count`、`artifact_files_key_tail` 和 `artifact_files_key_tail_sha256`，让工具只读整包摘要就能检查 artifacts 文件映射末尾入口，并判断 files key tail 是否漂移。

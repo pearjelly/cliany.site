@@ -692,6 +692,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "issue_bodies": ["pypi-project-search.md", "npm-package-search.md"],
     }
     artifact_file_keys = list(expected_artifact_files)
+    artifact_files_key_boundary = {
+        "first_key": artifact_file_keys[0],
+        "last_key": artifact_file_keys[-1],
+    }
     artifact_files_key_preview = artifact_file_keys[:8]
     artifact_files_key_tail = artifact_file_keys[-8:]
     review_order = [
@@ -930,6 +934,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ],
         "artifact_files_key_count": len(expected_artifact_files),
         "artifact_files_sha256": _stable_json_sha256(expected_artifact_files),
+        "artifact_files_first_key": artifact_files_key_boundary["first_key"],
+        "artifact_files_last_key": artifact_files_key_boundary["last_key"],
+        "artifact_files_key_boundary_sha256": _stable_json_sha256(
+            artifact_files_key_boundary
+        ),
         "artifact_files_key_preview_count": len(artifact_files_key_preview),
         "artifact_files_key_preview": list(artifact_files_key_preview),
         "artifact_files_key_preview_sha256": _stable_json_sha256(
@@ -1345,6 +1354,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "issue_metadata_tail"
     ] == artifact_manifest["issue_metadata_summary"]["metadata_tail"]
     assert artifact_manifest["artifact_bundle_summary"][
+        "artifact_files_first_key"
+    ] == list(artifact_manifest["files"])[0]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "artifact_files_last_key"
+    ] == list(artifact_manifest["files"])[-1]
+    assert artifact_manifest["artifact_bundle_summary"][
         "artifact_files_key_preview"
     ] == list(artifact_manifest["files"])[
         : artifact_manifest["artifact_bundle_summary"][
@@ -1662,6 +1677,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "artifact_files_key_count: `6`" in readme
     assert f"artifact_files_sha256: `{artifact_bundle_summary['artifact_files_sha256']}`" in readme
+    assert (
+        "artifact_files_first_key: "
+        f"`{artifact_bundle_summary['artifact_files_first_key']}`"
+    ) in readme
+    assert (
+        "artifact_files_last_key: "
+        f"`{artifact_bundle_summary['artifact_files_last_key']}`"
+    ) in readme
+    assert (
+        "artifact_files_key_boundary_sha256: "
+        f"`{artifact_bundle_summary['artifact_files_key_boundary_sha256']}`"
+    ) in readme
     assert (
         "artifact_files_key_preview_count: "
         f"`{artifact_bundle_summary['artifact_files_key_preview_count']}`"

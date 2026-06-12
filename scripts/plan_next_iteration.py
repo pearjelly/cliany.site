@@ -144,6 +144,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "issue_metadata_tail_sha256",
     "artifact_files_key_count",
     "artifact_files_sha256",
+    "artifact_files_first_key",
+    "artifact_files_last_key",
+    "artifact_files_key_boundary_sha256",
     "artifact_files_key_preview_count",
     "artifact_files_key_preview",
     "artifact_files_key_preview_sha256",
@@ -1985,6 +1988,10 @@ def _issue_artifact_bundle_summary(
     candidate_issue_gate_summary = plan.candidate_issue_gate.get("summary")
     release_draft_required_actions = _release_draft_required_actions(plan.release_draft_issues)
     artifact_file_keys = list(artifact_files)
+    artifact_files_key_boundary = {
+        "first_key": artifact_file_keys[0] if artifact_file_keys else None,
+        "last_key": artifact_file_keys[-1] if artifact_file_keys else None,
+    }
     artifact_files_key_preview = artifact_file_keys[:8]
     artifact_files_key_tail = artifact_file_keys[-8:]
     artifact_manifest_payload = _artifact_manifest_payload_without_summary(
@@ -2167,6 +2174,11 @@ def _issue_artifact_bundle_summary(
         ],
         "artifact_files_key_count": len(artifact_files),
         "artifact_files_sha256": _stable_json_sha256(artifact_files),
+        "artifact_files_first_key": artifact_files_key_boundary["first_key"],
+        "artifact_files_last_key": artifact_files_key_boundary["last_key"],
+        "artifact_files_key_boundary_sha256": _stable_json_sha256(
+            artifact_files_key_boundary
+        ),
         "artifact_files_key_preview_count": len(artifact_files_key_preview),
         "artifact_files_key_preview": list(artifact_files_key_preview),
         "artifact_files_key_preview_sha256": _stable_json_sha256(
@@ -2455,6 +2467,9 @@ def _issue_artifact_bundle_summary_markdown(
             f"- issue_metadata_tail_sha256: `{summary['issue_metadata_tail_sha256']}`",
             f"- artifact_files_key_count: `{summary['artifact_files_key_count']}`",
             f"- artifact_files_sha256: `{summary['artifact_files_sha256']}`",
+            f"- artifact_files_first_key: `{summary['artifact_files_first_key']}`",
+            f"- artifact_files_last_key: `{summary['artifact_files_last_key']}`",
+            f"- artifact_files_key_boundary_sha256: `{summary['artifact_files_key_boundary_sha256']}`",
             f"- artifact_files_key_preview_count: `{summary['artifact_files_key_preview_count']}`",
             "- artifact_files_key_preview: "
             f"`{json.dumps(summary['artifact_files_key_preview'], ensure_ascii=False)}`",
