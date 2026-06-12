@@ -199,6 +199,12 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "publication_handoff_first_key",
     "publication_handoff_last_key",
     "publication_handoff_key_boundary_sha256",
+    "publication_handoff_key_preview_count",
+    "publication_handoff_key_preview",
+    "publication_handoff_key_preview_sha256",
+    "publication_handoff_key_tail_count",
+    "publication_handoff_key_tail",
+    "publication_handoff_key_tail_sha256",
     "publication_handoff_sha256",
     "publication_ref_context_key_count",
     "publication_ref_context_sha256",
@@ -2081,6 +2087,8 @@ def _issue_artifact_bundle_summary(
         "first_key": publication_handoff_keys[0] if publication_handoff_keys else None,
         "last_key": publication_handoff_keys[-1] if publication_handoff_keys else None,
     }
+    publication_handoff_key_preview = publication_handoff_keys[:8]
+    publication_handoff_key_tail = publication_handoff_keys[-8:]
     candidate_issue_gate_evidence = plan.candidate_issue_gate.get("evidence")
     if not isinstance(candidate_issue_gate_evidence, dict):
         candidate_issue_gate_evidence = {}
@@ -2515,6 +2523,16 @@ def _issue_artifact_bundle_summary(
         "publication_handoff_last_key": publication_handoff_key_boundary["last_key"],
         "publication_handoff_key_boundary_sha256": _stable_json_sha256(
             publication_handoff_key_boundary
+        ),
+        "publication_handoff_key_preview_count": len(publication_handoff_key_preview),
+        "publication_handoff_key_preview": list(publication_handoff_key_preview),
+        "publication_handoff_key_preview_sha256": _stable_json_sha256(
+            publication_handoff_key_preview
+        ),
+        "publication_handoff_key_tail_count": len(publication_handoff_key_tail),
+        "publication_handoff_key_tail": list(publication_handoff_key_tail),
+        "publication_handoff_key_tail_sha256": _stable_json_sha256(
+            publication_handoff_key_tail
         ),
         "publication_handoff_sha256": _stable_json_sha256(publication_handoff),
         "publication_ref_context_key_count": len(plan.publication_ref_context),
@@ -3048,6 +3066,18 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['publication_handoff_last_key']}`",
             "- publication_handoff_key_boundary_sha256: "
             f"`{summary['publication_handoff_key_boundary_sha256']}`",
+            "- publication_handoff_key_preview_count: "
+            f"`{summary['publication_handoff_key_preview_count']}`",
+            "- publication_handoff_key_preview: "
+            f"`{json.dumps(summary['publication_handoff_key_preview'], ensure_ascii=False)}`",
+            "- publication_handoff_key_preview_sha256: "
+            f"`{summary['publication_handoff_key_preview_sha256']}`",
+            "- publication_handoff_key_tail_count: "
+            f"`{summary['publication_handoff_key_tail_count']}`",
+            "- publication_handoff_key_tail: "
+            f"`{json.dumps(summary['publication_handoff_key_tail'], ensure_ascii=False)}`",
+            "- publication_handoff_key_tail_sha256: "
+            f"`{summary['publication_handoff_key_tail_sha256']}`",
             f"- publication_handoff_sha256: `{summary['publication_handoff_sha256']}`",
             f"- publication_ref_context_key_count: `{summary['publication_ref_context_key_count']}`",
             f"- publication_ref_context_sha256: `{summary['publication_ref_context_sha256']}`",

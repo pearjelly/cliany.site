@@ -686,6 +686,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "--publish-script /tmp/cliany-publish-release.sh"
         ),
     }
+    publication_handoff_keys = list(expected_publication_handoff)
+    publication_handoff_key_preview = publication_handoff_keys[:8]
+    publication_handoff_key_tail = publication_handoff_keys[-8:]
     expected_artifact_files = {
         "readme": "README.md",
         "issue_metadata": "issue-metadata.json",
@@ -1089,6 +1092,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 "first_key": "schema_version",
                 "last_key": "publish_script_command_sha256",
             }
+        ),
+        "publication_handoff_key_preview_count": len(publication_handoff_key_preview),
+        "publication_handoff_key_preview": list(publication_handoff_key_preview),
+        "publication_handoff_key_preview_sha256": _stable_json_sha256(
+            publication_handoff_key_preview
+        ),
+        "publication_handoff_key_tail_count": len(publication_handoff_key_tail),
+        "publication_handoff_key_tail": list(publication_handoff_key_tail),
+        "publication_handoff_key_tail_sha256": _stable_json_sha256(
+            publication_handoff_key_tail
         ),
         "publication_handoff_sha256": _stable_json_sha256(expected_publication_handoff),
         "publication_ref_context_key_count": len(plan.publication_ref_context),
@@ -2205,6 +2218,30 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "publication_handoff_key_boundary_sha256: "
         f"`{artifact_bundle_summary['publication_handoff_key_boundary_sha256']}`"
+    ) in readme
+    assert (
+        "publication_handoff_key_preview_count: "
+        f"`{artifact_bundle_summary['publication_handoff_key_preview_count']}`"
+    ) in readme
+    assert (
+        "publication_handoff_key_preview: "
+        f"`{json.dumps(artifact_bundle_summary['publication_handoff_key_preview'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "publication_handoff_key_preview_sha256: "
+        f"`{artifact_bundle_summary['publication_handoff_key_preview_sha256']}`"
+    ) in readme
+    assert (
+        "publication_handoff_key_tail_count: "
+        f"`{artifact_bundle_summary['publication_handoff_key_tail_count']}`"
+    ) in readme
+    assert (
+        "publication_handoff_key_tail: "
+        f"`{json.dumps(artifact_bundle_summary['publication_handoff_key_tail'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "publication_handoff_key_tail_sha256: "
+        f"`{artifact_bundle_summary['publication_handoff_key_tail_sha256']}`"
     ) in readme
     assert (
         f"publication_handoff_sha256: "
