@@ -706,6 +706,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_next_actions_sha256": _stable_json_sha256(plan.publication_next_actions),
         "publication_primary_next_action": plan.publication_next_actions[0],
         "publication_handoff_key_count": len(expected_publication_handoff),
+        "publication_handoff_schema_version": expected_publication_handoff["schema_version"],
         "publication_handoff_sha256": _stable_json_sha256(expected_publication_handoff),
         "publication_ref_context_key_count": len(plan.publication_ref_context),
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
@@ -1045,6 +1046,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
     assert "publication_handoff_key_count: `17`" in readme
+    assert "publication_handoff_schema_version: `1`" in readme
     assert (
         f"publication_handoff_sha256: "
         f"`{artifact_bundle_summary['publication_handoff_sha256']}`"

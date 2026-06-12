@@ -1715,6 +1715,7 @@ def _issue_artifact_bundle_summary(
             plan.publication_next_actions[0] if plan.publication_next_actions else None
         ),
         "publication_handoff_key_count": len(publication_handoff),
+        "publication_handoff_schema_version": publication_handoff.get("schema_version"),
         "publication_handoff_sha256": _stable_json_sha256(publication_handoff),
         "publication_ref_context_key_count": len(plan.publication_ref_context),
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
@@ -1853,6 +1854,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             "- publication_primary_next_action: "
             f"{_summary_inline_code(summary['publication_primary_next_action'])}",
             f"- publication_handoff_key_count: `{summary['publication_handoff_key_count']}`",
+            "- publication_handoff_schema_version: "
+            f"{_summary_inline_code(summary['publication_handoff_schema_version'])}",
             f"- publication_handoff_sha256: `{summary['publication_handoff_sha256']}`",
             f"- publication_ref_context_key_count: `{summary['publication_ref_context_key_count']}`",
             f"- publication_ref_context_sha256: `{summary['publication_ref_context_sha256']}`",
