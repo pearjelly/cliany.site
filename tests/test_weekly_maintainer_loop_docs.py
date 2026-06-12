@@ -159,6 +159,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "publication ref context",
         "publication worktree status",
         "publication publish script command",
+        "publication_publish_script_command_sha256",
         "release draft path",
         "release draft issues",
         "issue_artifacts_command",

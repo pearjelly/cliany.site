@@ -613,6 +613,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_handoff_sha256": _stable_json_sha256(expected_publication_handoff),
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
+        "publication_publish_script_command_sha256": _stable_json_sha256(
+            plan.publication_publish_script_command
+        ),
         "publication_worktree_status_count": len(plan.publication_worktree_status),
         "publication_worktree_status_sha256": _stable_json_sha256(plan.publication_worktree_status),
         "release_draft_handoff_key_count": len(expected_release_draft_handoff),
@@ -892,6 +895,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"publication_publish_commands_sha256: "
         f"`{_stable_json_sha256(plan.publication_publish_commands)}`"
+    ) in readme
+    assert (
+        f"publication_publish_script_command_sha256: "
+        f"`{artifact_bundle_summary['publication_publish_script_command_sha256']}`"
     ) in readme
     assert f"publication_worktree_status_count: `{len(plan.publication_worktree_status)}`" in readme
     assert (

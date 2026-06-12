@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.90] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `publication_publish_script_command_sha256`，方便工具只读整包摘要就检测发布脚本生成命令是否漂移。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示 publication publish script command hash。
+- 新增 `docs/releases/v0.16.90-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的发布脚本生成入口漂移检测。
+
 ## [0.16.89] - 2026-06-12
 
 ### Added
@@ -1030,7 +1037,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.89...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.90...HEAD
+[0.16.90]: https://github.com/pearjelly/cliany.site/compare/v0.16.89...v0.16.90
 [0.16.89]: https://github.com/pearjelly/cliany.site/compare/v0.16.88...v0.16.89
 [0.16.88]: https://github.com/pearjelly/cliany.site/compare/v0.16.87...v0.16.88
 [0.16.87]: https://github.com/pearjelly/cliany.site/compare/v0.16.86...v0.16.87

@@ -1484,6 +1484,9 @@ def _issue_artifact_bundle_summary(
         "publication_handoff_sha256": _stable_json_sha256(publication_handoff),
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
+        "publication_publish_script_command_sha256": _stable_json_sha256(
+            plan.publication_publish_script_command
+        ),
         "publication_worktree_status_count": len(plan.publication_worktree_status),
         "publication_worktree_status_sha256": _stable_json_sha256(plan.publication_worktree_status),
         "release_draft_handoff_key_count": len(release_draft_handoff),
@@ -1568,6 +1571,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- publication_handoff_sha256: `{summary['publication_handoff_sha256']}`",
             f"- publication_ref_context_sha256: `{summary['publication_ref_context_sha256']}`",
             f"- publication_publish_commands_sha256: `{summary['publication_publish_commands_sha256']}`",
+            "- publication_publish_script_command_sha256: "
+            f"`{summary['publication_publish_script_command_sha256']}`",
             f"- publication_worktree_status_count: `{summary['publication_worktree_status_count']}`",
             f"- publication_worktree_status_sha256: `{summary['publication_worktree_status_sha256']}`",
             f"- release_draft_handoff_key_count: `{summary['release_draft_handoff_key_count']}`",
