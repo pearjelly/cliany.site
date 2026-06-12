@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.167] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `candidate_cases_preview_count`、`candidate_cases_preview` 和 `candidate_cases_preview_sha256`，让只读取整包摘要的维护工具能直接看到 candidate case 列表入口。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 candidate cases preview count/list/hash，并继续展示完整 candidate cases hash。
+- 新增 `docs/releases/v0.16.167-draft.md`，把下一版 patch release 聚焦到 candidate case 列表预览可见性。
+
 ## [0.16.166] - 2026-06-13
 
 ### Added
@@ -1567,7 +1574,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.166...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.167...HEAD
+[0.16.167]: https://github.com/pearjelly/cliany.site/compare/v0.16.166...v0.16.167
 [0.16.166]: https://github.com/pearjelly/cliany.site/compare/v0.16.165...v0.16.166
 [0.16.165]: https://github.com/pearjelly/cliany.site/compare/v0.16.164...v0.16.165
 [0.16.164]: https://github.com/pearjelly/cliany.site/compare/v0.16.163...v0.16.164
