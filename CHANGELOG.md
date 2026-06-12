@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.156] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `artifact_manifest_payload_key_count` 和 `artifact_manifest_payload_sha256`，让只读取整包摘要的维护工具能判断除 summary 自身之外的 manifest payload 是否漂移。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在复用 manifest 中预先计算的 bundle summary，确保 README 与 `artifact-manifest.json` 的 payload hash 同源。
+- 新增 `docs/releases/v0.16.156-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 artifact manifest payload summary 可见性。
+
 ## [0.16.155] - 2026-06-13
 
 ### Added
@@ -1490,7 +1497,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.155...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.156...HEAD
+[0.16.156]: https://github.com/pearjelly/cliany.site/compare/v0.16.155...v0.16.156
 [0.16.155]: https://github.com/pearjelly/cliany.site/compare/v0.16.154...v0.16.155
 [0.16.154]: https://github.com/pearjelly/cliany.site/compare/v0.16.153...v0.16.154
 [0.16.153]: https://github.com/pearjelly/cliany.site/compare/v0.16.152...v0.16.153
