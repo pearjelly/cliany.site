@@ -503,6 +503,10 @@ def test_cases_report_checks_optional_packages_dir(tmp_path):
     assert package is not None
     assert package["status"] == "invalid"
     assert "domain mismatch" in package["issues"][0]
+    assert (
+        "Regenerate the package for the manifest adapter_domain or fix the case adapter_domain."
+        in package["next_actions"]
+    )
 
 
 def test_cases_report_accepts_valid_package(tmp_path):
@@ -520,6 +524,7 @@ def test_cases_report_accepts_valid_package(tmp_path):
     assert report.ok is True
     assert report.checked_packages is True
     assert report.cases[0].package["status"] == "ok"
+    assert report.cases[0].package["next_actions"] == []
 
 
 def test_cases_report_writes_markdown_report(tmp_path):
@@ -604,6 +609,7 @@ def test_cases_report_rejects_package_with_legacy_metadata(tmp_path):
 
     assert report.ok is False
     assert "metadata.schema_version must be 3" in report.cases[0].package["issues"]
+    assert "Regenerate the adapter metadata with schema_version 3." in report.cases[0].package["next_actions"]
 
 
 def test_cases_report_rejects_package_hash_mismatch(tmp_path):
@@ -621,3 +627,27 @@ def test_cases_report_rejects_package_hash_mismatch(tmp_path):
 
     assert report.ok is False
     assert "file hash mismatch: metadata.json" in report.cases[0].package["issues"]
+    assert (
+        "Rebuild the adapter package so manifest.file_hashes match the packaged files."
+        in report.cases[0].package["next_actions"]
+    )
+
+
+def test_cases_report_includes_package_next_actions_in_markdown(tmp_path):
+    case = _case(domain="demo.example.com")
+    _write_cases(tmp_path, [case])
+    packages_dir = tmp_path / "packages"
+    _write_package(
+        packages_dir,
+        "demo.example.com.cliany-adapter-v0.1.0.tar.gz",
+        domain="other.example.com",
+    )
+    report = validate_cases.build_report(tmp_path, packages_dir=packages_dir)
+    report_path = tmp_path / "reports" / "case-catalog-report.md"
+
+    validate_cases._write_markdown_report(report, report_path)
+
+    text = report_path.read_text(encoding="utf-8")
+    assert "fail: invalid" in text
+    assert "domain mismatch" in text
+    assert "next: Regenerate the package for the manifest adapter_domain or fix the case adapter_domain." in text

@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Changed
+- `scripts/validate_cases.py --packages-dir ... --report` 的包校验失败现在会输出 `next_actions`，帮助维护者定位 domain、metadata schema、hash 或缺失文件问题。
+
 ## [0.16.0] - 2026-06-12
 
 ### Changed

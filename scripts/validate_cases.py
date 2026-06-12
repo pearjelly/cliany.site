@@ -262,6 +262,29 @@ def _extract_required_file(tar: tarfile.TarFile, name: str, issues: list[str]) -
     return extracted.read()
 
 
+def _package_next_actions(issues: list[str]) -> list[str]:
+    actions: list[str] = []
+    for issue in issues:
+        if issue.startswith("domain mismatch"):
+            actions.append("Regenerate the package for the manifest adapter_domain or fix the case adapter_domain.")
+        elif issue.startswith("metadata.schema_version"):
+            actions.append("Regenerate the adapter metadata with schema_version 3.")
+        elif issue.startswith("file hash mismatch") or "file_hashes" in issue:
+            actions.append("Rebuild the adapter package so manifest.file_hashes match the packaged files.")
+        elif "missing required files" in issue or issue.endswith("missing"):
+            actions.append("Rebuild the adapter package with manifest.json, commands.py, and metadata.json.")
+        elif issue.startswith("unsafe"):
+            actions.append("Rebuild the adapter package without unsafe archive paths or nested manifest file names.")
+        elif issue.startswith("undeclared package files") or issue.startswith("manifest.files missing from package"):
+            actions.append("Align manifest.files with the files actually included in the package.")
+
+    deduped: list[str] = []
+    for action in actions:
+        if action not in deduped:
+            deduped.append(action)
+    return deduped
+
+
 def _check_package(package_path: Path, expected_domain: str | None) -> dict[str, Any]:
     if not package_path.exists():
         return {
@@ -269,6 +292,10 @@ def _check_package(package_path: Path, expected_domain: str | None) -> dict[str,
             "path": str(package_path),
             "status": "missing",
             "issue": "package file not found",
+            "next_actions": [
+                f"Download or build the adapter package at {package_path}.",
+                "Rerun python scripts/validate_cases.py --packages-dir <dir> --strict.",
+            ],
         }
 
     issues: list[str] = []
@@ -327,6 +354,10 @@ def _check_package(package_path: Path, expected_domain: str | None) -> dict[str,
             "path": str(package_path),
             "status": "invalid",
             "issue": str(exc),
+            "next_actions": [
+                "Regenerate the adapter package with cliany-site market publish.",
+                "Confirm the tarball contains manifest.json, commands.py, and metadata.json.",
+            ],
         }
 
     if manifest.get("manifest_version") != "1":
@@ -347,6 +378,7 @@ def _check_package(package_path: Path, expected_domain: str | None) -> dict[str,
         "path": str(package_path),
         "status": "ok" if not issues else "invalid",
         "issues": issues,
+        "next_actions": _package_next_actions(issues),
     }
 
 
@@ -545,6 +577,23 @@ def _offline_command_summary(commands: list[str]) -> str:
     return "<br>".join(commands) if commands else "-"
 
 
+def _package_summary(package: dict[str, Any] | None) -> str:
+    if package is None:
+        return "-"
+    package_status = str(package.get("status") or "unknown")
+    if package.get("ok"):
+        return package_status
+
+    parts = [f"fail: {package_status}"]
+    if package.get("issue"):
+        parts.append(str(package["issue"]))
+    issues = [str(issue) for issue in package.get("issues") or []]
+    parts.extend(issues)
+    next_actions = [str(action) for action in package.get("next_actions") or []]
+    parts.extend(f"next: {action}" for action in next_actions)
+    return "<br>".join(parts)
+
+
 def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
     candidates = [case for case in report.cases if case.status == "candidate" and case.promotion]
     if not candidates:
@@ -618,10 +667,7 @@ def _render_markdown_report(report: CasesReport) -> str:
     for check in report.cases:
         result = "ok" if check.ok else "fail"
         issues = "<br>".join(check.issues) if check.issues else "-"
-        package = "-"
-        if check.package is not None:
-            package_status = str(check.package.get("status") or "unknown")
-            package = package_status if check.package.get("ok") else f"fail: {package_status}"
+        package = _package_summary(check.package)
         promotion = _promotion_summary(check.promotion)
         lines.append(f"| `{check.id}` | `{check.status}` | `{result}` | {issues} | {package} | {promotion} |")
 

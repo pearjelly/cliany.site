@@ -13,6 +13,7 @@ V0157_DRAFT = ROOT / "docs" / "releases" / "v0.15.7-draft.md"
 V0158_DRAFT = ROOT / "docs" / "releases" / "v0.15.8-draft.md"
 V0159_DRAFT = ROOT / "docs" / "releases" / "v0.15.9-draft.md"
 V0160_DRAFT = ROOT / "docs" / "releases" / "v0.16.0-draft.md"
+V0161_DRAFT = ROOT / "docs" / "releases" / "v0.16.1-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -529,6 +530,45 @@ def test_v0160_release_draft_tracks_structured_offline_validation_commands():
         "tests/test_validate_cases.py",
         "python scripts/release_readiness.py --target-version 0.16.0",
         "git tag v0.16.0",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v0161_release_draft_has_required_sections():
+    text = V0161_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.1 发布草案",
+        "**目标版本：** `0.16.1`",
+        "**提交范围：** `v0.16.0..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v0161_release_draft_tracks_package_validation_next_actions():
+    text = V0161_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "next_actions",
+        "domain mismatch",
+        "metadata schema",
+        "manifest hash",
+        "missing package",
+        "tests/test_validate_cases.py",
+        "python scripts/release_readiness.py --target-version 0.16.1",
+        "git tag v0.16.1",
     ]
     for snippet in required:
         assert snippet in text

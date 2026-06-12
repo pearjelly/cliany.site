@@ -91,6 +91,8 @@ python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict
 python scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --require-packages --strict
 ```
 
+当包校验失败时，`scripts/validate_cases.py --report` 会在 Package 列输出 `next:` 建议，例如重新生成 schema v3 metadata、修正 `adapter_domain`、重建 hash 或补齐 `commands.py` / `metadata.json`。这些建议只帮助维护者定位 release asset 问题，不会自动修改 `~/.cliany-site/packages`。
+
 ## 下一步
 
 - 在正式发版前，把 GitHub Release 候选 demo adapter 包下载到 `~/.cliany-site/packages`，再运行 `scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --require-packages --strict`。
