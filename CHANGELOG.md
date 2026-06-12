@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.93] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `publication_publish_command_count`，方便工具只读候选 issue artifacts 整包摘要就判断发布命令数量。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示 publication publish command count。
+- 新增 `docs/releases/v0.16.93-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的发布命令数量可见性。
+
 ## [0.16.92] - 2026-06-12
 
 ### Added
@@ -1049,7 +1056,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.92...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.93...HEAD
+[0.16.93]: https://github.com/pearjelly/cliany.site/compare/v0.16.92...v0.16.93
 [0.16.92]: https://github.com/pearjelly/cliany.site/compare/v0.16.91...v0.16.92
 [0.16.91]: https://github.com/pearjelly/cliany.site/compare/v0.16.90...v0.16.91
 [0.16.90]: https://github.com/pearjelly/cliany.site/compare/v0.16.89...v0.16.90

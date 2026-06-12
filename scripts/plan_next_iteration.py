@@ -1495,6 +1495,7 @@ def _issue_artifact_bundle_summary(
         "publication_handoff_key_count": len(publication_handoff),
         "publication_handoff_sha256": _stable_json_sha256(publication_handoff),
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
+        "publication_publish_command_count": plan.publication_publish_command_count,
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
         "publication_publish_script_command_sha256": _stable_json_sha256(
             plan.publication_publish_script_command
@@ -1582,6 +1583,7 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- publication_handoff_key_count: `{summary['publication_handoff_key_count']}`",
             f"- publication_handoff_sha256: `{summary['publication_handoff_sha256']}`",
             f"- publication_ref_context_sha256: `{summary['publication_ref_context_sha256']}`",
+            f"- publication_publish_command_count: `{summary['publication_publish_command_count']}`",
             f"- publication_publish_commands_sha256: `{summary['publication_publish_commands_sha256']}`",
             "- publication_publish_script_command_sha256: "
             f"`{summary['publication_publish_script_command_sha256']}`",

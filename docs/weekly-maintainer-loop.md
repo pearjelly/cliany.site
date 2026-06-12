@@ -73,7 +73,7 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `publication_handoff_key_count` 和 `publication_handoff_sha256`，让工具只读整包摘要就能判断 publication handoff 是否漂移。
 
-`artifact_bundle_summary` 还会带上 `publication_ref_context_sha256` 和 `publication_publish_commands_sha256`，让工具只读整包摘要就能判断 publication ref context 或 publish commands 是否漂移。
+`artifact_bundle_summary` 还会带上 `publication_ref_context_sha256`、`publication_publish_command_count` 和 `publication_publish_commands_sha256`，让工具只读整包摘要就能判断 publication ref context 或 publish commands 数量/内容是否漂移。
 
 `artifact_bundle_summary` 还会带上 `publication_publish_script_command_sha256`，让工具只读整包摘要就能判断发布脚本生成命令是否漂移。
 
