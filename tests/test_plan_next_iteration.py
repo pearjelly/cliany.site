@@ -699,6 +699,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         artifact_files=expected_artifact_files,
     )
     artifact_bundle_summary = {
+        "artifact_bundle_summary_key_count": len(plan_next_iteration.ARTIFACT_BUNDLE_SUMMARY_KEYS),
+        "artifact_bundle_summary_keys_sha256": _stable_json_sha256(
+            plan_next_iteration.ARTIFACT_BUNDLE_SUMMARY_KEYS
+        ),
         "artifact_manifest_schema_version": plan_next_iteration.ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "artifact_manifest_key_count": len(plan_next_iteration.ARTIFACT_MANIFEST_KEYS),
         "artifact_manifest_keys_sha256": _stable_json_sha256(
@@ -983,6 +987,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ],
     }
     assert list(artifact_manifest) == list(plan_next_iteration.ARTIFACT_MANIFEST_KEYS)
+    assert list(artifact_manifest["artifact_bundle_summary"]) == list(
+        plan_next_iteration.ARTIFACT_BUNDLE_SUMMARY_KEYS
+    )
     assert {
         key: value for key, value in artifact_manifest.items() if key != "artifact_bundle_summary"
     } == artifact_manifest_payload
@@ -1032,6 +1039,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert f"total_byte_count: `{issue_body_summary['total_byte_count']}`" in readme
     assert f"inventory_sha256: `{issue_body_summary['inventory_sha256']}`" in readme
     assert "## Artifact Bundle Summary" in readme
+    assert (
+        f"artifact_bundle_summary_key_count: `{len(plan_next_iteration.ARTIFACT_BUNDLE_SUMMARY_KEYS)}`"
+    ) in readme
+    assert (
+        "artifact_bundle_summary_keys_sha256: "
+        f"`{_stable_json_sha256(plan_next_iteration.ARTIFACT_BUNDLE_SUMMARY_KEYS)}`"
+    ) in readme
     assert (
         "artifact_manifest_schema_version: "
         f"`{plan_next_iteration.ARTIFACT_MANIFEST_SCHEMA_VERSION}`"

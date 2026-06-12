@@ -254,6 +254,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "issue_body_inventory",
         "issue_body_summary",
         "artifact_bundle_summary",
+        "artifact_bundle_summary_key_count",
+        "artifact_bundle_summary_keys_sha256",
         "artifact_manifest_schema_version",
         "artifact_manifest_key_count",
         "artifact_manifest_keys_sha256",
