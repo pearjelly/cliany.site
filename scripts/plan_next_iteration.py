@@ -1201,6 +1201,7 @@ Generated for target version `{plan.target_version}`.
 - latest_tag: `{_format_context_value(plan.publication_ref_context.get("latest_tag"))}`
 - local_head: `{_format_context_value(plan.publication_ref_context.get("local_head"))}`
 - worktree_clean: `{str(plan.publication_worktree_clean).lower()}`
+- primary_next_action: `{_format_context_value(_publication_primary_next_action(plan))}`
 - publish_command_count: `{plan.publication_publish_command_count}`
 - primary_publish_command: `{_format_context_value(_publication_primary_publish_command(plan))}`
 - publish_script_path: `{plan.publication_publish_script_path}`
@@ -1495,6 +1496,7 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "visibility": plan.publication_visibility,
         "next_actions": plan.next_actions,
         "publication_next_actions": plan.publication_next_actions,
+        "primary_next_action": _publication_primary_next_action(plan),
         "ref_context": plan.publication_ref_context,
         "worktree_clean": plan.publication_worktree_clean,
         "worktree_status": plan.publication_worktree_status,
@@ -1506,6 +1508,10 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "publish_script_command": plan.publication_publish_script_command,
         "publish_script_command_sha256": plan.publication_publish_script_command_sha256,
     }
+
+
+def _publication_primary_next_action(plan: IterationPlan) -> str | None:
+    return plan.publication_next_actions[0] if plan.publication_next_actions else None
 
 
 def _publication_primary_publish_command(plan: IterationPlan) -> str | None:

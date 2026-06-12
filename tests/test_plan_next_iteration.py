@@ -614,6 +614,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "Push `master` to `origin`; local branch is ahead by `2` commits.",
             "Push tag `v0.16.1` after the branch is published.",
         ],
+        "primary_next_action": "Commit, stash, or discard local worktree changes before publishing release refs.",
         "ref_context": {
             "repo_root": "/repo/cliany.site",
             "branch": "master",
@@ -1040,7 +1041,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_primary_next_action: "
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
-    assert "publication_handoff_key_count: `15`" in readme
+    assert "publication_handoff_key_count: `16`" in readme
     assert (
         f"publication_handoff_sha256: "
         f"`{artifact_bundle_summary['publication_handoff_sha256']}`"
@@ -1273,6 +1274,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "latest_tag: `v0.16.1`" in readme
     assert "local_head: `abc123`" in readme
     assert "worktree_clean: `false`" in readme
+    assert (
+        "primary_next_action: "
+        "`Commit, stash, or discard local worktree changes before publishing release refs.`"
+    ) in readme
     assert "publish_command_count: `1`" in readme
     assert "primary_publish_command: `python scripts/check_release_publication.py --json`" in readme
     assert "publish_script_path: `/tmp/cliany-publish-release.sh`" in readme
