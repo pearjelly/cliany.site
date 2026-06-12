@@ -1077,6 +1077,22 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "candidate_issue_gate_primary_required_action: "
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
+    assert "## Candidate Issue Gate Quick Summary" in readme
+    assert readme.index("## Candidate Issue Gate Quick Summary") < readme.index("## Artifact Bundle Summary")
+    assert "- status: `blocked_by_publication`" in readme
+    assert "- can_create_issues: `false`" in readme
+    assert "- requires_maintainer_review: `true`" in readme
+    assert "- primary_reason_code: `publication_not_published`" in readme
+    assert (
+        "- primary_reason_description: "
+        "`The latest local release branch or tag is not visible upstream.`"
+    ) in readme
+    assert (
+        "- primary_required_action: "
+        "`Commit, stash, or discard local worktree changes before publishing release refs.`"
+    ) in readme
+    assert "- latest_tag: `v0.16.1`" in readme
+    assert "- visibility: `dirty_worktree`" in readme
     assert "dry_run_supported: `true`" in readme
     assert "preflight_required: `true`" in readme
     assert "## Publication Handoff" in readme

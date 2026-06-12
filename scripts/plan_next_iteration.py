@@ -1099,6 +1099,7 @@ def _render_issue_artifacts_readme(plan: IterationPlan) -> str:
     candidate_summary = _issue_artifact_candidate_summary(plan.candidate_promotions)
     body_inventory = _issue_artifact_body_inventory_markdown(plan.candidate_promotions)
     body_summary = _issue_artifact_body_summary_markdown(plan.candidate_promotions)
+    gate_quick_summary = _issue_artifact_gate_quick_summary(plan)
     bundle_summary = _issue_artifact_bundle_summary_markdown(plan)
     gate_reason_codes = _issue_artifact_gate_reason_codes(plan)
     gate_reason_descriptions = _issue_artifact_gate_reason_descriptions(plan)
@@ -1136,6 +1137,8 @@ Generated for target version `{plan.target_version}`.
 {body_inventory}
 
 {body_summary}
+
+{gate_quick_summary}
 
 {bundle_summary}
 
@@ -1216,6 +1219,40 @@ Preview the issue commands without running the publication preflight or creating
 CLIANY_CREATE_ISSUES_DRY_RUN=1 ./create-issues.sh
 ```
 """
+
+
+def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
+    reason_codes = plan.candidate_issue_gate.get("reason_codes")
+    if not isinstance(reason_codes, list):
+        reason_codes = []
+    reason_descriptions = plan.candidate_issue_gate.get("reason_descriptions")
+    if not isinstance(reason_descriptions, dict):
+        reason_descriptions = {}
+    required_actions = plan.candidate_issue_gate.get("required_actions")
+    if not isinstance(required_actions, list):
+        required_actions = []
+    primary_reason_code = reason_codes[0] if reason_codes else None
+    primary_reason_description = None
+    if primary_reason_code is not None:
+        primary_reason_description = reason_descriptions.get(primary_reason_code)
+    primary_required_action = required_actions[0] if required_actions else None
+    return "\n".join(
+        [
+            "## Candidate Issue Gate Quick Summary",
+            "",
+            f"- status: `{_format_context_value(plan.candidate_issue_gate.get('status'))}`",
+            "- can_create_issues: "
+            f"`{str(bool(plan.candidate_issue_gate.get('can_create_issues', False))).lower()}`",
+            "- requires_maintainer_review: "
+            f"`{str(bool(plan.candidate_issue_gate.get('requires_maintainer_review', False))).lower()}`",
+            f"- primary_reason_code: {_summary_inline_code(primary_reason_code)}",
+            f"- primary_reason_description: {_summary_inline_code(primary_reason_description)}",
+            f"- primary_required_action: {_summary_inline_code(primary_required_action)}",
+            "- latest_tag: "
+            f"`{_format_context_value(_candidate_issue_gate_evidence_value(plan, 'publication_latest_tag'))}`",
+            f"- visibility: `{_format_context_value(plan.publication_visibility.get('status'))}`",
+        ]
+    )
 
 
 def _candidate_issue_gate_evidence_value(plan: IterationPlan, key: str) -> object:

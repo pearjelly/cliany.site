@@ -47,6 +47,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "candidate_issue_gate_required_action_count",
         "candidate_issue_gate_required_actions_sha256",
         "candidate_issue_gate_primary_required_action",
+        "Candidate Issue Gate Quick Summary",
         "publication_visibility_status",
         "publication_remote_checked",
         "publication_ahead_count",
