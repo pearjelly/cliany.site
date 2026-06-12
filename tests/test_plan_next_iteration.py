@@ -34,6 +34,15 @@ def _readiness_report() -> SimpleNamespace:
         target_version="0.16.2",
         blockers=["release draft validation failed"],
         min_case_assets=8,
+        draft=SimpleNamespace(
+            ok=False,
+            path="/tmp/project/docs/releases/v0.16.2-draft.md",
+            target_version="0.16.2",
+            issues=[
+                "release draft is missing",
+                "release draft missing snippet: ## 发版前验证",
+            ],
+        ),
         cadence=SimpleNamespace(
             commit_day_count=2,
             min_commit_days=3,
@@ -125,6 +134,10 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     data = plan.to_dict()
 
     assert data["release_draft_path"] == "docs/releases/v0.16.2-draft.md"
+    assert data["release_draft_issues"] == [
+        "release draft is missing",
+        "release draft missing snippet: ## 发版前验证",
+    ]
     assert "python scripts/check_release_publication.py --json" in data["validation_commands"]
     assert "python scripts/validate_cases.py --strict" in data["validation_commands"]
     assert (
@@ -207,6 +220,11 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "python scripts/check_release_publication.py --remote --json" in text
     assert "## Publication Publish Script" in text
     assert "python scripts/check_release_publication.py --json --publish-script /tmp/cliany-publish-release.sh" in text
+    assert "## Release Draft" in text
+    assert "`docs/releases/v0.16.2-draft.md`" in text
+    assert "### Release Draft Issues" in text
+    assert "release draft is missing" in text
+    assert "release draft missing snippet: ## 发版前验证" in text
     assert "| `pypi-project-search` | Generate pypi.org-<version>.cliany-adapter.tar.gz." in text
     assert "## Scope: promote candidate case `pypi-project-search`" in text
     assert "## Reproduction Context" in text

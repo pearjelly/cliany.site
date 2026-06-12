@@ -22,6 +22,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "branch/tag push",
         "python scripts/check_release_publication.py --remote --json",
         "--publish-script /tmp/cliany-publish-release.sh",
+        "release_draft_issues",
+        "release draft validation failed",
         "Candidate Promotion Tasks",
         "Candidate Issue Metadata",
         "Candidate Issue Body Templates",

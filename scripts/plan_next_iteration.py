@@ -69,6 +69,7 @@ class IterationPlan:
     publication_publish_script_command: str
     issue_artifacts_command: str
     release_draft_path: str
+    release_draft_issues: list[str]
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -89,6 +90,7 @@ class IterationPlan:
             "publication_publish_script_command": self.publication_publish_script_command,
             "issue_artifacts_command": self.issue_artifacts_command,
             "release_draft_path": self.release_draft_path,
+            "release_draft_issues": self.release_draft_issues,
         }
 
 
@@ -115,6 +117,14 @@ def _publication_publish_commands(publication: Any) -> list[str]:
         return []
     payload = to_dict()
     return [str(command) for command in payload.get("publish_commands", [])]
+
+
+def _release_draft_issues(readiness: Any) -> list[str]:
+    draft = getattr(readiness, "draft", None)
+    issues = getattr(draft, "issues", []) if draft is not None else []
+    if not isinstance(issues, list):
+        return []
+    return [str(issue) for issue in issues]
 
 
 def _next_action_lines(readiness: Any, publication: Any) -> list[str]:
@@ -332,6 +342,7 @@ def build_plan(
         publication_publish_script_command=publication_publish_script_command,
         issue_artifacts_command=issue_artifacts_command,
         release_draft_path=f"docs/releases/v{readiness.target_version}-draft.md",
+        release_draft_issues=_release_draft_issues(readiness),
     )
 
 
@@ -346,6 +357,10 @@ def _print_text(plan: IterationPlan) -> None:
     print(f"commit_days: {plan.commit_days}")
     print(f"case_assets: {plan.case_assets}")
     print(f"release_draft_path: {plan.release_draft_path}")
+    if plan.release_draft_issues:
+        print("release_draft_issues:")
+        for issue in plan.release_draft_issues:
+            print(f"- {issue}")
     if plan.candidate_cases:
         print("candidate_cases:")
         for case_id in plan.candidate_cases:
@@ -388,6 +403,7 @@ def _render_markdown(plan: IterationPlan) -> str:
     publication_commands = _publication_commands_markdown(plan.publication_publish_commands)
     publication_script = _publication_script_markdown(plan.publication_publish_script_command)
     promotion_lines = _candidate_promotion_markdown(plan.candidate_promotions)
+    release_draft_issues = _release_draft_issues_markdown(plan.release_draft_issues)
     return f"""# cliany-site Next Iteration Plan
 
 | Metric | Value |
@@ -426,7 +442,15 @@ def _render_markdown(plan: IterationPlan) -> str:
 ## Release Draft
 
 - `{plan.release_draft_path}`
+{release_draft_issues}
 """
+
+
+def _release_draft_issues_markdown(issues: list[str]) -> str:
+    if not issues:
+        return ""
+    issue_lines = "\n".join(f"- {issue}" for issue in issues)
+    return f"\n\n### Release Draft Issues\n\n{issue_lines}"
 
 
 def _publication_script_markdown(command: str) -> str:
