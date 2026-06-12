@@ -1068,6 +1068,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "release_draft_handoff_primary_required_action": (
             expected_release_draft_handoff["primary_required_action"]
         ),
+        "release_draft_handoff_first_key": "schema_version",
+        "release_draft_handoff_last_key": "target_version",
+        "release_draft_handoff_key_boundary_sha256": _stable_json_sha256(
+            {
+                "first_key": "schema_version",
+                "last_key": "target_version",
+            }
+        ),
         "release_draft_handoff_sha256": _stable_json_sha256(expected_release_draft_handoff),
         "release_draft_path": plan.release_draft_path,
         "release_draft_path_sha256": _stable_json_sha256(plan.release_draft_path),
@@ -2119,6 +2127,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "release_draft_handoff_primary_required_action: "
         "`Resolve release draft issue: release draft is missing`"
+    ) in readme
+    assert "release_draft_handoff_first_key: `schema_version`" in readme
+    assert "release_draft_handoff_last_key: `target_version`" in readme
+    assert (
+        "release_draft_handoff_key_boundary_sha256: "
+        f"`{artifact_bundle_summary['release_draft_handoff_key_boundary_sha256']}`"
     ) in readme
     assert (
         f"release_draft_handoff_sha256: "
