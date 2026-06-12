@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.26] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 artifacts `README.md` 现在会在 `Publication Handoff` 中展示 `Publication Publish Script` 命令，方便维护者先生成并审阅发布脚本。
 - 新增 `docs/releases/v0.16.26-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts README 的 publish script 入口。
@@ -613,7 +615,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.25...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.26...HEAD
+[0.16.26]: https://github.com/pearjelly/cliany.site/compare/v0.16.25...v0.16.26
 [0.16.25]: https://github.com/pearjelly/cliany.site/compare/v0.16.24...v0.16.25
 [0.16.24]: https://github.com/pearjelly/cliany.site/compare/v0.16.23...v0.16.24
 [0.16.23]: https://github.com/pearjelly/cliany.site/compare/v0.16.22...v0.16.23
