@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.126] - 2026-06-12
+
+### Fixed
+- `Candidate Issue Gate Quick Summary` 的 inline code helper 现在会用带空格的双反引号包裹包含反引号的 summary，避免 `visibility_summary` 以反引号开头时生成含混的 Markdown。
+- `tests/test_plan_next_iteration.py` 覆盖 summary 以反引号开头的格式化边界。
+- 新增 `docs/releases/v0.16.126-draft.md`，把下一版 patch release 聚焦到 quick summary inline code fence 稳定性。
+
 ## [0.16.125] - 2026-06-12
 
 ### Added
@@ -1280,7 +1287,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.125...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.126...HEAD
+[0.16.126]: https://github.com/pearjelly/cliany.site/compare/v0.16.125...v0.16.126
 [0.16.125]: https://github.com/pearjelly/cliany.site/compare/v0.16.124...v0.16.125
 [0.16.124]: https://github.com/pearjelly/cliany.site/compare/v0.16.123...v0.16.124
 [0.16.123]: https://github.com/pearjelly/cliany.site/compare/v0.16.122...v0.16.123
