@@ -332,6 +332,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "git push origin master" in readme
     assert "git push origin v0.16.1" in readme
     assert "python scripts/check_release_publication.py --remote --json" in readme
+    assert "Confirm `Publication Next Actions` are resolved or intentionally deferred" in readme
+    assert "before running `create-issues.sh`" in readme
     assert "expected target URL, candidate commands" in readme
     assert "offline validation commands for each case" in readme
     assert "release publication preflight" in readme

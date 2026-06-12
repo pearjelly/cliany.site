@@ -41,6 +41,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "Candidate Summary",
         "Publication Handoff",
         "Publication Next Actions",
+        "已处理或明确延后",
         "issue body 文件",
         "create-issues.sh",
         "publish commands",

@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --issues-dir` 生成的 artifacts `README.md` 审阅清单现在要求先确认 `Publication Next Actions` 已处理或明确延后，再运行 `create-issues.sh`。
+- 新增 `docs/releases/v0.16.25-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts README 的 publication next actions 审阅门禁。
+
 ## [0.16.24] - 2026-06-12
 
 ### Added

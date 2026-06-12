@@ -645,6 +645,7 @@ Generated for target version `{plan.target_version}`.
 ## Review Checklist
 
 - Confirm the latest local release has been published before creating new candidate work.
+- Confirm `Publication Next Actions` are resolved or intentionally deferred before running `create-issues.sh`.
 - Confirm `issue-metadata.json` has the expected target URL, candidate commands, and
   offline validation commands for each case.
 - Review each body file for scope, tasks, validation evidence, and non-goals.
