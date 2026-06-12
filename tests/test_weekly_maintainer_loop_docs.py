@@ -74,6 +74,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "publication ref context",
         "publication worktree status",
         "publication publish script command",
+        "release draft path",
+        "release draft issues",
         "review order",
         "validation commands",
         "release draft path",
