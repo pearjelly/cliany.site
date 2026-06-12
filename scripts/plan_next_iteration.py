@@ -1032,18 +1032,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         encoding="utf-8",
     )
     (directory / "issue-metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
-    publication_handoff = {
-        "publication_ok": plan.publication_ok,
-        "candidate_issue_gate": plan.candidate_issue_gate,
-        "visibility": plan.publication_visibility,
-        "next_actions": plan.next_actions,
-        "publication_next_actions": plan.publication_next_actions,
-        "ref_context": plan.publication_ref_context,
-        "worktree_clean": plan.publication_worktree_clean,
-        "worktree_status": plan.publication_worktree_status,
-        "publish_commands": plan.publication_publish_commands,
-        "publish_script_command": plan.publication_publish_script_command,
-    }
+    publication_handoff = _publication_handoff(plan)
     (directory / "publication-handoff.json").write_text(
         json.dumps(publication_handoff, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -1321,6 +1310,21 @@ def _issue_artifact_create_issues_safety_contract(create_issues_safety: dict[str
     }
 
 
+def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
+    return {
+        "publication_ok": plan.publication_ok,
+        "candidate_issue_gate": plan.candidate_issue_gate,
+        "visibility": plan.publication_visibility,
+        "next_actions": plan.next_actions,
+        "publication_next_actions": plan.publication_next_actions,
+        "ref_context": plan.publication_ref_context,
+        "worktree_clean": plan.publication_worktree_clean,
+        "worktree_status": plan.publication_worktree_status,
+        "publish_commands": plan.publication_publish_commands,
+        "publish_script_command": plan.publication_publish_script_command,
+    }
+
+
 def _release_draft_handoff(plan: IterationPlan) -> dict[str, Any]:
     return {
         "release_draft_path": plan.release_draft_path,
@@ -1436,6 +1440,7 @@ def _issue_artifact_bundle_summary(
         separators=(",", ":"),
     ).encode()
     create_issues_safety_contract = _issue_artifact_create_issues_safety_contract(create_issues_safety)
+    publication_handoff = _publication_handoff(plan)
     release_draft_handoff = _release_draft_handoff(plan)
     return {
         "target_version": plan.target_version,
@@ -1454,6 +1459,8 @@ def _issue_artifact_bundle_summary(
         "next_actions_sha256": _stable_json_sha256(plan.next_actions),
         "publication_next_action_count": len(plan.publication_next_actions),
         "publication_next_actions_sha256": _stable_json_sha256(plan.publication_next_actions),
+        "publication_handoff_key_count": len(publication_handoff),
+        "publication_handoff_sha256": _stable_json_sha256(publication_handoff),
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
         "publication_worktree_status_count": len(plan.publication_worktree_status),
@@ -1519,6 +1526,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- next_actions_sha256: `{summary['next_actions_sha256']}`",
             f"- publication_next_action_count: `{summary['publication_next_action_count']}`",
             f"- publication_next_actions_sha256: `{summary['publication_next_actions_sha256']}`",
+            f"- publication_handoff_key_count: `{summary['publication_handoff_key_count']}`",
+            f"- publication_handoff_sha256: `{summary['publication_handoff_sha256']}`",
             f"- publication_ref_context_sha256: `{summary['publication_ref_context_sha256']}`",
             f"- publication_publish_commands_sha256: `{summary['publication_publish_commands_sha256']}`",
             f"- publication_worktree_status_count: `{summary['publication_worktree_status_count']}`",

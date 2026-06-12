@@ -525,6 +525,40 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ],
         "target_version": "0.16.2",
     }
+    expected_publication_handoff = {
+        "publication_ok": False,
+        "candidate_issue_gate": _blocked_candidate_issue_gate(),
+        "visibility": {
+            "status": "dirty_worktree",
+            "summary": "Worktree has uncommitted changes; resolve them before publishing release refs.",
+        },
+        "next_actions": plan.next_actions,
+        "publication_next_actions": [
+            "Commit, stash, or discard local worktree changes before publishing release refs.",
+            "Push `master` to `origin`; local branch is ahead by `2` commits.",
+            "Push tag `v0.16.1` after the branch is published.",
+        ],
+        "ref_context": {
+            "repo_root": "/repo/cliany.site",
+            "branch": "master",
+            "upstream": "origin/master",
+            "remote": "origin",
+            "local_head": "abc123",
+            "upstream_head": "def456",
+            "ahead_count": 2,
+            "behind_count": 0,
+            "latest_tag": "v0.16.1",
+            "tag_commit": "abc123",
+            "remote_checked": False,
+        },
+        "worktree_clean": False,
+        "worktree_status": [" M CHANGELOG.md"],
+        "publish_commands": ["python scripts/check_release_publication.py --json"],
+        "publish_script_command": (
+            "python scripts/check_release_publication.py --json "
+            "--publish-script /tmp/cliany-publish-release.sh"
+        ),
+    }
     review_order = [
         "README.md",
         "publication-handoff.json",
@@ -558,6 +592,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "next_actions_sha256": _stable_json_sha256(plan.next_actions),
         "publication_next_action_count": 3,
         "publication_next_actions_sha256": _stable_json_sha256(plan.publication_next_actions),
+        "publication_handoff_key_count": len(expected_publication_handoff),
+        "publication_handoff_sha256": _stable_json_sha256(expected_publication_handoff),
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
         "publication_worktree_status_count": len(plan.publication_worktree_status),
@@ -744,40 +780,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "python scripts/validate_cases.py --strict",
         ],
     }
-    assert publication_handoff == {
-        "publication_ok": False,
-        "candidate_issue_gate": _blocked_candidate_issue_gate(),
-        "visibility": {
-            "status": "dirty_worktree",
-            "summary": "Worktree has uncommitted changes; resolve them before publishing release refs.",
-        },
-        "next_actions": plan.next_actions,
-        "publication_next_actions": [
-            "Commit, stash, or discard local worktree changes before publishing release refs.",
-            "Push `master` to `origin`; local branch is ahead by `2` commits.",
-            "Push tag `v0.16.1` after the branch is published.",
-        ],
-        "ref_context": {
-            "repo_root": "/repo/cliany.site",
-            "branch": "master",
-            "upstream": "origin/master",
-            "remote": "origin",
-            "local_head": "abc123",
-            "upstream_head": "def456",
-            "ahead_count": 2,
-            "behind_count": 0,
-            "latest_tag": "v0.16.1",
-            "tag_commit": "abc123",
-            "remote_checked": False,
-        },
-        "worktree_clean": False,
-        "worktree_status": [" M CHANGELOG.md"],
-        "publish_commands": ["python scripts/check_release_publication.py --json"],
-        "publish_script_command": (
-            "python scripts/check_release_publication.py --json "
-            "--publish-script /tmp/cliany-publish-release.sh"
-        ),
-    }
+    assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
     assert 'REPO_ROOT="$(git rev-parse --show-toplevel)"' in script
@@ -840,6 +843,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"publication_next_actions_sha256: "
         f"`{_stable_json_sha256(plan.publication_next_actions)}`"
+    ) in readme
+    assert "publication_handoff_key_count: `10`" in readme
+    assert (
+        f"publication_handoff_sha256: "
+        f"`{artifact_bundle_summary['publication_handoff_sha256']}`"
     ) in readme
     assert (
         f"publication_ref_context_sha256: "

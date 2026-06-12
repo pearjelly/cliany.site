@@ -51,6 +51,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `blockers_sha256`、`next_actions_sha256` 和 `publication_next_actions_sha256`，让工具只读整包摘要就能判断 blockers 和 action lists 是否漂移。
 
+`artifact_bundle_summary` 还会带上 `publication_handoff_key_count` 和 `publication_handoff_sha256`，让工具只读整包摘要就能判断 publication handoff 是否漂移。
+
 `artifact_bundle_summary` 还会带上 `publication_ref_context_sha256` 和 `publication_publish_commands_sha256`，让工具只读整包摘要就能判断 publication ref context 或 publish commands 是否漂移。
 
 `artifact_bundle_summary` 还会带上 `publication_worktree_status_count` 和 `publication_worktree_status_sha256`，让工具只读整包摘要就能判断 publication worktree status 是否漂移。
