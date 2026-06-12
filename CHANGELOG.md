@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.150] - 2026-06-13
+
+### Added
+- `publication-handoff.json` 现在输出 `schema_version: 1`，让只读取 publication handoff 的维护工具能先判断字段语义版本。
+- Candidate issue artifacts `README.md` 的 `Publication Handoff` 段落现在展示 `schema_version`，并让 `publication_handoff_key_count` 与 hash 反映该字段变化。
+- 新增 `docs/releases/v0.16.150-draft.md`，把下一版 patch release 聚焦到 publication handoff schema version 可见性。
+
 ## [0.16.149] - 2026-06-13
 
 ### Added
@@ -1448,7 +1455,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.149...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.150...HEAD
+[0.16.150]: https://github.com/pearjelly/cliany.site/compare/v0.16.149...v0.16.150
 [0.16.149]: https://github.com/pearjelly/cliany.site/compare/v0.16.148...v0.16.149
 [0.16.148]: https://github.com/pearjelly/cliany.site/compare/v0.16.147...v0.16.148
 [0.16.147]: https://github.com/pearjelly/cliany.site/compare/v0.16.146...v0.16.147
