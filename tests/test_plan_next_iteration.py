@@ -162,6 +162,8 @@ def _blocked_candidate_issue_gate() -> dict[str, object]:
             "Commit, stash, or discard local worktree changes before publishing release refs.",
             "Push `master` to `origin`; local branch is ahead by `2` commits.",
             "Push tag `v0.16.1` after the branch is published.",
+            "Resolve release draft issue: release draft is missing",
+            "Resolve release draft issue: release draft missing snippet: ## 发版前验证",
         ],
         "evidence": {
             "publication_ok": False,
@@ -214,8 +216,8 @@ def test_candidate_issue_gate_allows_creation_after_publication_with_release_dra
             "release_draft_issues": "The target release draft still has validation issues.",
         },
         "required_actions": [
-            "release draft is missing",
-            "release draft missing snippet: ## 发版前验证",
+            "Resolve release draft issue: release draft is missing",
+            "Resolve release draft issue: release draft missing snippet: ## 发版前验证",
         ],
         "evidence": {
             "publication_ok": True,
@@ -370,6 +372,8 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "| release_draft_ok | `false` |" in text
     assert "| release_draft_issue_count | `2` |" in text
     assert "### Candidate Issue Gate Actions" in text
+    assert "Resolve release draft issue: release draft is missing" in text
+    assert "Resolve release draft issue: release draft missing snippet: ## 发版前验证" in text
     assert "## Publication Visibility" in text
     assert "status: `dirty_worktree`" in text
     assert "Worktree has uncommitted changes; resolve them before publishing release refs." in text

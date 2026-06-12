@@ -29,6 +29,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "human-readable",
         "可读说明",
         "required_actions",
+        "Resolve release draft issue",
         "evidence",
         "publication_ok",
         "publication_visibility_status",

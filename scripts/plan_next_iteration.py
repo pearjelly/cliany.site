@@ -221,10 +221,12 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
     evidence = _candidate_issue_gate_evidence(readiness, publication)
     reason_codes = _candidate_issue_gate_reason_codes(release_draft_issues, publication)
     reason_descriptions = _candidate_issue_gate_reason_descriptions(reason_codes)
+    release_draft_actions = _release_draft_required_actions(release_draft_issues)
     if not bool(getattr(publication, "ok", False)):
-        actions = _publication_next_actions(publication) or [
+        publication_actions = _publication_next_actions(publication) or [
             "Run python scripts/check_release_publication.py --json and resolve publication blockers."
         ]
+        actions = [*publication_actions, *release_draft_actions]
         return {
             "status": "blocked_by_publication",
             "can_create_issues": False,
@@ -243,7 +245,7 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
             "summary": "Release draft issues must be resolved or intentionally deferred before tagging.",
             "reason_codes": reason_codes,
             "reason_descriptions": reason_descriptions,
-            "required_actions": release_draft_issues,
+            "required_actions": release_draft_actions,
             "evidence": evidence,
         }
     return {
@@ -256,6 +258,10 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
         "required_actions": [],
         "evidence": evidence,
     }
+
+
+def _release_draft_required_actions(release_draft_issues: list[str]) -> list[str]:
+    return [f"Resolve release draft issue: {issue}" for issue in release_draft_issues]
 
 
 def _candidate_issue_gate_reason_codes(release_draft_issues: list[str], publication: Any) -> list[str]:
