@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.6] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py` 新增 `--issues-dir`，可离线写出 candidate issue body 文件、`issue-metadata.json` 和可审阅的 `create-issues.sh`，帮助维护者批量创建候选案例晋级 issue。
 - 新增 `docs/releases/v0.16.6-draft.md`，把下一版 patch release 聚焦到候选案例 issue artifacts 输出。
@@ -492,7 +494,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.5...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.6...HEAD
+[0.16.6]: https://github.com/pearjelly/cliany.site/compare/v0.16.5...v0.16.6
 [0.16.5]: https://github.com/pearjelly/cliany.site/compare/v0.16.4...v0.16.5
 [0.16.4]: https://github.com/pearjelly/cliany.site/compare/v0.16.3...v0.16.4
 [0.16.3]: https://github.com/pearjelly/cliany.site/compare/v0.16.2...v0.16.3
