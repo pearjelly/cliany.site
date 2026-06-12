@@ -32,6 +32,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "issue-metadata.json",
         "README.md",
         "create-issues.sh",
+        "python scripts/check_release_publication.py --strict --json",
+        "/tmp/cliany-issue-publication-check.json",
         "issue_artifacts_command",
         "复现命令",
         "/tmp/cliany-candidate-issues",

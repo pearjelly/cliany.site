@@ -509,6 +509,10 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "set -euo pipefail",
         "",
         "# Review these commands before running; they create GitHub issues in the current repository.",
+        "# Stop early if the latest local release is not publicly visible yet.",
+        'REPO_ROOT="$(git rev-parse --show-toplevel)"',
+        'cd "$REPO_ROOT"',
+        "python scripts/check_release_publication.py --strict --json >/tmp/cliany-issue-publication-check.json",
     ]
     for promotion in plan.candidate_promotions:
         body_path = directory / f"{promotion.case_id}.md"
@@ -542,7 +546,8 @@ Generated for target version `{plan.target_version}`.
 ## Files
 
 - `issue-metadata.json`: structured issue title, labels, body file path, and `gh issue create` command.
-- `create-issues.sh`: reviewable shell script with one `gh issue create` command per candidate.
+- `create-issues.sh`: reviewable shell script with a release publication preflight and
+  one `gh issue create` command per candidate.
 {body_files}
 
 ## Review Checklist
@@ -563,7 +568,9 @@ python scripts/validate_cases.py --strict
 ## Create Issues
 
 `create-issues.sh` is generated for review. It is not executed by `plan_next_iteration.py`.
-Run it only after checking `issue-metadata.json` and the body files.
+Run it only after checking `issue-metadata.json` and the body files. The script runs
+`python scripts/check_release_publication.py --strict --json` before creating issues and
+writes the preflight JSON to `/tmp/cliany-issue-publication-check.json`.
 """
 
 

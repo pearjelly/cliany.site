@@ -246,12 +246,21 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "--label case-proposal" in metadata[0]["create_command"]
     assert "--label 'good first issue'" in metadata[0]["create_command"]
     assert "gh issue create" in script
+    assert 'REPO_ROOT="$(git rev-parse --show-toplevel)"' in script
+    assert 'cd "$REPO_ROOT"' in script
+    assert (
+        "python scripts/check_release_publication.py --strict --json "
+        ">/tmp/cliany-issue-publication-check.json"
+    ) in script
     assert "--body-file" in script
     assert "pypi-project-search.md" in script
     assert oct((issues_dir / "create-issues.sh").stat().st_mode & 0o777) == "0o755"
     assert "# cliany-site Candidate Issue Artifacts" in readme
     assert "Generated for target version `0.16.2`." in readme
     assert "`issue-metadata.json`: structured issue title, labels, body file path" in readme
+    assert "release publication preflight" in readme
+    assert "python scripts/check_release_publication.py --strict --json" in readme
+    assert "/tmp/cliany-issue-publication-check.json" in readme
     assert "`create-issues.sh` is generated for review. It is not executed" in readme
     assert (
         "python scripts/plan_next_iteration.py --target-version 0.16.2 "

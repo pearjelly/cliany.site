@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --issues-dir` 生成的 `create-issues.sh` 现在会先运行 `python scripts/check_release_publication.py --strict --json`，在最新本地 release 尚未公开可见时阻止继续创建候选 issue。
+- 新增 `docs/releases/v0.16.15-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts 的 publication preflight。
+
 ## [0.16.14] - 2026-06-12
 
 ### Added
