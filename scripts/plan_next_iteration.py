@@ -1702,6 +1702,9 @@ def _issue_artifact_bundle_summary(
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
         "publication_publish_command_count": plan.publication_publish_command_count,
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
+        "publication_primary_publish_command": (
+            plan.publication_publish_commands[0] if plan.publication_publish_commands else None
+        ),
         "publication_publish_script_path_sha256": _stable_json_sha256(
             plan.publication_publish_script_path
         ),
@@ -1837,6 +1840,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- publication_ref_context_sha256: `{summary['publication_ref_context_sha256']}`",
             f"- publication_publish_command_count: `{summary['publication_publish_command_count']}`",
             f"- publication_publish_commands_sha256: `{summary['publication_publish_commands_sha256']}`",
+            "- publication_primary_publish_command: "
+            f"{_summary_inline_code(summary['publication_primary_publish_command'])}",
             "- publication_publish_script_path_sha256: "
             f"`{summary['publication_publish_script_path_sha256']}`",
             "- publication_publish_script_command_sha256: "

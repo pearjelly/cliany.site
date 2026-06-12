@@ -706,6 +706,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
         "publication_publish_command_count": plan.publication_publish_command_count,
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
+        "publication_primary_publish_command": plan.publication_publish_commands[0],
         "publication_publish_script_path_sha256": _stable_json_sha256(
             plan.publication_publish_script_path
         ),
@@ -1058,6 +1059,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"publication_publish_commands_sha256: "
         f"`{_stable_json_sha256(plan.publication_publish_commands)}`"
+    ) in readme
+    assert (
+        "publication_primary_publish_command: "
+        f"`{plan.publication_publish_commands[0]}`"
     ) in readme
     assert (
         f"publication_publish_script_path_sha256: "

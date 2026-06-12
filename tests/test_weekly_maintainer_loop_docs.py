@@ -106,6 +106,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "publication_ref_context_sha256",
         "publication_publish_command_count",
         "publication_publish_commands_sha256",
+        "publication_primary_publish_command",
         "publication_worktree_status_count",
         "publication_worktree_status_sha256",
         "release_draft_handoff_key_count",

@@ -95,6 +95,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 还会带上 `publication_ref_context_key_count`、`publication_ref_context_sha256`、`publication_publish_command_count` 和 `publication_publish_commands_sha256`，让工具只读整包摘要就能判断 publication ref context 结构/内容或 publish commands 数量/内容是否漂移。
 
+`artifact_bundle_summary` 还会带上 `publication_primary_publish_command`，让工具只读整包摘要就能展示第一条发布同步命令。
+
 `artifact_bundle_summary` 还会带上 `publication_publish_script_path_sha256` 和 `publication_publish_script_command_sha256`，让工具只读整包摘要就能判断发布脚本路径或生成命令是否漂移。
 
 `publication-handoff.json` 和 artifacts `README.md` 的 `Publication Handoff` 也会展示 `publish_script_path_sha256` 与 `publish_script_command_sha256`，让只读取 handoff 的维护工具不必展开完整 manifest 就能检测发布脚本路径或命令漂移。
