@@ -578,6 +578,17 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "release_draft_path_sha256": _stable_json_sha256("docs/releases/v0.16.2-draft.md"),
         "release_draft_primary_issue": "release draft is missing",
         "release_draft_primary_required_action": "Resolve release draft issue: release draft is missing",
+        "release_draft_required_action_count": 2,
+        "release_draft_required_actions_sha256": _stable_json_sha256(
+            [
+                "Resolve release draft issue: release draft is missing",
+                "Resolve release draft issue: release draft missing snippet: ## 发版前验证",
+            ]
+        ),
+        "release_draft_required_actions": [
+            "Resolve release draft issue: release draft is missing",
+            "Resolve release draft issue: release draft missing snippet: ## 发版前验证",
+        ],
         "release_draft_issues_sha256": _stable_json_sha256(
             [
                 "release draft is missing",
@@ -1046,7 +1057,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"publication_worktree_status_sha256: "
         f"`{_stable_json_sha256(plan.publication_worktree_status)}`"
     ) in readme
-    assert "release_draft_handoff_key_count: `10`" in readme
+    assert "release_draft_handoff_key_count: `13`" in readme
     assert (
         f"release_draft_handoff_sha256: "
         f"`{artifact_bundle_summary['release_draft_handoff_sha256']}`"
@@ -1267,6 +1278,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "release_draft_primary_required_action: "
         "`Resolve release draft issue: release draft is missing`"
     ) in readme
+    assert "release_draft_required_action_count: `2`" in readme
+    assert (
+        f"release_draft_required_actions_sha256: "
+        f"`{_stable_json_sha256(expected_release_draft_handoff['release_draft_required_actions'])}`"
+    ) in readme
+    assert "release_draft_required_actions:" in readme
+    assert "- Resolve release draft issue: release draft is missing" in readme
+    assert "- Resolve release draft issue: release draft missing snippet: ## 发版前验证" in readme
     assert (
         f"release_draft_issues_sha256: "
         f"`{_stable_json_sha256(plan.release_draft_issues)}`"

@@ -1144,6 +1144,7 @@ def _render_issue_artifacts_readme(plan: IterationPlan) -> str:
     gate_draft_ok = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_ok"))
     gate_draft_issues = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_issue_count"))
     create_issues_safety = _issue_artifact_create_issues_safety(Path("create-issues.sh"))
+    release_draft_required_actions = _release_draft_required_actions(plan.release_draft_issues)
     return f"""# cliany-site Candidate Issue Artifacts
 
 Generated for target version `{plan.target_version}`.
@@ -1160,6 +1161,7 @@ Generated for target version `{plan.target_version}`.
   publication next actions, ref context, worktree status, and publish commands to review first.
 - `release-draft-handoff.json`: schema version, target version, release draft ok status, release draft path,
   release draft path hash, release draft issue count, primary release draft issue, primary required action,
+  release draft required action count, release draft required actions hash, release draft required actions,
   release draft issues hash, and release draft issues
   to review before tagging the target version.
 - `create-issues.sh`: reviewable shell script with a release publication preflight and
@@ -1230,6 +1232,10 @@ Generated for target version `{plan.target_version}`.
 - release_draft_issue_count: `{len(plan.release_draft_issues)}`
 - release_draft_primary_issue: `{_format_context_value(_release_draft_primary_issue(plan))}`
 - release_draft_primary_required_action: `{_format_context_value(_release_draft_primary_required_action(plan))}`
+- release_draft_required_action_count: `{len(release_draft_required_actions)}`
+- release_draft_required_actions_sha256: `{_stable_json_sha256(release_draft_required_actions)}`
+- release_draft_required_actions:
+{_issue_artifact_release_draft_required_actions(plan)}
 - release_draft_issues_sha256: `{_stable_json_sha256(plan.release_draft_issues)}`
 - release_draft_issues:
 {_issue_artifact_release_draft_issues(plan)}
@@ -1393,6 +1399,13 @@ def _issue_artifact_release_draft_issues(plan: IterationPlan) -> str:
     return "\n".join(f"  - {issue}" for issue in plan.release_draft_issues)
 
 
+def _issue_artifact_release_draft_required_actions(plan: IterationPlan) -> str:
+    actions = _release_draft_required_actions(plan.release_draft_issues)
+    if not actions:
+        return "  - No release draft required actions are reported."
+    return "\n".join(f"  - {action}" for action in actions)
+
+
 def _issue_artifact_review_checklist() -> list[str]:
     return [
         "Confirm the latest local release has been published before creating new candidate work.",
@@ -1504,7 +1517,12 @@ def _release_draft_primary_required_action(plan: IterationPlan) -> str | None:
     return f"Resolve release draft issue: {primary_issue}"
 
 
+def _release_draft_required_actions(release_draft_issues: list[str]) -> list[str]:
+    return [f"Resolve release draft issue: {issue}" for issue in release_draft_issues]
+
+
 def _release_draft_handoff(plan: IterationPlan) -> dict[str, Any]:
+    required_actions = _release_draft_required_actions(plan.release_draft_issues)
     return {
         "schema_version": 1,
         "release_draft_ok": not plan.release_draft_issues,
@@ -1513,6 +1531,9 @@ def _release_draft_handoff(plan: IterationPlan) -> dict[str, Any]:
         "release_draft_path_sha256": _stable_json_sha256(plan.release_draft_path),
         "release_draft_primary_issue": _release_draft_primary_issue(plan),
         "release_draft_primary_required_action": _release_draft_primary_required_action(plan),
+        "release_draft_required_action_count": len(required_actions),
+        "release_draft_required_actions_sha256": _stable_json_sha256(required_actions),
+        "release_draft_required_actions": required_actions,
         "release_draft_issues_sha256": _stable_json_sha256(plan.release_draft_issues),
         "release_draft_issues": plan.release_draft_issues,
         "target_version": plan.target_version,
