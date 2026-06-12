@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.64] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `review_order_sha256`，让工具能快速检测 candidate issue artifacts 审阅顺序是否变化。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示 review order hash。
+- 新增 `docs/releases/v0.16.64-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts 审阅顺序摘要。
+
 ## [0.16.63] - 2026-06-12
 
 ### Added
@@ -848,7 +855,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.63...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.64...HEAD
+[0.16.64]: https://github.com/pearjelly/cliany.site/compare/v0.16.63...v0.16.64
 [0.16.63]: https://github.com/pearjelly/cliany.site/compare/v0.16.62...v0.16.63
 [0.16.62]: https://github.com/pearjelly/cliany.site/compare/v0.16.61...v0.16.62
 [0.16.61]: https://github.com/pearjelly/cliany.site/compare/v0.16.60...v0.16.61
