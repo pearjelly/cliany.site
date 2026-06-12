@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.38] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 artifacts `README.md` 现在会展示 `Release Draft Handoff`，包含下一版草案路径和 release draft issues。
 - 新增 `docs/releases/v0.16.38-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts README 的 release draft handoff。
@@ -685,7 +687,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.37...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.38...HEAD
+[0.16.38]: https://github.com/pearjelly/cliany.site/compare/v0.16.37...v0.16.38
 [0.16.37]: https://github.com/pearjelly/cliany.site/compare/v0.16.36...v0.16.37
 [0.16.36]: https://github.com/pearjelly/cliany.site/compare/v0.16.35...v0.16.36
 [0.16.35]: https://github.com/pearjelly/cliany.site/compare/v0.16.34...v0.16.35
