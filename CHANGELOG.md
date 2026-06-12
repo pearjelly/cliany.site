@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.165] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `artifact_manifest_payload_key_tail_count`、`artifact_manifest_payload_key_tail` 和 `artifact_manifest_payload_key_tail_sha256`，让只读取整包摘要的维护工具能检查 `artifact-manifest.json` payload 字段后缀。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 artifact manifest payload key tail count/list/hash，并继续展示 payload key preview。
+- 新增 `docs/releases/v0.16.165-draft.md`，把下一版 patch release 聚焦到 artifact manifest payload 字段尾部预览可见性。
+
 ## [0.16.164] - 2026-06-13
 
 ### Added
@@ -1553,7 +1560,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.164...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.165...HEAD
+[0.16.165]: https://github.com/pearjelly/cliany.site/compare/v0.16.164...v0.16.165
 [0.16.164]: https://github.com/pearjelly/cliany.site/compare/v0.16.163...v0.16.164
 [0.16.163]: https://github.com/pearjelly/cliany.site/compare/v0.16.162...v0.16.163
 [0.16.162]: https://github.com/pearjelly/cliany.site/compare/v0.16.161...v0.16.162
