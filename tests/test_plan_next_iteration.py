@@ -744,6 +744,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "artifact_manifest_key_boundary_sha256": _stable_json_sha256(
             plan_next_iteration.ARTIFACT_MANIFEST_KEY_BOUNDARY
         ),
+        "artifact_manifest_key_preview_count": len(
+            plan_next_iteration.ARTIFACT_MANIFEST_KEY_PREVIEW
+        ),
+        "artifact_manifest_key_preview": list(
+            plan_next_iteration.ARTIFACT_MANIFEST_KEY_PREVIEW
+        ),
+        "artifact_manifest_key_preview_sha256": _stable_json_sha256(
+            plan_next_iteration.ARTIFACT_MANIFEST_KEY_PREVIEW
+        ),
         "artifact_manifest_payload_key_count": len(artifact_manifest_payload),
         "artifact_manifest_payload_sha256": _stable_json_sha256(artifact_manifest_payload),
         "target_version": "0.16.2",
@@ -1048,6 +1057,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert artifact_manifest["artifact_bundle_summary"]["artifact_manifest_last_key"] == list(
         artifact_manifest
     )[-1]
+    assert artifact_manifest["artifact_bundle_summary"]["artifact_manifest_key_preview"] == list(
+        artifact_manifest
+    )[: artifact_manifest["artifact_bundle_summary"]["artifact_manifest_key_preview_count"]]
     assert {
         key: value for key, value in artifact_manifest.items() if key != "artifact_bundle_summary"
     } == artifact_manifest_payload
@@ -1156,6 +1168,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "artifact_manifest_key_boundary_sha256: "
         f"`{_stable_json_sha256(plan_next_iteration.ARTIFACT_MANIFEST_KEY_BOUNDARY)}`"
+    ) in readme
+    assert (
+        "artifact_manifest_key_preview_count: "
+        f"`{len(plan_next_iteration.ARTIFACT_MANIFEST_KEY_PREVIEW)}`"
+    ) in readme
+    assert "artifact_manifest_key_preview: " in readme
+    assert (
+        "artifact_manifest_key_preview_sha256: "
+        f"`{_stable_json_sha256(plan_next_iteration.ARTIFACT_MANIFEST_KEY_PREVIEW)}`"
     ) in readme
     assert f"artifact_manifest_payload_key_count: `{len(artifact_manifest_payload)}`" in readme
     assert (
