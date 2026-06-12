@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.108] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `candidate_issue_gate_primary_reason_description`，方便工具只读整包摘要就展示首要 gate reason 的可读说明。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 会展示 gate primary reason description，并保持 primary reason code/action 字段不变。
+- 新增 `docs/releases/v0.16.108-draft.md`，把下一版 patch release 聚焦到 candidate issue gate primary reason description 可见性。
+
 ## [0.16.107] - 2026-06-12
 
 ### Added
@@ -1154,7 +1161,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.107...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.108...HEAD
+[0.16.108]: https://github.com/pearjelly/cliany.site/compare/v0.16.107...v0.16.108
 [0.16.107]: https://github.com/pearjelly/cliany.site/compare/v0.16.106...v0.16.107
 [0.16.106]: https://github.com/pearjelly/cliany.site/compare/v0.16.105...v0.16.106
 [0.16.105]: https://github.com/pearjelly/cliany.site/compare/v0.16.104...v0.16.105
