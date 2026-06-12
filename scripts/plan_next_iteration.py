@@ -1198,6 +1198,8 @@ Generated for target version `{plan.target_version}`.
 - local_head: `{_format_context_value(plan.publication_ref_context.get("local_head"))}`
 - worktree_clean: `{str(plan.publication_worktree_clean).lower()}`
 - publish_script_path: `{plan.publication_publish_script_path}`
+- publish_script_path_sha256: `{plan.publication_publish_script_path_sha256}`
+- publish_script_command_sha256: `{plan.publication_publish_script_command_sha256}`
 - Review `publication-handoff.json` before running `create-issues.sh`.
 
 ### Publication Next Actions
@@ -1474,7 +1476,9 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "worktree_status": plan.publication_worktree_status,
         "publish_commands": plan.publication_publish_commands,
         "publish_script_path": plan.publication_publish_script_path,
+        "publish_script_path_sha256": plan.publication_publish_script_path_sha256,
         "publish_script_command": plan.publication_publish_script_command,
+        "publish_script_command_sha256": plan.publication_publish_script_command_sha256,
     }
 
 

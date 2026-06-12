@@ -192,6 +192,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "worktree status",
         "Publication Publish Script",
         "publish_script_path",
+        "publish_script_path_sha256",
+        "publish_script_command_sha256",
         "Create Issues Safety",
         "dry_run_supported",
         "dry_run_env",

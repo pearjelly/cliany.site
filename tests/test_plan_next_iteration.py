@@ -614,7 +614,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "worktree_status": [" M CHANGELOG.md"],
         "publish_commands": ["python scripts/check_release_publication.py --json"],
         "publish_script_path": "/tmp/cliany-publish-release.sh",
+        "publish_script_path_sha256": _stable_json_sha256("/tmp/cliany-publish-release.sh"),
         "publish_script_command": (
+            "python scripts/check_release_publication.py --json "
+            "--publish-script /tmp/cliany-publish-release.sh"
+        ),
+        "publish_script_command_sha256": _stable_json_sha256(
             "python scripts/check_release_publication.py --json "
             "--publish-script /tmp/cliany-publish-release.sh"
         ),
@@ -994,7 +999,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"publication_next_actions_sha256: "
         f"`{_stable_json_sha256(plan.publication_next_actions)}`"
     ) in readme
-    assert "publication_handoff_key_count: `11`" in readme
+    assert "publication_handoff_key_count: `13`" in readme
     assert (
         f"publication_handoff_sha256: "
         f"`{artifact_bundle_summary['publication_handoff_sha256']}`"
@@ -1211,6 +1216,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "local_head: `abc123`" in readme
     assert "worktree_clean: `false`" in readme
     assert "publish_script_path: `/tmp/cliany-publish-release.sh`" in readme
+    assert (
+        f"publish_script_path_sha256: "
+        f"`{_stable_json_sha256('/tmp/cliany-publish-release.sh')}`"
+    ) in readme
+    publish_script_command = (
+        "python scripts/check_release_publication.py --json "
+        "--publish-script /tmp/cliany-publish-release.sh"
+    )
+    assert (
+        f"publish_script_command_sha256: "
+        f"`{_stable_json_sha256(publish_script_command)}`"
+    ) in readme
     assert "### Publication Next Actions" in readme
     assert "Commit, stash, or discard local worktree changes" in readme
     assert "Push `master` to `origin`; local branch is ahead by `2` commits." in readme
