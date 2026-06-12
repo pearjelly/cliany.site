@@ -133,6 +133,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "inventory_sha256",
     "issue_metadata_count",
     "issue_metadata_sha256",
+    "issue_metadata_first_item",
+    "issue_metadata_last_item",
+    "issue_metadata_boundary_sha256",
     "issue_metadata_preview_count",
     "issue_metadata_preview",
     "issue_metadata_preview_sha256",
@@ -1812,12 +1815,19 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
         }
         for item in metadata
     ]
+    metadata_boundary = {
+        "first_item": stable_metadata[0] if stable_metadata else None,
+        "last_item": stable_metadata[-1] if stable_metadata else None,
+    }
     metadata_preview = stable_metadata[:8]
     metadata_tail = stable_metadata[-8:]
     digest_source = json.dumps(stable_metadata, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
     return {
         "metadata_count": len(stable_metadata),
         "metadata_sha256": hashlib.sha256(digest_source).hexdigest(),
+        "metadata_first_item": metadata_boundary["first_item"],
+        "metadata_last_item": metadata_boundary["last_item"],
+        "metadata_boundary_sha256": _stable_json_sha256(metadata_boundary),
         "metadata_preview_count": len(metadata_preview),
         "metadata_preview": list(metadata_preview),
         "metadata_preview_sha256": _stable_json_sha256(metadata_preview),
@@ -2127,6 +2137,11 @@ def _issue_artifact_bundle_summary(
         "inventory_sha256": issue_body_summary["inventory_sha256"],
         "issue_metadata_count": issue_metadata_summary["metadata_count"],
         "issue_metadata_sha256": issue_metadata_summary["metadata_sha256"],
+        "issue_metadata_first_item": issue_metadata_summary["metadata_first_item"],
+        "issue_metadata_last_item": issue_metadata_summary["metadata_last_item"],
+        "issue_metadata_boundary_sha256": issue_metadata_summary[
+            "metadata_boundary_sha256"
+        ],
         "issue_metadata_preview_count": issue_metadata_summary[
             "metadata_preview_count"
         ],
@@ -2406,6 +2421,11 @@ def _issue_artifact_bundle_summary_markdown(
             f"- inventory_sha256: `{summary['inventory_sha256']}`",
             f"- issue_metadata_count: `{summary['issue_metadata_count']}`",
             f"- issue_metadata_sha256: `{summary['issue_metadata_sha256']}`",
+            "- issue_metadata_first_item: "
+            f"`{json.dumps(summary['issue_metadata_first_item'], ensure_ascii=False)}`",
+            "- issue_metadata_last_item: "
+            f"`{json.dumps(summary['issue_metadata_last_item'], ensure_ascii=False)}`",
+            f"- issue_metadata_boundary_sha256: `{summary['issue_metadata_boundary_sha256']}`",
             f"- issue_metadata_preview_count: `{summary['issue_metadata_preview_count']}`",
             "- issue_metadata_preview: "
             f"`{json.dumps(summary['issue_metadata_preview'], ensure_ascii=False)}`",

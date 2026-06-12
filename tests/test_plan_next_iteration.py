@@ -579,11 +579,20 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         }
         for item in metadata
     ]
+    issue_metadata_boundary = {
+        "first_item": stable_issue_metadata[0],
+        "last_item": stable_issue_metadata[-1],
+    }
     issue_metadata_preview = stable_issue_metadata[:8]
     issue_metadata_tail = stable_issue_metadata[-8:]
     issue_metadata_summary = {
         "metadata_count": len(stable_issue_metadata),
         "metadata_sha256": _stable_json_sha256(stable_issue_metadata),
+        "metadata_first_item": issue_metadata_boundary["first_item"],
+        "metadata_last_item": issue_metadata_boundary["last_item"],
+        "metadata_boundary_sha256": _stable_json_sha256(
+            issue_metadata_boundary
+        ),
         "metadata_preview_count": len(issue_metadata_preview),
         "metadata_preview": list(issue_metadata_preview),
         "metadata_preview_sha256": _stable_json_sha256(issue_metadata_preview),
@@ -895,6 +904,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "inventory_sha256": issue_body_summary["inventory_sha256"],
         "issue_metadata_count": issue_metadata_summary["metadata_count"],
         "issue_metadata_sha256": issue_metadata_summary["metadata_sha256"],
+        "issue_metadata_first_item": issue_metadata_summary[
+            "metadata_first_item"
+        ],
+        "issue_metadata_last_item": issue_metadata_summary["metadata_last_item"],
+        "issue_metadata_boundary_sha256": issue_metadata_summary[
+            "metadata_boundary_sha256"
+        ],
         "issue_metadata_preview_count": issue_metadata_summary[
             "metadata_preview_count"
         ],
@@ -1307,6 +1323,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "issue_metadata_preview"
     ] == artifact_manifest["issue_metadata_summary"]["metadata_preview"]
     assert artifact_manifest["artifact_bundle_summary"][
+        "issue_metadata_first_item"
+    ] == artifact_manifest["issue_metadata_summary"]["metadata_first_item"]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "issue_metadata_last_item"
+    ] == artifact_manifest["issue_metadata_summary"]["metadata_last_item"]
+    assert artifact_manifest["artifact_bundle_summary"][
         "issue_metadata_tail"
     ] == artifact_manifest["issue_metadata_summary"]["metadata_tail"]
     assert publication_handoff == expected_publication_handoff
@@ -1587,6 +1609,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert f"issue_metadata_count: `{issue_metadata_summary['metadata_count']}`" in readme
     assert f"issue_metadata_sha256: `{issue_metadata_summary['metadata_sha256']}`" in readme
+    assert "issue_metadata_first_item: " in readme
+    assert "issue_metadata_last_item: " in readme
+    assert (
+        "issue_metadata_boundary_sha256: "
+        f"`{artifact_bundle_summary['issue_metadata_boundary_sha256']}`"
+    ) in readme
     assert (
         "issue_metadata_preview_count: "
         f"`{artifact_bundle_summary['issue_metadata_preview_count']}`"
