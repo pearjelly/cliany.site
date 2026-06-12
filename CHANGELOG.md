@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.65] - 2026-06-12
+
+### Changed
+- `candidate_issue_gate.required_actions` 现在会在 publication 阻塞之外追加 release draft 修复动作，避免 `release_draft_issues` 只有原因码、没有可执行待办。
+- Release draft 修复动作统一使用 `Resolve release draft issue: ...` 文案，方便维护者和自动化从 gate payload 直接执行下一步。
+- 新增 `docs/releases/v0.16.65-draft.md`，把下一版 patch release 聚焦到 candidate issue gate required actions 的完整性。
+
 ## [0.16.64] - 2026-06-12
 
 ### Added
@@ -855,7 +862,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.64...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.65...HEAD
+[0.16.65]: https://github.com/pearjelly/cliany.site/compare/v0.16.64...v0.16.65
 [0.16.64]: https://github.com/pearjelly/cliany.site/compare/v0.16.63...v0.16.64
 [0.16.63]: https://github.com/pearjelly/cliany.site/compare/v0.16.62...v0.16.63
 [0.16.62]: https://github.com/pearjelly/cliany.site/compare/v0.16.61...v0.16.62
