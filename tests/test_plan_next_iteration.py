@@ -159,7 +159,7 @@ def _blocked_candidate_issue_gate() -> dict[str, object]:
             "publication_branch": "master",
             "publication_latest_tag": "v0.16.1",
             "publication_ahead_count": 2,
-            "release_draft_path": "/tmp/project/docs/releases/v0.16.2-draft.md",
+            "release_draft_path": "docs/releases/v0.16.2-draft.md",
             "release_draft_issue_count": 2,
         },
     }
@@ -207,7 +207,7 @@ def test_candidate_issue_gate_allows_creation_after_publication_with_release_dra
             "publication_branch": "master",
             "publication_latest_tag": "v0.16.1",
             "publication_ahead_count": 0,
-            "release_draft_path": "/tmp/project/docs/releases/v0.16.2-draft.md",
+            "release_draft_path": "docs/releases/v0.16.2-draft.md",
             "release_draft_issue_count": 2,
         },
     }
@@ -236,6 +236,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "--issues-dir /tmp/cliany-candidate-issues"
     )
     assert data["candidate_issue_gate"] == _blocked_candidate_issue_gate()
+    assert not str(data["candidate_issue_gate"]["evidence"]["release_draft_path"]).startswith("/")
     assert data["publication_publish_commands"] == [
         "python scripts/check_release_publication.py --json",
     ]

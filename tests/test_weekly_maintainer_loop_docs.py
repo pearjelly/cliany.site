@@ -110,6 +110,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "gate 判定",
         "默认文本输出",
         "缩进列表",
+        "仓库相对路径",
+        "docs/releases/v<version>-draft.md",
         "release draft path",
         "release draft issues",
         "已处理或明确延后",

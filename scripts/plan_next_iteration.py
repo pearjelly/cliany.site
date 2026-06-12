@@ -250,7 +250,6 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
 
 
 def _candidate_issue_gate_evidence(readiness: Any, publication: Any) -> dict[str, Any]:
-    draft = getattr(readiness, "draft", None)
     release_draft_issues = _release_draft_issues(readiness)
     publication_visibility = _publication_visibility(publication)
     return {
@@ -260,9 +259,17 @@ def _candidate_issue_gate_evidence(readiness: Any, publication: Any) -> dict[str
         "publication_branch": str(getattr(publication, "branch", "") or "HEAD"),
         "publication_latest_tag": str(getattr(publication, "latest_tag", "") or "(none)"),
         "publication_ahead_count": getattr(publication, "ahead_count", None),
-        "release_draft_path": str(getattr(draft, "path", "") or ""),
+        "release_draft_path": _release_draft_evidence_path(readiness),
         "release_draft_issue_count": len(release_draft_issues),
     }
+
+
+def _release_draft_evidence_path(readiness: Any) -> str:
+    target_version = str(getattr(readiness, "target_version", "") or "")
+    if target_version:
+        return f"docs/releases/v{target_version}-draft.md"
+    draft = getattr(readiness, "draft", None)
+    return str(getattr(draft, "path", "") or "")
 
 
 def _publication_worktree_status(publication: Any) -> list[str]:

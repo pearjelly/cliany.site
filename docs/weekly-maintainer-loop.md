@@ -47,6 +47,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `plan_next_iteration.py` 的默认文本输出会把 `candidate_issue_gate.evidence` 展开成缩进列表，方便维护者在终端里直接审阅 publication visibility、latest tag、ahead count 和 release draft issue count。
 
+`candidate_issue_gate.evidence.release_draft_path` 使用 `docs/releases/v<version>-draft.md` 这样的仓库相对路径，避免候选 issue artifacts 泄漏维护者本机绝对路径。
+
 如果 readiness 只剩 `commit days N/3`，本周继续做小而可验证的增量；如果存在 gate issue，优先关闭具体 gate，再继续新功能。
 
 ## 2. 周中：实现一个可验证切片
