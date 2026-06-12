@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.152] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `release_draft_handoff_schema_version`，让只读取整包摘要的维护工具能先判断 release draft handoff 字段语义版本。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 `release_draft_handoff_schema_version`，并继续展示 handoff key count 与 hash。
+- 新增 `docs/releases/v0.16.152-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 release draft handoff schema version 可见性。
+
 ## [0.16.151] - 2026-06-13
 
 ### Added
@@ -1462,7 +1469,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.151...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.152...HEAD
+[0.16.152]: https://github.com/pearjelly/cliany.site/compare/v0.16.151...v0.16.152
 [0.16.151]: https://github.com/pearjelly/cliany.site/compare/v0.16.150...v0.16.151
 [0.16.150]: https://github.com/pearjelly/cliany.site/compare/v0.16.149...v0.16.150
 [0.16.149]: https://github.com/pearjelly/cliany.site/compare/v0.16.148...v0.16.149
