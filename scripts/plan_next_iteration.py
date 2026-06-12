@@ -798,6 +798,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "validation_commands": [
             plan.issue_artifacts_command,
             f"python scripts/plan_next_iteration.py --target-version {plan.target_version} --json",
+            f"python scripts/release_readiness.py --target-version {plan.target_version} --json",
             "python scripts/check_release_publication.py --json",
             "python scripts/validate_cases.py --strict",
         ],

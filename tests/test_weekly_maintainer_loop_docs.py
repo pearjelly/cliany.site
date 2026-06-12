@@ -81,6 +81,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "review order",
         "validation commands",
         "python scripts/check_release_publication.py --json",
+        "python scripts/release_readiness.py --target-version <version> --json",
         "release draft path",
         "release draft issues",
         "已处理或明确延后",
