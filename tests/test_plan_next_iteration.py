@@ -617,6 +617,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_next_actions_sha256": _stable_json_sha256(plan.publication_next_actions),
         "publication_handoff_key_count": len(expected_publication_handoff),
         "publication_handoff_sha256": _stable_json_sha256(expected_publication_handoff),
+        "publication_ref_context_key_count": len(plan.publication_ref_context),
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
         "publication_publish_command_count": plan.publication_publish_command_count,
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
@@ -894,6 +895,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"publication_handoff_sha256: "
         f"`{artifact_bundle_summary['publication_handoff_sha256']}`"
+    ) in readme
+    assert (
+        f"publication_ref_context_key_count: "
+        f"`{artifact_bundle_summary['publication_ref_context_key_count']}`"
     ) in readme
     assert (
         f"publication_ref_context_sha256: "
