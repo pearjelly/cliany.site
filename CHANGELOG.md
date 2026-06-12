@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py` 的 `candidate_promotions` 现在包含可复制 `issue_body`，Markdown report 新增 `Candidate Issue Body Templates` 小节，帮助维护者把候选案例晋级拆成 GitHub issue。
+- 新增 `docs/releases/v0.16.4-draft.md`，把下一版 patch release 聚焦到计划器生成候选案例 issue 模板。
+
 ## [0.16.3] - 2026-06-12
 
 ### Added

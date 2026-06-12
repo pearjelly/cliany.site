@@ -17,6 +17,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "python scripts/plan_next_iteration.py --report",
         "publication audit",
         "Candidate Promotion Tasks",
+        "Candidate Issue Body Templates",
+        "GitHub issue body",
         "adapter_package",
         "metadata_validation",
         "online_smoke",

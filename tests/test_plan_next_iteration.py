@@ -114,6 +114,21 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "adapter_package": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
         "metadata_validation": "Run validate_cases with --packages-dir.",
         "online_smoke": "Run read-only PyPI search smoke.",
+        "issue_body": (
+            "## Scope: promote candidate case `pypi-project-search`\n\n"
+            "Move this candidate case one step closer to `active` without changing its status early.\n\n"
+            "## Tasks\n"
+            "- [ ] `adapter_package`: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n"
+            "- [ ] `metadata_validation`: Run validate_cases with --packages-dir.\n"
+            "- [ ] `online_smoke`: Run read-only PyPI search smoke.\n\n"
+            "## Validation Evidence\n"
+            "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.\n"
+            "- Paste the local `scripts/validate_cases.py --packages-dir` result.\n"
+            "- Paste the read-only JSON envelope summary with `data.quality.ok=true` and `row_count>0`.\n\n"
+            "## Non-goals\n"
+            "- Do not mark the case `active` until all three promotion tasks are complete.\n"
+            "- Do not require real LLM keys or write runtime state into the repository."
+        ),
     }
 
 
@@ -130,7 +145,10 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
 
     text = report_path.read_text(encoding="utf-8")
     assert "## Candidate Promotion Tasks" in text
+    assert "## Candidate Issue Body Templates" in text
     assert "| `pypi-project-search` | Generate pypi.org-<version>.cliany-adapter.tar.gz." in text
+    assert "## Scope: promote candidate case `pypi-project-search`" in text
+    assert "Paste the read-only JSON envelope summary with `data.quality.ok=true` and `row_count>0`." in text
     assert "Run read-only npm search smoke." in text
 
 

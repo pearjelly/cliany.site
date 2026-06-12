@@ -26,7 +26,7 @@ python scripts/release_readiness.py --json
 python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 ```
 
-`plan_next_iteration.py` 会把 release readiness、publication audit、commit cadence 和 candidate cases 汇总成一个推荐切片；如果它提示最新本地 tag 尚未公开可见，先完成发布同步，再扩大下一版范围。它的 Markdown 报告会输出 `Candidate Promotion Tasks`，把每个 candidate 的 `adapter_package`、`metadata_validation` 和 `online_smoke` 证据项带到同一份周初计划里。Markdown 报告里的 `Weekly Review` 小节会把本页最后的 6 个复盘问题和当前证据放在一起；发版前优先引用这份报告，避免手工复盘和 readiness gate 脱节。
+`plan_next_iteration.py` 会把 release readiness、publication audit、commit cadence 和 candidate cases 汇总成一个推荐切片；如果它提示最新本地 tag 尚未公开可见，先完成发布同步，再扩大下一版范围。它的 Markdown 报告会输出 `Candidate Promotion Tasks`，把每个 candidate 的 `adapter_package`、`metadata_validation` 和 `online_smoke` 证据项带到同一份周初计划里，并在 `Candidate Issue Body Templates` 里生成可复制的 GitHub issue body。Markdown 报告里的 `Weekly Review` 小节会把本页最后的 6 个复盘问题和当前证据放在一起；发版前优先引用这份报告，避免手工复盘和 readiness gate 脱节。
 
 如果 readiness 只剩 `commit days N/3`，本周继续做小而可验证的增量；如果存在 gate issue，优先关闭具体 gate，再继续新功能。
 

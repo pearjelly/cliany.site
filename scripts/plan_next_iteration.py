@@ -27,6 +27,7 @@ class CandidatePromotion:
     adapter_package: str
     metadata_validation: str
     online_smoke: str
+    issue_body: str
 
     def to_dict(self) -> dict[str, str]:
         return {
@@ -34,6 +35,7 @@ class CandidatePromotion:
             "adapter_package": self.adapter_package,
             "metadata_validation": self.metadata_validation,
             "online_smoke": self.online_smoke,
+            "issue_body": self.issue_body,
         }
 
 
@@ -155,9 +157,45 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 adapter_package=_promotion_value(promotion, "adapter_package"),
                 metadata_validation=_promotion_value(promotion, "metadata_validation"),
                 online_smoke=_promotion_value(promotion, "online_smoke"),
+                issue_body=_candidate_issue_body(
+                    case_id=str(case.id),
+                    adapter_package=_promotion_value(promotion, "adapter_package"),
+                    metadata_validation=_promotion_value(promotion, "metadata_validation"),
+                    online_smoke=_promotion_value(promotion, "online_smoke"),
+                ),
             )
         )
     return promotions
+
+
+def _candidate_issue_body(
+    *,
+    case_id: str,
+    adapter_package: str,
+    metadata_validation: str,
+    online_smoke: str,
+) -> str:
+    return "\n".join(
+        [
+            f"## Scope: promote candidate case `{case_id}`",
+            "",
+            "Move this candidate case one step closer to `active` without changing its status early.",
+            "",
+            "## Tasks",
+            f"- [ ] `adapter_package`: {adapter_package}",
+            f"- [ ] `metadata_validation`: {metadata_validation}",
+            f"- [ ] `online_smoke`: {online_smoke}",
+            "",
+            "## Validation Evidence",
+            "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.",
+            "- Paste the local `scripts/validate_cases.py --packages-dir` result.",
+            "- Paste the read-only JSON envelope summary with `data.quality.ok=true` and `row_count>0`.",
+            "",
+            "## Non-goals",
+            "- Do not mark the case `active` until all three promotion tasks are complete.",
+            "- Do not require real LLM keys or write runtime state into the repository.",
+        ]
+    )
 
 
 def build_plan(
@@ -240,6 +278,9 @@ def _print_text(plan: IterationPlan) -> None:
             print(f"  adapter_package: {promotion.adapter_package}")
             print(f"  metadata_validation: {promotion.metadata_validation}")
             print(f"  online_smoke: {promotion.online_smoke}")
+            print("  issue_body:")
+            for line in promotion.issue_body.splitlines():
+                print(f"    {line}")
     if plan.blockers:
         print("blockers:")
         for blocker in plan.blockers:
@@ -309,6 +350,18 @@ def _candidate_promotion_markdown(promotions: list[CandidatePromotion]) -> str:
         lines.append(
             f"| `{promotion.case_id}` | {promotion.adapter_package} | "
             f"{promotion.metadata_validation} | {promotion.online_smoke} |"
+        )
+    lines.extend(["", "## Candidate Issue Body Templates"])
+    for promotion in promotions:
+        lines.extend(
+            [
+                "",
+                f"### `{promotion.case_id}`",
+                "",
+                "```markdown",
+                promotion.issue_body,
+                "```",
+            ]
         )
     return "\n".join(lines)
 
