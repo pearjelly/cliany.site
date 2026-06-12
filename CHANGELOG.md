@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.176] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `issue_body_summary_key_tail_count`、`issue_body_summary_key_tail` 和 `issue_body_summary_key_tail_sha256`，让只读取整包摘要的维护工具能检查 issue body summary 字段集合末尾入口。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 issue body summary key tail count/list/hash，并继续展示 key preview 与完整 summary hash。
+- 新增 `docs/releases/v0.16.176-draft.md`，把下一版 patch release 聚焦到 issue body summary key tail 可见性。
+
 ## [0.16.175] - 2026-06-13
 
 ### Added
@@ -1630,7 +1637,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.175...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.176...HEAD
+[0.16.176]: https://github.com/pearjelly/cliany.site/compare/v0.16.175...v0.16.176
 [0.16.175]: https://github.com/pearjelly/cliany.site/compare/v0.16.174...v0.16.175
 [0.16.174]: https://github.com/pearjelly/cliany.site/compare/v0.16.173...v0.16.174
 [0.16.173]: https://github.com/pearjelly/cliany.site/compare/v0.16.172...v0.16.173
