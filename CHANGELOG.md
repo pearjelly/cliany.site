@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.15.3] - 2026-06-12
+
 ### Added
 - `scripts/check_release_publication.py` 新增 `--report`，可生成 release publication Markdown 报告，保存 branch/tag 发布可见性、refs 和 next actions。
 - 新增 `docs/releases/v0.15.3-draft.md`，把下一版 patch release 聚焦到发布可见性报告 artifact。
@@ -422,7 +424,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.2...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.3...HEAD
+[0.15.3]: https://github.com/pearjelly/cliany.site/compare/v0.15.2...v0.15.3
 [0.15.2]: https://github.com/pearjelly/cliany.site/compare/v0.15.1...v0.15.2
 [0.15.1]: https://github.com/pearjelly/cliany.site/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/pearjelly/cliany.site/compare/v0.14.4...v0.15.0
