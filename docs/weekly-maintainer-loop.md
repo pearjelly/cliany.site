@@ -187,7 +187,7 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `publication-handoff.json` 和 artifacts `README.md` 的 `Publication Handoff` 也会展示 `publish_command_count` 和 `primary_publish_command`，让只读取 handoff 的维护工具不必展开完整命令列表就能判断发布命令规模并展示第一条同步命令。
 
-`artifact_bundle_summary` 还会带上 `publication_worktree_status_count` 和 `publication_worktree_status_sha256`，让工具只读整包摘要就能判断 publication worktree status 是否漂移。
+`artifact_bundle_summary` 还会带上 `publication_worktree_status_count`、`publication_worktree_status_sha256`、`publication_worktree_status_first_item`、`publication_worktree_status_last_item` 和 `publication_worktree_status_boundary_sha256`，让工具只读整包摘要就能判断 publication worktree status 是否漂移，并快速检查 status 列表首尾边界。
 
 `artifact_bundle_summary` 还会带上 `release_draft_handoff_key_count`、`release_draft_handoff_schema_version`、`release_draft_handoff_primary_issue`、`release_draft_handoff_primary_required_action` 和 `release_draft_handoff_sha256`，让工具只读整包摘要就能判断 release draft handoff 字段规模、语义版本、首要问题/动作或内容是否漂移。
 

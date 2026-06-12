@@ -1054,6 +1054,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "publication_worktree_status_count": len(plan.publication_worktree_status),
         "publication_worktree_status_sha256": _stable_json_sha256(plan.publication_worktree_status),
+        "publication_worktree_status_first_item": plan.publication_worktree_status[0],
+        "publication_worktree_status_last_item": plan.publication_worktree_status[-1],
+        "publication_worktree_status_boundary_sha256": _stable_json_sha256(
+            {
+                "first_item": plan.publication_worktree_status[0],
+                "last_item": plan.publication_worktree_status[-1],
+            }
+        ),
         "release_draft_handoff_key_count": len(expected_release_draft_handoff),
         "release_draft_handoff_schema_version": expected_release_draft_handoff["schema_version"],
         "release_draft_handoff_primary_issue": expected_release_draft_handoff["primary_issue"],
@@ -2092,6 +2100,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"publication_worktree_status_sha256: "
         f"`{_stable_json_sha256(plan.publication_worktree_status)}`"
+    ) in readme
+    assert (
+        "publication_worktree_status_first_item: "
+        f"{plan_next_iteration._summary_inline_code(plan.publication_worktree_status[0])}"
+    ) in readme
+    assert (
+        "publication_worktree_status_last_item: "
+        f"{plan_next_iteration._summary_inline_code(plan.publication_worktree_status[-1])}"
+    ) in readme
+    assert (
+        "publication_worktree_status_boundary_sha256: "
+        f"`{artifact_bundle_summary['publication_worktree_status_boundary_sha256']}`"
     ) in readme
     assert "release_draft_handoff_key_count: `15`" in readme
     assert "release_draft_handoff_schema_version: `1`" in readme

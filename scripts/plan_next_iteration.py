@@ -209,6 +209,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "publication_publish_script_command_sha256",
     "publication_worktree_status_count",
     "publication_worktree_status_sha256",
+    "publication_worktree_status_first_item",
+    "publication_worktree_status_last_item",
+    "publication_worktree_status_boundary_sha256",
     "release_draft_handoff_key_count",
     "release_draft_handoff_schema_version",
     "release_draft_handoff_primary_issue",
@@ -2109,6 +2112,14 @@ def _issue_artifact_bundle_summary(
         if plan.publication_publish_commands
         else None,
     }
+    publication_worktree_status_boundary = {
+        "first_item": plan.publication_worktree_status[0]
+        if plan.publication_worktree_status
+        else None,
+        "last_item": plan.publication_worktree_status[-1]
+        if plan.publication_worktree_status
+        else None,
+    }
     artifact_file_keys = list(artifact_files)
     artifact_files_key_boundary = {
         "first_key": artifact_file_keys[0] if artifact_file_keys else None,
@@ -2426,6 +2437,15 @@ def _issue_artifact_bundle_summary(
         ),
         "publication_worktree_status_count": len(plan.publication_worktree_status),
         "publication_worktree_status_sha256": _stable_json_sha256(plan.publication_worktree_status),
+        "publication_worktree_status_first_item": publication_worktree_status_boundary[
+            "first_item"
+        ],
+        "publication_worktree_status_last_item": publication_worktree_status_boundary[
+            "last_item"
+        ],
+        "publication_worktree_status_boundary_sha256": _stable_json_sha256(
+            publication_worktree_status_boundary
+        ),
         "release_draft_handoff_key_count": len(release_draft_handoff),
         "release_draft_handoff_schema_version": release_draft_handoff.get("schema_version"),
         "release_draft_handoff_primary_issue": release_draft_handoff.get("primary_issue"),
@@ -2814,6 +2834,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['publication_publish_script_command_sha256']}`",
             f"- publication_worktree_status_count: `{summary['publication_worktree_status_count']}`",
             f"- publication_worktree_status_sha256: `{summary['publication_worktree_status_sha256']}`",
+            "- publication_worktree_status_first_item: "
+            f"{_summary_inline_code(summary['publication_worktree_status_first_item'])}",
+            "- publication_worktree_status_last_item: "
+            f"{_summary_inline_code(summary['publication_worktree_status_last_item'])}",
+            "- publication_worktree_status_boundary_sha256: "
+            f"`{summary['publication_worktree_status_boundary_sha256']}`",
             f"- release_draft_handoff_key_count: `{summary['release_draft_handoff_key_count']}`",
             "- release_draft_handoff_schema_version: "
             f"{_summary_inline_code(summary['release_draft_handoff_schema_version'])}",
