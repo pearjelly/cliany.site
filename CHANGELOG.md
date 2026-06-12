@@ -1030,7 +1030,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.88...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.89...HEAD
+[0.16.89]: https://github.com/pearjelly/cliany.site/compare/v0.16.88...v0.16.89
 [0.16.88]: https://github.com/pearjelly/cliany.site/compare/v0.16.87...v0.16.88
 [0.16.87]: https://github.com/pearjelly/cliany.site/compare/v0.16.86...v0.16.87
 [0.16.86]: https://github.com/pearjelly/cliany.site/compare/v0.16.85...v0.16.86
