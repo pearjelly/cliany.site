@@ -559,6 +559,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "--publish-script /tmp/cliany-publish-release.sh"
         ),
     }
+    expected_artifact_files = {
+        "readme": "README.md",
+        "issue_metadata": "issue-metadata.json",
+        "publication_handoff": "publication-handoff.json",
+        "release_draft_handoff": "release-draft-handoff.json",
+        "create_issues_script": "create-issues.sh",
+        "issue_bodies": ["pypi-project-search.md", "npm-package-search.md"],
+    }
     review_order = [
         "README.md",
         "publication-handoff.json",
@@ -588,6 +596,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "inventory_sha256": issue_body_summary["inventory_sha256"],
         "issue_metadata_count": issue_metadata_summary["metadata_count"],
         "issue_metadata_sha256": issue_metadata_summary["metadata_sha256"],
+        "artifact_files_key_count": len(expected_artifact_files),
+        "artifact_files_sha256": _stable_json_sha256(expected_artifact_files),
         "blocker_count": 2,
         "blockers_sha256": _stable_json_sha256(plan.blockers),
         "next_action_count": len(plan.next_actions),
@@ -759,14 +769,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "issue_body_inventory": issue_body_inventory,
         "issue_body_summary": issue_body_summary,
         "issue_metadata_summary": issue_metadata_summary,
-        "files": {
-            "readme": "README.md",
-            "issue_metadata": "issue-metadata.json",
-            "publication_handoff": "publication-handoff.json",
-            "release_draft_handoff": "release-draft-handoff.json",
-            "create_issues_script": "create-issues.sh",
-            "issue_bodies": ["pypi-project-search.md", "npm-package-search.md"],
-        },
+        "files": expected_artifact_files,
         "review_order": review_order,
         "review_checklist": [
             "Confirm the latest local release has been published before creating new candidate work.",
@@ -849,6 +852,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert f"review_order_sha256: `{review_order_sha256}`" in readme
     assert f"issue_metadata_count: `{issue_metadata_summary['metadata_count']}`" in readme
     assert f"issue_metadata_sha256: `{issue_metadata_summary['metadata_sha256']}`" in readme
+    assert "artifact_files_key_count: `6`" in readme
+    assert f"artifact_files_sha256: `{artifact_bundle_summary['artifact_files_sha256']}`" in readme
     assert "blocker_count: `2`" in readme
     assert f"blockers_sha256: `{_stable_json_sha256(plan.blockers)}`" in readme
     assert f"next_action_count: `{len(plan.next_actions)}`" in readme

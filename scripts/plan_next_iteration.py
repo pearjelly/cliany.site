@@ -974,6 +974,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     candidate_cases = [promotion.case_id for promotion in plan.candidate_promotions]
     script_path = directory / "create-issues.sh"
     create_issues_safety = _issue_artifact_create_issues_safety(script_path)
+    artifact_files = _issue_artifact_files(issue_body_names)
     review_order = [
         "README.md",
         "publication-handoff.json",
@@ -989,6 +990,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         issue_body_summary=issue_body_summary,
         issue_metadata_summary=_issue_metadata_summary(metadata),
         create_issues_safety=create_issues_safety,
+        artifact_files=artifact_files,
     )
     artifact_manifest = {
         "schema_version": 1,
@@ -1015,14 +1017,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "issue_body_inventory": issue_body_inventory,
         "issue_body_summary": issue_body_summary,
         "issue_metadata_summary": _issue_metadata_summary(metadata),
-        "files": {
-            "readme": "README.md",
-            "issue_metadata": "issue-metadata.json",
-            "publication_handoff": "publication-handoff.json",
-            "release_draft_handoff": "release-draft-handoff.json",
-            "create_issues_script": "create-issues.sh",
-            "issue_bodies": issue_body_names,
-        },
+        "files": artifact_files,
         "review_order": review_order,
         "review_checklist": _issue_artifact_review_checklist(),
         "validation_commands": _issue_artifact_validation_commands(plan),
@@ -1310,6 +1305,17 @@ def _issue_artifact_create_issues_safety_contract(create_issues_safety: dict[str
     }
 
 
+def _issue_artifact_files(issue_body_names: list[str]) -> dict[str, Any]:
+    return {
+        "readme": "README.md",
+        "issue_metadata": "issue-metadata.json",
+        "publication_handoff": "publication-handoff.json",
+        "release_draft_handoff": "release-draft-handoff.json",
+        "create_issues_script": "create-issues.sh",
+        "issue_bodies": issue_body_names,
+    }
+
+
 def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
     return {
         "publication_ok": plan.publication_ok,
@@ -1432,6 +1438,7 @@ def _issue_artifact_bundle_summary(
     issue_body_summary: dict[str, Any],
     issue_metadata_summary: dict[str, Any],
     create_issues_safety: dict[str, Any],
+    artifact_files: dict[str, Any],
 ) -> dict[str, Any]:
     review_order_digest_source = json.dumps(
         review_order,
@@ -1460,6 +1467,8 @@ def _issue_artifact_bundle_summary(
         "inventory_sha256": issue_body_summary["inventory_sha256"],
         "issue_metadata_count": issue_metadata_summary["metadata_count"],
         "issue_metadata_sha256": issue_metadata_summary["metadata_sha256"],
+        "artifact_files_key_count": len(artifact_files),
+        "artifact_files_sha256": _stable_json_sha256(artifact_files),
         "blocker_count": len(plan.blockers),
         "blockers_sha256": _stable_json_sha256(plan.blockers),
         "next_action_count": len(plan.next_actions),
@@ -1522,6 +1531,7 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
         issue_body_summary=_issue_body_summary(_issue_body_inventory(plan.candidate_promotions)),
         issue_metadata_summary=_issue_metadata_summary(_issue_metadata_for_summary(plan.candidate_promotions)),
         create_issues_safety=_issue_artifact_create_issues_safety(Path("create-issues.sh")),
+        artifact_files=_issue_artifact_files(issue_body_names),
     )
     return "\n".join(
         [
@@ -1537,6 +1547,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- inventory_sha256: `{summary['inventory_sha256']}`",
             f"- issue_metadata_count: `{summary['issue_metadata_count']}`",
             f"- issue_metadata_sha256: `{summary['issue_metadata_sha256']}`",
+            f"- artifact_files_key_count: `{summary['artifact_files_key_count']}`",
+            f"- artifact_files_sha256: `{summary['artifact_files_sha256']}`",
             f"- blocker_count: `{summary['blocker_count']}`",
             f"- blockers_sha256: `{summary['blockers_sha256']}`",
             f"- next_action_count: `{summary['next_action_count']}`",
