@@ -39,6 +39,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "publication next actions",
         "README.md",
         "Candidate Summary",
+        "Publication Handoff",
+        "Publication Next Actions",
         "issue body 文件",
         "create-issues.sh",
         "publish commands",

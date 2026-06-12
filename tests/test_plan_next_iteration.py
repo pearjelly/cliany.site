@@ -326,6 +326,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "## Publication Handoff" in readme
     assert "publication_ok: `false`" in readme
+    assert "### Publication Next Actions" in readme
+    assert "Push `master` to `origin`; local branch is ahead by `2` commits." in readme
+    assert "Push tag `v0.16.1` after the branch is published." in readme
     assert "git push origin master" in readme
     assert "git push origin v0.16.1" in readme
     assert "python scripts/check_release_publication.py --remote --json" in readme

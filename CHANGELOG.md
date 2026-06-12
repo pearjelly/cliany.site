@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --issues-dir` 生成的 artifacts `README.md` 现在会在 `Publication Handoff` 中展示 `Publication Next Actions`，让维护者不用打开 JSON 也能看到具体发布阻塞。
+- 新增 `docs/releases/v0.16.24-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts README 的 publication next actions 可见性。
+
 ## [0.16.23] - 2026-06-12
 
 ### Added

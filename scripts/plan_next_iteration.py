@@ -634,6 +634,10 @@ Generated for target version `{plan.target_version}`.
 - publication_ok: `{str(plan.publication_ok).lower()}`
 - Review `publication-handoff.json` before running `create-issues.sh`.
 
+### Publication Next Actions
+
+{_issue_artifact_publication_next_actions(plan)}
+
 ```bash
 {_issue_artifact_publication_commands(plan)}
 ```
@@ -669,6 +673,12 @@ def _issue_artifact_publication_commands(plan: IterationPlan) -> str:
     if plan.publication_publish_commands:
         return "\n".join(plan.publication_publish_commands)
     return "python scripts/check_release_publication.py --json"
+
+
+def _issue_artifact_publication_next_actions(plan: IterationPlan) -> str:
+    if not plan.publication_next_actions:
+        return "- No publication next actions are needed."
+    return "\n".join(f"- {action}" for action in plan.publication_next_actions)
 
 
 def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> str:
