@@ -147,6 +147,11 @@ def _blocked_candidate_issue_gate() -> dict[str, object]:
         "can_create_issues": False,
         "requires_maintainer_review": True,
         "summary": "Do not create candidate issues until the latest local release is publicly visible.",
+        "reason_codes": [
+            "publication_not_published",
+            "dirty_worktree",
+            "release_draft_issues",
+        ],
         "required_actions": [
             "Commit, stash, or discard local worktree changes before publishing release refs.",
             "Push `master` to `origin`; local branch is ahead by `2` commits.",
@@ -198,6 +203,7 @@ def test_candidate_issue_gate_allows_creation_after_publication_with_release_dra
         "can_create_issues": True,
         "requires_maintainer_review": True,
         "summary": "Release draft issues must be resolved or intentionally deferred before tagging.",
+        "reason_codes": ["release_draft_issues"],
         "required_actions": [
             "release draft is missing",
             "release draft missing snippet: ## 发版前验证",
@@ -339,6 +345,10 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "can_create_issues: `false`" in text
     assert "requires_maintainer_review: `true`" in text
     assert "Do not create candidate issues until the latest local release is publicly visible." in text
+    assert "### Candidate Issue Gate Reason Codes" in text
+    assert "- `publication_not_published`" in text
+    assert "- `dirty_worktree`" in text
+    assert "- `release_draft_issues`" in text
     assert "### Candidate Issue Gate Evidence" in text
     assert "| publication_visibility_status | `dirty_worktree` |" in text
     assert "| publication_worktree_clean | `false` |" in text
@@ -391,6 +401,10 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
 
     text = capsys.readouterr().out
     assert "candidate_issue_gate:" in text
+    assert "- reason_codes:" in text
+    assert "  - publication_not_published" in text
+    assert "  - dirty_worktree" in text
+    assert "  - release_draft_issues" in text
     assert "- evidence:" in text
     assert "  - publication_visibility_status: dirty_worktree" in text
     assert "  - publication_worktree_clean: false" in text
@@ -610,6 +624,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "candidate_issue_gate: `blocked_by_publication`" in readme
     assert "can_create_issues: `false`" in readme
     assert "gate_summary: Do not create candidate issues until the latest local release is publicly visible." in readme
+    assert "gate_reason_codes: `publication_not_published`, `dirty_worktree`, `release_draft_issues`" in readme
     assert "gate_evidence_latest_tag: `v0.16.1`" in readme
     assert "gate_evidence_ahead_count: `2`" in readme
     assert "gate_evidence_worktree_clean: `false`" in readme

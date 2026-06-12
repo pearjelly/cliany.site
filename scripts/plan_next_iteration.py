@@ -218,6 +218,7 @@ def _publication_visibility(publication: Any) -> dict[str, str]:
 def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
     release_draft_issues = _release_draft_issues(readiness)
     evidence = _candidate_issue_gate_evidence(readiness, publication)
+    reason_codes = _candidate_issue_gate_reason_codes(release_draft_issues, publication)
     if not bool(getattr(publication, "ok", False)):
         actions = _publication_next_actions(publication) or [
             "Run python scripts/check_release_publication.py --json and resolve publication blockers."
@@ -227,6 +228,7 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
             "can_create_issues": False,
             "requires_maintainer_review": True,
             "summary": "Do not create candidate issues until the latest local release is publicly visible.",
+            "reason_codes": reason_codes,
             "required_actions": actions,
             "evidence": evidence,
         }
@@ -236,6 +238,7 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
             "can_create_issues": True,
             "requires_maintainer_review": True,
             "summary": "Release draft issues must be resolved or intentionally deferred before tagging.",
+            "reason_codes": reason_codes,
             "required_actions": release_draft_issues,
             "evidence": evidence,
         }
@@ -244,9 +247,28 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
         "can_create_issues": True,
         "requires_maintainer_review": False,
         "summary": "Candidate issues can be created after reviewing the generated artifacts.",
+        "reason_codes": reason_codes,
         "required_actions": [],
         "evidence": evidence,
     }
+
+
+def _candidate_issue_gate_reason_codes(release_draft_issues: list[str], publication: Any) -> list[str]:
+    codes: list[str] = []
+    if not bool(getattr(publication, "ok", False)):
+        codes.append("publication_not_published")
+        visibility_status = _publication_visibility(publication).get("status")
+        if visibility_status == "dirty_worktree":
+            codes.append("dirty_worktree")
+        elif visibility_status == "local_only":
+            codes.append("local_release_only")
+        elif visibility_status == "tag_not_visible":
+            codes.append("tag_not_visible")
+        elif visibility_status == "needs_remote_check":
+            codes.append("needs_remote_check")
+    if release_draft_issues:
+        codes.append("release_draft_issues")
+    return codes
 
 
 def _candidate_issue_gate_evidence(readiness: Any, publication: Any) -> dict[str, Any]:
@@ -690,8 +712,13 @@ def _candidate_issue_gate_markdown(gate: dict[str, Any]) -> str:
     can_create = str(bool(gate.get("can_create_issues", False))).lower()
     review_required = str(bool(gate.get("requires_maintainer_review", True))).lower()
     summary = gate.get("summary") or "Candidate issue gate has not been summarized."
+    reason_codes = gate.get("reason_codes")
     actions = gate.get("required_actions")
     evidence = gate.get("evidence")
+    if not isinstance(reason_codes, list) or not reason_codes:
+        reason_lines = "- No candidate issue gate reason codes are reported."
+    else:
+        reason_lines = "\n".join(f"- `{reason}`" for reason in reason_codes)
     if not isinstance(actions, list) or not actions:
         action_lines = "- No required actions are reported."
     else:
@@ -703,6 +730,10 @@ def _candidate_issue_gate_markdown(gate: dict[str, Any]) -> str:
 - can_create_issues: `{can_create}`
 - requires_maintainer_review: `{review_required}`
 - summary: {summary}
+
+### Candidate Issue Gate Reason Codes
+
+{reason_lines}
 
 ### Candidate Issue Gate Evidence
 
@@ -976,6 +1007,7 @@ def _render_issue_artifacts_readme(plan: IterationPlan) -> str:
     body_files = "\n".join(f"- `{promotion.case_id}.md`" for promotion in plan.candidate_promotions)
     body_files = body_files or "- No candidate issue body files were generated."
     candidate_summary = _issue_artifact_candidate_summary(plan.candidate_promotions)
+    gate_reason_codes = _issue_artifact_gate_reason_codes(plan)
     gate_latest_tag = _format_context_value(_candidate_issue_gate_evidence_value(plan, "publication_latest_tag"))
     gate_ahead_count = _format_context_value(_candidate_issue_gate_evidence_value(plan, "publication_ahead_count"))
     gate_worktree_clean = _format_context_value(
@@ -1011,6 +1043,7 @@ Generated for target version `{plan.target_version}`.
 - candidate_issue_gate: `{_format_context_value(plan.candidate_issue_gate.get("status"))}`
 - can_create_issues: `{str(bool(plan.candidate_issue_gate.get("can_create_issues", False))).lower()}`
 - gate_summary: {_format_context_value(plan.candidate_issue_gate.get("summary"))}
+- gate_reason_codes: {gate_reason_codes}
 - gate_evidence_latest_tag: `{gate_latest_tag}`
 - gate_evidence_ahead_count: `{gate_ahead_count}`
 - gate_evidence_worktree_clean: `{gate_worktree_clean}`
@@ -1070,6 +1103,13 @@ def _candidate_issue_gate_evidence_value(plan: IterationPlan, key: str) -> objec
     if not isinstance(evidence, dict):
         return None
     return evidence.get(key)
+
+
+def _issue_artifact_gate_reason_codes(plan: IterationPlan) -> str:
+    reason_codes = plan.candidate_issue_gate.get("reason_codes")
+    if not isinstance(reason_codes, list) or not reason_codes:
+        return "`(none)`"
+    return ", ".join(f"`{reason}`" for reason in reason_codes)
 
 
 def _issue_artifact_release_draft_issues(plan: IterationPlan) -> str:
