@@ -256,6 +256,12 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "validation_first_command",
     "validation_last_command",
     "validation_command_boundary_sha256",
+    "validation_command_preview_count",
+    "validation_command_preview",
+    "validation_command_preview_sha256",
+    "validation_command_tail_count",
+    "validation_command_tail",
+    "validation_command_tail_sha256",
     "review_checklist_count",
     "review_checklist_sha256",
     "review_checklist_first_item",
@@ -2111,6 +2117,8 @@ def _issue_artifact_bundle_summary(
         "first_command": validation_commands[0] if validation_commands else None,
         "last_command": validation_commands[-1] if validation_commands else None,
     }
+    validation_command_preview = validation_commands[:8]
+    validation_command_tail = validation_commands[-8:]
     review_checklist = _issue_artifact_review_checklist()
     review_checklist_boundary = {
         "first_item": review_checklist[0] if review_checklist else None,
@@ -2581,6 +2589,16 @@ def _issue_artifact_bundle_summary(
         "validation_command_boundary_sha256": _stable_json_sha256(
             validation_command_boundary
         ),
+        "validation_command_preview_count": len(validation_command_preview),
+        "validation_command_preview": list(validation_command_preview),
+        "validation_command_preview_sha256": _stable_json_sha256(
+            validation_command_preview
+        ),
+        "validation_command_tail_count": len(validation_command_tail),
+        "validation_command_tail": list(validation_command_tail),
+        "validation_command_tail_sha256": _stable_json_sha256(
+            validation_command_tail
+        ),
         "review_checklist_count": len(review_checklist),
         "review_checklist_sha256": _stable_json_sha256(review_checklist),
         "review_checklist_first_item": review_checklist_boundary["first_item"],
@@ -3017,6 +3035,18 @@ def _issue_artifact_bundle_summary_markdown(
             f"{_summary_inline_code(summary['validation_last_command'])}",
             "- validation_command_boundary_sha256: "
             f"`{summary['validation_command_boundary_sha256']}`",
+            "- validation_command_preview_count: "
+            f"`{summary['validation_command_preview_count']}`",
+            "- validation_command_preview: "
+            f"`{json.dumps(summary['validation_command_preview'], ensure_ascii=False)}`",
+            "- validation_command_preview_sha256: "
+            f"`{summary['validation_command_preview_sha256']}`",
+            "- validation_command_tail_count: "
+            f"`{summary['validation_command_tail_count']}`",
+            "- validation_command_tail: "
+            f"`{json.dumps(summary['validation_command_tail'], ensure_ascii=False)}`",
+            "- validation_command_tail_sha256: "
+            f"`{summary['validation_command_tail_sha256']}`",
             f"- review_checklist_count: `{summary['review_checklist_count']}`",
             f"- review_checklist_sha256: `{summary['review_checklist_sha256']}`",
             "- review_checklist_first_item: "

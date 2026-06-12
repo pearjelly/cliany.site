@@ -717,6 +717,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     }
     next_action_preview = plan.next_actions[:8]
     next_action_tail = plan.next_actions[-8:]
+    expected_validation_commands = [
+        (
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+            "--issues-dir /tmp/cliany-candidate-issues"
+        ),
+        "python scripts/plan_next_iteration.py --target-version 0.16.2 --json",
+        "python scripts/release_readiness.py --target-version 0.16.2 --json",
+        "python scripts/check_release_publication.py --json",
+        "python scripts/validate_cases.py --strict",
+    ]
     review_order = [
         "README.md",
         "publication-handoff.json",
@@ -1157,18 +1167,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             plan.release_draft_issues[-8:]
         ),
         "validation_command_count": 5,
-        "validation_commands_sha256": _stable_json_sha256(
-            [
-                (
-                    "python scripts/plan_next_iteration.py --target-version 0.16.2 "
-                    "--issues-dir /tmp/cliany-candidate-issues"
-                ),
-                "python scripts/plan_next_iteration.py --target-version 0.16.2 --json",
-                "python scripts/release_readiness.py --target-version 0.16.2 --json",
-                "python scripts/check_release_publication.py --json",
-                "python scripts/validate_cases.py --strict",
-            ]
-        ),
+        "validation_commands_sha256": _stable_json_sha256(expected_validation_commands),
         "validation_first_command": (
             "python scripts/plan_next_iteration.py --target-version 0.16.2 "
             "--issues-dir /tmp/cliany-candidate-issues"
@@ -1182,6 +1181,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 ),
                 "last_command": "python scripts/validate_cases.py --strict",
             }
+        ),
+        "validation_command_preview_count": len(expected_validation_commands[:8]),
+        "validation_command_preview": list(expected_validation_commands[:8]),
+        "validation_command_preview_sha256": _stable_json_sha256(
+            expected_validation_commands[:8]
+        ),
+        "validation_command_tail_count": len(expected_validation_commands[-8:]),
+        "validation_command_tail": list(expected_validation_commands[-8:]),
+        "validation_command_tail_sha256": _stable_json_sha256(
+            expected_validation_commands[-8:]
         ),
         "review_checklist_count": 7,
         "review_checklist_sha256": _stable_json_sha256(
@@ -2312,6 +2321,30 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "validation_command_boundary_sha256: "
         f"`{artifact_bundle_summary['validation_command_boundary_sha256']}`"
+    ) in readme
+    assert (
+        "validation_command_preview_count: "
+        f"`{artifact_bundle_summary['validation_command_preview_count']}`"
+    ) in readme
+    assert (
+        "validation_command_preview: "
+        f"`{json.dumps(artifact_bundle_summary['validation_command_preview'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "validation_command_preview_sha256: "
+        f"`{artifact_bundle_summary['validation_command_preview_sha256']}`"
+    ) in readme
+    assert (
+        "validation_command_tail_count: "
+        f"`{artifact_bundle_summary['validation_command_tail_count']}`"
+    ) in readme
+    assert (
+        "validation_command_tail: "
+        f"`{json.dumps(artifact_bundle_summary['validation_command_tail'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "validation_command_tail_sha256: "
+        f"`{artifact_bundle_summary['validation_command_tail_sha256']}`"
     ) in readme
     assert "review_checklist_count: `7`" in readme
     assert (

@@ -213,6 +213,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 还会带上 `validation_first_command`、`validation_last_command` 和 `validation_command_boundary_sha256`，让工具只读整包摘要就能检查 validation commands 首尾边界。
 
+`artifact_bundle_summary` 还会带上 `validation_command_preview_count`、`validation_command_preview`、`validation_command_preview_sha256`、`validation_command_tail_count`、`validation_command_tail` 和 `validation_command_tail_sha256`，让工具只读整包摘要就能检查 validation commands 的前后窗口。
+
 `artifact_bundle_summary` 还会带上 `review_checklist_count`、`review_checklist_sha256`、`review_checklist_first_item`、`review_checklist_last_item` 和 `review_checklist_boundary_sha256`，让工具只读整包摘要就能判断 review checklist 是否漂移，并快速检查首尾边界。
 
 `artifact_bundle_summary` 还会带上 `create_issues_safety_contract_key_count`、`create_issues_safety_contract_sha256`、`create_issues_safety_contract_first_key`、`create_issues_safety_contract_last_key` 和 `create_issues_safety_contract_key_boundary_sha256`，让工具只读整包摘要就能判断 create issues safety contract 是否漂移，并快速检查契约 key 首尾边界；这个摘要只覆盖 dry-run/preflight 契约，不包含本机脚本路径。
