@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.17] - 2026-06-12
+
 ### Changed
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 `create-issues.sh` 在 publication preflight 失败时会把 `/tmp/cliany-issue-publication-check.json` 打印到 stderr 后退出。
 - 新增 `docs/releases/v0.16.17-draft.md`，把下一版 patch release 聚焦到 candidate issue script 的 publication preflight 失败可读性。
@@ -558,7 +560,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.16...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.17...HEAD
+[0.16.17]: https://github.com/pearjelly/cliany.site/compare/v0.16.16...v0.16.17
 [0.16.16]: https://github.com/pearjelly/cliany.site/compare/v0.16.15...v0.16.16
 [0.16.15]: https://github.com/pearjelly/cliany.site/compare/v0.16.14...v0.16.15
 [0.16.14]: https://github.com/pearjelly/cliany.site/compare/v0.16.13...v0.16.14
