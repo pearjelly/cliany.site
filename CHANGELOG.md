@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.36] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py` 现在会输出 `publication_visibility`，并在 Markdown plan、`publication-handoff.json` 和 candidate artifacts `README.md` 中展示发布可见性状态与 summary。
 - 新增 `docs/releases/v0.16.36-draft.md`，把下一版 patch release 聚焦到 next iteration plan 的 publication visibility 结论字段。
@@ -673,7 +675,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.35...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.36...HEAD
+[0.16.36]: https://github.com/pearjelly/cliany.site/compare/v0.16.35...v0.16.36
 [0.16.35]: https://github.com/pearjelly/cliany.site/compare/v0.16.34...v0.16.35
 [0.16.34]: https://github.com/pearjelly/cliany.site/compare/v0.16.33...v0.16.34
 [0.16.33]: https://github.com/pearjelly/cliany.site/compare/v0.16.32...v0.16.33
