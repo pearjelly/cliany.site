@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.89] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `publication_visibility_sha256` 和 `publication_visibility_summary_sha256`，方便工具只读整包摘要就检测发布可见性对象或 summary 文本是否漂移。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示 publication visibility hash 和 summary hash。
+- 新增 `docs/releases/v0.16.89-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的发布可见性漂移检测。
+
 ## [0.16.88] - 2026-06-12
 
 ### Added
