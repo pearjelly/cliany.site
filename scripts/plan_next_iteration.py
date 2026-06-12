@@ -196,6 +196,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "publication_handoff_sha256",
     "publication_ref_context_key_count",
     "publication_ref_context_sha256",
+    "publication_ref_context_first_key",
+    "publication_ref_context_last_key",
+    "publication_ref_context_key_boundary_sha256",
     "publication_publish_command_count",
     "publication_publish_commands_sha256",
     "publication_primary_publish_command",
@@ -2086,6 +2089,15 @@ def _issue_artifact_bundle_summary(
         if create_issues_safety_contract_keys
         else None,
     }
+    publication_ref_context_keys = list(plan.publication_ref_context)
+    publication_ref_context_key_boundary = {
+        "first_key": publication_ref_context_keys[0]
+        if publication_ref_context_keys
+        else None,
+        "last_key": publication_ref_context_keys[-1]
+        if publication_ref_context_keys
+        else None,
+    }
     artifact_file_keys = list(artifact_files)
     artifact_files_key_boundary = {
         "first_key": artifact_file_keys[0] if artifact_file_keys else None,
@@ -2372,6 +2384,15 @@ def _issue_artifact_bundle_summary(
         "publication_handoff_sha256": _stable_json_sha256(publication_handoff),
         "publication_ref_context_key_count": len(plan.publication_ref_context),
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
+        "publication_ref_context_first_key": publication_ref_context_key_boundary[
+            "first_key"
+        ],
+        "publication_ref_context_last_key": publication_ref_context_key_boundary[
+            "last_key"
+        ],
+        "publication_ref_context_key_boundary_sha256": _stable_json_sha256(
+            publication_ref_context_key_boundary
+        ),
         "publication_publish_command_count": plan.publication_publish_command_count,
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
         "publication_primary_publish_command": (
@@ -2751,6 +2772,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"- publication_handoff_sha256: `{summary['publication_handoff_sha256']}`",
             f"- publication_ref_context_key_count: `{summary['publication_ref_context_key_count']}`",
             f"- publication_ref_context_sha256: `{summary['publication_ref_context_sha256']}`",
+            "- publication_ref_context_first_key: "
+            f"`{summary['publication_ref_context_first_key']}`",
+            "- publication_ref_context_last_key: "
+            f"`{summary['publication_ref_context_last_key']}`",
+            "- publication_ref_context_key_boundary_sha256: "
+            f"`{summary['publication_ref_context_key_boundary_sha256']}`",
             f"- publication_publish_command_count: `{summary['publication_publish_command_count']}`",
             f"- publication_publish_commands_sha256: `{summary['publication_publish_commands_sha256']}`",
             "- publication_primary_publish_command: "

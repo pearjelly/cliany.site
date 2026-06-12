@@ -1027,6 +1027,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_handoff_sha256": _stable_json_sha256(expected_publication_handoff),
         "publication_ref_context_key_count": len(plan.publication_ref_context),
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
+        "publication_ref_context_first_key": "repo_root",
+        "publication_ref_context_last_key": "remote_checked",
+        "publication_ref_context_key_boundary_sha256": _stable_json_sha256(
+            {
+                "first_key": "repo_root",
+                "last_key": "remote_checked",
+            }
+        ),
         "publication_publish_command_count": plan.publication_publish_command_count,
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
         "publication_primary_publish_command": plan.publication_publish_commands[0],
@@ -2033,6 +2041,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"publication_ref_context_sha256: "
         f"`{_stable_json_sha256(plan.publication_ref_context)}`"
+    ) in readme
+    assert "publication_ref_context_first_key: `repo_root`" in readme
+    assert "publication_ref_context_last_key: `remote_checked`" in readme
+    assert (
+        "publication_ref_context_key_boundary_sha256: "
+        f"`{artifact_bundle_summary['publication_ref_context_key_boundary_sha256']}`"
     ) in readme
     assert (
         f"publication_publish_command_count: "
