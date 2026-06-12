@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.2] - 2026-06-12
+
 ### Added
 - 新增 `scripts/plan_next_iteration.py`，聚合 release readiness、publication audit、commit cadence 和 candidate cases，为下个版本输出可执行推荐切片、JSON 和 Markdown 报告。
 - 新增 `docs/releases/v0.16.2-draft.md`，把下一版 patch release 聚焦到维护者下个迭代计划入口。
@@ -468,7 +470,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.1...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.2...HEAD
+[0.16.2]: https://github.com/pearjelly/cliany.site/compare/v0.16.1...v0.16.2
 [0.16.1]: https://github.com/pearjelly/cliany.site/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/pearjelly/cliany.site/compare/v0.15.9...v0.16.0
 [0.15.9]: https://github.com/pearjelly/cliany.site/compare/v0.15.8...v0.15.9
