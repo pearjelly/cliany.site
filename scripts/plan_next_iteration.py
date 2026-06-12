@@ -912,6 +912,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     metadata: list[dict[str, Any]] = []
     issue_commands: list[str] = []
     issue_body_inventory = _issue_body_inventory(plan.candidate_promotions)
+    issue_body_summary = _issue_body_summary(issue_body_inventory)
     for promotion in plan.candidate_promotions:
         body_path = directory / f"{promotion.case_id}.md"
         body_path.write_text(promotion.issue_body + "\n", encoding="utf-8")
@@ -958,6 +959,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "create_issues_dry_run_command": create_issues_safety["dry_run_command"],
         "create_issues_safety": create_issues_safety,
         "issue_body_inventory": issue_body_inventory,
+        "issue_body_summary": issue_body_summary,
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -1050,6 +1052,7 @@ def _render_issue_artifacts_readme(plan: IterationPlan) -> str:
     body_files = body_files or "- No candidate issue body files were generated."
     candidate_summary = _issue_artifact_candidate_summary(plan.candidate_promotions)
     body_inventory = _issue_artifact_body_inventory_markdown(plan.candidate_promotions)
+    body_summary = _issue_artifact_body_summary_markdown(plan.candidate_promotions)
     gate_reason_codes = _issue_artifact_gate_reason_codes(plan)
     gate_reason_descriptions = _issue_artifact_gate_reason_descriptions(plan)
     gate_latest_tag = _format_context_value(_candidate_issue_gate_evidence_value(plan, "publication_latest_tag"))
@@ -1084,6 +1087,8 @@ Generated for target version `{plan.target_version}`.
 {candidate_summary}
 
 {body_inventory}
+
+{body_summary}
 
 ## Publication Handoff
 
@@ -1271,6 +1276,15 @@ def _issue_body_inventory(promotions: list[CandidatePromotion]) -> list[dict[str
     return inventory
 
 
+def _issue_body_summary(inventory: list[dict[str, Any]]) -> dict[str, Any]:
+    digest_source = json.dumps(inventory, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+    return {
+        "body_count": len(inventory),
+        "total_byte_count": sum(int(item["byte_count"]) for item in inventory),
+        "inventory_sha256": hashlib.sha256(digest_source).hexdigest(),
+    }
+
+
 def _issue_artifact_body_inventory_markdown(promotions: list[CandidatePromotion]) -> str:
     inventory = _issue_body_inventory(promotions)
     if not inventory:
@@ -1287,6 +1301,19 @@ def _issue_artifact_body_inventory_markdown(promotions: list[CandidatePromotion]
             f"{item['byte_count']} | `{item['sha256']}` |"
         )
     return "\n".join(lines)
+
+
+def _issue_artifact_body_summary_markdown(promotions: list[CandidatePromotion]) -> str:
+    summary = _issue_body_summary(_issue_body_inventory(promotions))
+    return "\n".join(
+        [
+            "## Issue Body Summary",
+            "",
+            f"- body_count: `{summary['body_count']}`",
+            f"- total_byte_count: `{summary['total_byte_count']}`",
+            f"- inventory_sha256: `{summary['inventory_sha256']}`",
+        ]
+    )
 
 
 def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> str:

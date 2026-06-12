@@ -461,6 +461,17 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 "sha256": hashlib.sha256(body_bytes).hexdigest(),
             }
         )
+    summary_bytes = json.dumps(
+        issue_body_inventory,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    issue_body_summary = {
+        "body_count": len(issue_body_inventory),
+        "total_byte_count": sum(item["byte_count"] for item in issue_body_inventory),
+        "inventory_sha256": hashlib.sha256(summary_bytes).hexdigest(),
+    }
 
     assert "## Scope: promote candidate case `pypi-project-search`" in body
     assert "## Reproduction Context" in body
@@ -544,6 +555,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "preflight_json": "/tmp/cliany-issue-publication-check.json",
         },
         "issue_body_inventory": issue_body_inventory,
+        "issue_body_summary": issue_body_summary,
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -668,6 +680,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"| `pypi-project-search` | `pypi-project-search.md` | "
         f"{issue_body_inventory[0]['byte_count']} | `{issue_body_inventory[0]['sha256']}` |"
     ) in readme
+    assert "## Issue Body Summary" in readme
+    assert f"body_count: `{issue_body_summary['body_count']}`" in readme
+    assert f"total_byte_count: `{issue_body_summary['total_byte_count']}`" in readme
+    assert f"inventory_sha256: `{issue_body_summary['inventory_sha256']}`" in readme
     assert "## Publication Handoff" in readme
     assert "publication_ok: `false`" in readme
     assert "candidate_issue_gate: `blocked_by_publication`" in readme
