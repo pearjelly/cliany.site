@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.53] - 2026-06-12
+
+### Added
+- `plan_next_iteration.py` 的默认文本输出现在会把 `candidate_issue_gate.evidence` 展开为缩进列表，方便维护者在终端直接审阅 gate 判定依据。
+- 新增 `docs/releases/v0.16.53-draft.md`，把下一版 patch release 聚焦到 candidate issue gate evidence 的文本输出可读性。
+
 ## [0.16.52] - 2026-06-12
 
 ### Added
@@ -773,7 +779,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.52...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.53...HEAD
+[0.16.53]: https://github.com/pearjelly/cliany.site/compare/v0.16.52...v0.16.53
 [0.16.52]: https://github.com/pearjelly/cliany.site/compare/v0.16.51...v0.16.52
 [0.16.51]: https://github.com/pearjelly/cliany.site/compare/v0.16.50...v0.16.51
 [0.16.50]: https://github.com/pearjelly/cliany.site/compare/v0.16.49...v0.16.50
