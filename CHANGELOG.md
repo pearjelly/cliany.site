@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `artifact-manifest.json` 现在包含 `candidate_count` 和 `candidate_cases`，让维护者和工具无需读取 issue metadata 也能快速识别本批 candidate artifacts 覆盖范围。
+- 新增 `docs/releases/v0.16.41-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts manifest 的候选案例摘要。
+
 ## [0.16.40] - 2026-06-12
 
 ### Added

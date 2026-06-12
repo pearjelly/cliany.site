@@ -328,6 +328,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "--label 'good first issue'" in metadata[0]["create_command"]
     assert artifact_manifest == {
         "target_version": "0.16.2",
+        "candidate_count": 2,
+        "candidate_cases": ["pypi-project-search", "npm-package-search"],
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -411,7 +413,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "# cliany-site Candidate Issue Artifacts" in readme
     assert "Generated for target version `0.16.2`." in readme
     assert "`issue-metadata.json`: structured issue title, labels, reproduction context" in readme
-    assert "`artifact-manifest.json`: file names, review order, and validation commands" in readme
+    assert "`artifact-manifest.json`: candidate cases, file names, review order" in readme
     assert "body file name" in readme
     assert "`publication-handoff.json`: publication status, visibility, next actions" in readme
     assert "`release-draft-handoff.json`: target version, release draft path" in readme

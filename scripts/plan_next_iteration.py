@@ -760,8 +760,11 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         script_lines.extend(["", _gh_issue_create_command(promotion, body_path)])
 
     issue_body_names = [f"{promotion.case_id}.md" for promotion in plan.candidate_promotions]
+    candidate_cases = [promotion.case_id for promotion in plan.candidate_promotions]
     artifact_manifest = {
         "target_version": plan.target_version,
+        "candidate_count": len(candidate_cases),
+        "candidate_cases": candidate_cases,
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -831,7 +834,7 @@ Generated for target version `{plan.target_version}`.
 
 - `issue-metadata.json`: structured issue title, labels, reproduction context, body file name,
   body file path, and `gh issue create` command.
-- `artifact-manifest.json`: file names, review order, and validation commands for this
+- `artifact-manifest.json`: candidate cases, file names, review order, and validation commands for this
   candidate issue artifact bundle.
 - `publication-handoff.json`: publication status, visibility, next actions, publication next actions,
   ref context, worktree status, and publish commands to review first.

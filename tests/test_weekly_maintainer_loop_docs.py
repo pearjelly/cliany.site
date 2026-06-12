@@ -64,6 +64,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "Publication Publish Script",
         "Release Draft Handoff",
         "target version",
+        "candidate count",
+        "candidate cases",
         "review order",
         "validation commands",
         "release draft path",
