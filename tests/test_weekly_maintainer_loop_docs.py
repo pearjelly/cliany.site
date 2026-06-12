@@ -49,6 +49,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "candidate_issue_gate_primary_required_action",
         "Candidate Issue Gate Quick Summary",
         "publication/release draft ok",
+        "blocker/next action 数量",
         "reason/action 数量",
         "publication branch/upstream/remote",
         "publication local HEAD/tag commit/upstream HEAD",

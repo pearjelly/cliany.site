@@ -136,6 +136,7 @@ V016120_DRAFT = ROOT / "docs" / "releases" / "v0.16.120-draft.md"
 V016121_DRAFT = ROOT / "docs" / "releases" / "v0.16.121-draft.md"
 V016122_DRAFT = ROOT / "docs" / "releases" / "v0.16.122-draft.md"
 V016123_DRAFT = ROOT / "docs" / "releases" / "v0.16.123-draft.md"
+V016124_DRAFT = ROOT / "docs" / "releases" / "v0.16.124-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -5962,6 +5963,48 @@ def test_v016123_release_draft_tracks_quick_summary_ok_booleans():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.123 --issues-dir",
         "git tag v0.16.123",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016124_release_draft_has_required_sections():
+    text = V016124_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.124 发布草案",
+        "**目标版本：** `0.16.124`",
+        "**提交范围：** `v0.16.123..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016124_release_draft_tracks_quick_summary_workload_counts():
+    text = V016124_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "Candidate Issue Gate Quick Summary",
+        "blocker_count",
+        "next_action_count",
+        "publication_next_action_count",
+        "blocker/next action 数量",
+        "scripts/plan_next_iteration.py",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.124 --issues-dir",
+        "git tag v0.16.124",
     ]
     for snippet in required:
         assert snippet in text
