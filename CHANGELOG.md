@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-06-12
+
 ### Changed
 - `scripts/validate_cases.py --packages-dir ... --report` 的包校验失败现在会输出 `next_actions`，帮助维护者定位 domain、metadata schema、hash 或缺失文件问题。
 
@@ -462,7 +464,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.1...HEAD
+[0.16.1]: https://github.com/pearjelly/cliany.site/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/pearjelly/cliany.site/compare/v0.15.9...v0.16.0
 [0.15.9]: https://github.com/pearjelly/cliany.site/compare/v0.15.8...v0.15.9
 [0.15.8]: https://github.com/pearjelly/cliany.site/compare/v0.15.7...v0.15.8
