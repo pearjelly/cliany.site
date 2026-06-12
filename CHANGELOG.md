@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.15.5] - 2026-06-12
+
 ### Changed
 - `docs/module-ownership.md` 的 Release operations 行现在纳入 `scripts/check_release_publication.py` 和 `tests/test_release_publication.py`，让贡献者能从模块地图找到发布可见性检查。
 
@@ -432,7 +434,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.4...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.5...HEAD
+[0.15.5]: https://github.com/pearjelly/cliany.site/compare/v0.15.4...v0.15.5
 [0.15.4]: https://github.com/pearjelly/cliany.site/compare/v0.15.3...v0.15.4
 [0.15.3]: https://github.com/pearjelly/cliany.site/compare/v0.15.2...v0.15.3
 [0.15.2]: https://github.com/pearjelly/cliany.site/compare/v0.15.1...v0.15.2
