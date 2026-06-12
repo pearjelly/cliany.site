@@ -39,6 +39,8 @@ class PublicationReport:
     tag_published: bool | None
 
     def to_dict(self) -> dict[str, Any]:
+        next_actions = _next_action_lines(self)
+        publish_commands = _publish_command_lines(self)
         return {
             "ok": self.ok,
             "repo_root": self.repo_root,
@@ -60,8 +62,10 @@ class PublicationReport:
             "remote_tag_commit": self.remote_tag_commit,
             "branch_published": self.branch_published,
             "tag_published": self.tag_published,
-            "next_actions": _next_action_lines(self),
-            "publish_commands": _publish_command_lines(self),
+            "next_action_count": len(next_actions),
+            "next_actions": next_actions,
+            "publish_command_count": len(publish_commands),
+            "publish_commands": publish_commands,
         }
 
 
@@ -245,6 +249,8 @@ def _publish_command_lines(report: PublicationReport) -> list[str]:
 
 
 def _print_text(report: PublicationReport) -> None:
+    next_actions = _next_action_lines(report)
+    publish_commands = _publish_command_lines(report)
     print("=== cliany-site release publication ===")
     print(f"ok: {report.ok}")
     print(f"repo_root: {report.repo_root}")
@@ -259,16 +265,16 @@ def _print_text(report: PublicationReport) -> None:
     print(f"branch_published: {report.branch_published}")
     print(f"tag_published: {report.tag_published}")
     print(f"remote_checked: {report.remote_checked}")
+    print(f"next_action_count: {len(next_actions)}")
+    print(f"publish_command_count: {len(publish_commands)}")
     if report.worktree_status:
         print("worktree_status:")
         for line in report.worktree_status:
             print(f"- {line}")
-    next_actions = _next_action_lines(report)
     if next_actions:
         print("next_actions:")
         for action in next_actions:
             print(action)
-    publish_commands = _publish_command_lines(report)
     if publish_commands:
         print("publish_commands:")
         for command in publish_commands:
@@ -308,6 +314,8 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
         f"| branch_published | `{_format_bool(report.branch_published)}` |",
         f"| tag_published | `{_format_bool(report.tag_published)}` |",
         f"| remote_checked | `{_format_bool(report.remote_checked)}` |",
+        f"| next_action_count | `{len(next_actions)}` |",
+        f"| publish_command_count | `{len(publish_commands)}` |",
         "",
         "## Refs",
         "",

@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.91] - 2026-06-12
+
+### Added
+- `scripts/check_release_publication.py` 的 JSON、默认文本输出和 Markdown report 现在包含 `next_action_count` 与 `publish_command_count`，方便维护者先判断发布待办规模再展开具体列表。
+- 新增 `docs/releases/v0.16.91-draft.md`，把下一版 patch release 聚焦到 publication audit 的待办数量可见性。
+
 ## [0.16.90] - 2026-06-12
 
 ### Added
@@ -1037,7 +1043,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.90...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.91...HEAD
+[0.16.91]: https://github.com/pearjelly/cliany.site/compare/v0.16.90...v0.16.91
 [0.16.90]: https://github.com/pearjelly/cliany.site/compare/v0.16.89...v0.16.90
 [0.16.89]: https://github.com/pearjelly/cliany.site/compare/v0.16.88...v0.16.89
 [0.16.88]: https://github.com/pearjelly/cliany.site/compare/v0.16.87...v0.16.88

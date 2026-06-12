@@ -65,6 +65,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `blocker_count`、`next_action_count` 和 `publication_next_action_count`，让工具只读整包摘要就能判断本轮待办规模。
 
+`scripts/check_release_publication.py` 的 JSON、默认文本输出和 Markdown report 会展示 `next_action_count` 与 `publish_command_count`，让维护者先判断发布待办规模，再展开具体 next actions 和 publish commands。
+
 `artifact_bundle_summary` 还会带上 `blockers_sha256`、`next_actions_sha256` 和 `publication_next_actions_sha256`，让工具只读整包摘要就能判断 blockers 和 action lists 是否漂移。
 
 `artifact_bundle_summary` 还会带上 `publication_handoff_key_count` 和 `publication_handoff_sha256`，让工具只读整包摘要就能判断 publication handoff 是否漂移。

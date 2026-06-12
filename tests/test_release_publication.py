@@ -54,7 +54,9 @@ def test_release_publication_passes_when_branch_and_tag_are_pushed(tmp_path):
     assert report.latest_tag == "v0.1.0"
     assert report.branch_published is True
     assert report.tag_published is True
+    assert report.to_dict()["next_action_count"] == 0
     assert report.to_dict()["next_actions"] == []
+    assert report.to_dict()["publish_command_count"] == 0
 
 
 def test_release_publication_reports_unpushed_release_commit_and_tag(tmp_path):
@@ -71,6 +73,7 @@ def test_release_publication_reports_unpushed_release_commit_and_tag(tmp_path):
     assert report.tag_points_at_head is True
     assert report.tag_commit_in_upstream is False
     assert report.tag_published is False
+    assert report.to_dict()["next_action_count"] == 3
     assert report.to_dict()["next_actions"] == [
         "- Push `master` to `origin`; local branch is ahead by `1` commits.",
         (
@@ -79,6 +82,7 @@ def test_release_publication_reports_unpushed_release_commit_and_tag(tmp_path):
         ),
         "- Rerun with `--remote` when network access is available to verify live remote refs.",
     ]
+    assert report.to_dict()["publish_command_count"] == 3
     assert report.to_dict()["publish_commands"] == [
         "git push origin master",
         "git push origin v0.1.1",
@@ -141,6 +145,9 @@ def test_release_publication_text_output_includes_next_actions(tmp_path, capsys)
     assert f"repo_root: {repo.resolve()}" in output
     assert "worktree_clean: True" in output
     assert "latest_tag: v0.1.1" in output
+    assert "next_action_count: 3" in output
+    assert "publish_command_count: 3" in output
+    assert output.count("tag_published:") == 1
     assert "next_actions:" in output
     assert "Push `master` to `origin`" in output
     assert "publish_commands:" in output
@@ -163,6 +170,8 @@ def test_release_publication_writes_markdown_report(tmp_path):
     assert "| worktree_clean | `true` |" in text
     assert "| latest_tag | `v0.1.1` |" in text
     assert "| remote_checked | `true` |" in text
+    assert "| next_action_count | `2` |" in text
+    assert "| publish_command_count | `3` |" in text
     assert "## Refs" in text
     assert "## Next Actions" in text
     assert "## Worktree Status" in text

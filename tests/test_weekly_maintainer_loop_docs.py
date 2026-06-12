@@ -198,6 +198,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "check_release_publication.py --json",
         "validate_cases.py --strict",
         "publication audit",
+        "publish_command_count",
         "review_checklist",
         "硬性 publication preflight",
         "gate 判定",
