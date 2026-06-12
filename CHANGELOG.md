@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.12] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py` 现在输出 `publication_publish_script_command`，周初计划可直接给出生成 `/tmp/cliany-publish-release.sh` 的命令。
 - 新增 `docs/releases/v0.16.12-draft.md`，把下一版 patch release 聚焦到 next iteration plan 的 publish script 生成命令。
@@ -528,7 +530,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.11...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.12...HEAD
+[0.16.12]: https://github.com/pearjelly/cliany.site/compare/v0.16.11...v0.16.12
 [0.16.11]: https://github.com/pearjelly/cliany.site/compare/v0.16.10...v0.16.11
 [0.16.10]: https://github.com/pearjelly/cliany.site/compare/v0.16.9...v0.16.10
 [0.16.9]: https://github.com/pearjelly/cliany.site/compare/v0.16.8...v0.16.9
