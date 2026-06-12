@@ -66,6 +66,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "target version",
         "candidate count",
         "candidate cases",
+        "blockers",
+        "next actions",
         "review order",
         "validation commands",
         "release draft path",

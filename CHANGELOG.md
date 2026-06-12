@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `artifact-manifest.json` 现在包含 `blockers` 和 `next_actions`，让候选任务产物包有单文件可读的交接摘要。
+- 新增 `docs/releases/v0.16.42-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts manifest 的 blocker/next action 摘要。
+
 ## [0.16.41] - 2026-06-12
 
 ### Added
