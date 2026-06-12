@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.112] - 2026-06-12
+
+### Added
+- Candidate issue artifacts `README.md` 的 `Candidate Issue Gate Quick Summary` 现在展示 `release_draft_path`，方便维护者直接定位需要审阅的草案文件。
+- [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 说明 quick summary 会展示 release draft path。
+- 新增 `docs/releases/v0.16.112-draft.md`，把下一版 patch release 聚焦到 candidate issue gate quick summary 的草案路径可见性。
+
 ## [0.16.111] - 2026-06-12
 
 ### Added
@@ -1182,7 +1189,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.111...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.112...HEAD
+[0.16.112]: https://github.com/pearjelly/cliany.site/compare/v0.16.111...v0.16.112
 [0.16.111]: https://github.com/pearjelly/cliany.site/compare/v0.16.110...v0.16.111
 [0.16.110]: https://github.com/pearjelly/cliany.site/compare/v0.16.109...v0.16.110
 [0.16.109]: https://github.com/pearjelly/cliany.site/compare/v0.16.108...v0.16.109
