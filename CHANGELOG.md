@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.66] - 2026-06-12
+
+### Added
+- `candidate_issue_gate` 现在包含 `required_action_count` 和 `required_actions_sha256`，方便工具快速检测 gate action set 是否变化。
+- Next iteration Markdown report 与 candidate issue artifacts `README.md` 现在展示 required actions count/hash。
+- 新增 `docs/releases/v0.16.66-draft.md`，把下一版 patch release 聚焦到 candidate issue gate required actions 摘要。
+
 ## [0.16.65] - 2026-06-12
 
 ### Changed
@@ -862,7 +869,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.65...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.66...HEAD
+[0.16.66]: https://github.com/pearjelly/cliany.site/compare/v0.16.65...v0.16.66
 [0.16.65]: https://github.com/pearjelly/cliany.site/compare/v0.16.64...v0.16.65
 [0.16.64]: https://github.com/pearjelly/cliany.site/compare/v0.16.63...v0.16.64
 [0.16.63]: https://github.com/pearjelly/cliany.site/compare/v0.16.62...v0.16.63
