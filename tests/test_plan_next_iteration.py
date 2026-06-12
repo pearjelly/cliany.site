@@ -1094,6 +1094,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
     assert "- latest_tag: `v0.16.1`" in readme
+    assert "- publication_ahead_count: `2`" in readme
+    assert "- release_draft_issue_count: `2`" in readme
     assert "- visibility: `dirty_worktree`" in readme
     assert "dry_run_supported: `true`" in readme
     assert "preflight_required: `true`" in readme

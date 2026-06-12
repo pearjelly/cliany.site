@@ -49,6 +49,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "candidate_issue_gate_primary_required_action",
         "Candidate Issue Gate Quick Summary",
         "reason/action 数量",
+        "publication ahead 数",
+        "release draft issue 数",
         "publication_visibility_status",
         "publication_remote_checked",
         "publication_ahead_count",
