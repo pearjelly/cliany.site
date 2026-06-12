@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-06-12
+
 ### Added
 - 新增 `docs/releases/v0.15.0-draft.md`，把下一版 minor release 聚焦到 10 分钟成功路径、doctor 下一步提示和 demo adapter 静态验证闭环。
 
@@ -401,7 +403,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.14.4...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/pearjelly/cliany.site/compare/v0.14.4...v0.15.0
 [0.14.4]: https://github.com/pearjelly/cliany.site/compare/v0.14.3...v0.14.4
 [0.11.0]: https://github.com/pearjelly/cliany.site/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/pearjelly/cliany.site/compare/v0.9.3...v0.10.0
