@@ -161,6 +161,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "artifact_bundle_summary",
         "review_order_sha256",
         "review order hash",
+        "candidate_cases_sha256",
         "issue_metadata_count",
         "issue_metadata_sha256",
         "不包含本机输出路径",
