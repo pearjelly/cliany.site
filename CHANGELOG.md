@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.114] - 2026-06-12
+
+### Added
+- Candidate issue artifacts `README.md` 的 `Candidate Issue Gate Quick Summary` 现在展示 `publication_behind_count`，方便维护者先判断本地分支是否落后远端。
+- [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 说明 quick summary 会展示 publication ahead/behind 数。
+- 新增 `docs/releases/v0.16.114-draft.md`，把下一版 patch release 聚焦到 candidate issue gate quick summary 的 behind 同步风险可见性。
+
 ## [0.16.113] - 2026-06-12
 
 ### Added
@@ -1196,7 +1203,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.113...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.114...HEAD
+[0.16.114]: https://github.com/pearjelly/cliany.site/compare/v0.16.113...v0.16.114
 [0.16.113]: https://github.com/pearjelly/cliany.site/compare/v0.16.112...v0.16.113
 [0.16.112]: https://github.com/pearjelly/cliany.site/compare/v0.16.111...v0.16.112
 [0.16.111]: https://github.com/pearjelly/cliany.site/compare/v0.16.110...v0.16.111
