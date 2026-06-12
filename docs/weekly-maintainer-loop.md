@@ -39,6 +39,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 也会带上 `candidate_issue_gate_reason_code_count`、`candidate_issue_gate_reason_codes_sha256`、`candidate_issue_gate_required_action_count` 和 `candidate_issue_gate_required_actions_sha256`，让工具只读整包摘要就能判断 gate reason/action set 是否需要展开。
 
+`artifact_bundle_summary` 还会带上 `publication_ok`、`publication_visibility_status` 和 `release_draft_issue_count`，让工具只读整包摘要就能分辨发布阻塞和 release draft 阻塞分别来自哪里。
+
 `artifact-manifest.json` 中的 publication ref context、publication worktree status 和 publication publish script command 会复用 `publication-handoff.json` 的同源字段，方便工具先读取 manifest 再决定是否继续展开详细 handoff。
 
 `artifact-manifest.json` 也会保留 release draft path 和 release draft issues，与 `release-draft-handoff.json` 同源，方便工具先判断下一版草案是否已准备好。
