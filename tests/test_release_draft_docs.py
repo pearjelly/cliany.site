@@ -145,6 +145,7 @@ V016129_DRAFT = ROOT / "docs" / "releases" / "v0.16.129-draft.md"
 V016130_DRAFT = ROOT / "docs" / "releases" / "v0.16.130-draft.md"
 V016131_DRAFT = ROOT / "docs" / "releases" / "v0.16.131-draft.md"
 V016132_DRAFT = ROOT / "docs" / "releases" / "v0.16.132-draft.md"
+V016133_DRAFT = ROOT / "docs" / "releases" / "v0.16.133-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -6350,6 +6351,50 @@ def test_v016132_release_draft_tracks_publication_handoff_publish_script_hashes(
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.132 --issues-dir",
         "git tag v0.16.132",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016133_release_draft_has_required_sections():
+    text = V016133_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.133 发布草案",
+        "**目标版本：** `0.16.133`",
+        "**提交范围：** `v0.16.132..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016133_release_draft_tracks_publication_handoff_publish_command_count():
+    text = V016133_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "publication-handoff.json",
+        "Publication Handoff",
+        "publish_command_count",
+        "publication_publish_command_count",
+        "publication_handoff_key_count",
+        "publication_handoff_sha256",
+        "artifact_bundle_summary",
+        "scripts/plan_next_iteration.py",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.133 --issues-dir",
+        "git tag v0.16.133",
     ]
     for snippet in required:
         assert snippet in text

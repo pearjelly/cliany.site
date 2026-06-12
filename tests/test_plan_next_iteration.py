@@ -612,6 +612,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         },
         "worktree_clean": False,
         "worktree_status": [" M CHANGELOG.md"],
+        "publish_command_count": 1,
         "publish_commands": ["python scripts/check_release_publication.py --json"],
         "publish_script_path": "/tmp/cliany-publish-release.sh",
         "publish_script_path_sha256": _stable_json_sha256("/tmp/cliany-publish-release.sh"),
@@ -999,7 +1000,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"publication_next_actions_sha256: "
         f"`{_stable_json_sha256(plan.publication_next_actions)}`"
     ) in readme
-    assert "publication_handoff_key_count: `13`" in readme
+    assert "publication_handoff_key_count: `14`" in readme
     assert (
         f"publication_handoff_sha256: "
         f"`{artifact_bundle_summary['publication_handoff_sha256']}`"
@@ -1215,6 +1216,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "latest_tag: `v0.16.1`" in readme
     assert "local_head: `abc123`" in readme
     assert "worktree_clean: `false`" in readme
+    assert "publish_command_count: `1`" in readme
     assert "publish_script_path: `/tmp/cliany-publish-release.sh`" in readme
     assert (
         f"publish_script_path_sha256: "

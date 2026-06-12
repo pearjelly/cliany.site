@@ -191,6 +191,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "worktree_clean",
         "worktree status",
         "Publication Publish Script",
+        "publish_command_count",
         "publish_script_path",
         "publish_script_path_sha256",
         "publish_script_command_sha256",

@@ -1197,6 +1197,7 @@ Generated for target version `{plan.target_version}`.
 - latest_tag: `{_format_context_value(plan.publication_ref_context.get("latest_tag"))}`
 - local_head: `{_format_context_value(plan.publication_ref_context.get("local_head"))}`
 - worktree_clean: `{str(plan.publication_worktree_clean).lower()}`
+- publish_command_count: `{plan.publication_publish_command_count}`
 - publish_script_path: `{plan.publication_publish_script_path}`
 - publish_script_path_sha256: `{plan.publication_publish_script_path_sha256}`
 - publish_script_command_sha256: `{plan.publication_publish_script_command_sha256}`
@@ -1474,6 +1475,7 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "ref_context": plan.publication_ref_context,
         "worktree_clean": plan.publication_worktree_clean,
         "worktree_status": plan.publication_worktree_status,
+        "publish_command_count": plan.publication_publish_command_count,
         "publish_commands": plan.publication_publish_commands,
         "publish_script_path": plan.publication_publish_script_path,
         "publish_script_path_sha256": plan.publication_publish_script_path_sha256,
