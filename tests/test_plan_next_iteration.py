@@ -1099,6 +1099,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "- publication_remote: `origin`" in readme
     assert "- publication_local_head: `abc123`" in readme
     assert "- publication_tag_commit: `abc123`" in readme
+    assert "- publication_upstream_head: `def456`" in readme
+    assert "- publication_tag_points_at_head: `true`" in readme
+    assert "- publication_tag_commit_in_upstream: `false`" in readme
+    assert "- publication_branch_published: `false`" in readme
+    assert "- publication_tag_published: `false`" in readme
+    assert "- publication_remote_branch_head: `(none)`" in readme
+    assert "- publication_remote_tag_commit: `(none)`" in readme
     assert "- publication_worktree_clean: `false`" in readme
     assert "- publication_ahead_count: `2`" in readme
     assert "- publication_behind_count: `0`" in readme

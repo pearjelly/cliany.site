@@ -1264,6 +1264,20 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
             f"`{_format_context_value(plan.publication_ref_context.get('local_head'))}`",
             "- publication_tag_commit: "
             f"`{_format_context_value(plan.publication_ref_context.get('tag_commit'))}`",
+            "- publication_upstream_head: "
+            f"`{_format_context_value(plan.publication_ref_context.get('upstream_head'))}`",
+            "- publication_tag_points_at_head: "
+            f"`{_format_context_value(plan.publication_ref_context.get('tag_points_at_head'))}`",
+            "- publication_tag_commit_in_upstream: "
+            f"`{_format_context_value(plan.publication_ref_context.get('tag_commit_in_upstream'))}`",
+            "- publication_branch_published: "
+            f"`{_format_context_value(plan.publication_ref_context.get('branch_published'))}`",
+            "- publication_tag_published: "
+            f"`{_format_context_value(plan.publication_ref_context.get('tag_published'))}`",
+            "- publication_remote_branch_head: "
+            f"`{_format_context_value(plan.publication_ref_context.get('remote_branch_head'))}`",
+            "- publication_remote_tag_commit: "
+            f"`{_format_context_value(plan.publication_ref_context.get('remote_tag_commit'))}`",
             "- publication_worktree_clean: "
             f"`{_format_context_value(_candidate_issue_gate_evidence_value(plan, 'publication_worktree_clean'))}`",
             "- publication_ahead_count: "
