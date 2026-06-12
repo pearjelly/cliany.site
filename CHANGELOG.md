@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.15.9] - 2026-06-12
+
 ### Changed
 - `Real Demo Case Proposal` issue 模板现在包含 candidate 晋级证据字段，并指向 `Candidate Promotion Tasks` / `Issue Body Template`，让外部案例提案沿用后续 active 晋级结构。
 
@@ -452,7 +454,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.8...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.9...HEAD
+[0.15.9]: https://github.com/pearjelly/cliany.site/compare/v0.15.8...v0.15.9
 [0.15.8]: https://github.com/pearjelly/cliany.site/compare/v0.15.7...v0.15.8
 [0.15.7]: https://github.com/pearjelly/cliany.site/compare/v0.15.6...v0.15.7
 [0.15.6]: https://github.com/pearjelly/cliany.site/compare/v0.15.5...v0.15.6
