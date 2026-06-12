@@ -59,6 +59,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `publication_ok`、`publication_visibility_status`、`release_draft_ok` 和 `release_draft_issue_count`，让工具只读整包摘要就能分辨发布阻塞和 release draft 阻塞分别来自哪里。
 
+`artifact_bundle_summary` 还会带上 `publication_remote_checked` 和 `publication_ahead_count`，让工具只读整包摘要就能判断本轮发布审计是否做过远端复核，以及本地分支领先远端多少提交。
+
 `artifact_bundle_summary` 还会带上 `requires_maintainer_review`，让工具只读整包摘要就能判断候选 issue gate 是否仍需人工审阅。
 
 `artifact_bundle_summary` 还会带上 `candidate_issue_gate_summary_sha256`，让工具只读整包摘要就能判断 gate summary 是否漂移。

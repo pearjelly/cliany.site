@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.99] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `publication_remote_checked` 和 `publication_ahead_count`，方便工具只读候选 issue artifacts 整包摘要就判断 publication audit 是否做过远端复核及本地领先规模。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示 publication remote checked 与 ahead count。
+- 新增 `docs/releases/v0.16.99-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 publication remote 可见性。
+
 ## [0.16.98] - 2026-06-12
 
 ### Added
@@ -1091,7 +1098,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.98...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.99...HEAD
+[0.16.99]: https://github.com/pearjelly/cliany.site/compare/v0.16.98...v0.16.99
 [0.16.98]: https://github.com/pearjelly/cliany.site/compare/v0.16.97...v0.16.98
 [0.16.97]: https://github.com/pearjelly/cliany.site/compare/v0.16.96...v0.16.97
 [0.16.96]: https://github.com/pearjelly/cliany.site/compare/v0.16.95...v0.16.96
