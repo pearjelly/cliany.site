@@ -220,6 +220,7 @@ V016204_DRAFT = ROOT / "docs" / "releases" / "v0.16.204-draft.md"
 V016205_DRAFT = ROOT / "docs" / "releases" / "v0.16.205-draft.md"
 V016206_DRAFT = ROOT / "docs" / "releases" / "v0.16.206-draft.md"
 V016207_DRAFT = ROOT / "docs" / "releases" / "v0.16.207-draft.md"
+V016208_DRAFT = ROOT / "docs" / "releases" / "v0.16.208-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -9878,6 +9879,61 @@ def test_v016207_release_draft_tracks_publication_next_action_boundary():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.207 --issues-dir",
         "git tag v0.16.207",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016208_release_draft_has_required_sections():
+    text = V016208_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.208 发布草案",
+        "**目标版本：** `0.16.208`",
+        "**提交范围：** `v0.16.207..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016208_release_draft_tracks_release_draft_windows():
+    text = V016208_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "artifact_bundle_summary",
+        "Artifact Bundle Summary",
+        "release_draft_required_action_preview_count",
+        "release_draft_required_action_preview",
+        "release_draft_required_action_preview_sha256",
+        "release_draft_required_action_tail_count",
+        "release_draft_required_action_tail",
+        "release_draft_required_action_tail_sha256",
+        "release_draft_issue_preview_count",
+        "release_draft_issue_preview",
+        "release_draft_issue_preview_sha256",
+        "release_draft_issue_tail_count",
+        "release_draft_issue_tail",
+        "release_draft_issue_tail_sha256",
+        "release_draft_required_actions_sha256",
+        "release_draft_issues_sha256",
+        "release-draft-handoff.json",
+        "artifact-manifest.json",
+        "scripts/plan_next_iteration.py",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.208 --issues-dir",
+        "git tag v0.16.208",
     ]
     for snippet in required:
         assert snippet in text
