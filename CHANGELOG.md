@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.161] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `artifact_manifest_first_key`、`artifact_manifest_last_key` 和 `artifact_manifest_key_boundary_sha256`，让只读取整包摘要的维护工具能检查 `artifact-manifest.json` 顶层字段首尾边界。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 artifact manifest first/last key 和 boundary hash，并继续展示 manifest key count/hash。
+- 新增 `docs/releases/v0.16.161-draft.md`，把下一版 patch release 聚焦到 artifact manifest 顶层字段边界可见性。
+
 ## [0.16.160] - 2026-06-13
 
 ### Added
@@ -1525,7 +1532,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.160...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.161...HEAD
+[0.16.161]: https://github.com/pearjelly/cliany.site/compare/v0.16.160...v0.16.161
 [0.16.160]: https://github.com/pearjelly/cliany.site/compare/v0.16.159...v0.16.160
 [0.16.159]: https://github.com/pearjelly/cliany.site/compare/v0.16.158...v0.16.159
 [0.16.158]: https://github.com/pearjelly/cliany.site/compare/v0.16.157...v0.16.158
