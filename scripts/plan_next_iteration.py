@@ -1713,6 +1713,9 @@ def _issue_artifact_bundle_summary(
         "release_draft_path_sha256": _stable_json_sha256(plan.release_draft_path),
         "release_draft_required_action_count": len(release_draft_required_actions),
         "release_draft_required_actions_sha256": _stable_json_sha256(release_draft_required_actions),
+        "release_draft_primary_required_action": (
+            release_draft_required_actions[0] if release_draft_required_actions else None
+        ),
         "release_draft_issues_sha256": _stable_json_sha256(plan.release_draft_issues),
         "validation_command_count": len(_issue_artifact_validation_commands(plan)),
         "validation_commands_sha256": _stable_json_sha256(_issue_artifact_validation_commands(plan)),
@@ -1767,6 +1770,8 @@ def _issue_artifact_bundle_summary(
 
 
 def _summary_inline_code(value: Any) -> str:
+    if value is None:
+        return "`(none)`"
     text = str(value)
     if "`" in text:
         return f"`` {text} ``"
@@ -1839,6 +1844,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- release_draft_required_action_count: `{summary['release_draft_required_action_count']}`",
             "- release_draft_required_actions_sha256: "
             f"`{summary['release_draft_required_actions_sha256']}`",
+            "- release_draft_primary_required_action: "
+            f"{_summary_inline_code(summary['release_draft_primary_required_action'])}",
             f"- release_draft_issues_sha256: `{summary['release_draft_issues_sha256']}`",
             f"- validation_command_count: `{summary['validation_command_count']}`",
             f"- validation_commands_sha256: `{summary['validation_commands_sha256']}`",

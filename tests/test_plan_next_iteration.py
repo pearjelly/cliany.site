@@ -723,6 +723,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "release_draft_required_actions_sha256": _stable_json_sha256(
             expected_release_draft_handoff["release_draft_required_actions"]
         ),
+        "release_draft_primary_required_action": (
+            expected_release_draft_handoff["release_draft_required_actions"][0]
+        ),
         "release_draft_issues_sha256": _stable_json_sha256(plan.release_draft_issues),
         "validation_command_count": 5,
         "validation_commands_sha256": _stable_json_sha256(
@@ -1080,6 +1083,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"release_draft_required_actions_sha256: "
         f"`{artifact_bundle_summary['release_draft_required_actions_sha256']}`"
+    ) in readme
+    assert (
+        "release_draft_primary_required_action: "
+        "`Resolve release draft issue: release draft is missing`"
     ) in readme
     assert (
         f"release_draft_issues_sha256: "

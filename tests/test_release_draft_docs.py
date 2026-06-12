@@ -155,6 +155,7 @@ V016139_DRAFT = ROOT / "docs" / "releases" / "v0.16.139-draft.md"
 V016140_DRAFT = ROOT / "docs" / "releases" / "v0.16.140-draft.md"
 V016141_DRAFT = ROOT / "docs" / "releases" / "v0.16.141-draft.md"
 V016142_DRAFT = ROOT / "docs" / "releases" / "v0.16.142-draft.md"
+V016143_DRAFT = ROOT / "docs" / "releases" / "v0.16.143-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -6796,6 +6797,51 @@ def test_v016142_release_draft_tracks_artifact_bundle_required_action_summary():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.142 --issues-dir",
         "git tag v0.16.142",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016143_release_draft_has_required_sections():
+    text = V016143_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.143 发布草案",
+        "**目标版本：** `0.16.143`",
+        "**提交范围：** `v0.16.142..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016143_release_draft_tracks_artifact_bundle_primary_required_action():
+    text = V016143_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "artifact_bundle_summary",
+        "Artifact Bundle Summary",
+        "release_draft_primary_required_action",
+        "release_draft_required_action_count",
+        "release_draft_required_actions_sha256",
+        "release-draft-handoff.json",
+        "Release Draft Handoff",
+        "release_draft_required_actions",
+        "scripts/plan_next_iteration.py",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.143 --issues-dir",
+        "git tag v0.16.143",
     ]
     for snippet in required:
         assert snippet in text
