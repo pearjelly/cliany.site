@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.7] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --issues-dir` 现在会写出 `README.md`，说明 candidate issue artifacts 的文件用途、审阅清单、验证命令和 `create-issues.sh` 不会自动执行的边界。
 - 新增 `docs/releases/v0.16.7-draft.md`，把下一版 patch release 聚焦到候选案例 issue artifact README。
@@ -498,7 +500,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.6...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.7...HEAD
+[0.16.7]: https://github.com/pearjelly/cliany.site/compare/v0.16.6...v0.16.7
 [0.16.6]: https://github.com/pearjelly/cliany.site/compare/v0.16.5...v0.16.6
 [0.16.5]: https://github.com/pearjelly/cliany.site/compare/v0.16.4...v0.16.5
 [0.16.4]: https://github.com/pearjelly/cliany.site/compare/v0.16.3...v0.16.4
