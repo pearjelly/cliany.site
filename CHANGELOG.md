@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.15] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 `create-issues.sh` 现在会先运行 `python scripts/check_release_publication.py --strict --json`，在最新本地 release 尚未公开可见时阻止继续创建候选 issue。
 - 新增 `docs/releases/v0.16.15-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts 的 publication preflight。
@@ -546,7 +548,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.14...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.15...HEAD
+[0.16.15]: https://github.com/pearjelly/cliany.site/compare/v0.16.14...v0.16.15
 [0.16.14]: https://github.com/pearjelly/cliany.site/compare/v0.16.13...v0.16.14
 [0.16.13]: https://github.com/pearjelly/cliany.site/compare/v0.16.12...v0.16.13
 [0.16.12]: https://github.com/pearjelly/cliany.site/compare/v0.16.11...v0.16.12
