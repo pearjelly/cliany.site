@@ -937,9 +937,25 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     candidate_cases = [promotion.case_id for promotion in plan.candidate_promotions]
     script_path = directory / "create-issues.sh"
     create_issues_safety = _issue_artifact_create_issues_safety(script_path)
+    review_order = [
+        "README.md",
+        "publication-handoff.json",
+        "release-draft-handoff.json",
+        "issue-metadata.json",
+        *issue_body_names,
+        "create-issues.sh",
+    ]
+    artifact_bundle_summary = _issue_artifact_bundle_summary(
+        plan=plan,
+        candidate_cases=candidate_cases,
+        review_order=review_order,
+        issue_body_summary=issue_body_summary,
+        create_issues_safety=create_issues_safety,
+    )
     artifact_manifest = {
         "schema_version": 1,
         "target_version": plan.target_version,
+        "artifact_bundle_summary": artifact_bundle_summary,
         "candidate_count": len(candidate_cases),
         "candidate_cases": candidate_cases,
         "blockers": plan.blockers,
@@ -968,14 +984,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
             "create_issues_script": "create-issues.sh",
             "issue_bodies": issue_body_names,
         },
-        "review_order": [
-            "README.md",
-            "publication-handoff.json",
-            "release-draft-handoff.json",
-            "issue-metadata.json",
-            *issue_body_names,
-            "create-issues.sh",
-        ],
+        "review_order": review_order,
         "review_checklist": _issue_artifact_review_checklist(),
         "validation_commands": _issue_artifact_validation_commands(plan),
     }
@@ -1053,6 +1062,7 @@ def _render_issue_artifacts_readme(plan: IterationPlan) -> str:
     candidate_summary = _issue_artifact_candidate_summary(plan.candidate_promotions)
     body_inventory = _issue_artifact_body_inventory_markdown(plan.candidate_promotions)
     body_summary = _issue_artifact_body_summary_markdown(plan.candidate_promotions)
+    bundle_summary = _issue_artifact_bundle_summary_markdown(plan)
     gate_reason_codes = _issue_artifact_gate_reason_codes(plan)
     gate_reason_descriptions = _issue_artifact_gate_reason_descriptions(plan)
     gate_latest_tag = _format_context_value(_candidate_issue_gate_evidence_value(plan, "publication_latest_tag"))
@@ -1089,6 +1099,8 @@ Generated for target version `{plan.target_version}`.
 {body_inventory}
 
 {body_summary}
+
+{bundle_summary}
 
 ## Publication Handoff
 
@@ -1312,6 +1324,62 @@ def _issue_artifact_body_summary_markdown(promotions: list[CandidatePromotion]) 
             f"- body_count: `{summary['body_count']}`",
             f"- total_byte_count: `{summary['total_byte_count']}`",
             f"- inventory_sha256: `{summary['inventory_sha256']}`",
+        ]
+    )
+
+
+def _issue_artifact_bundle_summary(
+    *,
+    plan: IterationPlan,
+    candidate_cases: list[str],
+    review_order: list[str],
+    issue_body_summary: dict[str, Any],
+    create_issues_safety: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "target_version": plan.target_version,
+        "candidate_count": len(candidate_cases),
+        "body_count": issue_body_summary["body_count"],
+        "review_item_count": len(review_order),
+        "inventory_sha256": issue_body_summary["inventory_sha256"],
+        "candidate_issue_gate_status": plan.candidate_issue_gate.get("status"),
+        "can_create_issues": bool(plan.candidate_issue_gate.get("can_create_issues", False)),
+        "dry_run_supported": bool(create_issues_safety["dry_run_supported"]),
+        "preflight_required": bool(create_issues_safety["preflight_required"]),
+    }
+
+
+def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
+    candidate_cases = [promotion.case_id for promotion in plan.candidate_promotions]
+    issue_body_names = [f"{promotion.case_id}.md" for promotion in plan.candidate_promotions]
+    review_order = [
+        "README.md",
+        "publication-handoff.json",
+        "release-draft-handoff.json",
+        "issue-metadata.json",
+        *issue_body_names,
+        "create-issues.sh",
+    ]
+    summary = _issue_artifact_bundle_summary(
+        plan=plan,
+        candidate_cases=candidate_cases,
+        review_order=review_order,
+        issue_body_summary=_issue_body_summary(_issue_body_inventory(plan.candidate_promotions)),
+        create_issues_safety=_issue_artifact_create_issues_safety(Path("create-issues.sh")),
+    )
+    return "\n".join(
+        [
+            "## Artifact Bundle Summary",
+            "",
+            f"- target_version: `{summary['target_version']}`",
+            f"- candidate_count: `{summary['candidate_count']}`",
+            f"- body_count: `{summary['body_count']}`",
+            f"- review_item_count: `{summary['review_item_count']}`",
+            f"- inventory_sha256: `{summary['inventory_sha256']}`",
+            f"- candidate_issue_gate_status: `{summary['candidate_issue_gate_status']}`",
+            f"- can_create_issues: `{str(summary['can_create_issues']).lower()}`",
+            f"- dry_run_supported: `{str(summary['dry_run_supported']).lower()}`",
+            f"- preflight_required: `{str(summary['preflight_required']).lower()}`",
         ]
     )
 

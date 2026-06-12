@@ -472,6 +472,26 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "total_byte_count": sum(item["byte_count"] for item in issue_body_inventory),
         "inventory_sha256": hashlib.sha256(summary_bytes).hexdigest(),
     }
+    review_order = [
+        "README.md",
+        "publication-handoff.json",
+        "release-draft-handoff.json",
+        "issue-metadata.json",
+        "pypi-project-search.md",
+        "npm-package-search.md",
+        "create-issues.sh",
+    ]
+    artifact_bundle_summary = {
+        "target_version": "0.16.2",
+        "candidate_count": 2,
+        "body_count": 2,
+        "review_item_count": len(review_order),
+        "inventory_sha256": issue_body_summary["inventory_sha256"],
+        "candidate_issue_gate_status": "blocked_by_publication",
+        "can_create_issues": False,
+        "dry_run_supported": True,
+        "preflight_required": True,
+    }
 
     assert "## Scope: promote candidate case `pypi-project-search`" in body
     assert "## Reproduction Context" in body
@@ -500,6 +520,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert artifact_manifest == {
         "schema_version": 1,
         "target_version": "0.16.2",
+        "artifact_bundle_summary": artifact_bundle_summary,
         "candidate_count": 2,
         "candidate_cases": ["pypi-project-search", "npm-package-search"],
         "blockers": ["release draft validation failed", "latest local release is not published"],
@@ -564,15 +585,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "create_issues_script": "create-issues.sh",
             "issue_bodies": ["pypi-project-search.md", "npm-package-search.md"],
         },
-        "review_order": [
-            "README.md",
-            "publication-handoff.json",
-            "release-draft-handoff.json",
-            "issue-metadata.json",
-            "pypi-project-search.md",
-            "npm-package-search.md",
-            "create-issues.sh",
-        ],
+        "review_order": review_order,
         "review_checklist": [
             "Confirm the latest local release has been published before creating new candidate work.",
             "Confirm release draft issues are resolved or intentionally deferred before tagging the target version.",
@@ -684,6 +697,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert f"body_count: `{issue_body_summary['body_count']}`" in readme
     assert f"total_byte_count: `{issue_body_summary['total_byte_count']}`" in readme
     assert f"inventory_sha256: `{issue_body_summary['inventory_sha256']}`" in readme
+    assert "## Artifact Bundle Summary" in readme
+    assert "target_version: `0.16.2`" in readme
+    assert "candidate_count: `2`" in readme
+    assert "review_item_count: `7`" in readme
+    assert "candidate_issue_gate_status: `blocked_by_publication`" in readme
+    assert "can_create_issues: `false`" in readme
+    assert "dry_run_supported: `true`" in readme
+    assert "preflight_required: `true`" in readme
     assert "## Publication Handoff" in readme
     assert "publication_ok: `false`" in readme
     assert "candidate_issue_gate: `blocked_by_publication`" in readme
