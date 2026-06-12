@@ -372,6 +372,12 @@ def _write_publish_script(report: PublicationReport, path: Path) -> None:
         "    exit 1",
         "  fi",
         "fi",
+        'CURRENT_WORKTREE_STATUS="$(git status --porcelain)"',
+        'if [[ -n "$CURRENT_WORKTREE_STATUS" ]]; then',
+        '  echo "Publish script is stale: worktree has uncommitted changes." >&2',
+        '  echo "$CURRENT_WORKTREE_STATUS" >&2',
+        "  exit 1",
+        "fi",
         "",
     ]
     if commands:

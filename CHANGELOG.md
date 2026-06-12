@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/check_release_publication.py --publish-script` 生成的发布脚本现在会在 push 前运行 `git status --porcelain`，当 worktree 有未提交改动时拒绝执行。
+- 新增 `docs/releases/v0.16.32-draft.md`，把下一版 patch release 聚焦到 publish script 的 dirty worktree 保护。
+
 ## [0.16.31] - 2026-06-12
 
 ### Added

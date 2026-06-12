@@ -29,6 +29,8 @@ def test_release_cadence_doc_explains_readiness_triage():
         "EXPECTED_LOCAL_HEAD",
         "EXPECTED_LATEST_TAG",
         "EXPECTED_TAG_COMMIT",
+        "git status --porcelain",
+        "worktree",
         "stale preflight",
         "Publish script is stale",
         "missing_commit_days",

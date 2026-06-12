@@ -175,6 +175,8 @@ def test_release_publication_writes_reviewable_publish_script(tmp_path):
     assert "EXPECTED_LATEST_TAG=v0.1.1" in text
     assert f"EXPECTED_TAG_COMMIT={report.tag_commit}" in text
     assert 'CURRENT_LOCAL_HEAD="$(git rev-parse HEAD)"' in text
+    assert 'CURRENT_WORKTREE_STATUS="$(git status --porcelain)"' in text
+    assert "worktree has uncommitted changes" in text
     assert "Publish script is stale" in text
     assert "git push origin master" in text
     assert "git push origin v0.1.1" in text
@@ -206,6 +208,38 @@ def test_release_publication_publish_script_rejects_stale_head_before_push(tmp_p
 
     assert result.returncode == 1
     assert "Publish script is stale: HEAD is" in result.stderr
+    current_remote_head = subprocess.check_output(
+        ["git", "--git-dir", str(origin), "rev-parse", "master"],
+        text=True,
+    ).strip()
+    assert current_remote_head == original_remote_head
+
+
+def test_release_publication_publish_script_rejects_dirty_worktree_before_push(tmp_path):
+    repo = _init_repo_with_origin(tmp_path)
+    origin = tmp_path / "origin.git"
+    original_remote_head = subprocess.check_output(
+        ["git", "--git-dir", str(origin), "rev-parse", "master"],
+        text=True,
+    ).strip()
+    _commit(repo, "CHANGELOG.md", "released\n", "release")
+    _git(repo, "tag", "v0.1.1")
+    report = release_publication.build_report(repo)
+    script_path = tmp_path / "reports" / "publish-release.sh"
+    release_publication._write_publish_script(report, script_path)
+
+    (repo / "scratch.txt").write_text("uncommitted\n", encoding="utf-8")
+    result = subprocess.run(
+        [str(script_path)],
+        cwd=tmp_path,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "Publish script is stale: worktree has uncommitted changes." in result.stderr
+    assert "scratch.txt" in result.stderr
     current_remote_head = subprocess.check_output(
         ["git", "--git-dir", str(origin), "rev-parse", "master"],
         text=True,
