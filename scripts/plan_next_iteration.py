@@ -1233,7 +1233,9 @@ Generated for target version `{plan.target_version}`.
 - release_draft_path_sha256: `{_stable_json_sha256(plan.release_draft_path)}`
 - release_draft_issue_count: `{len(plan.release_draft_issues)}`
 - release_draft_primary_issue: `{_format_context_value(_release_draft_primary_issue(plan))}`
+- primary_issue: `{_format_context_value(_release_draft_primary_issue(plan))}`
 - release_draft_primary_required_action: `{_format_context_value(_release_draft_primary_required_action(plan))}`
+- primary_required_action: `{_format_context_value(_release_draft_primary_required_action(plan))}`
 - release_draft_required_action_count: `{len(release_draft_required_actions)}`
 - release_draft_required_actions_sha256: `{_stable_json_sha256(release_draft_required_actions)}`
 - release_draft_required_actions:
@@ -1538,7 +1540,9 @@ def _release_draft_handoff(plan: IterationPlan) -> dict[str, Any]:
         "release_draft_path": plan.release_draft_path,
         "release_draft_path_sha256": _stable_json_sha256(plan.release_draft_path),
         "release_draft_primary_issue": _release_draft_primary_issue(plan),
+        "primary_issue": _release_draft_primary_issue(plan),
         "release_draft_primary_required_action": _release_draft_primary_required_action(plan),
+        "primary_required_action": _release_draft_primary_required_action(plan),
         "release_draft_required_action_count": len(required_actions),
         "release_draft_required_actions_sha256": _stable_json_sha256(required_actions),
         "release_draft_required_actions": required_actions,

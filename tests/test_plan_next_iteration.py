@@ -577,7 +577,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "release_draft_path": "docs/releases/v0.16.2-draft.md",
         "release_draft_path_sha256": _stable_json_sha256("docs/releases/v0.16.2-draft.md"),
         "release_draft_primary_issue": "release draft is missing",
+        "primary_issue": "release draft is missing",
         "release_draft_primary_required_action": "Resolve release draft issue: release draft is missing",
+        "primary_required_action": "Resolve release draft issue: release draft is missing",
         "release_draft_required_action_count": 2,
         "release_draft_required_actions_sha256": _stable_json_sha256(
             [
@@ -1079,7 +1081,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"publication_worktree_status_sha256: "
         f"`{_stable_json_sha256(plan.publication_worktree_status)}`"
     ) in readme
-    assert "release_draft_handoff_key_count: `13`" in readme
+    assert "release_draft_handoff_key_count: `15`" in readme
     assert (
         f"release_draft_handoff_sha256: "
         f"`{artifact_bundle_summary['release_draft_handoff_sha256']}`"
@@ -1090,6 +1092,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"`{artifact_bundle_summary['release_draft_path_sha256']}`"
     ) in readme
     assert "release_draft_primary_issue: `release draft is missing`" in readme
+    assert "primary_issue: `release draft is missing`" in readme
     assert (
         f"release_draft_required_action_count: "
         f"`{artifact_bundle_summary['release_draft_required_action_count']}`"
@@ -1100,6 +1103,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert (
         "release_draft_primary_required_action: "
+        "`Resolve release draft issue: release draft is missing`"
+    ) in readme
+    assert (
+        "primary_required_action: "
         "`Resolve release draft issue: release draft is missing`"
     ) in readme
     assert (
@@ -1314,8 +1321,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "release_draft_issue_count: `2`" in readme
     assert "release_draft_primary_issue: `release draft is missing`" in readme
+    assert "primary_issue: `release draft is missing`" in readme
     assert (
         "release_draft_primary_required_action: "
+        "`Resolve release draft issue: release draft is missing`"
+    ) in readme
+    assert (
+        "primary_required_action: "
         "`Resolve release draft issue: release draft is missing`"
     ) in readme
     assert "release_draft_required_action_count: `2`" in readme
