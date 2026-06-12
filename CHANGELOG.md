@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.32] - 2026-06-12
+
 ### Added
 - `scripts/check_release_publication.py --publish-script` 生成的发布脚本现在会在 push 前运行 `git status --porcelain`，当 worktree 有未提交改动时拒绝执行。
 - 新增 `docs/releases/v0.16.32-draft.md`，把下一版 patch release 聚焦到 publish script 的 dirty worktree 保护。
@@ -649,7 +651,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.31...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.32...HEAD
+[0.16.32]: https://github.com/pearjelly/cliany.site/compare/v0.16.31...v0.16.32
 [0.16.31]: https://github.com/pearjelly/cliany.site/compare/v0.16.30...v0.16.31
 [0.16.30]: https://github.com/pearjelly/cliany.site/compare/v0.16.29...v0.16.30
 [0.16.29]: https://github.com/pearjelly/cliany.site/compare/v0.16.28...v0.16.29
