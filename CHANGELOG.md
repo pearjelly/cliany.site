@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.109] - 2026-06-12
+
+### Added
+- Candidate issue artifacts `README.md` 现在会在 `Artifact Bundle Summary` 前展示 `Candidate Issue Gate Quick Summary`，让维护者先看到 gate status、首要 reason/action、latest tag 和 visibility。
+- README quick summary 会复用已有 primary reason code、reason description 和 required action，让人工审阅不必先展开完整 artifact bundle summary。
+- 新增 `docs/releases/v0.16.109-draft.md`，把下一版 patch release 聚焦到 candidate issue gate quick summary 可读性。
+
 ## [0.16.108] - 2026-06-12
 
 ### Added
@@ -1161,7 +1168,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.108...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.109...HEAD
+[0.16.109]: https://github.com/pearjelly/cliany.site/compare/v0.16.108...v0.16.109
 [0.16.108]: https://github.com/pearjelly/cliany.site/compare/v0.16.107...v0.16.108
 [0.16.107]: https://github.com/pearjelly/cliany.site/compare/v0.16.106...v0.16.107
 [0.16.106]: https://github.com/pearjelly/cliany.site/compare/v0.16.105...v0.16.106
