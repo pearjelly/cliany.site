@@ -205,6 +205,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "Release Draft Handoff",
         "release_draft_ok",
         "release_draft_issue_count",
+        "release_draft_primary_issue",
         "release_draft_path_sha256",
         "release_draft_issues_sha256",
         "target version",
