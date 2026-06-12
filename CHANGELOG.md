@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.37] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 artifacts `README.md` 现在会在 `Publication Handoff` 中展示 `visibility_summary`，维护者不用打开 `publication-handoff.json` 也能看到发布可见性原因。
 - 新增 `docs/releases/v0.16.37-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts README 的 publication visibility summary。
@@ -679,7 +681,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.36...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.37...HEAD
+[0.16.37]: https://github.com/pearjelly/cliany.site/compare/v0.16.36...v0.16.37
 [0.16.36]: https://github.com/pearjelly/cliany.site/compare/v0.16.35...v0.16.36
 [0.16.35]: https://github.com/pearjelly/cliany.site/compare/v0.16.34...v0.16.35
 [0.16.34]: https://github.com/pearjelly/cliany.site/compare/v0.16.33...v0.16.34
