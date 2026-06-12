@@ -554,6 +554,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "total_byte_count": sum(item["byte_count"] for item in issue_body_inventory),
         "inventory_sha256": hashlib.sha256(summary_bytes).hexdigest(),
     }
+    issue_body_inventory_preview = issue_body_inventory[:8]
     stable_issue_metadata = [
         {
             "case_id": item["case_id"],
@@ -813,6 +814,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "candidate_cases_sha256": _stable_json_sha256(["pypi-project-search", "npm-package-search"]),
         "body_count": 2,
+        "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
+        "issue_body_inventory_preview": list(issue_body_inventory_preview),
+        "issue_body_inventory_preview_sha256": _stable_json_sha256(
+            issue_body_inventory_preview
+        ),
         "issue_body_summary_sha256": _stable_json_sha256(issue_body_summary),
         "review_item_count": len(review_order),
         "review_order_sha256": review_order_sha256,
@@ -1152,6 +1158,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert artifact_manifest["artifact_bundle_summary"]["candidate_cases_last_case"] == artifact_manifest[
         "candidate_cases"
     ][-1]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "issue_body_inventory_preview"
+    ] == artifact_manifest["issue_body_inventory"][
+        : artifact_manifest["artifact_bundle_summary"][
+            "issue_body_inventory_preview_count"
+        ]
+    ]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1333,6 +1346,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "candidate_cases_sha256: `" in readme
     assert f"candidate_cases_sha256: `{artifact_bundle_summary['candidate_cases_sha256']}`" in readme
+    assert (
+        "issue_body_inventory_preview_count: "
+        f"`{artifact_bundle_summary['issue_body_inventory_preview_count']}`"
+    ) in readme
+    assert "issue_body_inventory_preview: " in readme
+    assert (
+        "issue_body_inventory_preview_sha256: "
+        f"`{artifact_bundle_summary['issue_body_inventory_preview_sha256']}`"
+    ) in readme
     assert f"issue_body_summary_sha256: `{artifact_bundle_summary['issue_body_summary_sha256']}`" in readme
     assert "review_item_count: `7`" in readme
     assert f"review_order_sha256: `{review_order_sha256}`" in readme

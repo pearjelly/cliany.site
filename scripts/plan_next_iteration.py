@@ -98,6 +98,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "candidate_cases_tail_sha256",
     "candidate_cases_sha256",
     "body_count",
+    "issue_body_inventory_preview_count",
+    "issue_body_inventory_preview",
+    "issue_body_inventory_preview_sha256",
     "issue_body_summary_sha256",
     "review_item_count",
     "review_order_sha256",
@@ -1929,6 +1932,7 @@ def _issue_artifact_bundle_summary(
         create_issues_safety=create_issues_safety,
         artifact_files=artifact_files,
     )
+    issue_body_inventory_preview = issue_body_inventory[:8]
     return {
         "artifact_bundle_summary_key_count": len(ARTIFACT_BUNDLE_SUMMARY_KEYS),
         "artifact_bundle_summary_keys_sha256": _stable_json_sha256(ARTIFACT_BUNDLE_SUMMARY_KEYS),
@@ -2012,6 +2016,11 @@ def _issue_artifact_bundle_summary(
         "candidate_cases_tail_sha256": _stable_json_sha256(candidate_cases[-8:]),
         "candidate_cases_sha256": _stable_json_sha256(candidate_cases),
         "body_count": issue_body_summary["body_count"],
+        "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
+        "issue_body_inventory_preview": list(issue_body_inventory_preview),
+        "issue_body_inventory_preview_sha256": _stable_json_sha256(
+            issue_body_inventory_preview
+        ),
         "issue_body_summary_sha256": _stable_json_sha256(issue_body_summary),
         "review_item_count": len(review_order),
         "review_order_sha256": hashlib.sha256(review_order_digest_source).hexdigest(),
@@ -2234,6 +2243,11 @@ def _issue_artifact_bundle_summary_markdown(
             f"- candidate_cases_tail_sha256: `{summary['candidate_cases_tail_sha256']}`",
             f"- candidate_cases_sha256: `{summary['candidate_cases_sha256']}`",
             f"- body_count: `{summary['body_count']}`",
+            f"- issue_body_inventory_preview_count: `{summary['issue_body_inventory_preview_count']}`",
+            "- issue_body_inventory_preview: "
+            f"`{json.dumps(summary['issue_body_inventory_preview'], ensure_ascii=False)}`",
+            "- issue_body_inventory_preview_sha256: "
+            f"`{summary['issue_body_inventory_preview_sha256']}`",
             f"- issue_body_summary_sha256: `{summary['issue_body_summary_sha256']}`",
             f"- review_item_count: `{summary['review_item_count']}`",
             f"- review_order_sha256: `{summary['review_order_sha256']}`",
