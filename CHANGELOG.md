@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.149] - 2026-06-13
+
+### Added
+- `release-draft-handoff.json` 现在输出 `primary_issue` 和 `primary_required_action`，让工具能用和 publication handoff 一致的 primary 字段模型读取首要草案问题。
+- Candidate issue artifacts `README.md` 的 `Release Draft Handoff` 段落现在展示 `primary_issue` 和 `primary_required_action`，并在无 release draft issue 时使用 `(none)`。
+- 新增 `docs/releases/v0.16.149-draft.md`，把下一版 patch release 聚焦到 release draft handoff 的 primary 字段别名可见性。
+
 ## [0.16.148] - 2026-06-13
 
 ### Added
@@ -1441,7 +1448,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.148...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.149...HEAD
+[0.16.149]: https://github.com/pearjelly/cliany.site/compare/v0.16.148...v0.16.149
 [0.16.148]: https://github.com/pearjelly/cliany.site/compare/v0.16.147...v0.16.148
 [0.16.147]: https://github.com/pearjelly/cliany.site/compare/v0.16.146...v0.16.147
 [0.16.146]: https://github.com/pearjelly/cliany.site/compare/v0.16.145...v0.16.146
