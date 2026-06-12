@@ -19,6 +19,9 @@
 | `docs` | 改进 10 分钟成功路径中的某一步说明，减少新用户第一次运行时的分叉 | `docs/quickstart-10min.md`, `README.md`, `README.zh.md` | `git diff --check` |
 | `cases` | 为一个公开只读工作流补候选案例、离线 JSON envelope 样例和 `promotion` 清单 | `cases/manifest.json`, `cases/examples/` | `python scripts/validate_cases.py --strict` |
 | `cases` | 把一个已有 candidate 的晋级阻塞拆成 adapter package、metadata validation、online smoke 三个可执行子任务 | `cases/README.md`, `cases/manifest.json` | `python scripts/validate_cases.py --report /tmp/cliany-case-report.md` |
+| `cases` | 为 candidate 的 `adapter_package` 子任务整理包名、发布草案和 release asset 检查清单 | `cases/README.md`, `docs/releases/` | `python scripts/validate_cases.py --json` |
+| `cases` | 为 candidate 的 `metadata_validation` 子任务补充离线验收说明或失败样例 | `cases/README.md`, `scripts/validate_cases.py`, `tests/test_validate_cases.py` | `pytest tests/test_validate_cases.py -q --no-cov` |
+| `cases` | 为 candidate 的 `online_smoke` 子任务整理只读命令、质量字段和 PR 证据模板 | `cases/README.md`, `docs/good-first-issues.md` | `git diff --check` |
 | `doctor` | 为一个已有 doctor check 补充更具体的 action 文案，并覆盖 human/JSON 输出 | `src/cliany_site/commands/doctor.py`, `tests/test_doctor_v3.py` | `pytest tests/test_doctor_v3.py -q --no-cov` |
 | `release` | 改进 release readiness 或 cadence 的 `next_actions` 文案，让阻塞项更可执行 | `scripts/release_readiness.py`, `scripts/check_release_cadence.py` | `python scripts/release_readiness.py --json` 和 `pytest tests/test_release_readiness.py tests/test_release_cadence.py -q --no-cov` |
 | `extract` | 为抽取质量补一个空结果、全空字段或部分缺字段的离线 fixture 回归 | `tests/fixtures/`, `tests/test_extract_quality.py` | `pytest tests/test_extract_quality.py tests/test_search_extraction_gap_fixture.py -q --no-cov` |

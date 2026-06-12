@@ -112,8 +112,12 @@ def test_good_first_issues_doc_is_offline_and_verifiable():
         "# Good First Issues",
         "CLIANY_QA_OFFLINE=1",
         "python scripts/validate_cases.py --strict",
+        "python scripts/validate_cases.py --json",
         "python scripts/release_readiness.py",
         "promotion",
+        "adapter_package",
+        "metadata_validation",
+        "online_smoke",
         "~/.cliany-site/",
         "不需要真实 LLM key",
     ]

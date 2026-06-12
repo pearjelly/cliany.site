@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Changed
+- 候选案例文档和 Good First Issues 现在把 `adapter_package`、`metadata_validation`、`online_smoke` 拆成独立可验收子任务，帮助贡献者推进 candidate 案例晋级 active。
+
 ## [0.15.5] - 2026-06-12
 
 ### Changed

@@ -56,3 +56,16 @@ def test_good_first_issue_candidates_keep_local_validation_commands():
                 "CLIANY_QA_OFFLINE=1",
             )
         ), f"missing runnable validation command in row: {task}"
+
+
+def test_good_first_issues_split_candidate_promotion_tasks():
+    text = DOC.read_text(encoding="utf-8")
+    rows = _candidate_task_rows(text)
+    tasks = "\n".join(row[1] for row in rows)
+    validations = "\n".join(row[3] for row in rows)
+
+    for snippet in ("adapter_package", "metadata_validation", "online_smoke"):
+        assert snippet in tasks
+    assert "python scripts/validate_cases.py --json" in validations
+    assert "pytest tests/test_validate_cases.py -q --no-cov" in validations
+    assert "git diff --check" in validations

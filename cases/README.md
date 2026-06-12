@@ -37,6 +37,18 @@
 - `metadata_validation`：包资产准备好后要运行的离线 metadata 校验。
 - `online_smoke`：晋级前需要手动确认的公开只读 smoke 命令或结果。
 
+### Candidate 晋级任务拆分
+
+维护者把 candidate 转成 GitHub issue 时，不要把“晋级 active”打包成一个大任务。优先拆成三条可以独立验收的小 issue：
+
+| 子任务 | 适合贡献者 | 完成证据 |
+|--------|------------|----------|
+| `adapter_package` | 熟悉 `explore` / `market publish` 的维护者 | 生成 `<domain>-<version>.cliany-adapter.tar.gz`，并把包资产放到 release candidate 或本地 `~/.cliany-site/packages` |
+| `metadata_validation` | 首次贡献者或文档/测试贡献者 | 运行 `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict`，确认目标 active 包通过 schema v3、manifest hash 和 domain 校验 |
+| `online_smoke` | 能手动访问第三方公开站点的维护者 | 运行 candidate 声明的只读命令，保存 JSON envelope 摘要，并确认 `data.quality.ok=true` 和 `row_count>0` |
+
+每个 issue 都应引用对应 case id、`promotion` 字段和推荐验证命令；如果任一子任务还没完成，案例继续保持 `candidate`，不要提前改成 `active`。
+
 ## 维护规则
 
 - 新增真实 demo 时，先更新 `manifest.json`，再补充 README/官网展示。
