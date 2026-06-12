@@ -332,6 +332,10 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     assert data["publication_publish_script_path_sha256"] == _stable_json_sha256(
         "/tmp/cliany-publish-release.sh"
     )
+    assert data["publication_publish_script_command_sha256"] == _stable_json_sha256(
+        "python scripts/check_release_publication.py --json "
+        "--publish-script /tmp/cliany-publish-release.sh"
+    )
     assert data["publication_next_actions"] == [
         "Commit, stash, or discard local worktree changes before publishing release refs.",
         "Push `master` to `origin`; local branch is ahead by `2` commits.",
@@ -444,10 +448,18 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "Push tag `v0.16.1` after the branch is published." in text
     assert "python scripts/check_release_publication.py --json" in text
     assert "## Publication Publish Script" in text
+    publish_script_command = (
+        "python scripts/check_release_publication.py --json "
+        "--publish-script /tmp/cliany-publish-release.sh"
+    )
     assert "| publication_publish_script_path | `/tmp/cliany-publish-release.sh` |" in text
     assert (
         "| publication_publish_script_path_sha256 | "
         f"`{_stable_json_sha256('/tmp/cliany-publish-release.sh')}` |"
+    ) in text
+    assert (
+        "| publication_publish_script_command_sha256 | "
+        f"`{_stable_json_sha256(publish_script_command)}` |"
     ) in text
     assert "- path: `/tmp/cliany-publish-release.sh`" in text
     assert "python scripts/check_release_publication.py --json --publish-script /tmp/cliany-publish-release.sh" in text
@@ -846,6 +858,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "python scripts/check_release_publication.py --json "
             "--publish-script /tmp/cliany-publish-release.sh"
         ),
+        "publication_publish_script_command_sha256": _stable_json_sha256(
+            "python scripts/check_release_publication.py --json "
+            "--publish-script /tmp/cliany-publish-release.sh"
+        ),
         "release_draft_path": "docs/releases/v0.16.2-draft.md",
         "release_draft_issues": [
             "release draft is missing",
@@ -1121,6 +1137,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "- publication_publish_script_command: "
         "`python scripts/check_release_publication.py --json --publish-script /tmp/cliany-publish-release.sh`"
+    ) in readme
+    publish_script_command = (
+        "python scripts/check_release_publication.py --json "
+        "--publish-script /tmp/cliany-publish-release.sh"
+    )
+    assert (
+        f"- publication_publish_script_command_sha256: "
+        f"`{_stable_json_sha256(publish_script_command)}`"
     ) in readme
     assert "- reason_code_count: `3`" in readme
     assert "- required_action_count: `5`" in readme
