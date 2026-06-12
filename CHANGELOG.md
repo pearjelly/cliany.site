@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.77] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `issue_metadata_count` 和 `issue_metadata_sha256`，方便工具只读整包摘要就检测候选 issue metadata 是否漂移。
+- `artifact-manifest.json` 新增 `issue_metadata_summary`，记录稳定 issue metadata 字段的数量和 SHA-256。
+- 新增 `docs/releases/v0.16.77-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 issue metadata 漂移检测。
+
 ## [0.16.76] - 2026-06-12
 
 ### Added
@@ -939,7 +946,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.76...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.77...HEAD
+[0.16.77]: https://github.com/pearjelly/cliany.site/compare/v0.16.76...v0.16.77
 [0.16.76]: https://github.com/pearjelly/cliany.site/compare/v0.16.75...v0.16.76
 [0.16.75]: https://github.com/pearjelly/cliany.site/compare/v0.16.74...v0.16.75
 [0.16.74]: https://github.com/pearjelly/cliany.site/compare/v0.16.73...v0.16.74
