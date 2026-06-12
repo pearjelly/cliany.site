@@ -633,6 +633,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ],
         "target_version": "0.16.2",
     }
+    release_draft_handoff_keys = list(expected_release_draft_handoff)
+    release_draft_handoff_key_preview = release_draft_handoff_keys[:8]
+    release_draft_handoff_key_tail = release_draft_handoff_keys[-8:]
     expected_publication_handoff = {
         "schema_version": 1,
         "publication_ok": False,
@@ -1135,6 +1138,22 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 "first_key": "schema_version",
                 "last_key": "target_version",
             }
+        ),
+        "release_draft_handoff_key_preview_count": len(
+            release_draft_handoff_key_preview
+        ),
+        "release_draft_handoff_key_preview": list(
+            release_draft_handoff_key_preview
+        ),
+        "release_draft_handoff_key_preview_sha256": _stable_json_sha256(
+            release_draft_handoff_key_preview
+        ),
+        "release_draft_handoff_key_tail_count": len(
+            release_draft_handoff_key_tail
+        ),
+        "release_draft_handoff_key_tail": list(release_draft_handoff_key_tail),
+        "release_draft_handoff_key_tail_sha256": _stable_json_sha256(
+            release_draft_handoff_key_tail
         ),
         "release_draft_handoff_sha256": _stable_json_sha256(expected_release_draft_handoff),
         "release_draft_path": plan.release_draft_path,
@@ -2247,6 +2266,30 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "release_draft_handoff_key_boundary_sha256: "
         f"`{artifact_bundle_summary['release_draft_handoff_key_boundary_sha256']}`"
+    ) in readme
+    assert (
+        "release_draft_handoff_key_preview_count: "
+        f"`{artifact_bundle_summary['release_draft_handoff_key_preview_count']}`"
+    ) in readme
+    assert (
+        "release_draft_handoff_key_preview: "
+        f"`{json.dumps(artifact_bundle_summary['release_draft_handoff_key_preview'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "release_draft_handoff_key_preview_sha256: "
+        f"`{artifact_bundle_summary['release_draft_handoff_key_preview_sha256']}`"
+    ) in readme
+    assert (
+        "release_draft_handoff_key_tail_count: "
+        f"`{artifact_bundle_summary['release_draft_handoff_key_tail_count']}`"
+    ) in readme
+    assert (
+        "release_draft_handoff_key_tail: "
+        f"`{json.dumps(artifact_bundle_summary['release_draft_handoff_key_tail'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "release_draft_handoff_key_tail_sha256: "
+        f"`{artifact_bundle_summary['release_draft_handoff_key_tail_sha256']}`"
     ) in readme
     assert (
         f"release_draft_handoff_sha256: "

@@ -149,6 +149,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 还会带上 `candidate_issue_gate_summary_sha256`，让工具只读整包摘要就能判断 gate summary 是否漂移。
 
+`artifact_bundle_summary` 还会带上 `release_draft_handoff_key_preview_count`、`release_draft_handoff_key_preview`、`release_draft_handoff_key_preview_sha256`、`release_draft_handoff_key_tail_count`、`release_draft_handoff_key_tail` 和 `release_draft_handoff_key_tail_sha256`，让工具只读整包摘要就能检查 `release-draft-handoff.json` 字段清单前后窗口是否漂移。
+
 `artifact_bundle_summary` 还会带上 `candidate_issue_gate_evidence_key_count` 和 `candidate_issue_gate_evidence_sha256`，让工具只读整包摘要就能判断 gate evidence 是否漂移。
 
 `artifact_bundle_summary` 还会带上 `candidate_issue_gate_evidence_first_key`、`candidate_issue_gate_evidence_last_key` 和 `candidate_issue_gate_evidence_key_boundary_sha256`，让工具只读整包摘要就能检查 gate evidence key 首尾边界。

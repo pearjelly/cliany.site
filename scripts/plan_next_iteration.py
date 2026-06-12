@@ -225,6 +225,12 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "release_draft_handoff_first_key",
     "release_draft_handoff_last_key",
     "release_draft_handoff_key_boundary_sha256",
+    "release_draft_handoff_key_preview_count",
+    "release_draft_handoff_key_preview",
+    "release_draft_handoff_key_preview_sha256",
+    "release_draft_handoff_key_tail_count",
+    "release_draft_handoff_key_tail",
+    "release_draft_handoff_key_tail_sha256",
     "release_draft_handoff_sha256",
     "release_draft_path",
     "release_draft_path_sha256",
@@ -2195,6 +2201,8 @@ def _issue_artifact_bundle_summary(
         if release_draft_handoff_keys
         else None,
     }
+    release_draft_handoff_key_preview = release_draft_handoff_keys[:8]
+    release_draft_handoff_key_tail = release_draft_handoff_keys[-8:]
     artifact_file_keys = list(artifact_files)
     artifact_files_key_boundary = {
         "first_key": artifact_file_keys[0] if artifact_file_keys else None,
@@ -2557,6 +2565,22 @@ def _issue_artifact_bundle_summary(
         ],
         "release_draft_handoff_key_boundary_sha256": _stable_json_sha256(
             release_draft_handoff_key_boundary
+        ),
+        "release_draft_handoff_key_preview_count": len(
+            release_draft_handoff_key_preview
+        ),
+        "release_draft_handoff_key_preview": list(
+            release_draft_handoff_key_preview
+        ),
+        "release_draft_handoff_key_preview_sha256": _stable_json_sha256(
+            release_draft_handoff_key_preview
+        ),
+        "release_draft_handoff_key_tail_count": len(
+            release_draft_handoff_key_tail
+        ),
+        "release_draft_handoff_key_tail": list(release_draft_handoff_key_tail),
+        "release_draft_handoff_key_tail_sha256": _stable_json_sha256(
+            release_draft_handoff_key_tail
         ),
         "release_draft_handoff_sha256": _stable_json_sha256(release_draft_handoff),
         "release_draft_path": plan.release_draft_path,
@@ -3044,6 +3068,18 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['release_draft_handoff_last_key']}`",
             "- release_draft_handoff_key_boundary_sha256: "
             f"`{summary['release_draft_handoff_key_boundary_sha256']}`",
+            "- release_draft_handoff_key_preview_count: "
+            f"`{summary['release_draft_handoff_key_preview_count']}`",
+            "- release_draft_handoff_key_preview: "
+            f"`{json.dumps(summary['release_draft_handoff_key_preview'], ensure_ascii=False)}`",
+            "- release_draft_handoff_key_preview_sha256: "
+            f"`{summary['release_draft_handoff_key_preview_sha256']}`",
+            "- release_draft_handoff_key_tail_count: "
+            f"`{summary['release_draft_handoff_key_tail_count']}`",
+            "- release_draft_handoff_key_tail: "
+            f"`{json.dumps(summary['release_draft_handoff_key_tail'], ensure_ascii=False)}`",
+            "- release_draft_handoff_key_tail_sha256: "
+            f"`{summary['release_draft_handoff_key_tail_sha256']}`",
             f"- release_draft_handoff_sha256: `{summary['release_draft_handoff_sha256']}`",
             f"- release_draft_path: `{summary['release_draft_path']}`",
             f"- release_draft_path_sha256: `{summary['release_draft_path_sha256']}`",
