@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+## [0.16.219] - 2026-06-13
+
+### Added
+- Candidate 案例现在声明 `promotion_evidence`，为 `adapter_package`、`metadata_validation` 和 `online_smoke` 记录 `pending` / `complete` / `blocked` 状态、证据和下一步动作。
+- `scripts/validate_cases.py` 现在校验 candidate `promotion_evidence`，并在文本、JSON 和 Markdown report 中输出结构化晋级证据。
+- `scripts/plan_next_iteration.py` 现在把 `promotion_evidence` 透传到 candidate promotion JSON、issue body、`issue-metadata.json` 和 issue metadata summary，方便维护者按证据状态拆分任务。
+- 新增 `docs/releases/v0.16.219-draft.md`，把下一版 patch release 聚焦到 candidate promotion evidence 的可交接性。
+
 ## [0.16.218] - 2026-06-13
 
 ### Added
@@ -1931,7 +1939,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.218...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.219...HEAD
+[0.16.219]: https://github.com/pearjelly/cliany.site/compare/v0.16.218...v0.16.219
 [0.16.218]: https://github.com/pearjelly/cliany.site/compare/v0.16.217...v0.16.218
 [0.16.217]: https://github.com/pearjelly/cliany.site/compare/v0.16.216...v0.16.217
 [0.16.216]: https://github.com/pearjelly/cliany.site/compare/v0.16.215...v0.16.216
