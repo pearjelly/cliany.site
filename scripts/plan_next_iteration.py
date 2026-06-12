@@ -512,7 +512,12 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "# Stop early if the latest local release is not publicly visible yet.",
         'REPO_ROOT="$(git rev-parse --show-toplevel)"',
         'cd "$REPO_ROOT"',
-        "python scripts/check_release_publication.py --strict --json >/tmp/cliany-issue-publication-check.json",
+        'PREFLIGHT_JSON="/tmp/cliany-issue-publication-check.json"',
+        'if ! python scripts/check_release_publication.py --strict --json >"$PREFLIGHT_JSON"; then',
+        '  echo "Release publication preflight failed; review $PREFLIGHT_JSON before creating candidate issues." >&2',
+        '  cat "$PREFLIGHT_JSON" >&2',
+        "  exit 1",
+        "fi",
     ]
     for promotion in plan.candidate_promotions:
         body_path = directory / f"{promotion.case_id}.md"
@@ -590,7 +595,8 @@ python scripts/validate_cases.py --strict
 `create-issues.sh` is generated for review. It is not executed by `plan_next_iteration.py`.
 Run it only after checking `issue-metadata.json` and the body files. The script runs
 `python scripts/check_release_publication.py --strict --json` before creating issues and
-writes the preflight JSON to `/tmp/cliany-issue-publication-check.json`.
+writes the preflight JSON to `/tmp/cliany-issue-publication-check.json`. If the preflight
+fails, it prints that JSON before exiting.
 """
 
 

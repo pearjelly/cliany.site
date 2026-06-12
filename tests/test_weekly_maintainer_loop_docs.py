@@ -36,6 +36,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "publish commands",
         "python scripts/check_release_publication.py --strict --json",
         "/tmp/cliany-issue-publication-check.json",
+        "如果 preflight 失败",
         "issue_artifacts_command",
         "复现命令",
         "/tmp/cliany-candidate-issues",

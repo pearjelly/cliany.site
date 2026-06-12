@@ -262,10 +262,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "gh issue create" in script
     assert 'REPO_ROOT="$(git rev-parse --show-toplevel)"' in script
     assert 'cd "$REPO_ROOT"' in script
+    assert 'PREFLIGHT_JSON="/tmp/cliany-issue-publication-check.json"' in script
     assert (
-        "python scripts/check_release_publication.py --strict --json "
-        ">/tmp/cliany-issue-publication-check.json"
+        'if ! python scripts/check_release_publication.py --strict --json >"$PREFLIGHT_JSON"; then'
     ) in script
+    assert "Release publication preflight failed; review $PREFLIGHT_JSON" in script
+    assert 'cat "$PREFLIGHT_JSON" >&2' in script
+    assert "  exit 1" in script
     assert "--body-file" in script
     assert "pypi-project-search.md" in script
     assert oct((issues_dir / "create-issues.sh").stat().st_mode & 0o777) == "0o755"
@@ -281,6 +284,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "release publication preflight" in readme
     assert "python scripts/check_release_publication.py --strict --json" in readme
     assert "/tmp/cliany-issue-publication-check.json" in readme
+    assert "prints that JSON before exiting" in readme
     assert "`create-issues.sh` is generated for review. It is not executed" in readme
     assert (
         "python scripts/plan_next_iteration.py --target-version 0.16.2 "

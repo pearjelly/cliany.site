@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Changed
+- `scripts/plan_next_iteration.py --issues-dir` 生成的 `create-issues.sh` 在 publication preflight 失败时会把 `/tmp/cliany-issue-publication-check.json` 打印到 stderr 后退出。
+- 新增 `docs/releases/v0.16.17-draft.md`，把下一版 patch release 聚焦到 candidate issue script 的 publication preflight 失败可读性。
+
 ## [0.16.16] - 2026-06-12
 
 ### Added
