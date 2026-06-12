@@ -217,6 +217,7 @@ def _publication_visibility(publication: Any) -> dict[str, str]:
 
 def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
     release_draft_issues = _release_draft_issues(readiness)
+    evidence = _candidate_issue_gate_evidence(readiness, publication)
     if not bool(getattr(publication, "ok", False)):
         actions = _publication_next_actions(publication) or [
             "Run python scripts/check_release_publication.py --json and resolve publication blockers."
@@ -227,6 +228,7 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
             "requires_maintainer_review": True,
             "summary": "Do not create candidate issues until the latest local release is publicly visible.",
             "required_actions": actions,
+            "evidence": evidence,
         }
     if release_draft_issues:
         return {
@@ -235,6 +237,7 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
             "requires_maintainer_review": True,
             "summary": "Release draft issues must be resolved or intentionally deferred before tagging.",
             "required_actions": release_draft_issues,
+            "evidence": evidence,
         }
     return {
         "status": "ready",
@@ -242,6 +245,23 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
         "requires_maintainer_review": False,
         "summary": "Candidate issues can be created after reviewing the generated artifacts.",
         "required_actions": [],
+        "evidence": evidence,
+    }
+
+
+def _candidate_issue_gate_evidence(readiness: Any, publication: Any) -> dict[str, Any]:
+    draft = getattr(readiness, "draft", None)
+    release_draft_issues = _release_draft_issues(readiness)
+    publication_visibility = _publication_visibility(publication)
+    return {
+        "publication_ok": bool(getattr(publication, "ok", False)),
+        "publication_visibility_status": publication_visibility.get("status") or "(unknown)",
+        "publication_remote_checked": bool(getattr(publication, "remote_checked", False)),
+        "publication_branch": str(getattr(publication, "branch", "") or "HEAD"),
+        "publication_latest_tag": str(getattr(publication, "latest_tag", "") or "(none)"),
+        "publication_ahead_count": getattr(publication, "ahead_count", None),
+        "release_draft_path": str(getattr(draft, "path", "") or ""),
+        "release_draft_issue_count": len(release_draft_issues),
     }
 
 
@@ -652,10 +672,12 @@ def _candidate_issue_gate_markdown(gate: dict[str, Any]) -> str:
     review_required = str(bool(gate.get("requires_maintainer_review", True))).lower()
     summary = gate.get("summary") or "Candidate issue gate has not been summarized."
     actions = gate.get("required_actions")
+    evidence = gate.get("evidence")
     if not isinstance(actions, list) or not actions:
         action_lines = "- No required actions are reported."
     else:
         action_lines = "\n".join(f"- {action}" for action in actions)
+    evidence_lines = _candidate_issue_gate_evidence_markdown(evidence)
     return f"""## Candidate Issue Gate
 
 - status: `{status}`
@@ -663,9 +685,31 @@ def _candidate_issue_gate_markdown(gate: dict[str, Any]) -> str:
 - requires_maintainer_review: `{review_required}`
 - summary: {summary}
 
+### Candidate Issue Gate Evidence
+
+{evidence_lines}
+
 ### Candidate Issue Gate Actions
 
 {action_lines}"""
+
+
+def _candidate_issue_gate_evidence_markdown(evidence: object) -> str:
+    if not isinstance(evidence, dict) or not evidence:
+        return "- No candidate issue gate evidence is reported."
+    rows = [
+        ("publication_ok", evidence.get("publication_ok")),
+        ("publication_visibility_status", evidence.get("publication_visibility_status")),
+        ("publication_remote_checked", evidence.get("publication_remote_checked")),
+        ("publication_branch", evidence.get("publication_branch")),
+        ("publication_latest_tag", evidence.get("publication_latest_tag")),
+        ("publication_ahead_count", evidence.get("publication_ahead_count")),
+        ("release_draft_path", evidence.get("release_draft_path")),
+        ("release_draft_issue_count", evidence.get("release_draft_issue_count")),
+    ]
+    lines = ["| Field | Value |", "|-------|-------|"]
+    lines.extend(f"| {key} | `{_format_context_value(value)}` |" for key, value in rows)
+    return "\n".join(lines)
 
 
 def _publication_visibility_markdown(visibility: dict[str, str]) -> str:
@@ -911,6 +955,9 @@ def _render_issue_artifacts_readme(plan: IterationPlan) -> str:
     body_files = "\n".join(f"- `{promotion.case_id}.md`" for promotion in plan.candidate_promotions)
     body_files = body_files or "- No candidate issue body files were generated."
     candidate_summary = _issue_artifact_candidate_summary(plan.candidate_promotions)
+    gate_latest_tag = _format_context_value(_candidate_issue_gate_evidence_value(plan, "publication_latest_tag"))
+    gate_ahead_count = _format_context_value(_candidate_issue_gate_evidence_value(plan, "publication_ahead_count"))
+    gate_draft_issues = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_issue_count"))
     return f"""# cliany-site Candidate Issue Artifacts
 
 Generated for target version `{plan.target_version}`.
@@ -939,6 +986,9 @@ Generated for target version `{plan.target_version}`.
 - candidate_issue_gate: `{_format_context_value(plan.candidate_issue_gate.get("status"))}`
 - can_create_issues: `{str(bool(plan.candidate_issue_gate.get("can_create_issues", False))).lower()}`
 - gate_summary: {_format_context_value(plan.candidate_issue_gate.get("summary"))}
+- gate_evidence_latest_tag: `{gate_latest_tag}`
+- gate_evidence_ahead_count: `{gate_ahead_count}`
+- gate_evidence_release_draft_issues: `{gate_draft_issues}`
 - visibility: `{_format_context_value(plan.publication_visibility.get("status"))}`
 - visibility_summary: {_format_context_value(plan.publication_visibility.get("summary"))}
 - latest_tag: `{_format_context_value(plan.publication_ref_context.get("latest_tag"))}`
@@ -986,6 +1036,13 @@ Run it only after checking `issue-metadata.json` and the body files. The script 
 writes the preflight JSON to `/tmp/cliany-issue-publication-check.json`. If the preflight
 fails, it prints that JSON before exiting.
 """
+
+
+def _candidate_issue_gate_evidence_value(plan: IterationPlan, key: str) -> object:
+    evidence = plan.candidate_issue_gate.get("evidence")
+    if not isinstance(evidence, dict):
+        return None
+    return evidence.get(key)
 
 
 def _issue_artifact_release_draft_issues(plan: IterationPlan) -> str:

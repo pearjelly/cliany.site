@@ -141,6 +141,30 @@ def _published_publication_report() -> SimpleNamespace:
     )
 
 
+def _blocked_candidate_issue_gate() -> dict[str, object]:
+    return {
+        "status": "blocked_by_publication",
+        "can_create_issues": False,
+        "requires_maintainer_review": True,
+        "summary": "Do not create candidate issues until the latest local release is publicly visible.",
+        "required_actions": [
+            "Commit, stash, or discard local worktree changes before publishing release refs.",
+            "Push `master` to `origin`; local branch is ahead by `2` commits.",
+            "Push tag `v0.16.1` after the branch is published.",
+        ],
+        "evidence": {
+            "publication_ok": False,
+            "publication_visibility_status": "dirty_worktree",
+            "publication_remote_checked": False,
+            "publication_branch": "master",
+            "publication_latest_tag": "v0.16.1",
+            "publication_ahead_count": 2,
+            "release_draft_path": "/tmp/project/docs/releases/v0.16.2-draft.md",
+            "release_draft_issue_count": 2,
+        },
+    }
+
+
 def test_plan_defaults_to_next_patch_version(tmp_path):
     _write_pyproject(tmp_path, version="0.16.1")
 
@@ -176,6 +200,16 @@ def test_candidate_issue_gate_allows_creation_after_publication_with_release_dra
             "release draft is missing",
             "release draft missing snippet: ## 发版前验证",
         ],
+        "evidence": {
+            "publication_ok": True,
+            "publication_visibility_status": "published",
+            "publication_remote_checked": True,
+            "publication_branch": "master",
+            "publication_latest_tag": "v0.16.1",
+            "publication_ahead_count": 0,
+            "release_draft_path": "/tmp/project/docs/releases/v0.16.2-draft.md",
+            "release_draft_issue_count": 2,
+        },
     }
 
 
@@ -201,17 +235,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         == "python scripts/plan_next_iteration.py --target-version 0.16.2 "
         "--issues-dir /tmp/cliany-candidate-issues"
     )
-    assert data["candidate_issue_gate"] == {
-        "status": "blocked_by_publication",
-        "can_create_issues": False,
-        "requires_maintainer_review": True,
-        "summary": "Do not create candidate issues until the latest local release is publicly visible.",
-        "required_actions": [
-            "Commit, stash, or discard local worktree changes before publishing release refs.",
-            "Push `master` to `origin`; local branch is ahead by `2` commits.",
-            "Push tag `v0.16.1` after the branch is published.",
-        ],
-    }
+    assert data["candidate_issue_gate"] == _blocked_candidate_issue_gate()
     assert data["publication_publish_commands"] == [
         "python scripts/check_release_publication.py --json",
     ]
@@ -310,6 +334,11 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "can_create_issues: `false`" in text
     assert "requires_maintainer_review: `true`" in text
     assert "Do not create candidate issues until the latest local release is publicly visible." in text
+    assert "### Candidate Issue Gate Evidence" in text
+    assert "| publication_visibility_status | `dirty_worktree` |" in text
+    assert "| publication_latest_tag | `v0.16.1` |" in text
+    assert "| publication_ahead_count | `2` |" in text
+    assert "| release_draft_issue_count | `2` |" in text
     assert "### Candidate Issue Gate Actions" in text
     assert "## Publication Visibility" in text
     assert "status: `dirty_worktree`" in text
@@ -393,17 +422,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "candidate_cases": ["pypi-project-search", "npm-package-search"],
         "blockers": ["release draft validation failed", "latest local release is not published"],
         "next_actions": plan.next_actions,
-        "candidate_issue_gate": {
-            "status": "blocked_by_publication",
-            "can_create_issues": False,
-            "requires_maintainer_review": True,
-            "summary": "Do not create candidate issues until the latest local release is publicly visible.",
-            "required_actions": [
-                "Commit, stash, or discard local worktree changes before publishing release refs.",
-                "Push `master` to `origin`; local branch is ahead by `2` commits.",
-                "Push tag `v0.16.1` after the branch is published.",
-            ],
-        },
+        "candidate_issue_gate": _blocked_candidate_issue_gate(),
         "publication_ok": False,
         "publication_visibility": {
             "status": "dirty_worktree",
@@ -488,17 +507,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     }
     assert publication_handoff == {
         "publication_ok": False,
-        "candidate_issue_gate": {
-            "status": "blocked_by_publication",
-            "can_create_issues": False,
-            "requires_maintainer_review": True,
-            "summary": "Do not create candidate issues until the latest local release is publicly visible.",
-            "required_actions": [
-                "Commit, stash, or discard local worktree changes before publishing release refs.",
-                "Push `master` to `origin`; local branch is ahead by `2` commits.",
-                "Push tag `v0.16.1` after the branch is published.",
-            ],
-        },
+        "candidate_issue_gate": _blocked_candidate_issue_gate(),
         "visibility": {
             "status": "dirty_worktree",
             "summary": "Worktree has uncommitted changes; resolve them before publishing release refs.",
@@ -572,6 +581,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "candidate_issue_gate: `blocked_by_publication`" in readme
     assert "can_create_issues: `false`" in readme
     assert "gate_summary: Do not create candidate issues until the latest local release is publicly visible." in readme
+    assert "gate_evidence_latest_tag: `v0.16.1`" in readme
+    assert "gate_evidence_ahead_count: `2`" in readme
+    assert "gate_evidence_release_draft_issues: `2`" in readme
     assert "visibility: `dirty_worktree`" in readme
     assert (
         "visibility_summary: Worktree has uncommitted changes; "
