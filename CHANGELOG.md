@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.182] - 2026-06-13
+
+### Added
+- `issue_metadata_summary` 现在输出 `metadata_first_item`、`metadata_last_item` 和 `metadata_boundary_sha256`，让候选 issue metadata 的首尾边界可被机器审阅。
+- `artifact_bundle_summary` 现在输出 `issue_metadata_first_item`、`issue_metadata_last_item` 和 `issue_metadata_boundary_sha256`，让只读取整包摘要的维护工具能检查 candidate issue metadata 首尾边界。
+- 新增 `docs/releases/v0.16.182-draft.md`，把下一版 patch release 聚焦到 issue metadata boundary 可见性。
+
 ## [0.16.181] - 2026-06-13
 
 ### Added
@@ -1672,7 +1679,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.181...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.182...HEAD
+[0.16.182]: https://github.com/pearjelly/cliany.site/compare/v0.16.181...v0.16.182
 [0.16.181]: https://github.com/pearjelly/cliany.site/compare/v0.16.180...v0.16.181
 [0.16.180]: https://github.com/pearjelly/cliany.site/compare/v0.16.179...v0.16.180
 [0.16.179]: https://github.com/pearjelly/cliany.site/compare/v0.16.178...v0.16.179
