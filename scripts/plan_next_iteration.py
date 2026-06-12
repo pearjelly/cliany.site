@@ -1258,6 +1258,8 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
             f"`{_format_context_value(_candidate_issue_gate_evidence_value(plan, 'publication_ahead_count'))}`",
             "- release_draft_issue_count: "
             f"`{_format_context_value(_candidate_issue_gate_evidence_value(plan, 'release_draft_issue_count'))}`",
+            "- release_draft_path: "
+            f"`{_format_context_value(_candidate_issue_gate_evidence_value(plan, 'release_draft_path'))}`",
             f"- visibility: `{_format_context_value(plan.publication_visibility.get('status'))}`",
         ]
     )
