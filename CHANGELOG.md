@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.8] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --json` 现在输出 `issue_artifacts_command`，`--issues-dir` 生成的 `README.md` 也会展示同一条候选 issue artifacts 复现命令。
 - 新增 `docs/releases/v0.16.8-draft.md`，把下一版 patch release 聚焦到候选 issue artifacts 可复现生成命令。
@@ -504,7 +506,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.7...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.8...HEAD
+[0.16.8]: https://github.com/pearjelly/cliany.site/compare/v0.16.7...v0.16.8
 [0.16.7]: https://github.com/pearjelly/cliany.site/compare/v0.16.6...v0.16.7
 [0.16.6]: https://github.com/pearjelly/cliany.site/compare/v0.16.5...v0.16.6
 [0.16.5]: https://github.com/pearjelly/cliany.site/compare/v0.16.4...v0.16.5
