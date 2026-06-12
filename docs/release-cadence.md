@@ -149,6 +149,7 @@ chore(release): bump version to 0.15.0
 
 - [v0.14.4 发布草案](releases/v0.14.4-draft.md)
 - [v0.15.0 发布草案](releases/v0.15.0-draft.md)
+- [v0.15.1 发布草案](releases/v0.15.1-draft.md)
 
 如果下一版是 minor，而不是默认的下一 patch，运行 readiness 时显式传入目标版本，例如：
 

@@ -363,8 +363,8 @@ def _validate_candidate_promotion(promotion: dict[str, Any], adapter_domain: str
         expected_hint = _market_package_name_hint(adapter_domain)
         if f"{adapter_domain}.cliany-adapter-" in adapter_package:
             issues.append(f"candidate promotion.adapter_package uses legacy package naming; expected {expected_hint}")
-        elif PACKAGE_EXTENSION in adapter_package and f"{adapter_domain}-" not in adapter_package:
-            issues.append(f"candidate promotion.adapter_package missing market package name hint: {expected_hint}")
+        elif PACKAGE_EXTENSION in adapter_package and expected_hint not in adapter_package:
+            issues.append(f"candidate promotion.adapter_package must use version placeholder: {expected_hint}")
 
     return issues
 

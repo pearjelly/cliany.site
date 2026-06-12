@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+### Added
+- 新增 `docs/releases/v0.15.1-draft.md`，把下一版 patch release 聚焦到 candidate 案例晋级路径和包名提示去版本漂移。
+
+### Changed
+- candidate 案例的 `promotion.adapter_package` 现在要求使用 `<domain>-<version>.cliany-adapter.tar.gz` 占位格式，避免发布后继续保留上一轮固定版本提示。
+- `cases/manifest.json` 中 PyPI、npm 和 crates.io 候选案例的晋级包名提示改为 `<version>` 占位，便于后续任意 release train 复用。
+
 ## [0.15.0] - 2026-06-12
 
 ### Added
