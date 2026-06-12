@@ -282,6 +282,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "python scripts/validate_cases.py --strict",
         "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md",
     ]
+    assert metadata[0]["issue_body_name"] == "pypi-project-search.md"
     assert metadata[0]["issue_body_file"].endswith("pypi-project-search.md")
     assert "gh issue create" in metadata[0]["create_command"]
     assert "--label case-proposal" in metadata[0]["create_command"]
@@ -319,6 +320,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "# cliany-site Candidate Issue Artifacts" in readme
     assert "Generated for target version `0.16.2`." in readme
     assert "`issue-metadata.json`: structured issue title, labels, reproduction context" in readme
+    assert "body file name" in readme
     assert "`publication-handoff.json`: publication status, next actions, publication next actions" in readme
     assert "## Candidate Summary" in readme
     assert "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands |" in readme

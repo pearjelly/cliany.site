@@ -45,6 +45,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "Publication Publish Script",
         "已处理或明确延后",
         "issue body 文件",
+        "body file name",
+        "body file path",
         "create-issues.sh",
         "publish commands",
         "python scripts/check_release_publication.py --strict --json",

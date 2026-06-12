@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --issues-dir` 生成的 `issue-metadata.json` 现在为每个 candidate 增加 `issue_body_name`，方便下游工具不解析绝对路径也能定位 body 文件。
+- 新增 `docs/releases/v0.16.28-draft.md`，把下一版 patch release 聚焦到 candidate issue metadata 的 body 文件名字段。
+
 ## [0.16.27] - 2026-06-12
 
 ### Changed
