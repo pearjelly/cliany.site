@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.181] - 2026-06-13
+
+### Added
+- `issue_metadata_summary` 现在输出 `metadata_tail_count`、`metadata_tail` 和 `metadata_tail_sha256`，让候选 issue metadata 的稳定末尾入口可被机器审阅。
+- `artifact_bundle_summary` 现在输出 `issue_metadata_tail_count`、`issue_metadata_tail` 和 `issue_metadata_tail_sha256`，让只读取整包摘要的维护工具能检查 candidate issue metadata 末尾入口。
+- 新增 `docs/releases/v0.16.181-draft.md`，把下一版 patch release 聚焦到 issue metadata tail 可见性。
+
 ## [0.16.180] - 2026-06-13
 
 ### Added
@@ -1665,7 +1672,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.180...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.181...HEAD
+[0.16.181]: https://github.com/pearjelly/cliany.site/compare/v0.16.180...v0.16.181
 [0.16.180]: https://github.com/pearjelly/cliany.site/compare/v0.16.179...v0.16.180
 [0.16.179]: https://github.com/pearjelly/cliany.site/compare/v0.16.178...v0.16.179
 [0.16.178]: https://github.com/pearjelly/cliany.site/compare/v0.16.177...v0.16.178
