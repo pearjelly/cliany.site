@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.213] - 2026-06-13
+
+### Added
+- `release_readiness.py --report` 的 `Weekly Review` 在 tagged release preflight 通过且 tag 已指向 HEAD 时，现在把下一步显示为发布已验证 tag。
+- 新增测试覆盖 tagged release mode 的 Weekly Review 文案，避免 tag 已存在时继续提示维护者“Ready to tag”。
+- 新增 `docs/releases/v0.16.213-draft.md`，把下一版 patch release 聚焦到 tagged release preflight 的下一步可读性。
+
 ## [0.16.212] - 2026-06-13
 
 ### Added
@@ -1889,7 +1896,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.212...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.213...HEAD
+[0.16.213]: https://github.com/pearjelly/cliany.site/compare/v0.16.212...v0.16.213
 [0.16.212]: https://github.com/pearjelly/cliany.site/compare/v0.16.211...v0.16.212
 [0.16.211]: https://github.com/pearjelly/cliany.site/compare/v0.16.210...v0.16.211
 [0.16.210]: https://github.com/pearjelly/cliany.site/compare/v0.16.209...v0.16.210

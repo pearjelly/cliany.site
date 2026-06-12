@@ -225,6 +225,7 @@ V016209_DRAFT = ROOT / "docs" / "releases" / "v0.16.209-draft.md"
 V016210_DRAFT = ROOT / "docs" / "releases" / "v0.16.210-draft.md"
 V016211_DRAFT = ROOT / "docs" / "releases" / "v0.16.211-draft.md"
 V016212_DRAFT = ROOT / "docs" / "releases" / "v0.16.212-draft.md"
+V016213_DRAFT = ROOT / "docs" / "releases" / "v0.16.213-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -10140,6 +10141,48 @@ def test_v016212_release_draft_tracks_candidate_issue_gate_evidence_boundary():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.212 --issues-dir",
         "git tag v0.16.212",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016213_release_draft_has_required_sections():
+    text = V016213_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.213 发布草案",
+        "**目标版本：** `0.16.213`",
+        "**提交范围：** `v0.16.212..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016213_release_draft_tracks_tagged_release_next_step():
+    text = V016213_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "release_readiness.py --report",
+        "Weekly Review",
+        "Ready to publish verified tag",
+        "Ready to tag",
+        "--release-tag v0.16.213",
+        "--target-version 0.16.213",
+        "tests/test_release_readiness.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/release_readiness.py --strict --target-version 0.16.213",
+        "git tag v0.16.213",
     ]
     for snippet in required:
         assert snippet in text
