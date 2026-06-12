@@ -233,6 +233,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "review_checklist_boundary_sha256",
     "create_issues_safety_contract_key_count",
     "create_issues_safety_contract_sha256",
+    "create_issues_safety_contract_first_key",
+    "create_issues_safety_contract_last_key",
+    "create_issues_safety_contract_key_boundary_sha256",
     "publication_ok",
     "publication_visibility_status",
     "publication_branch",
@@ -2074,6 +2077,15 @@ def _issue_artifact_bundle_summary(
         "first_item": review_checklist[0] if review_checklist else None,
         "last_item": review_checklist[-1] if review_checklist else None,
     }
+    create_issues_safety_contract_keys = list(create_issues_safety_contract)
+    create_issues_safety_contract_key_boundary = {
+        "first_key": create_issues_safety_contract_keys[0]
+        if create_issues_safety_contract_keys
+        else None,
+        "last_key": create_issues_safety_contract_keys[-1]
+        if create_issues_safety_contract_keys
+        else None,
+    }
     artifact_file_keys = list(artifact_files)
     artifact_files_key_boundary = {
         "first_key": artifact_file_keys[0] if artifact_file_keys else None,
@@ -2417,6 +2429,15 @@ def _issue_artifact_bundle_summary(
         "review_checklist_boundary_sha256": _stable_json_sha256(review_checklist_boundary),
         "create_issues_safety_contract_key_count": len(create_issues_safety_contract),
         "create_issues_safety_contract_sha256": _stable_json_sha256(create_issues_safety_contract),
+        "create_issues_safety_contract_first_key": create_issues_safety_contract_key_boundary[
+            "first_key"
+        ],
+        "create_issues_safety_contract_last_key": create_issues_safety_contract_key_boundary[
+            "last_key"
+        ],
+        "create_issues_safety_contract_key_boundary_sha256": _stable_json_sha256(
+            create_issues_safety_contract_key_boundary
+        ),
         "publication_ok": plan.publication_ok,
         "publication_visibility_status": plan.publication_visibility.get("status"),
         "publication_branch": plan.publication_ref_context.get("branch"),
@@ -2787,6 +2808,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['review_checklist_boundary_sha256']}`",
             f"- create_issues_safety_contract_key_count: `{summary['create_issues_safety_contract_key_count']}`",
             f"- create_issues_safety_contract_sha256: `{summary['create_issues_safety_contract_sha256']}`",
+            "- create_issues_safety_contract_first_key: "
+            f"`{summary['create_issues_safety_contract_first_key']}`",
+            "- create_issues_safety_contract_last_key: "
+            f"`{summary['create_issues_safety_contract_last_key']}`",
+            "- create_issues_safety_contract_key_boundary_sha256: "
+            f"`{summary['create_issues_safety_contract_key_boundary_sha256']}`",
             f"- publication_ok: `{str(summary['publication_ok']).lower()}`",
             f"- publication_visibility_status: `{summary['publication_visibility_status']}`",
             f"- publication_branch: `{summary['publication_branch']}`",
