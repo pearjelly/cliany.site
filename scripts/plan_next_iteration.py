@@ -228,6 +228,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "validation_command_boundary_sha256",
     "review_checklist_count",
     "review_checklist_sha256",
+    "review_checklist_first_item",
+    "review_checklist_last_item",
+    "review_checklist_boundary_sha256",
     "create_issues_safety_contract_key_count",
     "create_issues_safety_contract_sha256",
     "publication_ok",
@@ -2066,6 +2069,11 @@ def _issue_artifact_bundle_summary(
         "first_command": validation_commands[0] if validation_commands else None,
         "last_command": validation_commands[-1] if validation_commands else None,
     }
+    review_checklist = _issue_artifact_review_checklist()
+    review_checklist_boundary = {
+        "first_item": review_checklist[0] if review_checklist else None,
+        "last_item": review_checklist[-1] if review_checklist else None,
+    }
     artifact_file_keys = list(artifact_files)
     artifact_files_key_boundary = {
         "first_key": artifact_file_keys[0] if artifact_file_keys else None,
@@ -2402,8 +2410,11 @@ def _issue_artifact_bundle_summary(
         "validation_command_boundary_sha256": _stable_json_sha256(
             validation_command_boundary
         ),
-        "review_checklist_count": len(_issue_artifact_review_checklist()),
-        "review_checklist_sha256": _stable_json_sha256(_issue_artifact_review_checklist()),
+        "review_checklist_count": len(review_checklist),
+        "review_checklist_sha256": _stable_json_sha256(review_checklist),
+        "review_checklist_first_item": review_checklist_boundary["first_item"],
+        "review_checklist_last_item": review_checklist_boundary["last_item"],
+        "review_checklist_boundary_sha256": _stable_json_sha256(review_checklist_boundary),
         "create_issues_safety_contract_key_count": len(create_issues_safety_contract),
         "create_issues_safety_contract_sha256": _stable_json_sha256(create_issues_safety_contract),
         "publication_ok": plan.publication_ok,
@@ -2768,6 +2779,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['validation_command_boundary_sha256']}`",
             f"- review_checklist_count: `{summary['review_checklist_count']}`",
             f"- review_checklist_sha256: `{summary['review_checklist_sha256']}`",
+            "- review_checklist_first_item: "
+            f"{_summary_inline_code(summary['review_checklist_first_item'])}",
+            "- review_checklist_last_item: "
+            f"{_summary_inline_code(summary['review_checklist_last_item'])}",
+            "- review_checklist_boundary_sha256: "
+            f"`{summary['review_checklist_boundary_sha256']}`",
             f"- create_issues_safety_contract_key_count: `{summary['create_issues_safety_contract_key_count']}`",
             f"- create_issues_safety_contract_sha256: `{summary['create_issues_safety_contract_sha256']}`",
             f"- publication_ok: `{str(summary['publication_ok']).lower()}`",

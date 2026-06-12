@@ -1131,6 +1131,20 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 "Do not use real LLM keys or write runtime state into the repository.",
             ]
         ),
+        "review_checklist_first_item": (
+            "Confirm the latest local release has been published before creating new candidate work."
+        ),
+        "review_checklist_last_item": (
+            "Do not use real LLM keys or write runtime state into the repository."
+        ),
+        "review_checklist_boundary_sha256": _stable_json_sha256(
+            {
+                "first_item": (
+                    "Confirm the latest local release has been published before creating new candidate work."
+                ),
+                "last_item": "Do not use real LLM keys or write runtime state into the repository.",
+            }
+        ),
         "create_issues_safety_contract_key_count": 5,
         "create_issues_safety_contract_sha256": _stable_json_sha256(
             {
@@ -2117,6 +2131,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "review_checklist_sha256: "
         f"`{artifact_bundle_summary['review_checklist_sha256']}`"
+    ) in readme
+    assert (
+        "review_checklist_first_item: "
+        f"{plan_next_iteration._summary_inline_code(artifact_bundle_summary['review_checklist_first_item'])}"
+    ) in readme
+    assert (
+        "review_checklist_last_item: "
+        f"{plan_next_iteration._summary_inline_code(artifact_bundle_summary['review_checklist_last_item'])}"
+    ) in readme
+    assert (
+        "review_checklist_boundary_sha256: "
+        f"`{artifact_bundle_summary['review_checklist_boundary_sha256']}`"
     ) in readme
     assert "create_issues_safety_contract_key_count: `5`" in readme
     assert (
