@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.115] - 2026-06-12
+
+### Added
+- Candidate issue artifacts `README.md` 的 `Candidate Issue Gate Quick Summary` 现在展示 `publication_worktree_clean`，方便维护者先判断是否需要清理本地改动再发布。
+- [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 说明 quick summary 会展示 publication worktree clean。
+- 新增 `docs/releases/v0.16.115-draft.md`，把下一版 patch release 聚焦到 candidate issue gate quick summary 的工作区清洁状态可见性。
+
 ## [0.16.114] - 2026-06-12
 
 ### Added
@@ -1203,7 +1210,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.114...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.115...HEAD
+[0.16.115]: https://github.com/pearjelly/cliany.site/compare/v0.16.114...v0.16.115
 [0.16.114]: https://github.com/pearjelly/cliany.site/compare/v0.16.113...v0.16.114
 [0.16.113]: https://github.com/pearjelly/cliany.site/compare/v0.16.112...v0.16.113
 [0.16.112]: https://github.com/pearjelly/cliany.site/compare/v0.16.111...v0.16.112
