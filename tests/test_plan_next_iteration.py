@@ -654,6 +654,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "release_draft_issue_count": 2,
         "candidate_issue_gate_status": "blocked_by_publication",
         "can_create_issues": False,
+        "requires_maintainer_review": True,
         "candidate_issue_gate_summary_sha256": _stable_json_sha256(
             _blocked_candidate_issue_gate()["summary"]
         ),
@@ -898,6 +899,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "release_draft_issue_count: `2`" in readme
     assert "candidate_issue_gate_status: `blocked_by_publication`" in readme
     assert "can_create_issues: `false`" in readme
+    assert "requires_maintainer_review: `true`" in readme
     assert (
         f"candidate_issue_gate_summary_sha256: "
         f"`{artifact_bundle_summary['candidate_issue_gate_summary_sha256']}`"
