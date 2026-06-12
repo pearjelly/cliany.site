@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-06-12
+
 ### Changed
 - 案例库新增结构化 `validation.offline_commands`，`scripts/validate_cases.py --report` 会汇总每个案例的离线验证命令，便于 PR 和 release 复盘直接复制。
 
@@ -457,7 +459,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.9...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/pearjelly/cliany.site/compare/v0.15.9...v0.16.0
 [0.15.9]: https://github.com/pearjelly/cliany.site/compare/v0.15.8...v0.15.9
 [0.15.8]: https://github.com/pearjelly/cliany.site/compare/v0.15.7...v0.15.8
 [0.15.7]: https://github.com/pearjelly/cliany.site/compare/v0.15.6...v0.15.7
