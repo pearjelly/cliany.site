@@ -43,6 +43,7 @@ V01627_DRAFT = ROOT / "docs" / "releases" / "v0.16.27-draft.md"
 V01628_DRAFT = ROOT / "docs" / "releases" / "v0.16.28-draft.md"
 V01629_DRAFT = ROOT / "docs" / "releases" / "v0.16.29-draft.md"
 V01630_DRAFT = ROOT / "docs" / "releases" / "v0.16.30-draft.md"
+V01631_DRAFT = ROOT / "docs" / "releases" / "v0.16.31-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -1886,6 +1887,51 @@ def test_v01630_release_draft_tracks_publish_script_stale_preflight():
         "tests/test_release_draft_docs.py",
         "python scripts/check_release_publication.py --json --publish-script",
         "git tag v0.16.30",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v01631_release_draft_has_required_sections():
+    text = V01631_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.31 发布草案",
+        "**目标版本：** `0.16.31`",
+        "**提交范围：** `v0.16.30..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v01631_release_draft_tracks_publish_script_repo_root():
+    text = V01631_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "scripts/check_release_publication.py",
+        "--publish-script",
+        "repo_root",
+        "REPO_ROOT",
+        "git rev-parse --show-toplevel",
+        "cd \"$REPO_ROOT\"",
+        "Publication context",
+        "Publish script is stale",
+        "git push origin v0.16.31",
+        "tests/test_release_publication.py",
+        "tests/test_release_cadence_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/check_release_publication.py --json --publish-script",
+        "git tag v0.16.31",
     ]
     for snippet in required:
         assert snippet in text

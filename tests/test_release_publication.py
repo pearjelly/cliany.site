@@ -44,6 +44,8 @@ def test_release_publication_passes_when_branch_and_tag_are_pushed(tmp_path):
     report = release_publication.build_report(repo, remote_check=True)
 
     assert report.ok is True
+    assert report.repo_root == str(repo.resolve())
+    assert report.to_dict()["repo_root"] == str(repo.resolve())
     assert report.branch == "master"
     assert report.upstream == "origin/master"
     assert report.latest_tag == "v0.1.0"
@@ -112,6 +114,7 @@ def test_release_publication_text_output_includes_next_actions(tmp_path, capsys)
 
     output = capsys.readouterr().out
     assert "ok: False" in output
+    assert f"repo_root: {repo.resolve()}" in output
     assert "latest_tag: v0.1.1" in output
     assert "next_actions:" in output
     assert "Push `master` to `origin`" in output
@@ -131,6 +134,7 @@ def test_release_publication_writes_markdown_report(tmp_path):
     text = report_path.read_text(encoding="utf-8")
     assert "# cliany-site Release Publication" in text
     assert "| ok | `false` |" in text
+    assert f"| repo_root | `{repo.resolve()}` |" in text
     assert "| latest_tag | `v0.1.1` |" in text
     assert "| remote_checked | `true` |" in text
     assert "## Refs" in text
@@ -154,6 +158,7 @@ def test_release_publication_writes_reviewable_publish_script(tmp_path):
     assert text.startswith("#!/usr/bin/env bash\nset -euo pipefail\n")
     assert "Review these commands before running" in text
     assert "# Publication context:" in text
+    assert f"# - repo_root: {repo.resolve()}" in text
     assert "# - branch: master" in text
     assert "# - upstream: origin/master" in text
     assert "# - remote: origin" in text
@@ -163,6 +168,9 @@ def test_release_publication_writes_reviewable_publish_script(tmp_path):
     assert "# - ahead_count: 1" in text
     assert "# - behind_count: 0" in text
     assert "# - remote_checked: false" in text
+    assert f"REPO_ROOT={repo.resolve()}" in text
+    assert 'cd "$REPO_ROOT"' in text
+    assert 'CURRENT_REPO_ROOT="$(git rev-parse --show-toplevel)"' in text
     assert f"EXPECTED_LOCAL_HEAD={report.local_head}" in text
     assert "EXPECTED_LATEST_TAG=v0.1.1" in text
     assert f"EXPECTED_TAG_COMMIT={report.tag_commit}" in text
@@ -190,7 +198,7 @@ def test_release_publication_publish_script_rejects_stale_head_before_push(tmp_p
     _commit(repo, "NOTES.md", "new work\n", "new work")
     result = subprocess.run(
         [str(script_path)],
-        cwd=repo,
+        cwd=tmp_path,
         text=True,
         capture_output=True,
         check=False,
