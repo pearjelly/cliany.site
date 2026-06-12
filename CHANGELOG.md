@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.20] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 artifacts `README.md` 现在包含 `Candidate Summary` 表，展示每个 candidate 的 target URL、candidate commands 数量和 offline validation commands 数量。
 - 新增 `docs/releases/v0.16.20-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts 的 README 候选摘要表。
@@ -576,7 +578,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.19...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.20...HEAD
+[0.16.20]: https://github.com/pearjelly/cliany.site/compare/v0.16.19...v0.16.20
 [0.16.19]: https://github.com/pearjelly/cliany.site/compare/v0.16.18...v0.16.19
 [0.16.18]: https://github.com/pearjelly/cliany.site/compare/v0.16.17...v0.16.18
 [0.16.17]: https://github.com/pearjelly/cliany.site/compare/v0.16.16...v0.16.17
