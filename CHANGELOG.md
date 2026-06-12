@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.10] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py` 现在会把 publication audit 的 `publish_commands` 带入 `publication_publish_commands`，周初计划可直接展示 branch/tag push 和远端复核命令。
 - 新增 `docs/releases/v0.16.10-draft.md`，把下一版 patch release 聚焦到 next iteration plan 的发布交接命令。
@@ -516,7 +518,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.9...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.10...HEAD
+[0.16.10]: https://github.com/pearjelly/cliany.site/compare/v0.16.9...v0.16.10
 [0.16.9]: https://github.com/pearjelly/cliany.site/compare/v0.16.8...v0.16.9
 [0.16.8]: https://github.com/pearjelly/cliany.site/compare/v0.16.7...v0.16.8
 [0.16.7]: https://github.com/pearjelly/cliany.site/compare/v0.16.6...v0.16.7
