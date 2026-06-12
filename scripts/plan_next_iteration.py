@@ -215,6 +215,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "release_draft_required_actions_sha256",
     "release_draft_primary_required_action",
     "release_draft_issues_sha256",
+    "release_draft_first_issue",
+    "release_draft_last_issue",
+    "release_draft_issue_boundary_sha256",
     "validation_command_count",
     "validation_commands_sha256",
     "review_checklist_count",
@@ -2036,6 +2039,14 @@ def _issue_artifact_bundle_summary(
         )
     candidate_issue_gate_summary = plan.candidate_issue_gate.get("summary")
     release_draft_required_actions = _release_draft_required_actions(plan.release_draft_issues)
+    release_draft_issue_boundary = {
+        "first_issue": plan.release_draft_issues[0]
+        if plan.release_draft_issues
+        else None,
+        "last_issue": plan.release_draft_issues[-1]
+        if plan.release_draft_issues
+        else None,
+    }
     artifact_file_keys = list(artifact_files)
     artifact_files_key_boundary = {
         "first_key": artifact_file_keys[0] if artifact_file_keys else None,
@@ -2351,6 +2362,11 @@ def _issue_artifact_bundle_summary(
             release_draft_required_actions[0] if release_draft_required_actions else None
         ),
         "release_draft_issues_sha256": _stable_json_sha256(plan.release_draft_issues),
+        "release_draft_first_issue": release_draft_issue_boundary["first_issue"],
+        "release_draft_last_issue": release_draft_issue_boundary["last_issue"],
+        "release_draft_issue_boundary_sha256": _stable_json_sha256(
+            release_draft_issue_boundary
+        ),
         "validation_command_count": len(_issue_artifact_validation_commands(plan)),
         "validation_commands_sha256": _stable_json_sha256(_issue_artifact_validation_commands(plan)),
         "review_checklist_count": len(_issue_artifact_review_checklist()),
@@ -2697,6 +2713,12 @@ def _issue_artifact_bundle_summary_markdown(
             "- release_draft_primary_required_action: "
             f"{_summary_inline_code(summary['release_draft_primary_required_action'])}",
             f"- release_draft_issues_sha256: `{summary['release_draft_issues_sha256']}`",
+            "- release_draft_first_issue: "
+            f"{_summary_inline_code(summary['release_draft_first_issue'])}",
+            "- release_draft_last_issue: "
+            f"{_summary_inline_code(summary['release_draft_last_issue'])}",
+            "- release_draft_issue_boundary_sha256: "
+            f"`{summary['release_draft_issue_boundary_sha256']}`",
             f"- validation_command_count: `{summary['validation_command_count']}`",
             f"- validation_commands_sha256: `{summary['validation_commands_sha256']}`",
             f"- review_checklist_count: `{summary['review_checklist_count']}`",
