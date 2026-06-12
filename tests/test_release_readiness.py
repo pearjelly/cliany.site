@@ -301,6 +301,7 @@ def _readme_content() -> str:
         "--strict-quality\n"
         "E_EMPTY_RESULT\n"
         "scripts/release_readiness.py\n"
+        "scripts/check_release_publication.py\n"
         "Real Demo Case Proposal\n"
         "docs/good-first-issues.md\n"
         "docs/module-ownership.md\n"

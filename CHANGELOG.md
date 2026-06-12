@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Changed
+- README 双语路线图入口现在会提示 `scripts/check_release_publication.py --json`，让维护者在选择下一块发布切片时同时确认最新本地 tag 是否公开可见。
+
 ## [0.15.3] - 2026-06-12
 
 ### Added

@@ -6,6 +6,7 @@ V0150_DRAFT = ROOT / "docs" / "releases" / "v0.15.0-draft.md"
 V0151_DRAFT = ROOT / "docs" / "releases" / "v0.15.1-draft.md"
 V0152_DRAFT = ROOT / "docs" / "releases" / "v0.15.2-draft.md"
 V0153_DRAFT = ROOT / "docs" / "releases" / "v0.15.3-draft.md"
+V0154_DRAFT = ROOT / "docs" / "releases" / "v0.15.4-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -242,6 +243,43 @@ def test_v0153_release_draft_tracks_publication_markdown_report():
         "release-readiness-report.md",
         "release_readiness.py --target-version 0.15.3",
         "git tag v0.15.3",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v0154_release_draft_has_required_sections():
+    text = V0154_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.15.4 发布草案",
+        "**目标版本：** `0.15.4`",
+        "**提交范围：** `v0.15.3..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v0154_release_draft_tracks_readme_publication_entrypoint():
+    text = V0154_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "README.md",
+        "README.zh.md",
+        "scripts/check_release_publication.py --json",
+        "最新本地 tag 是否公开可见",
+        "tests/test_readme_current_features.py",
+        "release_readiness.py --target-version 0.15.4",
+        "git tag v0.15.4",
     ]
     for snippet in required:
         assert snippet in text
