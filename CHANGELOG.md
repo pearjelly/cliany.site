@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.125] - 2026-06-12
+
+### Added
+- Candidate issue artifacts `README.md` 的 `Candidate Issue Gate Quick Summary` 现在展示 `visibility_summary`，方便维护者先读到发布可见性的可读解释。
+- [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 说明 quick summary 会展示 visibility summary。
+- 新增 `docs/releases/v0.16.125-draft.md`，把下一版 patch release 聚焦到 candidate issue gate quick summary 的 visibility summary 可见性。
+
 ## [0.16.124] - 2026-06-12
 
 ### Added
@@ -1273,7 +1280,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.124...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.125...HEAD
+[0.16.125]: https://github.com/pearjelly/cliany.site/compare/v0.16.124...v0.16.125
 [0.16.124]: https://github.com/pearjelly/cliany.site/compare/v0.16.123...v0.16.124
 [0.16.123]: https://github.com/pearjelly/cliany.site/compare/v0.16.122...v0.16.123
 [0.16.122]: https://github.com/pearjelly/cliany.site/compare/v0.16.121...v0.16.122
