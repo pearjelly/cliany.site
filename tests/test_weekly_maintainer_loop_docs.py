@@ -49,7 +49,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "candidate_issue_gate_primary_required_action",
         "Candidate Issue Gate Quick Summary",
         "reason/action 数量",
-        "publication branch",
+        "publication branch/upstream",
         "publication worktree clean",
         "publication ahead/behind 数",
         "publication remote checked",

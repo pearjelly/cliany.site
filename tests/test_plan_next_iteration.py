@@ -1095,6 +1095,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "- latest_tag: `v0.16.1`" in readme
     assert "- publication_branch: `master`" in readme
+    assert "- publication_upstream: `origin/master`" in readme
     assert "- publication_worktree_clean: `false`" in readme
     assert "- publication_ahead_count: `2`" in readme
     assert "- publication_behind_count: `0`" in readme
