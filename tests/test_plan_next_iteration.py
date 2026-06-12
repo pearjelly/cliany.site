@@ -389,6 +389,21 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "npm-package-search.md",
             "create-issues.sh",
         ],
+        "review_checklist": [
+            "Confirm the latest local release has been published before creating new candidate work.",
+            "Confirm release draft issues are resolved or intentionally deferred before tagging the target version.",
+            "Confirm Publication Next Actions are resolved or intentionally deferred before running create-issues.sh.",
+            (
+                "Confirm issue-metadata.json has the expected target URL, candidate commands, "
+                "and offline validation commands for each case."
+            ),
+            "Review each body file for scope, tasks, validation evidence, and non-goals.",
+            (
+                "Keep cases as candidate until adapter package, metadata validation, "
+                "and online smoke evidence are complete."
+            ),
+            "Do not use real LLM keys or write runtime state into the repository.",
+        ],
         "validation_commands": [
             (
                 "python scripts/plan_next_iteration.py --target-version 0.16.2 "
@@ -458,7 +473,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "Generated for target version `0.16.2`." in readme
     assert "`issue-metadata.json`: structured issue title, labels, reproduction context" in readme
     assert "`artifact-manifest.json`: schema version, candidate cases, blockers, next actions" in readme
-    assert "release draft handoff, reproduction" in readme
+    assert "review checklist, publication status, publication ref context" in readme
+    assert "release draft" in readme
+    assert "handoff, reproduction" in readme
     assert "body file name" in readme
     assert "`publication-handoff.json`: publication status, visibility, next actions" in readme
     assert "`release-draft-handoff.json`: target version, release draft path" in readme
@@ -493,8 +510,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "- release draft is missing" in readme
     assert "- release draft missing snippet: ## 发版前验证" in readme
     assert "Confirm release draft issues are resolved or intentionally deferred" in readme
-    assert "Confirm `Publication Next Actions` are resolved or intentionally deferred" in readme
-    assert "before running `create-issues.sh`" in readme
+    assert "Confirm Publication Next Actions are resolved or intentionally deferred" in readme
+    assert "before running create-issues.sh" in readme
     assert "expected target URL, candidate commands" in readme
     assert "offline validation commands for each case" in readme
     assert "release publication preflight" in readme

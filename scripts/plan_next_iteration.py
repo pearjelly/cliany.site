@@ -795,6 +795,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
             *issue_body_names,
             "create-issues.sh",
         ],
+        "review_checklist": _issue_artifact_review_checklist(),
         "validation_commands": [
             plan.issue_artifacts_command,
             f"python scripts/plan_next_iteration.py --target-version {plan.target_version} --json",
@@ -851,8 +852,9 @@ Generated for target version `{plan.target_version}`.
 - `issue-metadata.json`: structured issue title, labels, reproduction context, body file name,
   body file path, and `gh issue create` command.
 - `artifact-manifest.json`: schema version, candidate cases, blockers, next actions, file names, review order,
-  publication status, publication ref context, worktree status, release draft handoff, reproduction
-  command, publish commands, and validation commands for this candidate issue artifact bundle.
+  review checklist, publication status, publication ref context, worktree status, release draft
+  handoff, reproduction command, publish commands, and validation commands for this candidate issue
+  artifact bundle.
 - `publication-handoff.json`: publication status, visibility, next actions, publication next actions,
   ref context, worktree status, and publish commands to review first.
 - `release-draft-handoff.json`: target version, release draft path, and release draft issues
@@ -895,14 +897,7 @@ Generated for target version `{plan.target_version}`.
 
 ## Review Checklist
 
-- Confirm the latest local release has been published before creating new candidate work.
-- Confirm release draft issues are resolved or intentionally deferred before tagging the target version.
-- Confirm `Publication Next Actions` are resolved or intentionally deferred before running `create-issues.sh`.
-- Confirm `issue-metadata.json` has the expected target URL, candidate commands, and
-  offline validation commands for each case.
-- Review each body file for scope, tasks, validation evidence, and non-goals.
-- Keep cases as `candidate` until adapter package, metadata validation, and online smoke evidence are complete.
-- Do not use real LLM keys or write runtime state into the repository.
+{_issue_artifact_review_checklist_markdown()}
 
 ## Validation Commands
 
@@ -926,6 +921,28 @@ def _issue_artifact_release_draft_issues(plan: IterationPlan) -> str:
     if not plan.release_draft_issues:
         return "  - No release draft issues are reported."
     return "\n".join(f"  - {issue}" for issue in plan.release_draft_issues)
+
+
+def _issue_artifact_review_checklist() -> list[str]:
+    return [
+        "Confirm the latest local release has been published before creating new candidate work.",
+        "Confirm release draft issues are resolved or intentionally deferred before tagging the target version.",
+        "Confirm Publication Next Actions are resolved or intentionally deferred before running create-issues.sh.",
+        (
+            "Confirm issue-metadata.json has the expected target URL, candidate commands, "
+            "and offline validation commands for each case."
+        ),
+        "Review each body file for scope, tasks, validation evidence, and non-goals.",
+        (
+            "Keep cases as candidate until adapter package, metadata validation, "
+            "and online smoke evidence are complete."
+        ),
+        "Do not use real LLM keys or write runtime state into the repository.",
+    ]
+
+
+def _issue_artifact_review_checklist_markdown() -> str:
+    return "\n".join(f"- {item}" for item in _issue_artifact_review_checklist())
 
 
 def _issue_artifact_publication_commands(plan: IterationPlan) -> str:

@@ -41,6 +41,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact-manifest.json` 的 `validation_commands` 也会包含 `python scripts/release_readiness.py --target-version <version> --json`，方便维护者在同一入口复核下一版 release gate。
 
+`artifact-manifest.json` 还会包含 `review_checklist`，把 README 里的候选任务审阅清单同步为机器可读字段。
+
 如果 readiness 只剩 `commit days N/3`，本周继续做小而可验证的增量；如果存在 gate issue，优先关闭具体 gate，再继续新功能。
 
 ## 2. 周中：实现一个可验证切片
