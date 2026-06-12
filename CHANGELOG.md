@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py` 现在会输出 `publication_worktree_clean` / `publication_worktree_status`，并在 Markdown plan、`publication-handoff.json` 和 artifacts `README.md` 中展示 publication worktree 状态。
+- 新增 `docs/releases/v0.16.34-draft.md`，把下一版 patch release 聚焦到 next iteration plan 的 publication worktree 状态交接。
+
 ## [0.16.33] - 2026-06-12
 
 ### Added

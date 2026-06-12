@@ -67,6 +67,8 @@ class IterationPlan:
     validation_commands: list[str]
     publication_next_actions: list[str]
     publication_publish_commands: list[str]
+    publication_worktree_clean: bool
+    publication_worktree_status: list[str]
     publication_publish_script_command: str
     issue_artifacts_command: str
     release_draft_path: str
@@ -89,6 +91,8 @@ class IterationPlan:
             "validation_commands": self.validation_commands,
             "publication_next_actions": self.publication_next_actions,
             "publication_publish_commands": self.publication_publish_commands,
+            "publication_worktree_clean": self.publication_worktree_clean,
+            "publication_worktree_status": self.publication_worktree_status,
             "publication_publish_script_command": self.publication_publish_script_command,
             "issue_artifacts_command": self.issue_artifacts_command,
             "release_draft_path": self.release_draft_path,
@@ -130,6 +134,28 @@ def _publication_next_actions(publication: Any) -> list[str]:
         return []
     payload = to_dict()
     return [str(action).removeprefix("- ") for action in payload.get("next_actions", [])]
+
+
+def _publication_worktree_clean(publication: Any) -> bool:
+    clean = getattr(publication, "worktree_clean", None)
+    if clean is not None:
+        return bool(clean)
+    to_dict = getattr(publication, "to_dict", None)
+    if not callable(to_dict):
+        return True
+    payload = to_dict()
+    return bool(payload.get("worktree_clean", True))
+
+
+def _publication_worktree_status(publication: Any) -> list[str]:
+    status = getattr(publication, "worktree_status", None)
+    if status is not None:
+        return [str(line) for line in status]
+    to_dict = getattr(publication, "to_dict", None)
+    if not callable(to_dict):
+        return []
+    payload = to_dict()
+    return [str(line) for line in payload.get("worktree_status", [])]
 
 
 def _release_draft_issues(readiness: Any) -> list[str]:
@@ -353,6 +379,8 @@ def build_plan(
         validation_commands=validation_commands,
         publication_next_actions=_publication_next_actions(publication),
         publication_publish_commands=_publication_publish_commands(publication),
+        publication_worktree_clean=_publication_worktree_clean(publication),
+        publication_worktree_status=_publication_worktree_status(publication),
         publication_publish_script_command=publication_publish_script_command,
         issue_artifacts_command=issue_artifacts_command,
         release_draft_path=f"docs/releases/v{readiness.target_version}-draft.md",
@@ -409,6 +437,11 @@ def _print_text(plan: IterationPlan) -> None:
         print("publication_publish_commands:")
         for command in plan.publication_publish_commands:
             print(f"- {command}")
+    print(f"publication_worktree_clean: {str(plan.publication_worktree_clean).lower()}")
+    if plan.publication_worktree_status:
+        print("publication_worktree_status:")
+        for line in plan.publication_worktree_status:
+            print(f"- {line}")
     print(f"publication_publish_script_command: {plan.publication_publish_script_command}")
     print(f"issue_artifacts_command: {plan.issue_artifacts_command}")
 
@@ -419,6 +452,10 @@ def _render_markdown(plan: IterationPlan) -> str:
     next_actions = "\n".join(f"- {action}" for action in plan.next_actions)
     validation = "\n".join(f"- `{command}`" for command in plan.validation_commands)
     publication_actions = _publication_next_actions_markdown(plan.publication_next_actions)
+    publication_worktree = _publication_worktree_markdown(
+        plan.publication_worktree_clean,
+        plan.publication_worktree_status,
+    )
     publication_commands = _publication_commands_markdown(plan.publication_publish_commands)
     publication_script = _publication_script_markdown(plan.publication_publish_script_command)
     promotion_lines = _candidate_promotion_markdown(plan.candidate_promotions)
@@ -456,6 +493,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 
 {publication_actions}
 
+{publication_worktree}
+
 {publication_commands}
 
 {publication_script}
@@ -488,6 +527,19 @@ def _publication_script_markdown(command: str) -> str:
 
 ```bash
 {command}
+```"""
+
+
+def _publication_worktree_markdown(clean: bool, status: list[str]) -> str:
+    if clean:
+        return "## Publication Worktree\n\n- worktree_clean: `true`"
+    status_lines = "\n".join(status) or "(no status lines)"
+    return f"""## Publication Worktree
+
+- worktree_clean: `false`
+
+```text
+{status_lines}
 ```"""
 
 
@@ -597,6 +649,8 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "publication_ok": plan.publication_ok,
         "next_actions": plan.next_actions,
         "publication_next_actions": plan.publication_next_actions,
+        "worktree_clean": plan.publication_worktree_clean,
+        "worktree_status": plan.publication_worktree_status,
         "publish_commands": plan.publication_publish_commands,
         "publish_script_command": plan.publication_publish_script_command,
     }
@@ -623,7 +677,7 @@ Generated for target version `{plan.target_version}`.
 - `issue-metadata.json`: structured issue title, labels, reproduction context, body file name,
   body file path, and `gh issue create` command.
 - `publication-handoff.json`: publication status, next actions, publication next actions,
-  and publish commands to review first.
+  worktree status, and publish commands to review first.
 - `create-issues.sh`: reviewable shell script with a release publication preflight and
   one `gh issue create` command per candidate.
 {body_files}
@@ -633,6 +687,7 @@ Generated for target version `{plan.target_version}`.
 ## Publication Handoff
 
 - publication_ok: `{str(plan.publication_ok).lower()}`
+- worktree_clean: `{str(plan.publication_worktree_clean).lower()}`
 - Review `publication-handoff.json` before running `create-issues.sh`.
 
 ### Publication Next Actions

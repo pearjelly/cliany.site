@@ -98,14 +98,15 @@ def _publication_report() -> SimpleNamespace:
         ahead_count=2,
         latest_tag="v0.16.1",
         tag_published=False,
+        worktree_clean=False,
+        worktree_status=[" M CHANGELOG.md"],
         next_actions=[
+            "- Commit, stash, or discard local worktree changes before publishing release refs.",
             "- Push `master` to `origin`; local branch is ahead by `2` commits.",
             "- Push tag `v0.16.1` after the branch is published.",
         ],
         publish_commands=[
-            "git push origin master",
-            "git push origin v0.16.1",
-            "python scripts/check_release_publication.py --remote --json",
+            "python scripts/check_release_publication.py --json",
         ],
     )
 
@@ -150,16 +151,17 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "--issues-dir /tmp/cliany-candidate-issues"
     )
     assert data["publication_publish_commands"] == [
-        "git push origin master",
-        "git push origin v0.16.1",
-        "python scripts/check_release_publication.py --remote --json",
+        "python scripts/check_release_publication.py --json",
     ]
+    assert data["publication_worktree_clean"] is False
+    assert data["publication_worktree_status"] == [" M CHANGELOG.md"]
     assert (
         data["publication_publish_script_command"]
         == "python scripts/check_release_publication.py --json "
         "--publish-script /tmp/cliany-publish-release.sh"
     )
     assert data["publication_next_actions"] == [
+        "Commit, stash, or discard local worktree changes before publishing release refs.",
         "Push `master` to `origin`; local branch is ahead by `2` commits.",
         "Push tag `v0.16.1` after the branch is published.",
     ]
@@ -225,10 +227,13 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "## Candidate Issue Body Templates" in text
     assert "## Publication Publish Commands" in text
     assert "## Publication Next Actions" in text
+    assert "## Publication Worktree" in text
+    assert "worktree_clean: `false`" in text
+    assert " M CHANGELOG.md" in text
+    assert "Commit, stash, or discard local worktree changes" in text
     assert "Push `master` to `origin`; local branch is ahead by `2` commits." in text
     assert "Push tag `v0.16.1` after the branch is published." in text
-    assert "git push origin master" in text
-    assert "python scripts/check_release_publication.py --remote --json" in text
+    assert "python scripts/check_release_publication.py --json" in text
     assert "## Publication Publish Script" in text
     assert "python scripts/check_release_publication.py --json --publish-script /tmp/cliany-publish-release.sh" in text
     assert "## Release Draft" in text
@@ -291,14 +296,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_ok": False,
         "next_actions": plan.next_actions,
         "publication_next_actions": [
+            "Commit, stash, or discard local worktree changes before publishing release refs.",
             "Push `master` to `origin`; local branch is ahead by `2` commits.",
             "Push tag `v0.16.1` after the branch is published.",
         ],
-        "publish_commands": [
-            "git push origin master",
-            "git push origin v0.16.1",
-            "python scripts/check_release_publication.py --remote --json",
-        ],
+        "worktree_clean": False,
+        "worktree_status": [" M CHANGELOG.md"],
+        "publish_commands": ["python scripts/check_release_publication.py --json"],
         "publish_script_command": (
             "python scripts/check_release_publication.py --json "
             "--publish-script /tmp/cliany-publish-release.sh"
@@ -330,7 +334,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "## Publication Handoff" in readme
     assert "publication_ok: `false`" in readme
+    assert "worktree_clean: `false`" in readme
     assert "### Publication Next Actions" in readme
+    assert "Commit, stash, or discard local worktree changes" in readme
     assert "Push `master` to `origin`; local branch is ahead by `2` commits." in readme
     assert "Push tag `v0.16.1` after the branch is published." in readme
     assert "### Publication Publish Script" in readme
@@ -338,9 +344,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "python scripts/check_release_publication.py --json "
         "--publish-script /tmp/cliany-publish-release.sh"
     ) in readme
-    assert "git push origin master" in readme
-    assert "git push origin v0.16.1" in readme
-    assert "python scripts/check_release_publication.py --remote --json" in readme
+    assert "python scripts/check_release_publication.py --json" in readme
     assert "Confirm `Publication Next Actions` are resolved or intentionally deferred" in readme
     assert "before running `create-issues.sh`" in readme
     assert "expected target URL, candidate commands" in readme
