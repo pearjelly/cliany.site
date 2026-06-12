@@ -1021,6 +1021,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "next_action_tail_sha256": _stable_json_sha256(next_action_tail),
         "publication_next_action_count": 3,
         "publication_next_actions_sha256": _stable_json_sha256(plan.publication_next_actions),
+        "publication_next_action_first_item": plan.publication_next_actions[0],
+        "publication_next_action_last_item": plan.publication_next_actions[-1],
+        "publication_next_action_boundary_sha256": _stable_json_sha256(
+            {
+                "first_item": plan.publication_next_actions[0],
+                "last_item": plan.publication_next_actions[-1],
+            }
+        ),
         "publication_primary_next_action": plan.publication_next_actions[0],
         "publication_handoff_key_count": len(expected_publication_handoff),
         "publication_handoff_schema_version": expected_publication_handoff["schema_version"],
@@ -2055,6 +2063,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"publication_next_actions_sha256: "
         f"`{_stable_json_sha256(plan.publication_next_actions)}`"
+    ) in readme
+    assert (
+        "publication_next_action_first_item: "
+        f"{plan_next_iteration._summary_inline_code(plan.publication_next_actions[0])}"
+    ) in readme
+    assert (
+        "publication_next_action_last_item: "
+        f"{plan_next_iteration._summary_inline_code(plan.publication_next_actions[-1])}"
+    ) in readme
+    assert (
+        "publication_next_action_boundary_sha256: "
+        f"`{artifact_bundle_summary['publication_next_action_boundary_sha256']}`"
     ) in readme
     assert (
         "publication_primary_next_action: "

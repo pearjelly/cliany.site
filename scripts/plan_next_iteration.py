@@ -190,6 +190,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "next_action_tail_sha256",
     "publication_next_action_count",
     "publication_next_actions_sha256",
+    "publication_next_action_first_item",
+    "publication_next_action_last_item",
+    "publication_next_action_boundary_sha256",
     "publication_primary_next_action",
     "publication_handoff_key_count",
     "publication_handoff_schema_version",
@@ -2170,6 +2173,14 @@ def _issue_artifact_bundle_summary(
     }
     next_action_preview = plan.next_actions[:8]
     next_action_tail = plan.next_actions[-8:]
+    publication_next_action_boundary = {
+        "first_item": plan.publication_next_actions[0]
+        if plan.publication_next_actions
+        else None,
+        "last_item": plan.publication_next_actions[-1]
+        if plan.publication_next_actions
+        else None,
+    }
     artifact_manifest_payload = _artifact_manifest_payload_without_summary(
         plan=plan,
         candidate_cases=candidate_cases,
@@ -2418,6 +2429,15 @@ def _issue_artifact_bundle_summary(
         "next_action_tail_sha256": _stable_json_sha256(next_action_tail),
         "publication_next_action_count": len(plan.publication_next_actions),
         "publication_next_actions_sha256": _stable_json_sha256(plan.publication_next_actions),
+        "publication_next_action_first_item": publication_next_action_boundary[
+            "first_item"
+        ],
+        "publication_next_action_last_item": publication_next_action_boundary[
+            "last_item"
+        ],
+        "publication_next_action_boundary_sha256": _stable_json_sha256(
+            publication_next_action_boundary
+        ),
         "publication_primary_next_action": (
             plan.publication_next_actions[0] if plan.publication_next_actions else None
         ),
@@ -2838,6 +2858,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"- next_action_tail_sha256: `{summary['next_action_tail_sha256']}`",
             f"- publication_next_action_count: `{summary['publication_next_action_count']}`",
             f"- publication_next_actions_sha256: `{summary['publication_next_actions_sha256']}`",
+            "- publication_next_action_first_item: "
+            f"{_summary_inline_code(summary['publication_next_action_first_item'])}",
+            "- publication_next_action_last_item: "
+            f"{_summary_inline_code(summary['publication_next_action_last_item'])}",
+            "- publication_next_action_boundary_sha256: "
+            f"`{summary['publication_next_action_boundary_sha256']}`",
             "- publication_primary_next_action: "
             f"{_summary_inline_code(summary['publication_primary_next_action'])}",
             f"- publication_handoff_key_count: `{summary['publication_handoff_key_count']}`",
