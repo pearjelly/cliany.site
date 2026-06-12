@@ -7,7 +7,7 @@
 
 > 🌐 Languages: [English](README.md) | [简体中文](README.zh.md)
 
-> **🧪 v0.14.4 草案质量门禁**：结构化抽取现在返回 `data.quality`，`browser extract --strict-quality` 可将空结果或关键字段缺失判为 `E_EMPTY_RESULT`，生成的 `list-` / `search-` 命令也会输出抽取质量；`scripts/release_readiness.py` 会在发版前统一检查案例库、CI 门禁、发布草案、CHANGELOG 和每周提交节奏。详见 [v0.14.4 发布草案](docs/releases/v0.14.4-draft.md)。
+> **🧪 v0.14.4 质量门禁**：结构化抽取现在返回 `data.quality`，`browser extract --strict-quality` 可将空结果或关键字段缺失判为 `E_EMPTY_RESULT`，生成的 `list-` / `search-` 命令也会输出抽取质量；`scripts/release_readiness.py` 会在发版前统一检查案例库、CI 门禁、发布草案、CHANGELOG 和每周提交节奏。详见 [v0.14.4 发布草案](docs/releases/v0.14.4-draft.md)。
 > **🧭 v0.14.3 开源可用性增强**：新增 Q3 路线图、10 分钟成功路径、真实 demo 案例索引、面向人的 `doctor` 摘要、贡献者上手地图和本地发布节奏检查，详见 [CHANGELOG.md](CHANGELOG.md)。
 > **🤖 v0.14.2 自主改进闭环**：新增 5 维度自主改进脚手架——确定性 benchmark 回归测试、headless Chrome 具身验证、Dependabot 依赖哨兵、运行时反馈闭环、Agent 守则文档，使 OpenCode 可触发自主演进循环，详见 [CHANGELOG.md](CHANGELOG.md)。  
 > **🔧 v0.14.1 修复与增强**：新增 `E_PAGE_NOT_READY` / `E_PARSE_FAILED` / `E_EMPTY_RESULT` 错误码、修复 navigate/extract/action_runtime 失败语义、doctor 同时识别 `AGENT.md` / `AGENTS.md`、Obscura 能力声明修正（navigation/cookies）、list-/search- 命令空结果 opt-in 检测、Obscura 友好错误提示，详见 [CHANGELOG.md](CHANGELOG.md)。  

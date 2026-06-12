@@ -7,7 +7,7 @@
 
 > 🌐 Languages: [English](README.md) | [简体中文](README.zh.md)
 
-> **🧪 v0.14.4 Draft Quality Gates**: Structured extraction now reports `data.quality`, `browser extract --strict-quality` can fail empty or partially missing results with `E_EMPTY_RESULT`, generated `list-` / `search-` commands expose extraction quality, and `scripts/release_readiness.py` checks case catalog, CI gates, release draft, changelog, and weekly commit cadence before release. See [v0.14.4 draft](docs/releases/v0.14.4-draft.md).
+> **🧪 v0.14.4 Quality Gates**: Structured extraction now reports `data.quality`, `browser extract --strict-quality` can fail empty or partially missing results with `E_EMPTY_RESULT`, generated `list-` / `search-` commands expose extraction quality, and `scripts/release_readiness.py` checks case catalog, CI gates, release draft, changelog, and weekly commit cadence before release. See [v0.14.4 release draft](docs/releases/v0.14.4-draft.md).
 > **🧭 v0.14.3 Open-Source Readiness**: Added the Q3 roadmap, 10-minute quickstart, structured real-demo case index, human-readable `doctor` summary, contributor starter map, and local release cadence checks. See [CHANGELOG.md](CHANGELOG.md).
 > **🤖 v0.14.2 自主改进闭环**：新增 5 维度自主改进脚手架——确定性 benchmark 回归测试、headless Chrome 具身验证、Dependabot 依赖哨兵、运行时反馈闭环、Agent 守则文档，使 OpenCode 可触发自主演进循环，详见 [CHANGELOG.md](CHANGELOG.md)。  
 > **🔧 v0.14.1 修复与增强**：新增 `E_PAGE_NOT_READY` / `E_PARSE_FAILED` / `E_EMPTY_RESULT` 错误码、修复 navigate/extract/action_runtime 失败语义、doctor 同时识别 `AGENT.md` / `AGENTS.md`、Obscura 能力声明修正（navigation/cookies）、list-/search- 命令空结果 opt-in 检测、Obscura 友好错误提示，详见 [CHANGELOG.md](CHANGELOG.md)。  

@@ -7,9 +7,12 @@
 
 ## [Unreleased]
 
+## [0.14.4] - 2026-06-12
+
 ### Added
 - 案例库新增 `candidate` 状态和 `pypi-project-search` 候选案例，用离线 JSON 样例承接真实公开只读工作流，待 adapter 包准备好后再晋级 active。
 - 案例库新增 `npm-package-search` 候选案例，用离线 JSON 样例覆盖 JavaScript 包注册表搜索场景。
+- 案例库新增 `crates-io-crate-search` 候选案例，用离线 JSON 样例覆盖 Rust 包注册表搜索场景，并把真实案例资产推进到 8 个。
 - 新增 `docs/module-ownership.md`，把 owner area、主要路径、典型改动和最小验证命令整理成贡献者模块地图。
 - 新增 `docs/weekly-maintainer-loop.md`，把路线图、release readiness、案例库验证和发布节奏串成每周选题、实现、复盘的维护者循环。
 - 新增 `docs/good-first-issues.md`，把首次贡献任务整理成默认离线、带验证命令的候选池。
@@ -35,6 +38,7 @@
 - `scripts/validate_cases.py` 现在会校验离线样例输出中的 `data.quality`，要求样例显式展示成功质量状态和正数 `row_count`。
 - `scripts/validate_cases.py` 的终端输出、JSON 和 Markdown 报告现在会展示 candidate 案例的 `promotion` 晋级清单，维护者可直接从 CI artifact 判断候选案例下一步。
 - `release_readiness.py` 的文本与 Markdown 报告现在会显示案例库 active/candidate/known-gap/total 汇总，发版复盘可直接看到候选案例管道。
+- `release_readiness.py` 默认要求案例库至少保留 8 个 active/candidate/known-gap 资产，防止真实案例库目标在后续维护中无声回退。
 - `release_readiness.py --report` 现在会输出 `Candidate Promotions` 小节，把候选案例晋级 active 的三项动作直接带入发版 readiness artifact。
 - 官网 quickstart 现在暴露每周维护者循环和 `next_actions` 入口，让网站读者也能从 roadmap 进入可验证发布切片。
 - README 双语路线图入口现在链接每周维护者循环，并说明 `release_readiness.py --json` / `check_release_cadence.py --json` 的 `next_actions` 可用于选择下一块可验证发布切片。
@@ -386,6 +390,7 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.14.3...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.14.4...HEAD
+[0.14.4]: https://github.com/pearjelly/cliany.site/compare/v0.14.3...v0.14.4
 [0.11.0]: https://github.com/pearjelly/cliany.site/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/pearjelly/cliany.site/compare/v0.9.3...v0.10.0
