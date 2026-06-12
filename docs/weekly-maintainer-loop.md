@@ -99,6 +99,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `artifact_files_key_preview_count`、`artifact_files_key_preview` 和 `artifact_files_key_preview_sha256`，让工具只读整包摘要就能看到 artifacts 文件映射字段入口，并判断 files key preview 是否漂移。
 
+`artifact_bundle_summary` 还会带上 `artifact_files_key_tail_count`、`artifact_files_key_tail` 和 `artifact_files_key_tail_sha256`，让工具只读整包摘要就能检查 artifacts 文件映射末尾入口，并判断 files key tail 是否漂移。
+
 `artifact_bundle_summary` 还会带上 `issue_artifacts_command_sha256`，让工具只读整包摘要就能判断 artifacts 复现命令是否漂移。
 
 `artifact_bundle_summary` 还会带上 `publication_visibility_key_count`、`publication_visibility_sha256` 和 `publication_visibility_summary_sha256`，让工具只读整包摘要就能判断发布可见性对象结构/内容或 summary 文本是否漂移。
