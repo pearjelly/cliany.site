@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.212] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `candidate_issue_gate_evidence_first_key`、`candidate_issue_gate_evidence_last_key` 和 `candidate_issue_gate_evidence_key_boundary_sha256`，让只读取整包摘要的维护工具能检查 candidate issue gate evidence key 首尾边界。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 gate evidence key boundary，并继续展示 evidence key count 和 evidence hash。
+- 新增 `docs/releases/v0.16.212-draft.md`，把下一版 patch release 聚焦到 candidate issue gate evidence key boundary 可见性。
+
 ## [0.16.211] - 2026-06-13
 
 ### Added
@@ -1882,7 +1889,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.211...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.212...HEAD
+[0.16.212]: https://github.com/pearjelly/cliany.site/compare/v0.16.211...v0.16.212
 [0.16.211]: https://github.com/pearjelly/cliany.site/compare/v0.16.210...v0.16.211
 [0.16.210]: https://github.com/pearjelly/cliany.site/compare/v0.16.209...v0.16.210
 [0.16.209]: https://github.com/pearjelly/cliany.site/compare/v0.16.208...v0.16.209

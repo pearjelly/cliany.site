@@ -224,6 +224,7 @@ V016208_DRAFT = ROOT / "docs" / "releases" / "v0.16.208-draft.md"
 V016209_DRAFT = ROOT / "docs" / "releases" / "v0.16.209-draft.md"
 V016210_DRAFT = ROOT / "docs" / "releases" / "v0.16.210-draft.md"
 V016211_DRAFT = ROOT / "docs" / "releases" / "v0.16.211-draft.md"
+V016212_DRAFT = ROOT / "docs" / "releases" / "v0.16.212-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -10093,6 +10094,52 @@ def test_v016211_release_draft_tracks_create_issues_safety_contract_key_windows(
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.211 --issues-dir",
         "git tag v0.16.211",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016212_release_draft_has_required_sections():
+    text = V016212_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.212 发布草案",
+        "**目标版本：** `0.16.212`",
+        "**提交范围：** `v0.16.211..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016212_release_draft_tracks_candidate_issue_gate_evidence_boundary():
+    text = V016212_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "artifact_bundle_summary",
+        "Artifact Bundle Summary",
+        "candidate_issue_gate_evidence_first_key",
+        "candidate_issue_gate_evidence_last_key",
+        "candidate_issue_gate_evidence_key_boundary_sha256",
+        "candidate_issue_gate_evidence_key_count",
+        "candidate_issue_gate_evidence_sha256",
+        "candidate_issue_gate.evidence",
+        "artifact-manifest.json",
+        "scripts/plan_next_iteration.py",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.212 --issues-dir",
+        "git tag v0.16.212",
     ]
     for snippet in required:
         assert snippet in text
