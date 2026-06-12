@@ -367,6 +367,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "release draft is missing",
             "release draft missing snippet: ## 发版前验证",
         ],
+        "issue_artifacts_command": (
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+            "--issues-dir /tmp/cliany-candidate-issues"
+        ),
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -451,7 +455,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "Generated for target version `0.16.2`." in readme
     assert "`issue-metadata.json`: structured issue title, labels, reproduction context" in readme
     assert "`artifact-manifest.json`: candidate cases, blockers, next actions" in readme
-    assert "publication status, publication ref context, worktree status, release draft handoff" in readme
+    assert "release draft handoff, reproduction" in readme
     assert "body file name" in readme
     assert "`publication-handoff.json`: publication status, visibility, next actions" in readme
     assert "`release-draft-handoff.json`: target version, release draft path" in readme

@@ -76,6 +76,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "publication publish script command",
         "release draft path",
         "release draft issues",
+        "issue_artifacts_command",
         "review order",
         "validation commands",
         "release draft path",
