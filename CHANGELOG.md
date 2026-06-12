@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.153] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `release_draft_handoff_primary_issue` 和 `release_draft_handoff_primary_required_action`，让只读取整包摘要的维护工具能用 handoff primary alias 展示首要草案问题和处理动作。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 release draft handoff primary alias，并继续展示 schema version、key count 与 hash。
+- 新增 `docs/releases/v0.16.153-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 release draft handoff primary alias 可见性。
+
 ## [0.16.152] - 2026-06-13
 
 ### Added
@@ -1469,7 +1476,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.152...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.153...HEAD
+[0.16.153]: https://github.com/pearjelly/cliany.site/compare/v0.16.152...v0.16.153
 [0.16.152]: https://github.com/pearjelly/cliany.site/compare/v0.16.151...v0.16.152
 [0.16.151]: https://github.com/pearjelly/cliany.site/compare/v0.16.150...v0.16.151
 [0.16.150]: https://github.com/pearjelly/cliany.site/compare/v0.16.149...v0.16.150
