@@ -691,6 +691,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "create_issues_script": "create-issues.sh",
         "issue_bodies": ["pypi-project-search.md", "npm-package-search.md"],
     }
+    artifact_file_keys = list(expected_artifact_files)
+    artifact_files_key_preview = artifact_file_keys[:8]
     review_order = [
         "README.md",
         "publication-handoff.json",
@@ -927,6 +929,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ],
         "artifact_files_key_count": len(expected_artifact_files),
         "artifact_files_sha256": _stable_json_sha256(expected_artifact_files),
+        "artifact_files_key_preview_count": len(artifact_files_key_preview),
+        "artifact_files_key_preview": list(artifact_files_key_preview),
+        "artifact_files_key_preview_sha256": _stable_json_sha256(
+            artifact_files_key_preview
+        ),
         "issue_artifacts_command_sha256": _stable_json_sha256(plan.issue_artifacts_command),
         "publication_visibility_key_count": len(plan.publication_visibility),
         "publication_visibility_sha256": _stable_json_sha256(plan.publication_visibility),
@@ -1331,6 +1338,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert artifact_manifest["artifact_bundle_summary"][
         "issue_metadata_tail"
     ] == artifact_manifest["issue_metadata_summary"]["metadata_tail"]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "artifact_files_key_preview"
+    ] == list(artifact_manifest["files"])[
+        : artifact_manifest["artifact_bundle_summary"][
+            "artifact_files_key_preview_count"
+        ]
+    ]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1635,6 +1649,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "artifact_files_key_count: `6`" in readme
     assert f"artifact_files_sha256: `{artifact_bundle_summary['artifact_files_sha256']}`" in readme
+    assert (
+        "artifact_files_key_preview_count: "
+        f"`{artifact_bundle_summary['artifact_files_key_preview_count']}`"
+    ) in readme
+    assert "artifact_files_key_preview: " in readme
+    assert (
+        "artifact_files_key_preview_sha256: "
+        f"`{artifact_bundle_summary['artifact_files_key_preview_sha256']}`"
+    ) in readme
     assert (
         f"issue_artifacts_command_sha256: "
         f"`{artifact_bundle_summary['issue_artifacts_command_sha256']}`"

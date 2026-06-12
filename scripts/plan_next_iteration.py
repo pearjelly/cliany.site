@@ -144,6 +144,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "issue_metadata_tail_sha256",
     "artifact_files_key_count",
     "artifact_files_sha256",
+    "artifact_files_key_preview_count",
+    "artifact_files_key_preview",
+    "artifact_files_key_preview_sha256",
     "issue_artifacts_command_sha256",
     "publication_visibility_key_count",
     "publication_visibility_sha256",
@@ -1978,6 +1981,8 @@ def _issue_artifact_bundle_summary(
         )
     candidate_issue_gate_summary = plan.candidate_issue_gate.get("summary")
     release_draft_required_actions = _release_draft_required_actions(plan.release_draft_issues)
+    artifact_file_keys = list(artifact_files)
+    artifact_files_key_preview = artifact_file_keys[:8]
     artifact_manifest_payload = _artifact_manifest_payload_without_summary(
         plan=plan,
         candidate_cases=candidate_cases,
@@ -2158,6 +2163,11 @@ def _issue_artifact_bundle_summary(
         ],
         "artifact_files_key_count": len(artifact_files),
         "artifact_files_sha256": _stable_json_sha256(artifact_files),
+        "artifact_files_key_preview_count": len(artifact_files_key_preview),
+        "artifact_files_key_preview": list(artifact_files_key_preview),
+        "artifact_files_key_preview_sha256": _stable_json_sha256(
+            artifact_files_key_preview
+        ),
         "issue_artifacts_command_sha256": _stable_json_sha256(plan.issue_artifacts_command),
         "publication_visibility_key_count": len(plan.publication_visibility),
         "publication_visibility_sha256": _stable_json_sha256(plan.publication_visibility),
@@ -2436,6 +2446,10 @@ def _issue_artifact_bundle_summary_markdown(
             f"- issue_metadata_tail_sha256: `{summary['issue_metadata_tail_sha256']}`",
             f"- artifact_files_key_count: `{summary['artifact_files_key_count']}`",
             f"- artifact_files_sha256: `{summary['artifact_files_sha256']}`",
+            f"- artifact_files_key_preview_count: `{summary['artifact_files_key_preview_count']}`",
+            "- artifact_files_key_preview: "
+            f"`{json.dumps(summary['artifact_files_key_preview'], ensure_ascii=False)}`",
+            f"- artifact_files_key_preview_sha256: `{summary['artifact_files_key_preview_sha256']}`",
             f"- issue_artifacts_command_sha256: `{summary['issue_artifacts_command_sha256']}`",
             f"- publication_visibility_key_count: `{summary['publication_visibility_key_count']}`",
             f"- publication_visibility_sha256: `{summary['publication_visibility_sha256']}`",
