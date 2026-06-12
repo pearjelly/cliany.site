@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.74] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `validation_command_count` 和 `validation_commands_sha256`，方便工具只读整包摘要就检测验证命令集合是否漂移。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示这些 validation commands 摘要字段。
+- 新增 `docs/releases/v0.16.74-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 validation commands 漂移检测。
+
 ## [0.16.73] - 2026-06-12
 
 ### Added
@@ -918,7 +925,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.73...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.74...HEAD
+[0.16.74]: https://github.com/pearjelly/cliany.site/compare/v0.16.73...v0.16.74
 [0.16.73]: https://github.com/pearjelly/cliany.site/compare/v0.16.72...v0.16.73
 [0.16.72]: https://github.com/pearjelly/cliany.site/compare/v0.16.71...v0.16.72
 [0.16.71]: https://github.com/pearjelly/cliany.site/compare/v0.16.70...v0.16.71
