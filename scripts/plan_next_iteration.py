@@ -71,6 +71,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "artifact_manifest_key_preview_count",
     "artifact_manifest_key_preview",
     "artifact_manifest_key_preview_sha256",
+    "artifact_manifest_key_tail_count",
+    "artifact_manifest_key_tail",
+    "artifact_manifest_key_tail_sha256",
     "artifact_manifest_payload_key_count",
     "artifact_manifest_payload_sha256",
     "target_version",
@@ -177,6 +180,7 @@ ARTIFACT_MANIFEST_KEY_BOUNDARY = {
     "last_key": ARTIFACT_MANIFEST_KEYS[-1],
 }
 ARTIFACT_MANIFEST_KEY_PREVIEW = ARTIFACT_MANIFEST_KEYS[:8]
+ARTIFACT_MANIFEST_KEY_TAIL = ARTIFACT_MANIFEST_KEYS[-8:]
 PUBLICATION_PUBLISH_SCRIPT_PATH = "/tmp/cliany-publish-release.sh"
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
@@ -1929,6 +1933,11 @@ def _issue_artifact_bundle_summary(
         "artifact_manifest_key_preview_sha256": _stable_json_sha256(
             ARTIFACT_MANIFEST_KEY_PREVIEW
         ),
+        "artifact_manifest_key_tail_count": len(ARTIFACT_MANIFEST_KEY_TAIL),
+        "artifact_manifest_key_tail": list(ARTIFACT_MANIFEST_KEY_TAIL),
+        "artifact_manifest_key_tail_sha256": _stable_json_sha256(
+            ARTIFACT_MANIFEST_KEY_TAIL
+        ),
         "artifact_manifest_payload_key_count": len(artifact_manifest_payload),
         "artifact_manifest_payload_sha256": _stable_json_sha256(artifact_manifest_payload),
         "target_version": plan.target_version,
@@ -2117,6 +2126,11 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{json.dumps(summary['artifact_manifest_key_preview'], ensure_ascii=False)}`",
             "- artifact_manifest_key_preview_sha256: "
             f"`{summary['artifact_manifest_key_preview_sha256']}`",
+            f"- artifact_manifest_key_tail_count: `{summary['artifact_manifest_key_tail_count']}`",
+            "- artifact_manifest_key_tail: "
+            f"`{json.dumps(summary['artifact_manifest_key_tail'], ensure_ascii=False)}`",
+            "- artifact_manifest_key_tail_sha256: "
+            f"`{summary['artifact_manifest_key_tail_sha256']}`",
             f"- artifact_manifest_payload_key_count: `{summary['artifact_manifest_payload_key_count']}`",
             f"- artifact_manifest_payload_sha256: `{summary['artifact_manifest_payload_sha256']}`",
             f"- target_version: `{summary['target_version']}`",
