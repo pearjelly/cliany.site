@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.54] - 2026-06-12
+
+### Changed
+- `candidate_issue_gate.evidence.release_draft_path` 现在使用 `docs/releases/v<version>-draft.md` 形式的仓库相对路径，避免 candidate issue artifacts 泄漏维护者本机绝对路径。
+- 新增 `docs/releases/v0.16.54-draft.md`，把下一版 patch release 聚焦到 candidate issue gate evidence 的相对路径交接。
+
 ## [0.16.53] - 2026-06-12
 
 ### Added
@@ -779,7 +785,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.53...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.54...HEAD
+[0.16.54]: https://github.com/pearjelly/cliany.site/compare/v0.16.53...v0.16.54
 [0.16.53]: https://github.com/pearjelly/cliany.site/compare/v0.16.52...v0.16.53
 [0.16.52]: https://github.com/pearjelly/cliany.site/compare/v0.16.51...v0.16.52
 [0.16.51]: https://github.com/pearjelly/cliany.site/compare/v0.16.50...v0.16.51
