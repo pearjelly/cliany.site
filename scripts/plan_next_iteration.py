@@ -16,6 +16,7 @@ from typing import Any
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
+ARTIFACT_MANIFEST_SCHEMA_VERSION = 1
 PUBLICATION_PUBLISH_SCRIPT_PATH = "/tmp/cliany-publish-release.sh"
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
@@ -1039,7 +1040,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         artifact_files=artifact_files,
     )
     artifact_manifest = {
-        "schema_version": 1,
+        "schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "target_version": plan.target_version,
         "artifact_bundle_summary": artifact_bundle_summary,
         "candidate_count": len(candidate_cases),
@@ -1687,6 +1688,7 @@ def _issue_artifact_bundle_summary(
     candidate_issue_gate_summary = plan.candidate_issue_gate.get("summary")
     release_draft_required_actions = _release_draft_required_actions(plan.release_draft_issues)
     return {
+        "artifact_manifest_schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "target_version": plan.target_version,
         "candidate_count": len(candidate_cases),
         "candidate_cases_sha256": _stable_json_sha256(candidate_cases),
@@ -1833,6 +1835,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
         [
             "## Artifact Bundle Summary",
             "",
+            "- artifact_manifest_schema_version: "
+            f"`{summary['artifact_manifest_schema_version']}`",
             f"- target_version: `{summary['target_version']}`",
             f"- candidate_count: `{summary['candidate_count']}`",
             f"- candidate_cases_sha256: `{summary['candidate_cases_sha256']}`",

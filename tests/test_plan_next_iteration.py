@@ -680,6 +680,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     candidate_issue_gate_evidence = _blocked_candidate_issue_gate()["evidence"]
     candidate_issue_gate_reason_descriptions = _blocked_candidate_issue_gate()["reason_descriptions"]
     artifact_bundle_summary = {
+        "artifact_manifest_schema_version": plan_next_iteration.ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "target_version": "0.16.2",
         "candidate_count": 2,
         "candidate_cases_sha256": _stable_json_sha256(["pypi-project-search", "npm-package-search"]),
@@ -862,7 +863,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "--label case-proposal" in metadata[0]["create_command"]
     assert "--label 'good first issue'" in metadata[0]["create_command"]
     assert artifact_manifest == {
-        "schema_version": 1,
+        "schema_version": plan_next_iteration.ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "target_version": "0.16.2",
         "artifact_bundle_summary": artifact_bundle_summary,
         "candidate_count": 2,
@@ -1010,6 +1011,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert f"total_byte_count: `{issue_body_summary['total_byte_count']}`" in readme
     assert f"inventory_sha256: `{issue_body_summary['inventory_sha256']}`" in readme
     assert "## Artifact Bundle Summary" in readme
+    assert (
+        "artifact_manifest_schema_version: "
+        f"`{plan_next_iteration.ARTIFACT_MANIFEST_SCHEMA_VERSION}`"
+    ) in readme
     assert "target_version: `0.16.2`" in readme
     assert "candidate_count: `2`" in readme
     assert "candidate_cases_sha256: `" in readme
