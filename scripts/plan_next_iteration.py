@@ -767,6 +767,10 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "candidate_cases": candidate_cases,
         "blockers": plan.blockers,
         "next_actions": plan.next_actions,
+        "publication_ok": plan.publication_ok,
+        "publication_visibility": plan.publication_visibility,
+        "publication_next_actions": plan.publication_next_actions,
+        "publication_publish_commands": plan.publication_publish_commands,
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -837,7 +841,8 @@ Generated for target version `{plan.target_version}`.
 - `issue-metadata.json`: structured issue title, labels, reproduction context, body file name,
   body file path, and `gh issue create` command.
 - `artifact-manifest.json`: candidate cases, blockers, next actions, file names, review order,
-  and validation commands for this candidate issue artifact bundle.
+  publication status, publication next actions, publish commands, and validation commands for this
+  candidate issue artifact bundle.
 - `publication-handoff.json`: publication status, visibility, next actions, publication next actions,
   ref context, worktree status, and publish commands to review first.
 - `release-draft-handoff.json`: target version, release draft path, and release draft issues
