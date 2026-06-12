@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.159] - 2026-06-13
+
+### Added
+- `artifact_bundle_summary` 现在输出 `artifact_bundle_summary_key_tail_count`、`artifact_bundle_summary_key_tail` 和 `artifact_bundle_summary_key_tail_sha256`，让只读取整包摘要的维护工具能检查 summary 末尾字段。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 段落现在展示 artifact bundle summary key tail count/list/hash，并继续展示 key preview。
+- 新增 `docs/releases/v0.16.159-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 自身字段尾部预览可见性。
+
 ## [0.16.158] - 2026-06-13
 
 ### Added
@@ -1511,7 +1518,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.158...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.159...HEAD
+[0.16.159]: https://github.com/pearjelly/cliany.site/compare/v0.16.158...v0.16.159
 [0.16.158]: https://github.com/pearjelly/cliany.site/compare/v0.16.157...v0.16.158
 [0.16.157]: https://github.com/pearjelly/cliany.site/compare/v0.16.156...v0.16.157
 [0.16.156]: https://github.com/pearjelly/cliany.site/compare/v0.16.155...v0.16.156
