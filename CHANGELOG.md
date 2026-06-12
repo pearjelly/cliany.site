@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.18] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 `issue-metadata.json` 现在包含 `target_url`、`commands` 和 `offline_commands`，方便维护者机器可读地审阅候选 issue 复现上下文。
 - 新增 `docs/releases/v0.16.18-draft.md`，把下一版 patch release 聚焦到 candidate issue metadata 的结构化复现上下文。
@@ -564,7 +566,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.17...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.18...HEAD
+[0.16.18]: https://github.com/pearjelly/cliany.site/compare/v0.16.17...v0.16.18
 [0.16.17]: https://github.com/pearjelly/cliany.site/compare/v0.16.16...v0.16.17
 [0.16.16]: https://github.com/pearjelly/cliany.site/compare/v0.16.15...v0.16.16
 [0.16.15]: https://github.com/pearjelly/cliany.site/compare/v0.16.14...v0.16.15
