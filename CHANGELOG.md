@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.97] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `release_draft_path` 和 `release_draft_path_sha256`，方便工具只读候选 issue artifacts 整包摘要就判断目标 release draft 路径是否漂移。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示 release draft path 与 path hash。
+- 新增 `docs/releases/v0.16.97-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 release draft path 可见性。
+
 ## [0.16.96] - 2026-06-12
 
 ### Added
@@ -1077,7 +1084,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.96...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.97...HEAD
+[0.16.97]: https://github.com/pearjelly/cliany.site/compare/v0.16.96...v0.16.97
 [0.16.96]: https://github.com/pearjelly/cliany.site/compare/v0.16.95...v0.16.96
 [0.16.95]: https://github.com/pearjelly/cliany.site/compare/v0.16.94...v0.16.95
 [0.16.94]: https://github.com/pearjelly/cliany.site/compare/v0.16.93...v0.16.94

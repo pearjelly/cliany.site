@@ -629,6 +629,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_worktree_status_sha256": _stable_json_sha256(plan.publication_worktree_status),
         "release_draft_handoff_key_count": len(expected_release_draft_handoff),
         "release_draft_handoff_sha256": _stable_json_sha256(expected_release_draft_handoff),
+        "release_draft_path": plan.release_draft_path,
+        "release_draft_path_sha256": _stable_json_sha256(plan.release_draft_path),
         "release_draft_issues_sha256": _stable_json_sha256(plan.release_draft_issues),
         "validation_command_count": 5,
         "validation_commands_sha256": _stable_json_sha256(
@@ -931,6 +933,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"release_draft_handoff_sha256: "
         f"`{artifact_bundle_summary['release_draft_handoff_sha256']}`"
+    ) in readme
+    assert f"release_draft_path: `{plan.release_draft_path}`" in readme
+    assert (
+        f"release_draft_path_sha256: "
+        f"`{artifact_bundle_summary['release_draft_path_sha256']}`"
     ) in readme
     assert (
         f"release_draft_issues_sha256: "
