@@ -174,6 +174,8 @@ def _publication_ref_context(publication: Any) -> dict[str, Any]:
         "tag_commit_in_upstream",
         "branch_published",
         "tag_published",
+        "remote_branch_head",
+        "remote_tag_commit",
         "remote_checked",
     ]
     to_dict = getattr(publication, "to_dict", None)
@@ -1532,6 +1534,8 @@ def _issue_artifact_bundle_summary(
         "publication_tag_commit_in_upstream": plan.publication_ref_context.get("tag_commit_in_upstream"),
         "publication_branch_published": plan.publication_ref_context.get("branch_published"),
         "publication_tag_published": plan.publication_ref_context.get("tag_published"),
+        "publication_remote_branch_head": plan.publication_ref_context.get("remote_branch_head"),
+        "publication_remote_tag_commit": plan.publication_ref_context.get("remote_tag_commit"),
         "publication_remote_checked": bool(plan.publication_ref_context.get("remote_checked", False)),
         "publication_ahead_count": plan.publication_ref_context.get("ahead_count"),
         "publication_behind_count": plan.publication_ref_context.get("behind_count"),
@@ -1641,6 +1645,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"`{str(summary['publication_tag_commit_in_upstream']).lower()}`",
             f"- publication_branch_published: `{str(summary['publication_branch_published']).lower()}`",
             f"- publication_tag_published: `{str(summary['publication_tag_published']).lower()}`",
+            f"- publication_remote_branch_head: `{summary['publication_remote_branch_head']}`",
+            f"- publication_remote_tag_commit: `{summary['publication_remote_tag_commit']}`",
             f"- publication_remote_checked: `{str(summary['publication_remote_checked']).lower()}`",
             f"- publication_ahead_count: `{summary['publication_ahead_count']}`",
             f"- publication_behind_count: `{summary['publication_behind_count']}`",

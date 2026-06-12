@@ -114,6 +114,8 @@ def _publication_report() -> SimpleNamespace:
         tag_commit_in_upstream=False,
         branch_published=False,
         tag_published=False,
+        remote_branch_head=None,
+        remote_tag_commit=None,
         remote_checked=False,
         worktree_clean=False,
         worktree_status=[" M CHANGELOG.md"],
@@ -145,6 +147,8 @@ def _published_publication_report() -> SimpleNamespace:
         tag_commit_in_upstream=True,
         branch_published=True,
         tag_published=True,
+        remote_branch_head="abc123",
+        remote_tag_commit="abc123",
         remote_checked=True,
         worktree_clean=True,
         worktree_status=[],
@@ -304,6 +308,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "tag_commit_in_upstream": False,
         "branch_published": False,
         "tag_published": False,
+        "remote_branch_head": None,
+        "remote_tag_commit": None,
         "remote_checked": False,
     }
     assert data["publication_worktree_clean"] is False
@@ -569,6 +575,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "tag_commit_in_upstream": False,
             "branch_published": False,
             "tag_published": False,
+            "remote_branch_head": None,
+            "remote_tag_commit": None,
             "remote_checked": False,
         },
         "worktree_clean": False,
@@ -706,6 +714,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_tag_commit_in_upstream": False,
         "publication_branch_published": False,
         "publication_tag_published": False,
+        "publication_remote_branch_head": None,
+        "publication_remote_tag_commit": None,
         "publication_remote_checked": False,
         "publication_ahead_count": 2,
         "publication_behind_count": 0,
@@ -792,6 +802,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "tag_commit_in_upstream": False,
             "branch_published": False,
             "tag_published": False,
+            "remote_branch_head": None,
+            "remote_tag_commit": None,
             "remote_checked": False,
         },
         "publication_worktree_clean": False,
@@ -1004,6 +1016,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "publication_tag_commit_in_upstream: `false`" in readme
     assert "publication_branch_published: `false`" in readme
     assert "publication_tag_published: `false`" in readme
+    assert "publication_remote_branch_head: `None`" in readme
+    assert "publication_remote_tag_commit: `None`" in readme
     assert "publication_remote_checked: `false`" in readme
     assert "publication_ahead_count: `2`" in readme
     assert "publication_behind_count: `0`" in readme

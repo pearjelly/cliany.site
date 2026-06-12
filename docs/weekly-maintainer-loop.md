@@ -71,6 +71,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `publication_branch_published` 和 `publication_tag_published`，让工具只读整包摘要就能判断发布分支和最新本地 tag 是否已经公开可见。
 
+`artifact_bundle_summary` 还会带上 `publication_remote_branch_head` 和 `publication_remote_tag_commit`，让工具只读整包摘要就能判断远端分支和远端 tag 在 remote check 时实际指向的提交。
+
 `artifact_bundle_summary` 还会带上 `requires_maintainer_review`，让工具只读整包摘要就能判断候选 issue gate 是否仍需人工审阅。
 
 `artifact_bundle_summary` 还会带上 `candidate_issue_gate_summary_sha256`，让工具只读整包摘要就能判断 gate summary 是否漂移。
