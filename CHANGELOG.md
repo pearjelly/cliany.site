@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.79] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `issue_body_summary_sha256`，方便工具只读整包摘要就检测 issue body summary 是否漂移。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示 issue body summary hash。
+- 新增 `docs/releases/v0.16.79-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 issue body summary 漂移检测。
+
 ## [0.16.78] - 2026-06-12
 
 ### Added
@@ -953,7 +960,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.78...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.79...HEAD
+[0.16.79]: https://github.com/pearjelly/cliany.site/compare/v0.16.78...v0.16.79
 [0.16.78]: https://github.com/pearjelly/cliany.site/compare/v0.16.77...v0.16.78
 [0.16.77]: https://github.com/pearjelly/cliany.site/compare/v0.16.76...v0.16.77
 [0.16.76]: https://github.com/pearjelly/cliany.site/compare/v0.16.75...v0.16.76
