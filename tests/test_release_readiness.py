@@ -981,6 +981,54 @@ def test_release_readiness_accepts_tagged_release_mode(tmp_path):
     assert report.draft.ok is True
 
 
+def test_release_readiness_markdown_tagged_mode_points_to_publish_step(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    _commit(repo, "notes/tuesday.md", "tuesday", "2026-06-09")
+    (repo / "pyproject.toml").write_text(
+        '[project]\n'
+        'name = "demo"\n'
+        'version = "0.1.1"\n'
+        'description = "Demo package."\n'
+        'readme = "README.md"\n\n'
+        '[project.urls]\n'
+        'Homepage = "https://demo.example.com"\n'
+        'Repository = "https://github.com/example/demo"\n'
+        'Changelog = "https://github.com/example/demo/blob/main/CHANGELOG.md"\n',
+        encoding="utf-8",
+    )
+    (repo / "CHANGELOG.md").write_text(
+        "# Changelog\n\n"
+        "## [Unreleased]\n\n"
+        "## [0.1.1] - 2026-06-10\n\n"
+        "### Added\n"
+        "- Pending release note.\n\n"
+        "## [0.1.0] - 2026-06-08\n\n"
+        "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.1.1...HEAD\n",
+        encoding="utf-8",
+    )
+    _git(repo, "add", "pyproject.toml", "CHANGELOG.md")
+    env = {
+        "GIT_AUTHOR_NAME": "Test",
+        "GIT_AUTHOR_EMAIL": "test@example.com",
+        "GIT_COMMITTER_NAME": "Test",
+        "GIT_COMMITTER_EMAIL": "test@example.com",
+        "GIT_AUTHOR_DATE": "2026-06-10T12:00:00+00:00",
+        "GIT_COMMITTER_DATE": "2026-06-10T12:00:00+00:00",
+    }
+    _git(repo, "commit", "-m", "release 0.1.1", env=env)
+    _git(repo, "tag", "v0.1.1")
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=3, release_tag="v0.1.1")
+    report_path = tmp_path / "reports" / "release-readiness.md"
+
+    release_readiness._write_markdown_report(report, report_path)
+
+    text = report_path.read_text(encoding="utf-8")
+    assert (
+        "| What is the next smallest release slice? | Ready to publish verified tag `v0.1.1`. |"
+        in text
+    )
+
+
 def test_release_readiness_blocks_release_tag_not_at_head(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     _commit(repo, "notes/tuesday.md", "tuesday", "2026-06-09")

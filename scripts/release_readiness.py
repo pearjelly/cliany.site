@@ -697,13 +697,21 @@ def _candidate_promotion_rows(report: ReadinessReport) -> list[str]:
     return rows
 
 
-def _weekly_review_rows(report: ReadinessReport) -> list[str]:
+def _weekly_review_next_slice(report: ReadinessReport) -> str:
     next_actions = _next_action_lines(report)
-    next_slice = (
-        next_actions[0].removeprefix("- ")
-        if next_actions
-        else f"Ready to tag `v{report.target_version}` after final validation."
-    )
+    if next_actions:
+        return next_actions[0].removeprefix("- ")
+    if (
+        report.current_version == report.target_version
+        and report.cadence.tag_matches_version
+        and report.cadence.commits_since_latest_tag == 0
+    ):
+        return f"Ready to publish verified tag `v{report.target_version}`."
+    return f"Ready to tag `v{report.target_version}` after final validation."
+
+
+def _weekly_review_rows(report: ReadinessReport) -> list[str]:
+    next_slice = _weekly_review_next_slice(report)
     return [
         (
             "| Does this release help real users succeed? | "
