@@ -297,6 +297,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     body = (issues_dir / "pypi-project-search.md").read_text(encoding="utf-8")
     metadata = json.loads((issues_dir / "issue-metadata.json").read_text(encoding="utf-8"))
     publication_handoff = json.loads((issues_dir / "publication-handoff.json").read_text(encoding="utf-8"))
+    release_draft_handoff = json.loads((issues_dir / "release-draft-handoff.json").read_text(encoding="utf-8"))
     script = (issues_dir / "create-issues.sh").read_text(encoding="utf-8")
     readme = (issues_dir / "README.md").read_text(encoding="utf-8")
 
@@ -357,6 +358,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "--publish-script /tmp/cliany-publish-release.sh"
         ),
     }
+    assert release_draft_handoff == {
+        "release_draft_path": "docs/releases/v0.16.2-draft.md",
+        "release_draft_issues": [
+            "release draft is missing",
+            "release draft missing snippet: ## 发版前验证",
+        ],
+        "target_version": "0.16.2",
+    }
     assert "gh issue create" in script
     assert 'REPO_ROOT="$(git rev-parse --show-toplevel)"' in script
     assert 'cd "$REPO_ROOT"' in script
@@ -375,6 +384,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "`issue-metadata.json`: structured issue title, labels, reproduction context" in readme
     assert "body file name" in readme
     assert "`publication-handoff.json`: publication status, visibility, next actions" in readme
+    assert "`release-draft-handoff.json`: target version, release draft path" in readme
     assert "## Candidate Summary" in readme
     assert "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands |" in readme
     assert (

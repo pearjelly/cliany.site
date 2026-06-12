@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --issues-dir` 现在会写出 `release-draft-handoff.json`，把 target version、release draft path 和 release draft issues 作为结构化 artifact 交给维护者和工具读取。
+- 新增 `docs/releases/v0.16.39-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts 的结构化 release draft handoff。
+
 ## [0.16.38] - 2026-06-12
 
 ### Added

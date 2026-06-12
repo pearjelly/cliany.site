@@ -775,6 +775,15 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         json.dumps(publication_handoff, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+    release_draft_handoff = {
+        "release_draft_path": plan.release_draft_path,
+        "release_draft_issues": plan.release_draft_issues,
+        "target_version": plan.target_version,
+    }
+    (directory / "release-draft-handoff.json").write_text(
+        json.dumps(release_draft_handoff, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     script_path = directory / "create-issues.sh"
     script_path.write_text("\n".join(script_lines) + "\n", encoding="utf-8")
     script_path.chmod(0o755)
@@ -795,6 +804,8 @@ Generated for target version `{plan.target_version}`.
   body file path, and `gh issue create` command.
 - `publication-handoff.json`: publication status, visibility, next actions, publication next actions,
   ref context, worktree status, and publish commands to review first.
+- `release-draft-handoff.json`: target version, release draft path, and release draft issues
+  to review before tagging the target version.
 - `create-issues.sh`: reviewable shell script with a release publication preflight and
   one `gh issue create` command per candidate.
 {body_files}
