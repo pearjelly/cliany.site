@@ -186,11 +186,11 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "## Reproduction Context\n"
             "- Target URL: https://pypi.org/search/?q=cliany-site\n"
             "- Candidate commands:\n"
-            '- `cliany-site explore "https://pypi.org" "search Python packages" --json`\n'
-            "- `cliany-site pypi.org search-projects --query cliany-site --limit 5 --json`\n"
+            '  - `cliany-site explore "https://pypi.org" "search Python packages" --json`\n'
+            "  - `cliany-site pypi.org search-projects --query cliany-site --limit 5 --json`\n"
             "- Offline validation commands:\n"
-            "- `python scripts/validate_cases.py --strict`\n"
-            "- `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md`\n\n"
+            "  - `python scripts/validate_cases.py --strict`\n"
+            "  - `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md`\n\n"
             "## Tasks\n"
             "- [ ] `adapter_package`: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n"
             "- [ ] `metadata_validation`: Run validate_cases with --packages-dir.\n"
@@ -266,6 +266,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "## Scope: promote candidate case `pypi-project-search`" in body
     assert "## Reproduction Context" in body
     assert "- Target URL: https://pypi.org/search/?q=cliany-site" in body
+    assert "- Candidate commands:\n  - `cliany-site explore" in body
+    assert "- Offline validation commands:\n  - `python scripts/validate_cases.py --strict`" in body
     assert 'cliany-site explore "https://pypi.org" "search Python packages" --json' in body
     assert "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md" in body
     assert metadata[0]["case_id"] == "pypi-project-search"

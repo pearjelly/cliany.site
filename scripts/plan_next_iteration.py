@@ -257,8 +257,8 @@ def _candidate_issue_body(
     metadata_validation: str,
     online_smoke: str,
 ) -> str:
-    command_lines = [f"- `{command}`" for command in commands] or ["- Not declared."]
-    offline_command_lines = [f"- `{command}`" for command in offline_commands] or ["- Not declared."]
+    command_lines = [f"  - `{command}`" for command in commands] or ["  - Not declared."]
+    offline_command_lines = [f"  - `{command}`" for command in offline_commands] or ["  - Not declared."]
     return "\n".join(
         [
             f"## Scope: promote candidate case `{case_id}`",

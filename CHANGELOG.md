@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Changed
+- `scripts/plan_next_iteration.py` 生成的 candidate issue body 现在会把 candidate commands 和 offline validation commands 渲染为 `Reproduction Context` 下的子列表，提升 GitHub issue 可读性。
+- 新增 `docs/releases/v0.16.27-draft.md`，把下一版 patch release 聚焦到 candidate issue body 的复现命令层级。
+
 ## [0.16.26] - 2026-06-12
 
 ### Added
