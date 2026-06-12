@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --issues-dir` 现在写出 `publication-handoff.json`，把 publication 状态、next actions 和 publish commands 放进候选 issue artifacts。
+- 新增 `docs/releases/v0.16.16-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts 的 publication handoff。
+
 ## [0.16.15] - 2026-06-12
 
 ### Added

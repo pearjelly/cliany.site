@@ -230,6 +230,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
 
     body = (issues_dir / "pypi-project-search.md").read_text(encoding="utf-8")
     metadata = json.loads((issues_dir / "issue-metadata.json").read_text(encoding="utf-8"))
+    publication_handoff = json.loads((issues_dir / "publication-handoff.json").read_text(encoding="utf-8"))
     script = (issues_dir / "create-issues.sh").read_text(encoding="utf-8")
     readme = (issues_dir / "README.md").read_text(encoding="utf-8")
 
@@ -245,6 +246,19 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "gh issue create" in metadata[0]["create_command"]
     assert "--label case-proposal" in metadata[0]["create_command"]
     assert "--label 'good first issue'" in metadata[0]["create_command"]
+    assert publication_handoff == {
+        "publication_ok": False,
+        "next_actions": plan.next_actions,
+        "publish_commands": [
+            "git push origin master",
+            "git push origin v0.16.1",
+            "python scripts/check_release_publication.py --remote --json",
+        ],
+        "publish_script_command": (
+            "python scripts/check_release_publication.py --json "
+            "--publish-script /tmp/cliany-publish-release.sh"
+        ),
+    }
     assert "gh issue create" in script
     assert 'REPO_ROOT="$(git rev-parse --show-toplevel)"' in script
     assert 'cd "$REPO_ROOT"' in script
@@ -258,6 +272,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "# cliany-site Candidate Issue Artifacts" in readme
     assert "Generated for target version `0.16.2`." in readme
     assert "`issue-metadata.json`: structured issue title, labels, body file path" in readme
+    assert "`publication-handoff.json`: publication status, next actions" in readme
+    assert "## Publication Handoff" in readme
+    assert "publication_ok: `false`" in readme
+    assert "git push origin master" in readme
+    assert "git push origin v0.16.1" in readme
+    assert "python scripts/check_release_publication.py --remote --json" in readme
     assert "release publication preflight" in readme
     assert "python scripts/check_release_publication.py --strict --json" in readme
     assert "/tmp/cliany-issue-publication-check.json" in readme

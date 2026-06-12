@@ -530,6 +530,16 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         script_lines.extend(["", _gh_issue_create_command(promotion, body_path)])
 
     (directory / "issue-metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
+    publication_handoff = {
+        "publication_ok": plan.publication_ok,
+        "next_actions": plan.next_actions,
+        "publish_commands": plan.publication_publish_commands,
+        "publish_script_command": plan.publication_publish_script_command,
+    }
+    (directory / "publication-handoff.json").write_text(
+        json.dumps(publication_handoff, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     script_path = directory / "create-issues.sh"
     script_path.write_text("\n".join(script_lines) + "\n", encoding="utf-8")
     script_path.chmod(0o755)
@@ -546,9 +556,19 @@ Generated for target version `{plan.target_version}`.
 ## Files
 
 - `issue-metadata.json`: structured issue title, labels, body file path, and `gh issue create` command.
+- `publication-handoff.json`: publication status, next actions, and publish commands to review first.
 - `create-issues.sh`: reviewable shell script with a release publication preflight and
   one `gh issue create` command per candidate.
 {body_files}
+
+## Publication Handoff
+
+- publication_ok: `{str(plan.publication_ok).lower()}`
+- Review `publication-handoff.json` before running `create-issues.sh`.
+
+```bash
+{_issue_artifact_publication_commands(plan)}
+```
 
 ## Review Checklist
 
@@ -572,6 +592,12 @@ Run it only after checking `issue-metadata.json` and the body files. The script 
 `python scripts/check_release_publication.py --strict --json` before creating issues and
 writes the preflight JSON to `/tmp/cliany-issue-publication-check.json`.
 """
+
+
+def _issue_artifact_publication_commands(plan: IterationPlan) -> str:
+    if plan.publication_publish_commands:
+        return "\n".join(plan.publication_publish_commands)
+    return "python scripts/check_release_publication.py --json"
 
 
 def _gh_issue_create_command(promotion: CandidatePromotion, body_path: Path) -> str:
