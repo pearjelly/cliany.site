@@ -772,6 +772,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "artifact_manifest_payload_key_preview_sha256": _stable_json_sha256(
             plan_next_iteration.ARTIFACT_MANIFEST_PAYLOAD_KEY_PREVIEW
         ),
+        "artifact_manifest_payload_key_tail_count": len(
+            plan_next_iteration.ARTIFACT_MANIFEST_PAYLOAD_KEY_TAIL
+        ),
+        "artifact_manifest_payload_key_tail": list(
+            plan_next_iteration.ARTIFACT_MANIFEST_PAYLOAD_KEY_TAIL
+        ),
+        "artifact_manifest_payload_key_tail_sha256": _stable_json_sha256(
+            plan_next_iteration.ARTIFACT_MANIFEST_PAYLOAD_KEY_TAIL
+        ),
         "artifact_manifest_payload_sha256": _stable_json_sha256(artifact_manifest_payload),
         "target_version": "0.16.2",
         "candidate_count": 2,
@@ -1091,6 +1100,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "artifact_manifest_payload_key_preview_count"
         ]
     ]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "artifact_manifest_payload_key_tail"
+    ] == list(artifact_manifest_payload)[
+        -artifact_manifest["artifact_bundle_summary"][
+            "artifact_manifest_payload_key_tail_count"
+        ] :
+    ]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1224,6 +1240,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "artifact_manifest_payload_key_preview_sha256: "
         f"`{_stable_json_sha256(plan_next_iteration.ARTIFACT_MANIFEST_PAYLOAD_KEY_PREVIEW)}`"
+    ) in readme
+    assert (
+        "artifact_manifest_payload_key_tail_count: "
+        f"`{len(plan_next_iteration.ARTIFACT_MANIFEST_PAYLOAD_KEY_TAIL)}`"
+    ) in readme
+    assert "artifact_manifest_payload_key_tail: " in readme
+    assert (
+        "artifact_manifest_payload_key_tail_sha256: "
+        f"`{_stable_json_sha256(plan_next_iteration.ARTIFACT_MANIFEST_PAYLOAD_KEY_TAIL)}`"
     ) in readme
     assert (
         "artifact_manifest_payload_sha256: "
