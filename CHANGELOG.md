@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.33] - 2026-06-12
+
 ### Added
 - `scripts/check_release_publication.py` 的 JSON、文本和 Markdown report 现在会展示 `worktree_clean` / `worktree_status`，dirty worktree 时优先提示清理本地改动并收敛 `publish_commands`。
 - 新增 `docs/releases/v0.16.33-draft.md`，把下一版 patch release 聚焦到 publication audit 的 worktree 状态可见性。
@@ -655,7 +657,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.32...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.33...HEAD
+[0.16.33]: https://github.com/pearjelly/cliany.site/compare/v0.16.32...v0.16.33
 [0.16.32]: https://github.com/pearjelly/cliany.site/compare/v0.16.31...v0.16.32
 [0.16.31]: https://github.com/pearjelly/cliany.site/compare/v0.16.30...v0.16.31
 [0.16.30]: https://github.com/pearjelly/cliany.site/compare/v0.16.29...v0.16.30
