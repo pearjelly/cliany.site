@@ -31,7 +31,7 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `plan_next_iteration.py` 的 JSON、默认文本输出和 Markdown report 会展示 `publication_next_action_count`、`publication_publish_command_count`、`publication_publish_script_path`、`publication_publish_script_path_sha256`、`publication_publish_script_command` 与 `publication_publish_script_command_sha256`，让维护者在周初计划里先判断发布待办规模，并直接看到可审阅发布脚本的路径、路径摘要、生成命令和命令摘要，再展开 publication next actions 和 publish commands。
 
-`release_readiness.py --report` 的 `Weekly Review` 在 tagged release preflight 通过后，会把下一步显示为发布已验证 tag，而不是继续提示打 tag，避免维护者在 tag 已存在时误判下一步。
+`release_readiness.py --report` 会在 JSON 和 Markdown report 中输出 `release_mode` / `release_tag`；只有显式 `--release-tag` 的 tagged preflight 通过后，`Weekly Review` 才会把下一步显示为发布已验证 tag。普通 `--target-version` readiness 即使版本和 tag 已匹配，也仍提示准备打 tag，避免目标版本自检和 tag 发布前自检互相混淆。
 
 `artifact_bundle_summary` 会带上 `artifact_bundle_summary_key_count` 和 `artifact_bundle_summary_keys_sha256`，让工具只读整包摘要就能判断 summary 自身字段规模和字段清单是否漂移。
 

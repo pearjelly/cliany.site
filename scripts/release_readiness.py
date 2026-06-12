@@ -109,6 +109,8 @@ class ReadinessReport:
     ok: bool
     current_version: str
     target_version: str
+    release_mode: str
+    release_tag: str | None
     blockers: list[str]
     min_case_assets: int
     cadence: CadenceReport
@@ -124,6 +126,8 @@ class ReadinessReport:
             "ok": self.ok,
             "current_version": self.current_version,
             "target_version": self.target_version,
+            "release_mode": self.release_mode,
+            "release_tag": self.release_tag,
             "blockers": self.blockers,
             "min_case_assets": self.min_case_assets,
             "cadence": self.cadence.to_dict(),
@@ -569,6 +573,8 @@ def build_report(
         ok=not blockers,
         current_version=current_version,
         target_version=expected_target,
+        release_mode="tagged" if release_tag else "target",
+        release_tag=release_tag,
         blockers=blockers,
         min_case_assets=min_case_assets,
         cadence=cadence,
@@ -702,7 +708,8 @@ def _weekly_review_next_slice(report: ReadinessReport) -> str:
     if next_actions:
         return next_actions[0].removeprefix("- ")
     if (
-        report.current_version == report.target_version
+        report.release_mode == "tagged"
+        and report.current_version == report.target_version
         and report.cadence.tag_matches_version
         and report.cadence.commits_since_latest_tag == 0
     ):
@@ -749,6 +756,8 @@ def _render_markdown_report(report: ReadinessReport) -> str:
         f"| ok | `{str(report.ok).lower()}` |",
         f"| current_version | `{report.current_version}` |",
         f"| target_version | `{report.target_version}` |",
+        f"| release_mode | `{report.release_mode}` |",
+        f"| release_tag | `{report.release_tag or '-'}` |",
         f"| blockers | {blockers} |",
         "",
         "## Gates",

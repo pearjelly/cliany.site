@@ -4,6 +4,7 @@ import json
 import subprocess
 import sys
 import tarfile
+from dataclasses import replace
 from datetime import date
 from io import BytesIO
 from pathlib import Path
@@ -975,10 +976,14 @@ def test_release_readiness_accepts_tagged_release_mode(tmp_path):
     assert report.ok is True
     assert report.current_version == "0.1.1"
     assert report.target_version == "0.1.1"
+    assert report.release_mode == "tagged"
+    assert report.release_tag == "v0.1.1"
     assert report.blockers == []
     assert report.cadence.latest_tag == "v0.1.1"
     assert report.cadence.commits_since_latest_tag == 0
     assert report.draft.ok is True
+    assert report.to_dict()["release_mode"] == "tagged"
+    assert report.to_dict()["release_tag"] == "v0.1.1"
 
 
 def test_release_readiness_markdown_tagged_mode_points_to_publish_step(tmp_path):
@@ -1023,9 +1028,23 @@ def test_release_readiness_markdown_tagged_mode_points_to_publish_step(tmp_path)
     release_readiness._write_markdown_report(report, report_path)
 
     text = report_path.read_text(encoding="utf-8")
+    assert "| release_mode | `tagged` |" in text
+    assert "| release_tag | `v0.1.1` |" in text
     assert (
         "| What is the next smallest release slice? | Ready to publish verified tag `v0.1.1`. |"
         in text
+    )
+
+    target_report = replace(report, release_mode="target", release_tag=None)
+    target_report_path = tmp_path / "reports" / "target-readiness.md"
+    release_readiness._write_markdown_report(target_report, target_report_path)
+
+    target_text = target_report_path.read_text(encoding="utf-8")
+    assert "| release_mode | `target` |" in target_text
+    assert "| release_tag | `-` |" in target_text
+    assert (
+        "| What is the next smallest release slice? | Ready to tag `v0.1.1` after final validation. |"
+        in target_text
     )
 
 
