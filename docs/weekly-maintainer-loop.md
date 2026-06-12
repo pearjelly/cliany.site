@@ -119,6 +119,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 也会带上 `candidate_issue_gate_reason_code_count`、`candidate_issue_gate_reason_codes_sha256`、`candidate_issue_gate_required_action_count` 和 `candidate_issue_gate_required_actions_sha256`，让工具只读整包摘要就能判断 gate reason/action set 是否需要展开。
 
+`artifact_bundle_summary` 还会带上 `candidate_issue_gate_first_reason_code`、`candidate_issue_gate_last_reason_code` 和 `candidate_issue_gate_reason_code_boundary_sha256`，让工具只读整包摘要就能检查 gate reason code 首尾边界。
+
 `artifact_bundle_summary` 还会带上 `candidate_issue_gate_primary_reason_code`、`candidate_issue_gate_primary_reason_description` 和 `candidate_issue_gate_primary_required_action`，让工具只读整包摘要就能展示首要阻塞原因、原因说明和首个维护动作。
 
 Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示 `Candidate Issue Gate Quick Summary`，把 gate status、`can_create_issues`、`requires_maintainer_review`、publication/release draft ok、blocker/next action 数量、publication publish command 数量、publication publish script path、publication publish script command、reason/action 数量、primary reason/action、latest tag、publication branch/upstream/remote、publication local HEAD/tag commit/upstream HEAD、publication tag state、publication published state、publication remote refs、publication worktree clean、publication ahead/behind 数、publication remote checked、release draft issue 数、release draft path、visibility 和 visibility summary 放到维护者最容易先读到的位置。

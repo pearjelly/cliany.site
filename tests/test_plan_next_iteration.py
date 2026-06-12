@@ -1141,6 +1141,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "candidate_issue_gate_reason_code_count": _blocked_candidate_issue_gate()["reason_code_count"],
         "candidate_issue_gate_reason_codes_sha256": _blocked_candidate_issue_gate()["reason_codes_sha256"],
+        "candidate_issue_gate_first_reason_code": "publication_not_published",
+        "candidate_issue_gate_last_reason_code": "release_draft_issues",
+        "candidate_issue_gate_reason_code_boundary_sha256": _stable_json_sha256(
+            {
+                "first_code": "publication_not_published",
+                "last_code": "release_draft_issues",
+            }
+        ),
         "candidate_issue_gate_primary_reason_code": "publication_not_published",
         "candidate_issue_gate_primary_reason_description": (
             "The latest local release branch or tag is not visible upstream."
@@ -2076,6 +2084,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"candidate_issue_gate_reason_codes_sha256: "
         f"`{_blocked_candidate_issue_gate()['reason_codes_sha256']}`"
+    ) in readme
+    assert "candidate_issue_gate_first_reason_code: `publication_not_published`" in readme
+    assert "candidate_issue_gate_last_reason_code: `release_draft_issues`" in readme
+    assert (
+        "candidate_issue_gate_reason_code_boundary_sha256: "
+        f"`{artifact_bundle_summary['candidate_issue_gate_reason_code_boundary_sha256']}`"
     ) in readme
     assert "candidate_issue_gate_primary_reason_code: `publication_not_published`" in readme
     assert (

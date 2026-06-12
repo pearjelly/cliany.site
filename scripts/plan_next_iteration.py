@@ -253,6 +253,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "candidate_issue_gate_reason_descriptions_sha256",
     "candidate_issue_gate_reason_code_count",
     "candidate_issue_gate_reason_codes_sha256",
+    "candidate_issue_gate_first_reason_code",
+    "candidate_issue_gate_last_reason_code",
+    "candidate_issue_gate_reason_code_boundary_sha256",
     "candidate_issue_gate_primary_reason_code",
     "candidate_issue_gate_primary_reason_description",
     "candidate_issue_gate_required_action_count",
@@ -2007,6 +2010,14 @@ def _issue_artifact_bundle_summary(
     candidate_issue_gate_primary_reason_code = (
         candidate_issue_gate_reason_codes[0] if candidate_issue_gate_reason_codes else None
     )
+    candidate_issue_gate_reason_code_boundary = {
+        "first_code": candidate_issue_gate_reason_codes[0]
+        if candidate_issue_gate_reason_codes
+        else None,
+        "last_code": candidate_issue_gate_reason_codes[-1]
+        if candidate_issue_gate_reason_codes
+        else None,
+    }
     candidate_issue_gate_primary_reason_description = None
     if candidate_issue_gate_primary_reason_code is not None:
         candidate_issue_gate_primary_reason_description = candidate_issue_gate_reason_descriptions.get(
@@ -2369,6 +2380,15 @@ def _issue_artifact_bundle_summary(
         ),
         "candidate_issue_gate_reason_code_count": plan.candidate_issue_gate.get("reason_code_count"),
         "candidate_issue_gate_reason_codes_sha256": plan.candidate_issue_gate.get("reason_codes_sha256"),
+        "candidate_issue_gate_first_reason_code": candidate_issue_gate_reason_code_boundary[
+            "first_code"
+        ],
+        "candidate_issue_gate_last_reason_code": candidate_issue_gate_reason_code_boundary[
+            "last_code"
+        ],
+        "candidate_issue_gate_reason_code_boundary_sha256": _stable_json_sha256(
+            candidate_issue_gate_reason_code_boundary
+        ),
         "candidate_issue_gate_primary_reason_code": candidate_issue_gate_primary_reason_code,
         "candidate_issue_gate_primary_reason_description": candidate_issue_gate_primary_reason_description,
         "candidate_issue_gate_required_action_count": plan.candidate_issue_gate.get("required_action_count"),
@@ -2699,6 +2719,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['candidate_issue_gate_reason_descriptions_sha256']}`",
             f"- candidate_issue_gate_reason_code_count: `{summary['candidate_issue_gate_reason_code_count']}`",
             f"- candidate_issue_gate_reason_codes_sha256: `{summary['candidate_issue_gate_reason_codes_sha256']}`",
+            "- candidate_issue_gate_first_reason_code: "
+            f"{_summary_inline_code(summary['candidate_issue_gate_first_reason_code'])}",
+            "- candidate_issue_gate_last_reason_code: "
+            f"{_summary_inline_code(summary['candidate_issue_gate_last_reason_code'])}",
+            "- candidate_issue_gate_reason_code_boundary_sha256: "
+            f"`{summary['candidate_issue_gate_reason_code_boundary_sha256']}`",
             "- candidate_issue_gate_primary_reason_code: "
             f"{_summary_inline_code(summary['candidate_issue_gate_primary_reason_code'])}",
             "- candidate_issue_gate_primary_reason_description: "
