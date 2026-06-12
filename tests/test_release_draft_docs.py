@@ -189,6 +189,7 @@ V016173_DRAFT = ROOT / "docs" / "releases" / "v0.16.173-draft.md"
 V016174_DRAFT = ROOT / "docs" / "releases" / "v0.16.174-draft.md"
 V016175_DRAFT = ROOT / "docs" / "releases" / "v0.16.175-draft.md"
 V016176_DRAFT = ROOT / "docs" / "releases" / "v0.16.176-draft.md"
+V016177_DRAFT = ROOT / "docs" / "releases" / "v0.16.177-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -8388,6 +8389,52 @@ def test_v016176_release_draft_tracks_issue_body_summary_key_tail():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.176 --issues-dir",
         "git tag v0.16.176",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016177_release_draft_has_required_sections():
+    text = V016177_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.177 发布草案",
+        "**目标版本：** `0.16.177`",
+        "**提交范围：** `v0.16.176..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016177_release_draft_tracks_review_order_preview():
+    text = V016177_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "artifact_bundle_summary",
+        "Artifact Bundle Summary",
+        "review_order_preview_count",
+        "review_order_preview",
+        "review_order_preview_sha256",
+        "review_item_count",
+        "review_order_sha256",
+        "review_order",
+        "artifact-manifest.json",
+        "scripts/plan_next_iteration.py",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.177 --issues-dir",
+        "git tag v0.16.177",
     ]
     for snippet in required:
         assert snippet in text

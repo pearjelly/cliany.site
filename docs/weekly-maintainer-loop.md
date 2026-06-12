@@ -47,6 +47,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary.review_order_sha256` 会对 `review_order` 做稳定 SHA-256 摘要；artifacts `README.md` 的 `Artifact Bundle Summary` 也会展示 `review_order_sha256`，让工具能先检查 review order hash，再决定是否展开完整 manifest。
 
+`artifact_bundle_summary` 还会带上 `review_order_preview_count`、`review_order_preview` 和 `review_order_preview_sha256`，让工具只读整包摘要就能看到审阅顺序入口，并判断 review order preview 是否漂移。
+
 `artifact_bundle_summary` 还会带上 `artifact_manifest_schema_version`、`artifact_manifest_key_count` 和 `artifact_manifest_keys_sha256`，让工具只读整包摘要就能判断 `artifact-manifest.json` 的字段语义版本、顶层字段规模和字段清单是否漂移，再决定是否展开完整 manifest。
 
 `artifact_bundle_summary` 也会带上 `artifact_manifest_payload_key_count` 和 `artifact_manifest_payload_sha256`，让工具只读整包摘要就能判断除 summary 自身之外的 manifest payload 是否漂移，避免递归 hash。

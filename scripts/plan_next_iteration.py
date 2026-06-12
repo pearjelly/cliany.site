@@ -121,6 +121,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "issue_body_summary_sha256",
     "review_item_count",
     "review_order_sha256",
+    "review_order_preview_count",
+    "review_order_preview",
+    "review_order_preview_sha256",
     "inventory_sha256",
     "issue_metadata_count",
     "issue_metadata_sha256",
@@ -1914,6 +1917,7 @@ def _issue_artifact_bundle_summary(
         sort_keys=True,
         separators=(",", ":"),
     ).encode()
+    review_order_preview = review_order[:8]
     create_issues_safety_contract = _issue_artifact_create_issues_safety_contract(create_issues_safety)
     publication_handoff = _publication_handoff(plan)
     release_draft_handoff = _release_draft_handoff(plan)
@@ -2086,6 +2090,9 @@ def _issue_artifact_bundle_summary(
         "issue_body_summary_sha256": _stable_json_sha256(issue_body_summary),
         "review_item_count": len(review_order),
         "review_order_sha256": hashlib.sha256(review_order_digest_source).hexdigest(),
+        "review_order_preview_count": len(review_order_preview),
+        "review_order_preview": list(review_order_preview),
+        "review_order_preview_sha256": _stable_json_sha256(review_order_preview),
         "inventory_sha256": issue_body_summary["inventory_sha256"],
         "issue_metadata_count": issue_metadata_summary["metadata_count"],
         "issue_metadata_sha256": issue_metadata_summary["metadata_sha256"],
@@ -2340,6 +2347,10 @@ def _issue_artifact_bundle_summary_markdown(
             f"- issue_body_summary_sha256: `{summary['issue_body_summary_sha256']}`",
             f"- review_item_count: `{summary['review_item_count']}`",
             f"- review_order_sha256: `{summary['review_order_sha256']}`",
+            f"- review_order_preview_count: `{summary['review_order_preview_count']}`",
+            "- review_order_preview: "
+            f"`{json.dumps(summary['review_order_preview'], ensure_ascii=False)}`",
+            f"- review_order_preview_sha256: `{summary['review_order_preview_sha256']}`",
             f"- inventory_sha256: `{summary['inventory_sha256']}`",
             f"- issue_metadata_count: `{summary['issue_metadata_count']}`",
             f"- issue_metadata_sha256: `{summary['issue_metadata_sha256']}`",
