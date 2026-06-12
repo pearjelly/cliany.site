@@ -534,6 +534,19 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
         "publication_worktree_status_count": len(plan.publication_worktree_status),
         "publication_worktree_status_sha256": _stable_json_sha256(plan.publication_worktree_status),
+        "validation_command_count": 5,
+        "validation_commands_sha256": _stable_json_sha256(
+            [
+                (
+                    "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+                    "--issues-dir /tmp/cliany-candidate-issues"
+                ),
+                "python scripts/plan_next_iteration.py --target-version 0.16.2 --json",
+                "python scripts/release_readiness.py --target-version 0.16.2 --json",
+                "python scripts/check_release_publication.py --json",
+                "python scripts/validate_cases.py --strict",
+            ]
+        ),
         "publication_ok": False,
         "publication_visibility_status": "dirty_worktree",
         "release_draft_issue_count": 2,
@@ -777,6 +790,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"publication_worktree_status_sha256: "
         f"`{_stable_json_sha256(plan.publication_worktree_status)}`"
+    ) in readme
+    assert "validation_command_count: `5`" in readme
+    assert (
+        "validation_commands_sha256: "
+        f"`{artifact_bundle_summary['validation_commands_sha256']}`"
     ) in readme
     assert "publication_ok: `false`" in readme
     assert "publication_visibility_status: `dirty_worktree`" in readme
