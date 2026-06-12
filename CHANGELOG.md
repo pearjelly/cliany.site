@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.23] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py` 的 JSON、文本和 Markdown report 现在会输出 `publication_next_actions`，直接透传 publication audit 的具体发布待办。
 - `scripts/plan_next_iteration.py --issues-dir` 写出的 `publication-handoff.json` 现在包含 `publication_next_actions`，方便候选 issue 派发前审阅发布阻塞。
@@ -595,7 +597,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.22...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.23...HEAD
+[0.16.23]: https://github.com/pearjelly/cliany.site/compare/v0.16.22...v0.16.23
 [0.16.22]: https://github.com/pearjelly/cliany.site/compare/v0.16.21...v0.16.22
 [0.16.21]: https://github.com/pearjelly/cliany.site/compare/v0.16.20...v0.16.21
 [0.16.20]: https://github.com/pearjelly/cliany.site/compare/v0.16.19...v0.16.20
