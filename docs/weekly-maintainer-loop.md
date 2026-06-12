@@ -109,7 +109,7 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 还会带上 `publication_worktree_status_count` 和 `publication_worktree_status_sha256`，让工具只读整包摘要就能判断 publication worktree status 是否漂移。
 
-`artifact_bundle_summary` 还会带上 `release_draft_handoff_key_count`、`release_draft_handoff_schema_version` 和 `release_draft_handoff_sha256`，让工具只读整包摘要就能判断 release draft handoff 字段规模、语义版本或内容是否漂移。
+`artifact_bundle_summary` 还会带上 `release_draft_handoff_key_count`、`release_draft_handoff_schema_version`、`release_draft_handoff_primary_issue`、`release_draft_handoff_primary_required_action` 和 `release_draft_handoff_sha256`，让工具只读整包摘要就能判断 release draft handoff 字段规模、语义版本、首要问题/动作或内容是否漂移。
 
 `artifact_bundle_summary` 还会带上 `release_draft_path` 和 `release_draft_path_sha256`，让工具只读整包摘要就能判断目标 release draft 路径是否漂移。
 

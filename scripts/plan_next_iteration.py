@@ -1734,6 +1734,10 @@ def _issue_artifact_bundle_summary(
         "publication_worktree_status_sha256": _stable_json_sha256(plan.publication_worktree_status),
         "release_draft_handoff_key_count": len(release_draft_handoff),
         "release_draft_handoff_schema_version": release_draft_handoff.get("schema_version"),
+        "release_draft_handoff_primary_issue": release_draft_handoff.get("primary_issue"),
+        "release_draft_handoff_primary_required_action": release_draft_handoff.get(
+            "primary_required_action"
+        ),
         "release_draft_handoff_sha256": _stable_json_sha256(release_draft_handoff),
         "release_draft_path": plan.release_draft_path,
         "release_draft_path_sha256": _stable_json_sha256(plan.release_draft_path),
@@ -1873,6 +1877,10 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- release_draft_handoff_key_count: `{summary['release_draft_handoff_key_count']}`",
             "- release_draft_handoff_schema_version: "
             f"{_summary_inline_code(summary['release_draft_handoff_schema_version'])}",
+            "- release_draft_handoff_primary_issue: "
+            f"{_summary_inline_code(summary['release_draft_handoff_primary_issue'])}",
+            "- release_draft_handoff_primary_required_action: "
+            f"{_summary_inline_code(summary['release_draft_handoff_primary_required_action'])}",
             f"- release_draft_handoff_sha256: `{summary['release_draft_handoff_sha256']}`",
             f"- release_draft_path: `{summary['release_draft_path']}`",
             f"- release_draft_path_sha256: `{summary['release_draft_path_sha256']}`",
