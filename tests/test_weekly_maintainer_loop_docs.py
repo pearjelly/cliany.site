@@ -179,6 +179,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "不包含本机输出路径",
         "artifact_files_key_count",
         "artifact_files_sha256",
+        "issue_artifacts_command_sha256",
         "byte_count",
         "sha256",
         "body_count",
