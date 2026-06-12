@@ -571,6 +571,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "metadata_sha256": _stable_json_sha256(stable_issue_metadata),
     }
     expected_release_draft_handoff = {
+        "release_draft_ok": False,
         "release_draft_issue_count": 2,
         "release_draft_path": "docs/releases/v0.16.2-draft.md",
         "release_draft_issues": [
@@ -947,7 +948,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "handoff, reproduction" in readme
     assert "body file name" in readme
     assert "`publication-handoff.json`: publication status, candidate issue gate, visibility" in readme
-    assert "`release-draft-handoff.json`: target version, release draft path" in readme
+    assert "`release-draft-handoff.json`: target version, release draft ok status" in readme
     assert "## Candidate Summary" in readme
     assert "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands |" in readme
     assert (
@@ -1035,7 +1036,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"publication_worktree_status_sha256: "
         f"`{_stable_json_sha256(plan.publication_worktree_status)}`"
     ) in readme
-    assert "release_draft_handoff_key_count: `4`" in readme
+    assert "release_draft_handoff_key_count: `5`" in readme
     assert (
         f"release_draft_handoff_sha256: "
         f"`{artifact_bundle_summary['release_draft_handoff_sha256']}`"
@@ -1243,6 +1244,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "python scripts/check_release_publication.py --json" in readme
     assert "## Release Draft Handoff" in readme
+    assert "release_draft_ok: `false`" in readme
     assert "release_draft_path: `docs/releases/v0.16.2-draft.md`" in readme
     assert "release_draft_issue_count: `2`" in readme
     assert "- release draft is missing" in readme

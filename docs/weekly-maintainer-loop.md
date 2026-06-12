@@ -117,6 +117,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `release-draft-handoff.json` 和 artifacts `README.md` 的 `Release Draft Handoff` 也会展示 `release_draft_issue_count`，让只读取 handoff 的维护工具不必展开完整 issue 列表就能判断草案门禁规模。
 
+`release-draft-handoff.json` 和 artifacts `README.md` 的 `Release Draft Handoff` 也会展示 `release_draft_ok`，让只读取 handoff 的维护工具不必根据 issue 数量自行推断草案门禁是否通过。
+
 `artifact-manifest.json` 也会保留 release draft path 和 release draft issues，与 `release-draft-handoff.json` 同源，方便工具先判断下一版草案是否已准备好。
 
 `artifact-manifest.json` 还会保留 `issue_artifacts_command`，让维护者和自动化能从同一个入口复现当前候选任务产物包。
