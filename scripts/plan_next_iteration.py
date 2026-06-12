@@ -1245,6 +1245,8 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
             f"`{str(bool(plan.candidate_issue_gate.get('can_create_issues', False))).lower()}`",
             "- requires_maintainer_review: "
             f"`{str(bool(plan.candidate_issue_gate.get('requires_maintainer_review', False))).lower()}`",
+            f"- publication_ok: `{str(plan.publication_ok).lower()}`",
+            f"- release_draft_ok: `{str(not plan.release_draft_issues).lower()}`",
             "- reason_code_count: "
             f"`{_format_context_value(plan.candidate_issue_gate.get('reason_code_count'))}`",
             "- required_action_count: "

@@ -1082,6 +1082,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "- status: `blocked_by_publication`" in readme
     assert "- can_create_issues: `false`" in readme
     assert "- requires_maintainer_review: `true`" in readme
+    assert "- publication_ok: `false`" in readme
+    assert "- release_draft_ok: `false`" in readme
     assert "- reason_code_count: `3`" in readme
     assert "- required_action_count: `5`" in readme
     assert "- primary_reason_code: `publication_not_published`" in readme
