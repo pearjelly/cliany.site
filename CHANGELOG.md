@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.124] - 2026-06-12
+
+### Added
+- Candidate issue artifacts `README.md` 的 `Candidate Issue Gate Quick Summary` 现在展示 `blocker_count`、`next_action_count` 和 `publication_next_action_count`，方便维护者先判断本轮待办规模。
+- [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 说明 quick summary 会展示 blocker/next action 数量。
+- 新增 `docs/releases/v0.16.124-draft.md`，把下一版 patch release 聚焦到 candidate issue gate quick summary 的待办规模可见性。
+
 ## [0.16.123] - 2026-06-12
 
 ### Added
@@ -1266,7 +1273,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.123...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.124...HEAD
+[0.16.124]: https://github.com/pearjelly/cliany.site/compare/v0.16.123...v0.16.124
 [0.16.123]: https://github.com/pearjelly/cliany.site/compare/v0.16.122...v0.16.123
 [0.16.122]: https://github.com/pearjelly/cliany.site/compare/v0.16.121...v0.16.122
 [0.16.121]: https://github.com/pearjelly/cliany.site/compare/v0.16.120...v0.16.121
