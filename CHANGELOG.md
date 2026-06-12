@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.15.8] - 2026-06-12
+
 ### Changed
 - `scripts/validate_cases.py --report` 的 `Candidate Promotion Tasks` 现在会为每个 candidate 输出可复制的 `Issue Body Template`，包含任务、验收证据和非目标边界。
 
@@ -447,7 +449,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.7...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.8...HEAD
+[0.15.8]: https://github.com/pearjelly/cliany.site/compare/v0.15.7...v0.15.8
 [0.15.7]: https://github.com/pearjelly/cliany.site/compare/v0.15.6...v0.15.7
 [0.15.6]: https://github.com/pearjelly/cliany.site/compare/v0.15.5...v0.15.6
 [0.15.5]: https://github.com/pearjelly/cliany.site/compare/v0.15.4...v0.15.5
