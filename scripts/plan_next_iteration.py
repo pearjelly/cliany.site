@@ -77,6 +77,7 @@ class IterationPlan:
     publication_worktree_clean: bool
     publication_worktree_status: list[str]
     publication_publish_script_path: str
+    publication_publish_script_path_sha256: str
     publication_publish_script_command: str
     issue_artifacts_command: str
     release_draft_path: str
@@ -107,6 +108,7 @@ class IterationPlan:
             "publication_worktree_clean": self.publication_worktree_clean,
             "publication_worktree_status": self.publication_worktree_status,
             "publication_publish_script_path": self.publication_publish_script_path,
+            "publication_publish_script_path_sha256": self.publication_publish_script_path_sha256,
             "publication_publish_script_command": self.publication_publish_script_command,
             "issue_artifacts_command": self.issue_artifacts_command,
             "release_draft_path": self.release_draft_path,
@@ -598,6 +600,7 @@ def build_plan(
         publication_worktree_clean=_publication_worktree_clean(publication),
         publication_worktree_status=_publication_worktree_status(publication),
         publication_publish_script_path=PUBLICATION_PUBLISH_SCRIPT_PATH,
+        publication_publish_script_path_sha256=_stable_json_sha256(PUBLICATION_PUBLISH_SCRIPT_PATH),
         publication_publish_script_command=publication_publish_script_command,
         issue_artifacts_command=issue_artifacts_command,
         release_draft_path=f"docs/releases/v{readiness.target_version}-draft.md",
@@ -671,6 +674,7 @@ def _print_text(plan: IterationPlan) -> None:
         for line in plan.publication_worktree_status:
             print(f"- {line}")
     print(f"publication_publish_script_path: {plan.publication_publish_script_path}")
+    print(f"publication_publish_script_path_sha256: {plan.publication_publish_script_path_sha256}")
     print(f"publication_publish_script_command: {plan.publication_publish_script_command}")
     print(f"issue_artifacts_command: {plan.issue_artifacts_command}")
 
@@ -721,6 +725,7 @@ def _render_markdown(plan: IterationPlan) -> str:
 | publication_next_action_count | `{plan.publication_next_action_count}` |
 | publication_publish_command_count | `{plan.publication_publish_command_count}` |
 | publication_publish_script_path | `{plan.publication_publish_script_path}` |
+| publication_publish_script_path_sha256 | `{plan.publication_publish_script_path_sha256}` |
 | commit_days | `{plan.commit_days}` |
 | case_assets | {plan.case_assets} |
 | candidate_cases | {candidate_cases} |
@@ -1038,6 +1043,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "publication_worktree_clean": plan.publication_worktree_clean,
         "publication_worktree_status": plan.publication_worktree_status,
         "publication_publish_script_path": plan.publication_publish_script_path,
+        "publication_publish_script_path_sha256": plan.publication_publish_script_path_sha256,
         "publication_publish_script_command": plan.publication_publish_script_command,
         "release_draft_path": plan.release_draft_path,
         "release_draft_issues": plan.release_draft_issues,
@@ -1268,6 +1274,8 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
             f"- publication_publish_command_count: `{plan.publication_publish_command_count}`",
             "- publication_publish_script_path: "
             f"{_summary_inline_code(plan.publication_publish_script_path)}",
+            "- publication_publish_script_path_sha256: "
+            f"`{plan.publication_publish_script_path_sha256}`",
             "- publication_publish_script_command: "
             f"{_summary_inline_code(plan.publication_publish_script_command)}",
             "- reason_code_count: "

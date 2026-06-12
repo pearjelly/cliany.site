@@ -329,6 +329,9 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "--publish-script /tmp/cliany-publish-release.sh"
     )
     assert data["publication_publish_script_path"] == "/tmp/cliany-publish-release.sh"
+    assert data["publication_publish_script_path_sha256"] == _stable_json_sha256(
+        "/tmp/cliany-publish-release.sh"
+    )
     assert data["publication_next_actions"] == [
         "Commit, stash, or discard local worktree changes before publishing release refs.",
         "Push `master` to `origin`; local branch is ahead by `2` commits.",
@@ -442,6 +445,10 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "python scripts/check_release_publication.py --json" in text
     assert "## Publication Publish Script" in text
     assert "| publication_publish_script_path | `/tmp/cliany-publish-release.sh` |" in text
+    assert (
+        "| publication_publish_script_path_sha256 | "
+        f"`{_stable_json_sha256('/tmp/cliany-publish-release.sh')}` |"
+    ) in text
     assert "- path: `/tmp/cliany-publish-release.sh`" in text
     assert "python scripts/check_release_publication.py --json --publish-script /tmp/cliany-publish-release.sh" in text
     assert "## Release Draft" in text
@@ -832,6 +839,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_worktree_clean": False,
         "publication_worktree_status": [" M CHANGELOG.md"],
         "publication_publish_script_path": "/tmp/cliany-publish-release.sh",
+        "publication_publish_script_path_sha256": _stable_json_sha256(
+            "/tmp/cliany-publish-release.sh"
+        ),
         "publication_publish_script_command": (
             "python scripts/check_release_publication.py --json "
             "--publish-script /tmp/cliany-publish-release.sh"
@@ -1104,6 +1114,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "- publication_next_action_count: `3`" in readme
     assert "- publication_publish_command_count: `1`" in readme
     assert "- publication_publish_script_path: `/tmp/cliany-publish-release.sh`" in readme
+    assert (
+        f"- publication_publish_script_path_sha256: "
+        f"`{_stable_json_sha256('/tmp/cliany-publish-release.sh')}`"
+    ) in readme
     assert (
         "- publication_publish_script_command: "
         "`python scripts/check_release_publication.py --json --publish-script /tmp/cliany-publish-release.sh`"
