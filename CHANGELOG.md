@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py` 现在会把 publication audit 的 `publish_commands` 带入 `publication_publish_commands`，周初计划可直接展示 branch/tag push 和远端复核命令。
+- 新增 `docs/releases/v0.16.10-draft.md`，把下一版 patch release 聚焦到 next iteration plan 的发布交接命令。
+
 ## [0.16.9] - 2026-06-12
 
 ### Added

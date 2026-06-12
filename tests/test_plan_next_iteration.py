@@ -75,6 +75,11 @@ def _publication_report() -> SimpleNamespace:
         ahead_count=2,
         latest_tag="v0.16.1",
         tag_published=False,
+        publish_commands=[
+            "git push origin master",
+            "git push origin v0.16.1",
+            "python scripts/check_release_publication.py --remote --json",
+        ],
     )
 
 
@@ -113,6 +118,11 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         == "python scripts/plan_next_iteration.py --target-version 0.16.2 "
         "--issues-dir /tmp/cliany-candidate-issues"
     )
+    assert data["publication_publish_commands"] == [
+        "git push origin master",
+        "git push origin v0.16.1",
+        "python scripts/check_release_publication.py --remote --json",
+    ]
     assert any("push `master`" in action for action in data["next_actions"])
     assert data["candidate_promotions"][0] == {
         "case_id": "pypi-project-search",
@@ -156,6 +166,9 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "`case-proposal`, `good first issue`" in text
     assert "## Candidate Promotion Tasks" in text
     assert "## Candidate Issue Body Templates" in text
+    assert "## Publication Publish Commands" in text
+    assert "git push origin master" in text
+    assert "python scripts/check_release_publication.py --remote --json" in text
     assert "| `pypi-project-search` | Generate pypi.org-<version>.cliany-adapter.tar.gz." in text
     assert "## Scope: promote candidate case `pypi-project-search`" in text
     assert "Paste the read-only JSON envelope summary with `data.quality.ok=true` and `row_count>0`." in text

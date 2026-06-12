@@ -59,6 +59,7 @@ class IterationPlan:
     blockers: list[str]
     next_actions: list[str]
     validation_commands: list[str]
+    publication_publish_commands: list[str]
     issue_artifacts_command: str
     release_draft_path: str
 
@@ -77,6 +78,7 @@ class IterationPlan:
             "blockers": self.blockers,
             "next_actions": self.next_actions,
             "validation_commands": self.validation_commands,
+            "publication_publish_commands": self.publication_publish_commands,
             "issue_artifacts_command": self.issue_artifacts_command,
             "release_draft_path": self.release_draft_path,
         }
@@ -94,6 +96,17 @@ def _next_patch_version(version: str) -> str:
         raise ValueError(msg)
     major, minor, patch = parts
     return f"{major}.{minor}.{int(patch) + 1}"
+
+
+def _publication_publish_commands(publication: Any) -> list[str]:
+    commands = getattr(publication, "publish_commands", None)
+    if commands is not None:
+        return [str(command) for command in commands]
+    to_dict = getattr(publication, "to_dict", None)
+    if not callable(to_dict):
+        return []
+    payload = to_dict()
+    return [str(command) for command in payload.get("publish_commands", [])]
 
 
 def _next_action_lines(readiness: Any, publication: Any) -> list[str]:
@@ -269,6 +282,7 @@ def build_plan(
         blockers=blockers,
         next_actions=_next_action_lines(readiness, publication),
         validation_commands=validation_commands,
+        publication_publish_commands=_publication_publish_commands(publication),
         issue_artifacts_command=issue_artifacts_command,
         release_draft_path=f"docs/releases/v{readiness.target_version}-draft.md",
     )
@@ -311,6 +325,10 @@ def _print_text(plan: IterationPlan) -> None:
     print("validation_commands:")
     for command in plan.validation_commands:
         print(f"- {command}")
+    if plan.publication_publish_commands:
+        print("publication_publish_commands:")
+        for command in plan.publication_publish_commands:
+            print(f"- {command}")
     print(f"issue_artifacts_command: {plan.issue_artifacts_command}")
 
 
@@ -319,6 +337,7 @@ def _render_markdown(plan: IterationPlan) -> str:
     blockers = "\n".join(f"- {blocker}" for blocker in plan.blockers) or "- None."
     next_actions = "\n".join(f"- {action}" for action in plan.next_actions)
     validation = "\n".join(f"- `{command}`" for command in plan.validation_commands)
+    publication_commands = _publication_commands_markdown(plan.publication_publish_commands)
     promotion_lines = _candidate_promotion_markdown(plan.candidate_promotions)
     return f"""# cliany-site Next Iteration Plan
 
@@ -351,10 +370,23 @@ def _render_markdown(plan: IterationPlan) -> str:
 
 {validation}
 
+{publication_commands}
+
 ## Release Draft
 
 - `{plan.release_draft_path}`
 """
+
+
+def _publication_commands_markdown(commands: list[str]) -> str:
+    if not commands:
+        return "## Publication Publish Commands\n\n- No publication publish commands are needed."
+    command_lines = "\n".join(commands)
+    return f"""## Publication Publish Commands
+
+```bash
+{command_lines}
+```"""
 
 
 def _candidate_promotion_markdown(promotions: list[CandidatePromotion]) -> str:
