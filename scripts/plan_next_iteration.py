@@ -1479,6 +1479,14 @@ def _issue_artifact_bundle_summary(
     candidate_issue_gate_required_actions = plan.candidate_issue_gate.get("required_actions")
     if not isinstance(candidate_issue_gate_required_actions, list):
         candidate_issue_gate_required_actions = []
+    candidate_issue_gate_primary_reason_code = (
+        candidate_issue_gate_reason_codes[0] if candidate_issue_gate_reason_codes else None
+    )
+    candidate_issue_gate_primary_reason_description = None
+    if candidate_issue_gate_primary_reason_code is not None:
+        candidate_issue_gate_primary_reason_description = candidate_issue_gate_reason_descriptions.get(
+            candidate_issue_gate_primary_reason_code
+        )
     candidate_issue_gate_summary = plan.candidate_issue_gate.get("summary")
     return {
         "target_version": plan.target_version,
@@ -1561,9 +1569,8 @@ def _issue_artifact_bundle_summary(
         ),
         "candidate_issue_gate_reason_code_count": plan.candidate_issue_gate.get("reason_code_count"),
         "candidate_issue_gate_reason_codes_sha256": plan.candidate_issue_gate.get("reason_codes_sha256"),
-        "candidate_issue_gate_primary_reason_code": (
-            candidate_issue_gate_reason_codes[0] if candidate_issue_gate_reason_codes else None
-        ),
+        "candidate_issue_gate_primary_reason_code": candidate_issue_gate_primary_reason_code,
+        "candidate_issue_gate_primary_reason_description": candidate_issue_gate_primary_reason_description,
         "candidate_issue_gate_required_action_count": plan.candidate_issue_gate.get("required_action_count"),
         "candidate_issue_gate_required_actions_sha256": plan.candidate_issue_gate.get("required_actions_sha256"),
         "candidate_issue_gate_primary_required_action": (
@@ -1686,6 +1693,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- candidate_issue_gate_reason_codes_sha256: `{summary['candidate_issue_gate_reason_codes_sha256']}`",
             "- candidate_issue_gate_primary_reason_code: "
             f"{_summary_inline_code(summary['candidate_issue_gate_primary_reason_code'])}",
+            "- candidate_issue_gate_primary_reason_description: "
+            f"{_summary_inline_code(summary['candidate_issue_gate_primary_reason_description'])}",
             f"- candidate_issue_gate_required_action_count: `{summary['candidate_issue_gate_required_action_count']}`",
             "- candidate_issue_gate_required_actions_sha256: "
             f"`{summary['candidate_issue_gate_required_actions_sha256']}`",

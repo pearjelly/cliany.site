@@ -120,6 +120,7 @@ V016104_DRAFT = ROOT / "docs" / "releases" / "v0.16.104-draft.md"
 V016105_DRAFT = ROOT / "docs" / "releases" / "v0.16.105-draft.md"
 V016106_DRAFT = ROOT / "docs" / "releases" / "v0.16.106-draft.md"
 V016107_DRAFT = ROOT / "docs" / "releases" / "v0.16.107-draft.md"
+V016108_DRAFT = ROOT / "docs" / "releases" / "v0.16.108-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -5281,6 +5282,50 @@ def test_v016107_release_draft_tracks_candidate_issue_gate_primary_summary():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.107 --issues-dir",
         "git tag v0.16.107",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016108_release_draft_has_required_sections():
+    text = V016108_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.108 发布草案",
+        "**目标版本：** `0.16.108`",
+        "**提交范围：** `v0.16.107..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016108_release_draft_tracks_candidate_issue_gate_primary_reason_description():
+    text = V016108_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "artifact_bundle_summary",
+        "candidate_issue_gate_primary_reason_description",
+        "candidate_issue_gate_primary_reason_code",
+        "candidate_issue_gate_primary_required_action",
+        "candidate_issue_gate",
+        "reason_descriptions",
+        "artifact-manifest.json",
+        "README.md",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.108 --issues-dir",
+        "git tag v0.16.108",
     ]
     for snippet in required:
         assert snippet in text

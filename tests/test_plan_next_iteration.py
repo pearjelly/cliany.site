@@ -744,6 +744,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "candidate_issue_gate_reason_code_count": _blocked_candidate_issue_gate()["reason_code_count"],
         "candidate_issue_gate_reason_codes_sha256": _blocked_candidate_issue_gate()["reason_codes_sha256"],
         "candidate_issue_gate_primary_reason_code": "publication_not_published",
+        "candidate_issue_gate_primary_reason_description": (
+            "The latest local release branch or tag is not visible upstream."
+        ),
         "candidate_issue_gate_required_action_count": _blocked_candidate_issue_gate()["required_action_count"],
         "candidate_issue_gate_required_actions_sha256": _blocked_candidate_issue_gate()["required_actions_sha256"],
         "candidate_issue_gate_primary_required_action": (
@@ -1061,6 +1064,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"`{_blocked_candidate_issue_gate()['reason_codes_sha256']}`"
     ) in readme
     assert "candidate_issue_gate_primary_reason_code: `publication_not_published`" in readme
+    assert (
+        "candidate_issue_gate_primary_reason_description: "
+        "`The latest local release branch or tag is not visible upstream.`"
+    ) in readme
     assert "candidate_issue_gate_required_action_count: `5`" in readme
     assert (
         f"candidate_issue_gate_required_actions_sha256: "
