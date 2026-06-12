@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.123] - 2026-06-12
+
+### Added
+- Candidate issue artifacts `README.md` 的 `Candidate Issue Gate Quick Summary` 现在展示 `publication_ok` 和 `release_draft_ok`，方便维护者先区分发布阻塞和草案阻塞。
+- [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 说明 quick summary 会展示 publication/release draft ok。
+- 新增 `docs/releases/v0.16.123-draft.md`，把下一版 patch release 聚焦到 candidate issue gate quick summary 的 ok 布尔值可见性。
+
 ## [0.16.122] - 2026-06-12
 
 ### Added
@@ -1259,7 +1266,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.122...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.123...HEAD
+[0.16.123]: https://github.com/pearjelly/cliany.site/compare/v0.16.122...v0.16.123
 [0.16.122]: https://github.com/pearjelly/cliany.site/compare/v0.16.121...v0.16.122
 [0.16.121]: https://github.com/pearjelly/cliany.site/compare/v0.16.120...v0.16.121
 [0.16.120]: https://github.com/pearjelly/cliany.site/compare/v0.16.119...v0.16.120
