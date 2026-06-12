@@ -547,6 +547,30 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 "python scripts/validate_cases.py --strict",
             ]
         ),
+        "review_checklist_count": 7,
+        "review_checklist_sha256": _stable_json_sha256(
+            [
+                "Confirm the latest local release has been published before creating new candidate work.",
+                (
+                    "Confirm release draft issues are resolved or intentionally deferred before tagging the "
+                    "target version."
+                ),
+                (
+                    "Confirm Publication Next Actions are resolved or intentionally deferred before running "
+                    "create-issues.sh."
+                ),
+                (
+                    "Confirm issue-metadata.json has the expected target URL, candidate commands, "
+                    "and offline validation commands for each case."
+                ),
+                "Review each body file for scope, tasks, validation evidence, and non-goals.",
+                (
+                    "Keep cases as candidate until adapter package, metadata validation, "
+                    "and online smoke evidence are complete."
+                ),
+                "Do not use real LLM keys or write runtime state into the repository.",
+            ]
+        ),
         "publication_ok": False,
         "publication_visibility_status": "dirty_worktree",
         "release_draft_issue_count": 2,
@@ -795,6 +819,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "validation_commands_sha256: "
         f"`{artifact_bundle_summary['validation_commands_sha256']}`"
+    ) in readme
+    assert "review_checklist_count: `7`" in readme
+    assert (
+        "review_checklist_sha256: "
+        f"`{artifact_bundle_summary['review_checklist_sha256']}`"
     ) in readme
     assert "publication_ok: `false`" in readme
     assert "publication_visibility_status: `dirty_worktree`" in readme

@@ -54,6 +54,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "publication_worktree_status_sha256",
         "validation_command_count",
         "validation_commands_sha256",
+        "review_checklist_count",
+        "review_checklist_sha256",
         "evidence",
         "publication_ok",
         "publication_visibility_status",
