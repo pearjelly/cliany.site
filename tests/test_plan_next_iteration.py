@@ -711,6 +711,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     }
     blocker_preview = plan.blockers[:8]
     blocker_tail = plan.blockers[-8:]
+    next_action_preview = plan.next_actions[:8]
     review_order = [
         "README.md",
         "publication-handoff.json",
@@ -1004,6 +1005,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "blocker_tail_sha256": _stable_json_sha256(blocker_tail),
         "next_action_count": len(plan.next_actions),
         "next_actions_sha256": _stable_json_sha256(plan.next_actions),
+        "next_action_preview_count": len(next_action_preview),
+        "next_action_preview": list(next_action_preview),
+        "next_action_preview_sha256": _stable_json_sha256(next_action_preview),
         "publication_next_action_count": 3,
         "publication_next_actions_sha256": _stable_json_sha256(plan.publication_next_actions),
         "publication_primary_next_action": plan.publication_next_actions[0],
@@ -1454,6 +1458,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert artifact_manifest["artifact_bundle_summary"][
         "blocker_last_item"
     ] == artifact_manifest["blockers"][-1]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "next_action_preview"
+    ] == artifact_manifest["next_actions"][
+        : artifact_manifest["artifact_bundle_summary"]["next_action_preview_count"]
+    ]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1868,6 +1877,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert f"next_action_count: `{len(plan.next_actions)}`" in readme
     assert f"next_actions_sha256: `{_stable_json_sha256(plan.next_actions)}`" in readme
+    assert (
+        "next_action_preview_count: "
+        f"`{artifact_bundle_summary['next_action_preview_count']}`"
+    ) in readme
+    assert "next_action_preview: " in readme
+    assert (
+        "next_action_preview_sha256: "
+        f"`{artifact_bundle_summary['next_action_preview_sha256']}`"
+    ) in readme
     assert "publication_next_action_count: `3`" in readme
     assert (
         f"publication_next_actions_sha256: "

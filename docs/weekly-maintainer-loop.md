@@ -151,6 +151,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 还会带上 `blockers_sha256`、`next_actions_sha256` 和 `publication_next_actions_sha256`，让工具只读整包摘要就能判断 blockers 和 action lists 是否漂移。
 
+`artifact_bundle_summary` 也会带上 `next_action_preview_count`、`next_action_preview` 和 `next_action_preview_sha256`，让工具只读整包摘要就能看到 next actions 入口，并判断 next action preview 是否漂移。
+
 `artifact_bundle_summary` 还会带上 `blocker_first_item`、`blocker_last_item` 和 `blocker_boundary_sha256`，让工具只读整包摘要就能确认 blockers 首尾边界是否符合预期。
 
 `artifact_bundle_summary` 还会带上 `blocker_preview_count`、`blocker_preview` 和 `blocker_preview_sha256`，让工具只读整包摘要就能看到 blockers 入口，并判断 blocker preview 是否漂移。
