@@ -121,6 +121,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `release-draft-handoff.json` 和 artifacts `README.md` 的 `Release Draft Handoff` 也会展示 `release_draft_primary_issue`，让只读取 handoff 的维护工具不必解析完整列表就能拿到第一条草案阻塞原因。
 
+`release-draft-handoff.json` 和 artifacts `README.md` 的 `Release Draft Handoff` 也会展示 `release_draft_primary_required_action`，让只读取 handoff 的维护工具不必解析完整列表就能拿到第一条草案阻塞的处理动作。
+
 `release-draft-handoff.json` 和 artifacts `README.md` 的 `Release Draft Handoff` 也会展示 `release_draft_ok`，让只读取 handoff 的维护工具不必根据 issue 数量自行推断草案门禁是否通过。
 
 `release-draft-handoff.json` 和 artifacts `README.md` 的 `Release Draft Handoff` 也会展示 `release_draft_path_sha256`，让只读取 handoff 的维护工具不必展开完整 manifest 就能检测草案路径漂移。

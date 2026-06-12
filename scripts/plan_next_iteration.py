@@ -1159,7 +1159,7 @@ Generated for target version `{plan.target_version}`.
 - `publication-handoff.json`: publication status, candidate issue gate, visibility, next actions,
   publication next actions, ref context, worktree status, and publish commands to review first.
 - `release-draft-handoff.json`: schema version, target version, release draft ok status, release draft path,
-  release draft path hash, release draft issue count, primary release draft issue,
+  release draft path hash, release draft issue count, primary release draft issue, primary required action,
   release draft issues hash, and release draft issues
   to review before tagging the target version.
 - `create-issues.sh`: reviewable shell script with a release publication preflight and
@@ -1229,6 +1229,7 @@ Generated for target version `{plan.target_version}`.
 - release_draft_path_sha256: `{_stable_json_sha256(plan.release_draft_path)}`
 - release_draft_issue_count: `{len(plan.release_draft_issues)}`
 - release_draft_primary_issue: `{_format_context_value(_release_draft_primary_issue(plan))}`
+- release_draft_primary_required_action: `{_format_context_value(_release_draft_primary_required_action(plan))}`
 - release_draft_issues_sha256: `{_stable_json_sha256(plan.release_draft_issues)}`
 - release_draft_issues:
 {_issue_artifact_release_draft_issues(plan)}
@@ -1496,6 +1497,13 @@ def _release_draft_primary_issue(plan: IterationPlan) -> str | None:
     return plan.release_draft_issues[0] if plan.release_draft_issues else None
 
 
+def _release_draft_primary_required_action(plan: IterationPlan) -> str | None:
+    primary_issue = _release_draft_primary_issue(plan)
+    if primary_issue is None:
+        return None
+    return f"Resolve release draft issue: {primary_issue}"
+
+
 def _release_draft_handoff(plan: IterationPlan) -> dict[str, Any]:
     return {
         "schema_version": 1,
@@ -1504,6 +1512,7 @@ def _release_draft_handoff(plan: IterationPlan) -> dict[str, Any]:
         "release_draft_path": plan.release_draft_path,
         "release_draft_path_sha256": _stable_json_sha256(plan.release_draft_path),
         "release_draft_primary_issue": _release_draft_primary_issue(plan),
+        "release_draft_primary_required_action": _release_draft_primary_required_action(plan),
         "release_draft_issues_sha256": _stable_json_sha256(plan.release_draft_issues),
         "release_draft_issues": plan.release_draft_issues,
         "target_version": plan.target_version,
