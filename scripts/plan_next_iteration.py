@@ -552,12 +552,7 @@ def _print_text(plan: IterationPlan) -> None:
         print(f"- {command}")
     print("candidate_issue_gate:")
     for key, value in plan.candidate_issue_gate.items():
-        if isinstance(value, list):
-            print(f"- {key}:")
-            for item in value:
-                print(f"  - {item}")
-        else:
-            print(f"- {key}: {value}")
+        _print_text_item(key, value)
     print("publication_visibility:")
     for key, value in plan.publication_visibility.items():
         print(f"- {key}: {value}")
@@ -579,6 +574,20 @@ def _print_text(plan: IterationPlan) -> None:
             print(f"- {line}")
     print(f"publication_publish_script_command: {plan.publication_publish_script_command}")
     print(f"issue_artifacts_command: {plan.issue_artifacts_command}")
+
+
+def _print_text_item(key: str, value: object) -> None:
+    if isinstance(value, list):
+        print(f"- {key}:")
+        for item in value:
+            print(f"  - {item}")
+        return
+    if isinstance(value, dict):
+        print(f"- {key}:")
+        for nested_key, nested_value in value.items():
+            print(f"  - {nested_key}: {_format_context_value(nested_value)}")
+        return
+    print(f"- {key}: {value}")
 
 
 def _render_markdown(plan: IterationPlan) -> str:

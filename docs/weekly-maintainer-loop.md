@@ -45,6 +45,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact-manifest.json` 的 `candidate_issue_gate` 会和 `publication-handoff.json` 同源，用 `can_create_issues` 把硬性 publication preflight 和 release draft 人工审阅区分开，并用 `evidence` 保留 gate 判定所用的 release/publication 证据。
 
+`plan_next_iteration.py` 的默认文本输出会把 `candidate_issue_gate.evidence` 展开成缩进列表，方便维护者在终端里直接审阅 publication visibility、latest tag、ahead count 和 release draft issue count。
+
 如果 readiness 只剩 `commit days N/3`，本周继续做小而可验证的增量；如果存在 gate issue，优先关闭具体 gate，再继续新功能。
 
 ## 2. 周中：实现一个可验证切片

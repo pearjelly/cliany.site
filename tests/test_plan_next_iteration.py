@@ -372,6 +372,26 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "Run read-only npm search smoke." in text
 
 
+def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys):
+    _write_pyproject(tmp_path)
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=_readiness_report(),
+        publication_report=_publication_report(),
+    )
+
+    plan_next_iteration._print_text(plan)
+
+    text = capsys.readouterr().out
+    assert "candidate_issue_gate:" in text
+    assert "- evidence:" in text
+    assert "  - publication_visibility_status: dirty_worktree" in text
+    assert "  - publication_latest_tag: v0.16.1" in text
+    assert "  - publication_ahead_count: 2" in text
+    assert "  - release_draft_issue_count: 2" in text
+    assert "'publication_visibility_status':" not in text
+
+
 def test_plan_writes_candidate_issue_files(tmp_path):
     _write_pyproject(tmp_path)
     plan = plan_next_iteration.build_plan(

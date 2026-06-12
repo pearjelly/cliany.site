@@ -108,6 +108,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "review_checklist",
         "硬性 publication preflight",
         "gate 判定",
+        "默认文本输出",
+        "缩进列表",
         "release draft path",
         "release draft issues",
         "已处理或明确延后",
