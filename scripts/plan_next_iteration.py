@@ -168,6 +168,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "publication_visibility_summary_sha256",
     "blocker_count",
     "blockers_sha256",
+    "blocker_preview_count",
+    "blocker_preview",
+    "blocker_preview_sha256",
     "next_action_count",
     "next_actions_sha256",
     "publication_next_action_count",
@@ -2014,6 +2017,7 @@ def _issue_artifact_bundle_summary(
     }
     publication_visibility_key_preview = publication_visibility_keys[:8]
     publication_visibility_key_tail = publication_visibility_keys[-8:]
+    blocker_preview = plan.blockers[:8]
     artifact_manifest_payload = _artifact_manifest_payload_without_summary(
         plan=plan,
         candidate_cases=candidate_cases,
@@ -2240,6 +2244,9 @@ def _issue_artifact_bundle_summary(
         ),
         "blocker_count": len(plan.blockers),
         "blockers_sha256": _stable_json_sha256(plan.blockers),
+        "blocker_preview_count": len(blocker_preview),
+        "blocker_preview": list(blocker_preview),
+        "blocker_preview_sha256": _stable_json_sha256(blocker_preview),
         "next_action_count": len(plan.next_actions),
         "next_actions_sha256": _stable_json_sha256(plan.next_actions),
         "publication_next_action_count": len(plan.publication_next_actions),
@@ -2544,6 +2551,10 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['publication_visibility_summary_sha256']}`",
             f"- blocker_count: `{summary['blocker_count']}`",
             f"- blockers_sha256: `{summary['blockers_sha256']}`",
+            f"- blocker_preview_count: `{summary['blocker_preview_count']}`",
+            "- blocker_preview: "
+            f"`{json.dumps(summary['blocker_preview'], ensure_ascii=False)}`",
+            f"- blocker_preview_sha256: `{summary['blocker_preview_sha256']}`",
             f"- next_action_count: `{summary['next_action_count']}`",
             f"- next_actions_sha256: `{summary['next_actions_sha256']}`",
             f"- publication_next_action_count: `{summary['publication_next_action_count']}`",

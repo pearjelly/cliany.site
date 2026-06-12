@@ -201,6 +201,7 @@ V016185_DRAFT = ROOT / "docs" / "releases" / "v0.16.185-draft.md"
 V016186_DRAFT = ROOT / "docs" / "releases" / "v0.16.186-draft.md"
 V016187_DRAFT = ROOT / "docs" / "releases" / "v0.16.187-draft.md"
 V016188_DRAFT = ROOT / "docs" / "releases" / "v0.16.188-draft.md"
+V016189_DRAFT = ROOT / "docs" / "releases" / "v0.16.189-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -8972,6 +8973,52 @@ def test_v016188_release_draft_tracks_publication_visibility_key_tail():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.188 --issues-dir",
         "git tag v0.16.188",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016189_release_draft_has_required_sections():
+    text = V016189_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.189 发布草案",
+        "**目标版本：** `0.16.189`",
+        "**提交范围：** `v0.16.188..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016189_release_draft_tracks_blocker_preview():
+    text = V016189_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "artifact_bundle_summary",
+        "Artifact Bundle Summary",
+        "blocker_preview_count",
+        "blocker_preview",
+        "blocker_preview_sha256",
+        "blocker_count",
+        "blockers_sha256",
+        "blockers",
+        "artifact-manifest.json",
+        "scripts/plan_next_iteration.py",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.189 --issues-dir",
+        "git tag v0.16.189",
     ]
     for snippet in required:
         assert snippet in text
