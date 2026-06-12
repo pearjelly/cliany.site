@@ -16,7 +16,7 @@
 | Adapter generation | `src/cliany_site/codegen/`, `src/cliany_site/codegen/runtime_helpers.py` | 生成命令、数据抽取命令、模板安全 | `pytest tests/test_codegen.py tests/test_generated_orchestration.py -q --no-cov` |
 | Adapter lifecycle | `src/cliany_site/marketplace.py`, `src/cliany_site/commands/market.py`, `src/cliany_site/commands/verify.py`, `docs/adapter-lifecycle.md` | publish/install/rollback、manifest、包哈希、verify | `pytest tests/test_marketplace.py tests/test_verify.py tests/test_adapter_lifecycle_docs.py -q --no-cov` |
 | Case catalog | `cases/`, `scripts/validate_cases.py` | 真实案例、离线样例、candidate promotion | `python scripts/validate_cases.py --strict` 和 `pytest tests/test_cases_manifest.py tests/test_validate_cases.py -q --no-cov` |
-| Release operations | `scripts/release_readiness.py`, `scripts/check_release_cadence.py`, `.github/workflows/` | 发版门禁、提交节奏、CI artifact | `pytest tests/test_release_readiness.py tests/test_release_cadence.py -q --no-cov` |
+| Release operations | `scripts/release_readiness.py`, `scripts/check_release_cadence.py`, `scripts/check_release_publication.py`, `.github/workflows/` | 发版门禁、提交节奏、发布可见性、CI artifact | `pytest tests/test_release_readiness.py tests/test_release_cadence.py tests/test_release_publication.py -q --no-cov` |
 | Contributor experience | `docs/contributor-starter.md`, `docs/good-first-issues.md`, `.github/ISSUE_TEMPLATE/`, `.github/PULL_REQUEST_TEMPLATE.md` | issue/PR 模板、首次贡献任务池、模块入口 | `pytest tests/test_contributor_docs.py tests/test_good_first_issues_docs.py -q --no-cov` |
 | Website and public docs | `site/`, `README.md`, `README.zh.md`, `docs/` | 官网入口、README 示例、用户教程 | `pytest tests/test_site_content.py tests/test_readme_current_features.py -q --no-cov` |
 

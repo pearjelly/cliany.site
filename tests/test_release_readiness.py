@@ -382,9 +382,11 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "Adapter lifecycle\n"
         "Case catalog\n"
         "Release operations\n"
+        "scripts/check_release_publication.py\n"
         "Contributor experience\n"
         "CLIANY_QA_OFFLINE=1\n"
         "python scripts/validate_cases.py --strict\n"
+        "tests/test_release_publication.py\n"
         "~/.cliany-site/\n",
         encoding="utf-8",
     )

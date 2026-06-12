@@ -361,9 +361,11 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "Adapter lifecycle",
             "Case catalog",
             "Release operations",
+            "scripts/check_release_publication.py",
             "Contributor experience",
             "CLIANY_QA_OFFLINE=1",
             "python scripts/validate_cases.py --strict",
+            "tests/test_release_publication.py",
             "~/.cliany-site/",
         ],
         "docs/good-first-issues.md": [

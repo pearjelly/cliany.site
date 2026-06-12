@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Changed
+- `docs/module-ownership.md` 的 Release operations 行现在纳入 `scripts/check_release_publication.py` 和 `tests/test_release_publication.py`，让贡献者能从模块地图找到发布可见性检查。
+
 ## [0.15.4] - 2026-06-12
 
 ### Changed
