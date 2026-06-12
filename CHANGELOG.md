@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.131] - 2026-06-13
+
+### Added
+- `scripts/plan_next_iteration.py` 现在输出 `publication_publish_script_command_sha256`，让计划 JSON、文本输出和 Markdown report 不生成 artifacts 也能检测发布脚本生成命令漂移。
+- Candidate issue artifacts `README.md` 的 `Candidate Issue Gate Quick Summary` 和 `artifact-manifest.json` 现在展示 `publication_publish_script_command_sha256`。
+- 新增 `docs/releases/v0.16.131-draft.md`，把下一版 patch release 聚焦到 publication publish script command hash 的 plan 级可见性。
+
 ## [0.16.130] - 2026-06-13
 
 ### Added
@@ -1315,7 +1322,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.130...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.131...HEAD
+[0.16.131]: https://github.com/pearjelly/cliany.site/compare/v0.16.130...v0.16.131
 [0.16.130]: https://github.com/pearjelly/cliany.site/compare/v0.16.129...v0.16.130
 [0.16.129]: https://github.com/pearjelly/cliany.site/compare/v0.16.128...v0.16.129
 [0.16.128]: https://github.com/pearjelly/cliany.site/compare/v0.16.127...v0.16.128
