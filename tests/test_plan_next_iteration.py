@@ -263,7 +263,10 @@ def test_candidate_issue_gate_allows_creation_after_publication_with_release_dra
 
 def test_summary_inline_code_uses_wider_fence_for_backticks():
     assert plan_next_iteration._summary_inline_code("Push `master` to `origin`") == (
-        "``Push `master` to `origin```"
+        "`` Push `master` to `origin` ``"
+    )
+    assert plan_next_iteration._summary_inline_code("`master` is ahead") == (
+        "`` `master` is ahead ``"
     )
 
 

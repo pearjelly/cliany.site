@@ -1666,8 +1666,9 @@ def _issue_artifact_bundle_summary(
 
 def _summary_inline_code(value: Any) -> str:
     text = str(value)
-    fence = "``" if "`" in text else "`"
-    return f"{fence}{text}{fence}"
+    if "`" in text:
+        return f"`` {text} ``"
+    return f"`{text}`"
 
 
 def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
