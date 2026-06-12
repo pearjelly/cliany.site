@@ -1254,6 +1254,8 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
             f"- primary_required_action: {_summary_inline_code(primary_required_action)}",
             "- latest_tag: "
             f"`{_format_context_value(_candidate_issue_gate_evidence_value(plan, 'publication_latest_tag'))}`",
+            "- publication_branch: "
+            f"`{_format_context_value(_candidate_issue_gate_evidence_value(plan, 'publication_branch'))}`",
             "- publication_worktree_clean: "
             f"`{_format_context_value(_candidate_issue_gate_evidence_value(plan, 'publication_worktree_clean'))}`",
             "- publication_ahead_count: "
