@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.132] - 2026-06-13
+
+### Added
+- `publication-handoff.json` 现在输出 `publish_script_path_sha256` 和 `publish_script_command_sha256`，让只读取 handoff 的维护工具也能检测发布脚本路径或命令漂移。
+- Candidate issue artifacts `README.md` 的 `Publication Handoff` 段落现在展示同一组发布脚本摘要字段。
+- 新增 `docs/releases/v0.16.132-draft.md`，把下一版 patch release 聚焦到 publication handoff 的发布脚本摘要可见性。
+
 ## [0.16.131] - 2026-06-13
 
 ### Added
@@ -1322,7 +1329,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.131...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.132...HEAD
+[0.16.132]: https://github.com/pearjelly/cliany.site/compare/v0.16.131...v0.16.132
 [0.16.131]: https://github.com/pearjelly/cliany.site/compare/v0.16.130...v0.16.131
 [0.16.130]: https://github.com/pearjelly/cliany.site/compare/v0.16.129...v0.16.130
 [0.16.129]: https://github.com/pearjelly/cliany.site/compare/v0.16.128...v0.16.129
