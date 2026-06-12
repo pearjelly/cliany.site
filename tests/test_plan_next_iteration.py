@@ -155,10 +155,12 @@ def _blocked_candidate_issue_gate() -> dict[str, object]:
         "evidence": {
             "publication_ok": False,
             "publication_visibility_status": "dirty_worktree",
+            "publication_worktree_clean": False,
             "publication_remote_checked": False,
             "publication_branch": "master",
             "publication_latest_tag": "v0.16.1",
             "publication_ahead_count": 2,
+            "release_draft_ok": False,
             "release_draft_path": "docs/releases/v0.16.2-draft.md",
             "release_draft_issue_count": 2,
         },
@@ -203,10 +205,12 @@ def test_candidate_issue_gate_allows_creation_after_publication_with_release_dra
         "evidence": {
             "publication_ok": True,
             "publication_visibility_status": "published",
+            "publication_worktree_clean": True,
             "publication_remote_checked": True,
             "publication_branch": "master",
             "publication_latest_tag": "v0.16.1",
             "publication_ahead_count": 0,
+            "release_draft_ok": False,
             "release_draft_path": "docs/releases/v0.16.2-draft.md",
             "release_draft_issue_count": 2,
         },
@@ -337,8 +341,10 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "Do not create candidate issues until the latest local release is publicly visible." in text
     assert "### Candidate Issue Gate Evidence" in text
     assert "| publication_visibility_status | `dirty_worktree` |" in text
+    assert "| publication_worktree_clean | `false` |" in text
     assert "| publication_latest_tag | `v0.16.1` |" in text
     assert "| publication_ahead_count | `2` |" in text
+    assert "| release_draft_ok | `false` |" in text
     assert "| release_draft_issue_count | `2` |" in text
     assert "### Candidate Issue Gate Actions" in text
     assert "## Publication Visibility" in text
@@ -387,8 +393,10 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
     assert "candidate_issue_gate:" in text
     assert "- evidence:" in text
     assert "  - publication_visibility_status: dirty_worktree" in text
+    assert "  - publication_worktree_clean: false" in text
     assert "  - publication_latest_tag: v0.16.1" in text
     assert "  - publication_ahead_count: 2" in text
+    assert "  - release_draft_ok: false" in text
     assert "  - release_draft_issue_count: 2" in text
     assert "'publication_visibility_status':" not in text
 
@@ -604,6 +612,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "gate_summary: Do not create candidate issues until the latest local release is publicly visible." in readme
     assert "gate_evidence_latest_tag: `v0.16.1`" in readme
     assert "gate_evidence_ahead_count: `2`" in readme
+    assert "gate_evidence_worktree_clean: `false`" in readme
+    assert "gate_evidence_release_draft_ok: `false`" in readme
     assert "gate_evidence_release_draft_issues: `2`" in readme
     assert "visibility: `dirty_worktree`" in readme
     assert (

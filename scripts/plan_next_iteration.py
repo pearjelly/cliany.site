@@ -252,13 +252,16 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
 def _candidate_issue_gate_evidence(readiness: Any, publication: Any) -> dict[str, Any]:
     release_draft_issues = _release_draft_issues(readiness)
     publication_visibility = _publication_visibility(publication)
+    draft = getattr(readiness, "draft", None)
     return {
         "publication_ok": bool(getattr(publication, "ok", False)),
         "publication_visibility_status": publication_visibility.get("status") or "(unknown)",
+        "publication_worktree_clean": _publication_worktree_clean(publication),
         "publication_remote_checked": bool(getattr(publication, "remote_checked", False)),
         "publication_branch": str(getattr(publication, "branch", "") or "HEAD"),
         "publication_latest_tag": str(getattr(publication, "latest_tag", "") or "(none)"),
         "publication_ahead_count": getattr(publication, "ahead_count", None),
+        "release_draft_ok": bool(getattr(draft, "ok", False)),
         "release_draft_path": _release_draft_evidence_path(readiness),
         "release_draft_issue_count": len(release_draft_issues),
     }
@@ -716,10 +719,12 @@ def _candidate_issue_gate_evidence_markdown(evidence: object) -> str:
     rows = [
         ("publication_ok", evidence.get("publication_ok")),
         ("publication_visibility_status", evidence.get("publication_visibility_status")),
+        ("publication_worktree_clean", evidence.get("publication_worktree_clean")),
         ("publication_remote_checked", evidence.get("publication_remote_checked")),
         ("publication_branch", evidence.get("publication_branch")),
         ("publication_latest_tag", evidence.get("publication_latest_tag")),
         ("publication_ahead_count", evidence.get("publication_ahead_count")),
+        ("release_draft_ok", evidence.get("release_draft_ok")),
         ("release_draft_path", evidence.get("release_draft_path")),
         ("release_draft_issue_count", evidence.get("release_draft_issue_count")),
     ]
@@ -973,6 +978,10 @@ def _render_issue_artifacts_readme(plan: IterationPlan) -> str:
     candidate_summary = _issue_artifact_candidate_summary(plan.candidate_promotions)
     gate_latest_tag = _format_context_value(_candidate_issue_gate_evidence_value(plan, "publication_latest_tag"))
     gate_ahead_count = _format_context_value(_candidate_issue_gate_evidence_value(plan, "publication_ahead_count"))
+    gate_worktree_clean = _format_context_value(
+        _candidate_issue_gate_evidence_value(plan, "publication_worktree_clean")
+    )
+    gate_draft_ok = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_ok"))
     gate_draft_issues = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_issue_count"))
     return f"""# cliany-site Candidate Issue Artifacts
 
@@ -1004,6 +1013,8 @@ Generated for target version `{plan.target_version}`.
 - gate_summary: {_format_context_value(plan.candidate_issue_gate.get("summary"))}
 - gate_evidence_latest_tag: `{gate_latest_tag}`
 - gate_evidence_ahead_count: `{gate_ahead_count}`
+- gate_evidence_worktree_clean: `{gate_worktree_clean}`
+- gate_evidence_release_draft_ok: `{gate_draft_ok}`
 - gate_evidence_release_draft_issues: `{gate_draft_issues}`
 - visibility: `{_format_context_value(plan.publication_visibility.get("status"))}`
 - visibility_summary: {_format_context_value(plan.publication_visibility.get("summary"))}
