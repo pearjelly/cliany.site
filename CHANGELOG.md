@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.44] - 2026-06-12
+
+### Added
+- `artifact-manifest.json` 现在包含 `publication_ref_context`、`publication_worktree_clean`、`publication_worktree_status` 和 `publication_publish_script_command`，让候选任务产物包的机器可读入口也能直接展示发布 refs、worktree 和发布脚本生成命令。
+- 新增 `docs/releases/v0.16.44-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts manifest 的 publication context 摘要。
+
 ## [0.16.43] - 2026-06-12
 
 ### Added
@@ -717,7 +723,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.43...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.44...HEAD
+[0.16.44]: https://github.com/pearjelly/cliany.site/compare/v0.16.43...v0.16.44
 [0.16.43]: https://github.com/pearjelly/cliany.site/compare/v0.16.42...v0.16.43
 [0.16.42]: https://github.com/pearjelly/cliany.site/compare/v0.16.41...v0.16.42
 [0.16.41]: https://github.com/pearjelly/cliany.site/compare/v0.16.40...v0.16.41
