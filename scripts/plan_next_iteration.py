@@ -762,6 +762,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     issue_body_names = [f"{promotion.case_id}.md" for promotion in plan.candidate_promotions]
     candidate_cases = [promotion.case_id for promotion in plan.candidate_promotions]
     artifact_manifest = {
+        "schema_version": 1,
         "target_version": plan.target_version,
         "candidate_count": len(candidate_cases),
         "candidate_cases": candidate_cases,
@@ -847,7 +848,7 @@ Generated for target version `{plan.target_version}`.
 
 - `issue-metadata.json`: structured issue title, labels, reproduction context, body file name,
   body file path, and `gh issue create` command.
-- `artifact-manifest.json`: candidate cases, blockers, next actions, file names, review order,
+- `artifact-manifest.json`: schema version, candidate cases, blockers, next actions, file names, review order,
   publication status, publication ref context, worktree status, release draft handoff, reproduction
   command, publish commands, and validation commands for this candidate issue artifact bundle.
 - `publication-handoff.json`: publication status, visibility, next actions, publication next actions,

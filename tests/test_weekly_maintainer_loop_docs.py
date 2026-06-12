@@ -77,6 +77,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "release draft path",
         "release draft issues",
         "issue_artifacts_command",
+        "schema_version",
         "review order",
         "validation commands",
         "release draft path",

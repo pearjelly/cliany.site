@@ -35,6 +35,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact-manifest.json` 还会保留 `issue_artifacts_command`，让维护者和自动化能从同一个入口复现当前候选任务产物包。
 
+`artifact-manifest.json` 会带 `schema_version`，这是 artifacts manifest 自身的格式版本，用于脚本在解析前判断字段语义。
+
 如果 readiness 只剩 `commit days N/3`，本周继续做小而可验证的增量；如果存在 gate issue，优先关闭具体 gate，再继续新功能。
 
 ## 2. 周中：实现一个可验证切片
