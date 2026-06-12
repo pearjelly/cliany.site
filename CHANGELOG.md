@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.16] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --issues-dir` 现在写出 `publication-handoff.json`，把 publication 状态、next actions 和 publish commands 放进候选 issue artifacts。
 - 新增 `docs/releases/v0.16.16-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts 的 publication handoff。
@@ -552,7 +554,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.15...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.16...HEAD
+[0.16.16]: https://github.com/pearjelly/cliany.site/compare/v0.16.15...v0.16.16
 [0.16.15]: https://github.com/pearjelly/cliany.site/compare/v0.16.14...v0.16.15
 [0.16.14]: https://github.com/pearjelly/cliany.site/compare/v0.16.13...v0.16.14
 [0.16.13]: https://github.com/pearjelly/cliany.site/compare/v0.16.12...v0.16.13
