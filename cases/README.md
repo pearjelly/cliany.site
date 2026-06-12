@@ -49,6 +49,8 @@
 
 每个 issue 都应引用对应 case id、`promotion` 字段和推荐验证命令；如果任一子任务还没完成，案例继续保持 `candidate`，不要提前改成 `active`。
 
+运行 `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md` 会在 Markdown 报告中生成 `Candidate Promotion Tasks` 小节，维护者可以直接把其中的 `adapter_package`、`metadata_validation`、`online_smoke` 任务复制到 GitHub issue。
+
 ## 维护规则
 
 - 新增真实 demo 时，先更新 `manifest.json`，再补充 README/官网展示。
@@ -73,6 +75,8 @@ pytest tests/test_search_extraction_gap_fixture.py -q --no-cov
 ```
 
 CI 的 `Case Catalog Validation` job 会上传 `case-catalog-report` artifact，供 PR 诊断和 release notes 复盘引用。
+
+报告中的 `Candidate Promotion Tasks` 小节会把 candidate 的 `promotion` 清单转成可复制 issue，包括 package asset、metadata validation 和 online smoke 三类验收证据。
 
 `search-extraction-gap` 的最小复现页面固定在 [tests/fixtures/search_extraction_gap.html](../tests/fixtures/search_extraction_gap.html)，用于离线验证搜索结果列表中链接或摘要缺失时应被判为 `partial` 质量问题。
 

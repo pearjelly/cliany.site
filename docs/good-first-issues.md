@@ -22,6 +22,7 @@
 | `cases` | 为 candidate 的 `adapter_package` 子任务整理包名、发布草案和 release asset 检查清单 | `cases/README.md`, `docs/releases/` | `python scripts/validate_cases.py --json` |
 | `cases` | 为 candidate 的 `metadata_validation` 子任务补充离线验收说明或失败样例 | `cases/README.md`, `scripts/validate_cases.py`, `tests/test_validate_cases.py` | `pytest tests/test_validate_cases.py -q --no-cov` |
 | `cases` | 为 candidate 的 `online_smoke` 子任务整理只读命令、质量字段和 PR 证据模板 | `cases/README.md`, `docs/good-first-issues.md` | `git diff --check` |
+| `cases` | 把 `case-catalog-report` 中的 Candidate Promotion Tasks 复制成 GitHub issue 草稿 | `scripts/validate_cases.py`, `cases/README.md` | `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md` |
 | `doctor` | 为一个已有 doctor check 补充更具体的 action 文案，并覆盖 human/JSON 输出 | `src/cliany_site/commands/doctor.py`, `tests/test_doctor_v3.py` | `pytest tests/test_doctor_v3.py -q --no-cov` |
 | `release` | 改进 release readiness 或 cadence 的 `next_actions` 文案，让阻塞项更可执行 | `scripts/release_readiness.py`, `scripts/check_release_cadence.py` | `python scripts/release_readiness.py --json` 和 `pytest tests/test_release_readiness.py tests/test_release_cadence.py -q --no-cov` |
 | `extract` | 为抽取质量补一个空结果、全空字段或部分缺字段的离线 fixture 回归 | `tests/fixtures/`, `tests/test_extract_quality.py` | `pytest tests/test_extract_quality.py tests/test_search_extraction_gap_fixture.py -q --no-cov` |

@@ -522,6 +522,13 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "adapter_package: publish demo.example.com-<version>.cliany-adapter.tar.gz" in text
     assert f"metadata_validation: {metadata_validation}" in text
     assert "online_smoke: cliany-site demo.example.com list-items --json" in text
+    assert "## Candidate Promotion Tasks" in text
+    assert "### `candidate-case`" in text
+    assert "- [ ] `adapter_package`: publish demo.example.com-<version>.cliany-adapter.tar.gz" in text
+    assert f"- [ ] `metadata_validation`: {metadata_validation}" in text
+    assert "- [ ] `online_smoke`: cliany-site demo.example.com list-items --json" in text
+    assert "data.quality.ok=true" in text
+    assert "row_count>0" in text
 
 
 def test_cases_report_prints_candidate_promotion_checklist(tmp_path, capsys):

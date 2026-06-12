@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Changed
+- `scripts/validate_cases.py --report` 现在会输出 `Candidate Promotion Tasks` 小节，把 candidate 案例的 `promotion` 清单转成可复制的 GitHub issue 任务。
+
 ## [0.15.6] - 2026-06-12
 
 ### Changed

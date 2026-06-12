@@ -510,6 +510,37 @@ def _promotion_summary(promotion: dict[str, Any] | None) -> str:
     return "<br>".join(parts) if parts else "-"
 
 
+def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
+    candidates = [case for case in report.cases if case.status == "candidate" and case.promotion]
+    if not candidates:
+        return []
+
+    lines = [
+        "",
+        "## Candidate Promotion Tasks",
+        "",
+        "Use these issue-ready tasks to move candidate cases toward active status without bundling "
+        "package creation, metadata validation, and online smoke evidence into one PR.",
+    ]
+    for case in candidates:
+        promotion = case.promotion or {}
+        lines.extend(
+            [
+                "",
+                f"### `{case.id}`",
+                "",
+                f"- [ ] `adapter_package`: {promotion.get('adapter_package')}",
+                "  - Validation: attach the generated `.cliany-adapter.tar.gz` path or release asset name.",
+                f"- [ ] `metadata_validation`: {promotion.get('metadata_validation')}",
+                "  - Validation: paste the local `scripts/validate_cases.py --packages-dir` result.",
+                f"- [ ] `online_smoke`: {promotion.get('online_smoke')}",
+                "  - Validation: paste the read-only JSON envelope summary with "
+                "`data.quality.ok=true` and `row_count>0`.",
+            ]
+        )
+    return lines
+
+
 def _render_markdown_report(report: CasesReport) -> str:
     lines = [
         "# cliany-site Case Catalog Validation",
@@ -537,6 +568,7 @@ def _render_markdown_report(report: CasesReport) -> str:
         promotion = _promotion_summary(check.promotion)
         lines.append(f"| `{check.id}` | `{check.status}` | `{result}` | {issues} | {package} | {promotion} |")
 
+    lines.extend(_candidate_promotion_task_lines(report))
     return "\n".join(lines) + "\n"
 
 

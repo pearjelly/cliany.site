@@ -69,3 +69,19 @@ def test_good_first_issues_split_candidate_promotion_tasks():
     assert "python scripts/validate_cases.py --json" in validations
     assert "pytest tests/test_validate_cases.py -q --no-cov" in validations
     assert "git diff --check" in validations
+    assert "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md" in validations
+
+
+def test_good_first_issues_include_case_report_issue_draft_task():
+    text = DOC.read_text(encoding="utf-8")
+
+    required = [
+        "case-catalog-report",
+        "Candidate Promotion Tasks",
+        "GitHub issue 草稿",
+        "scripts/validate_cases.py",
+        "cases/README.md",
+        "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md",
+    ]
+    for snippet in required:
+        assert snippet in text
