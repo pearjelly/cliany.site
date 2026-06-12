@@ -151,6 +151,7 @@ V016135_DRAFT = ROOT / "docs" / "releases" / "v0.16.135-draft.md"
 V016136_DRAFT = ROOT / "docs" / "releases" / "v0.16.136-draft.md"
 V016137_DRAFT = ROOT / "docs" / "releases" / "v0.16.137-draft.md"
 V016138_DRAFT = ROOT / "docs" / "releases" / "v0.16.138-draft.md"
+V016139_DRAFT = ROOT / "docs" / "releases" / "v0.16.139-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -6617,6 +6618,49 @@ def test_v016138_release_draft_tracks_release_draft_handoff_primary_issue():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.138 --issues-dir",
         "git tag v0.16.138",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016139_release_draft_has_required_sections():
+    text = V016139_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.139 发布草案",
+        "**目标版本：** `0.16.139`",
+        "**提交范围：** `v0.16.138..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016139_release_draft_tracks_release_draft_handoff_schema_version():
+    text = V016139_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "release-draft-handoff.json",
+        "Release Draft Handoff",
+        "schema_version",
+        "release_draft_handoff_key_count",
+        "release_draft_handoff_sha256",
+        "artifact_bundle_summary",
+        "scripts/plan_next_iteration.py",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.139 --issues-dir",
+        "git tag v0.16.139",
     ]
     for snippet in required:
         assert snippet in text

@@ -203,6 +203,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "preflight_command",
         "preflight_json",
         "Release Draft Handoff",
+        "schema_version",
         "release_draft_ok",
         "release_draft_issue_count",
         "release_draft_primary_issue",

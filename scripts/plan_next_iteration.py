@@ -1158,7 +1158,7 @@ Generated for target version `{plan.target_version}`.
   issue artifact bundle.
 - `publication-handoff.json`: publication status, candidate issue gate, visibility, next actions,
   publication next actions, ref context, worktree status, and publish commands to review first.
-- `release-draft-handoff.json`: target version, release draft ok status, release draft path,
+- `release-draft-handoff.json`: schema version, target version, release draft ok status, release draft path,
   release draft path hash, release draft issue count, primary release draft issue,
   release draft issues hash, and release draft issues
   to review before tagging the target version.
@@ -1223,6 +1223,7 @@ Generated for target version `{plan.target_version}`.
 
 ## Release Draft Handoff
 
+- schema_version: `1`
 - release_draft_ok: `{str(not plan.release_draft_issues).lower()}`
 - release_draft_path: `{plan.release_draft_path}`
 - release_draft_path_sha256: `{_stable_json_sha256(plan.release_draft_path)}`
@@ -1497,6 +1498,7 @@ def _release_draft_primary_issue(plan: IterationPlan) -> str | None:
 
 def _release_draft_handoff(plan: IterationPlan) -> dict[str, Any]:
     return {
+        "schema_version": 1,
         "release_draft_ok": not plan.release_draft_issues,
         "release_draft_issue_count": len(plan.release_draft_issues),
         "release_draft_path": plan.release_draft_path,
