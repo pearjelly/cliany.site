@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/check_release_publication.py --publish-script` 生成的发布脚本现在会带 `Publication context` 注释，展示 branch、tag、HEAD、ahead/behind 和 remote check 状态，方便维护者审阅脚本是否对应当前本地 release。
+- 新增 `docs/releases/v0.16.29-draft.md`，把下一版 patch release 聚焦到 publish script 的发布上下文注释。
+
 ## [0.16.28] - 2026-06-12
 
 ### Added

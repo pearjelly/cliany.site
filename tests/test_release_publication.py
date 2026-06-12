@@ -153,6 +153,16 @@ def test_release_publication_writes_reviewable_publish_script(tmp_path):
     text = script_path.read_text(encoding="utf-8")
     assert text.startswith("#!/usr/bin/env bash\nset -euo pipefail\n")
     assert "Review these commands before running" in text
+    assert "# Publication context:" in text
+    assert "# - branch: master" in text
+    assert "# - upstream: origin/master" in text
+    assert "# - remote: origin" in text
+    assert "# - latest_tag: v0.1.1" in text
+    assert f"# - local_head: {report.local_head}" in text
+    assert f"# - tag_commit: {report.tag_commit}" in text
+    assert "# - ahead_count: 1" in text
+    assert "# - behind_count: 0" in text
+    assert "# - remote_checked: false" in text
     assert "git push origin master" in text
     assert "git push origin v0.1.1" in text
     assert "python scripts/check_release_publication.py --remote --json" in text
