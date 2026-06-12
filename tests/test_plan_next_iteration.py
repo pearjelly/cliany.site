@@ -119,6 +119,28 @@ def _publication_report() -> SimpleNamespace:
     )
 
 
+def _published_publication_report() -> SimpleNamespace:
+    return SimpleNamespace(
+        ok=True,
+        repo_root="/repo/cliany.site",
+        branch="master",
+        upstream="origin/master",
+        remote="origin",
+        local_head="abc123",
+        upstream_head="abc123",
+        ahead_count=0,
+        behind_count=0,
+        latest_tag="v0.16.1",
+        tag_commit="abc123",
+        remote_checked=True,
+        tag_published=True,
+        worktree_clean=True,
+        worktree_status=[],
+        next_actions=[],
+        publish_commands=[],
+    )
+
+
 def test_plan_defaults_to_next_patch_version(tmp_path):
     _write_pyproject(tmp_path, version="0.16.1")
 
@@ -134,6 +156,27 @@ def test_plan_defaults_to_next_patch_version(tmp_path):
     assert "latest local release is not published" in plan.blockers
     assert plan.candidate_cases == ["pypi-project-search", "npm-package-search"]
     assert plan.candidate_promotions[0].case_id == "pypi-project-search"
+
+
+def test_candidate_issue_gate_allows_creation_after_publication_with_release_draft_review(tmp_path):
+    _write_pyproject(tmp_path, version="0.16.1")
+
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=_readiness_report(),
+        publication_report=_published_publication_report(),
+    )
+
+    assert plan.candidate_issue_gate == {
+        "status": "review_required",
+        "can_create_issues": True,
+        "requires_maintainer_review": True,
+        "summary": "Release draft issues must be resolved or intentionally deferred before tagging.",
+        "required_actions": [
+            "release draft is missing",
+            "release draft missing snippet: ## 发版前验证",
+        ],
+    }
 
 
 def test_plan_json_keeps_actionable_validation_commands(tmp_path):
@@ -158,6 +201,17 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         == "python scripts/plan_next_iteration.py --target-version 0.16.2 "
         "--issues-dir /tmp/cliany-candidate-issues"
     )
+    assert data["candidate_issue_gate"] == {
+        "status": "blocked_by_publication",
+        "can_create_issues": False,
+        "requires_maintainer_review": True,
+        "summary": "Do not create candidate issues until the latest local release is publicly visible.",
+        "required_actions": [
+            "Commit, stash, or discard local worktree changes before publishing release refs.",
+            "Push `master` to `origin`; local branch is ahead by `2` commits.",
+            "Push tag `v0.16.1` after the branch is published.",
+        ],
+    }
     assert data["publication_publish_commands"] == [
         "python scripts/check_release_publication.py --json",
     ]
@@ -251,6 +305,12 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "## Candidate Promotion Tasks" in text
     assert "## Candidate Issue Body Templates" in text
     assert "## Publication Publish Commands" in text
+    assert "## Candidate Issue Gate" in text
+    assert "status: `blocked_by_publication`" in text
+    assert "can_create_issues: `false`" in text
+    assert "requires_maintainer_review: `true`" in text
+    assert "Do not create candidate issues until the latest local release is publicly visible." in text
+    assert "### Candidate Issue Gate Actions" in text
     assert "## Publication Visibility" in text
     assert "status: `dirty_worktree`" in text
     assert "Worktree has uncommitted changes; resolve them before publishing release refs." in text
@@ -333,6 +393,17 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "candidate_cases": ["pypi-project-search", "npm-package-search"],
         "blockers": ["release draft validation failed", "latest local release is not published"],
         "next_actions": plan.next_actions,
+        "candidate_issue_gate": {
+            "status": "blocked_by_publication",
+            "can_create_issues": False,
+            "requires_maintainer_review": True,
+            "summary": "Do not create candidate issues until the latest local release is publicly visible.",
+            "required_actions": [
+                "Commit, stash, or discard local worktree changes before publishing release refs.",
+                "Push `master` to `origin`; local branch is ahead by `2` commits.",
+                "Push tag `v0.16.1` after the branch is published.",
+            ],
+        },
         "publication_ok": False,
         "publication_visibility": {
             "status": "dirty_worktree",
@@ -417,6 +488,17 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     }
     assert publication_handoff == {
         "publication_ok": False,
+        "candidate_issue_gate": {
+            "status": "blocked_by_publication",
+            "can_create_issues": False,
+            "requires_maintainer_review": True,
+            "summary": "Do not create candidate issues until the latest local release is publicly visible.",
+            "required_actions": [
+                "Commit, stash, or discard local worktree changes before publishing release refs.",
+                "Push `master` to `origin`; local branch is ahead by `2` commits.",
+                "Push tag `v0.16.1` after the branch is published.",
+            ],
+        },
         "visibility": {
             "status": "dirty_worktree",
             "summary": "Worktree has uncommitted changes; resolve them before publishing release refs.",
@@ -473,11 +555,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "Generated for target version `0.16.2`." in readme
     assert "`issue-metadata.json`: structured issue title, labels, reproduction context" in readme
     assert "`artifact-manifest.json`: schema version, candidate cases, blockers, next actions" in readme
-    assert "review checklist, publication status, publication ref context" in readme
+    assert "review checklist, candidate issue gate, publication status" in readme
     assert "release draft" in readme
     assert "handoff, reproduction" in readme
     assert "body file name" in readme
-    assert "`publication-handoff.json`: publication status, visibility, next actions" in readme
+    assert "`publication-handoff.json`: publication status, candidate issue gate, visibility" in readme
     assert "`release-draft-handoff.json`: target version, release draft path" in readme
     assert "## Candidate Summary" in readme
     assert "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands |" in readme
@@ -487,6 +569,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "## Publication Handoff" in readme
     assert "publication_ok: `false`" in readme
+    assert "candidate_issue_gate: `blocked_by_publication`" in readme
+    assert "can_create_issues: `false`" in readme
+    assert "gate_summary: Do not create candidate issues until the latest local release is publicly visible." in readme
     assert "visibility: `dirty_worktree`" in readme
     assert (
         "visibility_summary: Worktree has uncommitted changes; "

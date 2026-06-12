@@ -65,6 +65,7 @@ class IterationPlan:
     blockers: list[str]
     next_actions: list[str]
     validation_commands: list[str]
+    candidate_issue_gate: dict[str, Any]
     publication_visibility: dict[str, str]
     publication_next_actions: list[str]
     publication_publish_commands: list[str]
@@ -91,6 +92,7 @@ class IterationPlan:
             "blockers": self.blockers,
             "next_actions": self.next_actions,
             "validation_commands": self.validation_commands,
+            "candidate_issue_gate": self.candidate_issue_gate,
             "publication_visibility": self.publication_visibility,
             "publication_next_actions": self.publication_next_actions,
             "publication_publish_commands": self.publication_publish_commands,
@@ -210,6 +212,36 @@ def _publication_visibility(publication: Any) -> dict[str, str]:
     return {
         "status": "needs_remote_check",
         "summary": "Publication visibility is inconclusive; rerun with `--remote` to verify live refs.",
+    }
+
+
+def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
+    release_draft_issues = _release_draft_issues(readiness)
+    if not bool(getattr(publication, "ok", False)):
+        actions = _publication_next_actions(publication) or [
+            "Run python scripts/check_release_publication.py --json and resolve publication blockers."
+        ]
+        return {
+            "status": "blocked_by_publication",
+            "can_create_issues": False,
+            "requires_maintainer_review": True,
+            "summary": "Do not create candidate issues until the latest local release is publicly visible.",
+            "required_actions": actions,
+        }
+    if release_draft_issues:
+        return {
+            "status": "review_required",
+            "can_create_issues": True,
+            "requires_maintainer_review": True,
+            "summary": "Release draft issues must be resolved or intentionally deferred before tagging.",
+            "required_actions": release_draft_issues,
+        }
+    return {
+        "status": "ready",
+        "can_create_issues": True,
+        "requires_maintainer_review": False,
+        "summary": "Candidate issues can be created after reviewing the generated artifacts.",
+        "required_actions": [],
     }
 
 
@@ -443,6 +475,7 @@ def build_plan(
         blockers=blockers,
         next_actions=_next_action_lines(readiness, publication),
         validation_commands=validation_commands,
+        candidate_issue_gate=_candidate_issue_gate(readiness, publication),
         publication_visibility=_publication_visibility(publication),
         publication_next_actions=_publication_next_actions(publication),
         publication_publish_commands=_publication_publish_commands(publication),
@@ -497,6 +530,14 @@ def _print_text(plan: IterationPlan) -> None:
     print("validation_commands:")
     for command in plan.validation_commands:
         print(f"- {command}")
+    print("candidate_issue_gate:")
+    for key, value in plan.candidate_issue_gate.items():
+        if isinstance(value, list):
+            print(f"- {key}:")
+            for item in value:
+                print(f"  - {item}")
+        else:
+            print(f"- {key}: {value}")
     print("publication_visibility:")
     for key, value in plan.publication_visibility.items():
         print(f"- {key}: {value}")
@@ -526,6 +567,7 @@ def _render_markdown(plan: IterationPlan) -> str:
     next_actions = "\n".join(f"- {action}" for action in plan.next_actions)
     validation = "\n".join(f"- `{command}`" for command in plan.validation_commands)
     publication_visibility = _publication_visibility_markdown(plan.publication_visibility)
+    candidate_issue_gate = _candidate_issue_gate_markdown(plan.candidate_issue_gate)
     publication_actions = _publication_next_actions_markdown(plan.publication_next_actions)
     publication_refs = _publication_ref_context_markdown(plan.publication_ref_context)
     publication_worktree = _publication_worktree_markdown(
@@ -569,6 +611,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 
 {publication_visibility}
 
+{candidate_issue_gate}
+
 {publication_actions}
 
 {publication_refs}
@@ -598,6 +642,28 @@ def _publication_next_actions_markdown(actions: list[str]) -> str:
         return "## Publication Next Actions\n\n- No publication next actions are needed."
     action_lines = "\n".join(f"- {action}" for action in actions)
     return f"""## Publication Next Actions
+
+{action_lines}"""
+
+
+def _candidate_issue_gate_markdown(gate: dict[str, Any]) -> str:
+    status = gate.get("status") or "(unknown)"
+    can_create = str(bool(gate.get("can_create_issues", False))).lower()
+    review_required = str(bool(gate.get("requires_maintainer_review", True))).lower()
+    summary = gate.get("summary") or "Candidate issue gate has not been summarized."
+    actions = gate.get("required_actions")
+    if not isinstance(actions, list) or not actions:
+        action_lines = "- No required actions are reported."
+    else:
+        action_lines = "\n".join(f"- {action}" for action in actions)
+    return f"""## Candidate Issue Gate
+
+- status: `{status}`
+- can_create_issues: `{can_create}`
+- requires_maintainer_review: `{review_required}`
+- summary: {summary}
+
+### Candidate Issue Gate Actions
 
 {action_lines}"""
 
@@ -768,6 +834,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "candidate_cases": candidate_cases,
         "blockers": plan.blockers,
         "next_actions": plan.next_actions,
+        "candidate_issue_gate": plan.candidate_issue_gate,
         "publication_ok": plan.publication_ok,
         "publication_visibility": plan.publication_visibility,
         "publication_next_actions": plan.publication_next_actions,
@@ -811,6 +878,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     (directory / "issue-metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
     publication_handoff = {
         "publication_ok": plan.publication_ok,
+        "candidate_issue_gate": plan.candidate_issue_gate,
         "visibility": plan.publication_visibility,
         "next_actions": plan.next_actions,
         "publication_next_actions": plan.publication_next_actions,
@@ -852,11 +920,11 @@ Generated for target version `{plan.target_version}`.
 - `issue-metadata.json`: structured issue title, labels, reproduction context, body file name,
   body file path, and `gh issue create` command.
 - `artifact-manifest.json`: schema version, candidate cases, blockers, next actions, file names, review order,
-  review checklist, publication status, publication ref context, worktree status, release draft
-  handoff, reproduction command, publish commands, and validation commands for this candidate issue
-  artifact bundle.
-- `publication-handoff.json`: publication status, visibility, next actions, publication next actions,
-  ref context, worktree status, and publish commands to review first.
+  review checklist, candidate issue gate, publication status, publication ref context, worktree status,
+  release draft handoff, reproduction command, publish commands, and validation commands for this candidate
+  issue artifact bundle.
+- `publication-handoff.json`: publication status, candidate issue gate, visibility, next actions,
+  publication next actions, ref context, worktree status, and publish commands to review first.
 - `release-draft-handoff.json`: target version, release draft path, and release draft issues
   to review before tagging the target version.
 - `create-issues.sh`: reviewable shell script with a release publication preflight and
@@ -868,6 +936,9 @@ Generated for target version `{plan.target_version}`.
 ## Publication Handoff
 
 - publication_ok: `{str(plan.publication_ok).lower()}`
+- candidate_issue_gate: `{_format_context_value(plan.candidate_issue_gate.get("status"))}`
+- can_create_issues: `{str(bool(plan.candidate_issue_gate.get("can_create_issues", False))).lower()}`
+- gate_summary: {_format_context_value(plan.candidate_issue_gate.get("summary"))}
 - visibility: `{_format_context_value(plan.publication_visibility.get("status"))}`
 - visibility_summary: {_format_context_value(plan.publication_visibility.get("summary"))}
 - latest_tag: `{_format_context_value(plan.publication_ref_context.get("latest_tag"))}`
