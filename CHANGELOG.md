@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.136] - 2026-06-13
+
+### Added
+- `release-draft-handoff.json` 现在输出 `release_draft_path_sha256`，让只读取 handoff 的维护工具也能检测草案路径漂移。
+- Candidate issue artifacts `README.md` 的 `Release Draft Handoff` 段落现在展示 `release_draft_path_sha256`。
+- 新增 `docs/releases/v0.16.136-draft.md`，把下一版 patch release 聚焦到 release draft handoff 的路径摘要可见性。
+
 ## [0.16.135] - 2026-06-13
 
 ### Added
@@ -1350,7 +1357,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.135...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.136...HEAD
+[0.16.136]: https://github.com/pearjelly/cliany.site/compare/v0.16.135...v0.16.136
 [0.16.135]: https://github.com/pearjelly/cliany.site/compare/v0.16.134...v0.16.135
 [0.16.134]: https://github.com/pearjelly/cliany.site/compare/v0.16.133...v0.16.134
 [0.16.133]: https://github.com/pearjelly/cliany.site/compare/v0.16.132...v0.16.133
