@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.105] - 2026-06-12
+
+### Added
+- `publication_ref_context` 现在包含 `branch_published` 和 `tag_published`，方便候选 issue artifacts 保留分支/tag 是否公开可见的判断。
+- `artifact_bundle_summary` 现在包含 `publication_branch_published` 和 `publication_tag_published`，方便工具只读整包摘要就判断发布 refs 是否公开。
+- 新增 `docs/releases/v0.16.105-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 publication published state 可见性。
+
 ## [0.16.104] - 2026-06-12
 
 ### Added
@@ -1133,7 +1140,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.104...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.105...HEAD
+[0.16.105]: https://github.com/pearjelly/cliany.site/compare/v0.16.104...v0.16.105
 [0.16.104]: https://github.com/pearjelly/cliany.site/compare/v0.16.103...v0.16.104
 [0.16.103]: https://github.com/pearjelly/cliany.site/compare/v0.16.102...v0.16.103
 [0.16.102]: https://github.com/pearjelly/cliany.site/compare/v0.16.101...v0.16.102

@@ -112,8 +112,9 @@ def _publication_report() -> SimpleNamespace:
         tag_commit="abc123",
         tag_points_at_head=True,
         tag_commit_in_upstream=False,
-        remote_checked=False,
+        branch_published=False,
         tag_published=False,
+        remote_checked=False,
         worktree_clean=False,
         worktree_status=[" M CHANGELOG.md"],
         next_actions=[
@@ -142,8 +143,9 @@ def _published_publication_report() -> SimpleNamespace:
         tag_commit="abc123",
         tag_points_at_head=True,
         tag_commit_in_upstream=True,
-        remote_checked=True,
+        branch_published=True,
         tag_published=True,
+        remote_checked=True,
         worktree_clean=True,
         worktree_status=[],
         next_actions=[],
@@ -300,6 +302,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "tag_commit": "abc123",
         "tag_points_at_head": True,
         "tag_commit_in_upstream": False,
+        "branch_published": False,
+        "tag_published": False,
         "remote_checked": False,
     }
     assert data["publication_worktree_clean"] is False
@@ -563,6 +567,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "tag_commit": "abc123",
             "tag_points_at_head": True,
             "tag_commit_in_upstream": False,
+            "branch_published": False,
+            "tag_published": False,
             "remote_checked": False,
         },
         "worktree_clean": False,
@@ -698,6 +704,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_upstream_head": "def456",
         "publication_tag_points_at_head": True,
         "publication_tag_commit_in_upstream": False,
+        "publication_branch_published": False,
+        "publication_tag_published": False,
         "publication_remote_checked": False,
         "publication_ahead_count": 2,
         "publication_behind_count": 0,
@@ -782,6 +790,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "tag_commit": "abc123",
             "tag_points_at_head": True,
             "tag_commit_in_upstream": False,
+            "branch_published": False,
+            "tag_published": False,
             "remote_checked": False,
         },
         "publication_worktree_clean": False,
@@ -992,6 +1002,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "publication_upstream_head: `def456`" in readme
     assert "publication_tag_points_at_head: `true`" in readme
     assert "publication_tag_commit_in_upstream: `false`" in readme
+    assert "publication_branch_published: `false`" in readme
+    assert "publication_tag_published: `false`" in readme
     assert "publication_remote_checked: `false`" in readme
     assert "publication_ahead_count: `2`" in readme
     assert "publication_behind_count: `0`" in readme

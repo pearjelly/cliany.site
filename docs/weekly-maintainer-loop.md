@@ -69,6 +69,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact_bundle_summary` 还会带上 `publication_tag_points_at_head` 和 `publication_tag_commit_in_upstream`，让工具只读整包摘要就能判断最新本地 tag 是否指向 HEAD，以及该 tag commit 是否已经包含在上游分支中。
 
+`artifact_bundle_summary` 还会带上 `publication_branch_published` 和 `publication_tag_published`，让工具只读整包摘要就能判断发布分支和最新本地 tag 是否已经公开可见。
+
 `artifact_bundle_summary` 还会带上 `requires_maintainer_review`，让工具只读整包摘要就能判断候选 issue gate 是否仍需人工审阅。
 
 `artifact_bundle_summary` 还会带上 `candidate_issue_gate_summary_sha256`，让工具只读整包摘要就能判断 gate summary 是否漂移。
