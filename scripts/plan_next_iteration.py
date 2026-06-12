@@ -219,6 +219,7 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
     release_draft_issues = _release_draft_issues(readiness)
     evidence = _candidate_issue_gate_evidence(readiness, publication)
     reason_codes = _candidate_issue_gate_reason_codes(release_draft_issues, publication)
+    reason_descriptions = _candidate_issue_gate_reason_descriptions(reason_codes)
     if not bool(getattr(publication, "ok", False)):
         actions = _publication_next_actions(publication) or [
             "Run python scripts/check_release_publication.py --json and resolve publication blockers."
@@ -229,6 +230,7 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
             "requires_maintainer_review": True,
             "summary": "Do not create candidate issues until the latest local release is publicly visible.",
             "reason_codes": reason_codes,
+            "reason_descriptions": reason_descriptions,
             "required_actions": actions,
             "evidence": evidence,
         }
@@ -239,6 +241,7 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
             "requires_maintainer_review": True,
             "summary": "Release draft issues must be resolved or intentionally deferred before tagging.",
             "reason_codes": reason_codes,
+            "reason_descriptions": reason_descriptions,
             "required_actions": release_draft_issues,
             "evidence": evidence,
         }
@@ -248,6 +251,7 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
         "requires_maintainer_review": False,
         "summary": "Candidate issues can be created after reviewing the generated artifacts.",
         "reason_codes": reason_codes,
+        "reason_descriptions": reason_descriptions,
         "required_actions": [],
         "evidence": evidence,
     }
@@ -269,6 +273,18 @@ def _candidate_issue_gate_reason_codes(release_draft_issues: list[str], publicat
     if release_draft_issues:
         codes.append("release_draft_issues")
     return codes
+
+
+def _candidate_issue_gate_reason_descriptions(reason_codes: list[str]) -> dict[str, str]:
+    descriptions = {
+        "publication_not_published": "The latest local release branch or tag is not visible upstream.",
+        "dirty_worktree": "The working tree has uncommitted changes that must be resolved first.",
+        "local_release_only": "The local branch is ahead of upstream and needs maintainer-approved publishing.",
+        "tag_not_visible": "The latest local release tag is not visible on the configured remote.",
+        "needs_remote_check": "Live remote refs have not been checked yet.",
+        "release_draft_issues": "The target release draft still has validation issues.",
+    }
+    return {code: descriptions[code] for code in reason_codes if code in descriptions}
 
 
 def _candidate_issue_gate_evidence(readiness: Any, publication: Any) -> dict[str, Any]:
@@ -713,12 +729,14 @@ def _candidate_issue_gate_markdown(gate: dict[str, Any]) -> str:
     review_required = str(bool(gate.get("requires_maintainer_review", True))).lower()
     summary = gate.get("summary") or "Candidate issue gate has not been summarized."
     reason_codes = gate.get("reason_codes")
+    reason_descriptions = gate.get("reason_descriptions")
     actions = gate.get("required_actions")
     evidence = gate.get("evidence")
     if not isinstance(reason_codes, list) or not reason_codes:
         reason_lines = "- No candidate issue gate reason codes are reported."
     else:
         reason_lines = "\n".join(f"- `{reason}`" for reason in reason_codes)
+    description_lines = _candidate_issue_gate_reason_descriptions_markdown(reason_descriptions)
     if not isinstance(actions, list) or not actions:
         action_lines = "- No required actions are reported."
     else:
@@ -734,6 +752,10 @@ def _candidate_issue_gate_markdown(gate: dict[str, Any]) -> str:
 ### Candidate Issue Gate Reason Codes
 
 {reason_lines}
+
+### Candidate Issue Gate Reason Descriptions
+
+{description_lines}
 
 ### Candidate Issue Gate Evidence
 
@@ -1008,6 +1030,7 @@ def _render_issue_artifacts_readme(plan: IterationPlan) -> str:
     body_files = body_files or "- No candidate issue body files were generated."
     candidate_summary = _issue_artifact_candidate_summary(plan.candidate_promotions)
     gate_reason_codes = _issue_artifact_gate_reason_codes(plan)
+    gate_reason_descriptions = _issue_artifact_gate_reason_descriptions(plan)
     gate_latest_tag = _format_context_value(_candidate_issue_gate_evidence_value(plan, "publication_latest_tag"))
     gate_ahead_count = _format_context_value(_candidate_issue_gate_evidence_value(plan, "publication_ahead_count"))
     gate_worktree_clean = _format_context_value(
@@ -1044,6 +1067,7 @@ Generated for target version `{plan.target_version}`.
 - can_create_issues: `{str(bool(plan.candidate_issue_gate.get("can_create_issues", False))).lower()}`
 - gate_summary: {_format_context_value(plan.candidate_issue_gate.get("summary"))}
 - gate_reason_codes: {gate_reason_codes}
+- gate_reason_descriptions: {gate_reason_descriptions}
 - gate_evidence_latest_tag: `{gate_latest_tag}`
 - gate_evidence_ahead_count: `{gate_ahead_count}`
 - gate_evidence_worktree_clean: `{gate_worktree_clean}`
@@ -1110,6 +1134,21 @@ def _issue_artifact_gate_reason_codes(plan: IterationPlan) -> str:
     if not isinstance(reason_codes, list) or not reason_codes:
         return "`(none)`"
     return ", ".join(f"`{reason}`" for reason in reason_codes)
+
+
+def _candidate_issue_gate_reason_descriptions_markdown(descriptions: object) -> str:
+    if not isinstance(descriptions, dict) or not descriptions:
+        return "- No candidate issue gate reason descriptions are reported."
+    lines = ["| Code | Description |", "|------|-------------|"]
+    lines.extend(f"| `{code}` | {description} |" for code, description in descriptions.items())
+    return "\n".join(lines)
+
+
+def _issue_artifact_gate_reason_descriptions(plan: IterationPlan) -> str:
+    descriptions = plan.candidate_issue_gate.get("reason_descriptions")
+    if not isinstance(descriptions, dict) or not descriptions:
+        return "`(none)`"
+    return "; ".join(f"`{code}`: {description}" for code, description in descriptions.items())
 
 
 def _issue_artifact_release_draft_issues(plan: IterationPlan) -> str:

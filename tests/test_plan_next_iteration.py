@@ -152,6 +152,11 @@ def _blocked_candidate_issue_gate() -> dict[str, object]:
             "dirty_worktree",
             "release_draft_issues",
         ],
+        "reason_descriptions": {
+            "publication_not_published": "The latest local release branch or tag is not visible upstream.",
+            "dirty_worktree": "The working tree has uncommitted changes that must be resolved first.",
+            "release_draft_issues": "The target release draft still has validation issues.",
+        },
         "required_actions": [
             "Commit, stash, or discard local worktree changes before publishing release refs.",
             "Push `master` to `origin`; local branch is ahead by `2` commits.",
@@ -204,6 +209,9 @@ def test_candidate_issue_gate_allows_creation_after_publication_with_release_dra
         "requires_maintainer_review": True,
         "summary": "Release draft issues must be resolved or intentionally deferred before tagging.",
         "reason_codes": ["release_draft_issues"],
+        "reason_descriptions": {
+            "release_draft_issues": "The target release draft still has validation issues.",
+        },
         "required_actions": [
             "release draft is missing",
             "release draft missing snippet: ## 发版前验证",
@@ -349,6 +357,10 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "- `publication_not_published`" in text
     assert "- `dirty_worktree`" in text
     assert "- `release_draft_issues`" in text
+    assert "### Candidate Issue Gate Reason Descriptions" in text
+    assert "| `publication_not_published` | The latest local release branch or tag is not visible upstream. |" in text
+    assert "| `dirty_worktree` | The working tree has uncommitted changes that must be resolved first. |" in text
+    assert "| `release_draft_issues` | The target release draft still has validation issues. |" in text
     assert "### Candidate Issue Gate Evidence" in text
     assert "| publication_visibility_status | `dirty_worktree` |" in text
     assert "| publication_worktree_clean | `false` |" in text
@@ -405,6 +417,10 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
     assert "  - publication_not_published" in text
     assert "  - dirty_worktree" in text
     assert "  - release_draft_issues" in text
+    assert "- reason_descriptions:" in text
+    assert "  - publication_not_published: The latest local release branch or tag is not visible upstream." in text
+    assert "  - dirty_worktree: The working tree has uncommitted changes that must be resolved first." in text
+    assert "  - release_draft_issues: The target release draft still has validation issues." in text
     assert "- evidence:" in text
     assert "  - publication_visibility_status: dirty_worktree" in text
     assert "  - publication_worktree_clean: false" in text
@@ -625,6 +641,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "can_create_issues: `false`" in readme
     assert "gate_summary: Do not create candidate issues until the latest local release is publicly visible." in readme
     assert "gate_reason_codes: `publication_not_published`, `dirty_worktree`, `release_draft_issues`" in readme
+    assert "gate_reason_descriptions:" in readme
+    assert "`publication_not_published`: The latest local release branch or tag is not visible upstream." in readme
+    assert "`dirty_worktree`: The working tree has uncommitted changes that must be resolved first." in readme
+    assert "`release_draft_issues`: The target release draft still has validation issues." in readme
     assert "gate_evidence_latest_tag: `v0.16.1`" in readme
     assert "gate_evidence_ahead_count: `2`" in readme
     assert "gate_evidence_worktree_clean: `false`" in readme

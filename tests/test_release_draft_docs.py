@@ -69,6 +69,7 @@ V01653_DRAFT = ROOT / "docs" / "releases" / "v0.16.53-draft.md"
 V01654_DRAFT = ROOT / "docs" / "releases" / "v0.16.54-draft.md"
 V01655_DRAFT = ROOT / "docs" / "releases" / "v0.16.55-draft.md"
 V01656_DRAFT = ROOT / "docs" / "releases" / "v0.16.56-draft.md"
+V01657_DRAFT = ROOT / "docs" / "releases" / "v0.16.57-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -3017,6 +3018,50 @@ def test_v01656_release_draft_tracks_gate_reason_codes():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.56 --json",
         "git tag v0.16.56",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v01657_release_draft_has_required_sections():
+    text = V01657_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.57 发布草案",
+        "**目标版本：** `0.16.57`",
+        "**提交范围：** `v0.16.56..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v01657_release_draft_tracks_gate_reason_descriptions():
+    text = V01657_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "candidate_issue_gate.reason_descriptions",
+        "reason_codes",
+        "publication_not_published",
+        "The latest local release branch or tag is not visible upstream.",
+        "Candidate Issue Gate Reason Descriptions",
+        "gate reason descriptions",
+        "artifact-manifest.json",
+        "publication-handoff.json",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.57 --json",
+        "git tag v0.16.57",
     ]
     for snippet in required:
         assert snippet in text
