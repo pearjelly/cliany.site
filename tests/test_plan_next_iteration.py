@@ -395,6 +395,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 "--issues-dir /tmp/cliany-candidate-issues"
             ),
             "python scripts/plan_next_iteration.py --target-version 0.16.2 --json",
+            "python scripts/check_release_publication.py --json",
             "python scripts/validate_cases.py --strict",
         ],
     }

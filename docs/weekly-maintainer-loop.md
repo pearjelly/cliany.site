@@ -37,6 +37,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `artifact-manifest.json` 会带 `schema_version`，这是 artifacts manifest 自身的格式版本，用于脚本在解析前判断字段语义。
 
+`artifact-manifest.json` 的 `validation_commands` 会包含 `python scripts/check_release_publication.py --json`，方便维护者在创建候选 issue 前重新复核发布可见性。
+
 如果 readiness 只剩 `commit days N/3`，本周继续做小而可验证的增量；如果存在 gate issue，优先关闭具体 gate，再继续新功能。
 
 ## 2. 周中：实现一个可验证切片
