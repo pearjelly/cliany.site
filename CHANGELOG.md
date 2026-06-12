@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.39] - 2026-06-12
+
 ### Added
 - `scripts/plan_next_iteration.py --issues-dir` 现在会写出 `release-draft-handoff.json`，把 target version、release draft path 和 release draft issues 作为结构化 artifact 交给维护者和工具读取。
 - 新增 `docs/releases/v0.16.39-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts 的结构化 release draft handoff。
@@ -691,7 +693,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.38...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.39...HEAD
+[0.16.39]: https://github.com/pearjelly/cliany.site/compare/v0.16.38...v0.16.39
 [0.16.38]: https://github.com/pearjelly/cliany.site/compare/v0.16.37...v0.16.38
 [0.16.37]: https://github.com/pearjelly/cliany.site/compare/v0.16.36...v0.16.37
 [0.16.36]: https://github.com/pearjelly/cliany.site/compare/v0.16.35...v0.16.36
