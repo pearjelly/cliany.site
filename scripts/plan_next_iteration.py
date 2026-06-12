@@ -1711,6 +1711,7 @@ def _issue_artifact_bundle_summary(
         "release_draft_handoff_sha256": _stable_json_sha256(release_draft_handoff),
         "release_draft_path": plan.release_draft_path,
         "release_draft_path_sha256": _stable_json_sha256(plan.release_draft_path),
+        "release_draft_primary_issue": _release_draft_primary_issue(plan),
         "release_draft_required_action_count": len(release_draft_required_actions),
         "release_draft_required_actions_sha256": _stable_json_sha256(release_draft_required_actions),
         "release_draft_primary_required_action": (
@@ -1841,6 +1842,7 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- release_draft_handoff_sha256: `{summary['release_draft_handoff_sha256']}`",
             f"- release_draft_path: `{summary['release_draft_path']}`",
             f"- release_draft_path_sha256: `{summary['release_draft_path_sha256']}`",
+            f"- release_draft_primary_issue: {_summary_inline_code(summary['release_draft_primary_issue'])}",
             f"- release_draft_required_action_count: `{summary['release_draft_required_action_count']}`",
             "- release_draft_required_actions_sha256: "
             f"`{summary['release_draft_required_actions_sha256']}`",
