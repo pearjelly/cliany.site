@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.69] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `publication_ok`、`publication_visibility_status` 和 `release_draft_issue_count`，方便工具只读整包摘要就区分 publication/release draft 阻塞来源。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示这些 publication/release draft 预筛字段。
+- 新增 `docs/releases/v0.16.69-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的阻塞来源预筛。
+
 ## [0.16.68] - 2026-06-12
 
 ### Added
@@ -883,7 +890,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.68...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.69...HEAD
+[0.16.69]: https://github.com/pearjelly/cliany.site/compare/v0.16.68...v0.16.69
 [0.16.68]: https://github.com/pearjelly/cliany.site/compare/v0.16.67...v0.16.68
 [0.16.67]: https://github.com/pearjelly/cliany.site/compare/v0.16.66...v0.16.67
 [0.16.66]: https://github.com/pearjelly/cliany.site/compare/v0.16.65...v0.16.66
