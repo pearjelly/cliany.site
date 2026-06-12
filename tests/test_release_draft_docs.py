@@ -130,6 +130,7 @@ V016114_DRAFT = ROOT / "docs" / "releases" / "v0.16.114-draft.md"
 V016115_DRAFT = ROOT / "docs" / "releases" / "v0.16.115-draft.md"
 V016116_DRAFT = ROOT / "docs" / "releases" / "v0.16.116-draft.md"
 V016117_DRAFT = ROOT / "docs" / "releases" / "v0.16.117-draft.md"
+V016118_DRAFT = ROOT / "docs" / "releases" / "v0.16.118-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -5704,6 +5705,47 @@ def test_v016117_release_draft_tracks_quick_summary_upstream():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.117 --issues-dir",
         "git tag v0.16.117",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016118_release_draft_has_required_sections():
+    text = V016118_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.118 发布草案",
+        "**目标版本：** `0.16.118`",
+        "**提交范围：** `v0.16.117..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016118_release_draft_tracks_quick_summary_remote():
+    text = V016118_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "Candidate Issue Gate Quick Summary",
+        "publication_branch",
+        "publication_upstream",
+        "publication_remote",
+        "README.md",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.118 --issues-dir",
+        "git tag v0.16.118",
     ]
     for snippet in required:
         assert snippet in text
