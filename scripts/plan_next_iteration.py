@@ -201,6 +201,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "publication_ref_context_key_boundary_sha256",
     "publication_publish_command_count",
     "publication_publish_commands_sha256",
+    "publication_publish_first_command",
+    "publication_publish_last_command",
+    "publication_publish_command_boundary_sha256",
     "publication_primary_publish_command",
     "publication_publish_script_path_sha256",
     "publication_publish_script_command_sha256",
@@ -2098,6 +2101,14 @@ def _issue_artifact_bundle_summary(
         if publication_ref_context_keys
         else None,
     }
+    publication_publish_command_boundary = {
+        "first_command": plan.publication_publish_commands[0]
+        if plan.publication_publish_commands
+        else None,
+        "last_command": plan.publication_publish_commands[-1]
+        if plan.publication_publish_commands
+        else None,
+    }
     artifact_file_keys = list(artifact_files)
     artifact_files_key_boundary = {
         "first_key": artifact_file_keys[0] if artifact_file_keys else None,
@@ -2395,6 +2406,15 @@ def _issue_artifact_bundle_summary(
         ),
         "publication_publish_command_count": plan.publication_publish_command_count,
         "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
+        "publication_publish_first_command": publication_publish_command_boundary[
+            "first_command"
+        ],
+        "publication_publish_last_command": publication_publish_command_boundary[
+            "last_command"
+        ],
+        "publication_publish_command_boundary_sha256": _stable_json_sha256(
+            publication_publish_command_boundary
+        ),
         "publication_primary_publish_command": (
             plan.publication_publish_commands[0] if plan.publication_publish_commands else None
         ),
@@ -2780,6 +2800,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['publication_ref_context_key_boundary_sha256']}`",
             f"- publication_publish_command_count: `{summary['publication_publish_command_count']}`",
             f"- publication_publish_commands_sha256: `{summary['publication_publish_commands_sha256']}`",
+            "- publication_publish_first_command: "
+            f"{_summary_inline_code(summary['publication_publish_first_command'])}",
+            "- publication_publish_last_command: "
+            f"{_summary_inline_code(summary['publication_publish_last_command'])}",
+            "- publication_publish_command_boundary_sha256: "
+            f"`{summary['publication_publish_command_boundary_sha256']}`",
             "- publication_primary_publish_command: "
             f"{_summary_inline_code(summary['publication_primary_publish_command'])}",
             "- publication_publish_script_path_sha256: "

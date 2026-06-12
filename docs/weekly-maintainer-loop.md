@@ -179,6 +179,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 还会带上 `publication_primary_publish_command`，让工具只读整包摘要就能展示第一条发布同步命令。
 
+`artifact_bundle_summary` 还会带上 `publication_publish_first_command`、`publication_publish_last_command` 和 `publication_publish_command_boundary_sha256`，让工具只读整包摘要就能检查 publication publish commands 首尾边界。
+
 `artifact_bundle_summary` 还会带上 `publication_publish_script_path_sha256` 和 `publication_publish_script_command_sha256`，让工具只读整包摘要就能判断发布脚本路径或生成命令是否漂移。
 
 `publication-handoff.json` 和 artifacts `README.md` 的 `Publication Handoff` 也会展示 `publish_script_path_sha256` 与 `publish_script_command_sha256`，让只读取 handoff 的维护工具不必展开完整 manifest 就能检测发布脚本路径或命令漂移。
