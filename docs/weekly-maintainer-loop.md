@@ -199,11 +199,15 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 还会带上 `release_draft_first_required_action`、`release_draft_last_required_action` 和 `release_draft_required_action_boundary_sha256`，让工具只读整包摘要就能检查 release draft required actions 首尾边界。
 
+`artifact_bundle_summary` 还会带上 `release_draft_required_action_preview_count`、`release_draft_required_action_preview`、`release_draft_required_action_preview_sha256`、`release_draft_required_action_tail_count`、`release_draft_required_action_tail` 和 `release_draft_required_action_tail_sha256`，让工具只读整包摘要就能检查 release draft required actions 的前后窗口。
+
 `artifact_bundle_summary` 还会带上 `release_draft_primary_required_action`，让工具只读整包摘要就能展示第一条 release draft 修复动作。
 
 `artifact_bundle_summary` 还会带上 `release_draft_issues_sha256`，让工具只读整包摘要就能判断 release draft issues 列表是否漂移。
 
 `artifact_bundle_summary` 还会带上 `release_draft_first_issue`、`release_draft_last_issue` 和 `release_draft_issue_boundary_sha256`，让工具只读整包摘要就能检查 release draft issues 首尾边界。
+
+`artifact_bundle_summary` 还会带上 `release_draft_issue_preview_count`、`release_draft_issue_preview`、`release_draft_issue_preview_sha256`、`release_draft_issue_tail_count`、`release_draft_issue_tail` 和 `release_draft_issue_tail_sha256`，让工具只读整包摘要就能检查 release draft issues 的前后窗口。
 
 `artifact_bundle_summary` 还会带上 `validation_command_count` 和 `validation_commands_sha256`，让工具只读整包摘要就能判断 validation commands 是否漂移。
 

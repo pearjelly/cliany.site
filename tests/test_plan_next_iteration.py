@@ -1116,6 +1116,24 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 ),
             }
         ),
+        "release_draft_required_action_preview_count": len(
+            expected_release_draft_handoff["release_draft_required_actions"][:8]
+        ),
+        "release_draft_required_action_preview": list(
+            expected_release_draft_handoff["release_draft_required_actions"][:8]
+        ),
+        "release_draft_required_action_preview_sha256": _stable_json_sha256(
+            expected_release_draft_handoff["release_draft_required_actions"][:8]
+        ),
+        "release_draft_required_action_tail_count": len(
+            expected_release_draft_handoff["release_draft_required_actions"][-8:]
+        ),
+        "release_draft_required_action_tail": list(
+            expected_release_draft_handoff["release_draft_required_actions"][-8:]
+        ),
+        "release_draft_required_action_tail_sha256": _stable_json_sha256(
+            expected_release_draft_handoff["release_draft_required_actions"][-8:]
+        ),
         "release_draft_primary_required_action": (
             expected_release_draft_handoff["release_draft_required_actions"][0]
         ),
@@ -1127,6 +1145,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 "first_issue": "release draft is missing",
                 "last_issue": "release draft missing snippet: ## 发版前验证",
             }
+        ),
+        "release_draft_issue_preview_count": len(plan.release_draft_issues[:8]),
+        "release_draft_issue_preview": list(plan.release_draft_issues[:8]),
+        "release_draft_issue_preview_sha256": _stable_json_sha256(
+            plan.release_draft_issues[:8]
+        ),
+        "release_draft_issue_tail_count": len(plan.release_draft_issues[-8:]),
+        "release_draft_issue_tail": list(plan.release_draft_issues[-8:]),
+        "release_draft_issue_tail_sha256": _stable_json_sha256(
+            plan.release_draft_issues[-8:]
         ),
         "validation_command_count": 5,
         "validation_commands_sha256": _stable_json_sha256(
@@ -2200,6 +2228,30 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"`{artifact_bundle_summary['release_draft_required_action_boundary_sha256']}`"
     ) in readme
     assert (
+        "release_draft_required_action_preview_count: "
+        f"`{artifact_bundle_summary['release_draft_required_action_preview_count']}`"
+    ) in readme
+    assert (
+        "release_draft_required_action_preview: "
+        f"`{json.dumps(artifact_bundle_summary['release_draft_required_action_preview'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "release_draft_required_action_preview_sha256: "
+        f"`{artifact_bundle_summary['release_draft_required_action_preview_sha256']}`"
+    ) in readme
+    assert (
+        "release_draft_required_action_tail_count: "
+        f"`{artifact_bundle_summary['release_draft_required_action_tail_count']}`"
+    ) in readme
+    assert (
+        "release_draft_required_action_tail: "
+        f"`{json.dumps(artifact_bundle_summary['release_draft_required_action_tail'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "release_draft_required_action_tail_sha256: "
+        f"`{artifact_bundle_summary['release_draft_required_action_tail_sha256']}`"
+    ) in readme
+    assert (
         "release_draft_primary_required_action: "
         "`Resolve release draft issue: release draft is missing`"
     ) in readme
@@ -2219,6 +2271,30 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "release_draft_issue_boundary_sha256: "
         f"`{artifact_bundle_summary['release_draft_issue_boundary_sha256']}`"
+    ) in readme
+    assert (
+        "release_draft_issue_preview_count: "
+        f"`{artifact_bundle_summary['release_draft_issue_preview_count']}`"
+    ) in readme
+    assert (
+        "release_draft_issue_preview: "
+        f"`{json.dumps(artifact_bundle_summary['release_draft_issue_preview'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "release_draft_issue_preview_sha256: "
+        f"`{artifact_bundle_summary['release_draft_issue_preview_sha256']}`"
+    ) in readme
+    assert (
+        "release_draft_issue_tail_count: "
+        f"`{artifact_bundle_summary['release_draft_issue_tail_count']}`"
+    ) in readme
+    assert (
+        "release_draft_issue_tail: "
+        f"`{json.dumps(artifact_bundle_summary['release_draft_issue_tail'], ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "release_draft_issue_tail_sha256: "
+        f"`{artifact_bundle_summary['release_draft_issue_tail_sha256']}`"
     ) in readme
     assert "validation_command_count: `5`" in readme
     assert (

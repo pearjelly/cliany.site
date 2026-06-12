@@ -234,11 +234,23 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "release_draft_first_required_action",
     "release_draft_last_required_action",
     "release_draft_required_action_boundary_sha256",
+    "release_draft_required_action_preview_count",
+    "release_draft_required_action_preview",
+    "release_draft_required_action_preview_sha256",
+    "release_draft_required_action_tail_count",
+    "release_draft_required_action_tail",
+    "release_draft_required_action_tail_sha256",
     "release_draft_primary_required_action",
     "release_draft_issues_sha256",
     "release_draft_first_issue",
     "release_draft_last_issue",
     "release_draft_issue_boundary_sha256",
+    "release_draft_issue_preview_count",
+    "release_draft_issue_preview",
+    "release_draft_issue_preview_sha256",
+    "release_draft_issue_tail_count",
+    "release_draft_issue_tail",
+    "release_draft_issue_tail_sha256",
     "validation_command_count",
     "validation_commands_sha256",
     "validation_first_command",
@@ -2082,6 +2094,8 @@ def _issue_artifact_bundle_summary(
         if release_draft_required_actions
         else None,
     }
+    release_draft_required_action_preview = release_draft_required_actions[:8]
+    release_draft_required_action_tail = release_draft_required_actions[-8:]
     release_draft_issue_boundary = {
         "first_issue": plan.release_draft_issues[0]
         if plan.release_draft_issues
@@ -2090,6 +2104,8 @@ def _issue_artifact_bundle_summary(
         if plan.release_draft_issues
         else None,
     }
+    release_draft_issue_preview = plan.release_draft_issues[:8]
+    release_draft_issue_tail = plan.release_draft_issues[-8:]
     validation_commands = _issue_artifact_validation_commands(plan)
     validation_command_boundary = {
         "first_command": validation_commands[0] if validation_commands else None,
@@ -2521,6 +2537,24 @@ def _issue_artifact_bundle_summary(
         "release_draft_required_action_boundary_sha256": _stable_json_sha256(
             release_draft_required_action_boundary
         ),
+        "release_draft_required_action_preview_count": len(
+            release_draft_required_action_preview
+        ),
+        "release_draft_required_action_preview": list(
+            release_draft_required_action_preview
+        ),
+        "release_draft_required_action_preview_sha256": _stable_json_sha256(
+            release_draft_required_action_preview
+        ),
+        "release_draft_required_action_tail_count": len(
+            release_draft_required_action_tail
+        ),
+        "release_draft_required_action_tail": list(
+            release_draft_required_action_tail
+        ),
+        "release_draft_required_action_tail_sha256": _stable_json_sha256(
+            release_draft_required_action_tail
+        ),
         "release_draft_primary_required_action": (
             release_draft_required_actions[0] if release_draft_required_actions else None
         ),
@@ -2529,6 +2563,16 @@ def _issue_artifact_bundle_summary(
         "release_draft_last_issue": release_draft_issue_boundary["last_issue"],
         "release_draft_issue_boundary_sha256": _stable_json_sha256(
             release_draft_issue_boundary
+        ),
+        "release_draft_issue_preview_count": len(release_draft_issue_preview),
+        "release_draft_issue_preview": list(release_draft_issue_preview),
+        "release_draft_issue_preview_sha256": _stable_json_sha256(
+            release_draft_issue_preview
+        ),
+        "release_draft_issue_tail_count": len(release_draft_issue_tail),
+        "release_draft_issue_tail": list(release_draft_issue_tail),
+        "release_draft_issue_tail_sha256": _stable_json_sha256(
+            release_draft_issue_tail
         ),
         "validation_command_count": len(validation_commands),
         "validation_commands_sha256": _stable_json_sha256(validation_commands),
@@ -2932,6 +2976,18 @@ def _issue_artifact_bundle_summary_markdown(
             f"{_summary_inline_code(summary['release_draft_last_required_action'])}",
             "- release_draft_required_action_boundary_sha256: "
             f"`{summary['release_draft_required_action_boundary_sha256']}`",
+            "- release_draft_required_action_preview_count: "
+            f"`{summary['release_draft_required_action_preview_count']}`",
+            "- release_draft_required_action_preview: "
+            f"`{json.dumps(summary['release_draft_required_action_preview'], ensure_ascii=False)}`",
+            "- release_draft_required_action_preview_sha256: "
+            f"`{summary['release_draft_required_action_preview_sha256']}`",
+            "- release_draft_required_action_tail_count: "
+            f"`{summary['release_draft_required_action_tail_count']}`",
+            "- release_draft_required_action_tail: "
+            f"`{json.dumps(summary['release_draft_required_action_tail'], ensure_ascii=False)}`",
+            "- release_draft_required_action_tail_sha256: "
+            f"`{summary['release_draft_required_action_tail_sha256']}`",
             "- release_draft_primary_required_action: "
             f"{_summary_inline_code(summary['release_draft_primary_required_action'])}",
             f"- release_draft_issues_sha256: `{summary['release_draft_issues_sha256']}`",
@@ -2941,6 +2997,18 @@ def _issue_artifact_bundle_summary_markdown(
             f"{_summary_inline_code(summary['release_draft_last_issue'])}",
             "- release_draft_issue_boundary_sha256: "
             f"`{summary['release_draft_issue_boundary_sha256']}`",
+            "- release_draft_issue_preview_count: "
+            f"`{summary['release_draft_issue_preview_count']}`",
+            "- release_draft_issue_preview: "
+            f"`{json.dumps(summary['release_draft_issue_preview'], ensure_ascii=False)}`",
+            "- release_draft_issue_preview_sha256: "
+            f"`{summary['release_draft_issue_preview_sha256']}`",
+            "- release_draft_issue_tail_count: "
+            f"`{summary['release_draft_issue_tail_count']}`",
+            "- release_draft_issue_tail: "
+            f"`{json.dumps(summary['release_draft_issue_tail'], ensure_ascii=False)}`",
+            "- release_draft_issue_tail_sha256: "
+            f"`{summary['release_draft_issue_tail_sha256']}`",
             f"- validation_command_count: `{summary['validation_command_count']}`",
             f"- validation_commands_sha256: `{summary['validation_commands_sha256']}`",
             "- validation_first_command: "
