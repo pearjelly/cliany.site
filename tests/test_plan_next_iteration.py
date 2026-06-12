@@ -711,6 +711,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     }
     blocker_preview = plan.blockers[:8]
     blocker_tail = plan.blockers[-8:]
+    next_action_boundary = {
+        "first_item": plan.next_actions[0] if plan.next_actions else None,
+        "last_item": plan.next_actions[-1] if plan.next_actions else None,
+    }
     next_action_preview = plan.next_actions[:8]
     next_action_tail = plan.next_actions[-8:]
     review_order = [
@@ -1006,6 +1010,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "blocker_tail_sha256": _stable_json_sha256(blocker_tail),
         "next_action_count": len(plan.next_actions),
         "next_actions_sha256": _stable_json_sha256(plan.next_actions),
+        "next_action_first_item": next_action_boundary["first_item"],
+        "next_action_last_item": next_action_boundary["last_item"],
+        "next_action_boundary_sha256": _stable_json_sha256(next_action_boundary),
         "next_action_preview_count": len(next_action_preview),
         "next_action_preview": list(next_action_preview),
         "next_action_preview_sha256": _stable_json_sha256(next_action_preview),
@@ -1472,6 +1479,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ] == artifact_manifest["next_actions"][
         -artifact_manifest["artifact_bundle_summary"]["next_action_tail_count"] :
     ]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "next_action_first_item"
+    ] == artifact_manifest["next_actions"][0]
+    assert artifact_manifest["artifact_bundle_summary"][
+        "next_action_last_item"
+    ] == artifact_manifest["next_actions"][-1]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1886,6 +1899,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert f"next_action_count: `{len(plan.next_actions)}`" in readme
     assert f"next_actions_sha256: `{_stable_json_sha256(plan.next_actions)}`" in readme
+    assert (
+        "next_action_first_item: "
+        f"{plan_next_iteration._summary_inline_code(artifact_bundle_summary['next_action_first_item'])}"
+    ) in readme
+    assert (
+        "next_action_last_item: "
+        f"{plan_next_iteration._summary_inline_code(artifact_bundle_summary['next_action_last_item'])}"
+    ) in readme
+    assert (
+        "next_action_boundary_sha256: "
+        f"`{artifact_bundle_summary['next_action_boundary_sha256']}`"
+    ) in readme
     assert (
         "next_action_preview_count: "
         f"`{artifact_bundle_summary['next_action_preview_count']}`"

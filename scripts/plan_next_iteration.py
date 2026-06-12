@@ -179,6 +179,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "blocker_tail_sha256",
     "next_action_count",
     "next_actions_sha256",
+    "next_action_first_item",
+    "next_action_last_item",
+    "next_action_boundary_sha256",
     "next_action_preview_count",
     "next_action_preview",
     "next_action_preview_sha256",
@@ -2035,6 +2038,10 @@ def _issue_artifact_bundle_summary(
     }
     blocker_preview = plan.blockers[:8]
     blocker_tail = plan.blockers[-8:]
+    next_action_boundary = {
+        "first_item": plan.next_actions[0] if plan.next_actions else None,
+        "last_item": plan.next_actions[-1] if plan.next_actions else None,
+    }
     next_action_preview = plan.next_actions[:8]
     next_action_tail = plan.next_actions[-8:]
     artifact_manifest_payload = _artifact_manifest_payload_without_summary(
@@ -2274,6 +2281,9 @@ def _issue_artifact_bundle_summary(
         "blocker_tail_sha256": _stable_json_sha256(blocker_tail),
         "next_action_count": len(plan.next_actions),
         "next_actions_sha256": _stable_json_sha256(plan.next_actions),
+        "next_action_first_item": next_action_boundary["first_item"],
+        "next_action_last_item": next_action_boundary["last_item"],
+        "next_action_boundary_sha256": _stable_json_sha256(next_action_boundary),
         "next_action_preview_count": len(next_action_preview),
         "next_action_preview": list(next_action_preview),
         "next_action_preview_sha256": _stable_json_sha256(next_action_preview),
@@ -2597,6 +2607,11 @@ def _issue_artifact_bundle_summary_markdown(
             f"- blocker_tail_sha256: `{summary['blocker_tail_sha256']}`",
             f"- next_action_count: `{summary['next_action_count']}`",
             f"- next_actions_sha256: `{summary['next_actions_sha256']}`",
+            "- next_action_first_item: "
+            f"{_summary_inline_code(summary['next_action_first_item'])}",
+            "- next_action_last_item: "
+            f"{_summary_inline_code(summary['next_action_last_item'])}",
+            f"- next_action_boundary_sha256: `{summary['next_action_boundary_sha256']}`",
             f"- next_action_preview_count: `{summary['next_action_preview_count']}`",
             "- next_action_preview: "
             f"`{json.dumps(summary['next_action_preview'], ensure_ascii=False)}`",
