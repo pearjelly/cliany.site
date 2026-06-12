@@ -681,6 +681,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "publication_ok": False,
         "publication_visibility_status": "dirty_worktree",
+        "release_draft_ok": False,
         "release_draft_issue_count": 2,
         "candidate_issue_gate_key_count": len(_blocked_candidate_issue_gate()),
         "candidate_issue_gate_sha256": _stable_json_sha256(_blocked_candidate_issue_gate()),
@@ -960,6 +961,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "publication_ok: `false`" in readme
     assert "publication_visibility_status: `dirty_worktree`" in readme
+    assert "release_draft_ok: `false`" in readme
     assert "release_draft_issue_count: `2`" in readme
     assert f"candidate_issue_gate_key_count: `{len(_blocked_candidate_issue_gate())}`" in readme
     assert (
