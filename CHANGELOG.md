@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.72] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 `publication_ref_context_sha256` 和 `publication_publish_commands_sha256`，方便工具只读整包摘要就检测发布可见性证据是否漂移。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示这些 publication ref context / publish commands hash 字段。
+- 新增 `docs/releases/v0.16.72-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的发布可见性漂移检测。
+
 ## [0.16.71] - 2026-06-12
 
 ### Added
@@ -904,7 +911,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.71...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.72...HEAD
+[0.16.72]: https://github.com/pearjelly/cliany.site/compare/v0.16.71...v0.16.72
 [0.16.71]: https://github.com/pearjelly/cliany.site/compare/v0.16.70...v0.16.71
 [0.16.70]: https://github.com/pearjelly/cliany.site/compare/v0.16.69...v0.16.70
 [0.16.69]: https://github.com/pearjelly/cliany.site/compare/v0.16.68...v0.16.69
