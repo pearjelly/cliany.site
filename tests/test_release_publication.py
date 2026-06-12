@@ -163,10 +163,46 @@ def test_release_publication_writes_reviewable_publish_script(tmp_path):
     assert "# - ahead_count: 1" in text
     assert "# - behind_count: 0" in text
     assert "# - remote_checked: false" in text
+    assert f"EXPECTED_LOCAL_HEAD={report.local_head}" in text
+    assert "EXPECTED_LATEST_TAG=v0.1.1" in text
+    assert f"EXPECTED_TAG_COMMIT={report.tag_commit}" in text
+    assert 'CURRENT_LOCAL_HEAD="$(git rev-parse HEAD)"' in text
+    assert "Publish script is stale" in text
     assert "git push origin master" in text
     assert "git push origin v0.1.1" in text
     assert "python scripts/check_release_publication.py --remote --json" in text
     assert oct(script_path.stat().st_mode & 0o777) == "0o755"
+
+
+def test_release_publication_publish_script_rejects_stale_head_before_push(tmp_path):
+    repo = _init_repo_with_origin(tmp_path)
+    origin = tmp_path / "origin.git"
+    original_remote_head = subprocess.check_output(
+        ["git", "--git-dir", str(origin), "rev-parse", "master"],
+        text=True,
+    ).strip()
+    _commit(repo, "CHANGELOG.md", "released\n", "release")
+    _git(repo, "tag", "v0.1.1")
+    report = release_publication.build_report(repo)
+    script_path = tmp_path / "reports" / "publish-release.sh"
+    release_publication._write_publish_script(report, script_path)
+
+    _commit(repo, "NOTES.md", "new work\n", "new work")
+    result = subprocess.run(
+        [str(script_path)],
+        cwd=repo,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "Publish script is stale: HEAD is" in result.stderr
+    current_remote_head = subprocess.check_output(
+        ["git", "--git-dir", str(origin), "rev-parse", "master"],
+        text=True,
+    ).strip()
+    assert current_remote_head == original_remote_head
 
 
 def test_release_publication_main_writes_report_with_json(tmp_path, monkeypatch, capsys):

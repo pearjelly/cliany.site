@@ -304,6 +304,9 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
 
 def _write_publish_script(report: PublicationReport, path: Path) -> None:
     commands = _publish_command_lines(report)
+    expected_local_head = report.local_head or ""
+    expected_latest_tag = report.latest_tag or ""
+    expected_tag_commit = report.tag_commit or ""
     script_lines = [
         "#!/usr/bin/env bash",
         "set -euo pipefail",
@@ -321,6 +324,35 @@ def _write_publish_script(report: PublicationReport, path: Path) -> None:
         f"# - ahead_count: {_format_value(report.ahead_count)}",
         f"# - behind_count: {_format_value(report.behind_count)}",
         f"# - remote_checked: {_format_bool(report.remote_checked)}",
+        "",
+        f"EXPECTED_LOCAL_HEAD={shlex.quote(expected_local_head)}",
+        f"EXPECTED_LATEST_TAG={shlex.quote(expected_latest_tag)}",
+        f"EXPECTED_TAG_COMMIT={shlex.quote(expected_tag_commit)}",
+        "",
+        'CURRENT_LOCAL_HEAD="$(git rev-parse HEAD)"',
+        'if [[ -n "$EXPECTED_LOCAL_HEAD" && "$CURRENT_LOCAL_HEAD" != "$EXPECTED_LOCAL_HEAD" ]]; then',
+        '  echo "Publish script is stale: HEAD is $CURRENT_LOCAL_HEAD, expected $EXPECTED_LOCAL_HEAD." >&2',
+        "  exit 1",
+        "fi",
+        'if [[ -n "$EXPECTED_LATEST_TAG" ]]; then',
+        '  if ! CURRENT_LATEST_TAG="$(git describe --tags --abbrev=0 2>/dev/null)"; then',
+        '    echo "Publish script is stale: expected tag $EXPECTED_LATEST_TAG, but no local tag was found." >&2',
+        "    exit 1",
+        "  fi",
+        '  if [[ "$CURRENT_LATEST_TAG" != "$EXPECTED_LATEST_TAG" ]]; then',
+        '    echo "Publish script is stale: latest tag is $CURRENT_LATEST_TAG, expected $EXPECTED_LATEST_TAG." >&2',
+        "    exit 1",
+        "  fi",
+        '  if ! CURRENT_TAG_COMMIT="$(git rev-list -n 1 "$EXPECTED_LATEST_TAG" 2>/dev/null)"; then',
+        '    echo "Publish script is stale: expected tag $EXPECTED_LATEST_TAG is missing." >&2',
+        "    exit 1",
+        "  fi",
+        '  if [[ -n "$EXPECTED_TAG_COMMIT" && "$CURRENT_TAG_COMMIT" != "$EXPECTED_TAG_COMMIT" ]]; then',
+        '    echo "Publish script is stale: tag $EXPECTED_LATEST_TAG points at $CURRENT_TAG_COMMIT, '
+        'expected $EXPECTED_TAG_COMMIT." >&2',
+        "    exit 1",
+        "  fi",
+        "fi",
         "",
     ]
     if commands:
