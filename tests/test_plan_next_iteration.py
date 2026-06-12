@@ -652,6 +652,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_ok": False,
         "publication_visibility_status": "dirty_worktree",
         "release_draft_issue_count": 2,
+        "candidate_issue_gate_key_count": len(_blocked_candidate_issue_gate()),
+        "candidate_issue_gate_sha256": _stable_json_sha256(_blocked_candidate_issue_gate()),
         "candidate_issue_gate_status": "blocked_by_publication",
         "can_create_issues": False,
         "requires_maintainer_review": True,
@@ -897,6 +899,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "publication_ok: `false`" in readme
     assert "publication_visibility_status: `dirty_worktree`" in readme
     assert "release_draft_issue_count: `2`" in readme
+    assert f"candidate_issue_gate_key_count: `{len(_blocked_candidate_issue_gate())}`" in readme
+    assert (
+        f"candidate_issue_gate_sha256: "
+        f"`{artifact_bundle_summary['candidate_issue_gate_sha256']}`"
+    ) in readme
     assert "candidate_issue_gate_status: `blocked_by_publication`" in readme
     assert "can_create_issues: `false`" in readme
     assert "requires_maintainer_review: `true`" in readme

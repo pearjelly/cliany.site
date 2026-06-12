@@ -98,6 +98,7 @@ V01682_DRAFT = ROOT / "docs" / "releases" / "v0.16.82-draft.md"
 V01683_DRAFT = ROOT / "docs" / "releases" / "v0.16.83-draft.md"
 V01684_DRAFT = ROOT / "docs" / "releases" / "v0.16.84-draft.md"
 V01685_DRAFT = ROOT / "docs" / "releases" / "v0.16.85-draft.md"
+V01686_DRAFT = ROOT / "docs" / "releases" / "v0.16.86-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -4319,6 +4320,49 @@ def test_v01685_release_draft_tracks_requires_maintainer_review_summary():
         "tests/test_release_draft_docs.py",
         "python scripts/plan_next_iteration.py --target-version 0.16.85 --issues-dir",
         "git tag v0.16.85",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v01686_release_draft_has_required_sections():
+    text = V01686_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.86 发布草案",
+        "**目标版本：** `0.16.86`",
+        "**提交范围：** `v0.16.85..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v01686_release_draft_tracks_candidate_issue_gate_hash():
+    text = V01686_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "artifact_bundle_summary",
+        "candidate_issue_gate_key_count",
+        "candidate_issue_gate_sha256",
+        "candidate_issue_gate",
+        "Candidate Issue Gate",
+        "artifact-manifest.json",
+        "README.md",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.86 --issues-dir",
+        "git tag v0.16.86",
     ]
     for snippet in required:
         assert snippet in text

@@ -36,6 +36,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "reason_code_count",
         "reason_codes_sha256",
         "reason codes hash",
+        "candidate_issue_gate_key_count",
+        "candidate_issue_gate_sha256",
         "candidate_issue_gate_reason_description_count",
         "candidate_issue_gate_reason_descriptions_sha256",
         "candidate_issue_gate_reason_code_count",

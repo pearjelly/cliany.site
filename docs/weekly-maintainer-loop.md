@@ -43,6 +43,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `candidate_issue_gate.reason_code_count` 和 `candidate_issue_gate.reason_codes_sha256` 会对 gate 原因码做数量与稳定摘要；Markdown report 和 artifacts `README.md` 也会展示 reason codes hash，方便工具先判断 gate reason set 是否变化。
 
+`artifact_bundle_summary` 会带上 `candidate_issue_gate_key_count` 和 `candidate_issue_gate_sha256`，让工具只读整包摘要就能判断整个 candidate issue gate 是否漂移。
+
 `artifact_bundle_summary` 也会带上 `candidate_issue_gate_reason_description_count` 和 `candidate_issue_gate_reason_descriptions_sha256`，让工具只读整包摘要就能判断 gate reason descriptions 是否漂移。
 
 `artifact_bundle_summary` 也会带上 `candidate_issue_gate_reason_code_count`、`candidate_issue_gate_reason_codes_sha256`、`candidate_issue_gate_required_action_count` 和 `candidate_issue_gate_required_actions_sha256`，让工具只读整包摘要就能判断 gate reason/action set 是否需要展开。
