@@ -1067,45 +1067,31 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         plan=plan,
         candidate_cases=candidate_cases,
         review_order=review_order,
+        issue_body_inventory=issue_body_inventory,
+        issue_body_summary=issue_body_summary,
+        issue_metadata_summary=_issue_metadata_summary(metadata),
+        create_issues_safety=create_issues_safety,
+        artifact_files=artifact_files,
+    )
+    artifact_manifest_payload = _artifact_manifest_payload_without_summary(
+        plan=plan,
+        candidate_cases=candidate_cases,
+        review_order=review_order,
+        issue_body_inventory=issue_body_inventory,
         issue_body_summary=issue_body_summary,
         issue_metadata_summary=_issue_metadata_summary(metadata),
         create_issues_safety=create_issues_safety,
         artifact_files=artifact_files,
     )
     artifact_manifest = {
-        "schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
-        "target_version": plan.target_version,
+        "schema_version": artifact_manifest_payload["schema_version"],
+        "target_version": artifact_manifest_payload["target_version"],
         "artifact_bundle_summary": artifact_bundle_summary,
-        "candidate_count": len(candidate_cases),
-        "candidate_cases": candidate_cases,
-        "blockers": plan.blockers,
-        "next_actions": plan.next_actions,
-        "candidate_issue_gate": plan.candidate_issue_gate,
-        "publication_ok": plan.publication_ok,
-        "publication_visibility": plan.publication_visibility,
-        "publication_next_actions": plan.publication_next_actions,
-        "publication_publish_commands": plan.publication_publish_commands,
-        "publication_ref_context": plan.publication_ref_context,
-        "publication_worktree_clean": plan.publication_worktree_clean,
-        "publication_worktree_status": plan.publication_worktree_status,
-        "publication_publish_script_path": plan.publication_publish_script_path,
-        "publication_publish_script_path_sha256": plan.publication_publish_script_path_sha256,
-        "publication_publish_script_command": plan.publication_publish_script_command,
-        "publication_publish_script_command_sha256": (
-            plan.publication_publish_script_command_sha256
-        ),
-        "release_draft_path": plan.release_draft_path,
-        "release_draft_issues": plan.release_draft_issues,
-        "issue_artifacts_command": plan.issue_artifacts_command,
-        "create_issues_dry_run_command": create_issues_safety["dry_run_command"],
-        "create_issues_safety": create_issues_safety,
-        "issue_body_inventory": issue_body_inventory,
-        "issue_body_summary": issue_body_summary,
-        "issue_metadata_summary": _issue_metadata_summary(metadata),
-        "files": artifact_files,
-        "review_order": review_order,
-        "review_checklist": _issue_artifact_review_checklist(),
-        "validation_commands": _issue_artifact_validation_commands(plan),
+        **{
+            key: value
+            for key, value in artifact_manifest_payload.items()
+            if key not in {"schema_version", "target_version"}
+        },
     }
     (directory / "artifact-manifest.json").write_text(
         json.dumps(artifact_manifest, ensure_ascii=False, indent=2) + "\n",
@@ -1124,7 +1110,10 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     )
     script_path.write_text("\n".join(_candidate_issue_script_lines(issue_commands)) + "\n", encoding="utf-8")
     script_path.chmod(0o755)
-    (directory / "README.md").write_text(_render_issue_artifacts_readme(plan), encoding="utf-8")
+    (directory / "README.md").write_text(
+        _render_issue_artifacts_readme(plan, artifact_bundle_summary=artifact_bundle_summary),
+        encoding="utf-8",
+    )
 
 
 def _candidate_issue_script_lines(issue_commands: list[str]) -> list[str]:
@@ -1160,14 +1149,18 @@ def _candidate_issue_script_lines(issue_commands: list[str]) -> list[str]:
     return lines
 
 
-def _render_issue_artifacts_readme(plan: IterationPlan) -> str:
+def _render_issue_artifacts_readme(
+    plan: IterationPlan,
+    *,
+    artifact_bundle_summary: dict[str, Any] | None = None,
+) -> str:
     body_files = "\n".join(f"- `{promotion.case_id}.md`" for promotion in plan.candidate_promotions)
     body_files = body_files or "- No candidate issue body files were generated."
     candidate_summary = _issue_artifact_candidate_summary(plan.candidate_promotions)
     body_inventory = _issue_artifact_body_inventory_markdown(plan.candidate_promotions)
     body_summary = _issue_artifact_body_summary_markdown(plan.candidate_promotions)
     gate_quick_summary = _issue_artifact_gate_quick_summary(plan)
-    bundle_summary = _issue_artifact_bundle_summary_markdown(plan)
+    bundle_summary = _issue_artifact_bundle_summary_markdown(plan, summary=artifact_bundle_summary)
     gate_reason_codes = _issue_artifact_gate_reason_codes(plan)
     gate_reason_descriptions = _issue_artifact_gate_reason_descriptions(plan)
     gate_latest_tag = _format_context_value(_candidate_issue_gate_evidence_value(plan, "publication_latest_tag"))
@@ -1679,11 +1672,59 @@ def _issue_artifact_body_summary_markdown(promotions: list[CandidatePromotion]) 
     )
 
 
+def _artifact_manifest_payload_without_summary(
+    *,
+    plan: IterationPlan,
+    candidate_cases: list[str],
+    review_order: list[str],
+    issue_body_inventory: list[dict[str, Any]],
+    issue_body_summary: dict[str, Any],
+    issue_metadata_summary: dict[str, Any],
+    create_issues_safety: dict[str, Any],
+    artifact_files: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
+        "target_version": plan.target_version,
+        "candidate_count": len(candidate_cases),
+        "candidate_cases": candidate_cases,
+        "blockers": plan.blockers,
+        "next_actions": plan.next_actions,
+        "candidate_issue_gate": plan.candidate_issue_gate,
+        "publication_ok": plan.publication_ok,
+        "publication_visibility": plan.publication_visibility,
+        "publication_next_actions": plan.publication_next_actions,
+        "publication_publish_commands": plan.publication_publish_commands,
+        "publication_ref_context": plan.publication_ref_context,
+        "publication_worktree_clean": plan.publication_worktree_clean,
+        "publication_worktree_status": plan.publication_worktree_status,
+        "publication_publish_script_path": plan.publication_publish_script_path,
+        "publication_publish_script_path_sha256": plan.publication_publish_script_path_sha256,
+        "publication_publish_script_command": plan.publication_publish_script_command,
+        "publication_publish_script_command_sha256": (
+            plan.publication_publish_script_command_sha256
+        ),
+        "release_draft_path": plan.release_draft_path,
+        "release_draft_issues": plan.release_draft_issues,
+        "issue_artifacts_command": plan.issue_artifacts_command,
+        "create_issues_dry_run_command": create_issues_safety["dry_run_command"],
+        "create_issues_safety": create_issues_safety,
+        "issue_body_inventory": issue_body_inventory,
+        "issue_body_summary": issue_body_summary,
+        "issue_metadata_summary": issue_metadata_summary,
+        "files": artifact_files,
+        "review_order": review_order,
+        "review_checklist": _issue_artifact_review_checklist(),
+        "validation_commands": _issue_artifact_validation_commands(plan),
+    }
+
+
 def _issue_artifact_bundle_summary(
     *,
     plan: IterationPlan,
     candidate_cases: list[str],
     review_order: list[str],
+    issue_body_inventory: list[dict[str, Any]],
     issue_body_summary: dict[str, Any],
     issue_metadata_summary: dict[str, Any],
     create_issues_safety: dict[str, Any],
@@ -1720,10 +1761,22 @@ def _issue_artifact_bundle_summary(
         )
     candidate_issue_gate_summary = plan.candidate_issue_gate.get("summary")
     release_draft_required_actions = _release_draft_required_actions(plan.release_draft_issues)
+    artifact_manifest_payload = _artifact_manifest_payload_without_summary(
+        plan=plan,
+        candidate_cases=candidate_cases,
+        review_order=review_order,
+        issue_body_inventory=issue_body_inventory,
+        issue_body_summary=issue_body_summary,
+        issue_metadata_summary=issue_metadata_summary,
+        create_issues_safety=create_issues_safety,
+        artifact_files=artifact_files,
+    )
     return {
         "artifact_manifest_schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "artifact_manifest_key_count": len(ARTIFACT_MANIFEST_KEYS),
         "artifact_manifest_keys_sha256": _stable_json_sha256(ARTIFACT_MANIFEST_KEYS),
+        "artifact_manifest_payload_key_count": len(artifact_manifest_payload),
+        "artifact_manifest_payload_sha256": _stable_json_sha256(artifact_manifest_payload),
         "target_version": plan.target_version,
         "candidate_count": len(candidate_cases),
         "candidate_cases_sha256": _stable_json_sha256(candidate_cases),
@@ -1846,9 +1899,14 @@ def _summary_inline_code(value: Any) -> str:
     return f"`{text}`"
 
 
-def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
+def _issue_artifact_bundle_summary_markdown(
+    plan: IterationPlan,
+    *,
+    summary: dict[str, Any] | None = None,
+) -> str:
     candidate_cases = [promotion.case_id for promotion in plan.candidate_promotions]
     issue_body_names = [f"{promotion.case_id}.md" for promotion in plan.candidate_promotions]
+    issue_body_inventory = _issue_body_inventory(plan.candidate_promotions)
     review_order = [
         "README.md",
         "publication-handoff.json",
@@ -1857,15 +1915,17 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
         *issue_body_names,
         "create-issues.sh",
     ]
-    summary = _issue_artifact_bundle_summary(
-        plan=plan,
-        candidate_cases=candidate_cases,
-        review_order=review_order,
-        issue_body_summary=_issue_body_summary(_issue_body_inventory(plan.candidate_promotions)),
-        issue_metadata_summary=_issue_metadata_summary(_issue_metadata_for_summary(plan.candidate_promotions)),
-        create_issues_safety=_issue_artifact_create_issues_safety(Path("create-issues.sh")),
-        artifact_files=_issue_artifact_files(issue_body_names),
-    )
+    if summary is None:
+        summary = _issue_artifact_bundle_summary(
+            plan=plan,
+            candidate_cases=candidate_cases,
+            review_order=review_order,
+            issue_body_inventory=issue_body_inventory,
+            issue_body_summary=_issue_body_summary(issue_body_inventory),
+            issue_metadata_summary=_issue_metadata_summary(_issue_metadata_for_summary(plan.candidate_promotions)),
+            create_issues_safety=_issue_artifact_create_issues_safety(Path("create-issues.sh")),
+            artifact_files=_issue_artifact_files(issue_body_names),
+        )
     return "\n".join(
         [
             "## Artifact Bundle Summary",
@@ -1874,6 +1934,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"`{summary['artifact_manifest_schema_version']}`",
             f"- artifact_manifest_key_count: `{summary['artifact_manifest_key_count']}`",
             f"- artifact_manifest_keys_sha256: `{summary['artifact_manifest_keys_sha256']}`",
+            f"- artifact_manifest_payload_key_count: `{summary['artifact_manifest_payload_key_count']}`",
+            f"- artifact_manifest_payload_sha256: `{summary['artifact_manifest_payload_sha256']}`",
             f"- target_version: `{summary['target_version']}`",
             f"- candidate_count: `{summary['candidate_count']}`",
             f"- candidate_cases_sha256: `{summary['candidate_cases_sha256']}`",

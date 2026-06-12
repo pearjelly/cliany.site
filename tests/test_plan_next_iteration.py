@@ -679,12 +679,33 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     review_order_sha256 = hashlib.sha256(review_order_bytes).hexdigest()
     candidate_issue_gate_evidence = _blocked_candidate_issue_gate()["evidence"]
     candidate_issue_gate_reason_descriptions = _blocked_candidate_issue_gate()["reason_descriptions"]
+    create_issues_safety = {
+        "script": str(issues_dir / "create-issues.sh"),
+        "dry_run_supported": True,
+        "dry_run_env": "CLIANY_CREATE_ISSUES_DRY_RUN=1",
+        "dry_run_command": f"CLIANY_CREATE_ISSUES_DRY_RUN=1 {issues_dir / 'create-issues.sh'}",
+        "preflight_required": True,
+        "preflight_command": "python scripts/check_release_publication.py --strict --json",
+        "preflight_json": "/tmp/cliany-issue-publication-check.json",
+    }
+    artifact_manifest_payload = plan_next_iteration._artifact_manifest_payload_without_summary(
+        plan=plan,
+        candidate_cases=["pypi-project-search", "npm-package-search"],
+        review_order=review_order,
+        issue_body_inventory=issue_body_inventory,
+        issue_body_summary=issue_body_summary,
+        issue_metadata_summary=issue_metadata_summary,
+        create_issues_safety=create_issues_safety,
+        artifact_files=expected_artifact_files,
+    )
     artifact_bundle_summary = {
         "artifact_manifest_schema_version": plan_next_iteration.ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "artifact_manifest_key_count": len(plan_next_iteration.ARTIFACT_MANIFEST_KEYS),
         "artifact_manifest_keys_sha256": _stable_json_sha256(
             plan_next_iteration.ARTIFACT_MANIFEST_KEYS
         ),
+        "artifact_manifest_payload_key_count": len(artifact_manifest_payload),
+        "artifact_manifest_payload_sha256": _stable_json_sha256(artifact_manifest_payload),
         "target_version": "0.16.2",
         "candidate_count": 2,
         "candidate_cases_sha256": _stable_json_sha256(["pypi-project-search", "npm-package-search"]),
@@ -929,15 +950,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "--issues-dir /tmp/cliany-candidate-issues"
         ),
         "create_issues_dry_run_command": f"CLIANY_CREATE_ISSUES_DRY_RUN=1 {issues_dir / 'create-issues.sh'}",
-        "create_issues_safety": {
-            "script": str(issues_dir / "create-issues.sh"),
-            "dry_run_supported": True,
-            "dry_run_env": "CLIANY_CREATE_ISSUES_DRY_RUN=1",
-            "dry_run_command": f"CLIANY_CREATE_ISSUES_DRY_RUN=1 {issues_dir / 'create-issues.sh'}",
-            "preflight_required": True,
-            "preflight_command": "python scripts/check_release_publication.py --strict --json",
-            "preflight_json": "/tmp/cliany-issue-publication-check.json",
-        },
+        "create_issues_safety": create_issues_safety,
         "issue_body_inventory": issue_body_inventory,
         "issue_body_summary": issue_body_summary,
         "issue_metadata_summary": issue_metadata_summary,
@@ -970,6 +983,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ],
     }
     assert list(artifact_manifest) == list(plan_next_iteration.ARTIFACT_MANIFEST_KEYS)
+    assert {
+        key: value for key, value in artifact_manifest.items() if key != "artifact_bundle_summary"
+    } == artifact_manifest_payload
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -1026,6 +1042,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "artifact_manifest_keys_sha256: "
         f"`{_stable_json_sha256(plan_next_iteration.ARTIFACT_MANIFEST_KEYS)}`"
+    ) in readme
+    assert f"artifact_manifest_payload_key_count: `{len(artifact_manifest_payload)}`" in readme
+    assert (
+        "artifact_manifest_payload_sha256: "
+        f"`{_stable_json_sha256(artifact_manifest_payload)}`"
     ) in readme
     assert "target_version: `0.16.2`" in readme
     assert "candidate_count: `2`" in readme
