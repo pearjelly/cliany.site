@@ -101,7 +101,7 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `publication-handoff.json` 和 artifacts `README.md` 的 `Publication Handoff` 也会展示 `publish_script_path_sha256` 与 `publish_script_command_sha256`，让只读取 handoff 的维护工具不必展开完整 manifest 就能检测发布脚本路径或命令漂移。
 
-`publication-handoff.json` 和 artifacts `README.md` 的 `Publication Handoff` 也会展示 `publish_command_count`，让只读取 handoff 的维护工具不必展开完整命令列表就能判断发布命令规模。
+`publication-handoff.json` 和 artifacts `README.md` 的 `Publication Handoff` 也会展示 `publish_command_count` 和 `primary_publish_command`，让只读取 handoff 的维护工具不必展开完整命令列表就能判断发布命令规模并展示第一条同步命令。
 
 `artifact_bundle_summary` 还会带上 `publication_worktree_status_count` 和 `publication_worktree_status_sha256`，让工具只读整包摘要就能判断 publication worktree status 是否漂移。
 

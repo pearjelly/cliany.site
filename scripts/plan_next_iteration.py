@@ -1202,6 +1202,7 @@ Generated for target version `{plan.target_version}`.
 - local_head: `{_format_context_value(plan.publication_ref_context.get("local_head"))}`
 - worktree_clean: `{str(plan.publication_worktree_clean).lower()}`
 - publish_command_count: `{plan.publication_publish_command_count}`
+- primary_publish_command: `{_format_context_value(_publication_primary_publish_command(plan))}`
 - publish_script_path: `{plan.publication_publish_script_path}`
 - publish_script_path_sha256: `{plan.publication_publish_script_path_sha256}`
 - publish_script_command_sha256: `{plan.publication_publish_script_command_sha256}`
@@ -1498,12 +1499,17 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "worktree_clean": plan.publication_worktree_clean,
         "worktree_status": plan.publication_worktree_status,
         "publish_command_count": plan.publication_publish_command_count,
+        "primary_publish_command": _publication_primary_publish_command(plan),
         "publish_commands": plan.publication_publish_commands,
         "publish_script_path": plan.publication_publish_script_path,
         "publish_script_path_sha256": plan.publication_publish_script_path_sha256,
         "publish_script_command": plan.publication_publish_script_command,
         "publish_script_command_sha256": plan.publication_publish_script_command_sha256,
     }
+
+
+def _publication_primary_publish_command(plan: IterationPlan) -> str | None:
+    return plan.publication_publish_commands[0] if plan.publication_publish_commands else None
 
 
 def _release_draft_primary_issue(plan: IterationPlan) -> str | None:
