@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py` 现在会输出 `publication_ref_context`，并在 Markdown plan、`publication-handoff.json` 和 artifacts `README.md` 中展示 publication latest tag、local HEAD 和 tag commit 等上下文。
+- 新增 `docs/releases/v0.16.35-draft.md`，把下一版 patch release 聚焦到 next iteration plan 的 publication ref context 交接。
+
 ## [0.16.34] - 2026-06-12
 
 ### Added

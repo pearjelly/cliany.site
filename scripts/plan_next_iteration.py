@@ -67,6 +67,7 @@ class IterationPlan:
     validation_commands: list[str]
     publication_next_actions: list[str]
     publication_publish_commands: list[str]
+    publication_ref_context: dict[str, Any]
     publication_worktree_clean: bool
     publication_worktree_status: list[str]
     publication_publish_script_command: str
@@ -91,6 +92,7 @@ class IterationPlan:
             "validation_commands": self.validation_commands,
             "publication_next_actions": self.publication_next_actions,
             "publication_publish_commands": self.publication_publish_commands,
+            "publication_ref_context": self.publication_ref_context,
             "publication_worktree_clean": self.publication_worktree_clean,
             "publication_worktree_status": self.publication_worktree_status,
             "publication_publish_script_command": self.publication_publish_script_command,
@@ -145,6 +147,25 @@ def _publication_worktree_clean(publication: Any) -> bool:
         return True
     payload = to_dict()
     return bool(payload.get("worktree_clean", True))
+
+
+def _publication_ref_context(publication: Any) -> dict[str, Any]:
+    fields = [
+        "repo_root",
+        "branch",
+        "upstream",
+        "remote",
+        "local_head",
+        "upstream_head",
+        "ahead_count",
+        "behind_count",
+        "latest_tag",
+        "tag_commit",
+        "remote_checked",
+    ]
+    to_dict = getattr(publication, "to_dict", None)
+    payload = to_dict() if callable(to_dict) else {}
+    return {field: getattr(publication, field, payload.get(field, None)) for field in fields}
 
 
 def _publication_worktree_status(publication: Any) -> list[str]:
@@ -379,6 +400,7 @@ def build_plan(
         validation_commands=validation_commands,
         publication_next_actions=_publication_next_actions(publication),
         publication_publish_commands=_publication_publish_commands(publication),
+        publication_ref_context=_publication_ref_context(publication),
         publication_worktree_clean=_publication_worktree_clean(publication),
         publication_worktree_status=_publication_worktree_status(publication),
         publication_publish_script_command=publication_publish_script_command,
@@ -437,6 +459,9 @@ def _print_text(plan: IterationPlan) -> None:
         print("publication_publish_commands:")
         for command in plan.publication_publish_commands:
             print(f"- {command}")
+    print("publication_ref_context:")
+    for key, value in plan.publication_ref_context.items():
+        print(f"- {key}: {value}")
     print(f"publication_worktree_clean: {str(plan.publication_worktree_clean).lower()}")
     if plan.publication_worktree_status:
         print("publication_worktree_status:")
@@ -452,6 +477,7 @@ def _render_markdown(plan: IterationPlan) -> str:
     next_actions = "\n".join(f"- {action}" for action in plan.next_actions)
     validation = "\n".join(f"- `{command}`" for command in plan.validation_commands)
     publication_actions = _publication_next_actions_markdown(plan.publication_next_actions)
+    publication_refs = _publication_ref_context_markdown(plan.publication_ref_context)
     publication_worktree = _publication_worktree_markdown(
         plan.publication_worktree_clean,
         plan.publication_worktree_status,
@@ -492,6 +518,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 {validation}
 
 {publication_actions}
+
+{publication_refs}
 
 {publication_worktree}
 
@@ -541,6 +569,32 @@ def _publication_worktree_markdown(clean: bool, status: list[str]) -> str:
 ```text
 {status_lines}
 ```"""
+
+
+def _publication_ref_context_markdown(context: dict[str, Any]) -> str:
+    rows = [
+        ("repo_root", context.get("repo_root")),
+        ("branch", context.get("branch")),
+        ("upstream", context.get("upstream")),
+        ("remote", context.get("remote")),
+        ("latest_tag", context.get("latest_tag")),
+        ("local_head", context.get("local_head")),
+        ("tag_commit", context.get("tag_commit")),
+        ("ahead_count", context.get("ahead_count")),
+        ("behind_count", context.get("behind_count")),
+        ("remote_checked", context.get("remote_checked")),
+    ]
+    lines = ["## Publication Ref Context", "", "| Field | Value |", "|-------|-------|"]
+    lines.extend(f"| {key} | `{_format_context_value(value)}` |" for key, value in rows)
+    return "\n".join(lines)
+
+
+def _format_context_value(value: object) -> str:
+    if value is None:
+        return "(none)"
+    if isinstance(value, bool):
+        return str(value).lower()
+    return str(value)
 
 
 def _publication_commands_markdown(commands: list[str]) -> str:
@@ -649,6 +703,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "publication_ok": plan.publication_ok,
         "next_actions": plan.next_actions,
         "publication_next_actions": plan.publication_next_actions,
+        "ref_context": plan.publication_ref_context,
         "worktree_clean": plan.publication_worktree_clean,
         "worktree_status": plan.publication_worktree_status,
         "publish_commands": plan.publication_publish_commands,
@@ -677,7 +732,7 @@ Generated for target version `{plan.target_version}`.
 - `issue-metadata.json`: structured issue title, labels, reproduction context, body file name,
   body file path, and `gh issue create` command.
 - `publication-handoff.json`: publication status, next actions, publication next actions,
-  worktree status, and publish commands to review first.
+  ref context, worktree status, and publish commands to review first.
 - `create-issues.sh`: reviewable shell script with a release publication preflight and
   one `gh issue create` command per candidate.
 {body_files}
@@ -687,6 +742,8 @@ Generated for target version `{plan.target_version}`.
 ## Publication Handoff
 
 - publication_ok: `{str(plan.publication_ok).lower()}`
+- latest_tag: `{_format_context_value(plan.publication_ref_context.get("latest_tag"))}`
+- local_head: `{_format_context_value(plan.publication_ref_context.get("local_head"))}`
 - worktree_clean: `{str(plan.publication_worktree_clean).lower()}`
 - Review `publication-handoff.json` before running `create-issues.sh`.
 

@@ -94,9 +94,17 @@ def _readiness_report() -> SimpleNamespace:
 def _publication_report() -> SimpleNamespace:
     return SimpleNamespace(
         ok=False,
+        repo_root="/repo/cliany.site",
         branch="master",
+        upstream="origin/master",
+        remote="origin",
+        local_head="abc123",
+        upstream_head="def456",
         ahead_count=2,
+        behind_count=0,
         latest_tag="v0.16.1",
+        tag_commit="abc123",
+        remote_checked=False,
         tag_published=False,
         worktree_clean=False,
         worktree_status=[" M CHANGELOG.md"],
@@ -153,6 +161,19 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     assert data["publication_publish_commands"] == [
         "python scripts/check_release_publication.py --json",
     ]
+    assert data["publication_ref_context"] == {
+        "repo_root": "/repo/cliany.site",
+        "branch": "master",
+        "upstream": "origin/master",
+        "remote": "origin",
+        "local_head": "abc123",
+        "upstream_head": "def456",
+        "ahead_count": 2,
+        "behind_count": 0,
+        "latest_tag": "v0.16.1",
+        "tag_commit": "abc123",
+        "remote_checked": False,
+    }
     assert data["publication_worktree_clean"] is False
     assert data["publication_worktree_status"] == [" M CHANGELOG.md"]
     assert (
@@ -227,6 +248,10 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "## Candidate Issue Body Templates" in text
     assert "## Publication Publish Commands" in text
     assert "## Publication Next Actions" in text
+    assert "## Publication Ref Context" in text
+    assert "| latest_tag | `v0.16.1` |" in text
+    assert "| local_head | `abc123` |" in text
+    assert "| remote_checked | `false` |" in text
     assert "## Publication Worktree" in text
     assert "worktree_clean: `false`" in text
     assert " M CHANGELOG.md" in text
@@ -300,6 +325,19 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "Push `master` to `origin`; local branch is ahead by `2` commits.",
             "Push tag `v0.16.1` after the branch is published.",
         ],
+        "ref_context": {
+            "repo_root": "/repo/cliany.site",
+            "branch": "master",
+            "upstream": "origin/master",
+            "remote": "origin",
+            "local_head": "abc123",
+            "upstream_head": "def456",
+            "ahead_count": 2,
+            "behind_count": 0,
+            "latest_tag": "v0.16.1",
+            "tag_commit": "abc123",
+            "remote_checked": False,
+        },
         "worktree_clean": False,
         "worktree_status": [" M CHANGELOG.md"],
         "publish_commands": ["python scripts/check_release_publication.py --json"],
@@ -334,6 +372,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "## Publication Handoff" in readme
     assert "publication_ok: `false`" in readme
+    assert "latest_tag: `v0.16.1`" in readme
+    assert "local_head: `abc123`" in readme
     assert "worktree_clean: `false`" in readme
     assert "### Publication Next Actions" in readme
     assert "Commit, stash, or discard local worktree changes" in readme
