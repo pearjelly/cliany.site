@@ -50,6 +50,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "publication_next_actions_sha256",
         "publication_ref_context_sha256",
         "publication_publish_commands_sha256",
+        "publication_worktree_status_count",
+        "publication_worktree_status_sha256",
         "evidence",
         "publication_ok",
         "publication_visibility_status",
