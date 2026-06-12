@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.15.4] - 2026-06-12
+
 ### Changed
 - README 双语路线图入口现在会提示 `scripts/check_release_publication.py --json`，让维护者在选择下一块发布切片时同时确认最新本地 tag 是否公开可见。
 
@@ -427,7 +429,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.3...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.15.4...HEAD
+[0.15.4]: https://github.com/pearjelly/cliany.site/compare/v0.15.3...v0.15.4
 [0.15.3]: https://github.com/pearjelly/cliany.site/compare/v0.15.2...v0.15.3
 [0.15.2]: https://github.com/pearjelly/cliany.site/compare/v0.15.1...v0.15.2
 [0.15.1]: https://github.com/pearjelly/cliany.site/compare/v0.15.0...v0.15.1
