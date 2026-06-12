@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.47] - 2026-06-12
+
+### Added
+- `artifact-manifest.json` 现在包含 `schema_version: 1`，让维护脚本能先识别 candidate issue artifacts manifest 的字段语义。
+- 新增 `docs/releases/v0.16.47-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts manifest 的 schema version。
+
 ## [0.16.46] - 2026-06-12
 
 ### Added
@@ -735,7 +741,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.46...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.47...HEAD
+[0.16.47]: https://github.com/pearjelly/cliany.site/compare/v0.16.46...v0.16.47
 [0.16.46]: https://github.com/pearjelly/cliany.site/compare/v0.16.45...v0.16.46
 [0.16.45]: https://github.com/pearjelly/cliany.site/compare/v0.16.44...v0.16.45
 [0.16.44]: https://github.com/pearjelly/cliany.site/compare/v0.16.43...v0.16.44
