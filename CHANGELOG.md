@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.51] - 2026-06-12
+
+### Added
+- `plan_next_iteration.py` 现在输出 `candidate_issue_gate`，用 `blocked_by_publication`、`review_required` 和 `ready` 区分候选 issue 创建前的硬性发布门控与人工审阅门控。
+- Candidate issue artifacts 的 `artifact-manifest.json`、`publication-handoff.json` 和 `README.md` 现在同步展示 `candidate_issue_gate`、`can_create_issues` 和 required actions。
+- 新增 `docs/releases/v0.16.51-draft.md`，把下一版 patch release 聚焦到 candidate issue 创建门控的机器可读交接。
+
 ## [0.16.50] - 2026-06-12
 
 ### Added
@@ -759,7 +766,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.50...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.51...HEAD
+[0.16.51]: https://github.com/pearjelly/cliany.site/compare/v0.16.50...v0.16.51
 [0.16.50]: https://github.com/pearjelly/cliany.site/compare/v0.16.49...v0.16.50
 [0.16.49]: https://github.com/pearjelly/cliany.site/compare/v0.16.48...v0.16.49
 [0.16.48]: https://github.com/pearjelly/cliany.site/compare/v0.16.47...v0.16.48
