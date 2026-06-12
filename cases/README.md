@@ -10,6 +10,7 @@
 |------|------|----------------|
 | 离线结构校验 | 校验案例索引、命令、文档链接不腐烂 | 是 |
 | 离线样例输出 | 展示 active 案例的 JSON envelope 形状和典型字段 | 是 |
+| 结构化离线命令 | 每个案例声明 `validation.offline_commands`，让维护者能直接复制本地验证命令 | 是 |
 | adapter metadata 校验 | 校验本地 demo adapter 包结构、哈希和 metadata schema v3 | 可选，本地 release asset 存在时 |
 | 在线 smoke | 访问第三方 demo 站点并执行只读命令 | 否，第三方站点不稳定 |
 | 完整 explore 回归 | Chrome + LLM 从头探索生成 adapter | 手动或受保护 workflow |
@@ -58,6 +59,7 @@
 - 如果只是提出候选场景，优先使用 GitHub 的 `Real Demo Case Proposal` issue 模板，说明目标 URL、只读工作流、期望命令、离线样例输出和验证方式。
 - 第三方站点不可用时，将 `status` 标记为 `degraded`，不要直接删除案例。
 - 每个 active 案例至少要有一个 `commands` 示例和一种 `validation` 方式。
+- 每个案例必须提供 `validation.offline_commands`，命令应保持本地可运行，例如 `python scripts/validate_cases.py --strict`、`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict` 或相关 pytest。
 - 每个 active/candidate 案例必须提供 `example_output`，指向 `cases/examples/` 下的离线 JSON envelope 样例；样例必须包含 `data.quality.ok=true`、`status=ok` 和正数 `row_count`，只展示字段形状和典型数据，不作为第三方站点实时内容承诺。
 - 已知短板用 `known-gap` 记录，作为路线图输入，而不是藏在聊天记录里。
 - 案例运行产生的 adapter/session/snapshot 仍必须保存在 `~/.cliany-site/`，不能写入 repo。
@@ -75,6 +77,8 @@ pytest tests/test_search_extraction_gap_fixture.py -q --no-cov
 ```
 
 CI 的 `Case Catalog Validation` job 会上传 `case-catalog-report` artifact，供 PR 诊断和 release notes 复盘引用。
+
+报告中的 `Offline Validation Commands` 小节会汇总每个案例声明的 `validation.offline_commands`，维护者可以直接复制这些命令作为 PR 或 release 证据。
 
 报告中的 `Candidate Promotion Tasks` 小节会把 candidate 的 `promotion` 清单转成可复制 issue body，包括 package asset、metadata validation、online smoke 三类验收证据，以及“不要提前标记 active”“不要依赖真实 LLM key 或写入 repo runtime 状态”等非目标。
 

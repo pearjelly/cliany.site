@@ -16,6 +16,9 @@
     ],
     "validation": {
       "offline": "adapter package metadata should validate against schema v3",
+      "offline_commands": [
+        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
+      ],
       "online": "read-only account listing returns a JSON envelope with account rows"
     }
   },
@@ -35,6 +38,9 @@
     ],
     "validation": {
       "offline": "adapter package metadata should validate against schema v3",
+      "offline_commands": [
+        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
+      ],
       "online": "read-only issue listing returns a JSON envelope with issue rows"
     }
   },
@@ -54,6 +60,9 @@
     ],
     "validation": {
       "offline": "adapter package metadata should validate against schema v3",
+      "offline_commands": [
+        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
+      ],
       "online": "read-only wiki search returns a JSON envelope with page rows"
     }
   },
@@ -73,6 +82,9 @@
     ],
     "validation": {
       "offline": "adapter package metadata should validate against schema v3",
+      "offline_commands": [
+        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
+      ],
       "online": "read-only job listing returns a JSON envelope with build rows"
     }
   },
@@ -92,6 +104,10 @@
     ],
     "validation": {
       "offline": "candidate entry and example output validate without release adapter package assets",
+      "offline_commands": [
+        "python scripts/validate_cases.py --strict",
+        "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md"
+      ],
       "online": "read-only PyPI search returns project cards for the query"
     },
     "promotion": {
@@ -116,6 +132,10 @@
     ],
     "validation": {
       "offline": "candidate entry and example output validate without release adapter package assets",
+      "offline_commands": [
+        "python scripts/validate_cases.py --strict",
+        "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md"
+      ],
       "online": "read-only npm search returns package result rows for the query"
     },
     "promotion": {
@@ -140,6 +160,10 @@
     ],
     "validation": {
       "offline": "candidate entry and example output validate without release adapter package assets",
+      "offline_commands": [
+        "python scripts/validate_cases.py --strict",
+        "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md"
+      ],
       "online": "read-only crates.io search returns crate result rows for the query"
     },
     "promotion": {
@@ -160,6 +184,9 @@
     "commands": [],
     "validation": {
       "offline": "case review plus tests/fixtures/search_extraction_gap.html reproduce partial extraction quality without network access",
+      "offline_commands": [
+        "pytest tests/test_search_extraction_gap_fixture.py -q --no-cov"
+      ],
       "online": null
     }
   }

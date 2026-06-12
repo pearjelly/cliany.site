@@ -212,6 +212,7 @@ def _cases_manifest() -> str:
                 ],
                 "validation": {
                     "offline": "metadata validates",
+                    "offline_commands": ["python scripts/validate_cases.py --strict"],
                     "online": "read-only command returns rows",
                 },
             }
@@ -585,6 +586,7 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
             "commands": ["cliany-site demo.example.com search-items --query demo --json"],
             "validation": {
                 "offline": "candidate metadata validates",
+                "offline_commands": ["python scripts/validate_cases.py --strict"],
                 "online": "read-only search returns rows",
             },
             "promotion": {

@@ -65,6 +65,7 @@ def _case(case_id: str = "demo-case", *, domain: str = "demo.example.com") -> di
         ],
         "validation": {
             "offline": "metadata validates",
+            "offline_commands": ["python scripts/validate_cases.py --strict"],
             "online": "read-only command returns rows",
         },
     }
@@ -207,6 +208,32 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     assert report.candidate == 1
     assert report.cases[0].promotion == case["promotion"]
     assert report.cases[0].to_dict()["promotion"]["online_smoke"].startswith("cliany-site demo.example.com")
+    assert report.cases[0].to_dict()["offline_commands"] == ["python scripts/validate_cases.py --strict"]
+
+
+def test_cases_report_rejects_case_without_offline_commands(tmp_path):
+    case = _case()
+    del case["validation"]["offline_commands"]
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert "validation.offline_commands is required" in report.cases[0].issues
+
+
+def test_cases_report_rejects_non_local_offline_command(tmp_path):
+    case = _case()
+    case["validation"]["offline_commands"] = ["curl https://example.com"]
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert (
+        "validation.offline_commands entry is not a local validation command: curl https://example.com"
+        in report.cases[0].issues
+    )
 
 
 def test_cases_report_rejects_candidate_case_without_expected_commands(tmp_path):
@@ -522,6 +549,8 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "adapter_package: publish demo.example.com-<version>.cliany-adapter.tar.gz" in text
     assert f"metadata_validation: {metadata_validation}" in text
     assert "online_smoke: cliany-site demo.example.com list-items --json" in text
+    assert "## Offline Validation Commands" in text
+    assert "| `candidate-case` | python scripts/validate_cases.py --strict |" in text
     assert "## Candidate Promotion Tasks" in text
     assert "### `candidate-case`" in text
     assert "- [ ] `adapter_package`: publish demo.example.com-<version>.cliany-adapter.tar.gz" in text

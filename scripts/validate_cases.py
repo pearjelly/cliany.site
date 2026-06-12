@@ -45,6 +45,7 @@ class CaseCheck:
     issues: list[str] = field(default_factory=list)
     package: dict[str, Any] | None = None
     promotion: dict[str, Any] | None = None
+    offline_commands: list[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -62,6 +63,8 @@ class CaseCheck:
             data["package"] = self.package
         if self.promotion is not None:
             data["promotion"] = self.promotion
+        if self.offline_commands:
+            data["offline_commands"] = self.offline_commands
         return data
 
 
@@ -369,6 +372,31 @@ def _validate_candidate_promotion(promotion: dict[str, Any], adapter_domain: str
     return issues
 
 
+def _validate_offline_commands(validation: dict[str, Any]) -> tuple[list[str], list[str]]:
+    commands = validation.get("offline_commands")
+    if not isinstance(commands, list) or not commands:
+        return [], ["validation.offline_commands is required"]
+
+    issues: list[str] = []
+    normalized: list[str] = []
+    allowed_prefixes = (
+        "python ",
+        "pytest ",
+        "CLIANY_QA_OFFLINE=1 ",
+        "bash ",
+    )
+    for command in commands:
+        if not isinstance(command, str) or not command.strip():
+            issues.append("validation.offline_commands entries must be non-empty strings")
+            continue
+        command = command.strip()
+        normalized.append(command)
+        if not command.startswith(allowed_prefixes):
+            issues.append(f"validation.offline_commands entry is not a local validation command: {command}")
+
+    return normalized, issues
+
+
 def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> CaseCheck:
     case_id = str(case.get("id") or "(missing-id)")
     status = str(case.get("status") or "")
@@ -388,6 +416,9 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
     validation = case.get("validation") or {}
     if not isinstance(validation, dict) or not validation.get("offline"):
         check.issues.append("validation.offline is required")
+    if isinstance(validation, dict):
+        check.offline_commands, offline_command_issues = _validate_offline_commands(validation)
+        check.issues.extend(offline_command_issues)
 
     docs = str(case.get("docs") or "")
     if docs:
@@ -510,6 +541,10 @@ def _promotion_summary(promotion: dict[str, Any] | None) -> str:
     return "<br>".join(parts) if parts else "-"
 
 
+def _offline_command_summary(commands: list[str]) -> str:
+    return "<br>".join(commands) if commands else "-"
+
+
 def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
     candidates = [case for case in report.cases if case.status == "candidate" and case.promotion]
     if not candidates:
@@ -589,6 +624,18 @@ def _render_markdown_report(report: CasesReport) -> str:
             package = package_status if check.package.get("ok") else f"fail: {package_status}"
         promotion = _promotion_summary(check.promotion)
         lines.append(f"| `{check.id}` | `{check.status}` | `{result}` | {issues} | {package} | {promotion} |")
+
+    lines.extend(
+        [
+            "",
+            "## Offline Validation Commands",
+            "",
+            "| Case | Commands |",
+            "|------|----------|",
+        ]
+    )
+    for check in report.cases:
+        lines.append(f"| `{check.id}` | {_offline_command_summary(check.offline_commands)} |")
 
     lines.extend(_candidate_promotion_task_lines(report))
     return "\n".join(lines) + "\n"

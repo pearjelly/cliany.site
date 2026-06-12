@@ -27,6 +27,11 @@ def test_cases_manifest_entries_are_actionable():
         assert case["target_url"].startswith("https://")
         assert "offline" in case["validation"]
         assert case["validation"]["offline"]
+        assert case["validation"]["offline_commands"]
+        assert all(
+            command.startswith(("python ", "pytest ", "CLIANY_QA_OFFLINE=1 ", "bash "))
+            for command in case["validation"]["offline_commands"]
+        )
 
         if case["status"] == "active":
             assert case["adapter_domain"]

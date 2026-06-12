@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Changed
+- 案例库新增结构化 `validation.offline_commands`，`scripts/validate_cases.py --report` 会汇总每个案例的离线验证命令，便于 PR 和 release 复盘直接复制。
+
 ## [0.15.9] - 2026-06-12
 
 ### Changed
