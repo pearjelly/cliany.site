@@ -1517,10 +1517,6 @@ def _release_draft_primary_required_action(plan: IterationPlan) -> str | None:
     return f"Resolve release draft issue: {primary_issue}"
 
 
-def _release_draft_required_actions(release_draft_issues: list[str]) -> list[str]:
-    return [f"Resolve release draft issue: {issue}" for issue in release_draft_issues]
-
-
 def _release_draft_handoff(plan: IterationPlan) -> dict[str, Any]:
     required_actions = _release_draft_required_actions(plan.release_draft_issues)
     return {
@@ -1671,6 +1667,7 @@ def _issue_artifact_bundle_summary(
             candidate_issue_gate_primary_reason_code
         )
     candidate_issue_gate_summary = plan.candidate_issue_gate.get("summary")
+    release_draft_required_actions = _release_draft_required_actions(plan.release_draft_issues)
     return {
         "target_version": plan.target_version,
         "candidate_count": len(candidate_cases),
@@ -1714,6 +1711,8 @@ def _issue_artifact_bundle_summary(
         "release_draft_handoff_sha256": _stable_json_sha256(release_draft_handoff),
         "release_draft_path": plan.release_draft_path,
         "release_draft_path_sha256": _stable_json_sha256(plan.release_draft_path),
+        "release_draft_required_action_count": len(release_draft_required_actions),
+        "release_draft_required_actions_sha256": _stable_json_sha256(release_draft_required_actions),
         "release_draft_issues_sha256": _stable_json_sha256(plan.release_draft_issues),
         "validation_command_count": len(_issue_artifact_validation_commands(plan)),
         "validation_commands_sha256": _stable_json_sha256(_issue_artifact_validation_commands(plan)),
@@ -1837,6 +1836,9 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- release_draft_handoff_sha256: `{summary['release_draft_handoff_sha256']}`",
             f"- release_draft_path: `{summary['release_draft_path']}`",
             f"- release_draft_path_sha256: `{summary['release_draft_path_sha256']}`",
+            f"- release_draft_required_action_count: `{summary['release_draft_required_action_count']}`",
+            "- release_draft_required_actions_sha256: "
+            f"`{summary['release_draft_required_actions_sha256']}`",
             f"- release_draft_issues_sha256: `{summary['release_draft_issues_sha256']}`",
             f"- validation_command_count: `{summary['validation_command_count']}`",
             f"- validation_commands_sha256: `{summary['validation_commands_sha256']}`",

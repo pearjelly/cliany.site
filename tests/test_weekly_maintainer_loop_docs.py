@@ -111,6 +111,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "release_draft_handoff_sha256",
         "release_draft_path",
         "release_draft_path_sha256",
+        "release_draft_required_action_count",
+        "release_draft_required_actions_sha256",
         "release_draft_issues_sha256",
         "validation_command_count",
         "validation_commands_sha256",

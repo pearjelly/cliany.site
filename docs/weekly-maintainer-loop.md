@@ -105,6 +105,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 还会带上 `release_draft_path` 和 `release_draft_path_sha256`，让工具只读整包摘要就能判断目标 release draft 路径是否漂移。
 
+`artifact_bundle_summary` 还会带上 `release_draft_required_action_count` 和 `release_draft_required_actions_sha256`，让工具只读整包摘要就能判断 release draft required actions 是否需要展开。
+
 `artifact_bundle_summary` 还会带上 `release_draft_issues_sha256`，让工具只读整包摘要就能判断 release draft issues 列表是否漂移。
 
 `artifact_bundle_summary` 还会带上 `validation_command_count` 和 `validation_commands_sha256`，让工具只读整包摘要就能判断 validation commands 是否漂移。
