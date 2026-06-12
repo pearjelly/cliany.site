@@ -234,10 +234,11 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
             "summary": "Do not create candidate issues until the latest local release is publicly visible.",
             "reason_codes": reason_codes,
             "reason_descriptions": reason_descriptions,
-            "required_actions": actions,
+            **_candidate_issue_gate_action_fields(actions),
             "evidence": evidence,
         }
     if release_draft_issues:
+        actions = release_draft_actions
         return {
             "status": "review_required",
             "can_create_issues": True,
@@ -245,9 +246,10 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
             "summary": "Release draft issues must be resolved or intentionally deferred before tagging.",
             "reason_codes": reason_codes,
             "reason_descriptions": reason_descriptions,
-            "required_actions": release_draft_actions,
+            **_candidate_issue_gate_action_fields(actions),
             "evidence": evidence,
         }
+    actions: list[str] = []
     return {
         "status": "ready",
         "can_create_issues": True,
@@ -255,13 +257,26 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
         "summary": "Candidate issues can be created after reviewing the generated artifacts.",
         "reason_codes": reason_codes,
         "reason_descriptions": reason_descriptions,
-        "required_actions": [],
+        **_candidate_issue_gate_action_fields(actions),
         "evidence": evidence,
+    }
+
+
+def _candidate_issue_gate_action_fields(actions: list[str]) -> dict[str, Any]:
+    return {
+        "required_action_count": len(actions),
+        "required_actions_sha256": _stable_json_sha256(actions),
+        "required_actions": actions,
     }
 
 
 def _release_draft_required_actions(release_draft_issues: list[str]) -> list[str]:
     return [f"Resolve release draft issue: {issue}" for issue in release_draft_issues]
+
+
+def _stable_json_sha256(value: object) -> str:
+    digest_source = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(digest_source).hexdigest()
 
 
 def _candidate_issue_gate_reason_codes(release_draft_issues: list[str], publication: Any) -> list[str]:
@@ -735,6 +750,8 @@ def _candidate_issue_gate_markdown(gate: dict[str, Any]) -> str:
     can_create = str(bool(gate.get("can_create_issues", False))).lower()
     review_required = str(bool(gate.get("requires_maintainer_review", True))).lower()
     summary = gate.get("summary") or "Candidate issue gate has not been summarized."
+    action_count = gate.get("required_action_count")
+    action_hash = gate.get("required_actions_sha256") or "(unknown)"
     reason_codes = gate.get("reason_codes")
     reason_descriptions = gate.get("reason_descriptions")
     actions = gate.get("required_actions")
@@ -755,6 +772,8 @@ def _candidate_issue_gate_markdown(gate: dict[str, Any]) -> str:
 - can_create_issues: `{can_create}`
 - requires_maintainer_review: `{review_required}`
 - summary: {summary}
+- required_action_count: `{_format_context_value(action_count)}`
+- required_actions_sha256: `{_format_context_value(action_hash)}`
 
 ### Candidate Issue Gate Reason Codes
 
@@ -1114,6 +1133,8 @@ Generated for target version `{plan.target_version}`.
 - candidate_issue_gate: `{_format_context_value(plan.candidate_issue_gate.get("status"))}`
 - can_create_issues: `{str(bool(plan.candidate_issue_gate.get("can_create_issues", False))).lower()}`
 - gate_summary: {_format_context_value(plan.candidate_issue_gate.get("summary"))}
+- gate_required_action_count: `{_format_context_value(plan.candidate_issue_gate.get("required_action_count"))}`
+- gate_required_actions_sha256: `{_format_context_value(plan.candidate_issue_gate.get("required_actions_sha256"))}`
 - gate_reason_codes: {gate_reason_codes}
 - gate_reason_descriptions: {gate_reason_descriptions}
 - gate_evidence_latest_tag: `{gate_latest_tag}`

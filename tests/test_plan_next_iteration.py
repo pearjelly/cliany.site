@@ -18,6 +18,11 @@ sys.modules[SPEC.name] = plan_next_iteration
 SPEC.loader.exec_module(plan_next_iteration)
 
 
+def _stable_json_sha256(value: object) -> str:
+    digest_source = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(digest_source).hexdigest()
+
+
 def _write_pyproject(root: Path, version: str = "0.16.1") -> None:
     (root / "pyproject.toml").write_text(
         f"""
@@ -143,6 +148,13 @@ def _published_publication_report() -> SimpleNamespace:
 
 
 def _blocked_candidate_issue_gate() -> dict[str, object]:
+    required_actions = [
+        "Commit, stash, or discard local worktree changes before publishing release refs.",
+        "Push `master` to `origin`; local branch is ahead by `2` commits.",
+        "Push tag `v0.16.1` after the branch is published.",
+        "Resolve release draft issue: release draft is missing",
+        "Resolve release draft issue: release draft missing snippet: ## 发版前验证",
+    ]
     return {
         "status": "blocked_by_publication",
         "can_create_issues": False,
@@ -158,13 +170,9 @@ def _blocked_candidate_issue_gate() -> dict[str, object]:
             "dirty_worktree": "The working tree has uncommitted changes that must be resolved first.",
             "release_draft_issues": "The target release draft still has validation issues.",
         },
-        "required_actions": [
-            "Commit, stash, or discard local worktree changes before publishing release refs.",
-            "Push `master` to `origin`; local branch is ahead by `2` commits.",
-            "Push tag `v0.16.1` after the branch is published.",
-            "Resolve release draft issue: release draft is missing",
-            "Resolve release draft issue: release draft missing snippet: ## 发版前验证",
-        ],
+        "required_action_count": len(required_actions),
+        "required_actions_sha256": _stable_json_sha256(required_actions),
+        "required_actions": required_actions,
         "evidence": {
             "publication_ok": False,
             "publication_visibility_status": "dirty_worktree",
@@ -199,6 +207,10 @@ def test_plan_defaults_to_next_patch_version(tmp_path):
 
 def test_candidate_issue_gate_allows_creation_after_publication_with_release_draft_review(tmp_path):
     _write_pyproject(tmp_path, version="0.16.1")
+    required_actions = [
+        "Resolve release draft issue: release draft is missing",
+        "Resolve release draft issue: release draft missing snippet: ## 发版前验证",
+    ]
 
     plan = plan_next_iteration.build_plan(
         tmp_path,
@@ -215,10 +227,9 @@ def test_candidate_issue_gate_allows_creation_after_publication_with_release_dra
         "reason_descriptions": {
             "release_draft_issues": "The target release draft still has validation issues.",
         },
-        "required_actions": [
-            "Resolve release draft issue: release draft is missing",
-            "Resolve release draft issue: release draft missing snippet: ## 发版前验证",
-        ],
+        "required_action_count": len(required_actions),
+        "required_actions_sha256": _stable_json_sha256(required_actions),
+        "required_actions": required_actions,
         "evidence": {
             "publication_ok": True,
             "publication_visibility_status": "published",
@@ -356,6 +367,8 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "can_create_issues: `false`" in text
     assert "requires_maintainer_review: `true`" in text
     assert "Do not create candidate issues until the latest local release is publicly visible." in text
+    assert "required_action_count: `5`" in text
+    assert f"required_actions_sha256: `{_blocked_candidate_issue_gate()['required_actions_sha256']}`" in text
     assert "### Candidate Issue Gate Reason Codes" in text
     assert "- `publication_not_published`" in text
     assert "- `dirty_worktree`" in text
@@ -418,6 +431,8 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
 
     text = capsys.readouterr().out
     assert "candidate_issue_gate:" in text
+    assert "- required_action_count: 5" in text
+    assert f"- required_actions_sha256: {_blocked_candidate_issue_gate()['required_actions_sha256']}" in text
     assert "- reason_codes:" in text
     assert "  - publication_not_published" in text
     assert "  - dirty_worktree" in text
@@ -723,6 +738,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "candidate_issue_gate: `blocked_by_publication`" in readme
     assert "can_create_issues: `false`" in readme
     assert "gate_summary: Do not create candidate issues until the latest local release is publicly visible." in readme
+    assert "gate_required_action_count: `5`" in readme
+    assert f"gate_required_actions_sha256: `{_blocked_candidate_issue_gate()['required_actions_sha256']}`" in readme
     assert "gate_reason_codes: `publication_not_published`, `dirty_worktree`, `release_draft_issues`" in readme
     assert "gate_reason_descriptions:" in readme
     assert "`publication_not_published`: The latest local release branch or tag is not visible upstream." in readme
