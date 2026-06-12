@@ -167,6 +167,12 @@ def _previous_tag_version(root: Path, release_tag: str) -> str | None:
     return _strip_v_prefix(previous_tag) if previous_tag else None
 
 
+def _tag_points_at_head(root: Path, release_tag: str) -> bool:
+    tag_commit = _optional_git(["rev-list", "-n", "1", release_tag], root)
+    head_commit = _optional_git(["rev-parse", "HEAD"], root)
+    return bool(tag_commit and head_commit and tag_commit == head_commit)
+
+
 def _draft_path(root: Path, target_version: str) -> Path:
     return root / "docs" / "releases" / f"v{target_version}-draft.md"
 
@@ -496,6 +502,8 @@ def build_report(
         blockers.append(f"release tag {release_tag} != pyproject version {current_version}")
     if release_tag and draft_base_version is None:
         blockers.append(f"previous tag for release {release_tag} could not be determined")
+    if release_tag and not _tag_points_at_head(root, release_tag):
+        blockers.append(f"release tag {release_tag} does not point at HEAD")
     if not cases.ok:
         blockers.append("case catalog validation failed")
     if cases.total < min_case_assets:
@@ -557,6 +565,9 @@ def _print_text(report: ReadinessReport) -> None:
 
 def _report_issue_lines(report: ReadinessReport) -> list[str]:
     lines: list[str] = []
+    for blocker in report.blockers:
+        if blocker.startswith("release tag "):
+            lines.append(f"- `release_tag`: {blocker}")
     for issue in _cadence_blockers(report.cadence):
         lines.append(f"- `cadence`: {issue}")
     for case in report.cases.cases:
@@ -594,6 +605,8 @@ def _next_action_lines(report: ReadinessReport) -> list[str]:
         )
     if report.cadence.dirty:
         lines.append("- Commit or revert the working tree before tagging a release.")
+    if any(blocker.startswith("release tag ") and "does not point at HEAD" in blocker for blocker in report.blockers):
+        lines.append("- Check out the release tag commit before running `--release-tag` preflight.")
     if not report.cadence.tag_matches_version:
         lines.append("- Align `pyproject.toml` version and the latest release tag before publishing.")
     if not report.cadence.changelog_ok:

@@ -12,6 +12,7 @@
 
 ### Changed
 - `docs/release-cadence.md` 现在说明 minor release 应使用 `release_readiness.py --target-version 0.15.0` 跟踪目标版本，避免默认下一 patch 草案与路线图目标脱节。
+- `release_readiness.py --release-tag` 现在要求目标 tag 指向当前 HEAD，避免在 tag 后继续提交时误把后续工作区当作已打 tag 的发布状态。
 
 ## [0.14.4] - 2026-06-12
 
