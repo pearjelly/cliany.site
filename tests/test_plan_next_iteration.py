@@ -501,6 +501,22 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "total_byte_count": sum(item["byte_count"] for item in issue_body_inventory),
         "inventory_sha256": hashlib.sha256(summary_bytes).hexdigest(),
     }
+    stable_issue_metadata = [
+        {
+            "case_id": item["case_id"],
+            "issue_title": item["issue_title"],
+            "issue_labels": item["issue_labels"],
+            "target_url": item["target_url"],
+            "commands": item["commands"],
+            "offline_commands": item["offline_commands"],
+            "issue_body_name": item["issue_body_name"],
+        }
+        for item in metadata
+    ]
+    issue_metadata_summary = {
+        "metadata_count": len(stable_issue_metadata),
+        "metadata_sha256": _stable_json_sha256(stable_issue_metadata),
+    }
     review_order = [
         "README.md",
         "publication-handoff.json",
@@ -524,6 +540,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "review_item_count": len(review_order),
         "review_order_sha256": review_order_sha256,
         "inventory_sha256": issue_body_summary["inventory_sha256"],
+        "issue_metadata_count": issue_metadata_summary["metadata_count"],
+        "issue_metadata_sha256": issue_metadata_summary["metadata_sha256"],
         "blocker_count": 2,
         "blockers_sha256": _stable_json_sha256(plan.blockers),
         "next_action_count": len(plan.next_actions),
@@ -678,6 +696,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         },
         "issue_body_inventory": issue_body_inventory,
         "issue_body_summary": issue_body_summary,
+        "issue_metadata_summary": issue_metadata_summary,
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -803,6 +822,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "candidate_count: `2`" in readme
     assert "review_item_count: `7`" in readme
     assert f"review_order_sha256: `{review_order_sha256}`" in readme
+    assert f"issue_metadata_count: `{issue_metadata_summary['metadata_count']}`" in readme
+    assert f"issue_metadata_sha256: `{issue_metadata_summary['metadata_sha256']}`" in readme
     assert "blocker_count: `2`" in readme
     assert f"blockers_sha256: `{_stable_json_sha256(plan.blockers)}`" in readme
     assert f"next_action_count: `{len(plan.next_actions)}`" in readme

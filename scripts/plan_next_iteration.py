@@ -987,6 +987,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         candidate_cases=candidate_cases,
         review_order=review_order,
         issue_body_summary=issue_body_summary,
+        issue_metadata_summary=_issue_metadata_summary(metadata),
         create_issues_safety=create_issues_safety,
     )
     artifact_manifest = {
@@ -1013,6 +1014,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         "create_issues_safety": create_issues_safety,
         "issue_body_inventory": issue_body_inventory,
         "issue_body_summary": issue_body_summary,
+        "issue_metadata_summary": _issue_metadata_summary(metadata),
         "files": {
             "readme": "README.md",
             "issue_metadata": "issue-metadata.json",
@@ -1348,6 +1350,41 @@ def _issue_body_summary(inventory: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
+def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
+    stable_metadata = [
+        {
+            "case_id": item["case_id"],
+            "issue_title": item["issue_title"],
+            "issue_labels": item["issue_labels"],
+            "target_url": item["target_url"],
+            "commands": item["commands"],
+            "offline_commands": item["offline_commands"],
+            "issue_body_name": item["issue_body_name"],
+        }
+        for item in metadata
+    ]
+    digest_source = json.dumps(stable_metadata, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+    return {
+        "metadata_count": len(stable_metadata),
+        "metadata_sha256": hashlib.sha256(digest_source).hexdigest(),
+    }
+
+
+def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[dict[str, Any]]:
+    return [
+        {
+            "case_id": promotion.case_id,
+            "issue_title": promotion.issue_title,
+            "issue_labels": [*promotion.issue_labels],
+            "target_url": promotion.target_url,
+            "commands": promotion.commands,
+            "offline_commands": promotion.offline_commands,
+            "issue_body_name": f"{promotion.case_id}.md",
+        }
+        for promotion in promotions
+    ]
+
+
 def _issue_artifact_body_inventory_markdown(promotions: list[CandidatePromotion]) -> str:
     inventory = _issue_body_inventory(promotions)
     if not inventory:
@@ -1385,6 +1422,7 @@ def _issue_artifact_bundle_summary(
     candidate_cases: list[str],
     review_order: list[str],
     issue_body_summary: dict[str, Any],
+    issue_metadata_summary: dict[str, Any],
     create_issues_safety: dict[str, Any],
 ) -> dict[str, Any]:
     review_order_digest_source = json.dumps(
@@ -1401,6 +1439,8 @@ def _issue_artifact_bundle_summary(
         "review_item_count": len(review_order),
         "review_order_sha256": hashlib.sha256(review_order_digest_source).hexdigest(),
         "inventory_sha256": issue_body_summary["inventory_sha256"],
+        "issue_metadata_count": issue_metadata_summary["metadata_count"],
+        "issue_metadata_sha256": issue_metadata_summary["metadata_sha256"],
         "blocker_count": len(plan.blockers),
         "blockers_sha256": _stable_json_sha256(plan.blockers),
         "next_action_count": len(plan.next_actions),
@@ -1447,6 +1487,7 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
         candidate_cases=candidate_cases,
         review_order=review_order,
         issue_body_summary=_issue_body_summary(_issue_body_inventory(plan.candidate_promotions)),
+        issue_metadata_summary=_issue_metadata_summary(_issue_metadata_for_summary(plan.candidate_promotions)),
         create_issues_safety=_issue_artifact_create_issues_safety(Path("create-issues.sh")),
     )
     return "\n".join(
@@ -1459,6 +1500,8 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"- review_item_count: `{summary['review_item_count']}`",
             f"- review_order_sha256: `{summary['review_order_sha256']}`",
             f"- inventory_sha256: `{summary['inventory_sha256']}`",
+            f"- issue_metadata_count: `{summary['issue_metadata_count']}`",
+            f"- issue_metadata_sha256: `{summary['issue_metadata_sha256']}`",
             f"- blocker_count: `{summary['blocker_count']}`",
             f"- blockers_sha256: `{summary['blockers_sha256']}`",
             f"- next_action_count: `{summary['next_action_count']}`",
