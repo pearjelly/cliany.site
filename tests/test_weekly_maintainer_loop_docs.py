@@ -13,6 +13,9 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "## 2. 周中：实现一个可验证切片",
         "## 3. 周末：发版或明确阻塞",
         "## 4. 周复盘问题",
+        "python scripts/plan_next_iteration.py --json",
+        "python scripts/plan_next_iteration.py --report",
+        "publication audit",
         "python scripts/release_readiness.py --json",
         "python scripts/release_readiness.py --report",
         "Weekly Review",
@@ -30,6 +33,7 @@ def test_weekly_maintainer_loop_referenced_paths_exist():
     required_paths = [
         "docs/roadmap-2026-q3.md",
         "docs/release-cadence.md",
+        "scripts/plan_next_iteration.py",
         "scripts/release_readiness.py",
         "scripts/validate_cases.py",
         "CHANGELOG.md",

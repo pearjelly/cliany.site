@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- 新增 `scripts/plan_next_iteration.py`，聚合 release readiness、publication audit、commit cadence 和 candidate cases，为下个版本输出可执行推荐切片、JSON 和 Markdown 报告。
+- 新增 `docs/releases/v0.16.2-draft.md`，把下一版 patch release 聚焦到维护者下个迭代计划入口。
+
 ## [0.16.1] - 2026-06-12
 
 ### Changed
