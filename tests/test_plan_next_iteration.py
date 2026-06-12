@@ -530,6 +530,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "next_actions_sha256": _stable_json_sha256(plan.next_actions),
         "publication_next_action_count": 3,
         "publication_next_actions_sha256": _stable_json_sha256(plan.publication_next_actions),
+        "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
+        "publication_publish_commands_sha256": _stable_json_sha256(plan.publication_publish_commands),
         "publication_ok": False,
         "publication_visibility_status": "dirty_worktree",
         "release_draft_issue_count": 2,
@@ -760,6 +762,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"publication_next_actions_sha256: "
         f"`{_stable_json_sha256(plan.publication_next_actions)}`"
+    ) in readme
+    assert (
+        f"publication_ref_context_sha256: "
+        f"`{_stable_json_sha256(plan.publication_ref_context)}`"
+    ) in readme
+    assert (
+        f"publication_publish_commands_sha256: "
+        f"`{_stable_json_sha256(plan.publication_publish_commands)}`"
     ) in readme
     assert "publication_ok: `false`" in readme
     assert "publication_visibility_status: `dirty_worktree`" in readme
