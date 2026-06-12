@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --json` 和 `--report` 现在输出 `candidate_promotions` / `Candidate Promotion Tasks`，直接列出 candidate 案例晋级所需的 `adapter_package`、`metadata_validation` 和 `online_smoke` 证据。
+- 新增 `docs/releases/v0.16.3-draft.md`，把下一版 patch release 聚焦到计划器中的 candidate 晋级任务表。
+
 ## [0.16.2] - 2026-06-12
 
 ### Added

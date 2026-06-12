@@ -44,8 +44,24 @@ def _readiness_report() -> SimpleNamespace:
             known_gap=1,
             total=8,
             cases=[
-                SimpleNamespace(id="pypi-project-search", status="candidate"),
-                SimpleNamespace(id="npm-package-search", status="candidate"),
+                SimpleNamespace(
+                    id="pypi-project-search",
+                    status="candidate",
+                    promotion={
+                        "adapter_package": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
+                        "metadata_validation": "Run validate_cases with --packages-dir.",
+                        "online_smoke": "Run read-only PyPI search smoke.",
+                    },
+                ),
+                SimpleNamespace(
+                    id="npm-package-search",
+                    status="candidate",
+                    promotion={
+                        "adapter_package": "Generate www.npmjs.com-<version>.cliany-adapter.tar.gz.",
+                        "metadata_validation": "Run validate_cases with --packages-dir.",
+                        "online_smoke": "Run read-only npm search smoke.",
+                    },
+                ),
                 SimpleNamespace(id="search-extraction-gap", status="known-gap"),
             ],
         ),
@@ -76,6 +92,7 @@ def test_plan_defaults_to_next_patch_version(tmp_path):
     assert plan.recommended_theme == "发布可见性"
     assert "latest local release is not published" in plan.blockers
     assert plan.candidate_cases == ["pypi-project-search", "npm-package-search"]
+    assert plan.candidate_promotions[0].case_id == "pypi-project-search"
 
 
 def test_plan_json_keeps_actionable_validation_commands(tmp_path):
@@ -92,6 +109,29 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     assert "python scripts/check_release_publication.py --json" in data["validation_commands"]
     assert "python scripts/validate_cases.py --strict" in data["validation_commands"]
     assert any("push `master`" in action for action in data["next_actions"])
+    assert data["candidate_promotions"][0] == {
+        "case_id": "pypi-project-search",
+        "adapter_package": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
+        "metadata_validation": "Run validate_cases with --packages-dir.",
+        "online_smoke": "Run read-only PyPI search smoke.",
+    }
+
+
+def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
+    _write_pyproject(tmp_path)
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=_readiness_report(),
+        publication_report=_publication_report(),
+    )
+    report_path = tmp_path / "reports" / "next-iteration.md"
+
+    plan_next_iteration._write_markdown_report(plan, report_path)
+
+    text = report_path.read_text(encoding="utf-8")
+    assert "## Candidate Promotion Tasks" in text
+    assert "| `pypi-project-search` | Generate pypi.org-<version>.cliany-adapter.tar.gz." in text
+    assert "Run read-only npm search smoke." in text
 
 
 def test_plan_cli_writes_json_for_current_repo(capsys):

@@ -22,6 +22,22 @@ from release_readiness import build_report as build_readiness_report  # noqa: E4
 
 
 @dataclass(frozen=True)
+class CandidatePromotion:
+    case_id: str
+    adapter_package: str
+    metadata_validation: str
+    online_smoke: str
+
+    def to_dict(self) -> dict[str, str]:
+        return {
+            "case_id": self.case_id,
+            "adapter_package": self.adapter_package,
+            "metadata_validation": self.metadata_validation,
+            "online_smoke": self.online_smoke,
+        }
+
+
+@dataclass(frozen=True)
 class IterationPlan:
     current_version: str
     target_version: str
@@ -32,6 +48,7 @@ class IterationPlan:
     commit_days: str
     case_assets: str
     candidate_cases: list[str]
+    candidate_promotions: list[CandidatePromotion]
     blockers: list[str]
     next_actions: list[str]
     validation_commands: list[str]
@@ -48,6 +65,7 @@ class IterationPlan:
             "commit_days": self.commit_days,
             "case_assets": self.case_assets,
             "candidate_cases": self.candidate_cases,
+            "candidate_promotions": [promotion.to_dict() for promotion in self.candidate_promotions],
             "blockers": self.blockers,
             "next_actions": self.next_actions,
             "validation_commands": self.validation_commands,
@@ -117,6 +135,31 @@ def _recommended_slice(readiness: Any, publication: Any) -> tuple[str, str]:
     )
 
 
+def _promotion_value(promotion: Any, field_name: str) -> str:
+    if isinstance(promotion, dict):
+        return str(promotion.get(field_name) or "")
+    return str(getattr(promotion, field_name, "") or "")
+
+
+def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
+    promotions: list[CandidatePromotion] = []
+    for case in readiness.cases.cases:
+        if case.status != "candidate":
+            continue
+        promotion = getattr(case, "promotion", None)
+        if promotion is None:
+            continue
+        promotions.append(
+            CandidatePromotion(
+                case_id=str(case.id),
+                adapter_package=_promotion_value(promotion, "adapter_package"),
+                metadata_validation=_promotion_value(promotion, "metadata_validation"),
+                online_smoke=_promotion_value(promotion, "online_smoke"),
+            )
+        )
+    return promotions
+
+
 def build_plan(
     root: Path = ROOT,
     *,
@@ -138,6 +181,7 @@ def build_plan(
     )
     publication = publication_report or build_publication_report(root)
     theme, release_slice = _recommended_slice(readiness, publication)
+    candidate_promotions = _candidate_promotions(readiness)
     candidate_cases = [
         str(case.id)
         for case in readiness.cases.cases
@@ -166,6 +210,7 @@ def build_plan(
             f"known_gap {readiness.cases.known_gap}, total {readiness.cases.total}/{readiness.min_case_assets}"
         ),
         candidate_cases=candidate_cases,
+        candidate_promotions=candidate_promotions,
         blockers=blockers,
         next_actions=_next_action_lines(readiness, publication),
         validation_commands=validation_commands,
@@ -188,6 +233,13 @@ def _print_text(plan: IterationPlan) -> None:
         print("candidate_cases:")
         for case_id in plan.candidate_cases:
             print(f"- {case_id}")
+    if plan.candidate_promotions:
+        print("candidate_promotions:")
+        for promotion in plan.candidate_promotions:
+            print(f"- {promotion.case_id}")
+            print(f"  adapter_package: {promotion.adapter_package}")
+            print(f"  metadata_validation: {promotion.metadata_validation}")
+            print(f"  online_smoke: {promotion.online_smoke}")
     if plan.blockers:
         print("blockers:")
         for blocker in plan.blockers:
@@ -205,6 +257,7 @@ def _render_markdown(plan: IterationPlan) -> str:
     blockers = "\n".join(f"- {blocker}" for blocker in plan.blockers) or "- None."
     next_actions = "\n".join(f"- {action}" for action in plan.next_actions)
     validation = "\n".join(f"- `{command}`" for command in plan.validation_commands)
+    promotion_lines = _candidate_promotion_markdown(plan.candidate_promotions)
     return f"""# cliany-site Next Iteration Plan
 
 | Metric | Value |
@@ -230,6 +283,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 
 {next_actions}
 
+{promotion_lines}
+
 ## Validation Commands
 
 {validation}
@@ -238,6 +293,24 @@ def _render_markdown(plan: IterationPlan) -> str:
 
 - `{plan.release_draft_path}`
 """
+
+
+def _candidate_promotion_markdown(promotions: list[CandidatePromotion]) -> str:
+    if not promotions:
+        return "## Candidate Promotion Tasks\n\n- No candidate promotion tasks are available."
+
+    lines = [
+        "## Candidate Promotion Tasks",
+        "",
+        "| Case | Adapter Package | Metadata Validation | Online Smoke |",
+        "|------|-----------------|---------------------|--------------|",
+    ]
+    for promotion in promotions:
+        lines.append(
+            f"| `{promotion.case_id}` | {promotion.adapter_package} | "
+            f"{promotion.metadata_validation} | {promotion.online_smoke} |"
+        )
+    return "\n".join(lines)
 
 
 def _write_markdown_report(plan: IterationPlan, path: Path) -> None:
