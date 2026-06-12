@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.133] - 2026-06-13
+
+### Added
+- `publication-handoff.json` 现在输出 `publish_command_count`，让只读取 handoff 的维护工具也能先判断发布命令规模。
+- Candidate issue artifacts `README.md` 的 `Publication Handoff` 段落现在展示 `publish_command_count`。
+- 新增 `docs/releases/v0.16.133-draft.md`，把下一版 patch release 聚焦到 publication handoff 的发布命令数量可见性。
+
 ## [0.16.132] - 2026-06-13
 
 ### Added
@@ -1329,7 +1336,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.132...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.133...HEAD
+[0.16.133]: https://github.com/pearjelly/cliany.site/compare/v0.16.132...v0.16.133
 [0.16.132]: https://github.com/pearjelly/cliany.site/compare/v0.16.131...v0.16.132
 [0.16.131]: https://github.com/pearjelly/cliany.site/compare/v0.16.130...v0.16.131
 [0.16.130]: https://github.com/pearjelly/cliany.site/compare/v0.16.129...v0.16.130
