@@ -1473,6 +1473,12 @@ def _issue_artifact_bundle_summary(
     candidate_issue_gate_reason_descriptions = plan.candidate_issue_gate.get("reason_descriptions")
     if not isinstance(candidate_issue_gate_reason_descriptions, dict):
         candidate_issue_gate_reason_descriptions = {}
+    candidate_issue_gate_reason_codes = plan.candidate_issue_gate.get("reason_codes")
+    if not isinstance(candidate_issue_gate_reason_codes, list):
+        candidate_issue_gate_reason_codes = []
+    candidate_issue_gate_required_actions = plan.candidate_issue_gate.get("required_actions")
+    if not isinstance(candidate_issue_gate_required_actions, list):
+        candidate_issue_gate_required_actions = []
     candidate_issue_gate_summary = plan.candidate_issue_gate.get("summary")
     return {
         "target_version": plan.target_version,
@@ -1555,11 +1561,23 @@ def _issue_artifact_bundle_summary(
         ),
         "candidate_issue_gate_reason_code_count": plan.candidate_issue_gate.get("reason_code_count"),
         "candidate_issue_gate_reason_codes_sha256": plan.candidate_issue_gate.get("reason_codes_sha256"),
+        "candidate_issue_gate_primary_reason_code": (
+            candidate_issue_gate_reason_codes[0] if candidate_issue_gate_reason_codes else None
+        ),
         "candidate_issue_gate_required_action_count": plan.candidate_issue_gate.get("required_action_count"),
         "candidate_issue_gate_required_actions_sha256": plan.candidate_issue_gate.get("required_actions_sha256"),
+        "candidate_issue_gate_primary_required_action": (
+            candidate_issue_gate_required_actions[0] if candidate_issue_gate_required_actions else None
+        ),
         "dry_run_supported": bool(create_issues_safety["dry_run_supported"]),
         "preflight_required": bool(create_issues_safety["preflight_required"]),
     }
+
+
+def _summary_inline_code(value: Any) -> str:
+    text = str(value)
+    fence = "``" if "`" in text else "`"
+    return f"{fence}{text}{fence}"
 
 
 def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
@@ -1666,9 +1684,13 @@ def _issue_artifact_bundle_summary_markdown(plan: IterationPlan) -> str:
             f"`{summary['candidate_issue_gate_reason_descriptions_sha256']}`",
             f"- candidate_issue_gate_reason_code_count: `{summary['candidate_issue_gate_reason_code_count']}`",
             f"- candidate_issue_gate_reason_codes_sha256: `{summary['candidate_issue_gate_reason_codes_sha256']}`",
+            "- candidate_issue_gate_primary_reason_code: "
+            f"{_summary_inline_code(summary['candidate_issue_gate_primary_reason_code'])}",
             f"- candidate_issue_gate_required_action_count: `{summary['candidate_issue_gate_required_action_count']}`",
             "- candidate_issue_gate_required_actions_sha256: "
             f"`{summary['candidate_issue_gate_required_actions_sha256']}`",
+            "- candidate_issue_gate_primary_required_action: "
+            f"{_summary_inline_code(summary['candidate_issue_gate_primary_required_action'])}",
             f"- dry_run_supported: `{str(summary['dry_run_supported']).lower()}`",
             f"- preflight_required: `{str(summary['preflight_required']).lower()}`",
         ]

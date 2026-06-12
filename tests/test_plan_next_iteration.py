@@ -261,6 +261,12 @@ def test_candidate_issue_gate_allows_creation_after_publication_with_release_dra
     }
 
 
+def test_summary_inline_code_uses_wider_fence_for_backticks():
+    assert plan_next_iteration._summary_inline_code("Push `master` to `origin`") == (
+        "``Push `master` to `origin```"
+    )
+
+
 def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     _write_pyproject(tmp_path)
 
@@ -737,8 +743,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "candidate_issue_gate_reason_code_count": _blocked_candidate_issue_gate()["reason_code_count"],
         "candidate_issue_gate_reason_codes_sha256": _blocked_candidate_issue_gate()["reason_codes_sha256"],
+        "candidate_issue_gate_primary_reason_code": "publication_not_published",
         "candidate_issue_gate_required_action_count": _blocked_candidate_issue_gate()["required_action_count"],
         "candidate_issue_gate_required_actions_sha256": _blocked_candidate_issue_gate()["required_actions_sha256"],
+        "candidate_issue_gate_primary_required_action": (
+            "Commit, stash, or discard local worktree changes before publishing release refs."
+        ),
         "dry_run_supported": True,
         "preflight_required": True,
     }
@@ -1050,10 +1060,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"candidate_issue_gate_reason_codes_sha256: "
         f"`{_blocked_candidate_issue_gate()['reason_codes_sha256']}`"
     ) in readme
+    assert "candidate_issue_gate_primary_reason_code: `publication_not_published`" in readme
     assert "candidate_issue_gate_required_action_count: `5`" in readme
     assert (
         f"candidate_issue_gate_required_actions_sha256: "
         f"`{_blocked_candidate_issue_gate()['required_actions_sha256']}`"
+    ) in readme
+    assert (
+        "candidate_issue_gate_primary_required_action: "
+        "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
     assert "dry_run_supported: `true`" in readme
     assert "preflight_required: `true`" in readme
