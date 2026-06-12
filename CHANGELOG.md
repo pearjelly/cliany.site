@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py` 生成的 candidate issue body 现在包含 `Reproduction Context`，带上 target URL、candidate commands 和 offline validation commands。
+- 新增 `docs/releases/v0.16.14-draft.md`，把下一版 patch release 聚焦到 candidate issue body 的复现上下文。
+
 ## [0.16.13] - 2026-06-12
 
 ### Added

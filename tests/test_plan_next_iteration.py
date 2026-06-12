@@ -47,6 +47,15 @@ def _readiness_report() -> SimpleNamespace:
                 SimpleNamespace(
                     id="pypi-project-search",
                     status="candidate",
+                    target_url="https://pypi.org/search/?q=cliany-site",
+                    commands=[
+                        'cliany-site explore "https://pypi.org" "search Python packages" --json',
+                        "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json",
+                    ],
+                    offline_commands=[
+                        "python scripts/validate_cases.py --strict",
+                        "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md",
+                    ],
                     promotion={
                         "adapter_package": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
                         "metadata_validation": "Run validate_cases with --packages-dir.",
@@ -56,6 +65,11 @@ def _readiness_report() -> SimpleNamespace:
                 SimpleNamespace(
                     id="npm-package-search",
                     status="candidate",
+                    target_url="https://www.npmjs.com/search?q=playwright",
+                    commands=[
+                        "cliany-site www.npmjs.com search-packages --query playwright --limit 5 --json",
+                    ],
+                    offline_commands=["python scripts/validate_cases.py --strict"],
                     promotion={
                         "adapter_package": "Generate www.npmjs.com-<version>.cliany-adapter.tar.gz.",
                         "metadata_validation": "Run validate_cases with --packages-dir.",
@@ -133,12 +147,29 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "case_id": "pypi-project-search",
         "issue_title": "Promote candidate case `pypi-project-search` toward active",
         "issue_labels": ["case-proposal", "good first issue"],
+        "target_url": "https://pypi.org/search/?q=cliany-site",
+        "commands": [
+            'cliany-site explore "https://pypi.org" "search Python packages" --json',
+            "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json",
+        ],
+        "offline_commands": [
+            "python scripts/validate_cases.py --strict",
+            "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md",
+        ],
         "adapter_package": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
         "metadata_validation": "Run validate_cases with --packages-dir.",
         "online_smoke": "Run read-only PyPI search smoke.",
         "issue_body": (
             "## Scope: promote candidate case `pypi-project-search`\n\n"
             "Move this candidate case one step closer to `active` without changing its status early.\n\n"
+            "## Reproduction Context\n"
+            "- Target URL: https://pypi.org/search/?q=cliany-site\n"
+            "- Candidate commands:\n"
+            '- `cliany-site explore "https://pypi.org" "search Python packages" --json`\n'
+            "- `cliany-site pypi.org search-projects --query cliany-site --limit 5 --json`\n"
+            "- Offline validation commands:\n"
+            "- `python scripts/validate_cases.py --strict`\n"
+            "- `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md`\n\n"
             "## Tasks\n"
             "- [ ] `adapter_package`: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n"
             "- [ ] `metadata_validation`: Run validate_cases with --packages-dir.\n"
@@ -178,6 +209,10 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "python scripts/check_release_publication.py --json --publish-script /tmp/cliany-publish-release.sh" in text
     assert "| `pypi-project-search` | Generate pypi.org-<version>.cliany-adapter.tar.gz." in text
     assert "## Scope: promote candidate case `pypi-project-search`" in text
+    assert "## Reproduction Context" in text
+    assert "- Target URL: https://pypi.org/search/?q=cliany-site" in text
+    assert 'cliany-site explore "https://pypi.org" "search Python packages" --json' in text
+    assert "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md" in text
     assert "Paste the read-only JSON envelope summary with `data.quality.ok=true` and `row_count>0`." in text
     assert "Run read-only npm search smoke." in text
 
@@ -199,6 +234,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     readme = (issues_dir / "README.md").read_text(encoding="utf-8")
 
     assert "## Scope: promote candidate case `pypi-project-search`" in body
+    assert "## Reproduction Context" in body
+    assert "- Target URL: https://pypi.org/search/?q=cliany-site" in body
+    assert 'cliany-site explore "https://pypi.org" "search Python packages" --json' in body
+    assert "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md" in body
     assert metadata[0]["case_id"] == "pypi-project-search"
     assert metadata[0]["issue_title"] == "Promote candidate case `pypi-project-search` toward active"
     assert metadata[0]["issue_labels"] == ["case-proposal", "good first issue"]

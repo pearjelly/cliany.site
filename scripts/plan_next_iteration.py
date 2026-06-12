@@ -27,6 +27,9 @@ class CandidatePromotion:
     case_id: str
     issue_title: str
     issue_labels: list[str]
+    target_url: str
+    commands: list[str]
+    offline_commands: list[str]
     adapter_package: str
     metadata_validation: str
     online_smoke: str
@@ -37,6 +40,9 @@ class CandidatePromotion:
             "case_id": self.case_id,
             "issue_title": self.issue_title,
             "issue_labels": self.issue_labels,
+            "target_url": self.target_url,
+            "commands": self.commands,
+            "offline_commands": self.offline_commands,
             "adapter_package": self.adapter_package,
             "metadata_validation": self.metadata_validation,
             "online_smoke": self.online_smoke,
@@ -165,6 +171,22 @@ def _promotion_value(promotion: Any, field_name: str) -> str:
     return str(getattr(promotion, field_name, "") or "")
 
 
+def _case_string_list(case: Any, field_name: str) -> list[str]:
+    value = getattr(case, field_name, None)
+    if value is None and isinstance(case, dict):
+        value = case.get(field_name)
+    if not isinstance(value, list):
+        return []
+    return [str(item) for item in value]
+
+
+def _case_string_value(case: Any, field_name: str) -> str:
+    value = getattr(case, field_name, None)
+    if value is None and isinstance(case, dict):
+        value = case.get(field_name)
+    return str(value or "")
+
+
 def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
     promotions: list[CandidatePromotion] = []
     for case in readiness.cases.cases:
@@ -178,11 +200,17 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 case_id=str(case.id),
                 issue_title=_candidate_issue_title(str(case.id)),
                 issue_labels=["case-proposal", "good first issue"],
+                target_url=_case_string_value(case, "target_url"),
+                commands=_case_string_list(case, "commands"),
+                offline_commands=_case_string_list(case, "offline_commands"),
                 adapter_package=_promotion_value(promotion, "adapter_package"),
                 metadata_validation=_promotion_value(promotion, "metadata_validation"),
                 online_smoke=_promotion_value(promotion, "online_smoke"),
                 issue_body=_candidate_issue_body(
                     case_id=str(case.id),
+                    target_url=_case_string_value(case, "target_url"),
+                    commands=_case_string_list(case, "commands"),
+                    offline_commands=_case_string_list(case, "offline_commands"),
                     adapter_package=_promotion_value(promotion, "adapter_package"),
                     metadata_validation=_promotion_value(promotion, "metadata_validation"),
                     online_smoke=_promotion_value(promotion, "online_smoke"),
@@ -199,15 +227,27 @@ def _candidate_issue_title(case_id: str) -> str:
 def _candidate_issue_body(
     *,
     case_id: str,
+    target_url: str,
+    commands: list[str],
+    offline_commands: list[str],
     adapter_package: str,
     metadata_validation: str,
     online_smoke: str,
 ) -> str:
+    command_lines = [f"- `{command}`" for command in commands] or ["- Not declared."]
+    offline_command_lines = [f"- `{command}`" for command in offline_commands] or ["- Not declared."]
     return "\n".join(
         [
             f"## Scope: promote candidate case `{case_id}`",
             "",
             "Move this candidate case one step closer to `active` without changing its status early.",
+            "",
+            "## Reproduction Context",
+            f"- Target URL: {target_url or 'Not declared.'}",
+            "- Candidate commands:",
+            *command_lines,
+            "- Offline validation commands:",
+            *offline_command_lines,
             "",
             "## Tasks",
             f"- [ ] `adapter_package`: {adapter_package}",
