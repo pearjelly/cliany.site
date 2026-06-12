@@ -141,15 +141,38 @@ def test_release_publication_writes_markdown_report(tmp_path):
     assert "- Push tag `v0.1.1` to `origin`; remote tag is missing or stale." in text
 
 
+def test_release_publication_writes_reviewable_publish_script(tmp_path):
+    repo = _init_repo_with_origin(tmp_path)
+    _commit(repo, "CHANGELOG.md", "released\n", "release")
+    _git(repo, "tag", "v0.1.1")
+    report = release_publication.build_report(repo)
+    script_path = tmp_path / "reports" / "publish-release.sh"
+
+    release_publication._write_publish_script(report, script_path)
+
+    text = script_path.read_text(encoding="utf-8")
+    assert text.startswith("#!/usr/bin/env bash\nset -euo pipefail\n")
+    assert "Review these commands before running" in text
+    assert "git push origin master" in text
+    assert "git push origin v0.1.1" in text
+    assert "python scripts/check_release_publication.py --remote --json" in text
+    assert oct(script_path.stat().st_mode & 0o777) == "0o755"
+
+
 def test_release_publication_main_writes_report_with_json(tmp_path, monkeypatch, capsys):
     repo = _init_repo_with_origin(tmp_path)
     report_path = tmp_path / "publication.md"
+    script_path = tmp_path / "publish-release.sh"
     monkeypatch.setattr(release_publication, "ROOT", repo)
 
-    exit_code = release_publication.main(["--json", "--report", str(report_path)])
+    exit_code = release_publication.main(
+        ["--json", "--report", str(report_path), "--publish-script", str(script_path)]
+    )
 
     payload = capsys.readouterr().out
     assert exit_code == 0
     assert '"ok": true' in payload
     assert report_path.exists()
     assert "| ok | `true` |" in report_path.read_text(encoding="utf-8")
+    assert script_path.exists()
+    assert "python scripts/check_release_publication.py --remote --json" in script_path.read_text(encoding="utf-8")

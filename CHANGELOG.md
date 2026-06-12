@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/check_release_publication.py` 新增 `--publish-script`，可把 `publish_commands` 写成可审阅的可执行 shell 脚本，便于维护者手动发布 branch/tag 后复核远端 refs。
+- 新增 `docs/releases/v0.16.11-draft.md`，把下一版 patch release 聚焦到 release publication publish script artifact。
+
 ## [0.16.10] - 2026-06-12
 
 ### Added

@@ -16,6 +16,8 @@ def test_release_cadence_doc_explains_readiness_triage():
         "git push origin master",
         "git push origin vX.Y.Z",
         "python scripts/check_release_publication.py --remote --json",
+        "--publish-script /tmp/cliany-publish-release.sh",
+        "可审阅的 shell 脚本",
         "missing_commit_days",
         "先修具体 gate 失败原因",
         "python scripts/release_readiness.py --strict",
