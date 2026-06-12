@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.68] - 2026-06-12
+
+### Added
+- `artifact_bundle_summary` 现在包含 candidate issue gate reason/action 的 count/hash，方便工具只读整包摘要就判断 gate 是否需要展开。
+- Candidate issue artifacts `README.md` 的 `Artifact Bundle Summary` 现在展示 gate reason/action 摘要字段。
+- 新增 `docs/releases/v0.16.68-draft.md`，把下一版 patch release 聚焦到 artifact bundle summary 的 gate 摘要。
+
 ## [0.16.67] - 2026-06-12
 
 ### Added
@@ -876,7 +883,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.67...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.68...HEAD
+[0.16.68]: https://github.com/pearjelly/cliany.site/compare/v0.16.67...v0.16.68
 [0.16.67]: https://github.com/pearjelly/cliany.site/compare/v0.16.66...v0.16.67
 [0.16.66]: https://github.com/pearjelly/cliany.site/compare/v0.16.65...v0.16.66
 [0.16.65]: https://github.com/pearjelly/cliany.site/compare/v0.16.64...v0.16.65
