@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.62] - 2026-06-12
+
+### Added
+- `artifact-manifest.json` 现在包含 `issue_body_summary`，记录 candidate issue body 总数、总字节数和 inventory SHA-256。
+- Candidate issue artifacts `README.md` 现在展示 `Issue Body Summary` 小节，方便维护者快速判断整批 body 文件是否变化。
+- 新增 `docs/releases/v0.16.62-draft.md`，把下一版 patch release 聚焦到 candidate issue body 汇总的机器可读审计。
+
 ## [0.16.61] - 2026-06-12
 
 ### Added
@@ -834,7 +841,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.61...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.62...HEAD
+[0.16.62]: https://github.com/pearjelly/cliany.site/compare/v0.16.61...v0.16.62
 [0.16.61]: https://github.com/pearjelly/cliany.site/compare/v0.16.60...v0.16.61
 [0.16.60]: https://github.com/pearjelly/cliany.site/compare/v0.16.59...v0.16.60
 [0.16.59]: https://github.com/pearjelly/cliany.site/compare/v0.16.58...v0.16.59
