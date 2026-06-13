@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.221] - 2026-06-13
+
+### Added
+- `scripts/plan_next_iteration.py` 的 JSON、默认文本输出和 Markdown report 现在输出 `case_promotion_evidence_summary`，让周初计划直接展示 candidate 晋级任务的状态汇总。
+- Next iteration Markdown report 新增 `Candidate Promotion Evidence Summary` 小节，展示 candidate/task 数量、pending/blocked/complete 数量、primary next action 和任务明细。
+- 新增 `docs/releases/v0.16.221-draft.md`，把下一版 patch release 聚焦到周初计划中的 candidate promotion evidence summary。
+
 ## [0.16.220] - 2026-06-13
 
 ### Added
@@ -1947,7 +1954,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.220...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.221...HEAD
+[0.16.221]: https://github.com/pearjelly/cliany.site/compare/v0.16.220...v0.16.221
 [0.16.220]: https://github.com/pearjelly/cliany.site/compare/v0.16.219...v0.16.220
 [0.16.219]: https://github.com/pearjelly/cliany.site/compare/v0.16.218...v0.16.219
 [0.16.218]: https://github.com/pearjelly/cliany.site/compare/v0.16.217...v0.16.218

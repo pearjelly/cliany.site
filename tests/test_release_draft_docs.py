@@ -233,6 +233,7 @@ V016217_DRAFT = ROOT / "docs" / "releases" / "v0.16.217-draft.md"
 V016218_DRAFT = ROOT / "docs" / "releases" / "v0.16.218-draft.md"
 V016219_DRAFT = ROOT / "docs" / "releases" / "v0.16.219-draft.md"
 V016220_DRAFT = ROOT / "docs" / "releases" / "v0.16.220-draft.md"
+V016221_DRAFT = ROOT / "docs" / "releases" / "v0.16.221-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -10530,6 +10531,53 @@ def test_v016220_release_draft_tracks_promotion_evidence_summary():
         "python scripts/validate_cases.py --strict --json",
         "python scripts/validate_cases.py --strict --report",
         "git tag v0.16.220",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016221_release_draft_has_required_sections():
+    text = V016221_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.221 发布草案",
+        "**目标版本：** `0.16.221`",
+        "**提交范围：** `v0.16.220..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016221_release_draft_tracks_plan_promotion_evidence_summary():
+    text = V016221_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "case_promotion_evidence_summary",
+        "Candidate Promotion Evidence Summary",
+        "candidate/task 数量",
+        "pending/blocked/complete",
+        "primary next action",
+        "candidate_count",
+        "task_count",
+        "primary_next_action",
+        "IterationPlan",
+        "scripts/plan_next_iteration.py",
+        "tests/test_plan_next_iteration.py",
+        "tests/test_weekly_maintainer_loop_docs.py",
+        "tests/test_release_draft_docs.py",
+        "python scripts/plan_next_iteration.py --target-version 0.16.221 --json",
+        "python scripts/plan_next_iteration.py --target-version 0.16.221 --report",
+        "git tag v0.16.221",
     ]
     for snippet in required:
         assert snippet in text
