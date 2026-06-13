@@ -144,6 +144,9 @@ def test_current_cases_manifest_validates_without_packages():
     assert report.candidate >= 1
     assert report.known_gap >= 1
     assert report.checked_packages is False
+    assert report.promotion_evidence_summary["candidate_count"] == report.candidate
+    assert report.promotion_evidence_summary["pending_count"] == report.candidate * 3
+    assert report.promotion_evidence_summary["primary_next_action"]
 
 
 def test_cases_report_flags_duplicate_ids(tmp_path):
@@ -220,7 +223,6 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         "online_smoke": "cliany-site demo.example.com list-items --json",
     }
     case["promotion_evidence"] = _promotion_evidence()
-    case["promotion_evidence"] = _promotion_evidence()
     _write_cases(tmp_path, [case])
 
     report = validate_cases.build_report(tmp_path)
@@ -234,6 +236,19 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     assert report.cases[0].promotion_evidence == case["promotion_evidence"]
     assert report.cases[0].to_dict()["promotion"]["online_smoke"].startswith("cliany-site demo.example.com")
     assert report.cases[0].to_dict()["promotion_evidence"]["adapter_package"]["status"] == "pending"
+    summary = report.to_dict()["promotion_evidence_summary"]
+    assert summary["candidate_count"] == 1
+    assert summary["task_count"] == 3
+    assert summary["status_counts"] == {"blocked": 0, "complete": 0, "pending": 3}
+    assert summary["pending_count"] == 3
+    assert summary["primary_task"] == {
+        "case_id": "candidate-case",
+        "task": "adapter_package",
+        "status": "pending",
+        "evidence": "",
+        "next_action": "Generate the adapter package.",
+    }
+    assert summary["primary_next_action"] == "Generate the adapter package."
     assert report.cases[0].to_dict()["offline_commands"] == ["python scripts/validate_cases.py --strict"]
     assert report.cases[0].to_dict()["target_url"] == "https://demo.example.com/"
     assert report.cases[0].to_dict()["commands"] == ["cliany-site demo.example.com list-items --json"]
@@ -638,6 +653,10 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "## Candidate Handoff Matrix" in text
     assert "| `candidate-case` | https://demo.example.com/ | cliany-site demo.example.com list-items --json |" in text
     assert "without reopening `cases/manifest.json`" in text
+    assert "## Candidate Promotion Evidence Summary" in text
+    assert "| pending_count | `3` |" in text
+    assert "| primary_next_action | Generate the adapter package. |" in text
+    assert "| `candidate-case` | `adapter_package` | `pending` | - | Generate the adapter package. |" in text
     assert "## Candidate Promotion Tasks" in text
     assert "### `candidate-case`" in text
     assert "- [ ] `adapter_package`: publish demo.example.com-<version>.cliany-adapter.tar.gz" in text
@@ -676,6 +695,10 @@ def test_cases_report_prints_candidate_promotion_checklist(tmp_path, capsys):
     validate_cases._print_text(report)
 
     text = capsys.readouterr().out
+    assert "promotion_evidence_pending: 3" in text
+    assert "promotion_evidence_blocked: 0" in text
+    assert "promotion_evidence_complete: 0" in text
+    assert "promotion_evidence_next: Generate the adapter package." in text
     assert "promotion:" in text
     assert "adapter_package: publish demo.example.com-<version>.cliany-adapter.tar.gz" in text
     assert f"metadata_validation: {metadata_validation}" in text

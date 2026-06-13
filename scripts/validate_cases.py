@@ -85,6 +85,7 @@ class CasesReport:
     candidate: int
     known_gap: int
     checked_packages: bool
+    promotion_evidence_summary: dict[str, Any]
     cases: list[CaseCheck]
 
     def to_dict(self) -> dict[str, Any]:
@@ -95,6 +96,7 @@ class CasesReport:
             "candidate": self.candidate,
             "known_gap": self.known_gap,
             "checked_packages": self.checked_packages,
+            "promotion_evidence_summary": self.promotion_evidence_summary,
             "cases": [case.to_dict() for case in self.cases],
         }
 
@@ -565,6 +567,58 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
     return check
 
 
+def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]:
+    candidate_checks = [check for check in checks if check.status == "candidate"]
+    status_counts = {status: 0 for status in sorted(PROMOTION_EVIDENCE_STATUSES)}
+    task_status_counts = {
+        field_name: {status: 0 for status in sorted(PROMOTION_EVIDENCE_STATUSES)}
+        for field_name in PROMOTION_FIELDS
+    }
+    pending_tasks: list[dict[str, str]] = []
+    blocked_tasks: list[dict[str, str]] = []
+    complete_tasks: list[dict[str, str]] = []
+
+    for check in candidate_checks:
+        evidence = check.promotion_evidence or {}
+        for field_name in PROMOTION_FIELDS:
+            task = evidence.get(field_name)
+            if not isinstance(task, dict):
+                continue
+            status = str(task.get("status") or "unknown")
+            if status in status_counts:
+                status_counts[status] += 1
+                task_status_counts[field_name][status] += 1
+            entry = {
+                "case_id": check.id,
+                "task": field_name,
+                "status": status,
+                "evidence": str(task.get("evidence") or ""),
+                "next_action": str(task.get("next_action") or ""),
+            }
+            if status == "pending":
+                pending_tasks.append(entry)
+            elif status == "blocked":
+                blocked_tasks.append(entry)
+            elif status == "complete":
+                complete_tasks.append(entry)
+
+    primary = pending_tasks[0] if pending_tasks else (blocked_tasks[0] if blocked_tasks else None)
+    return {
+        "candidate_count": len(candidate_checks),
+        "task_count": sum(status_counts.values()),
+        "status_counts": status_counts,
+        "task_status_counts": task_status_counts,
+        "pending_count": len(pending_tasks),
+        "blocked_count": len(blocked_tasks),
+        "complete_count": len(complete_tasks),
+        "pending_tasks": pending_tasks,
+        "blocked_tasks": blocked_tasks,
+        "complete_tasks": complete_tasks,
+        "primary_task": primary,
+        "primary_next_action": primary["next_action"] if primary else "",
+    }
+
+
 def build_report(root: Path = ROOT, packages_dir: Path | None = None) -> CasesReport:
     cases = _load_manifest(root)
     checks = [_check_case(case, root, packages_dir) for case in cases]
@@ -582,6 +636,7 @@ def build_report(root: Path = ROOT, packages_dir: Path | None = None) -> CasesRe
         candidate=sum(1 for case in cases if case.get("status") == "candidate"),
         known_gap=sum(1 for case in cases if case.get("status") == "known-gap"),
         checked_packages=packages_dir is not None,
+        promotion_evidence_summary=_build_promotion_evidence_summary(checks),
         cases=checks,
     )
 
@@ -593,6 +648,11 @@ def _print_text(report: CasesReport) -> None:
     print(f"candidate: {report.candidate}")
     print(f"known_gap: {report.known_gap}")
     print(f"checked_packages: {report.checked_packages}")
+    print(f"promotion_evidence_pending: {report.promotion_evidence_summary['pending_count']}")
+    print(f"promotion_evidence_blocked: {report.promotion_evidence_summary['blocked_count']}")
+    print(f"promotion_evidence_complete: {report.promotion_evidence_summary['complete_count']}")
+    if report.promotion_evidence_summary["primary_next_action"]:
+        print(f"promotion_evidence_next: {report.promotion_evidence_summary['primary_next_action']}")
     print(f"ok: {report.ok}")
     for check in report.cases:
         status = "ok" if check.ok else "fail"
@@ -670,6 +730,47 @@ def _package_summary(package: dict[str, Any] | None) -> str:
     next_actions = [str(action) for action in package.get("next_actions") or []]
     parts.extend(f"next: {action}" for action in next_actions)
     return "<br>".join(parts)
+
+
+def _candidate_promotion_evidence_summary_lines(summary: dict[str, Any]) -> list[str]:
+    lines = [
+        "",
+        "## Candidate Promotion Evidence Summary",
+        "",
+        "| Metric | Value |",
+        "|--------|-------|",
+        f"| candidate_count | `{summary.get('candidate_count', 0)}` |",
+        f"| task_count | `{summary.get('task_count', 0)}` |",
+        f"| pending_count | `{summary.get('pending_count', 0)}` |",
+        f"| blocked_count | `{summary.get('blocked_count', 0)}` |",
+        f"| complete_count | `{summary.get('complete_count', 0)}` |",
+        f"| primary_next_action | {_markdown_cell(summary.get('primary_next_action') or '-')} |",
+        "",
+        "| Case | Task | Status | Evidence | Next Action |",
+        "|------|------|--------|----------|-------------|",
+    ]
+    task_rows = [
+        *list(summary.get("pending_tasks") or []),
+        *list(summary.get("blocked_tasks") or []),
+        *list(summary.get("complete_tasks") or []),
+    ]
+    if not task_rows:
+        lines.append("| - | - | - | - | - |")
+        return lines
+    for task in task_rows:
+        lines.append(
+            "| "
+            f"`{_markdown_cell(task.get('case_id'))}` | "
+            f"`{_markdown_cell(task.get('task'))}` | "
+            f"`{_markdown_cell(task.get('status'))}` | "
+            f"{_markdown_cell(task.get('evidence') or '-')} | "
+            f"{_markdown_cell(task.get('next_action') or '-')} |"
+        )
+    return lines
+
+
+def _markdown_cell(value: object) -> str:
+    return str(value or "-").replace("|", "\\|").replace("\n", "<br>")
 
 
 def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
@@ -784,7 +885,7 @@ def _render_markdown_report(report: CasesReport) -> str:
 
     for check in report.cases:
         result = "ok" if check.ok else "fail"
-        issues = "<br>".join(check.issues) if check.issues else "-"
+        issues = _markdown_cell("<br>".join(check.issues) if check.issues else "-")
         package = _package_summary(check.package)
         promotion = _promotion_summary(check.promotion)
         promotion_evidence = _promotion_evidence_summary(check.promotion_evidence)
@@ -806,6 +907,7 @@ def _render_markdown_report(report: CasesReport) -> str:
         lines.append(f"| `{check.id}` | {_offline_command_summary(check.offline_commands)} |")
 
     lines.extend(_candidate_handoff_lines(report))
+    lines.extend(_candidate_promotion_evidence_summary_lines(report.promotion_evidence_summary))
     lines.extend(_candidate_promotion_task_lines(report))
     return "\n".join(lines) + "\n"
 
