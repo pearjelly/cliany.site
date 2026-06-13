@@ -243,6 +243,8 @@ def test_plan_defaults_to_next_patch_version(tmp_path):
     assert plan.recommended_theme == "发布可见性"
     assert "latest local release is not published" in plan.blockers
     assert plan.candidate_cases == ["pypi-project-search", "npm-package-search"]
+    assert plan.case_promotion_evidence_summary["candidate_count"] == 2
+    assert plan.case_promotion_evidence_summary["pending_count"] == 6
     assert plan.candidate_promotions[0].case_id == "pypi-project-search"
 
 
@@ -371,6 +373,20 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     ]
     assert data["publication_next_action_count"] == 3
     assert any("push `master`" in action for action in data["next_actions"])
+    assert data["case_promotion_evidence_summary"]["candidate_count"] == 2
+    assert data["case_promotion_evidence_summary"]["task_count"] == 6
+    assert data["case_promotion_evidence_summary"]["status_counts"] == {
+        "blocked": 0,
+        "complete": 0,
+        "pending": 6,
+    }
+    assert data["case_promotion_evidence_summary"]["primary_task"] == {
+        "case_id": "pypi-project-search",
+        "task": "adapter_package",
+        "status": "pending",
+        "evidence": "",
+        "next_action": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
+    }
     assert data["candidate_promotions"][0] == {
         "case_id": "pypi-project-search",
         "issue_title": "Promote candidate case `pypi-project-search` toward active",
@@ -442,6 +458,11 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "| `pypi-project-search` | Promote candidate case `pypi-project-search` toward active |" in text
     assert "`case-proposal`, `good first issue`" in text
     assert "## Candidate Promotion Tasks" in text
+    assert "## Candidate Promotion Evidence Summary" in text
+    assert "| candidate_count | `2` |" in text
+    assert "| pending_count | `6` |" in text
+    assert "| primary_next_action | `Generate pypi.org-<version>.cliany-adapter.tar.gz.` |" in text
+    assert "| `pypi-project-search` | `adapter_package` | `pending` | - |" in text
     assert "| Case | Adapter Package | Metadata Validation | Online Smoke | Promotion Evidence |" in text
     assert "adapter_package: pending; next: Generate pypi.org-<version>.cliany-adapter.tar.gz." in text
     assert "## Candidate Issue Body Templates" in text
@@ -2957,4 +2978,5 @@ def test_plan_cli_writes_json_for_current_repo(capsys):
     payload = json.loads(output)
     assert payload["target_version"] == "0.16.2"
     assert "recommended_theme" in payload
+    assert "case_promotion_evidence_summary" in payload
     assert "next_actions" in payload

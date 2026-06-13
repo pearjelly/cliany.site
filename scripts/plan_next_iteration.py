@@ -429,6 +429,7 @@ class IterationPlan:
     case_assets: str
     candidate_cases: list[str]
     candidate_promotions: list[CandidatePromotion]
+    case_promotion_evidence_summary: dict[str, Any]
     blockers: list[str]
     next_actions: list[str]
     validation_commands: list[str]
@@ -461,6 +462,7 @@ class IterationPlan:
             "case_assets": self.case_assets,
             "candidate_cases": self.candidate_cases,
             "candidate_promotions": [promotion.to_dict() for promotion in self.candidate_promotions],
+            "case_promotion_evidence_summary": self.case_promotion_evidence_summary,
             "blockers": self.blockers,
             "next_actions": self.next_actions,
             "validation_commands": self.validation_commands,
@@ -823,6 +825,66 @@ def _case_dict_value(case: Any, field_name: str) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
+    summary = getattr(cases_report, "promotion_evidence_summary", None)
+    if isinstance(summary, dict):
+        return summary
+
+    cases = getattr(cases_report, "cases", [])
+    status_counts = {status: 0 for status in ("blocked", "complete", "pending")}
+    task_status_counts = {
+        field_name: {status: 0 for status in ("blocked", "complete", "pending")}
+        for field_name in CANDIDATE_PROMOTION_FIELDS
+    }
+    pending_tasks: list[dict[str, str]] = []
+    blocked_tasks: list[dict[str, str]] = []
+    complete_tasks: list[dict[str, str]] = []
+    candidate_count = 0
+
+    for case in cases:
+        if getattr(case, "status", None) != "candidate":
+            continue
+        candidate_count += 1
+        evidence = _case_dict_value(case, "promotion_evidence")
+        for field_name in CANDIDATE_PROMOTION_FIELDS:
+            task = evidence.get(field_name)
+            if not isinstance(task, dict):
+                continue
+            status = str(task.get("status") or "unknown")
+            if status in status_counts:
+                status_counts[status] += 1
+                task_status_counts[field_name][status] += 1
+            entry = {
+                "case_id": str(getattr(case, "id", "")),
+                "task": field_name,
+                "status": status,
+                "evidence": str(task.get("evidence") or ""),
+                "next_action": str(task.get("next_action") or ""),
+            }
+            if status == "pending":
+                pending_tasks.append(entry)
+            elif status == "blocked":
+                blocked_tasks.append(entry)
+            elif status == "complete":
+                complete_tasks.append(entry)
+
+    primary = pending_tasks[0] if pending_tasks else (blocked_tasks[0] if blocked_tasks else None)
+    return {
+        "candidate_count": candidate_count,
+        "task_count": sum(status_counts.values()),
+        "status_counts": status_counts,
+        "task_status_counts": task_status_counts,
+        "pending_count": len(pending_tasks),
+        "blocked_count": len(blocked_tasks),
+        "complete_count": len(complete_tasks),
+        "pending_tasks": pending_tasks,
+        "blocked_tasks": blocked_tasks,
+        "complete_tasks": complete_tasks,
+        "primary_task": primary,
+        "primary_next_action": primary["next_action"] if primary else "",
+    }
+
+
 def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
     promotions: list[CandidatePromotion] = []
     for case in readiness.cases.cases:
@@ -946,6 +1008,7 @@ def build_plan(
     publication = publication_report or build_publication_report(root)
     theme, release_slice = _recommended_slice(readiness, publication)
     candidate_promotions = _candidate_promotions(readiness)
+    case_promotion_evidence_summary = _case_promotion_evidence_summary(readiness.cases)
     publication_next_actions = _publication_next_actions(publication)
     publication_publish_commands = _publication_publish_commands(publication)
     candidate_cases = [
@@ -985,6 +1048,7 @@ def build_plan(
         ),
         candidate_cases=candidate_cases,
         candidate_promotions=candidate_promotions,
+        case_promotion_evidence_summary=case_promotion_evidence_summary,
         blockers=blockers,
         next_actions=_next_action_lines(readiness, publication),
         validation_commands=validation_commands,
@@ -1028,6 +1092,9 @@ def _print_text(plan: IterationPlan) -> None:
         print("candidate_cases:")
         for case_id in plan.candidate_cases:
             print(f"- {case_id}")
+    print("case_promotion_evidence_summary:")
+    for key, value in plan.case_promotion_evidence_summary.items():
+        _print_text_item(key, value)
     if plan.candidate_promotions:
         print("candidate_promotions:")
         for promotion in plan.candidate_promotions:
@@ -1116,6 +1183,7 @@ def _render_markdown(plan: IterationPlan) -> str:
         plan.publication_publish_script_path,
         plan.publication_publish_script_command,
     )
+    case_promotion_evidence = _case_promotion_evidence_markdown(plan.case_promotion_evidence_summary)
     promotion_lines = _candidate_promotion_markdown(plan.candidate_promotions)
     release_draft_issues = _release_draft_issues_markdown(plan.release_draft_issues)
     return f"""# cliany-site Next Iteration Plan
@@ -1148,6 +1216,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 
 {next_actions}
 
+{case_promotion_evidence}
+
 {promotion_lines}
 
 ## Validation Commands
@@ -1173,6 +1243,49 @@ def _render_markdown(plan: IterationPlan) -> str:
 - `{plan.release_draft_path}`
 {release_draft_issues}
 """
+
+
+def _case_promotion_evidence_markdown(summary: dict[str, Any]) -> str:
+    rows = [
+        ("candidate_count", summary.get("candidate_count", 0)),
+        ("task_count", summary.get("task_count", 0)),
+        ("pending_count", summary.get("pending_count", 0)),
+        ("blocked_count", summary.get("blocked_count", 0)),
+        ("complete_count", summary.get("complete_count", 0)),
+        ("primary_next_action", summary.get("primary_next_action") or "-"),
+    ]
+    lines = [
+        "## Candidate Promotion Evidence Summary",
+        "",
+        "| Metric | Value |",
+        "|--------|-------|",
+    ]
+    lines.extend(f"| {key} | `{_format_context_value(value)}` |" for key, value in rows)
+    lines.extend(
+        [
+            "",
+            "| Case | Task | Status | Evidence | Next Action |",
+            "|------|------|--------|----------|-------------|",
+        ]
+    )
+    tasks = [
+        *list(summary.get("pending_tasks") or []),
+        *list(summary.get("blocked_tasks") or []),
+        *list(summary.get("complete_tasks") or []),
+    ]
+    if not tasks:
+        lines.append("| - | - | - | - | - |")
+        return "\n".join(lines)
+    for task in tasks:
+        lines.append(
+            "| "
+            f"`{_format_context_value(task.get('case_id'))}` | "
+            f"`{_format_context_value(task.get('task'))}` | "
+            f"`{_format_context_value(task.get('status'))}` | "
+            f"{_format_context_value(task.get('evidence') or '-')} | "
+            f"{_format_context_value(task.get('next_action') or '-')} |"
+        )
+    return "\n".join(lines)
 
 
 def _release_draft_issues_markdown(issues: list[str]) -> str:
