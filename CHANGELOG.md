@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+## [0.16.220] - 2026-06-13
+
+### Added
+- `scripts/validate_cases.py` 的 JSON 现在输出 `promotion_evidence_summary`，汇总 candidate 数量、任务数量、pending/blocked/complete 状态计数和 primary next action。
+- `scripts/validate_cases.py --report` 新增 `Candidate Promotion Evidence Summary` 小节，让维护者不用展开每个 candidate 也能看到下一项该推进的晋级证据。
+- `scripts/validate_cases.py` 默认文本输出现在展示 `promotion_evidence_pending`、`promotion_evidence_blocked`、`promotion_evidence_complete` 和 `promotion_evidence_next`。
+- 新增 `docs/releases/v0.16.220-draft.md`，把下一版 patch release 聚焦到 candidate promotion evidence summary。
+
 ## [0.16.219] - 2026-06-13
 
 ### Added
@@ -1939,7 +1947,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.219...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.220...HEAD
+[0.16.220]: https://github.com/pearjelly/cliany.site/compare/v0.16.219...v0.16.220
 [0.16.219]: https://github.com/pearjelly/cliany.site/compare/v0.16.218...v0.16.219
 [0.16.218]: https://github.com/pearjelly/cliany.site/compare/v0.16.217...v0.16.218
 [0.16.217]: https://github.com/pearjelly/cliany.site/compare/v0.16.216...v0.16.217
