@@ -599,9 +599,20 @@ def _publication_visibility(publication: Any) -> dict[str, str]:
     latest_tag = str(getattr(publication, "latest_tag", "") or "(no tag)")
     ahead_count = getattr(publication, "ahead_count", None)
     tag_published = getattr(publication, "tag_published", None)
+    tag_points_at_head = getattr(publication, "tag_points_at_head", None)
     remote_checked = bool(getattr(publication, "remote_checked", False))
 
     if isinstance(ahead_count, int) and ahead_count > 0:
+        if latest_tag != "(no tag)" and tag_points_at_head is False:
+            return {
+                "status": "local_only",
+                "summary": (
+                    f"`{branch}` is ahead of `{remote}` by {ahead_count} commits; "
+                    f"`{latest_tag}` does not point at HEAD, so publish `{branch}` first and "
+                    "choose whether to move to that tag commit or create a new release tag at "
+                    "HEAD before publishing a tag."
+                ),
+            }
         return {
             "status": "local_only",
             "summary": (
@@ -774,11 +785,11 @@ def _release_draft_issues(readiness: Any) -> list[str]:
 def _next_action_lines(readiness: Any, publication: Any) -> list[str]:
     actions: list[str] = []
     if not publication.ok:
-        if publication.ahead_count and publication.ahead_count > 0:
-            actions.append(
-                f"Publish the current local release: push `{publication.branch or 'HEAD'}` "
-                f"and tag `{publication.latest_tag or '(none)'}` after maintainer approval."
-            )
+        publication_actions = _publication_next_actions(publication)
+        if publication_actions:
+            actions.extend(publication_actions)
+        elif publication.ahead_count and publication.ahead_count > 0:
+            actions.append(f"Push `{publication.branch or 'HEAD'}` after maintainer approval.")
         elif publication.latest_tag and publication.tag_published is False:
             actions.append(f"Publish tag `{publication.latest_tag}` after the branch is visible upstream.")
     if readiness.blockers:

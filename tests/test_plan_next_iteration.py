@@ -185,6 +185,42 @@ def _published_publication_report() -> SimpleNamespace:
     )
 
 
+def _tag_mismatch_publication_report() -> SimpleNamespace:
+    return SimpleNamespace(
+        ok=False,
+        repo_root="/repo/cliany.site",
+        branch="master",
+        upstream="origin/master",
+        remote="origin",
+        local_head="new123",
+        upstream_head="old456",
+        ahead_count=2,
+        behind_count=0,
+        latest_tag="v0.16.1",
+        tag_commit="tag789",
+        tag_points_at_head=False,
+        tag_commit_in_upstream=False,
+        branch_published=False,
+        tag_published=False,
+        remote_branch_head=None,
+        remote_tag_commit=None,
+        remote_checked=False,
+        worktree_clean=True,
+        worktree_status=[],
+        next_actions=[
+            "- Push `master` to `origin`; local branch is ahead by `2` commits.",
+            "- Move to the `v0.16.1` commit or create a new release tag at HEAD before publishing.",
+            "- Push tag `v0.16.1` after the branch is published, or rerun with `--remote` "
+            "to verify the live remote tag.",
+            "- Rerun with `--remote` when network access is available to verify live remote refs.",
+        ],
+        publish_commands=[
+            "git push origin master",
+            "python scripts/check_release_publication.py --remote --json",
+        ],
+    )
+
+
 def _blocked_candidate_issue_gate() -> dict[str, object]:
     reason_codes = [
         "publication_not_published",
@@ -246,6 +282,37 @@ def test_plan_defaults_to_next_patch_version(tmp_path):
     assert plan.case_promotion_evidence_summary["candidate_count"] == 2
     assert plan.case_promotion_evidence_summary["pending_count"] == 6
     assert plan.candidate_promotions[0].case_id == "pypi-project-search"
+
+
+def test_plan_surfaces_tag_mismatch_before_publication(tmp_path):
+    _write_pyproject(tmp_path, version="0.16.1")
+
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=_readiness_report(),
+        publication_report=_tag_mismatch_publication_report(),
+    )
+
+    assert plan.publication_visibility == {
+        "status": "local_only",
+        "summary": (
+            "`master` is ahead of `origin` by 2 commits; `v0.16.1` does not point at HEAD, "
+            "so publish `master` first and choose whether to move to that tag commit or create "
+            "a new release tag at HEAD before publishing a tag."
+        ),
+    }
+    assert plan.publication_publish_commands == [
+        "git push origin master",
+        "python scripts/check_release_publication.py --remote --json",
+    ]
+    assert plan.next_actions[:4] == [
+        "Push `master` to `origin`; local branch is ahead by `2` commits.",
+        "Move to the `v0.16.1` commit or create a new release tag at HEAD before publishing.",
+        "Push tag `v0.16.1` after the branch is published, or rerun with `--remote` to verify the live "
+        "remote tag.",
+        "Rerun with `--remote` when network access is available to verify live remote refs.",
+    ]
+    assert not any("push `master` and tag `v0.16.1`" in action for action in plan.next_actions)
 
 
 def test_candidate_issue_gate_allows_creation_after_publication_with_release_draft_review(tmp_path):
@@ -372,7 +439,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "Push tag `v0.16.1` after the branch is published.",
     ]
     assert data["publication_next_action_count"] == 3
-    assert any("push `master`" in action for action in data["next_actions"])
+    assert any("Push `master`" in action for action in data["next_actions"])
     assert data["case_promotion_evidence_summary"]["candidate_count"] == 2
     assert data["case_promotion_evidence_summary"]["task_count"] == 6
     assert data["case_promotion_evidence_summary"]["status_counts"] == {
@@ -461,7 +528,7 @@ def test_plan_next_actions_skip_release_draft_when_draft_is_valid(tmp_path):
 
     assert plan.release_draft_issues == []
     assert not any("Draft and verify" in action for action in plan.next_actions)
-    assert any("push `master`" in action for action in plan.next_actions)
+    assert any("Push `master`" in action for action in plan.next_actions)
     assert any("more unique commit days" in action for action in plan.next_actions)
     assert any("Promote one candidate case" in action for action in plan.next_actions)
 
