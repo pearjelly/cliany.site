@@ -516,6 +516,10 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "evidence": "",
         "next_action": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
     }
+    assert (
+        data["case_promotion_evidence_summary"]["primary_task_detail"]
+        == data["case_promotion_evidence_summary"]["primary_task"]
+    )
     assert data["candidate_promotions"][0] == {
         "case_id": "pypi-project-search",
         "issue_title": "Promote candidate case `pypi-project-search` toward active",
@@ -2385,6 +2389,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "case_promotion_evidence_summary_first_key: `candidate_count`" in readme
     assert "case_promotion_evidence_summary_last_key: `primary_next_action`" in readme
+    assert "primary_task_detail" in readme
     assert (
         "case_promotion_evidence_summary_key_boundary_sha256: "
         f"`{artifact_bundle_summary['case_promotion_evidence_summary_key_boundary_sha256']}`"

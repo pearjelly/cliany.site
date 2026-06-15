@@ -1088,6 +1088,7 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
         "blocked_tasks": blocked_tasks,
         "complete_tasks": complete_tasks,
         "primary_task": primary,
+        "primary_task_detail": primary,
         "primary_next_action": primary["next_action"] if primary else "",
     }
 
