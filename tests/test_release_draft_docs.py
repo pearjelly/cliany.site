@@ -10969,6 +10969,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "invalid_count",
         "repair_action_count",
         "primary_repair_action",
+        "package_gate_summary",
+        "package_gate_primary_repair_action",
         "python scripts/validate_cases.py",
         "README / README.zh",
         "当前 evidence",

@@ -662,6 +662,8 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     output = capsys.readouterr().out
     assert "ok: True" in output
     assert "cases: True (active 1, candidate 0, known_gap 0, total 1, min_assets 1)" in output
+    assert "package_gate_summary: checked=false, failed=0, missing=0, invalid=0, repair_actions=0" in output
+    assert "package_gate_primary_repair_action:" not in output
     assert "next_actions:" not in output
 
 
@@ -1175,7 +1177,7 @@ def test_release_readiness_accepts_required_valid_packages(tmp_path):
     assert report.package_gate.primary_repair_action is None
 
 
-def test_release_readiness_markdown_report_includes_case_package_checks(tmp_path):
+def test_release_readiness_markdown_report_includes_case_package_checks(tmp_path, capsys):
     repo = _init_repo(tmp_path, with_draft=True)
     packages_dir = tmp_path / "packages"
     _write_package(
@@ -1215,3 +1217,12 @@ def test_release_readiness_markdown_report_includes_case_package_checks(tmp_path
         "Regenerate the package for the manifest adapter_domain or fix the case adapter_domain."
     )
     assert package_next_action in report.to_dict()["next_actions"]
+
+    release_readiness._print_text(report)
+
+    output = capsys.readouterr().out
+    assert "package_gate_summary: checked=true, failed=1, missing=0, invalid=1, repair_actions=1" in output
+    assert (
+        "package_gate_primary_repair_action: "
+        "Regenerate the package for the manifest adapter_domain or fix the case adapter_domain."
+    ) in output

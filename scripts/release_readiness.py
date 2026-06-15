@@ -641,6 +641,16 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"release_workflow: {report.release_workflow.ok}")
     print(f"project_metadata: {report.project_metadata.ok}")
     print(f"package_gate: {report.package_gate.ok}")
+    print(
+        "package_gate_summary: "
+        f"checked={str(report.package_gate.checked).lower()}, "
+        f"failed={report.package_gate.failed_count}, "
+        f"missing={report.package_gate.missing_count}, "
+        f"invalid={report.package_gate.invalid_count}, "
+        f"repair_actions={report.package_gate.repair_action_count}"
+    )
+    if report.package_gate.primary_repair_action:
+        print(f"package_gate_primary_repair_action: {report.package_gate.primary_repair_action}")
     next_actions = _next_action_lines(report)
     if next_actions:
         print("next_actions:")
