@@ -31,6 +31,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 `plan_next_iteration.py` 也会把 publication audit 的 `tag_publish_decision` 透传为 `publication_tag_publish_decision`，并同步写入 JSON、默认文本输出、Markdown report、`artifact-manifest.json`、`publication-handoff.json` 和 artifacts `README.md`。维护工具可以直接读取 `status`、`can_push_tag`、`latest_tag`、`tag_points_at_head`、`tag_published` 和 `required_action`，无需重新解析 `publication_ref_context` 或自然语言 next action。
 
+`artifact_bundle_summary` 也会输出 `publication_tag_publish_decision_key_count`、`publication_tag_publish_decision_sha256`、key preview/tail/boundary hash、`publication_tag_publish_decision_status`、`publication_tag_can_push` 和 `publication_tag_required_action_sha256`。只读取整包摘要的维护工具可以先展示 tag 是否可推、是否需要人工决策，并检测 `publication_tag_publish_decision` 对象是否漂移。
+
 `plan_next_iteration.py` 的 JSON、默认文本输出和 Markdown report 会展示 `publication_next_action_count`、`publication_publish_command_count`、`publication_publish_script_path`、`publication_publish_script_path_sha256`、`publication_publish_script_command` 与 `publication_publish_script_command_sha256`，让维护者在周初计划里先判断发布待办规模，并直接看到可审阅发布脚本的路径、路径摘要、生成命令和命令摘要，再展开 publication next actions 和 publish commands。
 
 `release_readiness.py --report` 会在 JSON 和 Markdown report 中输出 `release_mode` / `release_tag`；只有显式 `--release-tag` 的 tagged preflight 通过后，`Weekly Review` 才会把下一步显示为发布已验证 tag。普通 `--target-version` readiness 即使版本和 tag 已匹配，也仍提示准备打 tag，避免目标版本自检和 tag 发布前自检互相混淆。

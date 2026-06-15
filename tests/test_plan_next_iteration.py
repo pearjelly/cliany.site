@@ -880,6 +880,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     }
     publication_visibility_key_preview = publication_visibility_keys[:8]
     publication_visibility_key_tail = publication_visibility_keys[-8:]
+    tag_publish_decision_keys = list(expected_tag_publish_decision)
+    tag_publish_decision_key_boundary = {
+        "first_key": tag_publish_decision_keys[0],
+        "last_key": tag_publish_decision_keys[-1],
+    }
+    tag_publish_decision_key_preview = tag_publish_decision_keys[:8]
+    tag_publish_decision_key_tail = tag_publish_decision_keys[-8:]
     publication_ref_context_keys = list(plan.publication_ref_context)
     publication_ref_context_key_preview = publication_ref_context_keys[:8]
     publication_ref_context_key_tail = publication_ref_context_keys[-8:]
@@ -1273,6 +1280,42 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "publication_visibility_summary_sha256": _stable_json_sha256(
             plan.publication_visibility["summary"]
+        ),
+        "publication_tag_publish_decision_key_count": len(expected_tag_publish_decision),
+        "publication_tag_publish_decision_sha256": _stable_json_sha256(
+            expected_tag_publish_decision
+        ),
+        "publication_tag_publish_decision_first_key": tag_publish_decision_key_boundary[
+            "first_key"
+        ],
+        "publication_tag_publish_decision_last_key": tag_publish_decision_key_boundary[
+            "last_key"
+        ],
+        "publication_tag_publish_decision_key_boundary_sha256": _stable_json_sha256(
+            tag_publish_decision_key_boundary
+        ),
+        "publication_tag_publish_decision_key_preview_count": len(
+            tag_publish_decision_key_preview
+        ),
+        "publication_tag_publish_decision_key_preview": list(
+            tag_publish_decision_key_preview
+        ),
+        "publication_tag_publish_decision_key_preview_sha256": _stable_json_sha256(
+            tag_publish_decision_key_preview
+        ),
+        "publication_tag_publish_decision_key_tail_count": len(
+            tag_publish_decision_key_tail
+        ),
+        "publication_tag_publish_decision_key_tail": list(
+            tag_publish_decision_key_tail
+        ),
+        "publication_tag_publish_decision_key_tail_sha256": _stable_json_sha256(
+            tag_publish_decision_key_tail
+        ),
+        "publication_tag_publish_decision_status": "blocked_by_worktree",
+        "publication_tag_can_push": False,
+        "publication_tag_required_action_sha256": _stable_json_sha256(
+            expected_tag_publish_decision["required_action"]
         ),
         "blocker_count": 2,
         "blockers_sha256": _stable_json_sha256(plan.blockers),
@@ -2421,6 +2464,50 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"publication_visibility_summary_sha256: "
         f"`{artifact_bundle_summary['publication_visibility_summary_sha256']}`"
+    ) in readme
+    assert (
+        "publication_tag_publish_decision_key_count: "
+        f"`{artifact_bundle_summary['publication_tag_publish_decision_key_count']}`"
+    ) in readme
+    assert (
+        "publication_tag_publish_decision_sha256: "
+        f"`{artifact_bundle_summary['publication_tag_publish_decision_sha256']}`"
+    ) in readme
+    assert (
+        "publication_tag_publish_decision_first_key: "
+        f"`{artifact_bundle_summary['publication_tag_publish_decision_first_key']}`"
+    ) in readme
+    assert (
+        "publication_tag_publish_decision_last_key: "
+        f"`{artifact_bundle_summary['publication_tag_publish_decision_last_key']}`"
+    ) in readme
+    assert (
+        "publication_tag_publish_decision_key_boundary_sha256: "
+        f"`{artifact_bundle_summary['publication_tag_publish_decision_key_boundary_sha256']}`"
+    ) in readme
+    assert (
+        "publication_tag_publish_decision_key_preview_count: "
+        f"`{artifact_bundle_summary['publication_tag_publish_decision_key_preview_count']}`"
+    ) in readme
+    assert "publication_tag_publish_decision_key_preview: " in readme
+    assert (
+        "publication_tag_publish_decision_key_preview_sha256: "
+        f"`{artifact_bundle_summary['publication_tag_publish_decision_key_preview_sha256']}`"
+    ) in readme
+    assert (
+        "publication_tag_publish_decision_key_tail_count: "
+        f"`{artifact_bundle_summary['publication_tag_publish_decision_key_tail_count']}`"
+    ) in readme
+    assert "publication_tag_publish_decision_key_tail: " in readme
+    assert (
+        "publication_tag_publish_decision_key_tail_sha256: "
+        f"`{artifact_bundle_summary['publication_tag_publish_decision_key_tail_sha256']}`"
+    ) in readme
+    assert "publication_tag_publish_decision_status: `blocked_by_worktree`" in readme
+    assert "publication_tag_can_push: `false`" in readme
+    assert (
+        "publication_tag_required_action_sha256: "
+        f"`{artifact_bundle_summary['publication_tag_required_action_sha256']}`"
     ) in readme
     assert "blocker_count: `2`" in readme
     assert f"blockers_sha256: `{_stable_json_sha256(plan.blockers)}`" in readme
