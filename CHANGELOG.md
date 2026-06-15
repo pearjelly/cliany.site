@@ -72,6 +72,7 @@
 - `scripts/plan_next_iteration.py` 现在也透传 `publication_blockers`、`publication_primary_blocker` 和 `publication_blockers_sha256` 到顶层 JSON、默认文本输出、Markdown report 与 candidate issue artifacts，帮助维护者先看发布阻塞原因再执行同步命令。
 - `scripts/plan_next_iteration.py` 的 `publication_tag_publish_decision` 现在附带目标 release tag 建议、`git tag v...` / `git push origin v...` 命令和命令 hash，让维护者在 latest tag 不指向 HEAD 时也能直接看到应该创建哪个新 tag。
 - `scripts/plan_next_iteration.py` 的顶层 `next_actions` 现在会在 tag mismatch 时用目标 release tag 动作替换旧 tag 推送提示，避免维护者误把不在 HEAD 的旧 tag 当作下一步发布对象。
+- Candidate issue artifacts 的 `artifact_bundle_summary` 现在输出 `publication_target_tag*` 摘要字段，维护工具只读整包摘要也能展示目标 release tag、创建命令和命令 hash。
 - README / README.zh 的路线图入口现在说明维护者可读取 `primary_next_action`，自动化可比对 `next_actions_sha256`、`publication_next_actions_sha256` 和 `publication_publish_commands_sha256` 检测发布动作漂移。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在说明维护者如何先读 `publication_summary`、`publication_summary_sha256`、首要发布动作和首条发布命令，再决定是否展开发布详情。
 - `artifact_bundle_summary` 现在输出 `case_promotion_evidence_primary_detail_sha256`，让只读整包摘要的工具能检测首要 candidate 晋级任务对象是否漂移。

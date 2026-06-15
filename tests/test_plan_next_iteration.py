@@ -1789,6 +1789,22 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_tag_required_action_sha256": _stable_json_sha256(
             expected_tag_publish_decision["required_action"]
         ),
+        "publication_target_tag": expected_tag_publish_decision["target_tag"],
+        "publication_target_tag_status": expected_tag_publish_decision[
+            "target_tag_status"
+        ],
+        "publication_target_tag_primary_command": expected_tag_publish_decision[
+            "target_tag_primary_command"
+        ],
+        "publication_target_tag_command_count": expected_tag_publish_decision[
+            "target_tag_command_count"
+        ],
+        "publication_target_tag_commands_sha256": expected_tag_publish_decision[
+            "target_tag_commands_sha256"
+        ],
+        "publication_target_tag_required_action_sha256": _stable_json_sha256(
+            expected_tag_publish_decision["target_tag_required_action"]
+        ),
         "publication_blocker_count": len(expected_publication_blockers),
         "publication_blockers_sha256": _stable_json_sha256(expected_publication_blockers),
         "publication_primary_blocker": expected_publication_blockers[0],
@@ -3102,6 +3118,30 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "publication_tag_required_action_sha256: "
         f"`{artifact_bundle_summary['publication_tag_required_action_sha256']}`"
+    ) in readme
+    assert (
+        "publication_target_tag: "
+        f"`{artifact_bundle_summary['publication_target_tag']}`"
+    ) in readme
+    assert (
+        "publication_target_tag_status: "
+        f"`{artifact_bundle_summary['publication_target_tag_status']}`"
+    ) in readme
+    assert (
+        "publication_target_tag_primary_command: "
+        f"`{artifact_bundle_summary['publication_target_tag_primary_command']}`"
+    ) in readme
+    assert (
+        "publication_target_tag_command_count: "
+        f"`{artifact_bundle_summary['publication_target_tag_command_count']}`"
+    ) in readme
+    assert (
+        "publication_target_tag_commands_sha256: "
+        f"`{artifact_bundle_summary['publication_target_tag_commands_sha256']}`"
+    ) in readme
+    assert (
+        "publication_target_tag_required_action_sha256: "
+        f"`{artifact_bundle_summary['publication_target_tag_required_action_sha256']}`"
     ) in readme
     assert (
         "publication_blocker_count: "

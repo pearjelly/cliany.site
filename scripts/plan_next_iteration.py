@@ -223,6 +223,12 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "publication_tag_publish_decision_status",
     "publication_tag_can_push",
     "publication_tag_required_action_sha256",
+    "publication_target_tag",
+    "publication_target_tag_status",
+    "publication_target_tag_primary_command",
+    "publication_target_tag_command_count",
+    "publication_target_tag_commands_sha256",
+    "publication_target_tag_required_action_sha256",
     "publication_blocker_count",
     "publication_blockers_sha256",
     "publication_primary_blocker",
@@ -3768,6 +3774,22 @@ def _issue_artifact_bundle_summary(
         "publication_tag_required_action_sha256": _stable_json_sha256(
             plan.publication_tag_publish_decision.get("required_action")
         ),
+        "publication_target_tag": plan.publication_tag_publish_decision.get("target_tag"),
+        "publication_target_tag_status": plan.publication_tag_publish_decision.get(
+            "target_tag_status"
+        ),
+        "publication_target_tag_primary_command": (
+            plan.publication_tag_publish_decision.get("target_tag_primary_command")
+        ),
+        "publication_target_tag_command_count": plan.publication_tag_publish_decision.get(
+            "target_tag_command_count"
+        ),
+        "publication_target_tag_commands_sha256": (
+            plan.publication_tag_publish_decision.get("target_tag_commands_sha256")
+        ),
+        "publication_target_tag_required_action_sha256": _stable_json_sha256(
+            plan.publication_tag_publish_decision.get("target_tag_required_action")
+        ),
         "publication_blocker_count": len(plan.publication_blockers),
         "publication_blockers_sha256": _stable_json_sha256(plan.publication_blockers),
         "publication_primary_blocker": _publication_primary_blocker(plan),
@@ -4429,6 +4451,18 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{str(bool(summary['publication_tag_can_push'])).lower()}`",
             "- publication_tag_required_action_sha256: "
             f"`{summary['publication_tag_required_action_sha256']}`",
+            "- publication_target_tag: "
+            f"{_summary_inline_code(summary['publication_target_tag'])}",
+            "- publication_target_tag_status: "
+            f"{_summary_inline_code(summary['publication_target_tag_status'])}",
+            "- publication_target_tag_primary_command: "
+            f"{_summary_inline_code(summary['publication_target_tag_primary_command'])}",
+            "- publication_target_tag_command_count: "
+            f"`{summary['publication_target_tag_command_count']}`",
+            "- publication_target_tag_commands_sha256: "
+            f"`{summary['publication_target_tag_commands_sha256']}`",
+            "- publication_target_tag_required_action_sha256: "
+            f"`{summary['publication_target_tag_required_action_sha256']}`",
             f"- blocker_count: `{summary['blocker_count']}`",
             f"- blockers_sha256: `{summary['blockers_sha256']}`",
             "- blocker_first_item: "
