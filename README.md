@@ -122,6 +122,7 @@ cliany-site cases --json
 cliany-site cases --case-id pypi-project-search --json
 cliany-site cases --case-id pypi-project-search --issue-template
 cliany-site cases --case-id pypi-project-search --evidence-bundle
+cliany-site cases --case-id pypi-project-search --evidence-bundle --json
 
 # Explore web workflow (requires LLM)
 cliany-site explore "https://github.com" "Search and view results" --json
@@ -248,7 +249,7 @@ async with ClanySite() as cs:
 
 The following adapters are available as downloadable assets on [GitHub Release v0.14.1](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.1).
 The maintained case index lives in [cases/README.md](cases/README.md) and [cases/manifest.json](cases/manifest.json).
-Use `cliany-site cases --json` to inspect active demos, candidate workflows, offline validation commands, and candidate promotion next actions from the CLI. Use `cliany-site cases --case-id pypi-project-search --json` to open one case with validation and promotion details; omit `--json` for a copy-friendly human handoff with Promotion Tasks. Add `--issue-template` to print a GitHub issue body for a candidate promotion task, or `--evidence-bundle` to print a structured local evidence checklist.
+Use `cliany-site cases --json` to inspect active demos, candidate workflows, offline validation commands, and candidate promotion next actions from the CLI. Use `cliany-site cases --case-id pypi-project-search --json` to open one case with validation and promotion details; omit `--json` for a copy-friendly human handoff with Promotion Tasks. Add `--issue-template` to print a GitHub issue body for a candidate promotion task, or `--evidence-bundle` to print a structured local evidence checklist; combine it with `--json` for a machine-readable evidence bundle.
 
 ### SuiteCRM Demo (Enterprise CRM)
 ```bash
