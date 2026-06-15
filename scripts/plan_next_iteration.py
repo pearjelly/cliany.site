@@ -1287,6 +1287,10 @@ def _candidate_issue_body(
             "",
             "## Validation Evidence",
             "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.",
+            (
+                "- Candidate package validation command: "
+                f"`{_default_candidate_package_validation_command()}`"
+            ),
             "- Paste the local `scripts/validate_cases.py --packages-dir` result.",
             "- Paste the read-only JSON envelope summary with `data.quality.ok=true` and `row_count>0`.",
             "",

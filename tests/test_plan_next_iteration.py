@@ -601,6 +601,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- Attach or paste the JSON output in the issue once evidence changes.\n\n"
             "## Validation Evidence\n"
             "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.\n"
+            "- Candidate package validation command: `python scripts/validate_cases.py "
+            "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`\n"
             "- Paste the local `scripts/validate_cases.py --packages-dir` result.\n"
             "- Paste the read-only JSON envelope summary with `data.quality.ok=true` and `row_count>0`.\n\n"
             "## Non-goals\n"
@@ -1924,6 +1926,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle" in body
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in body
     assert "Attach or paste the JSON output in the issue once evidence changes." in body
+    assert "Candidate package validation command" in body
+    assert (
+        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "--include-candidate-packages --strict"
+        in body
+    )
     assert metadata[0]["case_id"] == "pypi-project-search"
     assert metadata[0]["issue_title"] == "Promote candidate case `pypi-project-search` toward active"
     assert metadata[0]["issue_labels"] == ["case-proposal", "good first issue"]

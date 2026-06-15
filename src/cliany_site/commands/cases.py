@@ -147,6 +147,10 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
             "",
             "## Validation Evidence",
             "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.",
+            (
+                "- Candidate package validation command: "
+                f"`{CANDIDATE_PACKAGE_VALIDATION_COMMAND}`"
+            ),
             "- Paste the local `scripts/validate_cases.py --packages-dir` result.",
             "- Paste the read-only JSON envelope summary with `data.quality.ok=true` and `row_count>0`.",
             "",

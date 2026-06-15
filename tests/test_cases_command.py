@@ -203,6 +203,12 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle" in template
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in template
     assert "Attach or paste the JSON output in the issue once evidence changes." in template
+    assert "Candidate package validation command" in template
+    assert (
+        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "--include-candidate-packages --strict"
+        in template
+    )
     assert "Do not mark the case `active`" in template
 
 
@@ -218,6 +224,12 @@ def test_cases_command_issue_template_human_outputs_markdown(tmp_home):
     assert "## Scope: promote candidate case `pypi-project-search`" in result.output
     assert "## Evidence Bundle" in result.output
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in result.output
+    assert "Candidate package validation command" in result.output
+    assert (
+        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "--include-candidate-packages --strict"
+        in result.output
+    )
     assert "案例库" not in result.output
 
 
