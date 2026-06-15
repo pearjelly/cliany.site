@@ -273,8 +273,18 @@ def test_release_publication_writes_reviewable_publish_script(tmp_path):
     assert f"EXPECTED_LOCAL_HEAD={report.local_head}" in text
     assert "EXPECTED_LATEST_TAG=v0.1.1" in text
     assert f"EXPECTED_TAG_COMMIT={report.tag_commit}" in text
+    assert f"EXPECTED_NEXT_ACTIONS_SHA256={payload['next_actions_sha256']}" in text
+    assert f"EXPECTED_PUBLISH_COMMANDS_SHA256={payload['publish_commands_sha256']}" in text
+    assert f"PYTHON_BIN={sys.executable}" in text
+    assert "extract_publication_field() {" in text
+    assert "publication next actions changed" in text
+    assert "publication publish commands changed" in text
     assert 'CURRENT_LOCAL_HEAD="$(git rev-parse HEAD)"' in text
     assert 'CURRENT_WORKTREE_STATUS="$(git status --porcelain)"' in text
+    assert (
+        'CURRENT_PUBLICATION_JSON="$("$PYTHON_BIN" scripts/check_release_publication.py --json)"'
+        in text
+    )
     assert "worktree has uncommitted changes" in text
     assert "Publish script is stale" in text
     assert "git push origin master" in text
@@ -378,6 +388,43 @@ def test_release_publication_publish_script_rejects_dirty_worktree_before_push(t
         text=True,
     ).strip()
     assert current_remote_head == original_remote_head
+
+
+def test_release_publication_publish_script_rejects_changed_action_hash_before_push(tmp_path):
+    repo = _init_repo_with_origin(tmp_path)
+    origin = tmp_path / "origin.git"
+    script_copy = repo / "scripts" / "check_release_publication.py"
+    script_copy.parent.mkdir(parents=True)
+    script_copy.write_text(SCRIPT.read_text(encoding="utf-8"), encoding="utf-8")
+    _git(repo, "add", "scripts/check_release_publication.py")
+    _git(repo, "commit", "-m", "add publication script")
+    _git(repo, "push", "origin", "master")
+    _commit(repo, "CHANGELOG.md", "released\n", "release")
+    _git(repo, "tag", "v0.1.1")
+    report = release_publication.build_report(repo)
+    script_path = tmp_path / "reports" / "publish-release.sh"
+    release_publication._write_publish_script(report, script_path)
+
+    _git(repo, "push", "origin", "master")
+    result = subprocess.run(
+        [str(script_path)],
+        cwd=tmp_path,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "Publish script is stale: publication next actions changed." in result.stderr
+    assert "Current next_actions_sha256:" in result.stderr
+    assert "Expected next_actions_sha256:" in result.stderr
+    remote_tag = subprocess.run(
+        ["git", "--git-dir", str(origin), "rev-parse", "refs/tags/v0.1.1"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert remote_tag.returncode != 0
 
 
 def test_release_publication_main_writes_report_with_json(tmp_path, monkeypatch, capsys):

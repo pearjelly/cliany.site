@@ -442,10 +442,13 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
 def _write_publish_script(report: PublicationReport, path: Path) -> None:
     commands = _publish_command_lines(report)
     next_actions = _next_action_lines(report)
+    expected_next_actions_sha256 = _stable_json_sha256(next_actions)
+    expected_publish_commands_sha256 = _stable_json_sha256(commands)
     repo_root = report.repo_root
     expected_local_head = report.local_head or ""
     expected_latest_tag = report.latest_tag or ""
     expected_tag_commit = report.tag_commit or ""
+    python_bin = sys.executable or "python"
     script_lines = [
         "#!/usr/bin/env bash",
         "set -euo pipefail",
@@ -465,10 +468,10 @@ def _write_publish_script(report: PublicationReport, path: Path) -> None:
         f"# - behind_count: {_format_value(report.behind_count)}",
         f"# - remote_checked: {_format_bool(report.remote_checked)}",
         f"# - next_action_count: {len(next_actions)}",
-        f"# - next_actions_sha256: {_stable_json_sha256(next_actions)}",
+        f"# - next_actions_sha256: {expected_next_actions_sha256}",
         f"# - primary_next_action: {_format_value(next_actions[0] if next_actions else None)}",
         f"# - publish_command_count: {len(commands)}",
-        f"# - publish_commands_sha256: {_stable_json_sha256(commands)}",
+        f"# - publish_commands_sha256: {expected_publish_commands_sha256}",
         f"# - primary_publish_command: {_format_value(commands[0] if commands else None)}",
         *_publish_script_review_notes(report),
         "",
@@ -476,6 +479,9 @@ def _write_publish_script(report: PublicationReport, path: Path) -> None:
         f"EXPECTED_LOCAL_HEAD={shlex.quote(expected_local_head)}",
         f"EXPECTED_LATEST_TAG={shlex.quote(expected_latest_tag)}",
         f"EXPECTED_TAG_COMMIT={shlex.quote(expected_tag_commit)}",
+        f"EXPECTED_NEXT_ACTIONS_SHA256={shlex.quote(expected_next_actions_sha256)}",
+        f"EXPECTED_PUBLISH_COMMANDS_SHA256={shlex.quote(expected_publish_commands_sha256)}",
+        f"PYTHON_BIN={shlex.quote(python_bin)}",
         "",
         'if [[ ! -d "$REPO_ROOT" ]]; then',
         '  echo "Publish script is stale: repo root $REPO_ROOT does not exist." >&2',
@@ -516,6 +522,27 @@ def _write_publish_script(report: PublicationReport, path: Path) -> None:
         'if [[ -n "$CURRENT_WORKTREE_STATUS" ]]; then',
         '  echo "Publish script is stale: worktree has uncommitted changes." >&2',
         '  echo "$CURRENT_WORKTREE_STATUS" >&2',
+        "  exit 1",
+        "fi",
+        "",
+        "extract_publication_field() {",
+        "  \"$PYTHON_BIN\" -c 'import json, sys; print(json.load(sys.stdin)[sys.argv[1]])' \"$1\"",
+        "}",
+        'CURRENT_PUBLICATION_JSON="$("$PYTHON_BIN" scripts/check_release_publication.py --json)"',
+        'CURRENT_NEXT_ACTIONS_SHA256="$(printf "%s\\n" "$CURRENT_PUBLICATION_JSON" '
+        '| extract_publication_field next_actions_sha256)"',
+        'CURRENT_PUBLISH_COMMANDS_SHA256="$(printf "%s\\n" "$CURRENT_PUBLICATION_JSON" '
+        '| extract_publication_field publish_commands_sha256)"',
+        'if [[ "$CURRENT_NEXT_ACTIONS_SHA256" != "$EXPECTED_NEXT_ACTIONS_SHA256" ]]; then',
+        '  echo "Publish script is stale: publication next actions changed." >&2',
+        '  echo "Current next_actions_sha256: $CURRENT_NEXT_ACTIONS_SHA256" >&2',
+        '  echo "Expected next_actions_sha256: $EXPECTED_NEXT_ACTIONS_SHA256" >&2',
+        "  exit 1",
+        "fi",
+        'if [[ "$CURRENT_PUBLISH_COMMANDS_SHA256" != "$EXPECTED_PUBLISH_COMMANDS_SHA256" ]]; then',
+        '  echo "Publish script is stale: publication publish commands changed." >&2',
+        '  echo "Current publish_commands_sha256: $CURRENT_PUBLISH_COMMANDS_SHA256" >&2',
+        '  echo "Expected publish_commands_sha256: $EXPECTED_PUBLISH_COMMANDS_SHA256" >&2',
         "  exit 1",
         "fi",
         "",

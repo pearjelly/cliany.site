@@ -59,6 +59,7 @@
 - `scripts/check_release_publication.py` 的 JSON `next_actions` 现在保持纯文本，不再混入 Markdown bullet，文本和 Markdown report 仍由渲染层输出列表符号。
 - `scripts/check_release_publication.py` 现在也输出 `primary_next_action`、`next_actions_sha256`、`primary_publish_command` 和 `publish_commands_sha256`，让 publication audit 自身能直接展示首项并检测 action/command 列表漂移。
 - `scripts/check_release_publication.py --publish-script` 生成的可审阅发布脚本现在在注释头中展示 next/publish 的 count、SHA-256 和 primary 字段，维护者执行前即可确认脚本对应的发布动作集。
+- `scripts/check_release_publication.py --publish-script` 生成的可审阅发布脚本现在执行前会重新运行 publication audit，并在 next/publish hash 已漂移时退出，避免继续执行过期发布命令。
 - `scripts/plan_next_iteration.py` 现在也在顶层 JSON、默认文本输出和 Markdown report 展示 `next_action_count`、`primary_next_action` 与 `next_actions_sha256`，让周计划自身和 cadence/publication action contract 对齐。
 - `scripts/plan_next_iteration.py --issues-dir` 的 `artifact-manifest.json` 顶层现在也展示 `next_action_count`、`primary_next_action` 与 `next_actions_sha256`，让只读 manifest 的维护工具无需重算周计划 action 摘要。
 - `scripts/plan_next_iteration.py` 现在把 publication next actions / publish commands 的 primary 和 SHA-256 摘要提升到顶层 JSON、默认文本输出和 Markdown report。

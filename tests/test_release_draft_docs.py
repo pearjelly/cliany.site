@@ -10973,6 +10973,7 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "next_actions_sha256",
         "--publish-script /tmp/cliany-publish-release.sh",
         "publish_command_count",
+        "漂移时退出",
         "artifact-manifest.json",
         "check_release_cadence.py --json",
         "primary_publish_command",
