@@ -639,7 +639,11 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
 
     text = report_path.read_text(encoding="utf-8")
     assert "## Candidate Issue Metadata" in text
-    assert "| `pypi-project-search` | Promote candidate case `pypi-project-search` toward active |" in text
+    assert "Evidence Bundle Primary Next Task" in text
+    assert (
+        "| `pypi-project-search` | Promote candidate case `pypi-project-search` toward active | "
+        "`case-proposal`, `good first issue` | `adapter_package` |"
+    ) in text
     assert "`case-proposal`, `good first issue`" in text
     assert "## Candidate Promotion Tasks" in text
     assert "## Candidate Promotion Evidence Summary" in text
@@ -749,6 +753,9 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
     assert "commit_cadence:" in text
     assert "- status: needs_more_commit_days" in text
     assert "- missing_commit_days: 1" in text
+    assert "candidate_promotions:" in text
+    assert "  evidence_bundle_primary_next_task:" in text
+    assert "    task: adapter_package" in text
     assert "candidate_issue_gate:" in text
     assert "publication_next_action_count: 3" in text
     assert "publication_publish_command_count: 1" in text

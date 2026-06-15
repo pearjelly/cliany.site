@@ -20,6 +20,7 @@
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 candidate issue artifacts 现在在 `candidate_promotions`、`issue-metadata.json`、issue metadata summary 和 artifacts `README.md` 中输出 `evidence_bundle_command` / `evidence_bundle_json_command`，让维护者能直接复制案例证据包命令。
 - `scripts/plan_next_iteration.py` 的 candidate promotion JSON 和 issue artifacts 现在输出 `promotion_evidence_primary_task`，并在 artifacts `README.md` 的 `Candidate Summary` 中展示首要 evidence task。
 - `scripts/plan_next_iteration.py` 的 candidate promotion JSON、`issue-metadata.json` 和 artifacts `README.md` 现在也输出 `evidence_bundle_primary_next_task`，让 evidence bundle 的首要下一步字段贯穿周计划与 issue artifacts。
+- `scripts/plan_next_iteration.py` 的默认文本输出和 Markdown report 现在也展示 `evidence_bundle_primary_next_task`，维护者不用生成 artifacts 就能看到 evidence bundle 首要下一步。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 `promotion_evidence_primary_task` 与 `Primary Evidence Task`，让周维护手册和 candidate issue artifacts 字段保持一致。
 - `scripts/plan_next_iteration.py` 生成的 candidate issue body 现在也包含 `Evidence Bundle` 小节，与 `cliany-site cases --case-id <id> --issue-template` 保持一致。
 - `cliany-site cases --case-id <id> --issue-template` 和 `scripts/plan_next_iteration.py` 生成的 candidate issue body 现在会把已有 evidence 的 `complete` promotion task 输出为 `- [x]`，避免贡献者重复处理已完成证据项。

@@ -1382,6 +1382,9 @@ def _print_text(plan: IterationPlan) -> None:
             print(f"  adapter_package: {promotion.adapter_package}")
             print(f"  metadata_validation: {promotion.metadata_validation}")
             print(f"  online_smoke: {promotion.online_smoke}")
+            print("  evidence_bundle_primary_next_task:")
+            for key, value in promotion.evidence_bundle_primary_next_task.items():
+                print(f"    {key}: {value}")
             print("  issue_body:")
             for line in promotion.issue_body.splitlines():
                 print(f"    {line}")
@@ -1762,12 +1765,13 @@ def _candidate_promotion_markdown(promotions: list[CandidatePromotion]) -> str:
     lines = [
         "## Candidate Issue Metadata",
         "",
-        "| Case | Issue Title | Labels |",
-        "|------|-------------|--------|",
+        "| Case | Issue Title | Labels | Evidence Bundle Primary Next Task |",
+        "|------|-------------|--------|-----------------------------------|",
     ]
     for promotion in promotions:
         labels = ", ".join(f"`{label}`" for label in promotion.issue_labels)
-        lines.append(f"| `{promotion.case_id}` | {promotion.issue_title} | {labels} |")
+        primary_task = promotion.evidence_bundle_primary_next_task.get("task") or "Not declared."
+        lines.append(f"| `{promotion.case_id}` | {promotion.issue_title} | {labels} | `{primary_task}` |")
 
     lines.extend(
         [

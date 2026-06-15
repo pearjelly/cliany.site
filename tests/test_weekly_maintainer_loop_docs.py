@@ -262,6 +262,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "release-draft-handoff.json",
         "promotion_evidence_primary_task",
         "evidence_bundle_primary_next_task",
+        "默认文本输出",
+        "Markdown report",
         "publication next actions",
         "README.md",
         "Candidate Summary",
