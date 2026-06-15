@@ -24,6 +24,7 @@ PROMOTION_FIELDS = ("adapter_package", "metadata_validation", "online_smoke")
 PROMOTION_EVIDENCE_STATUSES = {"pending", "complete", "blocked"}
 BUILTIN_GROUPS = {
     "browser",
+    "cases",
     "check",
     "doctor",
     "list",

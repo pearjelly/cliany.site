@@ -199,18 +199,19 @@ def cli(ctx, json_mode, verbose, debug, cdp_url, headless, sandbox, explain, for
         click.echo(ctx.get_help())
 
 
+from cliany_site.commands.cases import cases_cmd
 from cliany_site.commands.check import check_cmd
 from cliany_site.commands.doctor import doctor
 from cliany_site.commands.explore import explore_cmd
 from cliany_site.commands.list_cmd import list_cmd
 from cliany_site.commands.login import login
 from cliany_site.commands.market import market_group
+from cliany_site.commands.obscura import obscura_group
 from cliany_site.commands.replay import replay
 from cliany_site.commands.report import report_group
 from cliany_site.commands.serve import serve_cmd
 from cliany_site.commands.tui import tui_cmd
 from cliany_site.commands.workflow import workflow_group
-from cliany_site.commands.obscura import obscura_group
 
 cli.add_command(doctor)
 cli.add_command(login)
@@ -220,9 +221,11 @@ cli.add_command(replay)
 cli.add_command(tui_cmd)
 cli.add_command(report_group)
 cli.add_command(check_cmd)
+cli.add_command(cases_cmd)
 cli.add_command(workflow_group)
 cli.add_command(market_group)
 cli.add_command(serve_cmd)
+cli.add_command(obscura_group)
 
 from cliany_site.commands.browser import browser_group
 
@@ -243,9 +246,6 @@ register_adapters(cli)
 from cliany_site.commands.migrate import migrate_cmd
 
 cli.add_command(migrate_cmd)
-
-from cliany_site.commands.obscura import obscura_group
-cli.add_command(obscura_group)
 
 
 if __name__ == "__main__":

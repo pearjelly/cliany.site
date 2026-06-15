@@ -10854,6 +10854,8 @@ def test_v016227_release_draft_has_required_sections():
         "## 案例库映射",
         "cases/README.md",
         "cases/manifest.json",
+        "Case catalog CLI",
+        "cliany-site cases",
         "search-extraction-gap",
         "## 风险与兼容性",
         "## 发版前验证",
@@ -10924,6 +10926,7 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "python scripts/check_release_publication.py --remote --json",
         "python scripts/plan_next_iteration.py --target-version 0.16.227 --issues-dir",
         "python scripts/release_readiness.py --target-version 0.16.227 --json",
+        "cliany-site cases --status candidate --detail --json",
         "git tag v0.16.227",
     ]
     for snippet in required:

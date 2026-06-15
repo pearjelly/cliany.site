@@ -117,6 +117,9 @@ pip install -e .
 # Check environment
 cliany-site doctor --json
 
+# Discover maintained real demo cases
+cliany-site cases --json
+
 # Explore web workflow (requires LLM)
 cliany-site explore "https://github.com" "Search and view results" --json
 
@@ -242,6 +245,7 @@ async with ClanySite() as cs:
 
 The following adapters are available as downloadable assets on [GitHub Release v0.14.1](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.1).
 The maintained case index lives in [cases/README.md](cases/README.md) and [cases/manifest.json](cases/manifest.json).
+Use `cliany-site cases --json` to inspect active demos, candidate workflows, offline validation commands, and candidate promotion next actions from the CLI.
 
 ### SuiteCRM Demo (Enterprise CRM)
 ```bash
@@ -343,6 +347,7 @@ cliany-site market rollback github.com
 | `login <url>` | `[--json]` | Open URL to wait for login and save session. |
 | `explore <url> <workflow>` | `[--json] [--interactive] [--extend <domain>] [--record]` | Explore workflow and generate adapter. |
 | `list` | `[--json]` | List generated adapters. |
+| `cases` | `[--status <status>] [--detail] [--json]` | List maintained real demo cases and candidate workflows. |
 | `verify <domain>` | `[--json]` | Statically verify adapter schema, signatures, and dependency integrity. |
 | `migrate` | `[--json] [--dry-run]` | Migrate all legacy adapters to schema v3. |
 | `replay <domain>` | `[--session <id>] [--step]` | Replay exploration recording with screenshots and actions. |
