@@ -21,6 +21,7 @@
 - `scripts/plan_next_iteration.py` 的 candidate promotion JSON 和 issue artifacts 现在输出 `promotion_evidence_primary_task`，并在 artifacts `README.md` 的 `Candidate Summary` 中展示首要 evidence task。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 `promotion_evidence_primary_task` 与 `Primary Evidence Task`，让周维护手册和 candidate issue artifacts 字段保持一致。
 - `scripts/plan_next_iteration.py` 生成的 candidate issue body 现在也包含 `Evidence Bundle` 小节，与 `cliany-site cases --case-id <id> --issue-template` 保持一致。
+- `cliany-site cases --case-id <id> --issue-template` 和 `scripts/plan_next_iteration.py` 生成的 candidate issue body 现在会把已有 evidence 的 `complete` promotion task 输出为 `- [x]`，避免贡献者重复处理已完成证据项。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 candidate issue artifacts 的 evidence bundle 字段和 `Candidate Summary` 复制入口。
 - [docs/good-first-issues.md](docs/good-first-issues.md) 和 [docs/contributor-starter.md](docs/contributor-starter.md) 现在明确 candidate promotion 的 Issue Body Template 自带 `Reproduction Context` 与 `Evidence Bundle`。
 - README / README.zh 现在展示 `cliany-site cases --case-id pypi-project-search --evidence-bundle --json`，让维护者知道证据包也可机器读取。

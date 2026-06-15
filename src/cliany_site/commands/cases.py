@@ -97,12 +97,14 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
         task_evidence = evidence.get(task)
         task_evidence = task_evidence if isinstance(task_evidence, dict) else {}
         status = task_evidence.get("status") or "pending"
-        current_evidence = task_evidence.get("evidence") or "Not attached yet."
+        evidence_value = task_evidence.get("evidence")
+        current_evidence = evidence_value or "Not attached yet."
         next_action = task_evidence.get("next_action") or "No next action declared."
         description = promotion.get(task) or "No task description declared."
+        checkbox = "x" if status == "complete" and bool(evidence_value) else " "
         lines.extend(
             [
-                f"- [ ] `{task}`: {description}",
+                f"- [{checkbox}] `{task}`: {description}",
                 f"  - Current status: `{status}`",
                 f"  - Current evidence: {current_evidence}",
                 f"  - Next action: {next_action}",

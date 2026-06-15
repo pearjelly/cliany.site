@@ -1191,11 +1191,13 @@ def _candidate_issue_body(
         task = promotion_evidence.get(task_name)
         task = task if isinstance(task, dict) else {}
         status = task.get("status") or "unknown"
-        evidence = task.get("evidence") or "Not attached yet."
+        evidence_value = task.get("evidence")
+        evidence = evidence_value or "Not attached yet."
         next_action = task.get("next_action") or "Not declared."
+        checkbox = "x" if status == "complete" and bool(evidence_value) else " "
         task_lines.extend(
             [
-                f"- [ ] `{task_name}`: {task_descriptions[task_name]}",
+                f"- [{checkbox}] `{task_name}`: {task_descriptions[task_name]}",
                 f"  - Current status: `{status}`",
                 f"  - Current evidence: {evidence}",
                 f"  - Next action: {next_action}",

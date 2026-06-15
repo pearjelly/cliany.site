@@ -129,6 +129,56 @@ def test_cases_command_issue_template_human_outputs_markdown(tmp_home):
     assert "案例库" not in result.output
 
 
+def test_cases_command_issue_template_checks_complete_tasks(tmp_home, monkeypatch):
+    import cliany_site.commands.cases as cases_module
+
+    case = {
+        "id": "mixed-candidate",
+        "title": "Mixed candidate",
+        "status": "candidate",
+        "target_url": "https://example.test/search",
+        "adapter_domain": "example.test",
+        "commands": ["cliany-site example.test search --json"],
+        "validation": {"offline_commands": ["python scripts/validate_cases.py --strict"]},
+        "promotion": {
+            "adapter_package": "Build adapter package.",
+            "metadata_validation": "Validate metadata.",
+            "online_smoke": "Run online smoke.",
+        },
+        "promotion_evidence": {
+            "adapter_package": {
+                "status": "complete",
+                "evidence": "example.test-v1.cliany-adapter.tar.gz",
+                "next_action": "",
+            },
+            "metadata_validation": {
+                "status": "blocked",
+                "evidence": "Waiting for package validation.",
+                "next_action": "Run package validation.",
+            },
+            "online_smoke": {
+                "status": "pending",
+                "evidence": None,
+                "next_action": "Run read-only smoke.",
+            },
+        },
+    }
+    source = tmp_home / "cases" / "manifest.json"
+    monkeypatch.setattr(cases_module, "_load_cases_manifest", lambda: ([case], source, [source]))
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["cases", "--case-id", "mixed-candidate", "--issue-template"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "- [x] `adapter_package`: Build adapter package." in result.output
+    assert "- [ ] `metadata_validation`: Validate metadata." in result.output
+    assert "- [ ] `online_smoke`: Run online smoke." in result.output
+
+
 def test_cases_command_evidence_bundle_json(tmp_home):
     runner = CliRunner()
     result = runner.invoke(
