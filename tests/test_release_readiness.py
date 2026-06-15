@@ -259,6 +259,53 @@ def _write_package(packages_dir: Path, filename: str, *, domain: str) -> None:
         tar.addfile(metadata_info, BytesIO(metadata_content))
 
 
+def _append_active_case(repo: Path, *, case_id: str, domain: str) -> None:
+    manifest_path = repo / "cases" / "manifest.json"
+    cases = json.loads(manifest_path.read_text(encoding="utf-8"))
+    cases.append(
+        {
+            "id": case_id,
+            "title": "Second demo case",
+            "category": "demo",
+            "status": "active",
+            "target_url": f"https://{domain}/",
+            "adapter_domain": domain,
+            "source_release": "v0.1.0",
+            "docs": "README.md#demo",
+            "example_output": f"cases/examples/{case_id}.json",
+            "commands": [
+                f"cliany-site market install ./{domain}.cliany-adapter-v0.1.0.tar.gz",
+                f"cliany-site {domain} list-items --json",
+            ],
+            "validation": {
+                "offline": "metadata validates",
+                "offline_commands": ["python scripts/validate_cases.py --strict"],
+                "online": "read-only command returns rows",
+            },
+        }
+    )
+    manifest_path.write_text(json.dumps(cases), encoding="utf-8")
+    (repo / "cases" / "examples" / f"{case_id}.json").write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "data": {
+                    "command": "list-items",
+                    "results": [{"ok": True, "data": {"items": [{"name": "Second"}]}}],
+                    "quality": {"ok": True, "status": "ok", "row_count": 1},
+                },
+                "error": None,
+                "meta": {
+                    "source": "case-example",
+                    "case_id": case_id,
+                    "sample": True,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
 def _template_content(filename: str) -> str:
     return {
         ".github/PULL_REQUEST_TEMPLATE.md": (
@@ -1234,3 +1281,33 @@ def test_release_readiness_markdown_report_includes_case_package_checks(tmp_path
         "package_gate_primary_repair_action: "
         "Regenerate the package for the manifest adapter_domain or fix the case adapter_domain."
     ) in output
+
+
+def test_release_readiness_package_next_actions_dedupe_global_repairs(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    _append_active_case(repo, case_id="second-demo-case", domain="second.example.com")
+    packages_dir = tmp_path / "packages"
+    packages_dir.mkdir()
+
+    report = _build_report(
+        repo,
+        today=date(2026, 6, 10),
+        min_commit_days=1,
+        packages_dir=packages_dir,
+        require_packages=True,
+    )
+
+    next_actions = report.to_dict()["next_actions"]
+    assert report.package_gate.failed_count == 2
+    assert report.package_gate.missing_count == 2
+    assert "- Package checks: Rerun python scripts/validate_cases.py --packages-dir <dir> --strict." in next_actions
+    assert (
+        next_actions.count("- Package checks: Rerun python scripts/validate_cases.py --packages-dir <dir> --strict.")
+        == 1
+    )
+    assert not any(
+        "`demo-case` package: Rerun python scripts/validate_cases.py --packages-dir <dir> --strict." in action
+        for action in next_actions
+    )
+    assert any("demo.example.com.cliany-adapter-v0.1.0.tar.gz" in action for action in next_actions)
+    assert any("second.example.com.cliany-adapter-v0.1.0.tar.gz" in action for action in next_actions)

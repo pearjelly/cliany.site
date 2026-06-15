@@ -10973,6 +10973,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "package_gate_primary_repair_action",
         "package_gate.ok=false",
         "case package validation failed",
+        "Package checks",
+        "共用的 rerun 动作",
         "python scripts/validate_cases.py",
         "README / README.zh",
         "当前 evidence",

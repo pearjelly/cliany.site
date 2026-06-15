@@ -695,15 +695,23 @@ def _report_issue_lines(report: ReadinessReport) -> list[str]:
 
 
 def _case_package_next_action_lines(report: ReadinessReport) -> list[str]:
-    lines: list[str] = []
+    action_cases: dict[str, list[str]] = {}
     for case in report.cases.cases:
         package = case.package
         if package is None or package.get("ok"):
             continue
         for action in package.get("next_actions") or []:
-            line = f"- `{case.id}` package: {action}"
-            if line not in lines:
-                lines.append(line)
+            action_text = str(action)
+            action_cases.setdefault(action_text, [])
+            if case.id not in action_cases[action_text]:
+                action_cases[action_text].append(case.id)
+
+    lines: list[str] = []
+    for action, case_ids in action_cases.items():
+        if len(case_ids) > 1:
+            lines.append(f"- Package checks: {action}")
+        else:
+            lines.append(f"- `{case_ids[0]}` package: {action}")
     return lines
 
 
