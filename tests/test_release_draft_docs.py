@@ -237,6 +237,7 @@ V016221_DRAFT = ROOT / "docs" / "releases" / "v0.16.221-draft.md"
 V016222_DRAFT = ROOT / "docs" / "releases" / "v0.16.222-draft.md"
 V016223_DRAFT = ROOT / "docs" / "releases" / "v0.16.223-draft.md"
 V016224_DRAFT = ROOT / "docs" / "releases" / "v0.16.224-draft.md"
+V016225_DRAFT = ROOT / "docs" / "releases" / "v0.16.225-draft.md"
 
 
 def test_v0144_release_draft_has_required_sections():
@@ -10735,6 +10736,54 @@ def test_v016224_release_draft_tracks_primary_promotion_task_locator():
         "python scripts/plan_next_iteration.py --target-version 0.16.224 --issues-dir",
         "python scripts/release_readiness.py --target-version 0.16.224 --json",
         "git tag v0.16.224",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016225_release_draft_has_required_sections():
+    text = V016225_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.225 发布草案",
+        "**目标版本：** `0.16.225`",
+        "**提交范围：** `v0.16.224..HEAD`",
+        "## 用户价值",
+        "## 变更分组",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "## 风险与兼容性",
+        "## 发版前验证",
+        "## 发版步骤",
+        "## Release Notes 摘要",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016225_release_draft_tracks_publication_first_plan():
+    text = V016225_DRAFT.read_text(encoding="utf-8")
+
+    required = [
+        "发布可见性",
+        "publication_visibility",
+        "publication_next_actions",
+        "publication_publish_commands",
+        "candidate_issue_gate",
+        "blocked_by_publication",
+        "release_draft_issues",
+        "release-draft-handoff.json",
+        "publication-handoff.json",
+        "v0.16.224",
+        "v0.16.225",
+        "git push origin master",
+        "git push origin v0.16.224",
+        "python scripts/check_release_publication.py --remote --json",
+        "python scripts/plan_next_iteration.py --target-version 0.16.225 --issues-dir",
+        "python scripts/release_readiness.py --target-version 0.16.225 --json",
+        "git tag v0.16.225",
     ]
     for snippet in required:
         assert snippet in text
