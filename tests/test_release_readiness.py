@@ -581,6 +581,9 @@ def test_release_readiness_passes_for_minimal_ready_repo(tmp_path):
         "primary_missing_task": None,
     }
     assert report.to_dict()["next_actions"] == []
+    assert report.to_dict()["next_action_count"] == 0
+    assert report.to_dict()["primary_next_action"] is None
+    assert report.to_dict()["next_actions_sha256"] == release_readiness._stable_json_sha256([])
 
 
 def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
@@ -640,6 +643,11 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
             "current commit days are `1/3`. Use `docs/weekly-maintainer-loop.md` to pick the next slice."
         )
     ]
+    assert payload["next_action_count"] == len(payload["next_actions"])
+    assert payload["primary_next_action"] == payload["next_actions"][0]
+    assert payload["next_actions_sha256"] == release_readiness._stable_json_sha256(
+        payload["next_actions"]
+    )
     assert not any(action.startswith("- ") for action in payload["next_actions"])
 
 

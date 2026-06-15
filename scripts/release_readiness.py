@@ -141,6 +141,7 @@ class ReadinessReport:
         publication_next_actions = publication_payload["next_actions"]
         publication_publish_commands = publication_payload["publish_commands"]
         publication_summary = _publication_summary(publication_payload)
+        next_actions = _next_action_lines(self)
         return {
             "ok": self.ok,
             "current_version": self.current_version,
@@ -179,7 +180,10 @@ class ReadinessReport:
                 publication_publish_commands[0] if publication_publish_commands else None
             ),
             "publication_publish_commands": publication_publish_commands,
-            "next_actions": _next_action_lines(self),
+            "next_action_count": len(next_actions),
+            "next_actions_sha256": _stable_json_sha256(next_actions),
+            "primary_next_action": next_actions[0] if next_actions else None,
+            "next_actions": next_actions,
         }
 
 
