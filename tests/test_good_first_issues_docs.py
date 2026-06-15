@@ -27,10 +27,12 @@ def test_good_first_issues_doc_has_issue_drafting_checklist():
         "期望改动范围",
         "推荐验证命令",
         "相关文件链接",
+        "证据包命令",
         "验收证据",
         "明确非目标",
         "不需要真实 LLM key",
         "~/.cliany-site/",
+        "cliany-site cases --case-id <id> --evidence-bundle --json",
     ]
     for snippet in required:
         assert snippet in text
@@ -70,6 +72,10 @@ def test_good_first_issues_split_candidate_promotion_tasks():
     assert "pytest tests/test_validate_cases.py -q --no-cov" in validations
     assert "git diff --check" in validations
     assert "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md" in validations
+    assert (
+        "python -m cliany_site --json cases --case-id pypi-project-search --evidence-bundle --json"
+        in validations
+    )
 
 
 def test_good_first_issues_include_case_report_issue_draft_task():
@@ -83,6 +89,8 @@ def test_good_first_issues_include_case_report_issue_draft_task():
         "scripts/validate_cases.py",
         "cases/README.md",
         "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md",
+        "cliany-site cases --case-id <id> --evidence-bundle --json",
+        "promotion_evidence",
     ]
     for snippet in required:
         assert snippet in text

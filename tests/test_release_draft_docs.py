@@ -10935,6 +10935,9 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "evidence_bundle_command",
         "evidence_bundle_json_command",
         "Candidate Summary",
+        "docs/good-first-issues.md",
+        "cliany-site cases --case-id <id> --evidence-bundle --json",
+        "promotion_evidence",
         "git tag v0.16.227",
     ]
     for snippet in required:

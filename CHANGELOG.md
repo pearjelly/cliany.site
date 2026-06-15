@@ -18,6 +18,7 @@
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 candidate issue artifacts 的 evidence bundle 字段和 `Candidate Summary` 复制入口。
 - README / README.zh 现在展示 `cliany-site cases --case-id pypi-project-search --evidence-bundle --json`，让维护者知道证据包也可机器读取。
 - 官网首页的贡献者路径现在展示 candidate evidence bundle JSON 命令，方便首次成功后的用户提交可复现案例证据。
+- [docs/good-first-issues.md](docs/good-first-issues.md) 现在要求 candidate promotion issue 附上 evidence bundle JSON，保持 issue、case report 和 `promotion_evidence` 同步。
 - 新增 `docs/releases/v0.16.227-draft.md`，把下一版 patch release 聚焦到 `v0.16.226` 本地 release 的发布可见性交接。
 - `v0.16.227` 草案明确记录 `publication_visibility`、`candidate_issue_gate`、`publication-handoff.json` 和 `release-draft-handoff.json` 在本地 release 未公开时的审阅路径。
 
