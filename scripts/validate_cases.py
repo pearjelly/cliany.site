@@ -867,6 +867,29 @@ def _candidate_handoff_lines(report: CasesReport) -> list[str]:
     return lines
 
 
+def _candidate_evidence_bundle_command_lines(report: CasesReport) -> list[str]:
+    candidates = [case for case in report.cases if case.status == "candidate"]
+    if not candidates:
+        return []
+    lines = [
+        "",
+        "## Candidate Evidence Bundle Commands",
+        "",
+        "Use these commands to print a local evidence checklist for each candidate case before opening "
+        "or updating a promotion issue.",
+        "",
+        "| Case | Human Handoff | JSON Evidence |",
+        "|------|---------------|---------------|",
+    ]
+    for case in candidates:
+        human_command = f"cliany-site cases --case-id {case.id} --evidence-bundle"
+        json_command = f"cliany-site cases --case-id {case.id} --evidence-bundle --json"
+        lines.append(
+            f"| `{case.id}` | `{_markdown_cell(human_command)}` | `{_markdown_cell(json_command)}` |"
+        )
+    return lines
+
+
 def _render_markdown_report(report: CasesReport) -> str:
     lines = [
         "# cliany-site Case Catalog Validation",
@@ -908,6 +931,7 @@ def _render_markdown_report(report: CasesReport) -> str:
         lines.append(f"| `{check.id}` | {_offline_command_summary(check.offline_commands)} |")
 
     lines.extend(_candidate_handoff_lines(report))
+    lines.extend(_candidate_evidence_bundle_command_lines(report))
     lines.extend(_candidate_promotion_evidence_summary_lines(report.promotion_evidence_summary))
     lines.extend(_candidate_promotion_task_lines(report))
     return "\n".join(lines) + "\n"

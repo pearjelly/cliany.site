@@ -653,6 +653,9 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "## Candidate Handoff Matrix" in text
     assert "| `candidate-case` | https://demo.example.com/ | cliany-site demo.example.com list-items --json |" in text
     assert "without reopening `cases/manifest.json`" in text
+    assert "## Candidate Evidence Bundle Commands" in text
+    assert "cliany-site cases --case-id candidate-case --evidence-bundle" in text
+    assert "cliany-site cases --case-id candidate-case --evidence-bundle --json" in text
     assert "## Candidate Promotion Evidence Summary" in text
     assert "| pending_count | `3` |" in text
     assert "| primary_next_action | Generate the adapter package. |" in text

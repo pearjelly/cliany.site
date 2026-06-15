@@ -10930,6 +10930,7 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "cliany-site cases --case-id pypi-project-search --json",
         "cliany-site cases --case-id pypi-project-search --issue-template",
         "cliany-site cases --case-id pypi-project-search --evidence-bundle",
+        "Candidate Evidence Bundle Commands",
         "git tag v0.16.227",
     ]
     for snippet in required:

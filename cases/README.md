@@ -56,7 +56,7 @@
 
 每个 issue 都应引用对应 case id、`promotion` 字段、`promotion_evidence` 状态和推荐验证命令；如果任一子任务还没完成，案例继续保持 `candidate`，不要提前改成 `active`。
 
-运行 `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md` 会在 Markdown 报告中生成 `Candidate Promotion Evidence Summary` 和 `Candidate Promotion Tasks` 小节。前者汇总 candidate 数量、pending/blocked/complete 任务数和 primary next action；后者可以直接把其中的 `Issue Body Template` 复制到 GitHub issue。模板会保留 `adapter_package`、`metadata_validation`、`online_smoke` 三类任务、`promotion_evidence` 当前状态、验收证据和非目标边界。
+运行 `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md` 会在 Markdown 报告中生成 `Candidate Promotion Evidence Summary`、`Candidate Evidence Bundle Commands` 和 `Candidate Promotion Tasks` 小节。Evidence Bundle 命令会指向 `cliany-site cases --case-id <id> --evidence-bundle`，方便维护者先输出本地证据清单；Promotion Evidence Summary 汇总 candidate 数量、pending/blocked/complete 任务数和 primary next action；Promotion Tasks 可以直接把其中的 `Issue Body Template` 复制到 GitHub issue。模板会保留 `adapter_package`、`metadata_validation`、`online_smoke` 三类任务、`promotion_evidence` 当前状态、验收证据和非目标边界。
 
 ## 维护规则
 
@@ -89,7 +89,7 @@ CI 的 `Case Catalog Validation` job 会上传 `case-catalog-report` artifact，
 
 报告中的 `Candidate Handoff Matrix` 小节会把 candidate 的 target URL、推荐命令和离线验证命令放到同一张表里，方便贡献者不打开 `cases/manifest.json` 也能获得基本复现上下文。
 
-报告中的 `Candidate Promotion Evidence Summary` 小节会汇总所有 candidate 子任务的状态和 primary next action，方便维护者先决定本周该推进哪项证据。`Candidate Promotion Tasks` 小节会把 candidate 的 `promotion` 清单和 `promotion_evidence` 状态转成可复制 issue body，包括 package asset、metadata validation、online smoke 三类验收证据、当前状态、下一步动作，以及“不要提前标记 active”“不要依赖真实 LLM key 或写入 repo runtime 状态”等非目标。
+报告中的 `Candidate Evidence Bundle Commands` 小节会为每个 candidate 输出 human 和 JSON 两种 `cliany-site cases --case-id <id> --evidence-bundle` 命令。`Candidate Promotion Evidence Summary` 小节会汇总所有 candidate 子任务的状态和 primary next action，方便维护者先决定本周该推进哪项证据。`Candidate Promotion Tasks` 小节会把 candidate 的 `promotion` 清单和 `promotion_evidence` 状态转成可复制 issue body，包括 package asset、metadata validation、online smoke 三类验收证据、当前状态、下一步动作，以及“不要提前标记 active”“不要依赖真实 LLM key 或写入 repo runtime 状态”等非目标。
 
 `search-extraction-gap` 的最小复现页面固定在 [tests/fixtures/search_extraction_gap.html](../tests/fixtures/search_extraction_gap.html)，用于离线验证搜索结果列表中链接或摘要缺失时应被判为 `partial` 质量问题。
 
