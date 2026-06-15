@@ -151,6 +151,9 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["blocked_tasks"] == []
     assert bundle["complete_tasks"] == []
     assert bundle["incomplete_tasks"] == ["adapter_package", "metadata_validation", "online_smoke"]
+    assert bundle["primary_pending_task"]["task"] == "adapter_package"
+    assert bundle["primary_blocked_task"] is None
+    assert bundle["primary_incomplete_task"]["task"] == "adapter_package"
     assert bundle["primary_next_action"].startswith("Generate pypi.org")
     assert bundle["tasks"][0]["task"] == "adapter_package"
     assert bundle["tasks"][0]["complete"] is False
@@ -211,6 +214,9 @@ def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatc
     assert bundle["blocked_tasks"] == ["metadata_validation"]
     assert bundle["complete_tasks"] == ["online_smoke"]
     assert bundle["incomplete_tasks"] == ["adapter_package", "metadata_validation"]
+    assert bundle["primary_pending_task"]["task"] == "adapter_package"
+    assert bundle["primary_blocked_task"]["task"] == "metadata_validation"
+    assert bundle["primary_incomplete_task"]["task"] == "adapter_package"
     assert bundle["pending_task_count"] == 1
     assert bundle["blocked_task_count"] == 1
     assert bundle["complete_task_count"] == 1
@@ -225,6 +231,7 @@ def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatc
     )
 
     assert human.exit_code == 0
+    assert "Primary incomplete task: `adapter_package`" in human.output
     assert "Blocked tasks: `1`" in human.output
     assert "Blocked task names: `metadata_validation`" in human.output
 
@@ -242,6 +249,7 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "Ready to promote: `false`" in result.output
     assert "Blocked tasks: `0`" in result.output
     assert "Incomplete tasks: `3`" in result.output
+    assert "Primary incomplete task: `adapter_package`" in result.output
     assert "## Promotion evidence" in result.output
     assert "`adapter_package`: `pending`" in result.output
     assert "cliany-site cases" not in result.output

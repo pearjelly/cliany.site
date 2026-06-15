@@ -158,7 +158,10 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
     pending_tasks = [task for task in tasks if task["status"] == "pending" and not task["complete"]]
     blocked_tasks = [task for task in tasks if task["status"] == "blocked" and not task["complete"]]
     incomplete_tasks = [task for task in tasks if not task["complete"]]
-    primary_next_action_task = pending_tasks[0] if pending_tasks else (blocked_tasks[0] if blocked_tasks else {})
+    primary_pending_task = pending_tasks[0] if pending_tasks else None
+    primary_blocked_task = blocked_tasks[0] if blocked_tasks else None
+    primary_incomplete_task = incomplete_tasks[0] if incomplete_tasks else None
+    primary_next_action_task = primary_pending_task or primary_blocked_task or primary_incomplete_task or {}
     return {
         "case_id": case_id,
         "title": case.get("title"),
@@ -179,6 +182,9 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "blocked_tasks": [task["task"] for task in blocked_tasks],
         "complete_tasks": [task["task"] for task in complete_tasks],
         "incomplete_tasks": [task["task"] for task in incomplete_tasks],
+        "primary_pending_task": primary_pending_task,
+        "primary_blocked_task": primary_blocked_task,
+        "primary_incomplete_task": primary_incomplete_task,
         "complete_task_count": len(complete_tasks),
         "pending_task_count": len(pending_tasks),
         "blocked_task_count": len(blocked_tasks),
@@ -203,6 +209,9 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
         f"- Complete tasks: `{bundle['complete_task_count']}`",
         f"- Incomplete tasks: `{bundle.get('incomplete_task_count', bundle['pending_task_count'])}`",
     ]
+    primary_incomplete_task = bundle.get("primary_incomplete_task")
+    if isinstance(primary_incomplete_task, dict) and primary_incomplete_task.get("task"):
+        lines.append(f"- Primary incomplete task: `{primary_incomplete_task['task']}`")
     blocked_tasks = bundle.get("blocked_tasks")
     if blocked_tasks:
         lines.append(f"- Blocked task names: {', '.join(f'`{task}`' for task in blocked_tasks)}")

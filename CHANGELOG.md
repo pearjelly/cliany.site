@@ -14,6 +14,7 @@
 - `cliany-site cases --case-id <id> --issue-template` 现在可为 candidate 案例输出可复制的 GitHub issue body，并预填 human / JSON evidence bundle 命令。
 - `cliany-site cases --case-id <id> --evidence-bundle` 现在可为 candidate 案例输出结构化本地证据清单，列出待补 promotion tasks、命令和离线验证步骤。
 - `cliany-site cases --case-id <id> --evidence-bundle` 的 JSON 现在输出 `status_counts`、`blocked_tasks`、`complete_tasks` 和 `incomplete_tasks`，让维护工具能直接区分待办、阻塞与已完成晋级任务。
+- `cliany-site cases --case-id <id> --evidence-bundle` 的 JSON 现在输出 `primary_pending_task`、`primary_blocked_task` 和 `primary_incomplete_task`，让 issue bot 与计划器能直接展示首要跟进项。
 - `scripts/validate_cases.py --report` 现在输出 `Candidate Evidence Bundle Commands` 小节，直接链接每个 candidate 的 evidence bundle CLI 命令。
 - `scripts/validate_cases.py --report` 的 `Issue Body Template` 现在包含 `Reproduction Context` 和 `Evidence Bundle` 小节，让 case report 复制出的 issue body 与 CLI/计划器模板一致。
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 candidate issue artifacts 现在在 `candidate_promotions`、`issue-metadata.json`、issue metadata summary 和 artifacts `README.md` 中输出 `evidence_bundle_command` / `evidence_bundle_json_command`，让维护者能直接复制案例证据包命令。
