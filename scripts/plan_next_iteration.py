@@ -2419,6 +2419,7 @@ def _issue_artifact_publication_next_actions(plan: IterationPlan) -> str:
 def _issue_artifact_validation_commands(plan: IterationPlan) -> list[str]:
     return [
         plan.issue_artifacts_command,
+        plan.plan_report_command,
         f"python scripts/plan_next_iteration.py --target-version {plan.target_version} --json",
         f"python scripts/release_readiness.py --target-version {plan.target_version} --json",
         "python scripts/check_release_publication.py --json",

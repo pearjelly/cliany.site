@@ -292,7 +292,7 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact-manifest.json` 的 `validation_commands` 也会包含 `python scripts/release_readiness.py --target-version <version> --json`，方便维护者在同一入口复核下一版 release gate。
 
-artifacts `README.md` 的 `Validation Commands` 会和 `artifact-manifest.json.validation_commands` 保持同源，列出 `plan_next_iteration.py --json`、`release_readiness.py --target-version <version> --json`、`check_release_publication.py --json` 和 `validate_cases.py --strict`，避免维护者只照 README 操作时漏跑 release readiness 或 publication audit。
+artifacts `README.md` 的 `Validation Commands` 会和 `artifact-manifest.json.validation_commands` 保持同源，列出 `plan_next_iteration.py --issues-dir`、`plan_next_iteration.py --report /tmp/cliany-next-iteration.md`、`plan_next_iteration.py --json`、`release_readiness.py --target-version <version> --json`、`check_release_publication.py --json` 和 `validate_cases.py --strict`，避免维护者只照 README 操作时漏跑周计划报告、release readiness 或 publication audit。
 
 `artifact-manifest.json` 还会包含 `review_checklist`，把 README 里的候选任务审阅清单同步为机器可读字段。
 

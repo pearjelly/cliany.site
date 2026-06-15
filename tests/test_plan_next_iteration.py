@@ -1147,6 +1147,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "python scripts/plan_next_iteration.py --target-version 0.16.2 "
             "--issues-dir /tmp/cliany-candidate-issues"
         ),
+        (
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+            "--report /tmp/cliany-next-iteration.md"
+        ),
         "python scripts/plan_next_iteration.py --target-version 0.16.2 --json",
         "python scripts/release_readiness.py --target-version 0.16.2 --json",
         "python scripts/check_release_publication.py --json",
@@ -1793,7 +1797,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "release_draft_issue_tail_sha256": _stable_json_sha256(
             plan.release_draft_issues[-8:]
         ),
-        "validation_command_count": 5,
+        "validation_command_count": 6,
         "validation_commands_sha256": _stable_json_sha256(expected_validation_commands),
         "validation_first_command": (
             "python scripts/plan_next_iteration.py --target-version 0.16.2 "
@@ -2110,6 +2114,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             (
                 "python scripts/plan_next_iteration.py --target-version 0.16.2 "
                 "--issues-dir /tmp/cliany-candidate-issues"
+            ),
+            (
+                "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+                "--report /tmp/cliany-next-iteration.md"
             ),
             "python scripts/plan_next_iteration.py --target-version 0.16.2 --json",
             "python scripts/release_readiness.py --target-version 0.16.2 --json",
@@ -3228,7 +3236,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "release_draft_issue_tail_sha256: "
         f"`{artifact_bundle_summary['release_draft_issue_tail_sha256']}`"
     ) in readme
-    assert "validation_command_count: `5`" in readme
+    assert "validation_command_count: `6`" in readme
     assert (
         "validation_commands_sha256: "
         f"`{artifact_bundle_summary['validation_commands_sha256']}`"
@@ -3656,6 +3664,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "python scripts/plan_next_iteration.py --target-version 0.16.2 "
         "--issues-dir /tmp/cliany-candidate-issues"
+    ) in readme
+    assert (
+        "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+        "--report /tmp/cliany-next-iteration.md"
     ) in readme
     assert "CLIANY_CREATE_ISSUES_DRY_RUN=1 ./create-issues.sh" in readme
     assert "python scripts/plan_next_iteration.py --target-version 0.16.2 --json" in readme
