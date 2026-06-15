@@ -10956,6 +10956,7 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "promotion_evidence_primary",
         "promotion_evidence_evidence",
         "python scripts/validate_cases.py",
+        "README / README.zh",
         "当前 evidence",
         "- [x]",
         "Candidate Summary",
