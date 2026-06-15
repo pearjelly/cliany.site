@@ -635,75 +635,156 @@ def _publication_publish_commands(publication: Any) -> list[str]:
     return [str(command) for command in payload.get("publish_commands", [])]
 
 
-def _publication_tag_publish_decision(publication: Any) -> dict[str, Any]:
+def _publication_tag_publish_decision(
+    publication: Any, target_version: str | None = None
+) -> dict[str, Any]:
     decision = getattr(publication, "tag_publish_decision", None)
     if isinstance(decision, dict):
-        return dict(decision)
+        return _with_target_tag_guidance(dict(decision), publication, target_version)
     to_dict = getattr(publication, "to_dict", None)
     if callable(to_dict):
         payload = to_dict()
         decision = payload.get("tag_publish_decision")
         if isinstance(decision, dict):
-            return dict(decision)
+            return _with_target_tag_guidance(dict(decision), publication, target_version)
 
     latest_tag = getattr(publication, "latest_tag", None)
     tag_points_at_head = bool(getattr(publication, "tag_points_at_head", False))
     tag_published = getattr(publication, "tag_published", None)
     if not latest_tag:
-        return {
-            "status": "missing_tag",
-            "can_push_tag": False,
-            "latest_tag": None,
-            "tag_points_at_head": tag_points_at_head,
-            "tag_published": tag_published,
-            "required_action": "Create a release tag before publishing a tag.",
-        }
+        return _with_target_tag_guidance(
+            {
+                "status": "missing_tag",
+                "can_push_tag": False,
+                "latest_tag": None,
+                "tag_points_at_head": tag_points_at_head,
+                "tag_published": tag_published,
+                "required_action": "Create a release tag before publishing a tag.",
+            },
+            publication,
+            target_version,
+        )
     if not tag_points_at_head:
-        return {
-            "status": "manual_decision_required",
-            "can_push_tag": False,
-            "latest_tag": str(latest_tag),
-            "tag_points_at_head": False,
-            "tag_published": tag_published,
-            "required_action": (
-                "Move to the latest tag commit or create a new release tag at HEAD "
-                "before publishing a tag."
-            ),
-        }
+        return _with_target_tag_guidance(
+            {
+                "status": "manual_decision_required",
+                "can_push_tag": False,
+                "latest_tag": str(latest_tag),
+                "tag_points_at_head": False,
+                "tag_published": tag_published,
+                "required_action": (
+                    "Move to the latest tag commit or create a new release tag at HEAD "
+                    "before publishing a tag."
+                ),
+            },
+            publication,
+            target_version,
+        )
     if tag_published is True:
-        return {
-            "status": "published",
-            "can_push_tag": False,
-            "latest_tag": str(latest_tag),
-            "tag_points_at_head": True,
-            "tag_published": True,
-            "required_action": None,
-        }
+        return _with_target_tag_guidance(
+            {
+                "status": "published",
+                "can_push_tag": False,
+                "latest_tag": str(latest_tag),
+                "tag_points_at_head": True,
+                "tag_published": True,
+                "required_action": None,
+            },
+            publication,
+            target_version,
+        )
     if not _publication_worktree_clean(publication):
-        return {
-            "status": "blocked_by_worktree",
+        return _with_target_tag_guidance(
+            {
+                "status": "blocked_by_worktree",
+                "can_push_tag": False,
+                "latest_tag": str(latest_tag),
+                "tag_points_at_head": True,
+                "tag_published": tag_published,
+                "required_action": "Commit, stash, or discard local worktree changes before publishing release refs.",
+            },
+            publication,
+            target_version,
+        )
+    if tag_published is False:
+        return _with_target_tag_guidance(
+            {
+                "status": "ready_to_push",
+                "can_push_tag": True,
+                "latest_tag": str(latest_tag),
+                "tag_points_at_head": True,
+                "tag_published": False,
+                "required_action": f"Push tag `{latest_tag}` after the branch is published.",
+            },
+            publication,
+            target_version,
+        )
+    return _with_target_tag_guidance(
+        {
+            "status": "needs_remote_check",
             "can_push_tag": False,
             "latest_tag": str(latest_tag),
             "tag_points_at_head": True,
             "tag_published": tag_published,
-            "required_action": "Commit, stash, or discard local worktree changes before publishing release refs.",
-        }
-    if tag_published is False:
-        return {
-            "status": "ready_to_push",
-            "can_push_tag": True,
-            "latest_tag": str(latest_tag),
-            "tag_points_at_head": True,
-            "tag_published": False,
-            "required_action": f"Push tag `{latest_tag}` after the branch is published.",
-        }
+            "required_action": "Rerun with `--remote` to verify the live remote tag.",
+        },
+        publication,
+        target_version,
+    )
+
+
+def _target_tag_name(target_version: str | None) -> str | None:
+    if not target_version:
+        return None
+    version = str(target_version).strip()
+    if not version:
+        return None
+    return version if version.startswith("v") else f"v{version}"
+
+
+def _with_target_tag_guidance(
+    decision: dict[str, Any], publication: Any, target_version: str | None
+) -> dict[str, Any]:
+    target_tag = _target_tag_name(target_version)
+    if target_tag is None:
+        return decision
+
+    latest_tag = decision.get("latest_tag")
+    tag_points_at_head = bool(decision.get("tag_points_at_head", False))
+    target_tag_matches_latest = latest_tag == target_tag
+    remote = str(getattr(publication, "remote", "") or "origin")
+    create_command = f"git tag {shlex.quote(target_tag)}"
+    push_command = f"git push {shlex.quote(remote)} {shlex.quote(target_tag)}"
+
+    if target_tag_matches_latest and tag_points_at_head:
+        target_status = "current_tag_at_head"
+        required_action = decision.get("required_action")
+        commands: list[str] = []
+    elif not _publication_worktree_clean(publication):
+        target_status = "blocked_by_worktree"
+        required_action = (
+            "Commit, stash, or discard local worktree changes before creating "
+            f"target tag `{target_tag}`."
+        )
+        commands = [create_command, push_command]
+    else:
+        target_status = "create_target_tag_at_head"
+        required_action = (
+            f"After final release readiness is clean, create target tag `{target_tag}` at HEAD "
+            "and push it after the branch is published."
+        )
+        commands = [create_command, push_command]
+
     return {
-        "status": "needs_remote_check",
-        "can_push_tag": False,
-        "latest_tag": str(latest_tag),
-        "tag_points_at_head": True,
-        "tag_published": tag_published,
-        "required_action": "Rerun with `--remote` to verify the live remote tag.",
+        **decision,
+        "target_tag": target_tag,
+        "target_tag_matches_latest": target_tag_matches_latest,
+        "target_tag_status": target_status,
+        "target_tag_required_action": required_action,
+        "target_tag_command_count": len(commands),
+        "target_tag_commands_sha256": _stable_json_sha256(commands),
+        "target_tag_primary_command": commands[0] if commands else None,
+        "target_tag_commands": commands,
     }
 
 
@@ -1579,7 +1660,9 @@ def build_plan(
         validation_commands=validation_commands,
         candidate_issue_gate=_candidate_issue_gate(readiness, publication),
         publication_visibility=_publication_visibility(publication),
-        publication_tag_publish_decision=_publication_tag_publish_decision(publication),
+        publication_tag_publish_decision=_publication_tag_publish_decision(
+            publication, str(readiness.target_version)
+        ),
         publication_blockers=publication_blockers,
         publication_next_action_count=len(publication_next_actions),
         publication_next_actions=publication_next_actions,

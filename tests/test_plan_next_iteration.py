@@ -388,6 +388,18 @@ def test_plan_surfaces_tag_mismatch_before_publication(tmp_path):
         "git push origin master",
         "python scripts/check_release_publication.py --remote --json",
     ]
+    assert plan.publication_tag_publish_decision["target_tag"] == "v0.16.2"
+    assert (
+        plan.publication_tag_publish_decision["target_tag_status"]
+        == "create_target_tag_at_head"
+    )
+    assert plan.publication_tag_publish_decision["target_tag_commands"] == [
+        "git tag v0.16.2",
+        "git push origin v0.16.2",
+    ]
+    assert plan.publication_tag_publish_decision["target_tag_commands_sha256"] == (
+        _stable_json_sha256(plan.publication_tag_publish_decision["target_tag_commands"])
+    )
     assert plan.next_actions[:4] == [
         "Push `master` to `origin`; local branch is ahead by `2` commits.",
         "Move to the `v0.16.1` commit or create a new release tag at HEAD before publishing.",
@@ -1187,6 +1199,19 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "required_action": (
             "Commit, stash, or discard local worktree changes before publishing release refs."
         ),
+        "target_tag": "v0.16.2",
+        "target_tag_matches_latest": False,
+        "target_tag_status": "blocked_by_worktree",
+        "target_tag_required_action": (
+            "Commit, stash, or discard local worktree changes before creating target tag "
+            "`v0.16.2`."
+        ),
+        "target_tag_command_count": 2,
+        "target_tag_commands_sha256": _stable_json_sha256(
+            ["git tag v0.16.2", "git push origin v0.16.2"]
+        ),
+        "target_tag_primary_command": "git tag v0.16.2",
+        "target_tag_commands": ["git tag v0.16.2", "git push origin v0.16.2"],
     }
     expected_publication_blockers = [
         "publication worktree is dirty",
