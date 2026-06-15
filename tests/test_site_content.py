@@ -20,6 +20,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Real Demo Case Proposal" in index
     assert "cases/manifest.json" in index
     assert "python scripts/validate_cases.py --strict" in index
+    assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in index
     assert "docs/good-first-issues.md" in index
     assert "docs/weekly-maintainer-loop.md" in index
     assert "python scripts/release_readiness.py --json" in index
