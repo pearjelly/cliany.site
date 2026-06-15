@@ -143,6 +143,45 @@ def _summary(cases: list[dict[str, Any]], *, catalog_total: int) -> dict[str, An
     }
 
 
+def _print_single_case_detail(console: Any, case: dict[str, Any]) -> None:
+    console.print("\n[bold]案例详情[/bold]")
+    for label, key in (
+        ("ID", "id"),
+        ("Title", "title"),
+        ("Status", "status"),
+        ("Category", "category"),
+        ("Target", "target_url"),
+        ("Adapter", "adapter_domain"),
+        ("Docs", "docs"),
+        ("Example", "example_output"),
+    ):
+        value = case.get(key)
+        if value:
+            console.print(f"- {label}: {value}")
+
+    validation = case.get("validation")
+    if isinstance(validation, dict):
+        console.print("\n[bold]Validation[/bold]")
+        for key in ("offline", "online"):
+            value = validation.get(key)
+            if value:
+                console.print(f"- {key}: {value}")
+
+    evidence = case.get("promotion_evidence")
+    if isinstance(evidence, dict):
+        console.print("\n[bold]Promotion Tasks[/bold]")
+        for task in PROMOTION_TASKS:
+            task_evidence = evidence.get(task)
+            if not isinstance(task_evidence, dict):
+                continue
+            status = task_evidence.get("status") or "unknown"
+            evidence_value = task_evidence.get("evidence") or "Not attached yet."
+            next_action = task_evidence.get("next_action") or "No next action declared."
+            console.print(f"- {task}: {status}")
+            console.print(f"  evidence: {evidence_value}")
+            console.print(f"  next: {next_action}")
+
+
 def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
     from rich.console import Console
     from rich.table import Table
@@ -163,6 +202,9 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
     if not cases:
         console.print("[yellow]没有匹配的案例。[/yellow]")
         return
+
+    if detail and len(cases) == 1:
+        _print_single_case_detail(console, cases[0])
 
     table = Table(title="案例库")
     table.add_column("ID", style="cyan")

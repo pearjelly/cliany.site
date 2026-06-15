@@ -80,7 +80,13 @@ def test_cases_command_human_case_detail_shows_all_commands(tmp_home):
     result = runner.invoke(cli, ["cases", "--case-id", "pypi-project-search"], catch_exceptions=False)
 
     assert result.exit_code == 0
+    assert "案例详情" in result.output
     assert "pypi-project-search" in result.output
+    assert "https://pypi.org/search/?q=cliany-site" in result.output
+    assert "Validation" in result.output
+    assert "Promotion Tasks" in result.output
+    assert "adapter_package: pending" in result.output
+    assert "Generate pypi.org" in result.output
     assert "cliany-site explore" in result.output
     assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in result.output
     assert "python scripts/validate_cases.py --strict" in result.output
