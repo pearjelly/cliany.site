@@ -123,6 +123,7 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "case_promotion_evidence_primary_task",
     "case_promotion_evidence_primary_status",
     "case_promotion_evidence_primary_evidence_sha256",
+    "case_promotion_evidence_primary_detail_sha256",
     "body_count",
     "issue_body_inventory_preview_count",
     "issue_body_inventory_preview",
@@ -3007,6 +3008,9 @@ def _issue_artifact_bundle_summary(
         "case_promotion_evidence_primary_evidence_sha256": _stable_json_sha256(
             case_promotion_evidence_primary_task.get("evidence")
         ),
+        "case_promotion_evidence_primary_detail_sha256": _stable_json_sha256(
+            case_promotion_evidence_primary_task
+        ),
         "body_count": issue_body_summary["body_count"],
         "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
         "issue_body_inventory_preview": list(issue_body_inventory_preview),
@@ -3686,6 +3690,8 @@ def _issue_artifact_bundle_summary_markdown(
             f"{_summary_inline_code(summary['case_promotion_evidence_primary_status'])}",
             "- case_promotion_evidence_primary_evidence_sha256: "
             f"`{summary['case_promotion_evidence_primary_evidence_sha256']}`",
+            "- case_promotion_evidence_primary_detail_sha256: "
+            f"`{summary['case_promotion_evidence_primary_detail_sha256']}`",
             f"- body_count: `{summary['body_count']}`",
             f"- issue_body_inventory_preview_count: `{summary['issue_body_inventory_preview_count']}`",
             "- issue_body_inventory_preview: "

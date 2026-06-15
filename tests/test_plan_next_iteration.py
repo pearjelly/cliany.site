@@ -1271,6 +1271,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "case_promotion_evidence_primary_task": "adapter_package",
         "case_promotion_evidence_primary_status": "pending",
         "case_promotion_evidence_primary_evidence_sha256": _stable_json_sha256(""),
+        "case_promotion_evidence_primary_detail_sha256": _stable_json_sha256(
+            plan.case_promotion_evidence_summary["primary_task_detail"]
+        ),
         "body_count": 2,
         "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
         "issue_body_inventory_preview": list(issue_body_inventory_preview),
@@ -2425,6 +2428,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "case_promotion_evidence_primary_evidence_sha256: "
         f"`{_stable_json_sha256('')}`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_primary_detail_sha256: "
+        f"`{artifact_bundle_summary['case_promotion_evidence_primary_detail_sha256']}`"
     ) in readme
     assert (
         "issue_body_inventory_preview_count: "
