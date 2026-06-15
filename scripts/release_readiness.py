@@ -168,9 +168,13 @@ class ReadinessReport:
             "publication_worktree_status": publication_payload["worktree_status"],
             "publication_tag_publish_decision": publication_payload["tag_publish_decision"],
             "publication_next_action_count": publication_payload["next_action_count"],
+            "publication_next_actions_sha256": _stable_json_sha256(publication_next_actions),
             "publication_primary_next_action": publication_next_actions[0] if publication_next_actions else None,
             "publication_next_actions": publication_next_actions,
             "publication_publish_command_count": publication_payload["publish_command_count"],
+            "publication_publish_commands_sha256": _stable_json_sha256(
+                publication_publish_commands
+            ),
             "publication_primary_publish_command": (
                 publication_publish_commands[0] if publication_publish_commands else None
             ),
@@ -727,6 +731,7 @@ def _print_text(report: ReadinessReport) -> None:
     if tag_publish_decision.get("required_action"):
         print(f"publication_tag_required_action: {tag_publish_decision['required_action']}")
     print(f"publication_next_action_count: {len(publication_next_actions)}")
+    print(f"publication_next_actions_sha256: {_stable_json_sha256(publication_next_actions)}")
     if publication_next_actions:
         print(f"publication_primary_next_action: {publication_next_actions[0]}")
     if publication_next_actions:
@@ -734,6 +739,10 @@ def _print_text(report: ReadinessReport) -> None:
         for action in publication_next_actions:
             print(f"- {action}")
     print(f"publication_publish_command_count: {len(publication_publish_commands)}")
+    print(
+        "publication_publish_commands_sha256: "
+        f"{_stable_json_sha256(publication_publish_commands)}"
+    )
     if publication_publish_commands:
         print(f"publication_primary_publish_command: {publication_publish_commands[0]}")
     if publication_publish_commands:
@@ -1005,8 +1014,10 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
         f"- tag_can_push: `{str(bool(tag_publish_decision['can_push_tag'])).lower()}`",
         f"- tag_required_action: `{_markdown_cell(tag_publish_decision.get('required_action'))}`",
         f"- publication_next_action_count: `{len(publication_next_actions)}`",
+        f"- publication_next_actions_sha256: `{_stable_json_sha256(publication_next_actions)}`",
         f"- publication_primary_next_action: `{_markdown_cell(primary_next_action)}`",
         f"- publish_command_count: `{len(commands)}`",
+        f"- publication_publish_commands_sha256: `{_stable_json_sha256(commands)}`",
         f"- primary_publish_command: `{_markdown_cell(primary_publish_command)}`",
         "",
     ]

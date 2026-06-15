@@ -50,6 +50,7 @@
 - `scripts/release_readiness.py` 现在也把 `publication_ref_context` 提升到顶层 JSON、默认文本输出和 Markdown report，让维护者直接看到发布待办对应的 branch、upstream、HEAD、tag 和 ahead/behind refs。
 - `scripts/release_readiness.py` 现在也把 `publication_worktree_clean`、`publication_worktree_status_count` 和 `publication_worktree_status` 提升到顶层 JSON、默认文本输出和 Markdown report，让维护者在发版预检 artifact 里直接判断本地改动是否阻塞发布命令。
 - `scripts/release_readiness.py` 现在也输出 `publication_primary_next_action` 和 `publication_primary_publish_command`，让只读发版预检摘要的工具可以直接展示首要发布待办与首条发布命令。
+- `scripts/release_readiness.py` 现在也输出 `publication_next_actions_sha256` 和 `publication_publish_commands_sha256`，让发版预检 artifact 能直接检测 publication action/command 列表是否漂移。
 - `scripts/release_readiness.py` 现在输出顶层 `publication_summary`，把发布状态、worktree、branch/tag、ahead/behind、tag 决策、首要动作和首条发布命令压缩成一个机器可读摘要。
 - `scripts/release_readiness.py` 现在输出 `publication_summary_sha256`，让只读发版预检 artifact 的工具能检测 publication summary 是否漂移。
 - `scripts/release_readiness.py` 现在也输出 `publication_summary_primary_next_action` 和 `publication_summary_primary_publish_command` 顶层别名，让只读摘要字段族的工具不用展开 nested summary。
