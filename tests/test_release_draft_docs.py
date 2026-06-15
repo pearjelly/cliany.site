@@ -10984,6 +10984,10 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         ),
         "adapter_domain-<version>.cliany-adapter.tar.gz",
         "candidate package repair action",
+        (
+            "python scripts/plan_next_iteration.py --target-version 0.16.227 "
+            "--packages-dir ~/.cliany-site/packages --json"
+        ),
         "Package checks",
         "共用的 rerun 动作",
         "python scripts/validate_cases.py",

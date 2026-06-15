@@ -628,6 +628,11 @@ def test_plan_validation_commands_keep_package_gate_args(tmp_path):
         data["validation_commands"][1]
         == f"python scripts/release_readiness.py --target-version 0.16.2 {package_args} --json"
     )
+    assert data["validation_commands"][4] == (
+        "python scripts/validate_cases.py "
+        f"--packages-dir {plan_next_iteration.shlex.quote(str(packages_dir))} "
+        "--include-candidate-packages --strict"
+    )
     assert data["issue_artifacts_command"] == (
         "python scripts/plan_next_iteration.py --target-version 0.16.2 "
         f"{package_args} --issues-dir /tmp/cliany-candidate-issues"

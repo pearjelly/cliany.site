@@ -668,6 +668,16 @@ def _package_gate_args(*, packages_dir: Path | None, require_packages: bool) -> 
     return f" {' '.join(args)}" if args else ""
 
 
+def _candidate_package_validation_command(packages_dir: Path | None) -> str | None:
+    if packages_dir is None:
+        return None
+    quoted_packages_dir = shlex.quote(str(packages_dir))
+    return (
+        "python scripts/validate_cases.py "
+        f"--packages-dir {quoted_packages_dir} --include-candidate-packages --strict"
+    )
+
+
 def _publication_worktree_clean(publication: Any) -> bool:
     clean = getattr(publication, "worktree_clean", None)
     if clean is not None:
@@ -1323,6 +1333,9 @@ def build_plan(
         "python scripts/check_release_publication.py --json",
         "python scripts/validate_cases.py --strict",
     ]
+    candidate_package_validation_command = _candidate_package_validation_command(packages_dir)
+    if candidate_package_validation_command is not None:
+        validation_commands.append(candidate_package_validation_command)
     issue_artifacts_command = (
         f"python scripts/plan_next_iteration.py --target-version {readiness.target_version}"
         f"{package_args} --issues-dir /tmp/cliany-candidate-issues"
