@@ -10939,6 +10939,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "evidence_bundle_command",
         "evidence_bundle_json_command",
         "promotion_evidence_primary_task",
+        "evidence_bundle_primary_next_task",
+        "Evidence Bundle Primary Next Task",
         "case_promotion_evidence_summary.primary_task_detail",
         "artifact_bundle_summary.case_promotion_evidence_primary_detail_sha256",
         "Primary Evidence Task",
