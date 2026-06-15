@@ -11,6 +11,9 @@
 - 新增 `docs/releases/v0.16.225-draft.md`，把下一版 patch release 聚焦到发布可见性优先的维护路径。
 - `v0.16.225` 草案明确记录 `publication_visibility`、`candidate_issue_gate`、`publication-handoff.json` 和 `release-draft-handoff.json` 的交接关系，让下一轮计划不再被缺失草案阻塞。
 
+### Fixed
+- `plan_next_iteration.py` 现在只在 release draft 真的存在校验问题时提示 `Draft and verify`，避免草案已通过后仍重复提示已完成动作。
+
 ## [0.16.224] - 2026-06-15
 
 ### Added

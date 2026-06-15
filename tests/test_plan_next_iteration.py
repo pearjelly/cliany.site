@@ -442,6 +442,30 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     }
 
 
+def test_plan_next_actions_skip_release_draft_when_draft_is_valid(tmp_path):
+    _write_pyproject(tmp_path)
+    readiness = _readiness_report()
+    readiness.draft = SimpleNamespace(
+        ok=True,
+        path="/tmp/project/docs/releases/v0.16.2-draft.md",
+        target_version="0.16.2",
+        issues=[],
+    )
+    readiness.blockers = ["commit days 2/3"]
+
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=readiness,
+        publication_report=_publication_report(),
+    )
+
+    assert plan.release_draft_issues == []
+    assert not any("Draft and verify" in action for action in plan.next_actions)
+    assert any("push `master`" in action for action in plan.next_actions)
+    assert any("more unique commit days" in action for action in plan.next_actions)
+    assert any("Promote one candidate case" in action for action in plan.next_actions)
+
+
 def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     _write_pyproject(tmp_path)
     plan = plan_next_iteration.build_plan(

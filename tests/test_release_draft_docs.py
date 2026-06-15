@@ -10774,6 +10774,8 @@ def test_v016225_release_draft_tracks_publication_first_plan():
         "candidate_issue_gate",
         "blocked_by_publication",
         "release_draft_issues",
+        "next_actions",
+        "Draft and verify",
         "release-draft-handoff.json",
         "publication-handoff.json",
         "v0.16.224",

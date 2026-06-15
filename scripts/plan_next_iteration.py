@@ -788,7 +788,8 @@ def _next_action_lines(readiness: Any, publication: Any) -> list[str]:
         actions.append(f"Ship verified slices on `{missing}` more unique commit days this week.")
     if readiness.cases.candidate:
         actions.append("Promote one candidate case by collecting adapter package, metadata, and online smoke evidence.")
-    actions.append(f"Draft and verify `docs/releases/v{readiness.target_version}-draft.md` for the next release.")
+    if _release_draft_issues(readiness):
+        actions.append(f"Draft and verify `docs/releases/v{readiness.target_version}-draft.md` for the next release.")
 
     deduped: list[str] = []
     for action in actions:
