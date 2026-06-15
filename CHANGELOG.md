@@ -18,6 +18,7 @@
 - `scripts/validate_cases.py --report` 现在输出 `Candidate Evidence Bundle Commands` 小节，直接链接每个 candidate 的 evidence bundle CLI 命令。
 - `scripts/validate_cases.py --report` 的 `Issue Body Template` 现在包含 `Reproduction Context` 和 `Evidence Bundle` 小节，让 case report 复制出的 issue body 与 CLI/计划器模板一致。
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 candidate issue artifacts 现在在 `candidate_promotions`、`issue-metadata.json`、issue metadata summary 和 artifacts `README.md` 中输出 `evidence_bundle_command` / `evidence_bundle_json_command`，让维护者能直接复制案例证据包命令。
+- `scripts/plan_next_iteration.py` 的 candidate promotion JSON 和 issue artifacts 现在输出 `promotion_evidence_primary_task`，并在 artifacts `README.md` 的 `Candidate Summary` 中展示首要 evidence task。
 - `scripts/plan_next_iteration.py` 生成的 candidate issue body 现在也包含 `Evidence Bundle` 小节，与 `cliany-site cases --case-id <id> --issue-template` 保持一致。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 candidate issue artifacts 的 evidence bundle 字段和 `Candidate Summary` 复制入口。
 - [docs/good-first-issues.md](docs/good-first-issues.md) 和 [docs/contributor-starter.md](docs/contributor-starter.md) 现在明确 candidate promotion 的 Issue Body Template 自带 `Reproduction Context` 与 `Evidence Bundle`。

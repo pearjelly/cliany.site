@@ -10934,6 +10934,7 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "Candidate Evidence Bundle Commands",
         "evidence_bundle_command",
         "evidence_bundle_json_command",
+        "promotion_evidence_primary_task",
         "Candidate Summary",
         "docs/good-first-issues.md",
         "cliany-site cases --case-id <id> --evidence-bundle --json",

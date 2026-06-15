@@ -449,6 +449,7 @@ class CandidatePromotion:
     metadata_validation: str
     online_smoke: str
     promotion_evidence: dict[str, Any]
+    promotion_evidence_primary_task: dict[str, Any]
     evidence_bundle_command: str
     evidence_bundle_json_command: str
     issue_body: str
@@ -465,6 +466,7 @@ class CandidatePromotion:
             "metadata_validation": self.metadata_validation,
             "online_smoke": self.online_smoke,
             "promotion_evidence": self.promotion_evidence,
+            "promotion_evidence_primary_task": self.promotion_evidence_primary_task,
             "evidence_bundle_command": self.evidence_bundle_command,
             "evidence_bundle_json_command": self.evidence_bundle_json_command,
             "issue_body": self.issue_body,
@@ -1111,6 +1113,7 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 metadata_validation=_promotion_value(promotion, "metadata_validation"),
                 online_smoke=_promotion_value(promotion, "online_smoke"),
                 promotion_evidence=promotion_evidence,
+                promotion_evidence_primary_task=_candidate_promotion_primary_task(promotion_evidence),
                 evidence_bundle_command=_candidate_evidence_bundle_command(str(case.id)),
                 evidence_bundle_json_command=_candidate_evidence_bundle_json_command(str(case.id)),
                 issue_body=_candidate_issue_body(
@@ -1126,6 +1129,31 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
             )
         )
     return promotions
+
+
+def _candidate_promotion_primary_task(evidence: dict[str, Any]) -> dict[str, Any]:
+    incomplete_tasks: list[dict[str, Any]] = []
+    for field_name in CANDIDATE_PROMOTION_FIELDS:
+        task = evidence.get(field_name)
+        task = task if isinstance(task, dict) else {}
+        status = str(task.get("status") or "pending")
+        evidence_value = task.get("evidence") or ""
+        complete = status == "complete" and bool(evidence_value)
+        if complete:
+            continue
+        incomplete_tasks.append(
+            {
+                "task": field_name,
+                "status": status,
+                "evidence": evidence_value,
+                "next_action": str(task.get("next_action") or ""),
+            }
+        )
+
+    pending = [task for task in incomplete_tasks if task["status"] == "pending"]
+    blocked = [task for task in incomplete_tasks if task["status"] == "blocked"]
+    primary = pending[0] if pending else (blocked[0] if blocked else (incomplete_tasks[0] if incomplete_tasks else {}))
+    return dict(primary)
 
 
 def _candidate_evidence_bundle_command(case_id: str) -> str:
@@ -1790,6 +1818,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "commands": promotion.commands,
                 "offline_commands": promotion.offline_commands,
                 "promotion_evidence": promotion.promotion_evidence,
+                "promotion_evidence_primary_task": promotion.promotion_evidence_primary_task,
                 "evidence_bundle_command": promotion.evidence_bundle_command,
                 "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
                 "issue_body_name": body_path.name,
@@ -2433,6 +2462,7 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
             "commands": item["commands"],
             "offline_commands": item["offline_commands"],
             "promotion_evidence": item["promotion_evidence"],
+            "promotion_evidence_primary_task": item["promotion_evidence_primary_task"],
             "evidence_bundle_command": item["evidence_bundle_command"],
             "evidence_bundle_json_command": item["evidence_bundle_json_command"],
             "issue_body_name": item["issue_body_name"],
@@ -2471,6 +2501,7 @@ def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[di
             "commands": promotion.commands,
             "offline_commands": promotion.offline_commands,
             "promotion_evidence": promotion.promotion_evidence,
+            "promotion_evidence_primary_task": promotion.promotion_evidence_primary_task,
             "evidence_bundle_command": promotion.evidence_bundle_command,
             "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
             "issue_body_name": f"{promotion.case_id}.md",
@@ -4103,15 +4134,17 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
         "",
         (
             "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands | "
-            "Evidence Bundle | Evidence Bundle JSON |"
+            "Primary Evidence Task | Evidence Bundle | Evidence Bundle JSON |"
         ),
-        "|------|------------|------------|--------------------|-----------------------------|-----------------|----------------------|",
+        "|------|------------|------------|--------------------|-----------------------------|-----------------------|-----------------|----------------------|",
     ]
     for promotion in promotions:
+        primary_task = promotion.promotion_evidence_primary_task.get("task") or "Not declared."
         lines.append(
             f"| `{promotion.case_id}` | `{promotion.case_id}.md` | {promotion.target_url or 'Not declared.'} | "
             f"{len(promotion.commands)} | {len(promotion.offline_commands)} | "
-            f"`{promotion.evidence_bundle_command}` | `{promotion.evidence_bundle_json_command}` |"
+            f"`{primary_task}` | `{promotion.evidence_bundle_command}` | "
+            f"`{promotion.evidence_bundle_json_command}` |"
         )
     return "\n".join(lines)
 
