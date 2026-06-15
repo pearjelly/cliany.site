@@ -154,6 +154,8 @@ class ReadinessReport:
             "publication": publication_payload,
             "publication_ok": publication_payload["ok"],
             "publication_tag_publish_decision": publication_payload["tag_publish_decision"],
+            "publication_next_action_count": publication_payload["next_action_count"],
+            "publication_next_actions": publication_payload["next_actions"],
             "publication_publish_command_count": publication_payload["publish_command_count"],
             "publication_publish_commands": publication_payload["publish_commands"],
             "next_actions": _next_action_lines(self),
@@ -640,6 +642,7 @@ def build_report(
 def _print_text(report: ReadinessReport) -> None:
     publication_payload = report.publication.to_dict()
     tag_publish_decision = publication_payload["tag_publish_decision"]
+    publication_next_actions = list(publication_payload["next_actions"])
     publication_publish_commands = list(publication_payload["publish_commands"])
     print("=== cliany-site release readiness ===")
     print(f"current_version: {report.current_version}")
@@ -676,6 +679,11 @@ def _print_text(report: ReadinessReport) -> None:
     )
     if tag_publish_decision.get("required_action"):
         print(f"publication_tag_required_action: {tag_publish_decision['required_action']}")
+    print(f"publication_next_action_count: {len(publication_next_actions)}")
+    if publication_next_actions:
+        print("publication_next_actions:")
+        for action in publication_next_actions:
+            print(action)
     print(f"publication_publish_command_count: {len(publication_publish_commands)}")
     if publication_publish_commands:
         print("publication_publish_commands:")
@@ -752,6 +760,10 @@ def _case_package_next_action_lines(report: ReadinessReport) -> list[str]:
 
 def _publication_publish_commands(report: ReadinessReport) -> list[str]:
     return [str(command) for command in report.publication.to_dict()["publish_commands"]]
+
+
+def _publication_next_actions(report: ReadinessReport) -> list[str]:
+    return [str(action) for action in report.publication.to_dict()["next_actions"]]
 
 
 def _next_action_lines(report: ReadinessReport) -> list[str]:
@@ -868,6 +880,7 @@ def _candidate_command_plan_summary_lines(report: ReadinessReport) -> list[str]:
 def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
     publication_payload = report.publication.to_dict()
     tag_publish_decision = publication_payload["tag_publish_decision"]
+    publication_next_actions = _publication_next_actions(report)
     commands = _publication_publish_commands(report)
     lines = [
         "",
@@ -877,9 +890,12 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
         f"- tag_publish_decision: `{_markdown_cell(tag_publish_decision['status'])}`",
         f"- tag_can_push: `{str(bool(tag_publish_decision['can_push_tag'])).lower()}`",
         f"- tag_required_action: `{_markdown_cell(tag_publish_decision.get('required_action'))}`",
+        f"- publication_next_action_count: `{len(publication_next_actions)}`",
         f"- publish_command_count: `{len(commands)}`",
         "",
     ]
+    if publication_next_actions:
+        lines.extend(["### Publication Next Actions", "", *publication_next_actions, ""])
     if commands:
         lines.extend(["```bash", *commands, "```"])
     else:
