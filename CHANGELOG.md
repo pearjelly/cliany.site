@@ -17,6 +17,7 @@
 - `check_release_publication.py --json` / `--report` 现在输出 `tag_publish_decision`，用稳定字段标记 `manual_decision_required`、`ready_to_push`、`published` 等 tag 发布状态。
 - `plan_next_iteration.py` 现在把 `tag_publish_decision` 透传为 `publication_tag_publish_decision`，并写入 Markdown report、`artifact-manifest.json`、`publication-handoff.json` 和 artifacts `README.md`。
 - `artifact_bundle_summary` 现在输出 `publication_tag_publish_decision_*` 摘要字段，让只读整包摘要的维护工具也能判断 tag 是否可推，并检测该对象字段漂移。
+- `candidate_issue_gate.evidence` 现在包含 tag 发布决策状态、是否可推和 required action，artifacts `README.md` 的 `Publication Handoff` 也会展示同一组 gate evidence。
 
 ## [0.16.226] - 2026-06-15
 

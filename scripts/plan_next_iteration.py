@@ -829,6 +829,7 @@ def _candidate_issue_gate_reason_descriptions(reason_codes: list[str]) -> dict[s
 def _candidate_issue_gate_evidence(readiness: Any, publication: Any) -> dict[str, Any]:
     release_draft_issues = _release_draft_issues(readiness)
     publication_visibility = _publication_visibility(publication)
+    tag_decision = _publication_tag_publish_decision(publication)
     draft = getattr(readiness, "draft", None)
     return {
         "publication_ok": bool(getattr(publication, "ok", False)),
@@ -838,6 +839,9 @@ def _candidate_issue_gate_evidence(readiness: Any, publication: Any) -> dict[str
         "publication_branch": str(getattr(publication, "branch", "") or "HEAD"),
         "publication_latest_tag": str(getattr(publication, "latest_tag", "") or "(none)"),
         "publication_ahead_count": getattr(publication, "ahead_count", None),
+        "publication_tag_decision_status": tag_decision.get("status"),
+        "publication_tag_can_push": tag_decision.get("can_push_tag"),
+        "publication_tag_required_action": tag_decision.get("required_action"),
         "release_draft_ok": bool(getattr(draft, "ok", False)),
         "release_draft_path": _release_draft_evidence_path(readiness),
         "release_draft_issue_count": len(release_draft_issues),
@@ -1513,6 +1517,9 @@ def _candidate_issue_gate_evidence_markdown(evidence: object) -> str:
         ("publication_branch", evidence.get("publication_branch")),
         ("publication_latest_tag", evidence.get("publication_latest_tag")),
         ("publication_ahead_count", evidence.get("publication_ahead_count")),
+        ("publication_tag_decision_status", evidence.get("publication_tag_decision_status")),
+        ("publication_tag_can_push", evidence.get("publication_tag_can_push")),
+        ("publication_tag_required_action", evidence.get("publication_tag_required_action")),
         ("release_draft_ok", evidence.get("release_draft_ok")),
         ("release_draft_path", evidence.get("release_draft_path")),
         ("release_draft_issue_count", evidence.get("release_draft_issue_count")),
@@ -1809,6 +1816,15 @@ def _render_issue_artifacts_readme(
     gate_worktree_clean = _format_context_value(
         _candidate_issue_gate_evidence_value(plan, "publication_worktree_clean")
     )
+    gate_tag_decision = _format_context_value(
+        _candidate_issue_gate_evidence_value(plan, "publication_tag_decision_status")
+    )
+    gate_tag_can_push = _format_context_value(
+        _candidate_issue_gate_evidence_value(plan, "publication_tag_can_push")
+    )
+    gate_tag_required_action = _format_context_value(
+        _candidate_issue_gate_evidence_value(plan, "publication_tag_required_action")
+    )
     gate_draft_ok = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_ok"))
     gate_draft_issues = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_issue_count"))
     create_issues_safety = _issue_artifact_create_issues_safety(Path("create-issues.sh"))
@@ -1865,6 +1881,9 @@ Generated for target version `{plan.target_version}`.
 - gate_evidence_latest_tag: `{gate_latest_tag}`
 - gate_evidence_ahead_count: `{gate_ahead_count}`
 - gate_evidence_worktree_clean: `{gate_worktree_clean}`
+- gate_evidence_tag_decision: `{gate_tag_decision}`
+- gate_evidence_tag_can_push: `{gate_tag_can_push}`
+- gate_evidence_tag_required_action: `{gate_tag_required_action}`
 - gate_evidence_release_draft_ok: `{gate_draft_ok}`
 - gate_evidence_release_draft_issues: `{gate_draft_issues}`
 - visibility: `{_format_context_value(plan.publication_visibility.get("status"))}`

@@ -258,6 +258,11 @@ def _blocked_candidate_issue_gate() -> dict[str, object]:
             "publication_branch": "master",
             "publication_latest_tag": "v0.16.1",
             "publication_ahead_count": 2,
+            "publication_tag_decision_status": "blocked_by_worktree",
+            "publication_tag_can_push": False,
+            "publication_tag_required_action": (
+                "Commit, stash, or discard local worktree changes before publishing release refs."
+            ),
             "release_draft_ok": False,
             "release_draft_path": "docs/releases/v0.16.2-draft.md",
             "release_draft_issue_count": 2,
@@ -351,6 +356,9 @@ def test_candidate_issue_gate_allows_creation_after_publication_with_release_dra
             "publication_branch": "master",
             "publication_latest_tag": "v0.16.1",
             "publication_ahead_count": 0,
+            "publication_tag_decision_status": "published",
+            "publication_tag_can_push": False,
+            "publication_tag_required_action": None,
             "release_draft_ok": False,
             "release_draft_path": "docs/releases/v0.16.2-draft.md",
             "release_draft_issue_count": 2,
@@ -3027,7 +3035,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"candidate_issue_gate_summary_sha256: "
         f"`{artifact_bundle_summary['candidate_issue_gate_summary_sha256']}`"
     ) in readme
-    assert "candidate_issue_gate_evidence_key_count: `10`" in readme
+    assert "candidate_issue_gate_evidence_key_count: `13`" in readme
     assert (
         f"candidate_issue_gate_evidence_sha256: "
         f"`{artifact_bundle_summary['candidate_issue_gate_evidence_sha256']}`"
@@ -3175,6 +3183,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "gate_evidence_latest_tag: `v0.16.1`" in readme
     assert "gate_evidence_ahead_count: `2`" in readme
     assert "gate_evidence_worktree_clean: `false`" in readme
+    assert "gate_evidence_tag_decision: `blocked_by_worktree`" in readme
+    assert "gate_evidence_tag_can_push: `false`" in readme
+    assert (
+        "gate_evidence_tag_required_action: "
+        "`Commit, stash, or discard local worktree changes before publishing release refs.`"
+    ) in readme
     assert "gate_evidence_release_draft_ok: `false`" in readme
     assert "gate_evidence_release_draft_issues: `2`" in readme
     assert "visibility: `dirty_worktree`" in readme
