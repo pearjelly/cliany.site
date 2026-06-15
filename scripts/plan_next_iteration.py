@@ -799,6 +799,52 @@ def _publication_next_actions(publication: Any) -> list[str]:
     return [str(action).removeprefix("- ") for action in payload.get("next_actions", [])]
 
 
+def _publication_plan_next_actions(publication: Any, target_version: str | None) -> list[str]:
+    actions = _publication_next_actions(publication)
+    decision = _publication_tag_publish_decision(publication, target_version)
+    if decision.get("status") != "manual_decision_required":
+        return actions
+    if decision.get("target_tag_status") not in {
+        "blocked_by_worktree",
+        "create_target_tag_at_head",
+    }:
+        return actions
+
+    target_action = _target_tag_next_action(decision)
+    if target_action is None:
+        return actions
+
+    latest_tag = str(decision.get("latest_tag") or "")
+    normalized: list[str] = []
+    inserted = False
+    for action in actions:
+        replaces_old_tag_action = "create a new release tag at HEAD" in action or (
+            bool(latest_tag) and f"Push tag `{latest_tag}`" in action
+        )
+        if replaces_old_tag_action:
+            if not inserted:
+                normalized.append(target_action)
+                inserted = True
+            continue
+        normalized.append(action)
+
+    if not inserted:
+        normalized.append(target_action)
+    return normalized
+
+
+def _target_tag_next_action(decision: dict[str, Any]) -> str | None:
+    action = decision.get("target_tag_required_action")
+    if not action:
+        return None
+
+    commands = decision.get("target_tag_commands")
+    if not isinstance(commands, list) or not commands:
+        return str(action)
+    command_text = " then ".join(f"`{command}`" for command in commands)
+    return f"{action} Commands: {command_text}."
+
+
 def _publication_blockers(publication: Any) -> list[str]:
     to_dict = getattr(publication, "to_dict", None)
     payload = to_dict() if callable(to_dict) else {}
@@ -1156,7 +1202,9 @@ def _commit_cadence(readiness: Any) -> dict[str, Any]:
 def _next_action_lines(readiness: Any, publication: Any) -> list[str]:
     actions: list[str] = []
     if not publication.ok:
-        publication_actions = _publication_next_actions(publication)
+        publication_actions = _publication_plan_next_actions(
+            publication, str(getattr(readiness, "target_version", "") or "")
+        )
         if publication_actions:
             actions.extend(publication_actions)
         elif publication.ahead_count and publication.ahead_count > 0:

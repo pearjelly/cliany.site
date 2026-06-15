@@ -400,14 +400,17 @@ def test_plan_surfaces_tag_mismatch_before_publication(tmp_path):
     assert plan.publication_tag_publish_decision["target_tag_commands_sha256"] == (
         _stable_json_sha256(plan.publication_tag_publish_decision["target_tag_commands"])
     )
-    assert plan.next_actions[:4] == [
+    assert plan.next_actions[:3] == [
         "Push `master` to `origin`; local branch is ahead by `2` commits.",
-        "Move to the `v0.16.1` commit or create a new release tag at HEAD before publishing.",
-        "Push tag `v0.16.1` after the branch is published, or rerun with `--remote` to verify the live "
-        "remote tag.",
+        (
+            "After final release readiness is clean, create target tag `v0.16.2` at HEAD and push it "
+            "after the branch is published. Commands: `git tag v0.16.2` then "
+            "`git push origin v0.16.2`."
+        ),
         "Rerun with `--remote` when network access is available to verify live remote refs.",
     ]
     assert not any("push `master` and tag `v0.16.1`" in action for action in plan.next_actions)
+    assert not any("Push tag `v0.16.1`" in action for action in plan.next_actions)
 
 
 def test_candidate_issue_gate_allows_creation_after_publication_with_release_draft_review(tmp_path):
