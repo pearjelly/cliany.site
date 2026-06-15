@@ -519,6 +519,9 @@ def _build_package_gate_report(
             if action_text not in repair_actions:
                 repair_actions.append(action_text)
 
+    if require_packages and cases.checked_packages and failed_count:
+        issues.append(f"case package validation failed: {failed_count} failing package(s)")
+
     return PackageGateReport(
         ok=not issues,
         required=require_packages,
@@ -600,7 +603,10 @@ def build_report(
     if not project_metadata.ok:
         blockers.append("project metadata validation failed")
     if not package_gate.ok:
-        blockers.append("case package validation not run")
+        if package_gate.checked:
+            blockers.append("case package validation failed")
+        else:
+            blockers.append("case package validation not run")
 
     return ReadinessReport(
         ok=not blockers,
@@ -738,10 +744,16 @@ def _next_action_lines(report: ReadinessReport) -> list[str]:
     if not report.project_metadata.ok:
         lines.append("- Restore PyPI metadata and open-source community entrypoints required by project metadata gate.")
     if not report.package_gate.ok:
-        lines.append(
-            "- Re-run release readiness with `--packages-dir ~/.cliany-site/packages --require-packages` "
-            "after demo adapter packages are available."
-        )
+        if report.package_gate.checked and report.package_gate.failed_count:
+            lines.append(
+                "- Fix or rebuild the failing case packages listed in `Case Package Checks`, then rerun "
+                "`python scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --require-packages`."
+            )
+        else:
+            lines.append(
+                "- Re-run release readiness with `--packages-dir ~/.cliany-site/packages --require-packages` "
+                "after demo adapter packages are available."
+            )
     return lines
 
 

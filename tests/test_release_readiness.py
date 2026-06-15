@@ -1202,7 +1202,11 @@ def test_release_readiness_markdown_report_includes_case_package_checks(tmp_path
     assert "demo.example.com.cliany-adapter-v0.1.0.tar.gz" in text
     assert "domain mismatch: expected 'demo.example.com', got 'other.example.com'" in text
     assert "Regenerate the package for the manifest adapter_domain or fix the case adapter_domain." in text
-    assert "| package_gate | `true` | required `true`, checked `true`, failed `1`, missing `0`, invalid `1` |" in text
+    assert "| package_gate | `false` | required `true`, checked `true`, failed `1`, missing `0`, invalid `1` |" in text
+    assert report.ok is False
+    assert "case package validation failed" in report.blockers
+    assert report.package_gate.ok is False
+    assert report.package_gate.issues == ["case package validation failed: 1 failing package(s)"]
     assert report.package_gate.failed_count == 1
     assert report.package_gate.missing_count == 0
     assert report.package_gate.invalid_count == 1
@@ -1217,6 +1221,10 @@ def test_release_readiness_markdown_report_includes_case_package_checks(tmp_path
         "Regenerate the package for the manifest adapter_domain or fix the case adapter_domain."
     )
     assert package_next_action in report.to_dict()["next_actions"]
+    assert (
+        "- Fix or rebuild the failing case packages listed in `Case Package Checks`, then rerun "
+        "`python scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --require-packages`."
+    ) in report.to_dict()["next_actions"]
 
     release_readiness._print_text(report)
 
