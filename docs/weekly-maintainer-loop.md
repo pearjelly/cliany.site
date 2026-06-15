@@ -44,7 +44,7 @@ Candidate issue artifacts 的 review checklist 会要求维护者核对 `issue-m
 
 `plan_next_iteration.py` 的默认文本输出会在 `candidate_promotions` 下展开 `evidence_bundle_primary_next_task`；Markdown report 的 `Candidate Issue Metadata` 表也会展示 `Evidence Bundle Primary Next Task`，不用生成 issue artifacts 也能看到 evidence bundle 首要下一步。
 
-`plan_next_iteration.py` 的顶层 JSON、默认文本输出和 Markdown report 也会展示 `case_promotion_evidence_primary_next_task` 与 `case_promotion_evidence_primary_next_action`，让维护工具不用展开完整 `case_promotion_evidence_summary` 就能直接定位首要 candidate evidence 任务。
+`plan_next_iteration.py` 的顶层 JSON、默认文本输出和 Markdown report 也会展示 `case_promotion_evidence_primary_next_task`、`case_promotion_evidence_primary_next_action`、`case_promotion_evidence_summary_sha256` 和 `case_promotion_command_plan_summary_sha256`，让维护工具不用展开完整 `case_promotion_evidence_summary` 就能直接定位首要 candidate evidence 任务，并在不生成 issue artifacts 的情况下检测 candidate evidence / command plan 摘要是否漂移。
 
 `plan_next_iteration.py` 还会输出 `plan_report_command`，默认给出 `python scripts/plan_next_iteration.py --target-version <version> --report /tmp/cliany-next-iteration.md`，让维护者和自动化能从 JSON 或默认文本直接复现同一份 Markdown 周计划报告。
 

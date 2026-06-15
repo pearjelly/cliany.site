@@ -545,7 +545,13 @@ class IterationPlan:
             "case_assets": self.case_assets,
             "candidate_cases": self.candidate_cases,
             "candidate_promotions": [promotion.to_dict() for promotion in self.candidate_promotions],
+            "case_promotion_evidence_summary_sha256": _stable_json_sha256(
+                self.case_promotion_evidence_summary
+            ),
             "case_promotion_evidence_summary": self.case_promotion_evidence_summary,
+            "case_promotion_command_plan_summary_sha256": _stable_json_sha256(
+                self.case_promotion_command_plan_summary
+            ),
             "case_promotion_command_plan_summary": self.case_promotion_command_plan_summary,
             "case_promotion_evidence_primary_next_task": primary_next_task,
             "case_promotion_evidence_primary_next_action": (
@@ -1572,9 +1578,17 @@ def _print_text(plan: IterationPlan) -> None:
         print("candidate_cases:")
         for case_id in plan.candidate_cases:
             print(f"- {case_id}")
+    print(
+        "case_promotion_evidence_summary_sha256: "
+        f"{_stable_json_sha256(plan.case_promotion_evidence_summary)}"
+    )
     print("case_promotion_evidence_summary:")
     for key, value in plan.case_promotion_evidence_summary.items():
         _print_text_item(key, value)
+    print(
+        "case_promotion_command_plan_summary_sha256: "
+        f"{_stable_json_sha256(plan.case_promotion_command_plan_summary)}"
+    )
     print("case_promotion_command_plan_summary:")
     for key, value in plan.case_promotion_command_plan_summary.items():
         _print_text_item(key, value)
@@ -1753,6 +1767,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 | commit_cadence_summary | {plan.commit_cadence.get("summary")} |
 | case_assets | {plan.case_assets} |
 | candidate_cases | {candidate_cases} |
+| case_promotion_evidence_summary_sha256 | `{_stable_json_sha256(plan.case_promotion_evidence_summary)}` |
+| case_promotion_command_plan_summary_sha256 | `{_stable_json_sha256(plan.case_promotion_command_plan_summary)}` |
 | case_promotion_evidence_primary_next_task | `{primary_candidate_task_value}` |
 | case_promotion_evidence_primary_next_action | `{primary_candidate_action}` |
 | case_promotion_command_plan_all_declared | `{command_plan_all_declared}` |

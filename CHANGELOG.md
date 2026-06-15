@@ -31,6 +31,7 @@
 - `scripts/plan_next_iteration.py` 在回退构造 `case_promotion_evidence_summary` 时也保留 `primary_task_detail`，让周计划输入来自 validate report 或内存 case 对象时字段一致。
 - `cliany-site cases --json`、`scripts/validate_cases.py` 和 `scripts/plan_next_iteration.py` 的 promotion evidence summary 现在输出 `primary_next_task`，让全局 candidate summary 与单案例 evidence bundle 使用同一首要下一步字段名。
 - `scripts/plan_next_iteration.py` 的顶层 JSON、默认文本输出和 Markdown report 现在直接展示 `case_promotion_evidence_primary_next_task` 与 `case_promotion_evidence_primary_next_action`，让自动化不用展开 summary 也能定位首要 candidate 任务。
+- `scripts/plan_next_iteration.py` 的顶层 JSON、默认文本输出和 Markdown report 现在也展示 `case_promotion_evidence_summary_sha256` 与 `case_promotion_command_plan_summary_sha256`，让周计划消费者不用生成 artifacts 也能检测 candidate evidence / command plan 摘要漂移。
 - `scripts/plan_next_iteration.py` 现在输出 `plan_report_command`，把生成 `/tmp/cliany-next-iteration.md` 的 Markdown 周计划命令与 `issue_artifacts_command` 一样结构化交给维护工具。
 - Candidate issue artifacts 的 `validation_commands` 现在包含 `plan_report_command`，让 artifacts README 和 manifest 都能直接复现 Markdown 周计划报告。
 - Candidate issue artifacts 的 `artifact-manifest.json` 现在带顶层 `plan_report_command`，`artifact_bundle_summary` 也输出 `plan_report_command_sha256`，让工具不用展开 validation commands 就能复现并检测周计划报告命令漂移。

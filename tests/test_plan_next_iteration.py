@@ -553,6 +553,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     assert data["next_actions_sha256"] == _stable_json_sha256(data["next_actions"])
     assert data["primary_next_action"] == data["next_actions"][0]
     assert any("Push `master`" in action for action in data["next_actions"])
+    assert data["case_promotion_evidence_summary_sha256"] == _stable_json_sha256(
+        data["case_promotion_evidence_summary"]
+    )
+    assert data["case_promotion_command_plan_summary_sha256"] == _stable_json_sha256(
+        data["case_promotion_command_plan_summary"]
+    )
     assert data["case_promotion_evidence_summary"]["candidate_count"] == 2
     assert data["case_promotion_evidence_summary"]["task_count"] == 6
     assert data["case_promotion_evidence_summary"]["status_counts"] == {
@@ -787,6 +793,14 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "## Candidate Promotion Evidence Summary" in text
     assert "| candidate_count | `2` |" in text
     assert "| pending_count | `6` |" in text
+    assert (
+        "| case_promotion_evidence_summary_sha256 | "
+        f"`{_stable_json_sha256(plan.case_promotion_evidence_summary)}` |"
+    ) in text
+    assert (
+        "| case_promotion_command_plan_summary_sha256 | "
+        f"`{_stable_json_sha256(plan.case_promotion_command_plan_summary)}` |"
+    ) in text
     assert "| primary_next_action | `Generate pypi.org-<version>.cliany-adapter.tar.gz.` |" in text
     assert "| case_promotion_evidence_primary_next_task | `{\"case_id\": \"pypi-project-search\"" in text
     assert "\"task\": \"adapter_package\"" in text
@@ -938,6 +952,16 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
     assert (
         "case_promotion_evidence_primary_next_action: "
         "Generate pypi.org-<version>.cliany-adapter.tar.gz."
+        in text
+    )
+    assert (
+        "case_promotion_evidence_summary_sha256: "
+        f"{_stable_json_sha256(plan.case_promotion_evidence_summary)}"
+        in text
+    )
+    assert (
+        "case_promotion_command_plan_summary_sha256: "
+        f"{_stable_json_sha256(plan.case_promotion_command_plan_summary)}"
         in text
     )
     assert "candidate_promotions:" in text
