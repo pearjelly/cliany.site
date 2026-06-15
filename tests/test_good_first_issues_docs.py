@@ -33,6 +33,8 @@ def test_good_first_issues_doc_has_issue_drafting_checklist():
         "不需要真实 LLM key",
         "~/.cliany-site/",
         "cliany-site cases --case-id <id> --evidence-bundle --json",
+        "primary_next_task",
+        "case/task/status",
     ]
     for snippet in required:
         assert snippet in text
@@ -92,6 +94,7 @@ def test_good_first_issues_include_case_report_issue_draft_task():
         "cases/README.md",
         "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md",
         "cliany-site cases --case-id <id> --evidence-bundle --json",
+        "primary_next_task",
         "promotion_evidence",
         "target URL",
         "candidate commands",

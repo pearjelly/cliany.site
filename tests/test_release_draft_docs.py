@@ -10962,6 +10962,7 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "Candidate Summary",
         "cases/README.md",
         "docs/good-first-issues.md",
+        "docs/contributor-starter.md",
         "cliany-site cases --case-id <id> --evidence-bundle --json",
         "promotion_evidence",
         "status_counts",

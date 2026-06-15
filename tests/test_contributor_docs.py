@@ -69,6 +69,8 @@ def test_contributor_starter_points_to_issue_and_pr_templates():
         "Issue Body Template",
         "Reproduction Context",
         "Evidence Bundle",
+        "primary_next_task",
+        "case/task/status/evidence",
         "adapter_package",
         "metadata_validation",
         "online_smoke",
