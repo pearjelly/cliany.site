@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- 新增 `docs/releases/v0.16.226-draft.md`，把下一版 patch release 聚焦到 `v0.16.225` 本地 release 的发布可见性交接。
+- `v0.16.226` 草案明确记录 `publication_visibility`、`candidate_issue_gate`、`publication-handoff.json` 和 `release-draft-handoff.json` 在本地 release 未公开时的审阅路径。
+
 ## [0.16.225] - 2026-06-15
 
 ### Added
