@@ -13,6 +13,7 @@
 
 ### Fixed
 - `plan_next_iteration.py` 现在把 `tag_points_at_head=false` 的发布审计动作透传到顶层 `next_actions` 和 `publication_visibility.summary`，避免把 tag mismatch 误写成“直接推 tag”。
+- `check_release_publication.py --publish-script` 现在在最新 tag 不指向 HEAD 时写入审阅注释，明确脚本不会自动推送旧 tag。
 
 ## [0.16.226] - 2026-06-15
 

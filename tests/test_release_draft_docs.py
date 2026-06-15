@@ -10877,6 +10877,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "tag_points_at_head=false",
         "tag commit",
         "release tag",
+        "Publication review notes",
+        "This script will not push that tag automatically",
         "candidate_issue_gate",
         "blocked_by_publication",
         "release_draft_issues",

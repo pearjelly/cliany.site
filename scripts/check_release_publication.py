@@ -368,6 +368,7 @@ def _write_publish_script(report: PublicationReport, path: Path) -> None:
         f"# - ahead_count: {_format_value(report.ahead_count)}",
         f"# - behind_count: {_format_value(report.behind_count)}",
         f"# - remote_checked: {_format_bool(report.remote_checked)}",
+        *_publish_script_review_notes(report),
         "",
         f"REPO_ROOT={shlex.quote(repo_root)}",
         f"EXPECTED_LOCAL_HEAD={shlex.quote(expected_local_head)}",
@@ -424,6 +425,19 @@ def _write_publish_script(report: PublicationReport, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(script_lines) + "\n", encoding="utf-8")
     path.chmod(0o755)
+
+
+def _publish_script_review_notes(report: PublicationReport) -> list[str]:
+    if report.latest_tag and not report.tag_points_at_head:
+        return [
+            "#",
+            "# Publication review notes:",
+            f"# - Latest tag {report.latest_tag} does not point at HEAD.",
+            "# - This script will not push that tag automatically.",
+            "# - Publish the branch first, then choose whether to move to the tag commit",
+            "#   or create a new release tag at HEAD before publishing a tag.",
+        ]
+    return []
 
 
 def main(argv: list[str] | None = None) -> int:

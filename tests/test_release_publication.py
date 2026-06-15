@@ -221,6 +221,28 @@ def test_release_publication_writes_reviewable_publish_script(tmp_path):
     assert oct(script_path.stat().st_mode & 0o777) == "0o755"
 
 
+def test_release_publication_publish_script_warns_when_tag_is_not_head(tmp_path):
+    repo = _init_repo_with_origin(tmp_path)
+    _commit(repo, "CHANGELOG.md", "released\n", "release")
+    _git(repo, "tag", "v0.1.1")
+    _commit(repo, "NOTES.md", "new work\n", "new work")
+    report = release_publication.build_report(repo)
+    script_path = tmp_path / "reports" / "publish-release.sh"
+
+    release_publication._write_publish_script(report, script_path)
+
+    text = script_path.read_text(encoding="utf-8")
+    assert report.tag_points_at_head is False
+    assert "# Publication review notes:" in text
+    assert "# - Latest tag v0.1.1 does not point at HEAD." in text
+    assert "# - This script will not push that tag automatically." in text
+    assert "# - Publish the branch first, then choose whether to move to the tag commit" in text
+    assert "#   or create a new release tag at HEAD before publishing a tag." in text
+    assert "git push origin master" in text
+    assert "git push origin v0.1.1" not in text
+    assert "python scripts/check_release_publication.py --remote --json" in text
+
+
 def test_release_publication_publish_script_rejects_stale_head_before_push(tmp_path):
     repo = _init_repo_with_origin(tmp_path)
     origin = tmp_path / "origin.git"
