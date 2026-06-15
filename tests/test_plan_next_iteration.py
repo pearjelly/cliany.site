@@ -1018,7 +1018,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "python scripts/plan_next_iteration.py --target-version 0.16.2 "
             "--report /tmp/cliany-next-iteration.md"
         ),
+        "plan_report_command_sha256": _stable_json_sha256(
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+            "--report /tmp/cliany-next-iteration.md"
+        ),
         "issue_artifacts_command": (
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+            "--issues-dir /tmp/cliany-candidate-issues"
+        ),
+        "issue_artifacts_command_sha256": _stable_json_sha256(
             "python scripts/plan_next_iteration.py --target-version 0.16.2 "
             "--issues-dir /tmp/cliany-candidate-issues"
         ),
@@ -1070,7 +1078,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "python scripts/plan_next_iteration.py --target-version 0.16.2 "
             "--report /tmp/cliany-next-iteration.md"
         ),
+        "plan_report_command_sha256": _stable_json_sha256(
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+            "--report /tmp/cliany-next-iteration.md"
+        ),
         "issue_artifacts_command": (
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+            "--issues-dir /tmp/cliany-candidate-issues"
+        ),
+        "issue_artifacts_command_sha256": _stable_json_sha256(
             "python scripts/plan_next_iteration.py --target-version 0.16.2 "
             "--issues-dir /tmp/cliany-candidate-issues"
         ),
@@ -2970,7 +2986,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_primary_next_action: "
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
-    assert "publication_handoff_key_count: `27`" in readme
+    assert "publication_handoff_key_count: `29`" in readme
     assert "publication_handoff_schema_version: `1`" in readme
     assert "publication_handoff_first_key: `schema_version`" in readme
     assert "publication_handoff_last_key: `publish_script_command_sha256`" in readme
@@ -3125,7 +3141,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_worktree_status_boundary_sha256: "
         f"`{artifact_bundle_summary['publication_worktree_status_boundary_sha256']}`"
     ) in readme
-    assert "release_draft_handoff_key_count: `17`" in readme
+    assert "release_draft_handoff_key_count: `19`" in readme
     assert "release_draft_handoff_schema_version: `1`" in readme
     assert "release_draft_handoff_primary_issue: `release draft is missing`" in readme
     assert (
@@ -3607,9 +3623,17 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "--report /tmp/cliany-next-iteration.md`"
     ) in readme
     assert (
+        f"plan_report_command_sha256: "
+        f"`{_stable_json_sha256(plan.plan_report_command)}`"
+    ) in readme
+    assert (
         "issue_artifacts_command: "
         "`python scripts/plan_next_iteration.py --target-version 0.16.2 "
         "--issues-dir /tmp/cliany-candidate-issues`"
+    ) in readme
+    assert (
+        f"issue_artifacts_command_sha256: "
+        f"`{_stable_json_sha256(plan.issue_artifacts_command)}`"
     ) in readme
     assert "latest_tag: `v0.16.1`" in readme
     assert "local_head: `abc123`" in readme
@@ -3683,9 +3707,17 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "--report /tmp/cliany-next-iteration.md`"
     ) in readme
     assert (
+        f"plan_report_command_sha256: "
+        f"`{_stable_json_sha256(plan.plan_report_command)}`"
+    ) in readme
+    assert (
         "issue_artifacts_command: "
         "`python scripts/plan_next_iteration.py --target-version 0.16.2 "
         "--issues-dir /tmp/cliany-candidate-issues`"
+    ) in readme
+    assert (
+        f"issue_artifacts_command_sha256: "
+        f"`{_stable_json_sha256(plan.issue_artifacts_command)}`"
     ) in readme
     assert "Confirm release draft issues are resolved or intentionally deferred" in readme
     assert "Confirm Publication Next Actions are resolved or intentionally deferred" in readme
