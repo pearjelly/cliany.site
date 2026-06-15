@@ -36,6 +36,10 @@ ARTIFACT_MANIFEST_KEYS = (
     "publication_ok",
     "publication_visibility",
     "publication_tag_publish_decision",
+    "publication_blocker_count",
+    "publication_blockers_sha256",
+    "publication_primary_blocker",
+    "publication_blockers",
     "publication_next_actions",
     "publication_publish_commands",
     "publication_ref_context",
@@ -219,6 +223,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "publication_tag_publish_decision_status",
     "publication_tag_can_push",
     "publication_tag_required_action_sha256",
+    "publication_blocker_count",
+    "publication_blockers_sha256",
+    "publication_primary_blocker",
     "blocker_count",
     "blockers_sha256",
     "blocker_first_item",
@@ -513,6 +520,7 @@ class IterationPlan:
     candidate_issue_gate: dict[str, Any]
     publication_visibility: dict[str, str]
     publication_tag_publish_decision: dict[str, Any]
+    publication_blockers: list[str]
     publication_next_action_count: int
     publication_next_actions: list[str]
     publication_publish_command_count: int
@@ -566,6 +574,12 @@ class IterationPlan:
             "candidate_issue_gate": self.candidate_issue_gate,
             "publication_visibility": self.publication_visibility,
             "publication_tag_publish_decision": self.publication_tag_publish_decision,
+            "publication_blocker_count": len(self.publication_blockers),
+            "publication_blockers_sha256": _stable_json_sha256(self.publication_blockers),
+            "publication_primary_blocker": (
+                self.publication_blockers[0] if self.publication_blockers else None
+            ),
+            "publication_blockers": self.publication_blockers,
             "publication_next_action_count": self.publication_next_action_count,
             "publication_next_actions_sha256": _stable_json_sha256(self.publication_next_actions),
             "publication_primary_next_action": (
@@ -702,6 +716,35 @@ def _publication_next_actions(publication: Any) -> list[str]:
         return []
     payload = to_dict()
     return [str(action).removeprefix("- ") for action in payload.get("next_actions", [])]
+
+
+def _publication_blockers(publication: Any) -> list[str]:
+    to_dict = getattr(publication, "to_dict", None)
+    payload = to_dict() if callable(to_dict) else {}
+    payload_blockers = payload.get("publication_blockers") or payload.get("blockers")
+    if isinstance(payload_blockers, list):
+        return [str(blocker) for blocker in payload_blockers]
+    if bool(getattr(publication, "ok", payload.get("ok", False))):
+        return []
+
+    blockers: list[str] = []
+    if not _publication_worktree_clean(publication):
+        blockers.append("publication worktree is dirty")
+    branch_published = getattr(publication, "branch_published", payload.get("branch_published"))
+    if branch_published is not True:
+        blockers.append("latest local release is not published")
+    latest_tag = getattr(publication, "latest_tag", payload.get("latest_tag"))
+    tag_points_at_head = bool(
+        getattr(publication, "tag_points_at_head", payload.get("tag_points_at_head", False))
+    )
+    if latest_tag and not tag_points_at_head:
+        blockers.append("latest release tag does not point at HEAD")
+    tag_published = getattr(publication, "tag_published", payload.get("tag_published"))
+    if tag_published is not True:
+        blockers.append("latest local release tag is not published")
+    if not latest_tag:
+        blockers.append("release tag is missing")
+    return blockers
 
 
 def _package_gate_args(*, packages_dir: Path | None, require_packages: bool) -> str:
@@ -1479,6 +1522,7 @@ def build_plan(
     candidate_promotions = _candidate_promotions(readiness)
     case_promotion_evidence_summary = _case_promotion_evidence_summary(readiness.cases)
     case_promotion_command_plan_summary = _case_promotion_command_plan_summary(readiness.cases)
+    publication_blockers = _publication_blockers(publication)
     publication_next_actions = _publication_next_actions(publication)
     publication_publish_commands = _publication_publish_commands(publication)
     commit_cadence = _commit_cadence(readiness)
@@ -1536,6 +1580,7 @@ def build_plan(
         candidate_issue_gate=_candidate_issue_gate(readiness, publication),
         publication_visibility=_publication_visibility(publication),
         publication_tag_publish_decision=_publication_tag_publish_decision(publication),
+        publication_blockers=publication_blockers,
         publication_next_action_count=len(publication_next_actions),
         publication_next_actions=publication_next_actions,
         publication_publish_command_count=len(publication_publish_commands),
@@ -1638,6 +1683,13 @@ def _print_text(plan: IterationPlan) -> None:
     print("publication_tag_publish_decision:")
     for key, value in plan.publication_tag_publish_decision.items():
         print(f"- {key}: {value}")
+    print(f"publication_blocker_count: {len(plan.publication_blockers)}")
+    print(f"publication_blockers_sha256: {_stable_json_sha256(plan.publication_blockers)}")
+    if plan.publication_blockers:
+        print(f"publication_primary_blocker: {plan.publication_blockers[0]}")
+        print("publication_blockers:")
+        for blocker in plan.publication_blockers:
+            print(f"- {blocker}")
     print(f"publication_next_action_count: {plan.publication_next_action_count}")
     print(f"publication_next_actions_sha256: {_stable_json_sha256(plan.publication_next_actions)}")
     if plan.publication_next_actions:
@@ -1707,6 +1759,9 @@ def _render_markdown(plan: IterationPlan) -> str:
     primary_publication_action = _format_context_value(
         plan.publication_next_actions[0] if plan.publication_next_actions else None
     )
+    primary_publication_blocker = _format_context_value(
+        plan.publication_blockers[0] if plan.publication_blockers else None
+    )
     primary_publication_command = _format_context_value(
         plan.publication_publish_commands[0] if plan.publication_publish_commands else None
     )
@@ -1723,6 +1778,7 @@ def _render_markdown(plan: IterationPlan) -> str:
         plan.publication_tag_publish_decision
     )
     candidate_issue_gate = _candidate_issue_gate_markdown(plan.candidate_issue_gate)
+    publication_blockers = _publication_blockers_markdown(plan.publication_blockers)
     publication_actions = _publication_next_actions_markdown(plan.publication_next_actions)
     publication_refs = _publication_ref_context_markdown(plan.publication_ref_context)
     publication_worktree = _publication_worktree_markdown(
@@ -1749,6 +1805,9 @@ def _render_markdown(plan: IterationPlan) -> str:
 | recommended_theme | {plan.recommended_theme} |
 | readiness_ok | `{str(plan.readiness_ok).lower()}` |
 | publication_ok | `{str(plan.publication_ok).lower()}` |
+| publication_blocker_count | `{len(plan.publication_blockers)}` |
+| publication_blockers_sha256 | `{_stable_json_sha256(plan.publication_blockers)}` |
+| publication_primary_blocker | `{primary_publication_blocker}` |
 | publication_next_action_count | `{plan.publication_next_action_count}` |
 | publication_next_actions_sha256 | `{_stable_json_sha256(plan.publication_next_actions)}` |
 | publication_primary_next_action | `{primary_publication_action}` |
@@ -1802,6 +1861,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 {tag_publish_decision}
 
 {candidate_issue_gate}
+
+{publication_blockers}
 
 {publication_actions}
 
@@ -1908,6 +1969,15 @@ def _publication_next_actions_markdown(actions: list[str]) -> str:
     return f"""## Publication Next Actions
 
 {action_lines}"""
+
+
+def _publication_blockers_markdown(blockers: list[str]) -> str:
+    if not blockers:
+        return "## Publication Blockers\n\n- No publication blockers are present."
+    blocker_lines = "\n".join(f"- {blocker}" for blocker in blockers)
+    return f"""## Publication Blockers
+
+{blocker_lines}"""
 
 
 def _publication_tag_publish_decision_markdown(decision: dict[str, Any]) -> str:
@@ -2373,6 +2443,9 @@ Generated for target version `{plan.target_version}`.
 - tag_publish_decision: `{_format_context_value(plan.publication_tag_publish_decision.get("status"))}`
 - tag_can_push: `{str(bool(plan.publication_tag_publish_decision.get("can_push_tag", False))).lower()}`
 - tag_required_action: `{_format_context_value(plan.publication_tag_publish_decision.get("required_action"))}`
+- publication_blocker_count: `{len(plan.publication_blockers)}`
+- publication_blockers_sha256: `{_stable_json_sha256(plan.publication_blockers)}`
+- publication_primary_blocker: `{_format_context_value(_publication_primary_blocker(plan))}`
 - commit_cadence_status: `{_format_context_value(plan.commit_cadence.get("status"))}`
 - commit_cadence_missing_commit_days: `{_format_context_value(plan.commit_cadence.get("missing_commit_days"))}`
 - commit_cadence_primary_next_action: `{_format_context_value(_commit_cadence_primary_next_action(plan))}`
@@ -2483,6 +2556,11 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
             f"- blocker_count: `{len(plan.blockers)}`",
             f"- next_action_count: `{len(plan.next_actions)}`",
             f"- publication_next_action_count: `{plan.publication_next_action_count}`",
+            f"- publication_blocker_count: `{len(plan.publication_blockers)}`",
+            "- publication_blockers_sha256: "
+            f"`{_stable_json_sha256(plan.publication_blockers)}`",
+            "- publication_primary_blocker: "
+            f"{_summary_inline_code(_publication_primary_blocker(plan))}",
             f"- publication_publish_command_count: `{plan.publication_publish_command_count}`",
             "- publication_publish_script_path: "
             f"{_summary_inline_code(plan.publication_publish_script_path)}",
@@ -2715,6 +2793,10 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         ),
         "visibility": plan.publication_visibility,
         "tag_publish_decision": plan.publication_tag_publish_decision,
+        "publication_blocker_count": len(plan.publication_blockers),
+        "publication_blockers_sha256": _stable_json_sha256(plan.publication_blockers),
+        "publication_primary_blocker": _publication_primary_blocker(plan),
+        "publication_blockers": plan.publication_blockers,
         "next_actions": plan.next_actions,
         "commit_cadence": plan.commit_cadence,
         "commit_cadence_status": plan.commit_cadence.get("status"),
@@ -2748,6 +2830,10 @@ def _commit_cadence_primary_next_action(plan: IterationPlan) -> str | None:
 
 def _publication_primary_next_action(plan: IterationPlan) -> str | None:
     return plan.publication_next_actions[0] if plan.publication_next_actions else None
+
+
+def _publication_primary_blocker(plan: IterationPlan) -> str | None:
+    return plan.publication_blockers[0] if plan.publication_blockers else None
 
 
 def _publication_primary_publish_command(plan: IterationPlan) -> str | None:
@@ -2938,6 +3024,10 @@ def _artifact_manifest_payload_without_summary(
         "publication_ok": plan.publication_ok,
         "publication_visibility": plan.publication_visibility,
         "publication_tag_publish_decision": plan.publication_tag_publish_decision,
+        "publication_blocker_count": len(plan.publication_blockers),
+        "publication_blockers_sha256": _stable_json_sha256(plan.publication_blockers),
+        "publication_primary_blocker": _publication_primary_blocker(plan),
+        "publication_blockers": plan.publication_blockers,
         "publication_next_actions": plan.publication_next_actions,
         "publication_publish_commands": plan.publication_publish_commands,
         "publication_ref_context": plan.publication_ref_context,
@@ -3547,6 +3637,9 @@ def _issue_artifact_bundle_summary(
         "publication_tag_required_action_sha256": _stable_json_sha256(
             plan.publication_tag_publish_decision.get("required_action")
         ),
+        "publication_blocker_count": len(plan.publication_blockers),
+        "publication_blockers_sha256": _stable_json_sha256(plan.publication_blockers),
+        "publication_primary_blocker": _publication_primary_blocker(plan),
         "blocker_count": len(plan.blockers),
         "blockers_sha256": _stable_json_sha256(plan.blockers),
         "blocker_first_item": blocker_boundary["first_item"],

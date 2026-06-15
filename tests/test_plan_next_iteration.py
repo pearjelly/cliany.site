@@ -505,6 +505,16 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "status": "dirty_worktree",
         "summary": "Worktree has uncommitted changes; resolve them before publishing release refs.",
     }
+    assert data["publication_blockers"] == [
+        "publication worktree is dirty",
+        "latest local release is not published",
+        "latest local release tag is not published",
+    ]
+    assert data["publication_blocker_count"] == len(data["publication_blockers"])
+    assert data["publication_blockers_sha256"] == _stable_json_sha256(
+        data["publication_blockers"]
+    )
+    assert data["publication_primary_blocker"] == data["publication_blockers"][0]
     assert data["publication_ref_context"] == {
         "repo_root": "/repo/cliany.site",
         "branch": "master",
@@ -826,6 +836,14 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "## Evidence Bundle" in text
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in text
     assert "## Publication Publish Commands" in text
+    assert "| publication_blocker_count | `3` |" in text
+    assert (
+        "| publication_blockers_sha256 | "
+        f"`{_stable_json_sha256(plan.publication_blockers)}` |"
+    ) in text
+    assert "| publication_primary_blocker | `publication worktree is dirty` |" in text
+    assert "## Publication Blockers" in text
+    assert "- publication worktree is dirty" in text
     assert "| publication_next_action_count | `3` |" in text
     assert (
         "| publication_next_actions_sha256 | "
@@ -968,6 +986,10 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
     assert "  evidence_bundle_primary_next_task:" in text
     assert "    task: adapter_package" in text
     assert "candidate_issue_gate:" in text
+    assert "publication_blocker_count: 3" in text
+    assert f"publication_blockers_sha256: {_stable_json_sha256(plan.publication_blockers)}" in text
+    assert "publication_primary_blocker: publication worktree is dirty" in text
+    assert "publication_blockers:" in text
     assert "publication_next_action_count: 3" in text
     assert f"publication_next_actions_sha256: {_stable_json_sha256(plan.publication_next_actions)}" in text
     assert (
@@ -1166,6 +1188,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "Commit, stash, or discard local worktree changes before publishing release refs."
         ),
     }
+    expected_publication_blockers = [
+        "publication worktree is dirty",
+        "latest local release is not published",
+        "latest local release tag is not published",
+    ]
     expected_publication_handoff = {
         "schema_version": 1,
         "publication_ok": False,
@@ -1182,6 +1209,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "summary": "Worktree has uncommitted changes; resolve them before publishing release refs.",
         },
         "tag_publish_decision": expected_tag_publish_decision,
+        "publication_blocker_count": len(expected_publication_blockers),
+        "publication_blockers_sha256": _stable_json_sha256(expected_publication_blockers),
+        "publication_primary_blocker": "publication worktree is dirty",
+        "publication_blockers": expected_publication_blockers,
         "next_actions": plan.next_actions,
         "commit_cadence": plan.commit_cadence,
         "commit_cadence_status": "needs_more_commit_days",
@@ -1730,6 +1761,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_tag_required_action_sha256": _stable_json_sha256(
             expected_tag_publish_decision["required_action"]
         ),
+        "publication_blocker_count": len(expected_publication_blockers),
+        "publication_blockers_sha256": _stable_json_sha256(expected_publication_blockers),
+        "publication_primary_blocker": expected_publication_blockers[0],
         "blocker_count": 2,
         "blockers_sha256": _stable_json_sha256(plan.blockers),
         "blocker_first_item": blocker_boundary["first_item"],
@@ -2224,6 +2258,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "summary": "Worktree has uncommitted changes; resolve them before publishing release refs.",
         },
         "publication_tag_publish_decision": expected_tag_publish_decision,
+        "publication_blocker_count": len(expected_publication_blockers),
+        "publication_blockers_sha256": _stable_json_sha256(expected_publication_blockers),
+        "publication_primary_blocker": expected_publication_blockers[0],
+        "publication_blockers": expected_publication_blockers,
         "publication_next_actions": [
             "Commit, stash, or discard local worktree changes before publishing release refs.",
             "Push `master` to `origin`; local branch is ahead by `2` commits.",
@@ -3037,6 +3075,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_tag_required_action_sha256: "
         f"`{artifact_bundle_summary['publication_tag_required_action_sha256']}`"
     ) in readme
+    assert (
+        "publication_blocker_count: "
+        f"`{artifact_bundle_summary['publication_blocker_count']}`"
+    ) in readme
+    assert (
+        "publication_blockers_sha256: "
+        f"`{artifact_bundle_summary['publication_blockers_sha256']}`"
+    ) in readme
+    assert (
+        "publication_primary_blocker: "
+        f"{plan_next_iteration._summary_inline_code(artifact_bundle_summary['publication_primary_blocker'])}"
+    ) in readme
     assert "blocker_count: `2`" in readme
     assert f"blockers_sha256: `{_stable_json_sha256(plan.blockers)}`" in readme
     assert (
@@ -3146,7 +3196,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_primary_next_action: "
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
-    assert "publication_handoff_key_count: `29`" in readme
+    assert "publication_handoff_key_count: `33`" in readme
     assert "publication_handoff_schema_version: `1`" in readme
     assert "publication_handoff_first_key: `schema_version`" in readme
     assert "publication_handoff_last_key: `publish_script_command_sha256`" in readme
