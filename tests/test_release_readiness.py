@@ -589,7 +589,12 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
 
     payload = report.to_dict()
+    publish_commands = payload["publication_publish_commands"]
     assert payload["blockers"] == ["commit days 1/3"]
+    assert payload["publication_ok"] is False
+    assert payload["publication"]["publish_commands"] == publish_commands
+    assert payload["publication_publish_command_count"] == len(publish_commands)
+    assert "python scripts/check_release_publication.py --remote --json" in publish_commands
     assert payload["next_actions"] == [
         (
             "- Ship verified slices on `2` more unique commit days this week; "
@@ -634,6 +639,10 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "| project_metadata | `true` |" in text
     assert "https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD" in text
     assert "## Weekly Review" in text
+    assert "## Publication Publish Commands" in text
+    assert "- publication_ok: `false`" in text
+    assert "- publish_command_count: `" in text
+    assert "python scripts/check_release_publication.py --remote --json" in text
     assert "| Does the week have enough commit days? | `3/3`: 2026-06-08, 2026-06-09, 2026-06-10 |" in text
     assert "| What is the next smallest release slice? | Ready to tag `v0.1.1` after final validation. |" in text
     assert "## Next Actions" not in text
@@ -739,6 +748,10 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     assert "ok: True" in output
     assert "cases: True (active 1, candidate 0, known_gap 0, total 1, min_assets 1)" in output
     assert "candidate_command_plan_summary: all_declared=true, commands=0/0, missing=0" in output
+    assert "publication: False" in output
+    assert "publication_publish_command_count:" in output
+    assert "publication_publish_commands:" in output
+    assert "- python scripts/check_release_publication.py --remote --json" in output
     assert "package_gate_summary: checked=false, failed=0, missing=0, invalid=0, repair_actions=0" in output
     assert "package_gate_primary_repair_action:" not in output
     assert "next_actions:" not in output

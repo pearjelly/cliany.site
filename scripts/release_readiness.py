@@ -15,6 +15,8 @@ from typing import Any
 
 from check_release_cadence import CadenceReport
 from check_release_cadence import build_report as build_cadence_report
+from check_release_publication import PublicationReport
+from check_release_publication import build_report as build_publication_report
 from validate_cases import CasesReport
 from validate_cases import build_report as build_cases_report
 
@@ -130,8 +132,10 @@ class ReadinessReport:
     release_workflow: ReleaseWorkflowReport
     project_metadata: ProjectMetadataReport
     package_gate: PackageGateReport
+    publication: PublicationReport
 
     def to_dict(self) -> dict[str, Any]:
+        publication_payload = self.publication.to_dict()
         return {
             "ok": self.ok,
             "current_version": self.current_version,
@@ -147,6 +151,10 @@ class ReadinessReport:
             "release_workflow": self.release_workflow.to_dict(),
             "project_metadata": self.project_metadata.to_dict(),
             "package_gate": self.package_gate.to_dict(),
+            "publication": publication_payload,
+            "publication_ok": publication_payload["ok"],
+            "publication_publish_command_count": publication_payload["publish_command_count"],
+            "publication_publish_commands": publication_payload["publish_commands"],
             "next_actions": _next_action_lines(self),
         }
 
@@ -577,6 +585,7 @@ def build_report(
     ci = _build_ci_report(root)
     release_workflow = _build_release_workflow_report(root)
     project_metadata = _build_project_metadata_report(root)
+    publication = build_publication_report(root)
     package_gate = _build_package_gate_report(
         packages_dir=packages_dir,
         require_packages=require_packages,
@@ -623,10 +632,13 @@ def build_report(
         release_workflow=release_workflow,
         project_metadata=project_metadata,
         package_gate=package_gate,
+        publication=publication,
     )
 
 
 def _print_text(report: ReadinessReport) -> None:
+    publication_payload = report.publication.to_dict()
+    publication_publish_commands = list(publication_payload["publish_commands"])
     print("=== cliany-site release readiness ===")
     print(f"current_version: {report.current_version}")
     print(f"target_version: {report.target_version}")
@@ -654,6 +666,12 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"ci: {report.ci.ok}")
     print(f"release_workflow: {report.release_workflow.ok}")
     print(f"project_metadata: {report.project_metadata.ok}")
+    print(f"publication: {publication_payload['ok']}")
+    print(f"publication_publish_command_count: {len(publication_publish_commands)}")
+    if publication_publish_commands:
+        print("publication_publish_commands:")
+        for command in publication_publish_commands:
+            print(f"- {command}")
     print(f"package_gate: {report.package_gate.ok}")
     print(
         "package_gate_summary: "
@@ -721,6 +739,10 @@ def _case_package_next_action_lines(report: ReadinessReport) -> list[str]:
         else:
             lines.append(f"- `{case_ids[0]}` package: {action}")
     return lines
+
+
+def _publication_publish_commands(report: ReadinessReport) -> list[str]:
+    return [str(command) for command in report.publication.to_dict()["publish_commands"]]
 
 
 def _next_action_lines(report: ReadinessReport) -> list[str]:
@@ -831,6 +853,23 @@ def _candidate_command_plan_summary_lines(report: ReadinessReport) -> list[str]:
     for case in missing_cases:
         missing_tasks = ", ".join(str(task) for task in case.get("missing_tasks") or [])
         lines.append(f"| `{_markdown_cell(case.get('case_id'))}` | `{_markdown_cell(missing_tasks)}` |")
+    return lines
+
+
+def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
+    commands = _publication_publish_commands(report)
+    lines = [
+        "",
+        "## Publication Publish Commands",
+        "",
+        f"- publication_ok: `{str(report.publication.ok).lower()}`",
+        f"- publish_command_count: `{len(commands)}`",
+        "",
+    ]
+    if commands:
+        lines.extend(["```bash", *commands, "```"])
+    else:
+        lines.append("- No publish commands are needed.")
     return lines
 
 
@@ -946,6 +985,7 @@ def _render_markdown_report(report: ReadinessReport) -> str:
         "",
         f"- CHANGELOG compare: {report.cadence.changelog_unreleased_compare_actual or '(missing)'}",
         f"- Release draft: `{report.draft.path}`",
+        *_publication_publish_command_lines(report),
         "",
         "## Weekly Review",
         "",

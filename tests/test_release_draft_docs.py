@@ -10944,6 +10944,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "case_promotion_command_plan_missing_command_count",
         "candidate_command_plan_summary",
         "python scripts/release_readiness.py --target-version 0.16.227 --report /tmp/cliany-release-readiness.md",
+        "publication_publish_commands",
+        "Publication Publish Commands",
         "all_declared",
         "missing_command_count",
         "artifact_bundle_summary",
