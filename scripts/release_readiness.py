@@ -991,6 +991,12 @@ def _stable_json_sha256(value: Any) -> str:
 
 def _next_action_lines(report: ReadinessReport) -> list[str]:
     lines: list[str] = []
+    if not report.publication.ok:
+        publication_primary_next_action = _publication_summary(
+            _publication_payload(report)
+        )["primary_next_action"]
+        if publication_primary_next_action:
+            lines.append(str(publication_primary_next_action))
     if report.cadence.commit_day_count < report.cadence.min_commit_days:
         missing_days = max(report.cadence.min_commit_days - report.cadence.commit_day_count, 0)
         lines.append(
@@ -1036,7 +1042,11 @@ def _next_action_lines(report: ReadinessReport) -> list[str]:
                 "Re-run release readiness with `--packages-dir ~/.cliany-site/packages --require-packages` "
                 "after demo adapter packages are available."
             )
-    return lines
+    deduped: list[str] = []
+    for line in lines:
+        if line not in deduped:
+            deduped.append(line)
+    return deduped
 
 
 def _markdown_cell(value: Any) -> str:

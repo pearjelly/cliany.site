@@ -580,10 +580,14 @@ def test_release_readiness_passes_for_minimal_ready_repo(tmp_path):
         "missing_cases": [],
         "primary_missing_task": None,
     }
-    assert report.to_dict()["next_actions"] == []
-    assert report.to_dict()["next_action_count"] == 0
-    assert report.to_dict()["primary_next_action"] is None
-    assert report.to_dict()["next_actions_sha256"] == release_readiness._stable_json_sha256([])
+    assert report.to_dict()["next_actions"] == [
+        "Set an upstream branch for `master` before checking publication status.",
+    ]
+    assert report.to_dict()["next_action_count"] == 1
+    assert report.to_dict()["primary_next_action"] == report.to_dict()["next_actions"][0]
+    assert report.to_dict()["next_actions_sha256"] == release_readiness._stable_json_sha256(
+        report.to_dict()["next_actions"]
+    )
 
 
 def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
@@ -663,10 +667,11 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert payload["publication_primary_publish_command"] == publish_commands[0]
     assert "python scripts/check_release_publication.py --remote --json" in publish_commands
     assert payload["next_actions"] == [
+        "Set an upstream branch for `master` before checking publication status.",
         (
             "Ship verified slices on `2` more unique commit days this week; "
             "current commit days are `1/3`. Use `docs/weekly-maintainer-loop.md` to pick the next slice."
-        )
+        ),
     ]
     assert payload["next_action_count"] == len(payload["next_actions"])
     assert payload["primary_next_action"] == payload["next_actions"][0]
@@ -756,8 +761,12 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- primary_publish_command: `git push -u origin master`" in text
     assert "python scripts/check_release_publication.py --remote --json" in text
     assert "| Does the week have enough commit days? | `3/3`: 2026-06-08, 2026-06-09, 2026-06-10 |" in text
-    assert "| What is the next smallest release slice? | Ready to tag `v0.1.1` after final validation. |" in text
-    assert "## Next Actions" not in text
+    assert (
+        "| What is the next smallest release slice? | Set an upstream branch for `master` "
+        "before checking publication status. |"
+    ) in text
+    assert "## Next Actions" in text
+    assert "- Set an upstream branch for `master` before checking publication status." in text
 
 
 def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_path):
@@ -898,7 +907,8 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     assert "- python scripts/check_release_publication.py --remote --json" in output
     assert "package_gate_summary: checked=false, failed=0, missing=0, invalid=0, repair_actions=0" in output
     assert "package_gate_primary_repair_action:" not in output
-    assert "next_actions:" not in output.splitlines()
+    assert "next_actions:" in output.splitlines()
+    assert "- Set an upstream branch for `master` before checking publication status." in output
 
 
 def test_release_readiness_text_output_includes_next_actions_when_blocked(tmp_path, capsys):
@@ -937,8 +947,8 @@ def test_release_readiness_markdown_report_includes_gate_issues_and_next_actions
         "current commit days are `1/3`. Use `docs/weekly-maintainer-loop.md` to pick the next slice."
     ) in text
     assert (
-        "| What is the next smallest release slice? | Ship verified slices on `2` more unique commit days "
-        "this week; current commit days are `1/3`. Use `docs/weekly-maintainer-loop.md` to pick the next slice. |"
+        "| What is the next smallest release slice? | Commit, stash, or discard local worktree changes "
+        "before publishing release refs. |"
     ) in text
     assert "- Update the target release draft under `docs/releases/`" in text
     assert "- Restore PyPI metadata and open-source community entrypoints required by project metadata gate." in text
@@ -1289,9 +1299,9 @@ def test_release_readiness_markdown_tagged_mode_points_to_publish_step(tmp_path)
     assert "| release_mode | `tagged` |" in text
     assert "| release_tag | `v0.1.1` |" in text
     assert (
-        "| What is the next smallest release slice? | Ready to publish verified tag `v0.1.1`. |"
-        in text
-    )
+        "| What is the next smallest release slice? | Set an upstream branch for `master` "
+        "before checking publication status. |"
+    ) in text
 
     target_report = replace(report, release_mode="target", release_tag=None)
     target_report_path = tmp_path / "reports" / "target-readiness.md"
@@ -1301,9 +1311,9 @@ def test_release_readiness_markdown_tagged_mode_points_to_publish_step(tmp_path)
     assert "| release_mode | `target` |" in target_text
     assert "| release_tag | `-` |" in target_text
     assert (
-        "| What is the next smallest release slice? | Ready to tag `v0.1.1` after final validation. |"
-        in target_text
-    )
+        "| What is the next smallest release slice? | Set an upstream branch for `master` "
+        "before checking publication status. |"
+    ) in target_text
 
 
 def test_release_readiness_blocks_release_tag_not_at_head(tmp_path):
