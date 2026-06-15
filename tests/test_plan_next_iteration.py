@@ -529,6 +529,10 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "  - Current status: `pending`\n"
             "  - Current evidence: Not attached yet.\n"
             "  - Next action: Run read-only PyPI search smoke.\n\n"
+            "## Evidence Bundle\n"
+            "- Human: `cliany-site cases --case-id pypi-project-search --evidence-bundle`\n"
+            "- JSON: `cliany-site cases --case-id pypi-project-search --evidence-bundle --json`\n"
+            "- Attach or paste the JSON output in the issue once evidence changes.\n\n"
             "## Validation Evidence\n"
             "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.\n"
             "- Paste the local `scripts/validate_cases.py --packages-dir` result.\n"
@@ -590,6 +594,8 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "## Candidate Issue Body Templates" in text
     assert "  - Current status: `pending`" in text
     assert "  - Current evidence: Not attached yet." in text
+    assert "## Evidence Bundle" in text
+    assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in text
     assert "## Publication Publish Commands" in text
     assert "| publication_next_action_count | `3` |" in text
     assert "| publication_publish_command_count | `1` |" in text
@@ -1772,6 +1778,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "- Offline validation commands:\n  - `python scripts/validate_cases.py --strict`" in body
     assert 'cliany-site explore "https://pypi.org" "search Python packages" --json' in body
     assert "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md" in body
+    assert "## Evidence Bundle" in body
+    assert "cliany-site cases --case-id pypi-project-search --evidence-bundle" in body
+    assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in body
+    assert "Attach or paste the JSON output in the issue once evidence changes." in body
     assert metadata[0]["case_id"] == "pypi-project-search"
     assert metadata[0]["issue_title"] == "Promote candidate case `pypi-project-search` toward active"
     assert metadata[0]["issue_labels"] == ["case-proposal", "good first issue"]
