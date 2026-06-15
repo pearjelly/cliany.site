@@ -153,6 +153,7 @@ class ReadinessReport:
             "package_gate": self.package_gate.to_dict(),
             "publication": publication_payload,
             "publication_ok": publication_payload["ok"],
+            "publication_tag_publish_decision": publication_payload["tag_publish_decision"],
             "publication_publish_command_count": publication_payload["publish_command_count"],
             "publication_publish_commands": publication_payload["publish_commands"],
             "next_actions": _next_action_lines(self),
@@ -638,6 +639,7 @@ def build_report(
 
 def _print_text(report: ReadinessReport) -> None:
     publication_payload = report.publication.to_dict()
+    tag_publish_decision = publication_payload["tag_publish_decision"]
     publication_publish_commands = list(publication_payload["publish_commands"])
     print("=== cliany-site release readiness ===")
     print(f"current_version: {report.current_version}")
@@ -667,6 +669,13 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"release_workflow: {report.release_workflow.ok}")
     print(f"project_metadata: {report.project_metadata.ok}")
     print(f"publication: {publication_payload['ok']}")
+    print(
+        "publication_tag_publish_decision: "
+        f"status={tag_publish_decision['status']}, "
+        f"can_push_tag={str(bool(tag_publish_decision['can_push_tag'])).lower()}"
+    )
+    if tag_publish_decision.get("required_action"):
+        print(f"publication_tag_required_action: {tag_publish_decision['required_action']}")
     print(f"publication_publish_command_count: {len(publication_publish_commands)}")
     if publication_publish_commands:
         print("publication_publish_commands:")
@@ -857,12 +866,17 @@ def _candidate_command_plan_summary_lines(report: ReadinessReport) -> list[str]:
 
 
 def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
+    publication_payload = report.publication.to_dict()
+    tag_publish_decision = publication_payload["tag_publish_decision"]
     commands = _publication_publish_commands(report)
     lines = [
         "",
         "## Publication Publish Commands",
         "",
         f"- publication_ok: `{str(report.publication.ok).lower()}`",
+        f"- tag_publish_decision: `{_markdown_cell(tag_publish_decision['status'])}`",
+        f"- tag_can_push: `{str(bool(tag_publish_decision['can_push_tag'])).lower()}`",
+        f"- tag_required_action: `{_markdown_cell(tag_publish_decision.get('required_action'))}`",
         f"- publish_command_count: `{len(commands)}`",
         "",
     ]

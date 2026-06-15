@@ -593,6 +593,9 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert payload["blockers"] == ["commit days 1/3"]
     assert payload["publication_ok"] is False
     assert payload["publication"]["publish_commands"] == publish_commands
+    assert payload["publication_tag_publish_decision"] == payload["publication"]["tag_publish_decision"]
+    assert payload["publication_tag_publish_decision"]["status"] == "needs_remote_check"
+    assert payload["publication_tag_publish_decision"]["can_push_tag"] is False
     assert payload["publication_publish_command_count"] == len(publish_commands)
     assert "python scripts/check_release_publication.py --remote --json" in publish_commands
     assert payload["next_actions"] == [
@@ -641,6 +644,9 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "## Weekly Review" in text
     assert "## Publication Publish Commands" in text
     assert "- publication_ok: `false`" in text
+    assert "- tag_publish_decision: `manual_decision_required`" in text
+    assert "- tag_can_push: `false`" in text
+    assert "- tag_required_action: `Move to the latest tag commit or create a new release tag at HEAD " in text
     assert "- publish_command_count: `" in text
     assert "python scripts/check_release_publication.py --remote --json" in text
     assert "| Does the week have enough commit days? | `3/3`: 2026-06-08, 2026-06-09, 2026-06-10 |" in text
@@ -749,6 +755,11 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     assert "cases: True (active 1, candidate 0, known_gap 0, total 1, min_assets 1)" in output
     assert "candidate_command_plan_summary: all_declared=true, commands=0/0, missing=0" in output
     assert "publication: False" in output
+    assert "publication_tag_publish_decision: status=manual_decision_required, can_push_tag=false" in output
+    assert (
+        "publication_tag_required_action: Move to the latest tag commit or create a new release tag at HEAD"
+        in output
+    )
     assert "publication_publish_command_count:" in output
     assert "publication_publish_commands:" in output
     assert "- python scripts/check_release_publication.py --remote --json" in output

@@ -45,6 +45,7 @@
 - `scripts/plan_next_iteration.py` 现在把 `promotion_command_plan_summary` 透传为 `case_promotion_command_plan_summary`，并写入默认文本输出、Markdown report、candidate issue artifacts manifest 和 `artifact_bundle_summary` compact 字段。
 - `scripts/release_readiness.py` 的默认文本输出和 Markdown report 现在也展示 candidate promotion command plan summary，让发版预检 artifact 直接显示 candidate 晋级命令是否完整。
 - `scripts/release_readiness.py` 现在把 publication audit 和 `publication_publish_commands` 写入 JSON、默认文本输出和 Markdown report，维护者查看发版预检 artifact 时可直接复制发布可见性复核命令。
+- `scripts/release_readiness.py` 现在也把 `publication_tag_publish_decision` 提升到顶层 JSON、默认文本输出和 Markdown report，维护者无需展开 publication audit 就能看到 tag 是否可推和人工决策动作。
 - `artifact_bundle_summary` 现在输出 `case_promotion_evidence_primary_detail_sha256`，让只读整包摘要的工具能检测首要 candidate 晋级任务对象是否漂移。
 - `artifact_bundle_summary` 现在也输出 `case_promotion_evidence_primary_next_task_sha256`，让只读整包摘要的工具能单独检测 `primary_next_task` 漂移。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 `case_promotion_evidence_primary_next_task_sha256`，让周维护手册覆盖最新 artifact bundle summary 字段。
