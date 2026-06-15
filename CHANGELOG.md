@@ -18,6 +18,7 @@
 - `plan_next_iteration.py` 现在把 `tag_publish_decision` 透传为 `publication_tag_publish_decision`，并写入 Markdown report、`artifact-manifest.json`、`publication-handoff.json` 和 artifacts `README.md`。
 - `artifact_bundle_summary` 现在输出 `publication_tag_publish_decision_*` 摘要字段，让只读整包摘要的维护工具也能判断 tag 是否可推，并检测该对象字段漂移。
 - `candidate_issue_gate.evidence` 现在包含 tag 发布决策状态、是否可推和 required action，artifacts `README.md` 的 `Publication Handoff` 也会展示同一组 gate evidence。
+- `candidate_issue_gate` 现在直接输出 `primary_reason_code`、`primary_reason_description` 和 `primary_required_action`，artifacts `README.md` 的 `Publication Handoff` 也会展示这组首要 gate 字段。
 
 ## [0.16.226] - 2026-06-15
 

@@ -242,14 +242,19 @@ def _blocked_candidate_issue_gate() -> dict[str, object]:
         "reason_code_count": len(reason_codes),
         "reason_codes_sha256": _stable_json_sha256(reason_codes),
         "reason_codes": reason_codes,
+        "primary_reason_code": "publication_not_published",
         "reason_descriptions": {
             "publication_not_published": "The latest local release branch or tag is not visible upstream.",
             "dirty_worktree": "The working tree has uncommitted changes that must be resolved first.",
             "release_draft_issues": "The target release draft still has validation issues.",
         },
+        "primary_reason_description": "The latest local release branch or tag is not visible upstream.",
         "required_action_count": len(required_actions),
         "required_actions_sha256": _stable_json_sha256(required_actions),
         "required_actions": required_actions,
+        "primary_required_action": (
+            "Commit, stash, or discard local worktree changes before publishing release refs."
+        ),
         "evidence": {
             "publication_ok": False,
             "publication_visibility_status": "dirty_worktree",
@@ -342,12 +347,15 @@ def test_candidate_issue_gate_allows_creation_after_publication_with_release_dra
         "reason_code_count": len(reason_codes),
         "reason_codes_sha256": _stable_json_sha256(reason_codes),
         "reason_codes": reason_codes,
+        "primary_reason_code": "release_draft_issues",
         "reason_descriptions": {
             "release_draft_issues": "The target release draft still has validation issues.",
         },
+        "primary_reason_description": "The target release draft still has validation issues.",
         "required_action_count": len(required_actions),
         "required_actions_sha256": _stable_json_sha256(required_actions),
         "required_actions": required_actions,
+        "primary_required_action": "Resolve release draft issue: release draft is missing",
         "evidence": {
             "publication_ok": True,
             "publication_visibility_status": "published",
@@ -3175,6 +3183,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert f"gate_reason_codes_sha256: `{_blocked_candidate_issue_gate()['reason_codes_sha256']}`" in readme
     assert "gate_required_action_count: `5`" in readme
     assert f"gate_required_actions_sha256: `{_blocked_candidate_issue_gate()['required_actions_sha256']}`" in readme
+    assert "gate_primary_reason_code: `publication_not_published`" in readme
+    assert (
+        "gate_primary_reason_description: "
+        "`The latest local release branch or tag is not visible upstream.`"
+    ) in readme
+    assert (
+        "gate_primary_required_action: "
+        "`Commit, stash, or discard local worktree changes before publishing release refs.`"
+    ) in readme
     assert "gate_reason_codes: `publication_not_published`, `dirty_worktree`, `release_draft_issues`" in readme
     assert "gate_reason_descriptions:" in readme
     assert "`publication_not_published`: The latest local release branch or tag is not visible upstream." in readme

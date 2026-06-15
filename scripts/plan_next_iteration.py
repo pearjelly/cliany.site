@@ -743,6 +743,9 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
             "summary": "Do not create candidate issues until the latest local release is publicly visible.",
             **_candidate_issue_gate_reason_fields(reason_codes),
             "reason_descriptions": reason_descriptions,
+            "primary_reason_description": _candidate_issue_gate_primary_reason_description(
+                reason_codes, reason_descriptions
+            ),
             **_candidate_issue_gate_action_fields(actions),
             "evidence": evidence,
         }
@@ -755,6 +758,9 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
             "summary": "Release draft issues must be resolved or intentionally deferred before tagging.",
             **_candidate_issue_gate_reason_fields(reason_codes),
             "reason_descriptions": reason_descriptions,
+            "primary_reason_description": _candidate_issue_gate_primary_reason_description(
+                reason_codes, reason_descriptions
+            ),
             **_candidate_issue_gate_action_fields(actions),
             "evidence": evidence,
         }
@@ -766,6 +772,9 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
         "summary": "Candidate issues can be created after reviewing the generated artifacts.",
         **_candidate_issue_gate_reason_fields(reason_codes),
         "reason_descriptions": reason_descriptions,
+        "primary_reason_description": _candidate_issue_gate_primary_reason_description(
+            reason_codes, reason_descriptions
+        ),
         **_candidate_issue_gate_action_fields(actions),
         "evidence": evidence,
     }
@@ -776,6 +785,7 @@ def _candidate_issue_gate_reason_fields(reason_codes: list[str]) -> dict[str, An
         "reason_code_count": len(reason_codes),
         "reason_codes_sha256": _stable_json_sha256(reason_codes),
         "reason_codes": reason_codes,
+        "primary_reason_code": reason_codes[0] if reason_codes else None,
     }
 
 
@@ -784,11 +794,20 @@ def _candidate_issue_gate_action_fields(actions: list[str]) -> dict[str, Any]:
         "required_action_count": len(actions),
         "required_actions_sha256": _stable_json_sha256(actions),
         "required_actions": actions,
+        "primary_required_action": actions[0] if actions else None,
     }
 
 
 def _release_draft_required_actions(release_draft_issues: list[str]) -> list[str]:
     return [f"Resolve release draft issue: {issue}" for issue in release_draft_issues]
+
+
+def _candidate_issue_gate_primary_reason_description(
+    reason_codes: list[str], reason_descriptions: dict[str, str]
+) -> str | None:
+    if not reason_codes:
+        return None
+    return reason_descriptions.get(reason_codes[0])
 
 
 def _stable_json_sha256(value: object) -> str:
@@ -1876,6 +1895,9 @@ Generated for target version `{plan.target_version}`.
 - gate_reason_codes_sha256: `{_format_context_value(plan.candidate_issue_gate.get("reason_codes_sha256"))}`
 - gate_required_action_count: `{_format_context_value(plan.candidate_issue_gate.get("required_action_count"))}`
 - gate_required_actions_sha256: `{_format_context_value(plan.candidate_issue_gate.get("required_actions_sha256"))}`
+- gate_primary_reason_code: {_summary_inline_code(plan.candidate_issue_gate.get("primary_reason_code"))}
+- gate_primary_reason_description: {_summary_inline_code(plan.candidate_issue_gate.get("primary_reason_description"))}
+- gate_primary_required_action: {_summary_inline_code(plan.candidate_issue_gate.get("primary_required_action"))}
 - gate_reason_codes: {gate_reason_codes}
 - gate_reason_descriptions: {gate_reason_descriptions}
 - gate_evidence_latest_tag: `{gate_latest_tag}`
@@ -1973,20 +1995,9 @@ CLIANY_CREATE_ISSUES_DRY_RUN=1 ./create-issues.sh
 
 
 def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
-    reason_codes = plan.candidate_issue_gate.get("reason_codes")
-    if not isinstance(reason_codes, list):
-        reason_codes = []
-    reason_descriptions = plan.candidate_issue_gate.get("reason_descriptions")
-    if not isinstance(reason_descriptions, dict):
-        reason_descriptions = {}
-    required_actions = plan.candidate_issue_gate.get("required_actions")
-    if not isinstance(required_actions, list):
-        required_actions = []
-    primary_reason_code = reason_codes[0] if reason_codes else None
-    primary_reason_description = None
-    if primary_reason_code is not None:
-        primary_reason_description = reason_descriptions.get(primary_reason_code)
-    primary_required_action = required_actions[0] if required_actions else None
+    primary_reason_code = plan.candidate_issue_gate.get("primary_reason_code")
+    primary_reason_description = plan.candidate_issue_gate.get("primary_reason_description")
+    primary_required_action = plan.candidate_issue_gate.get("primary_required_action")
     return "\n".join(
         [
             "## Candidate Issue Gate Quick Summary",
