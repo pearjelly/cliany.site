@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import shlex
 import subprocess
 import sys
 import tomllib
@@ -136,7 +137,7 @@ class ReadinessReport:
     publication: PublicationReport
 
     def to_dict(self) -> dict[str, Any]:
-        publication_payload = self.publication.to_dict()
+        publication_payload = _publication_payload(self)
         publication_ref_context = _publication_ref_context(publication_payload)
         publication_blockers = _publication_blockers(self.publication)
         publication_next_actions = publication_payload["next_actions"]
@@ -687,7 +688,7 @@ def build_report(
 
 
 def _print_text(report: ReadinessReport) -> None:
-    publication_payload = report.publication.to_dict()
+    publication_payload = _publication_payload(report)
     publication_summary = _publication_summary(publication_payload)
     publication_ref_context = _publication_ref_context(publication_payload)
     publication_blockers = _publication_blockers(report.publication)
@@ -728,6 +729,7 @@ def _print_text(report: ReadinessReport) -> None:
         f"worktree_clean={str(bool(publication_summary['worktree_clean'])).lower()}, "
         f"ahead={publication_summary['ahead_count']}, "
         f"tag_decision={publication_summary['tag_decision_status']}, "
+        f"target_tag={publication_summary['target_tag']}, "
         f"publish_commands={publication_summary['publish_command_count']}"
     )
     print(f"publication_summary_sha256: {_stable_json_sha256(publication_summary)}")
@@ -764,6 +766,15 @@ def _print_text(report: ReadinessReport) -> None:
     )
     if tag_publish_decision.get("required_action"):
         print(f"publication_tag_required_action: {tag_publish_decision['required_action']}")
+    if tag_publish_decision.get("target_tag"):
+        print(f"publication_target_tag: {tag_publish_decision['target_tag']}")
+        print(f"publication_target_tag_status: {tag_publish_decision['target_tag_status']}")
+        print(f"publication_target_tag_commands_sha256: {tag_publish_decision['target_tag_commands_sha256']}")
+        if tag_publish_decision.get("target_tag_primary_command"):
+            print(
+                "publication_target_tag_primary_command: "
+                f"{tag_publish_decision['target_tag_primary_command']}"
+            )
     print(f"publication_next_action_count: {len(publication_next_actions)}")
     print(f"publication_next_actions_sha256: {_stable_json_sha256(publication_next_actions)}")
     if publication_next_actions:
@@ -857,7 +868,73 @@ def _publication_publish_commands(report: ReadinessReport) -> list[str]:
 
 
 def _publication_next_actions(report: ReadinessReport) -> list[str]:
-    return [str(action) for action in report.publication.to_dict()["next_actions"]]
+    return [str(action) for action in _publication_payload(report)["next_actions"]]
+
+
+def _publication_payload(report: ReadinessReport) -> dict[str, Any]:
+    payload = report.publication.to_dict()
+    return {
+        **payload,
+        "tag_publish_decision": _publication_tag_publish_decision(
+            payload, report.target_version
+        ),
+    }
+
+
+def _publication_tag_publish_decision(
+    publication_payload: dict[str, Any], target_version: str | None
+) -> dict[str, Any]:
+    decision = dict(publication_payload["tag_publish_decision"])
+    target_tag = _target_tag_name(target_version)
+    if target_tag is None:
+        return decision
+
+    latest_tag = decision.get("latest_tag")
+    tag_points_at_head = bool(decision.get("tag_points_at_head", False))
+    target_tag_matches_latest = latest_tag == target_tag
+    remote = str(publication_payload.get("remote") or "origin")
+    create_command = f"git tag {shlex.quote(target_tag)}"
+    push_command = f"git push {shlex.quote(remote)} {shlex.quote(target_tag)}"
+
+    if target_tag_matches_latest and tag_points_at_head:
+        target_status = "current_tag_at_head"
+        required_action = decision.get("required_action")
+        commands: list[str] = []
+    elif not bool(publication_payload.get("worktree_clean", True)):
+        target_status = "blocked_by_worktree"
+        required_action = (
+            "Commit, stash, or discard local worktree changes before creating "
+            f"target tag `{target_tag}`."
+        )
+        commands = [create_command, push_command]
+    else:
+        target_status = "create_target_tag_at_head"
+        required_action = (
+            f"After final release readiness is clean, create target tag `{target_tag}` at HEAD "
+            "and push it after the branch is published."
+        )
+        commands = [create_command, push_command]
+
+    return {
+        **decision,
+        "target_tag": target_tag,
+        "target_tag_matches_latest": target_tag_matches_latest,
+        "target_tag_status": target_status,
+        "target_tag_required_action": required_action,
+        "target_tag_command_count": len(commands),
+        "target_tag_commands_sha256": _stable_json_sha256(commands),
+        "target_tag_primary_command": commands[0] if commands else None,
+        "target_tag_commands": commands,
+    }
+
+
+def _target_tag_name(target_version: str | None) -> str | None:
+    if not target_version:
+        return None
+    version = str(target_version).strip()
+    if not version:
+        return None
+    return version if version.startswith("v") else f"v{version}"
 
 
 def _publication_ref_context(publication_payload: dict[str, Any]) -> dict[str, Any]:
@@ -897,6 +974,9 @@ def _publication_summary(publication_payload: dict[str, Any]) -> dict[str, Any]:
         "tag_points_at_head": publication_payload["tag_points_at_head"],
         "tag_decision_status": tag_publish_decision["status"],
         "tag_can_push": tag_publish_decision["can_push_tag"],
+        "target_tag": tag_publish_decision.get("target_tag"),
+        "target_tag_status": tag_publish_decision.get("target_tag_status"),
+        "target_tag_primary_command": tag_publish_decision.get("target_tag_primary_command"),
         "next_action_count": len(next_actions),
         "primary_next_action": next_actions[0] if next_actions else None,
         "publish_command_count": len(publish_commands),
@@ -1021,7 +1101,7 @@ def _candidate_command_plan_summary_lines(report: ReadinessReport) -> list[str]:
 
 
 def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
-    publication_payload = report.publication.to_dict()
+    publication_payload = _publication_payload(report)
     publication_summary = _publication_summary(publication_payload)
     publication_blockers = _publication_blockers(report.publication)
     ref_context = _publication_ref_context(publication_payload)
@@ -1039,6 +1119,8 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
         f"- publication_summary_branch: `{_markdown_cell(publication_summary['branch'])}`",
         f"- publication_summary_ahead_count: `{_markdown_cell(publication_summary['ahead_count'])}`",
         f"- publication_summary_latest_tag: `{_markdown_cell(publication_summary['latest_tag'])}`",
+        f"- publication_summary_target_tag: `{_markdown_cell(publication_summary['target_tag'])}`",
+        f"- publication_summary_target_tag_status: `{_markdown_cell(publication_summary['target_tag_status'])}`",
         f"- publication_summary_sha256: `{_stable_json_sha256(publication_summary)}`",
         f"- publication_summary_primary_next_action: `{_markdown_cell(publication_summary['primary_next_action'])}`",
         (
@@ -1051,6 +1133,17 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
         f"- tag_publish_decision: `{_markdown_cell(tag_publish_decision['status'])}`",
         f"- tag_can_push: `{str(bool(tag_publish_decision['can_push_tag'])).lower()}`",
         f"- tag_required_action: `{_markdown_cell(tag_publish_decision.get('required_action'))}`",
+        f"- target_tag: `{_markdown_cell(tag_publish_decision.get('target_tag'))}`",
+        f"- target_tag_status: `{_markdown_cell(tag_publish_decision.get('target_tag_status'))}`",
+        (
+            "- target_tag_required_action: "
+            f"`{_markdown_cell(tag_publish_decision.get('target_tag_required_action'))}`"
+        ),
+        f"- target_tag_commands_sha256: `{_markdown_cell(tag_publish_decision.get('target_tag_commands_sha256'))}`",
+        (
+            "- target_tag_primary_command: "
+            f"`{_markdown_cell(tag_publish_decision.get('target_tag_primary_command'))}`"
+        ),
         f"- publication_next_action_count: `{len(publication_next_actions)}`",
         f"- publication_next_actions_sha256: `{_stable_json_sha256(publication_next_actions)}`",
         f"- publication_primary_next_action: `{_markdown_cell(primary_next_action)}`",

@@ -630,6 +630,22 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert payload["publication_tag_publish_decision"] == payload["publication"]["tag_publish_decision"]
     assert payload["publication_tag_publish_decision"]["status"] == "needs_remote_check"
     assert payload["publication_tag_publish_decision"]["can_push_tag"] is False
+    assert payload["publication_tag_publish_decision"]["target_tag"] == "v0.1.1"
+    assert (
+        payload["publication_tag_publish_decision"]["target_tag_status"]
+        == "create_target_tag_at_head"
+    )
+    assert payload["publication_tag_publish_decision"]["target_tag_commands"] == [
+        "git tag v0.1.1",
+        "git push origin v0.1.1",
+    ]
+    assert payload["publication_tag_publish_decision"]["target_tag_commands_sha256"] == (
+        release_readiness._stable_json_sha256(
+            payload["publication_tag_publish_decision"]["target_tag_commands"]
+        )
+    )
+    assert publication_summary["target_tag"] == "v0.1.1"
+    assert publication_summary["target_tag_primary_command"] == "git tag v0.1.1"
     assert payload["publication"]["next_actions"] == publication_next_actions
     assert payload["publication_next_action_count"] == len(publication_next_actions)
     assert payload["publication_next_actions_sha256"] == release_readiness._stable_json_sha256(
@@ -702,6 +718,8 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- publication_summary_status: `blocked`" in text
     assert "- publication_summary_branch: `master`" in text
     assert "- publication_summary_latest_tag: `v0.1.0`" in text
+    assert "- publication_summary_target_tag: `v0.1.1`" in text
+    assert "- publication_summary_target_tag_status: `create_target_tag_at_head`" in text
     assert "- publication_summary_sha256: `" in text
     assert "- publication_summary_primary_next_action: `" in text
     assert (
@@ -716,6 +734,10 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- tag_publish_decision: `manual_decision_required`" in text
     assert "- tag_can_push: `false`" in text
     assert "- tag_required_action: `Move to the latest tag commit or create a new release tag at HEAD " in text
+    assert "- target_tag: `v0.1.1`" in text
+    assert "- target_tag_status: `create_target_tag_at_head`" in text
+    assert "- target_tag_commands_sha256: `" in text
+    assert "- target_tag_primary_command: `git tag v0.1.1`" in text
     assert "- publication_next_action_count: `" in text
     assert "- publication_next_actions_sha256: `" in text
     assert "- publication_primary_next_action: `" in text
@@ -841,6 +863,7 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     assert "candidate_command_plan_summary: all_declared=true, commands=0/0, missing=0" in output
     assert "publication: False" in output
     assert "publication_summary: status=blocked, worktree_clean=true, ahead=None" in output
+    assert "target_tag=v0.1.1" in output
     assert "publication_summary_sha256:" in output
     assert "publication_summary_primary_next_action:" in output
     assert (
@@ -859,6 +882,10 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
         "publication_tag_required_action: Move to the latest tag commit or create a new release tag at HEAD"
         in output
     )
+    assert "publication_target_tag: v0.1.1" in output
+    assert "publication_target_tag_status: create_target_tag_at_head" in output
+    assert "publication_target_tag_commands_sha256:" in output
+    assert "publication_target_tag_primary_command: git tag v0.1.1" in output
     assert "publication_next_action_count:" in output
     assert "publication_next_actions_sha256:" in output
     assert "publication_primary_next_action: Set an upstream branch for `master`" in output
