@@ -1517,6 +1517,18 @@ def _print_text_item(key: str, value: object) -> None:
 
 def _render_markdown(plan: IterationPlan) -> str:
     candidate_cases = ", ".join(f"`{case_id}`" for case_id in plan.candidate_cases) or "-"
+    primary_candidate_task = plan.case_promotion_evidence_summary.get("primary_next_task")
+    if isinstance(primary_candidate_task, dict) and primary_candidate_task:
+        primary_candidate_task_value = json.dumps(
+            primary_candidate_task,
+            ensure_ascii=False,
+            sort_keys=True,
+        )
+    else:
+        primary_candidate_task_value = "(none)"
+    primary_candidate_action = _format_context_value(
+        plan.case_promotion_evidence_summary.get("primary_next_action")
+    )
     blockers = "\n".join(f"- {blocker}" for blocker in plan.blockers) or "- None."
     next_actions = "\n".join(f"- {action}" for action in plan.next_actions)
     validation = "\n".join(f"- `{command}`" for command in plan.validation_commands)
@@ -1559,6 +1571,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 | commit_cadence_summary | {plan.commit_cadence.get("summary")} |
 | case_assets | {plan.case_assets} |
 | candidate_cases | {candidate_cases} |
+| case_promotion_evidence_primary_next_task | `{primary_candidate_task_value}` |
+| case_promotion_evidence_primary_next_action | `{primary_candidate_action}` |
 
 ## Recommended Slice
 

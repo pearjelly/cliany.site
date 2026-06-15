@@ -40,7 +40,7 @@ Candidate issue artifacts 的 review checklist 会要求维护者核对 `issue-m
 
 `plan_next_iteration.py` 的默认文本输出会在 `candidate_promotions` 下展开 `evidence_bundle_primary_next_task`；Markdown report 的 `Candidate Issue Metadata` 表也会展示 `Evidence Bundle Primary Next Task`，不用生成 issue artifacts 也能看到 evidence bundle 首要下一步。
 
-`plan_next_iteration.py` 的顶层 JSON 和默认文本输出也会展示 `case_promotion_evidence_primary_next_task` 与 `case_promotion_evidence_primary_next_action`，让维护工具不用展开完整 `case_promotion_evidence_summary` 就能直接定位首要 candidate evidence 任务。
+`plan_next_iteration.py` 的顶层 JSON、默认文本输出和 Markdown report 也会展示 `case_promotion_evidence_primary_next_task` 与 `case_promotion_evidence_primary_next_action`，让维护工具不用展开完整 `case_promotion_evidence_summary` 就能直接定位首要 candidate evidence 任务。
 
 `plan_next_iteration.py` 也会把 publication audit 的 `tag_publish_decision` 透传为 `publication_tag_publish_decision`，并同步写入 JSON、默认文本输出、Markdown report、`artifact-manifest.json`、`publication-handoff.json` 和 artifacts `README.md`。维护工具可以直接读取 `status`、`can_push_tag`、`latest_tag`、`tag_points_at_head`、`tag_published` 和 `required_action`，无需重新解析 `publication_ref_context` 或自然语言 next action。
 

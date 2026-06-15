@@ -726,6 +726,13 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "| candidate_count | `2` |" in text
     assert "| pending_count | `6` |" in text
     assert "| primary_next_action | `Generate pypi.org-<version>.cliany-adapter.tar.gz.` |" in text
+    assert "| case_promotion_evidence_primary_next_task | `{\"case_id\": \"pypi-project-search\"" in text
+    assert "\"task\": \"adapter_package\"" in text
+    assert (
+        "| case_promotion_evidence_primary_next_action | "
+        "`Generate pypi.org-<version>.cliany-adapter.tar.gz.` |"
+        in text
+    )
     assert "| `pypi-project-search` | `adapter_package` | `pending` | - |" in text
     assert "| Case | Adapter Package | Metadata Validation | Online Smoke | Promotion Evidence |" in text
     assert "adapter_package: pending; next: Generate pypi.org-<version>.cliany-adapter.tar.gz." in text
