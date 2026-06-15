@@ -1186,6 +1186,19 @@ def _candidate_issue_body(
         "metadata_validation": metadata_validation,
         "online_smoke": online_smoke,
     }
+    primary_task = _candidate_promotion_primary_task(promotion_evidence)
+    if primary_task:
+        primary_evidence = primary_task.get("evidence") or "Not attached yet."
+        primary_next_action = primary_task.get("next_action") or "Not declared."
+        primary_task_lines = [
+            f"- Task: `{primary_task['task']}`",
+            f"- Status: `{primary_task['status']}`",
+            f"- Current evidence: {primary_evidence}",
+            f"- Next action: {primary_next_action}",
+        ]
+    else:
+        primary_task_lines = ["- All promotion tasks already have complete evidence."]
+
     task_lines: list[str] = []
     for task_name in CANDIDATE_PROMOTION_FIELDS:
         task = promotion_evidence.get(task_name)
@@ -1208,6 +1221,9 @@ def _candidate_issue_body(
             f"## Scope: promote candidate case `{case_id}`",
             "",
             "Move this candidate case one step closer to `active` without changing its status early.",
+            "",
+            "## Primary Evidence Task",
+            *primary_task_lines,
             "",
             "## Reproduction Context",
             f"- Target URL: {target_url or 'Not declared.'}",

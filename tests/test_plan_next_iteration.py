@@ -82,6 +82,10 @@ def test_candidate_issue_body_checks_complete_tasks():
         },
     )
 
+    assert "## Primary Evidence Task" in issue_body
+    assert "- Task: `online_smoke`" in issue_body
+    assert "- Status: `pending`" in issue_body
+    assert "- Next action: Run read-only smoke." in issue_body
     assert "- [x] `adapter_package`: Build adapter package." in issue_body
     assert "- [ ] `metadata_validation`: Validate metadata." in issue_body
     assert "- [ ] `online_smoke`: Run online smoke." in issue_body
@@ -547,6 +551,11 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "issue_body": (
             "## Scope: promote candidate case `pypi-project-search`\n\n"
             "Move this candidate case one step closer to `active` without changing its status early.\n\n"
+            "## Primary Evidence Task\n"
+            "- Task: `adapter_package`\n"
+            "- Status: `pending`\n"
+            "- Current evidence: Not attached yet.\n"
+            "- Next action: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n\n"
             "## Reproduction Context\n"
             "- Target URL: https://pypi.org/search/?q=cliany-site\n"
             "- Candidate commands:\n"
@@ -631,6 +640,8 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "| Case | Adapter Package | Metadata Validation | Online Smoke | Promotion Evidence |" in text
     assert "adapter_package: pending; next: Generate pypi.org-<version>.cliany-adapter.tar.gz." in text
     assert "## Candidate Issue Body Templates" in text
+    assert "## Primary Evidence Task" in text
+    assert "- Task: `adapter_package`" in text
     assert "  - Current status: `pending`" in text
     assert "  - Current evidence: Not attached yet." in text
     assert "## Evidence Bundle" in text

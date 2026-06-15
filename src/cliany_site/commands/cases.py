@@ -78,16 +78,37 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
     offline_commands = _offline_commands(case)
     promotion = case.get("promotion") if isinstance(case.get("promotion"), dict) else {}
     evidence = case.get("promotion_evidence") if isinstance(case.get("promotion_evidence"), dict) else {}
+    primary_task = _candidate_issue_primary_task(evidence)
 
     lines = [
         f"## Scope: promote candidate case `{case_id}`",
         "",
         "Move this candidate case one step closer to `active` without changing its status early.",
         "",
-        "## Reproduction Context",
-        f"- Target URL: {target_url}",
-        "- Candidate commands:",
+        "## Primary Evidence Task",
     ]
+    if primary_task:
+        current_evidence = primary_task.get("evidence") or "Not attached yet."
+        next_action = primary_task.get("next_action") or "No next action declared."
+        lines.extend(
+            [
+                f"- Task: `{primary_task['task']}`",
+                f"- Status: `{primary_task['status']}`",
+                f"- Current evidence: {current_evidence}",
+                f"- Next action: {next_action}",
+            ]
+        )
+    else:
+        lines.append("- All promotion tasks already have complete evidence.")
+
+    lines.extend(
+        [
+            "",
+            "## Reproduction Context",
+            f"- Target URL: {target_url}",
+            "- Candidate commands:",
+        ]
+    )
     lines.extend(f"  - `{command}`" for command in commands)
     lines.append("- Offline validation commands:")
     lines.extend(f"  - `{command}`" for command in offline_commands)
@@ -130,6 +151,35 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
         ]
     )
     return "\n".join(lines)
+
+
+def _candidate_issue_primary_task(evidence: dict[str, Any]) -> dict[str, Any]:
+    incomplete_tasks: list[dict[str, Any]] = []
+    for task_name in PROMOTION_TASKS:
+        task_evidence = evidence.get(task_name)
+        task_evidence = task_evidence if isinstance(task_evidence, dict) else {}
+        status = str(task_evidence.get("status") or "pending")
+        evidence_value = task_evidence.get("evidence") or ""
+        complete = status == "complete" and bool(evidence_value)
+        if complete:
+            continue
+        incomplete_tasks.append(
+            {
+                "task": task_name,
+                "status": status,
+                "evidence": evidence_value,
+                "next_action": str(task_evidence.get("next_action") or ""),
+            }
+        )
+
+    pending_tasks = [task for task in incomplete_tasks if task["status"] == "pending"]
+    blocked_tasks = [task for task in incomplete_tasks if task["status"] == "blocked"]
+    primary = (
+        pending_tasks[0]
+        if pending_tasks
+        else (blocked_tasks[0] if blocked_tasks else (incomplete_tasks[0] if incomplete_tasks else {}))
+    )
+    return dict(primary)
 
 
 def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:

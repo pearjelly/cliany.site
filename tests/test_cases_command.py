@@ -104,6 +104,9 @@ def test_cases_command_issue_template_json(tmp_home):
     payload = json.loads(result.output)
     template = payload["data"]["issue_template"]
     assert "## Scope: promote candidate case `pypi-project-search`" in template
+    assert "## Primary Evidence Task" in template
+    assert "- Task: `adapter_package`" in template
+    assert "- Status: `pending`" in template
     assert "## Reproduction Context" in template
     assert "`adapter_package`" in template
     assert "Generate pypi.org" in template
@@ -174,6 +177,10 @@ def test_cases_command_issue_template_checks_complete_tasks(tmp_home, monkeypatc
     )
 
     assert result.exit_code == 0
+    assert "## Primary Evidence Task" in result.output
+    assert "- Task: `online_smoke`" in result.output
+    assert "- Status: `pending`" in result.output
+    assert "- Next action: Run read-only smoke." in result.output
     assert "- [x] `adapter_package`: Build adapter package." in result.output
     assert "- [ ] `metadata_validation`: Validate metadata." in result.output
     assert "- [ ] `online_smoke`: Run online smoke." in result.output

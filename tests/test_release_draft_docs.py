@@ -10936,6 +10936,7 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "evidence_bundle_json_command",
         "promotion_evidence_primary_task",
         "Primary Evidence Task",
+        "## Primary Evidence Task",
         "- [x]",
         "Candidate Summary",
         "docs/good-first-issues.md",
