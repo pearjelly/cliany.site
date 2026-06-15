@@ -992,11 +992,17 @@ def _stable_json_sha256(value: Any) -> str:
 def _next_action_lines(report: ReadinessReport) -> list[str]:
     lines: list[str] = []
     if not report.publication.ok:
-        publication_primary_next_action = _publication_summary(
-            _publication_payload(report)
-        )["primary_next_action"]
+        publication_payload = _publication_payload(report)
+        publication_primary_next_action = _publication_summary(publication_payload)[
+            "primary_next_action"
+        ]
         if publication_primary_next_action:
             lines.append(str(publication_primary_next_action))
+        target_tag_action = _target_tag_next_action(
+            publication_payload["tag_publish_decision"]
+        )
+        if target_tag_action:
+            lines.append(target_tag_action)
     if report.cadence.commit_day_count < report.cadence.min_commit_days:
         missing_days = max(report.cadence.min_commit_days - report.cadence.commit_day_count, 0)
         lines.append(
@@ -1047,6 +1053,23 @@ def _next_action_lines(report: ReadinessReport) -> list[str]:
         if line not in deduped:
             deduped.append(line)
     return deduped
+
+
+def _target_tag_next_action(tag_publish_decision: dict[str, Any]) -> str | None:
+    if tag_publish_decision.get("target_tag_status") not in {
+        "blocked_by_worktree",
+        "create_target_tag_at_head",
+    }:
+        return None
+    action = tag_publish_decision.get("target_tag_required_action")
+    if not action:
+        return None
+
+    commands = tag_publish_decision.get("target_tag_commands")
+    if not isinstance(commands, list) or not commands:
+        return str(action)
+    command_text = " then ".join(f"`{command}`" for command in commands)
+    return f"{action} Commands: {command_text}."
 
 
 def _markdown_cell(value: Any) -> str:

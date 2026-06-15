@@ -582,8 +582,13 @@ def test_release_readiness_passes_for_minimal_ready_repo(tmp_path):
     }
     assert report.to_dict()["next_actions"] == [
         "Set an upstream branch for `master` before checking publication status.",
+        (
+            "After final release readiness is clean, create target tag `v0.1.1` at HEAD and push it "
+            "after the branch is published. Commands: `git tag v0.1.1` then "
+            "`git push origin v0.1.1`."
+        ),
     ]
-    assert report.to_dict()["next_action_count"] == 1
+    assert report.to_dict()["next_action_count"] == 2
     assert report.to_dict()["primary_next_action"] == report.to_dict()["next_actions"][0]
     assert report.to_dict()["next_actions_sha256"] == release_readiness._stable_json_sha256(
         report.to_dict()["next_actions"]
@@ -668,6 +673,11 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert "python scripts/check_release_publication.py --remote --json" in publish_commands
     assert payload["next_actions"] == [
         "Set an upstream branch for `master` before checking publication status.",
+        (
+            "After final release readiness is clean, create target tag `v0.1.1` at HEAD and push it "
+            "after the branch is published. Commands: `git tag v0.1.1` then "
+            "`git push origin v0.1.1`."
+        ),
         (
             "Ship verified slices on `2` more unique commit days this week; "
             "current commit days are `1/3`. Use `docs/weekly-maintainer-loop.md` to pick the next slice."
