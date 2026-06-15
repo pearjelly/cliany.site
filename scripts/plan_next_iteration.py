@@ -26,6 +26,12 @@ ARTIFACT_MANIFEST_KEYS = (
     "candidate_cases",
     "case_promotion_evidence_summary",
     "case_promotion_command_plan_summary",
+    "standard_release_flow",
+    "standard_release_flow_status",
+    "standard_release_flow_primary_next_action",
+    "standard_release_flow_command_count",
+    "standard_release_flow_commands_sha256",
+    "standard_release_flow_sha256",
     "blockers",
     "next_actions",
     "next_action_count",
@@ -139,6 +145,12 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "case_promotion_command_plan_command_count",
     "case_promotion_command_plan_missing_command_count",
     "case_promotion_command_plan_all_declared",
+    "standard_release_flow_status",
+    "standard_release_flow_target_tag",
+    "standard_release_flow_primary_next_action",
+    "standard_release_flow_command_count",
+    "standard_release_flow_commands_sha256",
+    "standard_release_flow_sha256",
     "body_count",
     "issue_body_inventory_preview_count",
     "issue_body_inventory_preview",
@@ -2724,6 +2736,17 @@ def _render_issue_artifacts_readme(
     gate_draft_issues = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_issue_count"))
     create_issues_safety = _issue_artifact_create_issues_safety(Path("create-issues.sh"))
     release_draft_required_actions = _release_draft_required_actions(plan.release_draft_issues)
+    standard_flow_status = _format_context_value(plan.standard_release_flow.get("status"))
+    standard_flow_target_tag = _format_context_value(plan.standard_release_flow.get("target_tag"))
+    standard_flow_primary_action = _format_context_value(
+        plan.standard_release_flow.get("primary_next_action")
+    )
+    standard_flow_command_count = _format_context_value(
+        plan.standard_release_flow.get("command_count")
+    )
+    standard_flow_commands_sha256 = _format_context_value(
+        plan.standard_release_flow.get("commands_sha256")
+    )
     return f"""# cliany-site Candidate Issue Artifacts
 
 Generated for target version `{plan.target_version}`.
@@ -2735,9 +2758,9 @@ Generated for target version `{plan.target_version}`.
 - `artifact-manifest.json`: schema version, candidate cases, promotion evidence summary, blockers,
   next actions, file names, review order, review checklist, candidate issue gate, publication status,
   publication ref context, worktree status, release draft handoff, reproduction command, plan report command,
-  publish commands, and validation commands for this candidate issue artifact bundle.
+  standard release flow, publish commands, and validation commands for this candidate issue artifact bundle.
 - `publication-handoff.json`: publication status, candidate issue gate, visibility, next actions,
-  publication next actions, ref context, worktree status, and publish commands to review first.
+  standard release flow, publication next actions, ref context, worktree status, and publish commands to review first.
 - `release-draft-handoff.json`: schema version, target version, release draft ok status, release draft path,
   release draft path hash, release draft issue count, primary release draft issue, primary required action,
   release draft required action count, release draft required actions hash, release draft required actions,
@@ -2801,6 +2824,12 @@ Generated for target version `{plan.target_version}`.
 - commit_cadence_status: `{_format_context_value(plan.commit_cadence.get("status"))}`
 - commit_cadence_missing_commit_days: `{_format_context_value(plan.commit_cadence.get("missing_commit_days"))}`
 - commit_cadence_primary_next_action: `{_format_context_value(_commit_cadence_primary_next_action(plan))}`
+- standard_release_flow_status: `{standard_flow_status}`
+- standard_release_flow_target_tag: `{standard_flow_target_tag}`
+- standard_release_flow_primary_next_action: `{standard_flow_primary_action}`
+- standard_release_flow_command_count: `{standard_flow_command_count}`
+- standard_release_flow_commands_sha256: `{standard_flow_commands_sha256}`
+- standard_release_flow_sha256: `{_stable_json_sha256(plan.standard_release_flow)}`
 - plan_report_command: `{plan.plan_report_command}`
 - plan_report_command_sha256: `{_stable_json_sha256(plan.plan_report_command)}`
 - issue_artifacts_command: `{plan.issue_artifacts_command}`
@@ -3154,6 +3183,18 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "commit_cadence_status": plan.commit_cadence.get("status"),
         "commit_cadence_missing_commit_days": plan.commit_cadence.get("missing_commit_days"),
         "commit_cadence_primary_next_action": _commit_cadence_primary_next_action(plan),
+        "standard_release_flow": plan.standard_release_flow,
+        "standard_release_flow_status": plan.standard_release_flow.get("status"),
+        "standard_release_flow_primary_next_action": plan.standard_release_flow.get(
+            "primary_next_action"
+        ),
+        "standard_release_flow_command_count": plan.standard_release_flow.get(
+            "command_count"
+        ),
+        "standard_release_flow_commands_sha256": plan.standard_release_flow.get(
+            "commands_sha256"
+        ),
+        "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "publication_next_actions": plan.publication_next_actions,
         "primary_next_action": _publication_primary_next_action(plan),
         "plan_report_command": plan.plan_report_command,
@@ -3366,6 +3407,18 @@ def _artifact_manifest_payload_without_summary(
         "candidate_cases": candidate_cases,
         "case_promotion_evidence_summary": plan.case_promotion_evidence_summary,
         "case_promotion_command_plan_summary": plan.case_promotion_command_plan_summary,
+        "standard_release_flow": plan.standard_release_flow,
+        "standard_release_flow_status": plan.standard_release_flow.get("status"),
+        "standard_release_flow_primary_next_action": plan.standard_release_flow.get(
+            "primary_next_action"
+        ),
+        "standard_release_flow_command_count": plan.standard_release_flow.get(
+            "command_count"
+        ),
+        "standard_release_flow_commands_sha256": plan.standard_release_flow.get(
+            "commands_sha256"
+        ),
+        "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "blockers": plan.blockers,
         "next_actions": plan.next_actions,
         "next_action_count": len(plan.next_actions),
@@ -3827,6 +3880,18 @@ def _issue_artifact_bundle_summary(
             "missing_command_count"
         ),
         "case_promotion_command_plan_all_declared": command_plan_summary.get("all_declared"),
+        "standard_release_flow_status": plan.standard_release_flow.get("status"),
+        "standard_release_flow_target_tag": plan.standard_release_flow.get("target_tag"),
+        "standard_release_flow_primary_next_action": plan.standard_release_flow.get(
+            "primary_next_action"
+        ),
+        "standard_release_flow_command_count": plan.standard_release_flow.get(
+            "command_count"
+        ),
+        "standard_release_flow_commands_sha256": plan.standard_release_flow.get(
+            "commands_sha256"
+        ),
+        "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "body_count": issue_body_summary["body_count"],
         "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
         "issue_body_inventory_preview": list(issue_body_inventory_preview),
@@ -4540,6 +4605,18 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['case_promotion_command_plan_missing_command_count']}`",
             "- case_promotion_command_plan_all_declared: "
             f"`{str(bool(summary['case_promotion_command_plan_all_declared'])).lower()}`",
+            "- standard_release_flow_status: "
+            f"{_summary_inline_code(summary['standard_release_flow_status'])}",
+            "- standard_release_flow_target_tag: "
+            f"{_summary_inline_code(summary['standard_release_flow_target_tag'])}",
+            "- standard_release_flow_primary_next_action: "
+            f"{_summary_inline_code(summary['standard_release_flow_primary_next_action'])}",
+            "- standard_release_flow_command_count: "
+            f"`{summary['standard_release_flow_command_count']}`",
+            "- standard_release_flow_commands_sha256: "
+            f"`{summary['standard_release_flow_commands_sha256']}`",
+            "- standard_release_flow_sha256: "
+            f"`{summary['standard_release_flow_sha256']}`",
             f"- body_count: `{summary['body_count']}`",
             f"- issue_body_inventory_preview_count: `{summary['issue_body_inventory_preview_count']}`",
             "- issue_body_inventory_preview: "

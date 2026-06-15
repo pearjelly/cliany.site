@@ -195,6 +195,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "standard_release_flow.primary_next_action",
         "目标 release tag 动作",
         "release gate",
+        "artifacts `README.md` 的 `Publication Handoff`",
+        "standard release flow 摘要",
         "target_tag_commands_sha256",
         "publication_tag_publish_decision.target_tag_commands",
         "publication_worktree_status_count",

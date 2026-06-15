@@ -1322,6 +1322,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "commit_cadence_primary_next_action": (
             "Ship verified slices on `1` more unique commit days this week."
         ),
+        "standard_release_flow": plan.standard_release_flow,
+        "standard_release_flow_status": plan.standard_release_flow["status"],
+        "standard_release_flow_primary_next_action": plan.standard_release_flow[
+            "primary_next_action"
+        ],
+        "standard_release_flow_command_count": plan.standard_release_flow["command_count"],
+        "standard_release_flow_commands_sha256": plan.standard_release_flow[
+            "commands_sha256"
+        ],
+        "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "publication_next_actions": [
             "Commit, stash, or discard local worktree changes before publishing release refs.",
             "Push `master` to `origin`; local branch is ahead by `2` commits.",
@@ -1703,6 +1713,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "missing_command_count"
         ],
         "case_promotion_command_plan_all_declared": command_plan_summary["all_declared"],
+        "standard_release_flow_status": plan.standard_release_flow["status"],
+        "standard_release_flow_target_tag": plan.standard_release_flow["target_tag"],
+        "standard_release_flow_primary_next_action": plan.standard_release_flow[
+            "primary_next_action"
+        ],
+        "standard_release_flow_command_count": plan.standard_release_flow["command_count"],
+        "standard_release_flow_commands_sha256": plan.standard_release_flow[
+            "commands_sha256"
+        ],
+        "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "body_count": 2,
         "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
         "issue_body_inventory_preview": list(issue_body_inventory_preview),
@@ -2363,6 +2383,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "candidate_cases": ["pypi-project-search", "npm-package-search"],
         "case_promotion_evidence_summary": plan.case_promotion_evidence_summary,
         "case_promotion_command_plan_summary": plan.case_promotion_command_plan_summary,
+        "standard_release_flow": plan.standard_release_flow,
+        "standard_release_flow_status": plan.standard_release_flow["status"],
+        "standard_release_flow_primary_next_action": plan.standard_release_flow[
+            "primary_next_action"
+        ],
+        "standard_release_flow_command_count": plan.standard_release_flow["command_count"],
+        "standard_release_flow_commands_sha256": plan.standard_release_flow[
+            "commands_sha256"
+        ],
+        "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "blockers": ["release draft validation failed", "latest local release is not published"],
         "next_actions": plan.next_actions,
         "next_action_count": len(plan.next_actions),
@@ -2946,6 +2976,24 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "case_promotion_command_plan_command_count: `6`" in readme
     assert "case_promotion_command_plan_missing_command_count: `1`" in readme
     assert "case_promotion_command_plan_all_declared: `false`" in readme
+    assert "standard_release_flow_status: `blocked`" in readme
+    assert "standard_release_flow_target_tag: `v0.16.2`" in readme
+    assert (
+        "standard_release_flow_primary_next_action: "
+        "`Commit, stash, or discard local worktree changes before publishing release refs.`"
+    ) in readme
+    assert (
+        "standard_release_flow_command_count: "
+        f"`{plan.standard_release_flow['command_count']}`"
+    ) in readme
+    assert (
+        "standard_release_flow_commands_sha256: "
+        f"`{plan.standard_release_flow['commands_sha256']}`"
+    ) in readme
+    assert (
+        "standard_release_flow_sha256: "
+        f"`{_stable_json_sha256(plan.standard_release_flow)}`"
+    ) in readme
     assert (
         "issue_body_inventory_preview_count: "
         f"`{artifact_bundle_summary['issue_body_inventory_preview_count']}`"
@@ -3338,7 +3386,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_primary_next_action: "
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
-    assert "publication_handoff_key_count: `33`" in readme
+    assert f"publication_handoff_key_count: `{len(expected_publication_handoff)}`" in readme
     assert "publication_handoff_schema_version: `1`" in readme
     assert "publication_handoff_first_key: `schema_version`" in readme
     assert "publication_handoff_last_key: `publish_script_command_sha256`" in readme
@@ -4003,6 +4051,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "publish_command_count: `1`" in readme
     assert "primary_publish_command: `python scripts/check_release_publication.py --json`" in readme
+    assert "standard_release_flow_status: `blocked`" in readme
+    assert "standard_release_flow_target_tag: `v0.16.2`" in readme
+    assert (
+        "standard_release_flow_command_count: "
+        f"`{plan.standard_release_flow['command_count']}`"
+    ) in readme
     assert "publish_script_path: `/tmp/cliany-publish-release.sh`" in readme
     assert (
         f"publish_script_path_sha256: "

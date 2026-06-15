@@ -10989,6 +10989,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "standard_release_flow.primary_next_action",
         "顶层 `next_actions[0]`",
         "目标 release tag 动作排在它之后",
+        "artifacts `README.md` 的 `Publication Handoff`",
+        "standard release flow 摘要",
         "Standard Release Commands",
         "Standard Release Steps",
         "next_actions[0]",
