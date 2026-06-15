@@ -1501,6 +1501,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             artifact_files_key_tail
         ),
         "issue_artifacts_command_sha256": _stable_json_sha256(plan.issue_artifacts_command),
+        "plan_report_command_sha256": _stable_json_sha256(plan.plan_report_command),
         "publication_visibility_key_count": len(plan.publication_visibility),
         "publication_visibility_sha256": _stable_json_sha256(plan.publication_visibility),
         "publication_visibility_first_key": publication_visibility_key_boundary[
@@ -2088,6 +2089,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "python scripts/plan_next_iteration.py --target-version 0.16.2 "
             "--issues-dir /tmp/cliany-candidate-issues"
         ),
+        "plan_report_command": (
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+            "--report /tmp/cliany-next-iteration.md"
+        ),
         "create_issues_dry_run_command": f"CLIANY_CREATE_ISSUES_DRY_RUN=1 {issues_dir / 'create-issues.sh'}",
         "create_issues_safety": create_issues_safety,
         "issue_body_inventory": issue_body_inventory,
@@ -2366,6 +2371,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "review checklist, candidate issue gate, publication status" in readme
     assert "release draft" in readme
     assert "handoff, reproduction" in readme
+    assert "plan report command" in readme
     assert "body file name" in readme
     assert "`publication-handoff.json`: publication status, candidate issue gate, visibility" in readme
     assert "`release-draft-handoff.json`: schema version, target version" in readme
@@ -2748,6 +2754,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"issue_artifacts_command_sha256: "
         f"`{artifact_bundle_summary['issue_artifacts_command_sha256']}`"
+    ) in readme
+    assert (
+        f"plan_report_command_sha256: "
+        f"`{artifact_bundle_summary['plan_report_command_sha256']}`"
     ) in readme
     assert (
         f"publication_visibility_key_count: "

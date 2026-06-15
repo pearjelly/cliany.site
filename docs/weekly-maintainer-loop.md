@@ -132,7 +132,7 @@ Candidate issue artifacts 的 review checklist 会要求维护者核对 `issue-m
 
 `artifact_bundle_summary` 还会带上 `artifact_files_key_tail_count`、`artifact_files_key_tail` 和 `artifact_files_key_tail_sha256`，让工具只读整包摘要就能检查 artifacts 文件映射末尾入口，并判断 files key tail 是否漂移。
 
-`artifact_bundle_summary` 还会带上 `issue_artifacts_command_sha256`，让工具只读整包摘要就能判断 artifacts 复现命令是否漂移。
+`artifact_bundle_summary` 还会带上 `issue_artifacts_command_sha256` 和 `plan_report_command_sha256`，让工具只读整包摘要就能判断 artifacts 复现命令或 Markdown 周计划报告命令是否漂移。
 
 `artifact_bundle_summary` 还会带上 `publication_visibility_key_count`、`publication_visibility_sha256`、`publication_visibility_first_key`、`publication_visibility_last_key`、`publication_visibility_key_boundary_sha256`、`publication_visibility_key_preview_count`、`publication_visibility_key_preview`、`publication_visibility_key_preview_sha256`、`publication_visibility_key_tail_count`、`publication_visibility_key_tail`、`publication_visibility_key_tail_sha256` 和 `publication_visibility_summary_sha256`，让工具只读整包摘要就能判断发布可见性对象结构、首尾边界、字段入口、末尾入口、内容或 summary 文本是否漂移。
 
@@ -284,7 +284,7 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact-manifest.json` 也会保留 release draft path 和 release draft issues，与 `release-draft-handoff.json` 同源，方便工具先判断下一版草案是否已准备好。
 
-`artifact-manifest.json` 还会保留 `issue_artifacts_command`，让维护者和自动化能从同一个入口复现当前候选任务产物包。
+`artifact-manifest.json` 还会保留 `issue_artifacts_command` 和 `plan_report_command`，让维护者和自动化能从同一个入口复现当前候选任务产物包与 Markdown 周计划报告。
 
 `artifact-manifest.json` 会带 `schema_version`，这是 artifacts manifest 自身的格式版本，用于脚本在解析前判断字段语义。
 

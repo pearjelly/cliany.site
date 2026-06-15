@@ -44,6 +44,7 @@ ARTIFACT_MANIFEST_KEYS = (
     "release_draft_path",
     "release_draft_issues",
     "issue_artifacts_command",
+    "plan_report_command",
     "create_issues_dry_run_command",
     "create_issues_safety",
     "issue_body_inventory",
@@ -182,6 +183,7 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "artifact_files_key_tail",
     "artifact_files_key_tail_sha256",
     "issue_artifacts_command_sha256",
+    "plan_report_command_sha256",
     "publication_visibility_key_count",
     "publication_visibility_sha256",
     "publication_visibility_first_key",
@@ -2090,8 +2092,8 @@ Generated for target version `{plan.target_version}`.
   body file path, and `gh issue create` command.
 - `artifact-manifest.json`: schema version, candidate cases, promotion evidence summary, blockers,
   next actions, file names, review order, review checklist, candidate issue gate, publication status,
-  publication ref context, worktree status, release draft handoff, reproduction command, publish commands,
-  and validation commands for this candidate issue artifact bundle.
+  publication ref context, worktree status, release draft handoff, reproduction command, plan report command,
+  publish commands, and validation commands for this candidate issue artifact bundle.
 - `publication-handoff.json`: publication status, candidate issue gate, visibility, next actions,
   publication next actions, ref context, worktree status, and publish commands to review first.
 - `release-draft-handoff.json`: schema version, target version, release draft ok status, release draft path,
@@ -2703,6 +2705,7 @@ def _artifact_manifest_payload_without_summary(
         "release_draft_path": plan.release_draft_path,
         "release_draft_issues": plan.release_draft_issues,
         "issue_artifacts_command": plan.issue_artifacts_command,
+        "plan_report_command": plan.plan_report_command,
         "create_issues_dry_run_command": create_issues_safety["dry_run_command"],
         "create_issues_safety": create_issues_safety,
         "issue_body_inventory": issue_body_inventory,
@@ -3214,6 +3217,7 @@ def _issue_artifact_bundle_summary(
             artifact_files_key_tail
         ),
         "issue_artifacts_command_sha256": _stable_json_sha256(plan.issue_artifacts_command),
+        "plan_report_command_sha256": _stable_json_sha256(plan.plan_report_command),
         "publication_visibility_key_count": len(plan.publication_visibility),
         "publication_visibility_sha256": _stable_json_sha256(plan.publication_visibility),
         "publication_visibility_first_key": publication_visibility_key_boundary[
@@ -3883,6 +3887,7 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{json.dumps(summary['artifact_files_key_tail'], ensure_ascii=False)}`",
             f"- artifact_files_key_tail_sha256: `{summary['artifact_files_key_tail_sha256']}`",
             f"- issue_artifacts_command_sha256: `{summary['issue_artifacts_command_sha256']}`",
+            f"- plan_report_command_sha256: `{summary['plan_report_command_sha256']}`",
             f"- publication_visibility_key_count: `{summary['publication_visibility_key_count']}`",
             f"- publication_visibility_sha256: `{summary['publication_visibility_sha256']}`",
             f"- publication_visibility_first_key: `{summary['publication_visibility_first_key']}`",

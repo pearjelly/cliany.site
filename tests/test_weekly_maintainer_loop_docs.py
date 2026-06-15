@@ -483,6 +483,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "artifact_files_key_tail",
         "artifact_files_key_tail_sha256",
         "issue_artifacts_command_sha256",
+        "plan_report_command_sha256",
         "publication_visibility_key_count",
         "publication_visibility_sha256",
         "publication_visibility_first_key",
