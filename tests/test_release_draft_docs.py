@@ -10949,6 +10949,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "plan_report_command",
         "publication-handoff.json.plan_report_command",
         "release-draft-handoff.json.plan_report_command",
+        "publication-handoff.json.issue_artifacts_command",
+        "release-draft-handoff.json.issue_artifacts_command",
         "plan_report_command_sha256",
         "/tmp/cliany-next-iteration.md",
         "artifact_bundle_summary.case_promotion_evidence_primary_detail_sha256",

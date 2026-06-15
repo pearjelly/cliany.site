@@ -216,6 +216,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `publication-handoff.json.plan_report_command` 和 artifacts `README.md` 的 `Publication Handoff` 也会展示 `plan_report_command`，让处理发布门禁的维护工具能从 handoff 直接复现同一份 Markdown 周计划报告。
 
+`publication-handoff.json.issue_artifacts_command` 和 artifacts `README.md` 的 `Publication Handoff` 也会展示 `issue_artifacts_command`，让处理发布门禁的维护工具能从 handoff 直接重新生成整包候选任务 artifacts。
+
 `artifact_bundle_summary` 还会带上 `publication_ref_context_key_count`、`publication_ref_context_sha256`、`publication_ref_context_first_key`、`publication_ref_context_last_key`、`publication_ref_context_key_boundary_sha256`、`publication_publish_command_count` 和 `publication_publish_commands_sha256`，让工具只读整包摘要就能判断 publication ref context 结构/内容或 publish commands 数量/内容是否漂移，并快速检查 publication ref context key 首尾边界。
 
 `artifact_bundle_summary` 还会带上 `publication_primary_publish_command`，让工具只读整包摘要就能展示第一条发布同步命令。
@@ -285,6 +287,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 `release-draft-handoff.json` 和 artifacts `README.md` 的 `Release Draft Handoff` 也会展示 `release_draft_issues_sha256`，让只读取 handoff 的维护工具不必展开完整 manifest 就能检测草案问题列表漂移。
 
 `release-draft-handoff.json.plan_report_command` 和 artifacts `README.md` 的 `Release Draft Handoff` 也会展示 `plan_report_command`，让处理草案门禁的维护工具能从 handoff 直接复现同一份 Markdown 周计划报告。
+
+`release-draft-handoff.json.issue_artifacts_command` 和 artifacts `README.md` 的 `Release Draft Handoff` 也会展示 `issue_artifacts_command`，让处理草案门禁的维护工具能从 handoff 直接重新生成整包候选任务 artifacts。
 
 `artifact-manifest.json` 也会保留 release draft path 和 release draft issues，与 `release-draft-handoff.json` 同源，方便工具先判断下一版草案是否已准备好。
 

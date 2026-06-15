@@ -2153,6 +2153,7 @@ Generated for target version `{plan.target_version}`.
 - commit_cadence_missing_commit_days: `{_format_context_value(plan.commit_cadence.get("missing_commit_days"))}`
 - commit_cadence_primary_next_action: `{_format_context_value(_commit_cadence_primary_next_action(plan))}`
 - plan_report_command: `{plan.plan_report_command}`
+- issue_artifacts_command: `{plan.issue_artifacts_command}`
 - latest_tag: `{_format_context_value(plan.publication_ref_context.get("latest_tag"))}`
 - local_head: `{_format_context_value(plan.publication_ref_context.get("local_head"))}`
 - worktree_clean: `{str(plan.publication_worktree_clean).lower()}`
@@ -2199,6 +2200,7 @@ Generated for target version `{plan.target_version}`.
 - release_draft_issues:
 {_issue_artifact_release_draft_issues(plan)}
 - plan_report_command: `{plan.plan_report_command}`
+- issue_artifacts_command: `{plan.issue_artifacts_command}`
 
 ## Review Checklist
 
@@ -2492,6 +2494,7 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "publication_next_actions": plan.publication_next_actions,
         "primary_next_action": _publication_primary_next_action(plan),
         "plan_report_command": plan.plan_report_command,
+        "issue_artifacts_command": plan.issue_artifacts_command,
         "ref_context": plan.publication_ref_context,
         "worktree_clean": plan.publication_worktree_clean,
         "worktree_status": plan.publication_worktree_status,
@@ -2549,6 +2552,7 @@ def _release_draft_handoff(plan: IterationPlan) -> dict[str, Any]:
         "release_draft_issues_sha256": _stable_json_sha256(plan.release_draft_issues),
         "release_draft_issues": plan.release_draft_issues,
         "plan_report_command": plan.plan_report_command,
+        "issue_artifacts_command": plan.issue_artifacts_command,
         "target_version": plan.target_version,
     }
 

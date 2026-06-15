@@ -1018,6 +1018,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "python scripts/plan_next_iteration.py --target-version 0.16.2 "
             "--report /tmp/cliany-next-iteration.md"
         ),
+        "issue_artifacts_command": (
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+            "--issues-dir /tmp/cliany-candidate-issues"
+        ),
         "target_version": "0.16.2",
     }
     release_draft_handoff_keys = list(expected_release_draft_handoff)
@@ -1065,6 +1069,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "plan_report_command": (
             "python scripts/plan_next_iteration.py --target-version 0.16.2 "
             "--report /tmp/cliany-next-iteration.md"
+        ),
+        "issue_artifacts_command": (
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+            "--issues-dir /tmp/cliany-candidate-issues"
         ),
         "ref_context": {
             "repo_root": "/repo/cliany.site",
@@ -2962,7 +2970,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_primary_next_action: "
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
-    assert "publication_handoff_key_count: `26`" in readme
+    assert "publication_handoff_key_count: `27`" in readme
     assert "publication_handoff_schema_version: `1`" in readme
     assert "publication_handoff_first_key: `schema_version`" in readme
     assert "publication_handoff_last_key: `publish_script_command_sha256`" in readme
@@ -3117,7 +3125,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_worktree_status_boundary_sha256: "
         f"`{artifact_bundle_summary['publication_worktree_status_boundary_sha256']}`"
     ) in readme
-    assert "release_draft_handoff_key_count: `16`" in readme
+    assert "release_draft_handoff_key_count: `17`" in readme
     assert "release_draft_handoff_schema_version: `1`" in readme
     assert "release_draft_handoff_primary_issue: `release draft is missing`" in readme
     assert (
@@ -3598,6 +3606,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "`python scripts/plan_next_iteration.py --target-version 0.16.2 "
         "--report /tmp/cliany-next-iteration.md`"
     ) in readme
+    assert (
+        "issue_artifacts_command: "
+        "`python scripts/plan_next_iteration.py --target-version 0.16.2 "
+        "--issues-dir /tmp/cliany-candidate-issues`"
+    ) in readme
     assert "latest_tag: `v0.16.1`" in readme
     assert "local_head: `abc123`" in readme
     assert "worktree_clean: `false`" in readme
@@ -3668,6 +3681,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "plan_report_command: "
         "`python scripts/plan_next_iteration.py --target-version 0.16.2 "
         "--report /tmp/cliany-next-iteration.md`"
+    ) in readme
+    assert (
+        "issue_artifacts_command: "
+        "`python scripts/plan_next_iteration.py --target-version 0.16.2 "
+        "--issues-dir /tmp/cliany-candidate-issues`"
     ) in readme
     assert "Confirm release draft issues are resolved or intentionally deferred" in readme
     assert "Confirm Publication Next Actions are resolved or intentionally deferred" in readme
