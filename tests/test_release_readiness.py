@@ -1163,3 +1163,30 @@ def test_release_readiness_accepts_required_valid_packages(tmp_path):
     assert report.package_gate.required is True
     assert report.package_gate.checked is True
     assert report.package_gate.packages_dir == str(packages_dir)
+
+
+def test_release_readiness_markdown_report_includes_case_package_checks(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    packages_dir = tmp_path / "packages"
+    _write_package(
+        packages_dir,
+        "demo.example.com.cliany-adapter-v0.1.0.tar.gz",
+        domain="other.example.com",
+    )
+    report = _build_report(
+        repo,
+        today=date(2026, 6, 10),
+        min_commit_days=1,
+        packages_dir=packages_dir,
+        require_packages=True,
+    )
+    report_path = tmp_path / "reports" / "release-readiness.md"
+
+    release_readiness._write_markdown_report(report, report_path)
+
+    text = report_path.read_text(encoding="utf-8")
+    assert "## Case Package Checks" in text
+    assert "| `demo-case` | `invalid` |" in text
+    assert "demo.example.com.cliany-adapter-v0.1.0.tar.gz" in text
+    assert "domain mismatch: expected 'demo.example.com', got 'other.example.com'" in text
+    assert "Regenerate the package for the manifest adapter_domain or fix the case adapter_domain." in text

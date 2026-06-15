@@ -719,6 +719,27 @@ def _candidate_primary_next_task_rows(report: ReadinessReport) -> list[str]:
     ]
 
 
+def _case_package_rows(report: ReadinessReport) -> list[str]:
+    rows: list[str] = []
+    for case in report.cases.cases:
+        if case.package is None:
+            continue
+        package = case.package
+        issues = list(package.get("issues") or [])
+        if package.get("issue"):
+            issues.append(str(package["issue"]))
+        next_actions = list(package.get("next_actions") or [])
+        rows.append(
+            "| "
+            f"`{_markdown_cell(case.id)}` | "
+            f"`{_markdown_cell(package.get('status'))}` | "
+            f"`{_markdown_cell(package.get('path'))}` | "
+            f"{_markdown_cell('<br>'.join(issues) if issues else '-')} | "
+            f"{_markdown_cell('<br>'.join(next_actions) if next_actions else '-')} |"
+        )
+    return rows
+
+
 def _weekly_review_next_slice(report: ReadinessReport) -> str:
     next_actions = _next_action_lines(report)
     if next_actions:
@@ -822,6 +843,18 @@ def _render_markdown_report(report: ReadinessReport) -> str:
                 "## Gate Issues",
                 "",
                 *issue_lines,
+            ]
+        )
+    package_rows = _case_package_rows(report)
+    if package_rows:
+        lines.extend(
+            [
+                "",
+                "## Case Package Checks",
+                "",
+                "| Case | Status | Package | Issues | Next Actions |",
+                "|------|--------|---------|--------|--------------|",
+                *package_rows,
             ]
         )
     primary_next_task_rows = _candidate_primary_next_task_rows(report)
