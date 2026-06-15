@@ -520,6 +520,7 @@ class IterationPlan:
     candidate_promotions: list[CandidatePromotion]
     case_promotion_evidence_summary: dict[str, Any]
     case_promotion_command_plan_summary: dict[str, Any]
+    standard_release_flow: dict[str, Any]
     blockers: list[str]
     next_actions: list[str]
     validation_commands: list[str]
@@ -567,6 +568,18 @@ class IterationPlan:
                 self.case_promotion_command_plan_summary
             ),
             "case_promotion_command_plan_summary": self.case_promotion_command_plan_summary,
+            "standard_release_flow_sha256": _stable_json_sha256(self.standard_release_flow),
+            "standard_release_flow_status": self.standard_release_flow.get("status"),
+            "standard_release_flow_primary_next_action": self.standard_release_flow.get(
+                "primary_next_action"
+            ),
+            "standard_release_flow_command_count": self.standard_release_flow.get(
+                "command_count"
+            ),
+            "standard_release_flow_commands_sha256": self.standard_release_flow.get(
+                "commands_sha256"
+            ),
+            "standard_release_flow": self.standard_release_flow,
             "case_promotion_evidence_primary_next_task": primary_next_task,
             "case_promotion_evidence_primary_next_action": (
                 self.case_promotion_evidence_summary.get("primary_next_action")
@@ -849,6 +862,82 @@ def _target_tag_next_action(decision: dict[str, Any]) -> str | None:
         return str(action)
     command_text = " then ".join(f"`{command}`" for command in commands)
     return f"{action} Commands: {command_text}."
+
+
+def _readiness_payload(readiness: Any) -> dict[str, Any]:
+    to_dict = getattr(readiness, "to_dict", None)
+    if not callable(to_dict):
+        return {}
+    payload = to_dict()
+    return payload if isinstance(payload, dict) else {}
+
+
+def _readiness_standard_release_flow(readiness: Any) -> dict[str, Any]:
+    flow = getattr(readiness, "standard_release_flow", None)
+    if isinstance(flow, dict):
+        return dict(flow)
+    flow = _readiness_payload(readiness).get("standard_release_flow")
+    return dict(flow) if isinstance(flow, dict) else {}
+
+
+def _standard_release_flow_primary_next_action(readiness: Any) -> str | None:
+    action = _readiness_standard_release_flow(readiness).get("primary_next_action")
+    return str(action) if action else None
+
+
+def _standard_release_flow(
+    readiness: Any,
+    publication: Any,
+    *,
+    next_actions: list[str],
+    publication_publish_commands: list[str],
+    publication_tag_publish_decision: dict[str, Any],
+) -> dict[str, Any]:
+    existing = _readiness_standard_release_flow(readiness)
+    if existing:
+        return existing
+
+    target_version = str(getattr(readiness, "target_version", "") or "")
+    target_tag = publication_tag_publish_decision.get("target_tag") or _target_tag_name(
+        target_version
+    )
+    strict_command = (
+        "python scripts/release_readiness.py --strict "
+        f"--target-version {shlex.quote(target_version)}"
+    )
+    validation_commands = [
+        strict_command,
+        "CLIANY_QA_OFFLINE=1 pytest tests/ -q",
+        "python scripts/validate_cases.py --strict",
+        *publication_publish_commands,
+        *[
+            str(command)
+            for command in publication_tag_publish_decision.get("target_tag_commands") or []
+        ],
+        "python scripts/check_release_publication.py --remote --json",
+    ]
+    commands = list(dict.fromkeys(command for command in validation_commands if command))
+    blockers = [
+        *[str(blocker) for blocker in getattr(readiness, "blockers", [])],
+        *_publication_blockers(publication),
+    ]
+    primary_next_action = (
+        next_actions[0]
+        if next_actions
+        else f"Run `{strict_command}` before tagging `{target_tag}`."
+    )
+    return {
+        "status": "blocked" if blockers else "ready",
+        "target_version": target_version,
+        "target_tag": target_tag,
+        "blocker_count": len(blockers),
+        "blockers_sha256": _stable_json_sha256(blockers),
+        "blockers": blockers,
+        "primary_next_action": primary_next_action,
+        "command_count": len(commands),
+        "commands_sha256": _stable_json_sha256(commands),
+        "commands": commands,
+    }
 
 
 def _publication_blockers(publication: Any) -> list[str]:
@@ -1222,6 +1311,16 @@ def _commit_cadence(readiness: Any) -> dict[str, Any]:
 def _next_action_lines(readiness: Any, publication: Any) -> list[str]:
     actions: list[str] = []
     if not publication.ok:
+        standard_primary_action = _standard_release_flow_primary_next_action(readiness)
+        if standard_primary_action:
+            actions.append(standard_primary_action)
+            target_tag_action = _target_tag_next_action(
+                _publication_tag_publish_decision(
+                    publication, str(getattr(readiness, "target_version", "") or "")
+                )
+            )
+            if target_tag_action:
+                actions.append(target_tag_action)
         publication_actions = _publication_plan_next_actions(
             publication, str(getattr(readiness, "target_version", "") or "")
         )
@@ -1674,6 +1773,17 @@ def build_plan(
     publication_blockers = _publication_blockers(publication)
     publication_next_actions = _publication_next_actions(publication)
     publication_publish_commands = _publication_publish_commands(publication)
+    publication_tag_publish_decision = _publication_tag_publish_decision(
+        publication, str(readiness.target_version)
+    )
+    next_actions = _next_action_lines(readiness, publication)
+    standard_release_flow = _standard_release_flow(
+        readiness,
+        publication,
+        next_actions=next_actions,
+        publication_publish_commands=publication_publish_commands,
+        publication_tag_publish_decision=publication_tag_publish_decision,
+    )
     commit_cadence = _commit_cadence(readiness)
     candidate_cases = [
         str(case.id)
@@ -1723,14 +1833,13 @@ def build_plan(
         candidate_promotions=candidate_promotions,
         case_promotion_evidence_summary=case_promotion_evidence_summary,
         case_promotion_command_plan_summary=case_promotion_command_plan_summary,
+        standard_release_flow=standard_release_flow,
         blockers=blockers,
-        next_actions=_next_action_lines(readiness, publication),
+        next_actions=next_actions,
         validation_commands=validation_commands,
         candidate_issue_gate=_candidate_issue_gate(readiness, publication),
         publication_visibility=_publication_visibility(publication),
-        publication_tag_publish_decision=_publication_tag_publish_decision(
-            publication, str(readiness.target_version)
-        ),
+        publication_tag_publish_decision=publication_tag_publish_decision,
         publication_blockers=publication_blockers,
         publication_next_action_count=len(publication_next_actions),
         publication_next_actions=publication_next_actions,
@@ -1788,6 +1897,21 @@ def _print_text(plan: IterationPlan) -> None:
     print("case_promotion_command_plan_summary:")
     for key, value in plan.case_promotion_command_plan_summary.items():
         _print_text_item(key, value)
+    print(
+        "standard_release_flow: "
+        f"status={plan.standard_release_flow.get('status')}, "
+        f"target_tag={plan.standard_release_flow.get('target_tag')}, "
+        f"commands={plan.standard_release_flow.get('command_count')}"
+    )
+    print(f"standard_release_flow_sha256: {_stable_json_sha256(plan.standard_release_flow)}")
+    print(
+        "standard_release_flow_primary_next_action: "
+        f"{plan.standard_release_flow.get('primary_next_action')}"
+    )
+    print(
+        "standard_release_flow_commands_sha256: "
+        f"{plan.standard_release_flow.get('commands_sha256')}"
+    )
     primary_next_task = plan.case_promotion_evidence_summary.get("primary_next_task")
     if isinstance(primary_next_task, dict) and primary_next_task:
         print("case_promotion_evidence_primary_next_task:")
@@ -1916,6 +2040,9 @@ def _render_markdown(plan: IterationPlan) -> str:
     primary_publication_command = _format_context_value(
         plan.publication_publish_commands[0] if plan.publication_publish_commands else None
     )
+    standard_release_flow_primary_action = _format_context_value(
+        plan.standard_release_flow.get("primary_next_action")
+    )
     command_plan_all_declared = str(
         bool(plan.case_promotion_command_plan_summary.get("all_declared"))
     ).lower()
@@ -1941,6 +2068,7 @@ def _render_markdown(plan: IterationPlan) -> str:
         plan.publication_publish_script_path,
         plan.publication_publish_script_command,
     )
+    standard_release_flow = _standard_release_flow_markdown(plan.standard_release_flow)
     case_promotion_evidence = _case_promotion_evidence_markdown(plan.case_promotion_evidence_summary)
     case_promotion_command_plan = _case_promotion_command_plan_markdown(
         plan.case_promotion_command_plan_summary
@@ -1968,6 +2096,11 @@ def _render_markdown(plan: IterationPlan) -> str:
 | publication_publish_script_path | `{plan.publication_publish_script_path}` |
 | publication_publish_script_path_sha256 | `{plan.publication_publish_script_path_sha256}` |
 | publication_publish_script_command_sha256 | `{plan.publication_publish_script_command_sha256}` |
+| standard_release_flow_status | `{plan.standard_release_flow.get("status")}` |
+| standard_release_flow_primary_next_action | `{standard_release_flow_primary_action}` |
+| standard_release_flow_command_count | `{plan.standard_release_flow.get("command_count")}` |
+| standard_release_flow_commands_sha256 | `{plan.standard_release_flow.get("commands_sha256")}` |
+| standard_release_flow_sha256 | `{_stable_json_sha256(plan.standard_release_flow)}` |
 | next_action_count | `{len(plan.next_actions)}` |
 | next_actions_sha256 | `{_stable_json_sha256(plan.next_actions)}` |
 | primary_next_action | {primary_next_action} |
@@ -2024,6 +2157,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 {publication_commands}
 
 {publication_script}
+
+{standard_release_flow}
 
 ## Release Draft
 
@@ -2249,6 +2384,42 @@ def _publication_script_markdown(path: str, command: str) -> str:
 
 ```bash
 {command}
+```"""
+
+
+def _standard_release_flow_markdown(flow: dict[str, Any]) -> str:
+    commands = flow.get("commands")
+    command_lines = (
+        "\n".join(str(command) for command in commands)
+        if isinstance(commands, list) and commands
+        else "# No standard release flow commands are needed."
+    )
+    blockers = flow.get("blockers")
+    blocker_lines = (
+        "\n".join(f"- {blocker}" for blocker in blockers)
+        if isinstance(blockers, list) and blockers
+        else "- No standard release flow blockers are present."
+    )
+    return f"""## Standard Release Flow
+
+- standard_release_flow_status: `{_format_context_value(flow.get("status"))}`
+- standard_release_flow_target_version: `{_format_context_value(flow.get("target_version"))}`
+- standard_release_flow_target_tag: `{_format_context_value(flow.get("target_tag"))}`
+- standard_release_flow_blocker_count: `{_format_context_value(flow.get("blocker_count"))}`
+- standard_release_flow_blockers_sha256: `{_format_context_value(flow.get("blockers_sha256"))}`
+- standard_release_flow_primary_next_action: `{_format_context_value(flow.get("primary_next_action"))}`
+- standard_release_flow_command_count: `{_format_context_value(flow.get("command_count"))}`
+- standard_release_flow_commands_sha256: `{_format_context_value(flow.get("commands_sha256"))}`
+- standard_release_flow_sha256: `{_stable_json_sha256(flow)}`
+
+### Standard Release Flow Blockers
+
+{blocker_lines}
+
+### Standard Release Flow Commands
+
+```bash
+{command_lines}
 ```"""
 
 

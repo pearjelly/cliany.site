@@ -62,6 +62,8 @@ Candidate issue artifacts 的 review checklist 会要求维护者核对 `issue-m
 
 提交后进入发布流程时，维护者先读取 `release_readiness.py --json` 或 Markdown report 中的 `standard_release_flow`、`standard_release_flow_status`、`standard_release_flow_primary_next_action`、`standard_release_flow_commands_sha256` 和 `standard_release_flow_sha256`。这组字段把标准发版动作压缩成可审阅步骤：严格 release readiness、整理 `CHANGELOG.md`、更新 `pyproject.toml`、离线验证、推送分支、创建/推送目标 tag，以及 `python scripts/check_release_publication.py --remote --json` 远端复核；如果 status 仍是 `blocked`，先执行 primary next action，不要跳过 gate 直接 tag。
 
+`plan_next_iteration.py` 也会透传同一组 `standard_release_flow*` 字段到 JSON、默认文本输出和 Markdown report。当 release readiness 已经给出 `standard_release_flow.primary_next_action` 且 publication 仍未通过时，周计划的顶层 `next_actions[0]` 会先采用这条标准流程首要动作，再展示目标 release tag 动作；维护者可以把周初计划和提交后的 release readiness 报告放在一起核对，确认两边没有把目标 tag 命令提前到 release gate 之前。
+
 `release_readiness.py --report` 会在 JSON 和 Markdown report 中输出 `release_mode` / `release_tag`；只有显式 `--release-tag` 的 tagged preflight 通过后，`Weekly Review` 才会把下一步显示为发布已验证 tag。普通 `--target-version` readiness 即使版本和 tag 已匹配，也仍提示准备打 tag，避免目标版本自检和 tag 发布前自检互相混淆。
 
 `artifact_bundle_summary` 会带上 `artifact_bundle_summary_key_count` 和 `artifact_bundle_summary_keys_sha256`，让工具只读整包摘要就能判断 summary 自身字段规模和字段清单是否漂移。

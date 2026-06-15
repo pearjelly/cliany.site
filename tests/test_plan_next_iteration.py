@@ -423,6 +423,60 @@ def test_plan_surfaces_tag_mismatch_before_publication(tmp_path):
     assert not any("Push tag `v0.16.1`" in action for action in plan.next_actions)
 
 
+def test_plan_prefers_standard_release_flow_primary_action(tmp_path):
+    _write_pyproject(tmp_path, version="0.16.1")
+    readiness = _readiness_report()
+    standard_primary_action = (
+        "Move to the `v0.16.1` commit or create a new release tag at HEAD before publishing."
+    )
+    readiness.standard_release_flow = {
+        "status": "blocked",
+        "target_version": "0.16.2",
+        "target_tag": "v0.16.2",
+        "blocker_count": 2,
+        "blockers_sha256": _stable_json_sha256(
+            ["commit days 2/3", "latest release tag does not point at HEAD"]
+        ),
+        "blockers": ["commit days 2/3", "latest release tag does not point at HEAD"],
+        "primary_next_action": standard_primary_action,
+        "command_count": 3,
+        "commands_sha256": _stable_json_sha256(
+            [
+                "python scripts/release_readiness.py --strict --target-version 0.16.2",
+                "git tag v0.16.2",
+                "git push origin v0.16.2",
+            ]
+        ),
+        "commands": [
+            "python scripts/release_readiness.py --strict --target-version 0.16.2",
+            "git tag v0.16.2",
+            "git push origin v0.16.2",
+        ],
+    }
+
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=readiness,
+        publication_report=_tag_mismatch_publication_report(),
+    )
+    data = plan.to_dict()
+
+    assert plan.next_actions[0] == standard_primary_action
+    assert plan.next_actions[1] == (
+        "After final release readiness is clean, create target tag `v0.16.2` at HEAD and push it "
+        "after the branch is published. Commands: `git tag v0.16.2` then "
+        "`git push origin v0.16.2`."
+    )
+    assert data["primary_next_action"] == standard_primary_action
+    assert data["standard_release_flow"] == readiness.standard_release_flow
+    assert data["standard_release_flow_status"] == "blocked"
+    assert data["standard_release_flow_primary_next_action"] == standard_primary_action
+    assert data["standard_release_flow_command_count"] == 3
+    assert data["standard_release_flow_commands_sha256"] == (
+        readiness.standard_release_flow["commands_sha256"]
+    )
+
+
 def test_candidate_issue_gate_allows_creation_after_publication_with_release_draft_review(tmp_path):
     _write_pyproject(tmp_path, version="0.16.1")
     reason_codes = ["release_draft_issues"]
