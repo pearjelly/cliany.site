@@ -10938,6 +10938,11 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "docs/good-first-issues.md",
         "cliany-site cases --case-id <id> --evidence-bundle --json",
         "promotion_evidence",
+        "status_counts",
+        "blocked_tasks",
+        "complete_tasks",
+        "incomplete_tasks",
+        "incomplete_task_count",
         "git tag v0.16.227",
     ]
     for snippet in required:

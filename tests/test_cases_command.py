@@ -142,12 +142,91 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     bundle = payload["data"]["evidence_bundle"]
     assert bundle["case_id"] == "pypi-project-search"
     assert bundle["ready_to_promote"] is False
+    assert bundle["status_counts"] == {"pending": 3, "blocked": 0, "complete": 0}
     assert bundle["pending_task_count"] == 3
+    assert bundle["blocked_task_count"] == 0
+    assert bundle["complete_task_count"] == 0
+    assert bundle["incomplete_task_count"] == 3
     assert bundle["pending_tasks"] == ["adapter_package", "metadata_validation", "online_smoke"]
+    assert bundle["blocked_tasks"] == []
+    assert bundle["complete_tasks"] == []
+    assert bundle["incomplete_tasks"] == ["adapter_package", "metadata_validation", "online_smoke"]
     assert bundle["primary_next_action"].startswith("Generate pypi.org")
     assert bundle["tasks"][0]["task"] == "adapter_package"
     assert bundle["tasks"][0]["complete"] is False
     assert "python scripts/validate_cases.py --strict" in bundle["offline_commands"]
+
+
+def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatch):
+    import cliany_site.commands.cases as cases_module
+
+    case = {
+        "id": "blocked-candidate",
+        "title": "Blocked candidate",
+        "status": "candidate",
+        "target_url": "https://example.test/search",
+        "adapter_domain": "example.test",
+        "docs": "docs/example.md",
+        "example_output": "cases/examples/example.json",
+        "commands": ["cliany-site example.test search --json"],
+        "validation": {"offline_commands": ["python scripts/validate_cases.py --strict"]},
+        "promotion": {
+            "adapter_package": "Build adapter package.",
+            "metadata_validation": "Validate metadata.",
+            "online_smoke": "Run online smoke.",
+        },
+        "promotion_evidence": {
+            "adapter_package": {
+                "status": "pending",
+                "evidence": None,
+                "next_action": "Package the adapter.",
+            },
+            "metadata_validation": {
+                "status": "blocked",
+                "evidence": "Waiting for package artifact.",
+                "next_action": "Attach package artifact first.",
+            },
+            "online_smoke": {
+                "status": "complete",
+                "evidence": "Read-only smoke passed.",
+                "next_action": "",
+            },
+        },
+    }
+    source = tmp_home / "cases" / "manifest.json"
+    monkeypatch.setattr(cases_module, "_load_cases_manifest", lambda: ([case], source, [source]))
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["--json", "cases", "--case-id", "blocked-candidate", "--evidence-bundle"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    bundle = payload["data"]["evidence_bundle"]
+    assert bundle["status_counts"] == {"pending": 1, "blocked": 1, "complete": 1}
+    assert bundle["pending_tasks"] == ["adapter_package"]
+    assert bundle["blocked_tasks"] == ["metadata_validation"]
+    assert bundle["complete_tasks"] == ["online_smoke"]
+    assert bundle["incomplete_tasks"] == ["adapter_package", "metadata_validation"]
+    assert bundle["pending_task_count"] == 1
+    assert bundle["blocked_task_count"] == 1
+    assert bundle["complete_task_count"] == 1
+    assert bundle["incomplete_task_count"] == 2
+    assert bundle["ready_to_promote"] is False
+    assert bundle["primary_next_action"] == "Package the adapter."
+
+    human = runner.invoke(
+        cli,
+        ["cases", "--case-id", "blocked-candidate", "--evidence-bundle"],
+        catch_exceptions=False,
+    )
+
+    assert human.exit_code == 0
+    assert "Blocked tasks: `1`" in human.output
+    assert "Blocked task names: `metadata_validation`" in human.output
 
 
 def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
@@ -161,6 +240,8 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert result.exit_code == 0
     assert "## Evidence bundle: `pypi-project-search`" in result.output
     assert "Ready to promote: `false`" in result.output
+    assert "Blocked tasks: `0`" in result.output
+    assert "Incomplete tasks: `3`" in result.output
     assert "## Promotion evidence" in result.output
     assert "`adapter_package`: `pending`" in result.output
     assert "cliany-site cases" not in result.output

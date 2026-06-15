@@ -153,7 +153,12 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
             }
         )
 
-    pending_tasks = [task for task in tasks if not task["complete"]]
+    status_counts = Counter(str(task["status"]) for task in tasks)
+    complete_tasks = [task for task in tasks if task["complete"]]
+    pending_tasks = [task for task in tasks if task["status"] == "pending" and not task["complete"]]
+    blocked_tasks = [task for task in tasks if task["status"] == "blocked" and not task["complete"]]
+    incomplete_tasks = [task for task in tasks if not task["complete"]]
+    primary_next_action_task = pending_tasks[0] if pending_tasks else (blocked_tasks[0] if blocked_tasks else {})
     return {
         "case_id": case_id,
         "title": case.get("title"),
@@ -165,11 +170,21 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "commands": case.get("commands") if isinstance(case.get("commands"), list) else [],
         "offline_commands": _offline_commands(case),
         "tasks": tasks,
+        "status_counts": {
+            "pending": status_counts.get("pending", 0),
+            "blocked": status_counts.get("blocked", 0),
+            "complete": status_counts.get("complete", 0),
+        },
         "pending_tasks": [task["task"] for task in pending_tasks],
-        "complete_task_count": sum(1 for task in tasks if task["complete"]),
+        "blocked_tasks": [task["task"] for task in blocked_tasks],
+        "complete_tasks": [task["task"] for task in complete_tasks],
+        "incomplete_tasks": [task["task"] for task in incomplete_tasks],
+        "complete_task_count": len(complete_tasks),
         "pending_task_count": len(pending_tasks),
-        "ready_to_promote": not pending_tasks,
-        "primary_next_action": pending_tasks[0]["next_action"] if pending_tasks else "",
+        "blocked_task_count": len(blocked_tasks),
+        "incomplete_task_count": len(incomplete_tasks),
+        "ready_to_promote": not incomplete_tasks,
+        "primary_next_action": primary_next_action_task.get("next_action", ""),
     }
 
 
@@ -184,7 +199,13 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
         f"- Example output: {bundle['example_output']}",
         f"- Ready to promote: `{str(bundle['ready_to_promote']).lower()}`",
         f"- Pending tasks: `{bundle['pending_task_count']}`",
+        f"- Blocked tasks: `{bundle.get('blocked_task_count', 0)}`",
+        f"- Complete tasks: `{bundle['complete_task_count']}`",
+        f"- Incomplete tasks: `{bundle.get('incomplete_task_count', bundle['pending_task_count'])}`",
     ]
+    blocked_tasks = bundle.get("blocked_tasks")
+    if blocked_tasks:
+        lines.append(f"- Blocked task names: {', '.join(f'`{task}`' for task in blocked_tasks)}")
     if bundle.get("primary_next_action"):
         lines.append(f"- Primary next action: {bundle['primary_next_action']}")
 
