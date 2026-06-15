@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.224] - 2026-06-15
+
+### Added
+- `artifact_bundle_summary` 现在输出 `case_promotion_evidence_primary_case_id`、`case_promotion_evidence_primary_task` 和 `case_promotion_evidence_primary_status`，让只读整包摘要的工具能直接定位首要 candidate 晋级任务。
+- `artifact_bundle_summary` 现在输出 `case_promotion_evidence_primary_evidence_sha256`，让维护工具能检测首要任务当前 evidence 是否漂移。
+- 新增 `docs/releases/v0.16.224-draft.md`，把下一版 patch release 聚焦到 candidate promotion primary task 的 bundle-level 可定位性。
+
 ## [0.16.223] - 2026-06-15
 
 ### Added
@@ -1968,7 +1975,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.223...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.224...HEAD
+[0.16.224]: https://github.com/pearjelly/cliany.site/compare/v0.16.223...v0.16.224
 [0.16.223]: https://github.com/pearjelly/cliany.site/compare/v0.16.222...v0.16.223
 [0.16.222]: https://github.com/pearjelly/cliany.site/compare/v0.16.221...v0.16.222
 [0.16.221]: https://github.com/pearjelly/cliany.site/compare/v0.16.220...v0.16.221
