@@ -57,6 +57,7 @@
 - `scripts/check_release_cadence.py` 的 JSON `next_actions` 现在保持纯文本，并输出 `primary_next_action` 与 `next_actions_sha256`，让 cadence audit 与 publication audit 的 action contract 保持一致。
 - `scripts/check_release_publication.py` 的 JSON `next_actions` 现在保持纯文本，不再混入 Markdown bullet，文本和 Markdown report 仍由渲染层输出列表符号。
 - `scripts/check_release_publication.py` 现在也输出 `primary_next_action`、`next_actions_sha256`、`primary_publish_command` 和 `publish_commands_sha256`，让 publication audit 自身能直接展示首项并检测 action/command 列表漂移。
+- `scripts/plan_next_iteration.py` 现在也在顶层 JSON、默认文本输出和 Markdown report 展示 `next_action_count`、`primary_next_action` 与 `next_actions_sha256`，让周计划自身和 cadence/publication action contract 对齐。
 - `scripts/plan_next_iteration.py` 现在把 publication next actions / publish commands 的 primary 和 SHA-256 摘要提升到顶层 JSON、默认文本输出和 Markdown report。
 - README / README.zh 的路线图入口现在说明维护者可读取 `primary_next_action`，自动化可比对 `next_actions_sha256`、`publication_next_actions_sha256` 和 `publication_publish_commands_sha256` 检测发布动作漂移。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在说明维护者如何先读 `publication_summary`、`publication_summary_sha256`、首要发布动作和首条发布命令，再决定是否展开发布详情。

@@ -549,6 +549,9 @@ class IterationPlan:
                 self.case_promotion_evidence_summary.get("primary_next_action")
             ),
             "blockers": self.blockers,
+            "next_action_count": len(self.next_actions),
+            "next_actions_sha256": _stable_json_sha256(self.next_actions),
+            "primary_next_action": self.next_actions[0] if self.next_actions else None,
             "next_actions": self.next_actions,
             "validation_commands": self.validation_commands,
             "candidate_issue_gate": self.candidate_issue_gate,
@@ -1599,6 +1602,10 @@ def _print_text(plan: IterationPlan) -> None:
         print("blockers:")
         for blocker in plan.blockers:
             print(f"- {blocker}")
+    print(f"next_action_count: {len(plan.next_actions)}")
+    print(f"next_actions_sha256: {_stable_json_sha256(plan.next_actions)}")
+    if plan.next_actions:
+        print(f"primary_next_action: {plan.next_actions[0]}")
     print("next_actions:")
     for action in plan.next_actions:
         print(f"- {action}")
@@ -1690,6 +1697,7 @@ def _render_markdown(plan: IterationPlan) -> str:
         bool(plan.case_promotion_command_plan_summary.get("all_declared"))
     ).lower()
     command_plan_missing_count = plan.case_promotion_command_plan_summary.get("missing_command_count")
+    primary_next_action = _summary_inline_code(plan.next_actions[0] if plan.next_actions else None)
     blockers = "\n".join(f"- {blocker}" for blocker in plan.blockers) or "- None."
     next_actions = "\n".join(f"- {action}" for action in plan.next_actions)
     validation = "\n".join(f"- `{command}`" for command in plan.validation_commands)
@@ -1733,6 +1741,9 @@ def _render_markdown(plan: IterationPlan) -> str:
 | publication_publish_script_path | `{plan.publication_publish_script_path}` |
 | publication_publish_script_path_sha256 | `{plan.publication_publish_script_path_sha256}` |
 | publication_publish_script_command_sha256 | `{plan.publication_publish_script_command_sha256}` |
+| next_action_count | `{len(plan.next_actions)}` |
+| next_actions_sha256 | `{_stable_json_sha256(plan.next_actions)}` |
+| primary_next_action | {primary_next_action} |
 | commit_days | `{plan.commit_days}` |
 | commit_cadence_status | `{plan.commit_cadence.get("status")}` |
 | commit_cadence_missing_commit_days | `{plan.commit_cadence.get("missing_commit_days")}` |

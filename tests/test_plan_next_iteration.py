@@ -549,6 +549,9 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         data["publication_next_actions"]
     )
     assert data["publication_primary_next_action"] == data["publication_next_actions"][0]
+    assert data["next_action_count"] == len(data["next_actions"])
+    assert data["next_actions_sha256"] == _stable_json_sha256(data["next_actions"])
+    assert data["primary_next_action"] == data["next_actions"][0]
     assert any("Push `master`" in action for action in data["next_actions"])
     assert data["case_promotion_evidence_summary"]["candidate_count"] == 2
     assert data["case_promotion_evidence_summary"]["task_count"] == 6
@@ -827,6 +830,13 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
         "| publication_primary_publish_command | "
         "`python scripts/check_release_publication.py --json` |"
     ) in text
+    assert f"| next_action_count | `{len(plan.next_actions)}` |" in text
+    assert f"| next_actions_sha256 | `{_stable_json_sha256(plan.next_actions)}` |" in text
+    assert (
+        "| primary_next_action | "
+        "`Commit, stash, or discard local worktree changes before publishing release refs.` |"
+        in text
+    )
     assert "| commit_cadence_status | `needs_more_commit_days` |" in text
     assert "| commit_cadence_missing_commit_days | `1` |" in text
     assert "| commit_cadence_summary | 2/3 commit days; 1 more unique day(s) needed. |" in text
@@ -938,6 +948,13 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
     assert f"publication_next_actions_sha256: {_stable_json_sha256(plan.publication_next_actions)}" in text
     assert (
         "publication_primary_next_action: "
+        "Commit, stash, or discard local worktree changes before publishing release refs."
+        in text
+    )
+    assert f"next_action_count: {len(plan.next_actions)}" in text
+    assert f"next_actions_sha256: {_stable_json_sha256(plan.next_actions)}" in text
+    assert (
+        "primary_next_action: "
         "Commit, stash, or discard local worktree changes before publishing release refs."
         in text
     )
