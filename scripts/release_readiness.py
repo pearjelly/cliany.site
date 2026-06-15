@@ -144,6 +144,11 @@ class ReadinessReport:
         publication_publish_commands = publication_payload["publish_commands"]
         publication_summary = _publication_summary(publication_payload)
         next_actions = _next_action_lines(self)
+        standard_release_flow = _standard_release_flow(
+            self,
+            publication_payload=publication_payload,
+            next_actions=next_actions,
+        )
         return {
             "ok": self.ok,
             "current_version": self.current_version,
@@ -186,6 +191,16 @@ class ReadinessReport:
                 publication_publish_commands[0] if publication_publish_commands else None
             ),
             "publication_publish_commands": publication_publish_commands,
+            "standard_release_flow": standard_release_flow,
+            "standard_release_flow_status": standard_release_flow["status"],
+            "standard_release_flow_primary_next_action": standard_release_flow[
+                "primary_next_action"
+            ],
+            "standard_release_flow_command_count": standard_release_flow["command_count"],
+            "standard_release_flow_commands_sha256": standard_release_flow[
+                "commands_sha256"
+            ],
+            "standard_release_flow_sha256": _stable_json_sha256(standard_release_flow),
             "next_action_count": len(next_actions),
             "next_actions_sha256": _stable_json_sha256(next_actions),
             "primary_next_action": next_actions[0] if next_actions else None,
@@ -695,6 +710,12 @@ def _print_text(report: ReadinessReport) -> None:
     tag_publish_decision = publication_payload["tag_publish_decision"]
     publication_next_actions = list(publication_payload["next_actions"])
     publication_publish_commands = list(publication_payload["publish_commands"])
+    next_actions = _next_action_lines(report)
+    standard_release_flow = _standard_release_flow(
+        report,
+        publication_payload=publication_payload,
+        next_actions=next_actions,
+    )
     print("=== cliany-site release readiness ===")
     print(f"current_version: {report.current_version}")
     print(f"target_version: {report.target_version}")
@@ -794,6 +815,21 @@ def _print_text(report: ReadinessReport) -> None:
         print("publication_publish_commands:")
         for command in publication_publish_commands:
             print(f"- {command}")
+    print(
+        "standard_release_flow: "
+        f"status={standard_release_flow['status']}, "
+        f"target_tag={standard_release_flow['target_tag']}, "
+        f"commands={standard_release_flow['command_count']}"
+    )
+    print(f"standard_release_flow_sha256: {_stable_json_sha256(standard_release_flow)}")
+    print(
+        "standard_release_flow_primary_next_action: "
+        f"{standard_release_flow['primary_next_action']}"
+    )
+    print(
+        "standard_release_flow_commands_sha256: "
+        f"{standard_release_flow['commands_sha256']}"
+    )
     print(f"package_gate: {report.package_gate.ok}")
     print(
         "package_gate_summary: "
@@ -805,7 +841,6 @@ def _print_text(report: ReadinessReport) -> None:
     )
     if report.package_gate.primary_repair_action:
         print(f"package_gate_primary_repair_action: {report.package_gate.primary_repair_action}")
-    next_actions = _next_action_lines(report)
     if next_actions:
         print("next_actions:")
         for action in next_actions:
@@ -981,6 +1016,98 @@ def _publication_summary(publication_payload: dict[str, Any]) -> dict[str, Any]:
         "primary_next_action": next_actions[0] if next_actions else None,
         "publish_command_count": len(publish_commands),
         "primary_publish_command": publish_commands[0] if publish_commands else None,
+    }
+
+
+def _standard_release_flow(
+    report: ReadinessReport,
+    *,
+    publication_payload: dict[str, Any],
+    next_actions: list[str],
+) -> dict[str, Any]:
+    tag_publish_decision = publication_payload["tag_publish_decision"]
+    target_tag = tag_publish_decision.get("target_tag") or _target_tag_name(report.target_version)
+    strict_command = (
+        "python scripts/release_readiness.py --strict "
+        f"--target-version {shlex.quote(report.target_version)}"
+    )
+    validation_command = "CLIANY_QA_OFFLINE=1 pytest tests/ -q"
+    case_validation_command = "python scripts/validate_cases.py --strict"
+    release_notes_action = (
+        f"Move CHANGELOG.md Unreleased entries into `## [{report.target_version}] - "
+        "<date>`."
+    )
+    version_action = f"Update pyproject.toml project.version to `{report.target_version}`."
+    target_tag_commands = [
+        str(command) for command in tag_publish_decision.get("target_tag_commands") or []
+    ]
+    remote_audit_command = "python scripts/check_release_publication.py --remote --json"
+
+    commands = [
+        strict_command,
+        validation_command,
+        case_validation_command,
+        *[str(command) for command in publication_payload["publish_commands"]],
+        *target_tag_commands,
+        remote_audit_command,
+    ]
+    commands = list(dict.fromkeys(command for command in commands if command))
+    blockers = [*report.blockers, *_publication_blockers(report.publication)]
+    status = "blocked" if blockers else "ready"
+    primary_next_action = (
+        next_actions[0]
+        if next_actions
+        else f"Run `{strict_command}` before tagging `{target_tag}`."
+    )
+
+    return {
+        "status": status,
+        "target_version": report.target_version,
+        "target_tag": target_tag,
+        "blocker_count": len(blockers),
+        "blockers_sha256": _stable_json_sha256(blockers),
+        "blockers": blockers,
+        "primary_next_action": primary_next_action,
+        "command_count": len(commands),
+        "commands_sha256": _stable_json_sha256(commands),
+        "commands": commands,
+        "steps": [
+            {
+                "name": "strict_release_readiness",
+                "status": "blocked" if report.blockers else "ready",
+                "command": strict_command,
+            },
+            {
+                "name": "release_notes",
+                "status": "pending",
+                "action": release_notes_action,
+            },
+            {
+                "name": "version_bump",
+                "status": "pending" if report.current_version != report.target_version else "ready",
+                "action": version_action,
+            },
+            {
+                "name": "offline_validation",
+                "status": "pending",
+                "commands": [validation_command, case_validation_command],
+            },
+            {
+                "name": "publish_branch",
+                "status": "blocked" if not publication_payload["worktree_clean"] else "pending",
+                "commands": list(publication_payload["publish_commands"]),
+            },
+            {
+                "name": "target_tag",
+                "status": tag_publish_decision.get("target_tag_status"),
+                "commands": target_tag_commands,
+            },
+            {
+                "name": "remote_publication_audit",
+                "status": "pending",
+                "command": remote_audit_command,
+            },
+        ],
     }
 
 
@@ -1246,6 +1373,53 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
     return lines
 
 
+def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
+    publication_payload = _publication_payload(report)
+    next_actions = _next_action_lines(report)
+    flow = _standard_release_flow(
+        report,
+        publication_payload=publication_payload,
+        next_actions=next_actions,
+    )
+    lines = [
+        "",
+        "## Standard Release Flow",
+        "",
+        f"- standard_release_flow_status: `{_markdown_cell(flow['status'])}`",
+        f"- standard_release_flow_target_version: `{_markdown_cell(flow['target_version'])}`",
+        f"- standard_release_flow_target_tag: `{_markdown_cell(flow['target_tag'])}`",
+        f"- standard_release_flow_blocker_count: `{flow['blocker_count']}`",
+        f"- standard_release_flow_blockers_sha256: `{flow['blockers_sha256']}`",
+        (
+            "- standard_release_flow_primary_next_action: "
+            f"`{_markdown_cell(flow['primary_next_action'])}`"
+        ),
+        f"- standard_release_flow_command_count: `{flow['command_count']}`",
+        f"- standard_release_flow_commands_sha256: `{flow['commands_sha256']}`",
+        f"- standard_release_flow_sha256: `{_stable_json_sha256(flow)}`",
+        "",
+        "### Standard Release Commands",
+        "",
+        *(f"- `{_markdown_cell(command)}`" for command in flow["commands"]),
+        "",
+        "### Standard Release Steps",
+        "",
+        "| Step | Status | Command / Action |",
+        "|------|--------|------------------|",
+    ]
+    for step in flow["steps"]:
+        command_or_action = step.get("command") or step.get("action")
+        if command_or_action is None:
+            command_or_action = "<br>".join(str(command) for command in step.get("commands") or [])
+        lines.append(
+            "| "
+            f"`{_markdown_cell(step.get('name'))}` | "
+            f"`{_markdown_cell(step.get('status'))}` | "
+            f"{_markdown_cell(command_or_action)} |"
+        )
+    return lines
+
+
 def _case_package_rows(report: ReadinessReport) -> list[str]:
     rows: list[str] = []
     for case in report.cases.cases:
@@ -1359,6 +1533,7 @@ def _render_markdown_report(report: ReadinessReport) -> str:
         f"- CHANGELOG compare: {report.cadence.changelog_unreleased_compare_actual or '(missing)'}",
         f"- Release draft: `{report.draft.path}`",
         *_publication_publish_command_lines(report),
+        *_standard_release_flow_lines(report),
         "",
         "## Weekly Review",
         "",

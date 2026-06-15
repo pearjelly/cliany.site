@@ -605,6 +605,7 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     publication_next_actions = payload["publication_next_actions"]
     publication_ref_context = payload["publication_ref_context"]
     publication_summary = payload["publication_summary"]
+    standard_release_flow = payload["standard_release_flow"]
     assert payload["blockers"] == ["commit days 1/3"]
     assert payload["publication_ok"] is False
     assert publication_summary["status"] == "blocked"
@@ -671,6 +672,39 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     )
     assert payload["publication_primary_publish_command"] == publish_commands[0]
     assert "python scripts/check_release_publication.py --remote --json" in publish_commands
+    assert standard_release_flow["status"] == "blocked"
+    assert standard_release_flow["target_version"] == "0.1.1"
+    assert standard_release_flow["target_tag"] == "v0.1.1"
+    assert standard_release_flow["blockers"] == [
+        "commit days 1/3",
+        "latest local release is not published",
+        "latest local release tag is not published",
+    ]
+    assert standard_release_flow["primary_next_action"] == payload["next_actions"][0]
+    assert "python scripts/release_readiness.py --strict --target-version 0.1.1" in (
+        standard_release_flow["commands"]
+    )
+    assert "CLIANY_QA_OFFLINE=1 pytest tests/ -q" in standard_release_flow["commands"]
+    assert "python scripts/validate_cases.py --strict" in standard_release_flow["commands"]
+    assert "git tag v0.1.1" in standard_release_flow["commands"]
+    assert "git push origin v0.1.1" in standard_release_flow["commands"]
+    assert "python scripts/check_release_publication.py --remote --json" in (
+        standard_release_flow["commands"]
+    )
+    assert payload["standard_release_flow_status"] == standard_release_flow["status"]
+    assert (
+        payload["standard_release_flow_primary_next_action"]
+        == standard_release_flow["primary_next_action"]
+    )
+    assert payload["standard_release_flow_command_count"] == len(
+        standard_release_flow["commands"]
+    )
+    assert payload["standard_release_flow_commands_sha256"] == (
+        release_readiness._stable_json_sha256(standard_release_flow["commands"])
+    )
+    assert payload["standard_release_flow_sha256"] == release_readiness._stable_json_sha256(
+        standard_release_flow
+    )
     assert payload["next_actions"] == [
         "Set an upstream branch for `master` before checking publication status.",
         (
@@ -770,6 +804,22 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- publication_publish_commands_sha256: `" in text
     assert "- primary_publish_command: `git push -u origin master`" in text
     assert "python scripts/check_release_publication.py --remote --json" in text
+    assert "## Standard Release Flow" in text
+    assert "- standard_release_flow_status: `blocked`" in text
+    assert "- standard_release_flow_target_version: `0.1.1`" in text
+    assert "- standard_release_flow_target_tag: `v0.1.1`" in text
+    assert "- standard_release_flow_blocker_count: `3`" in text
+    assert "- standard_release_flow_primary_next_action: `" in text
+    assert "- standard_release_flow_command_count: `" in text
+    assert "- standard_release_flow_commands_sha256: `" in text
+    assert "- standard_release_flow_sha256: `" in text
+    assert "### Standard Release Commands" in text
+    assert "`python scripts/release_readiness.py --strict --target-version 0.1.1`" in text
+    assert "`git tag v0.1.1`" in text
+    assert "`git push origin v0.1.1`" in text
+    assert "### Standard Release Steps" in text
+    assert "| `strict_release_readiness` | `ready` |" in text
+    assert "| `target_tag` | `create_target_tag_at_head` |" in text
     assert "| Does the week have enough commit days? | `3/3`: 2026-06-08, 2026-06-09, 2026-06-10 |" in text
     assert (
         "| What is the next smallest release slice? | Set an upstream branch for `master` "
@@ -915,6 +965,10 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     assert "publication_primary_publish_command: git push -u origin master" in output
     assert "publication_publish_commands:" in output
     assert "- python scripts/check_release_publication.py --remote --json" in output
+    assert "standard_release_flow: status=blocked, target_tag=v0.1.1" in output
+    assert "standard_release_flow_sha256:" in output
+    assert "standard_release_flow_primary_next_action:" in output
+    assert "standard_release_flow_commands_sha256:" in output
     assert "package_gate_summary: checked=false, failed=0, missing=0, invalid=0, repair_actions=0" in output
     assert "package_gate_primary_repair_action:" not in output
     assert "next_actions:" in output.splitlines()

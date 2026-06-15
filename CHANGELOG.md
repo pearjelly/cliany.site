@@ -74,6 +74,7 @@
 - `scripts/plan_next_iteration.py` 的顶层 `next_actions` 现在会在 tag mismatch 时用目标 release tag 动作替换旧 tag 推送提示，避免维护者误把不在 HEAD 的旧 tag 当作下一步发布对象。
 - Candidate issue artifacts 的 `artifact_bundle_summary` 现在输出 `publication_target_tag*` 摘要字段，维护工具只读整包摘要也能展示目标 release tag、创建命令和命令 hash。
 - `candidate_issue_gate.evidence` 现在也输出 `publication_target_tag*` 字段，维护工具只读 gate evidence 就能看到目标 release tag 交接状态。
+- `scripts/release_readiness.py` 现在输出 `standard_release_flow`、`standard_release_flow_status`、`standard_release_flow_primary_next_action` 和命令 hash，让提交后的标准发版流程可被 JSON、文本和 Markdown report 直接审阅。
 - README / README.zh 的路线图入口现在说明维护者可读取 `primary_next_action`，自动化可比对 `next_actions_sha256`、`publication_next_actions_sha256` 和 `publication_publish_commands_sha256` 检测发布动作漂移。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在说明维护者如何先读 `publication_summary`、`publication_summary_sha256`、首要发布动作和首条发布命令，再决定是否展开发布详情。
 - `artifact_bundle_summary` 现在输出 `case_promotion_evidence_primary_detail_sha256`，让只读整包摘要的工具能检测首要 candidate 晋级任务对象是否漂移。
