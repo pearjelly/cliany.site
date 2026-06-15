@@ -4,6 +4,7 @@ from pathlib import Path
 from click.testing import CliRunner
 
 from cliany_site.cli import cli
+from cliany_site.commands.cases import _print_human_cases
 
 
 def test_cases_command_returns_catalog_summary(tmp_home):
@@ -103,6 +104,54 @@ def test_cases_command_human_candidate_next_step_shows_primary_detail(tmp_home):
     assert "pypi-project-search/adapter_package (pending)" in result.output
     assert "evidence: Not attached yet." in result.output
     assert "package path or release asset name" in result.output
+
+
+def test_cases_human_output_uses_primary_next_task(capsys):
+    _print_human_cases(
+        {
+            "cases": [
+                {
+                    "id": "candidate-case",
+                    "status": "candidate",
+                    "category": "demo",
+                    "adapter_domain": "example.com",
+                    "commands": ["cliany-site example.com list --json"],
+                }
+            ],
+            "summary": {
+                "total": 1,
+                "active_count": 0,
+                "candidate_count": 1,
+                "known_gap_count": 0,
+            },
+            "source_path": "cases/manifest.json",
+            "promotion_evidence_summary": {
+                "primary_task_detail": {
+                    "case_id": "legacy-case",
+                    "task": "legacy_task",
+                    "status": "blocked",
+                    "evidence": "legacy evidence",
+                    "next_action": "Legacy next action.",
+                },
+                "primary_next_task": {
+                    "case_id": "candidate-case",
+                    "task": "adapter_package",
+                    "status": "pending",
+                    "evidence": "",
+                    "next_action": "Generate the adapter package.",
+                },
+                "primary_case_id": "legacy-case",
+                "primary_task": "legacy_task",
+                "primary_next_action": "Legacy next action.",
+            },
+        },
+        detail=False,
+    )
+
+    text = capsys.readouterr().out
+    assert "candidate-case/adapter_package (pending)" in text
+    assert "Generate the adapter package." in text
+    assert "legacy-case/legacy_task" not in text
 
 
 def test_cases_command_human_case_detail_shows_all_commands(tmp_home):

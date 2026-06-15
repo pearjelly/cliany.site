@@ -464,7 +464,7 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
 
     promotion = data.get("promotion_evidence_summary")
     if isinstance(promotion, dict) and promotion.get("primary_next_action"):
-        primary_task = promotion.get("primary_task_detail")
+        primary_task = promotion.get("primary_next_task") or promotion.get("primary_task_detail")
         primary_task = primary_task if isinstance(primary_task, dict) else {}
         primary_case_id = primary_task.get("case_id") or promotion.get("primary_case_id")
         primary_task_name = primary_task.get("task") or promotion.get("primary_task")

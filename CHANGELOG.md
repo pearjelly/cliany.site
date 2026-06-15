@@ -33,7 +33,7 @@
 - `artifact_bundle_summary` 现在输出 `case_promotion_evidence_primary_detail_sha256`，让只读整包摘要的工具能检测首要 candidate 晋级任务对象是否漂移。
 - `artifact_bundle_summary` 现在也输出 `case_promotion_evidence_primary_next_task_sha256`，让只读整包摘要的工具能单独检测 `primary_next_task` 漂移。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 `case_promotion_evidence_primary_next_task_sha256`，让周维护手册覆盖最新 artifact bundle summary 字段。
-- `cliany-site cases --status candidate` 的人类输出现在会在 `Candidate 下一步` 中展示首要任务状态和当前 evidence，维护者不用切到 JSON 也能判断证据是否已附加。
+- `cliany-site cases --status candidate` 的人类输出现在会在 `Candidate 下一步` 中展示首要任务状态和当前 evidence，并从 `primary_next_task` 读取首要任务，维护者不用切到 JSON 也能判断证据是否已附加。
 - `scripts/validate_cases.py` 的默认文本输出现在展示 `promotion_evidence_primary_next_task`，让快速校验入口也使用同一首要下一步字段名。
 - `scripts/validate_cases.py` 的默认文本输出现在展示 `promotion_evidence_primary` 和 `promotion_evidence_evidence`，让维护者不用打开 Markdown report 也能看到首要 candidate 晋级任务状态与证据。
 - `cliany-site cases --case-id <id> --evidence-bundle --json` 现在输出 `primary_next_task`，并在人类证据包里展示 `Primary next task`，让脚本和维护者无需重建 pending/blocked/incomplete 优先级规则。
