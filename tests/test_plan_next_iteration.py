@@ -442,6 +442,10 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         == "python scripts/plan_next_iteration.py --target-version 0.16.2 "
         "--issues-dir /tmp/cliany-candidate-issues"
     )
+    assert data["plan_report_command"] == (
+        "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+        "--report /tmp/cliany-next-iteration.md"
+    )
     assert data["commit_cadence"] == {
         "status": "needs_more_commit_days",
         "commit_days": [],
@@ -651,6 +655,10 @@ def test_plan_validation_commands_keep_package_gate_args(tmp_path):
         "python scripts/plan_next_iteration.py --target-version 0.16.2 "
         f"{package_args} --issues-dir /tmp/cliany-candidate-issues"
     )
+    assert data["plan_report_command"] == (
+        "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+        f"{package_args} --report /tmp/cliany-next-iteration.md"
+    )
 
 
 def test_plan_passes_package_gate_args_to_readiness(tmp_path, monkeypatch):
@@ -731,6 +739,12 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert (
         "| case_promotion_evidence_primary_next_action | "
         "`Generate pypi.org-<version>.cliany-adapter.tar.gz.` |"
+        in text
+    )
+    assert (
+        "| plan_report_command | "
+        "`python scripts/plan_next_iteration.py --target-version 0.16.2 "
+        "--report /tmp/cliany-next-iteration.md` |"
         in text
     )
     assert "| `pypi-project-search` | `adapter_package` | `pending` | - |" in text
@@ -834,6 +848,11 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
 
     text = capsys.readouterr().out
     assert "commit_cadence:" in text
+    assert (
+        "plan_report_command: python scripts/plan_next_iteration.py --target-version 0.16.2 "
+        "--report /tmp/cliany-next-iteration.md"
+        in text
+    )
     assert "- status: needs_more_commit_days" in text
     assert "- missing_commit_days: 1" in text
     assert "case_promotion_evidence_primary_next_task:" in text

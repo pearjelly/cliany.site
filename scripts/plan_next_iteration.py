@@ -510,6 +510,7 @@ class IterationPlan:
     publication_publish_script_path_sha256: str
     publication_publish_script_command: str
     publication_publish_script_command_sha256: str
+    plan_report_command: str
     issue_artifacts_command: str
     release_draft_path: str
     release_draft_issues: list[str]
@@ -554,6 +555,7 @@ class IterationPlan:
             "publication_publish_script_command_sha256": (
                 self.publication_publish_script_command_sha256
             ),
+            "plan_report_command": self.plan_report_command,
             "issue_artifacts_command": self.issue_artifacts_command,
             "release_draft_path": self.release_draft_path,
             "release_draft_issues": self.release_draft_issues,
@@ -1357,6 +1359,10 @@ def build_plan(
     candidate_package_validation_command = _candidate_package_validation_command(packages_dir)
     if candidate_package_validation_command is not None:
         validation_commands.append(candidate_package_validation_command)
+    plan_report_command = (
+        f"python scripts/plan_next_iteration.py --target-version {readiness.target_version}"
+        f"{package_args} --report /tmp/cliany-next-iteration.md"
+    )
     issue_artifacts_command = (
         f"python scripts/plan_next_iteration.py --target-version {readiness.target_version}"
         f"{package_args} --issues-dir /tmp/cliany-candidate-issues"
@@ -1400,6 +1406,7 @@ def build_plan(
         publication_publish_script_command_sha256=_stable_json_sha256(
             publication_publish_script_command
         ),
+        plan_report_command=plan_report_command,
         issue_artifacts_command=issue_artifacts_command,
         release_draft_path=f"docs/releases/v{readiness.target_version}-draft.md",
         release_draft_issues=_release_draft_issues(readiness),
@@ -1498,6 +1505,7 @@ def _print_text(plan: IterationPlan) -> None:
         "publication_publish_script_command_sha256: "
         f"{plan.publication_publish_script_command_sha256}"
     )
+    print(f"plan_report_command: {plan.plan_report_command}")
     print(f"issue_artifacts_command: {plan.issue_artifacts_command}")
 
 
@@ -1573,6 +1581,7 @@ def _render_markdown(plan: IterationPlan) -> str:
 | candidate_cases | {candidate_cases} |
 | case_promotion_evidence_primary_next_task | `{primary_candidate_task_value}` |
 | case_promotion_evidence_primary_next_action | `{primary_candidate_action}` |
+| plan_report_command | `{plan.plan_report_command}` |
 
 ## Recommended Slice
 

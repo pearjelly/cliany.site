@@ -31,6 +31,7 @@
 - `scripts/plan_next_iteration.py` 在回退构造 `case_promotion_evidence_summary` 时也保留 `primary_task_detail`，让周计划输入来自 validate report 或内存 case 对象时字段一致。
 - `cliany-site cases --json`、`scripts/validate_cases.py` 和 `scripts/plan_next_iteration.py` 的 promotion evidence summary 现在输出 `primary_next_task`，让全局 candidate summary 与单案例 evidence bundle 使用同一首要下一步字段名。
 - `scripts/plan_next_iteration.py` 的顶层 JSON、默认文本输出和 Markdown report 现在直接展示 `case_promotion_evidence_primary_next_task` 与 `case_promotion_evidence_primary_next_action`，让自动化不用展开 summary 也能定位首要 candidate 任务。
+- `scripts/plan_next_iteration.py` 现在输出 `plan_report_command`，把生成 `/tmp/cliany-next-iteration.md` 的 Markdown 周计划命令与 `issue_artifacts_command` 一样结构化交给维护工具。
 - `artifact_bundle_summary` 现在输出 `case_promotion_evidence_primary_detail_sha256`，让只读整包摘要的工具能检测首要 candidate 晋级任务对象是否漂移。
 - `artifact_bundle_summary` 现在也输出 `case_promotion_evidence_primary_next_task_sha256`，让只读整包摘要的工具能单独检测 `primary_next_task` 漂移。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 `case_promotion_evidence_primary_next_task_sha256`，让周维护手册覆盖最新 artifact bundle summary 字段。
