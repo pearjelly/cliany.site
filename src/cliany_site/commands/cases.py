@@ -71,6 +71,60 @@ def _case_ids(cases: list[dict[str, Any]]) -> list[str]:
     return [str(case.get("id")) for case in cases if case.get("id")]
 
 
+def _candidate_issue_template(case: dict[str, Any]) -> str:
+    case_id = str(case.get("id") or "")
+    target_url = str(case.get("target_url") or "")
+    commands = case.get("commands") if isinstance(case.get("commands"), list) else []
+    offline_commands = _offline_commands(case)
+    promotion = case.get("promotion") if isinstance(case.get("promotion"), dict) else {}
+    evidence = case.get("promotion_evidence") if isinstance(case.get("promotion_evidence"), dict) else {}
+
+    lines = [
+        f"## Scope: promote candidate case `{case_id}`",
+        "",
+        "Move this candidate case one step closer to `active` without changing its status early.",
+        "",
+        "## Reproduction Context",
+        f"- Target URL: {target_url}",
+        "- Candidate commands:",
+    ]
+    lines.extend(f"  - `{command}`" for command in commands)
+    lines.append("- Offline validation commands:")
+    lines.extend(f"  - `{command}`" for command in offline_commands)
+    lines.extend(["", "## Tasks"])
+
+    for task in PROMOTION_TASKS:
+        task_evidence = evidence.get(task)
+        task_evidence = task_evidence if isinstance(task_evidence, dict) else {}
+        status = task_evidence.get("status") or "pending"
+        current_evidence = task_evidence.get("evidence") or "Not attached yet."
+        next_action = task_evidence.get("next_action") or "No next action declared."
+        description = promotion.get(task) or "No task description declared."
+        lines.extend(
+            [
+                f"- [ ] `{task}`: {description}",
+                f"  - Current status: `{status}`",
+                f"  - Current evidence: {current_evidence}",
+                f"  - Next action: {next_action}",
+            ]
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Validation Evidence",
+            "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.",
+            "- Paste the local `scripts/validate_cases.py --packages-dir` result.",
+            "- Paste the read-only JSON envelope summary with `data.quality.ok=true` and `row_count>0`.",
+            "",
+            "## Non-goals",
+            "- Do not mark the case `active` until all three promotion tasks are complete.",
+            "- Do not require real LLM keys or write runtime state into the repository.",
+        ]
+    )
+    return "\n".join(lines)
+
+
 def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
     status_counts: Counter[str] = Counter()
     task_status_counts: dict[str, Counter[str]] = {task: Counter() for task in PROMOTION_TASKS}
@@ -256,6 +310,7 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
 @click.option("--case-id", default=None, help="只显示指定案例 ID，并自动展开详情")
 @click.option("--status", type=click.Choice(ALLOWED_STATUSES), default=None, help="只显示指定状态的案例")
 @click.option("--detail", is_flag=True, default=False, help="显示 promotion 和 validation 详情")
+@click.option("--issue-template", is_flag=True, default=False, help="为 candidate 案例输出 GitHub issue body")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")
 @click.pass_context
 def cases_cmd(
@@ -263,6 +318,7 @@ def cases_cmd(
     case_id: str | None,
     status: str | None,
     detail: bool,
+    issue_template: bool,
     json_mode: bool | None,
 ) -> None:
     """列出内置真实案例和候选工作流"""
@@ -295,6 +351,20 @@ def cases_cmd(
         return
 
     filtered_cases = [case for case in catalog_cases if status is None or case.get("status") == status]
+    if issue_template and not case_id:
+        result = err(
+            "cases",
+            ErrorCode.E_INVALID_PARAM,
+            "--issue-template 必须配合 --case-id 使用",
+            hint="例如：cliany-site cases --case-id pypi-project-search --issue-template",
+            details={
+                "status_filter": status,
+                "available_case_ids": _case_ids(filtered_cases),
+            },
+        )
+        print_response(result, effective_json_mode)
+        return
+
     if case_id:
         exact_matches = [case for case in filtered_cases if case.get("id") == case_id]
         if not exact_matches:
@@ -314,6 +384,27 @@ def cases_cmd(
         filtered_cases = exact_matches
 
     include_detail = detail or bool(case_id)
+    rendered_issue_template = ""
+    if issue_template:
+        selected_case = filtered_cases[0]
+        if selected_case.get("status") != "candidate":
+            result = err(
+                "cases",
+                ErrorCode.E_INVALID_PARAM,
+                f"案例 {case_id} 不是 candidate，不能生成 promotion issue template",
+                hint=(
+                    "仅 candidate 案例需要 promotion issue；"
+                    "运行 cliany-site cases --status candidate --json 查看候选项。"
+                ),
+                details={
+                    "case_id": case_id,
+                    "status": selected_case.get("status"),
+                },
+            )
+            print_response(result, effective_json_mode)
+            return
+        rendered_issue_template = _candidate_issue_template(selected_case)
+
     data = {
         "source_path": str(source_path),
         "case_id": case_id,
@@ -322,9 +413,14 @@ def cases_cmd(
         "promotion_evidence_summary": _promotion_evidence_summary(filtered_cases),
         "cases": [_compact_case(case, detail=include_detail) for case in filtered_cases],
     }
+    if rendered_issue_template:
+        data["issue_template"] = rendered_issue_template
     result = ok(command="cases", data=data, source="builtin")
 
     if effective_json_mode:
         print_response(result, effective_json_mode)
+        return
+    if rendered_issue_template:
+        click.echo(rendered_issue_template)
         return
     _print_human_cases(data, detail=include_detail)

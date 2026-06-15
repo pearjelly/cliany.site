@@ -120,6 +120,7 @@ cliany-site doctor --json
 # 查看维护中的真实 demo 案例
 cliany-site cases --json
 cliany-site cases --case-id pypi-project-search --json
+cliany-site cases --case-id pypi-project-search --issue-template
 
 # 探索网页工作流（需要 LLM）
 cliany-site explore "https://github.com" "搜索后查看结果" --json
@@ -252,7 +253,7 @@ async with ClanySite() as cs:
 
 以下适配器可在 [GitHub Release v0.14.1](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.1) 的资源中下载。
 可维护案例索引见 [cases/README.md](cases/README.md) 与 [cases/manifest.json](cases/manifest.json)。
-可以运行 `cliany-site cases --json`，直接从 CLI 查看 active demo、candidate 工作流、离线验证命令和 candidate 晋级下一步。使用 `cliany-site cases --case-id pypi-project-search --json` 可以展开单个案例的验证和晋级详情；去掉 `--json` 时会输出适合复制交接的 Promotion Tasks。
+可以运行 `cliany-site cases --json`，直接从 CLI 查看 active demo、candidate 工作流、离线验证命令和 candidate 晋级下一步。使用 `cliany-site cases --case-id pypi-project-search --json` 可以展开单个案例的验证和晋级详情；去掉 `--json` 时会输出适合复制交接的 Promotion Tasks。追加 `--issue-template` 可直接打印 candidate 晋级 GitHub issue body。
 
 ### SuiteCRM Demo (企业 CRM)
 ```bash
@@ -354,7 +355,7 @@ cliany-site market rollback github.com
 | `login <url>` | `[--json]` | 打开 URL 等待登录，保存 Session |
 | `explore <url> <workflow>` | `[--json] [--interactive] [--extend <domain>] [--record]` | 探索工作流，生成 adapter |
 | `list` | `[--json]` | 列出已生成的 adapter |
-| `cases` | `[--case-id <id>] [--status <status>] [--detail] [--json]` | 列出维护中的真实 demo 案例和候选工作流 |
+| `cases` | `[--case-id <id>] [--status <status>] [--detail] [--issue-template] [--json]` | 列出维护中的真实 demo 案例和候选工作流 |
 | `verify <domain>` | `[--json]` | 静态校验适配器 schema、签名、依赖完整性 |
 | `migrate` | `[--json] [--dry-run]` | 迁移所有旧版适配器至 schema v3 |
 | `replay <domain>` | `[--session <id>] [--step]` | 回放探索录像，终端展示每步截图和动作 |

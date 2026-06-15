@@ -10928,6 +10928,7 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "python scripts/release_readiness.py --target-version 0.16.227 --json",
         "cliany-site cases --status candidate --detail --json",
         "cliany-site cases --case-id pypi-project-search --json",
+        "cliany-site cases --case-id pypi-project-search --issue-template",
         "git tag v0.16.227",
     ]
     for snippet in required:

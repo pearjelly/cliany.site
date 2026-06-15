@@ -92,6 +92,65 @@ def test_cases_command_human_case_detail_shows_all_commands(tmp_home):
     assert "python scripts/validate_cases.py --strict" in result.output
 
 
+def test_cases_command_issue_template_json(tmp_home):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["--json", "cases", "--case-id", "pypi-project-search", "--issue-template"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    template = payload["data"]["issue_template"]
+    assert "## Scope: promote candidate case `pypi-project-search`" in template
+    assert "## Reproduction Context" in template
+    assert "`adapter_package`" in template
+    assert "Generate pypi.org" in template
+    assert "Do not mark the case `active`" in template
+
+
+def test_cases_command_issue_template_human_outputs_markdown(tmp_home):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["cases", "--case-id", "pypi-project-search", "--issue-template"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "## Scope: promote candidate case `pypi-project-search`" in result.output
+    assert "cliany-site cases" not in result.output
+    assert "案例库" not in result.output
+
+
+def test_cases_command_issue_template_requires_case_id(tmp_home):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["--json", "cases", "--issue-template"], catch_exceptions=True)
+
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    assert payload["ok"] is False
+    assert payload["error"]["code"] == "E_INVALID_PARAM"
+    assert "--issue-template 必须配合 --case-id 使用" in payload["error"]["message"]
+    assert "pypi-project-search" in payload["error"]["details"]["available_case_ids"]
+
+
+def test_cases_command_issue_template_rejects_active_case(tmp_home):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["--json", "cases", "--case-id", "suitecrm-accounts", "--issue-template"],
+        catch_exceptions=True,
+    )
+
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    assert payload["ok"] is False
+    assert payload["error"]["code"] == "E_INVALID_PARAM"
+    assert payload["error"]["details"]["status"] == "active"
+
+
 def test_cases_command_unknown_case_returns_available_ids(tmp_home):
     runner = CliRunner()
     result = runner.invoke(
