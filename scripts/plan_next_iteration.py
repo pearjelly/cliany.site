@@ -449,6 +449,8 @@ class CandidatePromotion:
     metadata_validation: str
     online_smoke: str
     promotion_evidence: dict[str, Any]
+    evidence_bundle_command: str
+    evidence_bundle_json_command: str
     issue_body: str
 
     def to_dict(self) -> dict[str, Any]:
@@ -463,6 +465,8 @@ class CandidatePromotion:
             "metadata_validation": self.metadata_validation,
             "online_smoke": self.online_smoke,
             "promotion_evidence": self.promotion_evidence,
+            "evidence_bundle_command": self.evidence_bundle_command,
+            "evidence_bundle_json_command": self.evidence_bundle_json_command,
             "issue_body": self.issue_body,
         }
 
@@ -1107,6 +1111,8 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 metadata_validation=_promotion_value(promotion, "metadata_validation"),
                 online_smoke=_promotion_value(promotion, "online_smoke"),
                 promotion_evidence=promotion_evidence,
+                evidence_bundle_command=_candidate_evidence_bundle_command(str(case.id)),
+                evidence_bundle_json_command=_candidate_evidence_bundle_json_command(str(case.id)),
                 issue_body=_candidate_issue_body(
                     case_id=str(case.id),
                     target_url=_case_string_value(case, "target_url"),
@@ -1120,6 +1126,14 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
             )
         )
     return promotions
+
+
+def _candidate_evidence_bundle_command(case_id: str) -> str:
+    return f"cliany-site cases --case-id {case_id} --evidence-bundle"
+
+
+def _candidate_evidence_bundle_json_command(case_id: str) -> str:
+    return f"{_candidate_evidence_bundle_command(case_id)} --json"
 
 
 def _candidate_issue_title(case_id: str) -> str:
@@ -1771,6 +1785,8 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "commands": promotion.commands,
                 "offline_commands": promotion.offline_commands,
                 "promotion_evidence": promotion.promotion_evidence,
+                "evidence_bundle_command": promotion.evidence_bundle_command,
+                "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
                 "issue_body_name": body_path.name,
                 "issue_body_file": str(body_path),
                 "create_command": create_command,
@@ -2412,6 +2428,8 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
             "commands": item["commands"],
             "offline_commands": item["offline_commands"],
             "promotion_evidence": item["promotion_evidence"],
+            "evidence_bundle_command": item["evidence_bundle_command"],
+            "evidence_bundle_json_command": item["evidence_bundle_json_command"],
             "issue_body_name": item["issue_body_name"],
         }
         for item in metadata
@@ -2448,6 +2466,8 @@ def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[di
             "commands": promotion.commands,
             "offline_commands": promotion.offline_commands,
             "promotion_evidence": promotion.promotion_evidence,
+            "evidence_bundle_command": promotion.evidence_bundle_command,
+            "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
             "issue_body_name": f"{promotion.case_id}.md",
         }
         for promotion in promotions
@@ -4076,13 +4096,17 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
     lines = [
         "## Candidate Summary",
         "",
-        "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands |",
-        "|------|------------|------------|--------------------|-----------------------------|",
+        (
+            "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands | "
+            "Evidence Bundle | Evidence Bundle JSON |"
+        ),
+        "|------|------------|------------|--------------------|-----------------------------|-----------------|----------------------|",
     ]
     for promotion in promotions:
         lines.append(
             f"| `{promotion.case_id}` | `{promotion.case_id}.md` | {promotion.target_url or 'Not declared.'} | "
-            f"{len(promotion.commands)} | {len(promotion.offline_commands)} |"
+            f"{len(promotion.commands)} | {len(promotion.offline_commands)} | "
+            f"`{promotion.evidence_bundle_command}` | `{promotion.evidence_bundle_json_command}` |"
         )
     return "\n".join(lines)
 

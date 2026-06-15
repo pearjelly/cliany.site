@@ -14,6 +14,7 @@
 - `cliany-site cases --case-id <id> --issue-template` 现在可为 candidate 案例输出可复制的 GitHub issue body。
 - `cliany-site cases --case-id <id> --evidence-bundle` 现在可为 candidate 案例输出结构化本地证据清单，列出待补 promotion tasks、命令和离线验证步骤。
 - `scripts/validate_cases.py --report` 现在输出 `Candidate Evidence Bundle Commands` 小节，直接链接每个 candidate 的 evidence bundle CLI 命令。
+- `scripts/plan_next_iteration.py --issues-dir` 生成的 candidate issue artifacts 现在在 `candidate_promotions`、`issue-metadata.json`、issue metadata summary 和 artifacts `README.md` 中输出 `evidence_bundle_command` / `evidence_bundle_json_command`，让维护者能直接复制案例证据包命令。
 - 新增 `docs/releases/v0.16.227-draft.md`，把下一版 patch release 聚焦到 `v0.16.226` 本地 release 的发布可见性交接。
 - `v0.16.227` 草案明确记录 `publication_visibility`、`candidate_issue_gate`、`publication-handoff.json` 和 `release-draft-handoff.json` 在本地 release 未公开时的审阅路径。
 

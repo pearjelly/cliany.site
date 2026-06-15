@@ -499,6 +499,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
             "Run read-only PyPI search smoke.",
         ),
+        "evidence_bundle_command": (
+            "cliany-site cases --case-id pypi-project-search --evidence-bundle"
+        ),
+        "evidence_bundle_json_command": (
+            "cliany-site cases --case-id pypi-project-search --evidence-bundle --json"
+        ),
         "issue_body": (
             "## Scope: promote candidate case `pypi-project-search`\n\n"
             "Move this candidate case one step closer to `active` without changing its status early.\n\n"
@@ -764,6 +770,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "commands": item["commands"],
             "offline_commands": item["offline_commands"],
             "promotion_evidence": item["promotion_evidence"],
+            "evidence_bundle_command": item["evidence_bundle_command"],
+            "evidence_bundle_json_command": item["evidence_bundle_json_command"],
             "issue_body_name": item["issue_body_name"],
         }
         for item in metadata
@@ -1780,6 +1788,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
         "Run read-only PyPI search smoke.",
     )
+    assert (
+        metadata[0]["evidence_bundle_command"]
+        == "cliany-site cases --case-id pypi-project-search --evidence-bundle"
+    )
+    assert (
+        metadata[0]["evidence_bundle_json_command"]
+        == "cliany-site cases --case-id pypi-project-search --evidence-bundle --json"
+    )
     assert metadata[0]["issue_body_name"] == "pypi-project-search.md"
     assert metadata[0]["issue_body_file"].endswith("pypi-project-search.md")
     assert "gh issue create" in metadata[0]["create_command"]
@@ -2128,10 +2144,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "`publication-handoff.json`: publication status, candidate issue gate, visibility" in readme
     assert "`release-draft-handoff.json`: schema version, target version" in readme
     assert "## Candidate Summary" in readme
-    assert "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands |" in readme
+    assert (
+        "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands | "
+        "Evidence Bundle | Evidence Bundle JSON |"
+    ) in readme
     assert (
         "| `pypi-project-search` | `pypi-project-search.md` | "
-        "https://pypi.org/search/?q=cliany-site | 2 | 2 |"
+        "https://pypi.org/search/?q=cliany-site | 2 | 2 | "
+        "`cliany-site cases --case-id pypi-project-search --evidence-bundle` | "
+        "`cliany-site cases --case-id pypi-project-search --evidence-bundle --json` |"
     ) in readme
     assert "## Candidate Promotion Evidence Summary" in readme
     assert "| pending_count | `6` |" in readme
