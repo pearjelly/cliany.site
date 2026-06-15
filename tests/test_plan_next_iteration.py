@@ -852,6 +852,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         },
         "tag_publish_decision": expected_tag_publish_decision,
         "next_actions": plan.next_actions,
+        "commit_cadence": plan.commit_cadence,
+        "commit_cadence_status": "needs_more_commit_days",
+        "commit_cadence_missing_commit_days": 1,
+        "commit_cadence_primary_next_action": (
+            "Ship verified slices on `1` more unique commit days this week."
+        ),
         "publication_next_actions": [
             "Commit, stash, or discard local worktree changes before publishing release refs.",
             "Push `master` to `origin`; local branch is ahead by `2` commits.",
@@ -2674,7 +2680,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_primary_next_action: "
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
-    assert "publication_handoff_key_count: `21`" in readme
+    assert "publication_handoff_key_count: `25`" in readme
     assert "publication_handoff_schema_version: `1`" in readme
     assert "publication_handoff_first_key: `schema_version`" in readme
     assert "publication_handoff_last_key: `publish_script_command_sha256`" in readme
@@ -2709,6 +2715,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"publication_handoff_sha256: "
         f"`{artifact_bundle_summary['publication_handoff_sha256']}`"
+    ) in readme
+    assert "commit_cadence_status: `needs_more_commit_days`" in readme
+    assert "commit_cadence_missing_commit_days: `1`" in readme
+    assert (
+        "commit_cadence_primary_next_action: "
+        "`Ship verified slices on `1` more unique commit days this week.`"
     ) in readme
     assert (
         "publication_handoff_candidate_issue_gate_primary_reason_code: "

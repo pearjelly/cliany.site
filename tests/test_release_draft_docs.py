@@ -10900,6 +10900,7 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "commit_cadence",
         "commit_cadence_status",
         "commit_cadence_missing_commit_days",
+        "commit_cadence_primary_next_action",
         "commit_cadence_commit_days_sha256",
         "commit_cadence_next_actions_sha256",
         "gate_primary_reason_code",

@@ -59,6 +59,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "commit_cadence",
         "commit_cadence_status",
         "commit_cadence_missing_commit_days",
+        "commit_cadence_primary_next_action",
         "commit_cadence_summary",
         "commit_cadence_commit_day_count",
         "commit_cadence_min_commit_days",

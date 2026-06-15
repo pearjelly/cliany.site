@@ -1973,6 +1973,9 @@ Generated for target version `{plan.target_version}`.
 - tag_publish_decision: `{_format_context_value(plan.publication_tag_publish_decision.get("status"))}`
 - tag_can_push: `{str(bool(plan.publication_tag_publish_decision.get("can_push_tag", False))).lower()}`
 - tag_required_action: `{_format_context_value(plan.publication_tag_publish_decision.get("required_action"))}`
+- commit_cadence_status: `{_format_context_value(plan.commit_cadence.get("status"))}`
+- commit_cadence_missing_commit_days: `{_format_context_value(plan.commit_cadence.get("missing_commit_days"))}`
+- commit_cadence_primary_next_action: `{_format_context_value(_commit_cadence_primary_next_action(plan))}`
 - latest_tag: `{_format_context_value(plan.publication_ref_context.get("latest_tag"))}`
 - local_head: `{_format_context_value(plan.publication_ref_context.get("local_head"))}`
 - worktree_clean: `{str(plan.publication_worktree_clean).lower()}`
@@ -2272,6 +2275,10 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "visibility": plan.publication_visibility,
         "tag_publish_decision": plan.publication_tag_publish_decision,
         "next_actions": plan.next_actions,
+        "commit_cadence": plan.commit_cadence,
+        "commit_cadence_status": plan.commit_cadence.get("status"),
+        "commit_cadence_missing_commit_days": plan.commit_cadence.get("missing_commit_days"),
+        "commit_cadence_primary_next_action": _commit_cadence_primary_next_action(plan),
         "publication_next_actions": plan.publication_next_actions,
         "primary_next_action": _publication_primary_next_action(plan),
         "ref_context": plan.publication_ref_context,
@@ -2285,6 +2292,13 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "publish_script_command": plan.publication_publish_script_command,
         "publish_script_command_sha256": plan.publication_publish_script_command_sha256,
     }
+
+
+def _commit_cadence_primary_next_action(plan: IterationPlan) -> str | None:
+    actions = plan.commit_cadence.get("next_actions")
+    if isinstance(actions, list) and actions:
+        return str(actions[0])
+    return None
 
 
 def _publication_primary_next_action(plan: IterationPlan) -> str | None:

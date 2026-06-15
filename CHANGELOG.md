@@ -22,6 +22,7 @@
 - `publication-handoff.json` 现在把 `candidate_issue_gate_primary_reason_code`、`candidate_issue_gate_primary_reason_description` 和 `candidate_issue_gate_primary_required_action` 提升为顶层别名，方便只读 handoff 的工具展示首要 gate 状态。
 - `artifact_bundle_summary` 现在输出 `publication_handoff_candidate_issue_gate_primary_*` 字段，让只读整包摘要的工具也能确认 publication handoff 顶层 gate primary 别名。
 - `plan_next_iteration.py` 现在输出结构化 `commit_cadence`，并在 Markdown report、`artifact-manifest.json` 和 `artifact_bundle_summary` 中展示提交天数状态、缺口和摘要 hash。
+- `publication-handoff.json` 和 artifacts `README.md` 的 `Publication Handoff` 现在展示 `commit_cadence` 状态、缺口和首要 cadence next action，帮助维护者先看到本周提交天数阻塞。
 
 ## [0.16.226] - 2026-06-15
 
