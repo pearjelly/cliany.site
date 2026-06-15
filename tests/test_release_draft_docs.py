@@ -10955,6 +10955,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "promotion_evidence_primary_next_task",
         "promotion_evidence_primary",
         "promotion_evidence_evidence",
+        "Candidate Primary Next Task",
+        "python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md",
         "python scripts/validate_cases.py",
         "README / README.zh",
         "当前 evidence",

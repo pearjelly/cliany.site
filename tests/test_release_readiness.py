@@ -595,6 +595,23 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
                 "metadata_validation": metadata_validation,
                 "online_smoke": "cliany-site demo.example.com search-items --query demo --json",
             },
+            "promotion_evidence": {
+                "adapter_package": {
+                    "status": "pending",
+                    "evidence": None,
+                    "next_action": "Generate demo.example.com-<version>.cliany-adapter.tar.gz.",
+                },
+                "metadata_validation": {
+                    "status": "pending",
+                    "evidence": None,
+                    "next_action": "Run metadata validation.",
+                },
+                "online_smoke": {
+                    "status": "pending",
+                    "evidence": None,
+                    "next_action": "Run online smoke.",
+                },
+            },
         }
     )
     (repo / "cases" / "manifest.json").write_text(json.dumps(cases), encoding="utf-8")
@@ -622,6 +639,11 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
     release_readiness._write_markdown_report(report, report_path)
 
     text = report_path.read_text(encoding="utf-8")
+    assert "## Candidate Primary Next Task" in text
+    assert (
+        "| `candidate-case` | `adapter_package` | `pending` | Not attached yet. | "
+        "Generate demo.example.com-<version>.cliany-adapter.tar.gz. |"
+    ) in text
     assert "## Candidate Promotions" in text
     assert "| `candidate-case` |" in text
     assert "publish demo.example.com-<version>.cliany-adapter.tar.gz" in text

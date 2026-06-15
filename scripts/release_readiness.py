@@ -703,6 +703,22 @@ def _candidate_promotion_rows(report: ReadinessReport) -> list[str]:
     return rows
 
 
+def _candidate_primary_next_task_rows(report: ReadinessReport) -> list[str]:
+    primary_task = report.cases.promotion_evidence_summary.get("primary_next_task")
+    if not isinstance(primary_task, dict) or not primary_task:
+        return []
+
+    return [
+        (
+            f"| `{_markdown_cell(primary_task.get('case_id'))}` | "
+            f"`{_markdown_cell(primary_task.get('task'))}` | "
+            f"`{_markdown_cell(primary_task.get('status'))}` | "
+            f"{_markdown_cell(primary_task.get('evidence') or 'Not attached yet.')} | "
+            f"{_markdown_cell(primary_task.get('next_action'))} |"
+        )
+    ]
+
+
 def _weekly_review_next_slice(report: ReadinessReport) -> str:
     next_actions = _next_action_lines(report)
     if next_actions:
@@ -806,6 +822,18 @@ def _render_markdown_report(report: ReadinessReport) -> str:
                 "## Gate Issues",
                 "",
                 *issue_lines,
+            ]
+        )
+    primary_next_task_rows = _candidate_primary_next_task_rows(report)
+    if primary_next_task_rows:
+        lines.extend(
+            [
+                "",
+                "## Candidate Primary Next Task",
+                "",
+                "| Case | Task | Status | Evidence | Next Action |",
+                "|------|------|--------|----------|-------------|",
+                *primary_next_task_rows,
             ]
         )
     candidate_rows = _candidate_promotion_rows(report)
