@@ -255,7 +255,7 @@ async with ClanySite() as cs:
 
 以下适配器可在 [GitHub Release v0.14.1](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.1) 的资源中下载。
 可维护案例索引见 [cases/README.md](cases/README.md) 与 [cases/manifest.json](cases/manifest.json)。
-可以运行 `cliany-site cases --json`，直接从 CLI 查看 active demo、candidate 工作流、离线验证命令和 candidate 晋级下一步。使用 `cliany-site cases --case-id pypi-project-search --json` 可以展开单个案例的验证和晋级详情；去掉 `--json` 时会输出适合复制交接的 Promotion Tasks。追加 `--issue-template` 可直接打印 candidate 晋级 GitHub issue body，追加 `--evidence-bundle` 可输出结构化本地证据清单；再加 `--json` 可得到机器可读的 evidence bundle。
+可以运行 `cliany-site cases --json`，直接从 CLI 查看 active demo、candidate 工作流、离线验证命令和 candidate 晋级下一步。使用 `cliany-site cases --case-id pypi-project-search --json` 可以展开单个案例的验证和晋级详情；去掉 `--json` 时会输出适合复制交接的 Promotion Tasks。追加 `--issue-template` 可直接打印 candidate 晋级 GitHub issue body；同时加 `--json` 会额外输出 `issue_template_primary_task`，让自动化不用解析 Markdown 就能读取首要待补证据任务。追加 `--evidence-bundle` 可输出结构化本地证据清单；再加 `--json` 可得到机器可读的 evidence bundle。
 
 ### SuiteCRM Demo (企业 CRM)
 ```bash

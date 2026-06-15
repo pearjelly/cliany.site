@@ -103,6 +103,16 @@ def test_cases_command_issue_template_json(tmp_home):
     assert result.exit_code == 0
     payload = json.loads(result.output)
     template = payload["data"]["issue_template"]
+    primary_task = payload["data"]["issue_template_primary_task"]
+    assert primary_task == {
+        "task": "adapter_package",
+        "status": "pending",
+        "evidence": "",
+        "next_action": (
+            "Generate pypi.org-<version>.cliany-adapter.tar.gz with cliany-site explore "
+            "and market publish, then attach the package path or release asset name."
+        ),
+    }
     assert "## Scope: promote candidate case `pypi-project-search`" in template
     assert "## Primary Evidence Task" in template
     assert "- Task: `adapter_package`" in template
@@ -177,6 +187,19 @@ def test_cases_command_issue_template_checks_complete_tasks(tmp_home, monkeypatc
     )
 
     assert result.exit_code == 0
+    payload = json.loads(
+        runner.invoke(
+            cli,
+            ["--json", "cases", "--case-id", "mixed-candidate", "--issue-template"],
+            catch_exceptions=False,
+        ).output
+    )
+    assert payload["data"]["issue_template_primary_task"] == {
+        "task": "online_smoke",
+        "status": "pending",
+        "evidence": "",
+        "next_action": "Run read-only smoke.",
+    }
     assert "## Primary Evidence Task" in result.output
     assert "- Task: `online_smoke`" in result.output
     assert "- Status: `pending`" in result.output

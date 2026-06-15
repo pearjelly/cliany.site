@@ -564,6 +564,7 @@ def cases_cmd(
 
     include_detail = detail or bool(case_id)
     rendered_issue_template = ""
+    rendered_issue_template_primary_task: dict[str, Any] = {}
     rendered_evidence_bundle: dict[str, Any] = {}
     if issue_template or evidence_bundle:
         selected_case = filtered_cases[0]
@@ -585,6 +586,12 @@ def cases_cmd(
             return
         if issue_template:
             rendered_issue_template = _candidate_issue_template(selected_case)
+            evidence = (
+                selected_case.get("promotion_evidence")
+                if isinstance(selected_case.get("promotion_evidence"), dict)
+                else {}
+            )
+            rendered_issue_template_primary_task = _candidate_issue_primary_task(evidence)
         if evidence_bundle:
             rendered_evidence_bundle = _candidate_evidence_bundle(selected_case)
 
@@ -598,6 +605,7 @@ def cases_cmd(
     }
     if rendered_issue_template:
         data["issue_template"] = rendered_issue_template
+        data["issue_template_primary_task"] = rendered_issue_template_primary_task
     if rendered_evidence_bundle:
         data["evidence_bundle"] = rendered_evidence_bundle
     result = ok(command="cases", data=data, source="builtin")
