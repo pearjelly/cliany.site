@@ -10973,6 +10973,11 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "package_gate_primary_repair_action",
         "package_gate.ok=false",
         "case package validation failed",
+        (
+            "python scripts/plan_next_iteration.py --target-version 0.16.227 "
+            "--packages-dir ~/.cliany-site/packages --require-packages --json"
+        ),
+        "issue artifacts 复现命令",
         "Package checks",
         "共用的 rerun 动作",
         "python scripts/validate_cases.py",

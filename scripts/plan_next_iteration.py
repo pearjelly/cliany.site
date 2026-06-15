@@ -659,6 +659,15 @@ def _publication_next_actions(publication: Any) -> list[str]:
     return [str(action).removeprefix("- ") for action in payload.get("next_actions", [])]
 
 
+def _package_gate_args(*, packages_dir: Path | None, require_packages: bool) -> str:
+    args: list[str] = []
+    if packages_dir is not None:
+        args.extend(["--packages-dir", shlex.quote(str(packages_dir))])
+    if require_packages:
+        args.append("--require-packages")
+    return f" {' '.join(args)}" if args else ""
+
+
 def _publication_worktree_clean(publication: Any) -> bool:
     clean = getattr(publication, "worktree_clean", None)
     if clean is not None:
@@ -1275,6 +1284,8 @@ def build_plan(
     target_version: str | None = None,
     min_commit_days: int = 3,
     min_case_assets: int = 8,
+    packages_dir: Path | None = None,
+    require_packages: bool = False,
     readiness_report: Any | None = None,
     publication_report: Any | None = None,
 ) -> IterationPlan:
@@ -1286,6 +1297,8 @@ def build_plan(
         min_commit_days=min_commit_days,
         min_case_assets=min_case_assets,
         target_version=expected_target,
+        packages_dir=packages_dir,
+        require_packages=require_packages,
     )
     publication = publication_report or build_publication_report(root)
     theme, release_slice = _recommended_slice(readiness, publication)
@@ -1303,15 +1316,16 @@ def build_plan(
     if not publication.ok:
         blockers.append("latest local release is not published")
 
+    package_args = _package_gate_args(packages_dir=packages_dir, require_packages=require_packages)
     validation_commands = [
-        f"python scripts/plan_next_iteration.py --target-version {readiness.target_version} --json",
-        f"python scripts/release_readiness.py --target-version {readiness.target_version} --json",
+        f"python scripts/plan_next_iteration.py --target-version {readiness.target_version}{package_args} --json",
+        f"python scripts/release_readiness.py --target-version {readiness.target_version}{package_args} --json",
         "python scripts/check_release_publication.py --json",
         "python scripts/validate_cases.py --strict",
     ]
     issue_artifacts_command = (
-        f"python scripts/plan_next_iteration.py --target-version {readiness.target_version} "
-        "--issues-dir /tmp/cliany-candidate-issues"
+        f"python scripts/plan_next_iteration.py --target-version {readiness.target_version}"
+        f"{package_args} --issues-dir /tmp/cliany-candidate-issues"
     )
     publication_publish_script_command = (
         "python scripts/check_release_publication.py --json "
@@ -4229,6 +4243,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--min-case-assets", type=int, default=8, help="Minimum tracked case assets expected.")
     parser.add_argument("--today", help="Override current date as YYYY-MM-DD, for audits.")
     parser.add_argument("--report", type=Path, help="Optional Markdown plan report path.")
+    parser.add_argument("--packages-dir", type=Path, help="Optional directory containing demo adapter packages.")
+    parser.add_argument(
+        "--require-packages",
+        action="store_true",
+        help="Require --packages-dir package validation in the release readiness input.",
+    )
     parser.add_argument(
         "--issues-dir",
         type=Path,
@@ -4243,6 +4263,8 @@ def main(argv: list[str] | None = None) -> int:
         target_version=args.target_version,
         min_commit_days=args.min_days,
         min_case_assets=args.min_case_assets,
+        packages_dir=args.packages_dir,
+        require_packages=args.require_packages,
     )
     if args.report:
         _write_markdown_report(plan, args.report)

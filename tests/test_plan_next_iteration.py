@@ -606,6 +606,59 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     }
 
 
+def test_plan_validation_commands_keep_package_gate_args(tmp_path):
+    _write_pyproject(tmp_path)
+    packages_dir = tmp_path / "packages dir"
+    package_args = f"--packages-dir {plan_next_iteration.shlex.quote(str(packages_dir))} --require-packages"
+
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        packages_dir=packages_dir,
+        require_packages=True,
+        readiness_report=_readiness_report(),
+        publication_report=_publication_report(),
+    )
+    data = plan.to_dict()
+
+    assert (
+        data["validation_commands"][0]
+        == f"python scripts/plan_next_iteration.py --target-version 0.16.2 {package_args} --json"
+    )
+    assert (
+        data["validation_commands"][1]
+        == f"python scripts/release_readiness.py --target-version 0.16.2 {package_args} --json"
+    )
+    assert data["issue_artifacts_command"] == (
+        "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+        f"{package_args} --issues-dir /tmp/cliany-candidate-issues"
+    )
+
+
+def test_plan_passes_package_gate_args_to_readiness(tmp_path, monkeypatch):
+    _write_pyproject(tmp_path)
+    packages_dir = tmp_path / "packages"
+    captured: dict[str, object] = {}
+
+    def fake_build_readiness_report(root: Path, **kwargs: object):
+        captured["root"] = root
+        captured.update(kwargs)
+        return _readiness_report()
+
+    monkeypatch.setattr(plan_next_iteration, "build_readiness_report", fake_build_readiness_report)
+
+    plan_next_iteration.build_plan(
+        tmp_path,
+        target_version="0.16.2",
+        packages_dir=packages_dir,
+        require_packages=True,
+        publication_report=_publication_report(),
+    )
+
+    assert captured["root"] == tmp_path
+    assert captured["packages_dir"] == packages_dir
+    assert captured["require_packages"] is True
+
+
 def test_plan_next_actions_skip_release_draft_when_draft_is_valid(tmp_path):
     _write_pyproject(tmp_path)
     readiness = _readiness_report()
