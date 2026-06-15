@@ -17,6 +17,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "python scripts/plan_next_iteration.py --report",
         "python scripts/plan_next_iteration.py --issues-dir",
         "python scripts/plan_next_iteration.py --packages-dir ~/.cliany-site/packages --require-packages --json",
+        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict",
+        "adapter_domain-<version>.cliany-adapter.tar.gz",
         "validation commands",
         "issue artifacts 复现命令",
         "publication audit",

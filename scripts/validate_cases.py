@@ -86,6 +86,7 @@ class CasesReport:
     candidate: int
     known_gap: int
     checked_packages: bool
+    checked_candidate_packages: bool
     promotion_evidence_summary: dict[str, Any]
     cases: list[CaseCheck]
 
@@ -97,6 +98,7 @@ class CasesReport:
             "candidate": self.candidate,
             "known_gap": self.known_gap,
             "checked_packages": self.checked_packages,
+            "checked_candidate_packages": self.checked_candidate_packages,
             "promotion_evidence_summary": self.promotion_evidence_summary,
             "cases": [case.to_dict() for case in self.cases],
         }
@@ -399,6 +401,36 @@ def _market_package_name_hint(domain: str) -> str:
     return f"{safe_domain}-<version>{PACKAGE_EXTENSION}"
 
 
+def _candidate_package_check(packages_dir: Path, adapter_domain: str) -> dict[str, Any]:
+    package_hint = _market_package_name_hint(adapter_domain)
+    package_paths = sorted(packages_dir.glob(package_hint.replace("<version>", "*")))
+    if not package_paths:
+        return {
+            "ok": False,
+            "path": str(packages_dir / package_hint),
+            "status": "missing",
+            "issue": "candidate package file not found",
+            "next_actions": [
+                f"Build or download {package_hint} into {packages_dir}.",
+                (
+                    "Rerun python scripts/validate_cases.py --packages-dir <dir> "
+                    "--include-candidate-packages --strict."
+                ),
+            ],
+        }
+    if len(package_paths) > 1:
+        return {
+            "ok": False,
+            "path": str(packages_dir),
+            "status": "ambiguous",
+            "issue": f"multiple candidate package files found: {', '.join(path.name for path in package_paths)}",
+            "next_actions": [
+                "Keep exactly one package file for this candidate adapter_domain in the packages directory.",
+            ],
+        }
+    return _check_package(package_paths[0], adapter_domain)
+
+
 def _validate_candidate_promotion(promotion: dict[str, Any], adapter_domain: str) -> list[str]:
     issues: list[str] = []
     for field_name in PROMOTION_FIELDS:
@@ -474,7 +506,12 @@ def _validate_offline_commands(validation: dict[str, Any]) -> tuple[list[str], l
     return normalized, issues
 
 
-def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> CaseCheck:
+def _check_case(
+    case: dict[str, Any],
+    root: Path,
+    packages_dir: Path | None,
+    include_candidate_packages: bool = False,
+) -> CaseCheck:
     case_id = str(case.get("id") or "(missing-id)")
     status = str(case.get("status") or "")
     target_url = str(case.get("target_url") or "")
@@ -553,6 +590,8 @@ def _check_case(case: dict[str, Any], root: Path, packages_dir: Path | None) -> 
         else:
             check.promotion_evidence = promotion_evidence
             check.issues.extend(_validate_candidate_promotion_evidence(promotion_evidence))
+        if packages_dir is not None and include_candidate_packages and adapter_domain:
+            check.package = _candidate_package_check(packages_dir, adapter_domain)
 
     if packages_dir is not None and status == "active":
         package_name = _install_package_name(case)
@@ -622,9 +661,21 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
     }
 
 
-def build_report(root: Path = ROOT, packages_dir: Path | None = None) -> CasesReport:
+def build_report(
+    root: Path = ROOT,
+    packages_dir: Path | None = None,
+    include_candidate_packages: bool = False,
+) -> CasesReport:
     cases = _load_manifest(root)
-    checks = [_check_case(case, root, packages_dir) for case in cases]
+    checks = [
+        _check_case(
+            case,
+            root,
+            packages_dir,
+            include_candidate_packages=include_candidate_packages,
+        )
+        for case in cases
+    ]
     ids = [str(case.get("id") or "") for case in cases]
     duplicate_ids = sorted({case_id for case_id in ids if ids.count(case_id) > 1})
     if duplicate_ids:
@@ -639,6 +690,7 @@ def build_report(root: Path = ROOT, packages_dir: Path | None = None) -> CasesRe
         candidate=sum(1 for case in cases if case.get("status") == "candidate"),
         known_gap=sum(1 for case in cases if case.get("status") == "known-gap"),
         checked_packages=packages_dir is not None,
+        checked_candidate_packages=packages_dir is not None and include_candidate_packages,
         promotion_evidence_summary=_build_promotion_evidence_summary(checks),
         cases=checks,
     )
@@ -651,6 +703,7 @@ def _print_text(report: CasesReport) -> None:
     print(f"candidate: {report.candidate}")
     print(f"known_gap: {report.known_gap}")
     print(f"checked_packages: {report.checked_packages}")
+    print(f"checked_candidate_packages: {report.checked_candidate_packages}")
     print(f"promotion_evidence_pending: {report.promotion_evidence_summary['pending_count']}")
     print(f"promotion_evidence_blocked: {report.promotion_evidence_summary['blocked_count']}")
     print(f"promotion_evidence_complete: {report.promotion_evidence_summary['complete_count']}")
@@ -934,6 +987,7 @@ def _render_markdown_report(report: CasesReport) -> str:
         f"| candidate | `{report.candidate}` |",
         f"| known_gap | `{report.known_gap}` |",
         f"| checked_packages | `{str(report.checked_packages).lower()}` |",
+        f"| checked_candidate_packages | `{str(report.checked_candidate_packages).lower()}` |",
         "",
         "| Case | Status | Result | Issues | Package | Promotion | Promotion Evidence |",
         "|------|--------|--------|--------|---------|-----------|--------------------|",
@@ -979,10 +1033,19 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="Output machine-readable JSON.")
     parser.add_argument("--strict", action="store_true", help="Exit non-zero when validation fails.")
     parser.add_argument("--packages-dir", type=Path, help="Optional directory containing .cliany-adapter.tar.gz files.")
+    parser.add_argument(
+        "--include-candidate-packages",
+        action="store_true",
+        help="Also validate candidate adapter packages matching adapter_domain-<version>.cliany-adapter.tar.gz.",
+    )
     parser.add_argument("--report", type=Path, help="Optional Markdown report path for CI artifacts.")
     args = parser.parse_args(argv)
 
-    report = build_report(ROOT, packages_dir=args.packages_dir)
+    report = build_report(
+        ROOT,
+        packages_dir=args.packages_dir,
+        include_candidate_packages=args.include_candidate_packages,
+    )
     if args.report is not None:
         _write_markdown_report(report, args.report)
     if args.json:

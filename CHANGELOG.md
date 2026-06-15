@@ -44,6 +44,7 @@
 - `scripts/release_readiness.py --require-packages` 现在会在已检查包但存在失败项时让 `package_gate.ok=false`，并输出 `case package validation failed` blocker，避免正式发版预检把无效包只归到通用 case catalog 失败。
 - `scripts/release_readiness.py` 的 package repair `next_actions` 现在会把多个 case 共用的修复动作合并为一条 `Package checks` 动作，避免空 packages 目录下重复输出同一条 rerun 命令。
 - `scripts/plan_next_iteration.py` 现在支持 `--packages-dir` 和 `--require-packages`，会把包门禁参数透传给 release readiness，并写入 validation commands 与 issue artifacts 复现命令。
+- `scripts/validate_cases.py --include-candidate-packages` 现在可显式校验 candidate adapter 包，按 `adapter_domain-<version>.cliany-adapter.tar.gz` 约定定位包文件，方便给 `pypi-project-search` 等候选案例补齐 adapter package evidence。
 - README / README.zh 现在用 `promotion_evidence_summary.primary_next_task` 指引自动化读取首要 candidate 任务，避免新用户继续参考旧的 `primary_task_detail` 字段。
 - `cliany-site cases --case-id <id> --evidence-bundle --json` 现在输出 `primary_next_task`，并在人类证据包里展示 `Primary next task`，让脚本和维护者无需重建 pending/blocked/incomplete 优先级规则。
 - [cases/README.md](cases/README.md) 现在说明 `Candidate Promotion Evidence Summary` 会展示 `primary_next_task`，帮助贡献者直接定位首要 candidate case/task/status/evidence。

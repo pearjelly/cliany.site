@@ -621,6 +621,84 @@ def test_cases_report_accepts_valid_package(tmp_path):
     assert report.cases[0].package["next_actions"] == []
 
 
+def test_cases_report_skips_candidate_packages_by_default(tmp_path):
+    case = _case("candidate-case", domain="demo.example.com")
+    case["status"] = "candidate"
+    case["source_release"] = None
+    case["promotion"] = {
+        "adapter_package": "publish demo.example.com-<version>.cliany-adapter.tar.gz",
+        "metadata_validation": "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict",
+        "online_smoke": "cliany-site demo.example.com list-items --json",
+    }
+    case["promotion_evidence"] = _promotion_evidence()
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(tmp_path, packages_dir=tmp_path / "packages")
+
+    assert report.ok is True
+    assert report.checked_packages is True
+    assert report.checked_candidate_packages is False
+    assert report.cases[0].package is None
+
+
+def test_cases_report_checks_candidate_package_when_requested(tmp_path):
+    case = _case("candidate-case", domain="demo.example.com")
+    case["status"] = "candidate"
+    case["source_release"] = None
+    case["promotion"] = {
+        "adapter_package": "publish demo.example.com-<version>.cliany-adapter.tar.gz",
+        "metadata_validation": "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict",
+        "online_smoke": "cliany-site demo.example.com list-items --json",
+    }
+    case["promotion_evidence"] = _promotion_evidence()
+    _write_cases(tmp_path, [case])
+    packages_dir = tmp_path / "packages"
+    _write_package(
+        packages_dir,
+        "demo.example.com-0.1.0.cliany-adapter.tar.gz",
+        domain="demo.example.com",
+    )
+
+    report = validate_cases.build_report(
+        tmp_path,
+        packages_dir=packages_dir,
+        include_candidate_packages=True,
+    )
+
+    assert report.ok is True
+    assert report.checked_candidate_packages is True
+    assert report.cases[0].package["status"] == "ok"
+
+
+def test_cases_report_reports_missing_candidate_package_when_requested(tmp_path):
+    case = _case("candidate-case", domain="demo.example.com")
+    case["status"] = "candidate"
+    case["source_release"] = None
+    case["promotion"] = {
+        "adapter_package": "publish demo.example.com-<version>.cliany-adapter.tar.gz",
+        "metadata_validation": "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict",
+        "online_smoke": "cliany-site demo.example.com list-items --json",
+    }
+    case["promotion_evidence"] = _promotion_evidence()
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(
+        tmp_path,
+        packages_dir=tmp_path / "packages",
+        include_candidate_packages=True,
+    )
+
+    assert report.ok is False
+    package = report.cases[0].package
+    assert package["status"] == "missing"
+    assert package["issue"] == "candidate package file not found"
+    assert "demo.example.com-<version>.cliany-adapter.tar.gz" in package["path"]
+    assert (
+        "Rerun python scripts/validate_cases.py --packages-dir <dir> "
+        "--include-candidate-packages --strict."
+    ) in package["next_actions"]
+
+
 def test_cases_report_writes_markdown_report(tmp_path):
     metadata_validation = "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
     candidate = _case("candidate-case")

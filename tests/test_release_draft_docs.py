@@ -10978,6 +10978,12 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
             "--packages-dir ~/.cliany-site/packages --require-packages --json"
         ),
         "issue artifacts 复现命令",
+        (
+            "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+            "--include-candidate-packages --strict"
+        ),
+        "adapter_domain-<version>.cliany-adapter.tar.gz",
+        "candidate package repair action",
         "Package checks",
         "共用的 rerun 动作",
         "python scripts/validate_cases.py",
