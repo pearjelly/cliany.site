@@ -654,6 +654,14 @@ def _print_text(report: CasesReport) -> None:
     print(f"promotion_evidence_blocked: {report.promotion_evidence_summary['blocked_count']}")
     print(f"promotion_evidence_complete: {report.promotion_evidence_summary['complete_count']}")
     if report.promotion_evidence_summary["primary_next_action"]:
+        primary_task = report.promotion_evidence_summary.get("primary_task_detail")
+        primary_task = primary_task if isinstance(primary_task, dict) else {}
+        primary_case_id = primary_task.get("case_id") or "-"
+        primary_task_name = primary_task.get("task") or "-"
+        primary_status = primary_task.get("status") or "unknown"
+        primary_evidence = primary_task.get("evidence") or "Not attached yet."
+        print(f"promotion_evidence_primary: {primary_case_id}/{primary_task_name} ({primary_status})")
+        print(f"promotion_evidence_evidence: {primary_evidence}")
         print(f"promotion_evidence_next: {report.promotion_evidence_summary['primary_next_action']}")
     print(f"ok: {report.ok}")
     for check in report.cases:
