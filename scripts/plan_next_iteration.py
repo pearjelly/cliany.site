@@ -99,6 +99,24 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "candidate_cases_tail",
     "candidate_cases_tail_sha256",
     "candidate_cases_sha256",
+    "case_promotion_evidence_summary_key_count",
+    "case_promotion_evidence_summary_keys_sha256",
+    "case_promotion_evidence_summary_first_key",
+    "case_promotion_evidence_summary_last_key",
+    "case_promotion_evidence_summary_key_boundary_sha256",
+    "case_promotion_evidence_summary_key_preview_count",
+    "case_promotion_evidence_summary_key_preview",
+    "case_promotion_evidence_summary_key_preview_sha256",
+    "case_promotion_evidence_summary_key_tail_count",
+    "case_promotion_evidence_summary_key_tail",
+    "case_promotion_evidence_summary_key_tail_sha256",
+    "case_promotion_evidence_summary_sha256",
+    "case_promotion_evidence_candidate_count",
+    "case_promotion_evidence_task_count",
+    "case_promotion_evidence_pending_count",
+    "case_promotion_evidence_blocked_count",
+    "case_promotion_evidence_complete_count",
+    "case_promotion_evidence_primary_next_action",
     "body_count",
     "issue_body_inventory_preview_count",
     "issue_body_inventory_preview",
@@ -2415,6 +2433,17 @@ def _issue_artifact_bundle_summary(
     }
     publication_visibility_key_preview = publication_visibility_keys[:8]
     publication_visibility_key_tail = publication_visibility_keys[-8:]
+    case_promotion_evidence_summary_keys = list(plan.case_promotion_evidence_summary)
+    case_promotion_evidence_summary_key_boundary = {
+        "first_key": case_promotion_evidence_summary_keys[0]
+        if case_promotion_evidence_summary_keys
+        else None,
+        "last_key": case_promotion_evidence_summary_keys[-1]
+        if case_promotion_evidence_summary_keys
+        else None,
+    }
+    case_promotion_evidence_summary_key_preview = case_promotion_evidence_summary_keys[:8]
+    case_promotion_evidence_summary_key_tail = case_promotion_evidence_summary_keys[-8:]
     blocker_boundary = {
         "first_item": plan.blockers[0] if plan.blockers else None,
         "last_item": plan.blockers[-1] if plan.blockers else None,
@@ -2542,6 +2571,58 @@ def _issue_artifact_bundle_summary(
         "candidate_cases_tail": list(candidate_cases[-8:]),
         "candidate_cases_tail_sha256": _stable_json_sha256(candidate_cases[-8:]),
         "candidate_cases_sha256": _stable_json_sha256(candidate_cases),
+        "case_promotion_evidence_summary_key_count": len(plan.case_promotion_evidence_summary),
+        "case_promotion_evidence_summary_keys_sha256": _stable_json_sha256(
+            case_promotion_evidence_summary_keys
+        ),
+        "case_promotion_evidence_summary_first_key": (
+            case_promotion_evidence_summary_key_boundary["first_key"]
+        ),
+        "case_promotion_evidence_summary_last_key": (
+            case_promotion_evidence_summary_key_boundary["last_key"]
+        ),
+        "case_promotion_evidence_summary_key_boundary_sha256": _stable_json_sha256(
+            case_promotion_evidence_summary_key_boundary
+        ),
+        "case_promotion_evidence_summary_key_preview_count": len(
+            case_promotion_evidence_summary_key_preview
+        ),
+        "case_promotion_evidence_summary_key_preview": list(
+            case_promotion_evidence_summary_key_preview
+        ),
+        "case_promotion_evidence_summary_key_preview_sha256": _stable_json_sha256(
+            case_promotion_evidence_summary_key_preview
+        ),
+        "case_promotion_evidence_summary_key_tail_count": len(
+            case_promotion_evidence_summary_key_tail
+        ),
+        "case_promotion_evidence_summary_key_tail": list(
+            case_promotion_evidence_summary_key_tail
+        ),
+        "case_promotion_evidence_summary_key_tail_sha256": _stable_json_sha256(
+            case_promotion_evidence_summary_key_tail
+        ),
+        "case_promotion_evidence_summary_sha256": _stable_json_sha256(
+            plan.case_promotion_evidence_summary
+        ),
+        "case_promotion_evidence_candidate_count": plan.case_promotion_evidence_summary.get(
+            "candidate_count"
+        ),
+        "case_promotion_evidence_task_count": plan.case_promotion_evidence_summary.get(
+            "task_count"
+        ),
+        "case_promotion_evidence_pending_count": plan.case_promotion_evidence_summary.get(
+            "pending_count"
+        ),
+        "case_promotion_evidence_blocked_count": plan.case_promotion_evidence_summary.get(
+            "blocked_count"
+        ),
+        "case_promotion_evidence_complete_count": plan.case_promotion_evidence_summary.get(
+            "complete_count"
+        ),
+        "case_promotion_evidence_primary_next_action": (
+            plan.case_promotion_evidence_summary.get("primary_next_action")
+        ),
         "body_count": issue_body_summary["body_count"],
         "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
         "issue_body_inventory_preview": list(issue_body_inventory_preview),
@@ -3110,6 +3191,42 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{json.dumps(summary['candidate_cases_tail'], ensure_ascii=False)}`",
             f"- candidate_cases_tail_sha256: `{summary['candidate_cases_tail_sha256']}`",
             f"- candidate_cases_sha256: `{summary['candidate_cases_sha256']}`",
+            "- case_promotion_evidence_summary_key_count: "
+            f"`{summary['case_promotion_evidence_summary_key_count']}`",
+            "- case_promotion_evidence_summary_keys_sha256: "
+            f"`{summary['case_promotion_evidence_summary_keys_sha256']}`",
+            "- case_promotion_evidence_summary_first_key: "
+            f"`{summary['case_promotion_evidence_summary_first_key']}`",
+            "- case_promotion_evidence_summary_last_key: "
+            f"`{summary['case_promotion_evidence_summary_last_key']}`",
+            "- case_promotion_evidence_summary_key_boundary_sha256: "
+            f"`{summary['case_promotion_evidence_summary_key_boundary_sha256']}`",
+            "- case_promotion_evidence_summary_key_preview_count: "
+            f"`{summary['case_promotion_evidence_summary_key_preview_count']}`",
+            "- case_promotion_evidence_summary_key_preview: "
+            f"`{json.dumps(summary['case_promotion_evidence_summary_key_preview'], ensure_ascii=False)}`",
+            "- case_promotion_evidence_summary_key_preview_sha256: "
+            f"`{summary['case_promotion_evidence_summary_key_preview_sha256']}`",
+            "- case_promotion_evidence_summary_key_tail_count: "
+            f"`{summary['case_promotion_evidence_summary_key_tail_count']}`",
+            "- case_promotion_evidence_summary_key_tail: "
+            f"`{json.dumps(summary['case_promotion_evidence_summary_key_tail'], ensure_ascii=False)}`",
+            "- case_promotion_evidence_summary_key_tail_sha256: "
+            f"`{summary['case_promotion_evidence_summary_key_tail_sha256']}`",
+            "- case_promotion_evidence_summary_sha256: "
+            f"`{summary['case_promotion_evidence_summary_sha256']}`",
+            "- case_promotion_evidence_candidate_count: "
+            f"`{summary['case_promotion_evidence_candidate_count']}`",
+            "- case_promotion_evidence_task_count: "
+            f"`{summary['case_promotion_evidence_task_count']}`",
+            "- case_promotion_evidence_pending_count: "
+            f"`{summary['case_promotion_evidence_pending_count']}`",
+            "- case_promotion_evidence_blocked_count: "
+            f"`{summary['case_promotion_evidence_blocked_count']}`",
+            "- case_promotion_evidence_complete_count: "
+            f"`{summary['case_promotion_evidence_complete_count']}`",
+            "- case_promotion_evidence_primary_next_action: "
+            f"{_summary_inline_code(summary['case_promotion_evidence_primary_next_action'])}",
             f"- body_count: `{summary['body_count']}`",
             f"- issue_body_inventory_preview_count: `{summary['issue_body_inventory_preview_count']}`",
             "- issue_body_inventory_preview: "

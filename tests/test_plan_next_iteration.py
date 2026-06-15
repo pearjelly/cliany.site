@@ -863,6 +863,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "last_key": candidate_issue_gate_evidence_keys[-1],
     }
     candidate_issue_gate_reason_descriptions = _blocked_candidate_issue_gate()["reason_descriptions"]
+    case_promotion_evidence_summary_keys = list(plan.case_promotion_evidence_summary)
+    case_promotion_evidence_summary_key_boundary = {
+        "first_key": case_promotion_evidence_summary_keys[0],
+        "last_key": case_promotion_evidence_summary_keys[-1],
+    }
+    case_promotion_evidence_summary_key_preview = case_promotion_evidence_summary_keys[:8]
+    case_promotion_evidence_summary_key_tail = case_promotion_evidence_summary_keys[-8:]
     create_issues_safety = {
         "script": str(issues_dir / "create-issues.sh"),
         "dry_run_supported": True,
@@ -996,6 +1003,48 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             ["pypi-project-search", "npm-package-search"]
         ),
         "candidate_cases_sha256": _stable_json_sha256(["pypi-project-search", "npm-package-search"]),
+        "case_promotion_evidence_summary_key_count": len(plan.case_promotion_evidence_summary),
+        "case_promotion_evidence_summary_keys_sha256": _stable_json_sha256(
+            case_promotion_evidence_summary_keys
+        ),
+        "case_promotion_evidence_summary_first_key": (
+            case_promotion_evidence_summary_key_boundary["first_key"]
+        ),
+        "case_promotion_evidence_summary_last_key": (
+            case_promotion_evidence_summary_key_boundary["last_key"]
+        ),
+        "case_promotion_evidence_summary_key_boundary_sha256": _stable_json_sha256(
+            case_promotion_evidence_summary_key_boundary
+        ),
+        "case_promotion_evidence_summary_key_preview_count": len(
+            case_promotion_evidence_summary_key_preview
+        ),
+        "case_promotion_evidence_summary_key_preview": list(
+            case_promotion_evidence_summary_key_preview
+        ),
+        "case_promotion_evidence_summary_key_preview_sha256": _stable_json_sha256(
+            case_promotion_evidence_summary_key_preview
+        ),
+        "case_promotion_evidence_summary_key_tail_count": len(
+            case_promotion_evidence_summary_key_tail
+        ),
+        "case_promotion_evidence_summary_key_tail": list(
+            case_promotion_evidence_summary_key_tail
+        ),
+        "case_promotion_evidence_summary_key_tail_sha256": _stable_json_sha256(
+            case_promotion_evidence_summary_key_tail
+        ),
+        "case_promotion_evidence_summary_sha256": _stable_json_sha256(
+            plan.case_promotion_evidence_summary
+        ),
+        "case_promotion_evidence_candidate_count": 2,
+        "case_promotion_evidence_task_count": 6,
+        "case_promotion_evidence_pending_count": 6,
+        "case_promotion_evidence_blocked_count": 0,
+        "case_promotion_evidence_complete_count": 0,
+        "case_promotion_evidence_primary_next_action": (
+            "Generate pypi.org-<version>.cliany-adapter.tar.gz."
+        ),
         "body_count": 2,
         "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
         "issue_body_inventory_preview": list(issue_body_inventory_preview),
@@ -2021,6 +2070,45 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "candidate_cases_sha256: `" in readme
     assert f"candidate_cases_sha256: `{artifact_bundle_summary['candidate_cases_sha256']}`" in readme
+    assert (
+        "case_promotion_evidence_summary_key_count: "
+        f"`{artifact_bundle_summary['case_promotion_evidence_summary_key_count']}`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_summary_keys_sha256: "
+        f"`{artifact_bundle_summary['case_promotion_evidence_summary_keys_sha256']}`"
+    ) in readme
+    assert "case_promotion_evidence_summary_first_key: `candidate_count`" in readme
+    assert "case_promotion_evidence_summary_last_key: `primary_next_action`" in readme
+    assert (
+        "case_promotion_evidence_summary_key_boundary_sha256: "
+        f"`{artifact_bundle_summary['case_promotion_evidence_summary_key_boundary_sha256']}`"
+    ) in readme
+    assert "case_promotion_evidence_summary_key_preview_count: `8`" in readme
+    assert "case_promotion_evidence_summary_key_preview: " in readme
+    assert (
+        "case_promotion_evidence_summary_key_preview_sha256: "
+        f"`{artifact_bundle_summary['case_promotion_evidence_summary_key_preview_sha256']}`"
+    ) in readme
+    assert "case_promotion_evidence_summary_key_tail_count: `8`" in readme
+    assert "case_promotion_evidence_summary_key_tail: " in readme
+    assert (
+        "case_promotion_evidence_summary_key_tail_sha256: "
+        f"`{artifact_bundle_summary['case_promotion_evidence_summary_key_tail_sha256']}`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_summary_sha256: "
+        f"`{artifact_bundle_summary['case_promotion_evidence_summary_sha256']}`"
+    ) in readme
+    assert "case_promotion_evidence_candidate_count: `2`" in readme
+    assert "case_promotion_evidence_task_count: `6`" in readme
+    assert "case_promotion_evidence_pending_count: `6`" in readme
+    assert "case_promotion_evidence_blocked_count: `0`" in readme
+    assert "case_promotion_evidence_complete_count: `0`" in readme
+    assert (
+        "case_promotion_evidence_primary_next_action: "
+        "`Generate pypi.org-<version>.cliany-adapter.tar.gz.`"
+    ) in readme
     assert (
         "issue_body_inventory_preview_count: "
         f"`{artifact_bundle_summary['issue_body_inventory_preview_count']}`"
