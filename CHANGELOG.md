@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.223] - 2026-06-15
+
+### Added
+- `artifact_bundle_summary` 现在输出 `case_promotion_evidence_summary_*` key count/hash/preview/tail/boundary 字段，让只读整包摘要的工具能检测 candidate 晋级证据摘要字段漂移。
+- `artifact_bundle_summary` 现在输出 `case_promotion_evidence_candidate_count`、`case_promotion_evidence_task_count`、pending/blocked/complete 计数和 `case_promotion_evidence_primary_next_action`，方便维护工具不展开完整 manifest 也能展示首要晋级动作。
+- 新增 `docs/releases/v0.16.223-draft.md`，把下一版 patch release 聚焦到 candidate promotion evidence summary 的 bundle-level 可审计性。
+
 ## [0.16.222] - 2026-06-15
 
 ### Added
@@ -1961,7 +1968,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.222...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.223...HEAD
+[0.16.223]: https://github.com/pearjelly/cliany.site/compare/v0.16.222...v0.16.223
 [0.16.222]: https://github.com/pearjelly/cliany.site/compare/v0.16.221...v0.16.222
 [0.16.221]: https://github.com/pearjelly/cliany.site/compare/v0.16.220...v0.16.221
 [0.16.220]: https://github.com/pearjelly/cliany.site/compare/v0.16.219...v0.16.220
