@@ -82,6 +82,8 @@ def test_cases_readme_documents_candidate_evidence_bundle_handoff():
         "Candidate Promotion Evidence Summary",
         "Candidate Evidence Bundle Commands",
         "Candidate Promotion Tasks",
+        "primary_next_task",
+        "case/task/status/evidence",
         "cliany-site cases --case-id <id> --evidence-bundle",
         "cliany-site cases --case-id <id> --evidence-bundle --json",
         "cliany-site cases --case-id pypi-project-search --evidence-bundle --json",

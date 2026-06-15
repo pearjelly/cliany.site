@@ -10960,6 +10960,7 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "当前 evidence",
         "- [x]",
         "Candidate Summary",
+        "cases/README.md",
         "docs/good-first-issues.md",
         "cliany-site cases --case-id <id> --evidence-bundle --json",
         "promotion_evidence",

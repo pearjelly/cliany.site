@@ -38,6 +38,7 @@
 - `scripts/validate_cases.py` 的默认文本输出现在展示 `promotion_evidence_primary` 和 `promotion_evidence_evidence`，让维护者不用打开 Markdown report 也能看到首要 candidate 晋级任务状态与证据。
 - README / README.zh 现在用 `promotion_evidence_summary.primary_next_task` 指引自动化读取首要 candidate 任务，避免新用户继续参考旧的 `primary_task_detail` 字段。
 - `cliany-site cases --case-id <id> --evidence-bundle --json` 现在输出 `primary_next_task`，并在人类证据包里展示 `Primary next task`，让脚本和维护者无需重建 pending/blocked/incomplete 优先级规则。
+- [cases/README.md](cases/README.md) 现在说明 `Candidate Promotion Evidence Summary` 会展示 `primary_next_task`，帮助贡献者直接定位首要 candidate case/task/status/evidence。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 candidate issue artifacts 的 evidence bundle 字段和 `Candidate Summary` 复制入口。
 - [docs/good-first-issues.md](docs/good-first-issues.md) 和 [docs/contributor-starter.md](docs/contributor-starter.md) 现在明确 candidate promotion 的 Issue Body Template 自带 `Reproduction Context` 与 `Evidence Bundle`。
 - README / README.zh 现在展示 `cliany-site cases --case-id pypi-project-search --evidence-bundle --json`，让维护者知道证据包也可机器读取。
