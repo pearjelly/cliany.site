@@ -100,6 +100,7 @@
 - `v0.16.227` 草案明确记录 `publication_visibility`、`candidate_issue_gate`、`publication-handoff.json` 和 `release-draft-handoff.json` 在本地 release 未公开时的审阅路径。
 
 ### Fixed
+- `scripts/release_readiness.py --json` 顶层 `next_actions` 现在保持纯文本，不再混入 Markdown bullet 前缀；默认文本输出和 Markdown report 仍由渲染层添加列表符号。
 - `plan_next_iteration.py` 现在把 `tag_points_at_head=false` 的发布审计动作透传到顶层 `next_actions` 和 `publication_visibility.summary`，避免把 tag mismatch 误写成“直接推 tag”。
 - `check_release_publication.py --publish-script` 现在在最新 tag 不指向 HEAD 时写入审阅注释，明确脚本不会自动推送旧 tag。
 - `check_release_publication.py --json` / `--report` 现在输出 `tag_publish_decision`，用稳定字段标记 `manual_decision_required`、`ready_to_push`、`published` 等 tag 发布状态。

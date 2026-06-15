@@ -764,7 +764,7 @@ def _print_text(report: ReadinessReport) -> None:
     if next_actions:
         print("next_actions:")
         for action in next_actions:
-            print(action)
+            print(f"- {action}")
 
 
 def _report_issue_lines(report: ReadinessReport) -> list[str]:
@@ -812,9 +812,9 @@ def _case_package_next_action_lines(report: ReadinessReport) -> list[str]:
     lines: list[str] = []
     for action, case_ids in action_cases.items():
         if len(case_ids) > 1:
-            lines.append(f"- Package checks: {action}")
+            lines.append(f"Package checks: {action}")
         else:
-            lines.append(f"- `{case_ids[0]}` package: {action}")
+            lines.append(f"`{case_ids[0]}` package: {action}")
     return lines
 
 
@@ -880,46 +880,46 @@ def _next_action_lines(report: ReadinessReport) -> list[str]:
     if report.cadence.commit_day_count < report.cadence.min_commit_days:
         missing_days = max(report.cadence.min_commit_days - report.cadence.commit_day_count, 0)
         lines.append(
-            "- Ship verified slices on "
+            "Ship verified slices on "
             f"`{missing_days}` more unique commit days this week; current commit days are "
             f"`{report.cadence.commit_day_count}/{report.cadence.min_commit_days}`. "
             "Use `docs/weekly-maintainer-loop.md` to pick the next slice."
         )
     if report.cadence.dirty:
-        lines.append("- Commit or revert the working tree before tagging a release.")
+        lines.append("Commit or revert the working tree before tagging a release.")
     if any(blocker.startswith("release tag ") and "does not point at HEAD" in blocker for blocker in report.blockers):
-        lines.append("- Check out the release tag commit before running `--release-tag` preflight.")
+        lines.append("Check out the release tag commit before running `--release-tag` preflight.")
     if not report.cadence.tag_matches_version:
-        lines.append("- Align `pyproject.toml` version and the latest release tag before publishing.")
+        lines.append("Align `pyproject.toml` version and the latest release tag before publishing.")
     if not report.cadence.changelog_ok:
-        lines.append("- Update `CHANGELOG.md` Unreleased content and compare link before release.")
+        lines.append("Update `CHANGELOG.md` Unreleased content and compare link before release.")
     if not report.cases.ok:
-        lines.append("- Run `python scripts/validate_cases.py --strict` and fix the listed case catalog issues.")
+        lines.append("Run `python scripts/validate_cases.py --strict` and fix the listed case catalog issues.")
         lines.extend(_case_package_next_action_lines(report))
     if report.cases.total < report.min_case_assets:
         lines.append(
-            "- Add verified active or candidate case assets until the catalog reaches "
+            "Add verified active or candidate case assets until the catalog reaches "
             f"`{report.min_case_assets}` tracked cases."
         )
     if not report.draft.ok:
         lines.append(
-            "- Update the target release draft under `docs/releases/` with value, risks, validation, and blockers."
+            "Update the target release draft under `docs/releases/` with value, risks, validation, and blockers."
         )
     if not report.ci.ok:
-        lines.append("- Restore the default zero-key CI release gates before merging.")
+        lines.append("Restore the default zero-key CI release gates before merging.")
     if not report.release_workflow.ok:
-        lines.append("- Restore tag release preflight, build, GitHub Release, and PyPI publishing checks.")
+        lines.append("Restore tag release preflight, build, GitHub Release, and PyPI publishing checks.")
     if not report.project_metadata.ok:
-        lines.append("- Restore PyPI metadata and open-source community entrypoints required by project metadata gate.")
+        lines.append("Restore PyPI metadata and open-source community entrypoints required by project metadata gate.")
     if not report.package_gate.ok:
         if report.package_gate.checked and report.package_gate.failed_count:
             lines.append(
-                "- Fix or rebuild the failing case packages listed in `Case Package Checks`, then rerun "
+                "Fix or rebuild the failing case packages listed in `Case Package Checks`, then rerun "
                 "`python scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --require-packages`."
             )
         else:
             lines.append(
-                "- Re-run release readiness with `--packages-dir ~/.cliany-site/packages --require-packages` "
+                "Re-run release readiness with `--packages-dir ~/.cliany-site/packages --require-packages` "
                 "after demo adapter packages are available."
             )
     return lines
@@ -1097,7 +1097,7 @@ def _case_package_rows(report: ReadinessReport) -> list[str]:
 def _weekly_review_next_slice(report: ReadinessReport) -> str:
     next_actions = _next_action_lines(report)
     if next_actions:
-        return next_actions[0].removeprefix("- ")
+        return next_actions[0]
     if (
         report.release_mode == "tagged"
         and report.current_version == report.target_version
@@ -1248,7 +1248,7 @@ def _render_markdown_report(report: ReadinessReport) -> str:
                 "",
                 "## Next Actions",
                 "",
-                *next_actions,
+                *(f"- {action}" for action in next_actions),
             ]
         )
     return "\n".join(lines) + "\n"

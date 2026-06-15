@@ -636,10 +636,11 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert "python scripts/check_release_publication.py --remote --json" in publish_commands
     assert payload["next_actions"] == [
         (
-            "- Ship verified slices on `2` more unique commit days this week; "
+            "Ship verified slices on `2` more unique commit days this week; "
             "current commit days are `1/3`. Use `docs/weekly-maintainer-loop.md` to pick the next slice."
         )
     ]
+    assert not any(action.startswith("- ") for action in payload["next_actions"])
 
 
 def test_release_readiness_default_requires_eight_case_assets(tmp_path):
@@ -654,7 +655,7 @@ def test_release_readiness_default_requires_eight_case_assets(tmp_path):
     assert "case assets 1/8" in report.blockers
     assert report.to_dict()["min_case_assets"] == 8
     assert (
-        "- Add verified active or candidate case assets until the catalog reaches `8` tracked cases."
+        "Add verified active or candidate case assets until the catalog reaches `8` tracked cases."
         in report.to_dict()["next_actions"]
     )
 
@@ -1295,7 +1296,7 @@ def test_release_readiness_blocks_release_tag_not_at_head(tmp_path):
 
     assert report.ok is False
     assert "release tag v0.1.1 does not point at HEAD" in report.blockers
-    assert "- Check out the release tag commit before running `--release-tag` preflight." in (
+    assert "Check out the release tag commit before running `--release-tag` preflight." in (
         report.to_dict()["next_actions"]
     )
 
@@ -1397,12 +1398,12 @@ def test_release_readiness_markdown_report_includes_case_package_checks(tmp_path
     )
     assert report.to_dict()["package_gate"]["failed_count"] == 1
     package_next_action = (
-        "- `demo-case` package: "
+        "`demo-case` package: "
         "Regenerate the package for the manifest adapter_domain or fix the case adapter_domain."
     )
     assert package_next_action in report.to_dict()["next_actions"]
     assert (
-        "- Fix or rebuild the failing case packages listed in `Case Package Checks`, then rerun "
+        "Fix or rebuild the failing case packages listed in `Case Package Checks`, then rerun "
         "`python scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --require-packages`."
     ) in report.to_dict()["next_actions"]
 
@@ -1433,9 +1434,9 @@ def test_release_readiness_package_next_actions_dedupe_global_repairs(tmp_path):
     next_actions = report.to_dict()["next_actions"]
     assert report.package_gate.failed_count == 2
     assert report.package_gate.missing_count == 2
-    assert "- Package checks: Rerun python scripts/validate_cases.py --packages-dir <dir> --strict." in next_actions
+    assert "Package checks: Rerun python scripts/validate_cases.py --packages-dir <dir> --strict." in next_actions
     assert (
-        next_actions.count("- Package checks: Rerun python scripts/validate_cases.py --packages-dir <dir> --strict.")
+        next_actions.count("Package checks: Rerun python scripts/validate_cases.py --packages-dir <dir> --strict.")
         == 1
     )
     assert not any(
