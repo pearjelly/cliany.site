@@ -93,6 +93,11 @@ class PackageGateReport:
     checked: bool
     packages_dir: str | None
     issues: list[str]
+    failed_count: int
+    missing_count: int
+    invalid_count: int
+    repair_action_count: int
+    primary_repair_action: str | None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -101,6 +106,11 @@ class PackageGateReport:
             "checked": self.checked,
             "packages_dir": self.packages_dir,
             "issues": self.issues,
+            "failed_count": self.failed_count,
+            "missing_count": self.missing_count,
+            "invalid_count": self.invalid_count,
+            "repair_action_count": self.repair_action_count,
+            "primary_repair_action": self.primary_repair_action,
         }
 
 
@@ -485,18 +495,41 @@ def _build_package_gate_report(
     *,
     packages_dir: Path | None,
     require_packages: bool,
-    checked_packages: bool,
+    cases: CasesReport,
 ) -> PackageGateReport:
     issues: list[str] = []
-    if require_packages and not checked_packages:
+    if require_packages and not cases.checked_packages:
         issues.append("case package validation is required; pass --packages-dir")
+
+    failed_count = 0
+    missing_count = 0
+    invalid_count = 0
+    repair_actions: list[str] = []
+    for case in cases.cases:
+        package = case.package
+        if package is None or package.get("ok"):
+            continue
+        failed_count += 1
+        if package.get("status") == "missing":
+            missing_count += 1
+        if package.get("status") == "invalid":
+            invalid_count += 1
+        for action in package.get("next_actions") or []:
+            action_text = str(action)
+            if action_text not in repair_actions:
+                repair_actions.append(action_text)
 
     return PackageGateReport(
         ok=not issues,
         required=require_packages,
-        checked=checked_packages,
+        checked=cases.checked_packages,
         packages_dir=str(packages_dir) if packages_dir is not None else None,
         issues=issues,
+        failed_count=failed_count,
+        missing_count=missing_count,
+        invalid_count=invalid_count,
+        repair_action_count=len(repair_actions),
+        primary_repair_action=repair_actions[0] if repair_actions else None,
     )
 
 
@@ -544,7 +577,7 @@ def build_report(
     package_gate = _build_package_gate_report(
         packages_dir=packages_dir,
         require_packages=require_packages,
-        checked_packages=cases.checked_packages,
+        cases=cases,
     )
 
     blockers = _cadence_blockers(cadence)
@@ -835,7 +868,10 @@ def _render_markdown_report(report: ReadinessReport) -> str:
         (
             f"| package_gate | `{str(report.package_gate.ok).lower()}` | "
             f"required `{str(report.package_gate.required).lower()}`, "
-            f"checked `{str(report.package_gate.checked).lower()}` |"
+            f"checked `{str(report.package_gate.checked).lower()}`, "
+            f"failed `{report.package_gate.failed_count}`, "
+            f"missing `{report.package_gate.missing_count}`, "
+            f"invalid `{report.package_gate.invalid_count}` |"
         ),
         "",
         "## Release Links",
