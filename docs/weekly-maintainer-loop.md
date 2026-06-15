@@ -196,7 +196,7 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `artifact_bundle_summary` 还会带上 `blocker_count`、`next_action_count` 和 `publication_next_action_count`，让工具只读整包摘要就能判断本轮待办规模。
 
-`scripts/check_release_publication.py` 的 JSON、默认文本输出和 Markdown report 会展示 `next_action_count` 与 `publish_command_count`，让维护者先判断发布待办规模，再展开具体 next actions 和 publish commands。
+`scripts/check_release_publication.py` 的 JSON、默认文本输出和 Markdown report 会展示 `next_action_count`、`next_actions_sha256`、`primary_next_action`、`publish_command_count`、`publish_commands_sha256` 与 `primary_publish_command`，让维护者先判断发布待办规模、首要动作、首条命令和列表是否漂移，再展开具体 next actions 和 publish commands。
 
 `artifact_bundle_summary` 还会带上 `blockers_sha256`、`next_actions_sha256` 和 `publication_next_actions_sha256`，让工具只读整包摘要就能判断 blockers 和 action lists 是否漂移。
 

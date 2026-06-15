@@ -90,12 +90,20 @@ def test_release_publication_reports_unpushed_release_commit_and_tag(tmp_path):
         ),
         "Rerun with `--remote` when network access is available to verify live remote refs.",
     ]
+    assert report.to_dict()["primary_next_action"] == report.to_dict()["next_actions"][0]
+    assert report.to_dict()["next_actions_sha256"] == release_publication._stable_json_sha256(
+        report.to_dict()["next_actions"]
+    )
     assert report.to_dict()["publish_command_count"] == 3
     assert report.to_dict()["publish_commands"] == [
         "git push origin master",
         "git push origin v0.1.1",
         "python scripts/check_release_publication.py --remote --json",
     ]
+    assert report.to_dict()["primary_publish_command"] == "git push origin master"
+    assert report.to_dict()["publish_commands_sha256"] == release_publication._stable_json_sha256(
+        report.to_dict()["publish_commands"]
+    )
     assert report.to_dict()["tag_publish_decision"] == {
         "status": "ready_to_push",
         "can_push_tag": True,
@@ -170,7 +178,11 @@ def test_release_publication_text_output_includes_next_actions(tmp_path, capsys)
     assert "worktree_clean: True" in output
     assert "latest_tag: v0.1.1" in output
     assert "next_action_count: 3" in output
+    assert "next_actions_sha256:" in output
+    assert "primary_next_action: Push `master` to `origin`; local branch is ahead by `1` commits." in output
     assert "publish_command_count: 3" in output
+    assert "publish_commands_sha256:" in output
+    assert "primary_publish_command: git push origin master" in output
     assert output.count("tag_published:") == 1
     assert "next_actions:" in output
     assert "Push `master` to `origin`" in output
@@ -187,6 +199,7 @@ def test_release_publication_writes_markdown_report(tmp_path):
 
     release_publication._write_markdown_report(report, report_path)
 
+    payload = report.to_dict()
     text = report_path.read_text(encoding="utf-8")
     assert "# cliany-site Release Publication" in text
     assert "| ok | `false` |" in text
@@ -197,7 +210,11 @@ def test_release_publication_writes_markdown_report(tmp_path):
     assert "| tag_can_push | `true` |" in text
     assert "| remote_checked | `true` |" in text
     assert "| next_action_count | `2` |" in text
+    assert "| next_actions_sha256 | `" in text
+    assert f"| primary_next_action | `{payload['primary_next_action']}` |" in text
     assert "| publish_command_count | `3` |" in text
+    assert "| publish_commands_sha256 | `" in text
+    assert f"| primary_publish_command | `{payload['primary_publish_command']}` |" in text
     assert "## Refs" in text
     assert "## Next Actions" in text
     assert "## Tag Publish Decision" in text

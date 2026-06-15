@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import shlex
 import subprocess
@@ -65,8 +66,12 @@ class PublicationReport:
             "tag_published": self.tag_published,
             "tag_publish_decision": tag_publish_decision,
             "next_action_count": len(next_actions),
+            "next_actions_sha256": _stable_json_sha256(next_actions),
+            "primary_next_action": next_actions[0] if next_actions else None,
             "next_actions": next_actions,
             "publish_command_count": len(publish_commands),
+            "publish_commands_sha256": _stable_json_sha256(publish_commands),
+            "primary_publish_command": publish_commands[0] if publish_commands else None,
             "publish_commands": publish_commands,
         }
 
@@ -250,6 +255,11 @@ def _publish_command_lines(report: PublicationReport) -> list[str]:
     return commands
 
 
+def _stable_json_sha256(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 def _tag_publish_decision(report: PublicationReport) -> dict[str, Any]:
     if not report.latest_tag:
         return {
@@ -329,7 +339,11 @@ def _print_text(report: PublicationReport) -> None:
     print(f"tag_publish_decision: {tag_publish_decision['status']}")
     print(f"remote_checked: {report.remote_checked}")
     print(f"next_action_count: {len(next_actions)}")
+    print(f"next_actions_sha256: {_stable_json_sha256(next_actions)}")
+    print(f"primary_next_action: {next_actions[0] if next_actions else '(none)'}")
     print(f"publish_command_count: {len(publish_commands)}")
+    print(f"publish_commands_sha256: {_stable_json_sha256(publish_commands)}")
+    print(f"primary_publish_command: {publish_commands[0] if publish_commands else '(none)'}")
     if report.worktree_status:
         print("worktree_status:")
         for line in report.worktree_status:
@@ -381,7 +395,11 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
         f"| tag_can_push | `{_format_bool(tag_publish_decision['can_push_tag'])}` |",
         f"| remote_checked | `{_format_bool(report.remote_checked)}` |",
         f"| next_action_count | `{len(next_actions)}` |",
+        f"| next_actions_sha256 | `{_stable_json_sha256(next_actions)}` |",
+        f"| primary_next_action | `{_format_value(next_actions[0] if next_actions else None)}` |",
         f"| publish_command_count | `{len(publish_commands)}` |",
+        f"| publish_commands_sha256 | `{_stable_json_sha256(publish_commands)}` |",
+        f"| primary_publish_command | `{_format_value(publish_commands[0] if publish_commands else None)}` |",
         "",
         "## Refs",
         "",
