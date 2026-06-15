@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.226] - 2026-06-15
+
 ### Added
 - 新增 `docs/releases/v0.16.226-draft.md`，把下一版 patch release 聚焦到 `v0.16.225` 本地 release 的发布可见性交接。
 - `v0.16.226` 草案明确记录 `publication_visibility`、`candidate_issue_gate`、`publication-handoff.json` 和 `release-draft-handoff.json` 在本地 release 未公开时的审阅路径。
@@ -1988,7 +1990,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.225...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.226...HEAD
+[0.16.226]: https://github.com/pearjelly/cliany.site/compare/v0.16.225...v0.16.226
 [0.16.225]: https://github.com/pearjelly/cliany.site/compare/v0.16.224...v0.16.225
 [0.16.224]: https://github.com/pearjelly/cliany.site/compare/v0.16.223...v0.16.224
 [0.16.223]: https://github.com/pearjelly/cliany.site/compare/v0.16.222...v0.16.223
