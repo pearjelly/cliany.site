@@ -10880,6 +10880,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "Publication review notes",
         "This script will not push that tag automatically",
         "tag_publish_decision",
+        "publication_tag_publish_decision",
+        "artifact-manifest.json",
         "manual_decision_required",
         "can_push_tag=false",
         "candidate_issue_gate",

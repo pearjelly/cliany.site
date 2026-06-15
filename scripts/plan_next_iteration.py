@@ -30,6 +30,7 @@ ARTIFACT_MANIFEST_KEYS = (
     "candidate_issue_gate",
     "publication_ok",
     "publication_visibility",
+    "publication_tag_publish_decision",
     "publication_next_actions",
     "publication_publish_commands",
     "publication_ref_context",
@@ -458,6 +459,7 @@ class IterationPlan:
     validation_commands: list[str]
     candidate_issue_gate: dict[str, Any]
     publication_visibility: dict[str, str]
+    publication_tag_publish_decision: dict[str, Any]
     publication_next_action_count: int
     publication_next_actions: list[str]
     publication_publish_command_count: int
@@ -491,6 +493,7 @@ class IterationPlan:
             "validation_commands": self.validation_commands,
             "candidate_issue_gate": self.candidate_issue_gate,
             "publication_visibility": self.publication_visibility,
+            "publication_tag_publish_decision": self.publication_tag_publish_decision,
             "publication_next_action_count": self.publication_next_action_count,
             "publication_next_actions": self.publication_next_actions,
             "publication_publish_command_count": self.publication_publish_command_count,
@@ -533,6 +536,78 @@ def _publication_publish_commands(publication: Any) -> list[str]:
         return []
     payload = to_dict()
     return [str(command) for command in payload.get("publish_commands", [])]
+
+
+def _publication_tag_publish_decision(publication: Any) -> dict[str, Any]:
+    decision = getattr(publication, "tag_publish_decision", None)
+    if isinstance(decision, dict):
+        return dict(decision)
+    to_dict = getattr(publication, "to_dict", None)
+    if callable(to_dict):
+        payload = to_dict()
+        decision = payload.get("tag_publish_decision")
+        if isinstance(decision, dict):
+            return dict(decision)
+
+    latest_tag = getattr(publication, "latest_tag", None)
+    tag_points_at_head = bool(getattr(publication, "tag_points_at_head", False))
+    tag_published = getattr(publication, "tag_published", None)
+    if not latest_tag:
+        return {
+            "status": "missing_tag",
+            "can_push_tag": False,
+            "latest_tag": None,
+            "tag_points_at_head": tag_points_at_head,
+            "tag_published": tag_published,
+            "required_action": "Create a release tag before publishing a tag.",
+        }
+    if not tag_points_at_head:
+        return {
+            "status": "manual_decision_required",
+            "can_push_tag": False,
+            "latest_tag": str(latest_tag),
+            "tag_points_at_head": False,
+            "tag_published": tag_published,
+            "required_action": (
+                "Move to the latest tag commit or create a new release tag at HEAD "
+                "before publishing a tag."
+            ),
+        }
+    if tag_published is True:
+        return {
+            "status": "published",
+            "can_push_tag": False,
+            "latest_tag": str(latest_tag),
+            "tag_points_at_head": True,
+            "tag_published": True,
+            "required_action": None,
+        }
+    if not _publication_worktree_clean(publication):
+        return {
+            "status": "blocked_by_worktree",
+            "can_push_tag": False,
+            "latest_tag": str(latest_tag),
+            "tag_points_at_head": True,
+            "tag_published": tag_published,
+            "required_action": "Commit, stash, or discard local worktree changes before publishing release refs.",
+        }
+    if tag_published is False:
+        return {
+            "status": "ready_to_push",
+            "can_push_tag": True,
+            "latest_tag": str(latest_tag),
+            "tag_points_at_head": True,
+            "tag_published": False,
+            "required_action": f"Push tag `{latest_tag}` after the branch is published.",
+        }
+    return {
+        "status": "needs_remote_check",
+        "can_push_tag": False,
+        "latest_tag": str(latest_tag),
+        "tag_points_at_head": True,
+        "tag_published": tag_published,
+        "required_action": "Rerun with `--remote` to verify the live remote tag.",
+    }
 
 
 def _publication_next_actions(publication: Any) -> list[str]:
@@ -1089,6 +1164,7 @@ def build_plan(
         validation_commands=validation_commands,
         candidate_issue_gate=_candidate_issue_gate(readiness, publication),
         publication_visibility=_publication_visibility(publication),
+        publication_tag_publish_decision=_publication_tag_publish_decision(publication),
         publication_next_action_count=len(publication_next_actions),
         publication_next_actions=publication_next_actions,
         publication_publish_command_count=len(publication_publish_commands),
@@ -1158,6 +1234,9 @@ def _print_text(plan: IterationPlan) -> None:
     print("publication_visibility:")
     for key, value in plan.publication_visibility.items():
         print(f"- {key}: {value}")
+    print("publication_tag_publish_decision:")
+    for key, value in plan.publication_tag_publish_decision.items():
+        print(f"- {key}: {value}")
     print(f"publication_next_action_count: {plan.publication_next_action_count}")
     if plan.publication_next_actions:
         print("publication_next_actions:")
@@ -1206,6 +1285,9 @@ def _render_markdown(plan: IterationPlan) -> str:
     next_actions = "\n".join(f"- {action}" for action in plan.next_actions)
     validation = "\n".join(f"- `{command}`" for command in plan.validation_commands)
     publication_visibility = _publication_visibility_markdown(plan.publication_visibility)
+    tag_publish_decision = _publication_tag_publish_decision_markdown(
+        plan.publication_tag_publish_decision
+    )
     candidate_issue_gate = _candidate_issue_gate_markdown(plan.candidate_issue_gate)
     publication_actions = _publication_next_actions_markdown(plan.publication_next_actions)
     publication_refs = _publication_ref_context_markdown(plan.publication_ref_context)
@@ -1260,6 +1342,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 {validation}
 
 {publication_visibility}
+
+{tag_publish_decision}
 
 {candidate_issue_gate}
 
@@ -1337,6 +1421,20 @@ def _publication_next_actions_markdown(actions: list[str]) -> str:
     return f"""## Publication Next Actions
 
 {action_lines}"""
+
+
+def _publication_tag_publish_decision_markdown(decision: dict[str, Any]) -> str:
+    rows = [
+        ("status", decision.get("status") or "(unknown)"),
+        ("can_push_tag", str(bool(decision.get("can_push_tag", False))).lower()),
+        ("latest_tag", _format_context_value(decision.get("latest_tag"))),
+        ("tag_points_at_head", _format_context_value(decision.get("tag_points_at_head"))),
+        ("tag_published", _format_context_value(decision.get("tag_published"))),
+        ("required_action", _format_context_value(decision.get("required_action"))),
+    ]
+    lines = ["## Publication Tag Publish Decision", "", "| Field | Value |", "|-------|-------|"]
+    lines.extend(f"| {field} | `{value}` |" for field, value in rows)
+    return "\n".join(lines)
 
 
 def _candidate_issue_gate_markdown(gate: dict[str, Any]) -> str:
@@ -1757,6 +1855,9 @@ Generated for target version `{plan.target_version}`.
 - gate_evidence_release_draft_issues: `{gate_draft_issues}`
 - visibility: `{_format_context_value(plan.publication_visibility.get("status"))}`
 - visibility_summary: {_format_context_value(plan.publication_visibility.get("summary"))}
+- tag_publish_decision: `{_format_context_value(plan.publication_tag_publish_decision.get("status"))}`
+- tag_can_push: `{str(bool(plan.publication_tag_publish_decision.get("can_push_tag", False))).lower()}`
+- tag_required_action: `{_format_context_value(plan.publication_tag_publish_decision.get("required_action"))}`
 - latest_tag: `{_format_context_value(plan.publication_ref_context.get("latest_tag"))}`
 - local_head: `{_format_context_value(plan.publication_ref_context.get("local_head"))}`
 - worktree_clean: `{str(plan.publication_worktree_clean).lower()}`
@@ -2056,6 +2157,7 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "publication_ok": plan.publication_ok,
         "candidate_issue_gate": plan.candidate_issue_gate,
         "visibility": plan.publication_visibility,
+        "tag_publish_decision": plan.publication_tag_publish_decision,
         "next_actions": plan.next_actions,
         "publication_next_actions": plan.publication_next_actions,
         "primary_next_action": _publication_primary_next_action(plan),
@@ -2242,6 +2344,7 @@ def _artifact_manifest_payload_without_summary(
         "candidate_issue_gate": plan.candidate_issue_gate,
         "publication_ok": plan.publication_ok,
         "publication_visibility": plan.publication_visibility,
+        "publication_tag_publish_decision": plan.publication_tag_publish_decision,
         "publication_next_actions": plan.publication_next_actions,
         "publication_publish_commands": plan.publication_publish_commands,
         "publication_ref_context": plan.publication_ref_context,

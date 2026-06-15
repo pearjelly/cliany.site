@@ -15,6 +15,7 @@
 - `plan_next_iteration.py` 现在把 `tag_points_at_head=false` 的发布审计动作透传到顶层 `next_actions` 和 `publication_visibility.summary`，避免把 tag mismatch 误写成“直接推 tag”。
 - `check_release_publication.py --publish-script` 现在在最新 tag 不指向 HEAD 时写入审阅注释，明确脚本不会自动推送旧 tag。
 - `check_release_publication.py --json` / `--report` 现在输出 `tag_publish_decision`，用稳定字段标记 `manual_decision_required`、`ready_to_push`、`published` 等 tag 发布状态。
+- `plan_next_iteration.py` 现在把 `tag_publish_decision` 透传为 `publication_tag_publish_decision`，并写入 Markdown report、`artifact-manifest.json`、`publication-handoff.json` 和 artifacts `README.md`。
 
 ## [0.16.226] - 2026-06-15
 

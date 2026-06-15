@@ -794,6 +794,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     release_draft_handoff_keys = list(expected_release_draft_handoff)
     release_draft_handoff_key_preview = release_draft_handoff_keys[:8]
     release_draft_handoff_key_tail = release_draft_handoff_keys[-8:]
+    expected_tag_publish_decision = {
+        "status": "blocked_by_worktree",
+        "can_push_tag": False,
+        "latest_tag": "v0.16.1",
+        "tag_points_at_head": True,
+        "tag_published": False,
+        "required_action": (
+            "Commit, stash, or discard local worktree changes before publishing release refs."
+        ),
+    }
     expected_publication_handoff = {
         "schema_version": 1,
         "publication_ok": False,
@@ -802,6 +812,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "status": "dirty_worktree",
             "summary": "Worktree has uncommitted changes; resolve them before publishing release refs.",
         },
+        "tag_publish_decision": expected_tag_publish_decision,
         "next_actions": plan.next_actions,
         "publication_next_actions": [
             "Commit, stash, or discard local worktree changes before publishing release refs.",
@@ -1681,6 +1692,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "status": "dirty_worktree",
             "summary": "Worktree has uncommitted changes; resolve them before publishing release refs.",
         },
+        "publication_tag_publish_decision": expected_tag_publish_decision,
         "publication_next_actions": [
             "Commit, stash, or discard local worktree changes before publishing release refs.",
             "Push `master` to `origin`; local branch is ahead by `2` commits.",
@@ -2519,7 +2531,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_primary_next_action: "
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
-    assert "publication_handoff_key_count: `17`" in readme
+    assert "publication_handoff_key_count: `18`" in readme
     assert "publication_handoff_schema_version: `1`" in readme
     assert "publication_handoff_first_key: `schema_version`" in readme
     assert "publication_handoff_last_key: `publish_script_command_sha256`" in readme
@@ -3050,6 +3062,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "- visibility_summary: "
         "`Worktree has uncommitted changes; resolve them before publishing release refs.`"
     ) in readme
+    assert "- tag_publish_decision: `blocked_by_worktree`" in readme
+    assert "- tag_can_push: `false`" in readme
+    assert (
+        "- tag_required_action: "
+        "`Commit, stash, or discard local worktree changes before publishing release refs.`"
+    ) in readme
     assert "dry_run_supported: `true`" in readme
     assert "preflight_required: `true`" in readme
     assert "## Publication Handoff" in readme
@@ -3076,6 +3094,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "visibility_summary: Worktree has uncommitted changes; "
         "resolve them before publishing release refs."
+    ) in readme
+    assert "tag_publish_decision: `blocked_by_worktree`" in readme
+    assert "tag_can_push: `false`" in readme
+    assert (
+        "tag_required_action: "
+        "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
     assert "latest_tag: `v0.16.1`" in readme
     assert "local_head: `abc123`" in readme
