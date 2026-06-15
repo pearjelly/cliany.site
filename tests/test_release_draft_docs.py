@@ -10952,6 +10952,7 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "promotion_evidence_summary.primary_task_detail",
         "promotion_evidence_summary.primary_next_task",
         "primary_task_detail",
+        "promotion_evidence_primary_next_task",
         "promotion_evidence_primary",
         "promotion_evidence_evidence",
         "python scripts/validate_cases.py",

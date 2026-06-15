@@ -713,6 +713,7 @@ def test_cases_report_prints_candidate_promotion_checklist(tmp_path, capsys):
     assert "promotion_evidence_pending: 3" in text
     assert "promotion_evidence_blocked: 0" in text
     assert "promotion_evidence_complete: 0" in text
+    assert "promotion_evidence_primary_next_task: candidate-case/adapter_package (pending)" in text
     assert "promotion_evidence_primary: candidate-case/adapter_package (pending)" in text
     assert "promotion_evidence_evidence: Not attached yet." in text
     assert "promotion_evidence_next: Generate the adapter package." in text
