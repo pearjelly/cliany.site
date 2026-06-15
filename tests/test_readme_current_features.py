@@ -27,6 +27,10 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "Real Demo Case Proposal" in text
         assert "weekly-maintainer-loop.md" in text
         assert "next_actions" in text
+        assert "primary_next_action" in text
+        assert "next_actions_sha256" in text
+        assert "publication_next_actions_sha256" in text
+        assert "publication_publish_commands_sha256" in text
         assert "github.com-1.0.0.cliany-adapter.tar.gz" in text
         assert "./github.com.cliany-adapter.tar.gz" not in text
         assert expected_partial_terms[filename] in text

@@ -10975,6 +10975,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "publish_commands_sha256",
         "publication_next_actions_sha256",
         "publication_publish_commands_sha256",
+        "README / README.zh 的路线图入口",
+        "next_actions_sha256",
         "all_declared",
         "missing_command_count",
         "artifact_bundle_summary",
