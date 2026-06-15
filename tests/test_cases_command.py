@@ -42,6 +42,29 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
     assert all("promotion_evidence" in case for case in data["cases"])
 
 
+def test_cases_command_filters_exact_case_with_implicit_detail(tmp_home):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["--json", "cases", "--case-id", "pypi-project-search"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    data = payload["data"]
+    assert data["case_id"] == "pypi-project-search"
+    assert data["summary"]["total"] == 1
+    assert data["promotion_evidence_summary"]["primary_case_id"] == "pypi-project-search"
+    case = data["cases"][0]
+    assert case["id"] == "pypi-project-search"
+    assert case["status"] == "candidate"
+    assert "promotion" in case
+    assert "promotion_evidence" in case
+    assert case["commands"][0].startswith("cliany-site explore")
+    assert "python scripts/validate_cases.py --strict" in case["offline_commands"]
+
+
 def test_cases_command_human_output_shows_first_commands(tmp_home):
     runner = CliRunner()
     result = runner.invoke(cli, ["cases", "--status", "active"], catch_exceptions=False)
@@ -50,6 +73,34 @@ def test_cases_command_human_output_shows_first_commands(tmp_home):
     assert "cliany-site cases" in result.output
     assert "suitecrm-accounts" in result.output
     assert "cliany-site market install" in result.output
+
+
+def test_cases_command_human_case_detail_shows_all_commands(tmp_home):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["cases", "--case-id", "pypi-project-search"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert "pypi-project-search" in result.output
+    assert "cliany-site explore" in result.output
+    assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in result.output
+    assert "python scripts/validate_cases.py --strict" in result.output
+
+
+def test_cases_command_unknown_case_returns_available_ids(tmp_home):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["--json", "cases", "--status", "candidate", "--case-id", "missing"],
+        catch_exceptions=True,
+    )
+
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    assert payload["ok"] is False
+    assert payload["error"]["code"] == "E_INVALID_PARAM"
+    assert payload["error"]["details"]["case_id"] == "missing"
+    assert payload["error"]["details"]["status_filter"] == "candidate"
+    assert "pypi-project-search" in payload["error"]["details"]["available_case_ids"]
 
 
 def test_cases_command_reports_missing_catalog(tmp_home, monkeypatch):

@@ -9,6 +9,7 @@
 
 ### Added
 - 新增内置 `cliany-site cases` 命令，可离线列出维护中的真实 demo、candidate 工作流、离线验证命令和 candidate 晋级下一步，并把 `cases/` 案例索引纳入 wheel 资源。
+- `cliany-site cases --case-id <id>` 现在可精确展开单个案例的命令、validation 和 promotion 详情，找不到案例时会返回可用 case id 列表。
 - 新增 `docs/releases/v0.16.227-draft.md`，把下一版 patch release 聚焦到 `v0.16.226` 本地 release 的发布可见性交接。
 - `v0.16.227` 草案明确记录 `publication_visibility`、`candidate_issue_gate`、`publication-handoff.json` 和 `release-draft-handoff.json` 在本地 release 未公开时的审阅路径。
 

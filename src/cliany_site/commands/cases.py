@@ -67,6 +67,10 @@ def _compact_case(case: dict[str, Any], *, detail: bool) -> dict[str, Any]:
     return item
 
 
+def _case_ids(cases: list[dict[str, Any]]) -> list[str]:
+    return [str(case.get("id")) for case in cases if case.get("id")]
+
+
 def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
     status_counts: Counter[str] = Counter()
     task_status_counts: dict[str, Counter[str]] = {task: Counter() for task in PROMOTION_TASKS}
@@ -180,8 +184,12 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
     console.print("\n[bold]快速命令[/bold]")
     for case in cases:
         commands = case.get("commands") if isinstance(case.get("commands"), list) else []
-        if commands:
-            console.print(f"- {case.get('id')}: {commands[0]}")
+        if not commands:
+            continue
+        console.print(f"- {case.get('id')}:")
+        command_lines = commands if detail else commands[:1]
+        for command in command_lines:
+            console.print(f"  {command}")
 
     promotion = data.get("promotion_evidence_summary")
     if isinstance(promotion, dict) and promotion.get("primary_next_action"):
@@ -203,11 +211,18 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
 
 
 @click.command("cases")
+@click.option("--case-id", default=None, help="只显示指定案例 ID，并自动展开详情")
 @click.option("--status", type=click.Choice(ALLOWED_STATUSES), default=None, help="只显示指定状态的案例")
 @click.option("--detail", is_flag=True, default=False, help="显示 promotion 和 validation 详情")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")
 @click.pass_context
-def cases_cmd(ctx: click.Context, status: str | None, detail: bool, json_mode: bool | None) -> None:
+def cases_cmd(
+    ctx: click.Context,
+    case_id: str | None,
+    status: str | None,
+    detail: bool,
+    json_mode: bool | None,
+) -> None:
     """列出内置真实案例和候选工作流"""
     root_ctx = ctx.find_root()
     root_obj = root_ctx.obj if isinstance(root_ctx.obj, dict) else {}
@@ -238,16 +253,36 @@ def cases_cmd(ctx: click.Context, status: str | None, detail: bool, json_mode: b
         return
 
     filtered_cases = [case for case in catalog_cases if status is None or case.get("status") == status]
+    if case_id:
+        exact_matches = [case for case in filtered_cases if case.get("id") == case_id]
+        if not exact_matches:
+            result = err(
+                "cases",
+                ErrorCode.E_INVALID_PARAM,
+                f"未找到案例: {case_id}",
+                hint="运行 cliany-site cases --json 查看可用案例，或检查 --status 筛选条件。",
+                details={
+                    "case_id": case_id,
+                    "status_filter": status,
+                    "available_case_ids": _case_ids(filtered_cases),
+                },
+            )
+            print_response(result, effective_json_mode)
+            return
+        filtered_cases = exact_matches
+
+    include_detail = detail or bool(case_id)
     data = {
         "source_path": str(source_path),
+        "case_id": case_id,
         "status_filter": status,
         "summary": _summary(filtered_cases, catalog_total=len(catalog_cases)),
         "promotion_evidence_summary": _promotion_evidence_summary(filtered_cases),
-        "cases": [_compact_case(case, detail=detail) for case in filtered_cases],
+        "cases": [_compact_case(case, detail=include_detail) for case in filtered_cases],
     }
     result = ok(command="cases", data=data, source="builtin")
 
     if effective_json_mode:
         print_response(result, effective_json_mode)
         return
-    _print_human_cases(data, detail=detail)
+    _print_human_cases(data, detail=include_detail)

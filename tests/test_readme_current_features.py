@@ -17,6 +17,7 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "E_EMPTY_RESULT" in text
         assert "scripts/release_readiness.py" in text
         assert "scripts/check_release_publication.py --json" in text
+        assert "cliany-site cases --case-id pypi-project-search --json" in text
         assert "Real Demo Case Proposal" in text
         assert "weekly-maintainer-loop.md" in text
         assert "next_actions" in text
