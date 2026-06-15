@@ -10992,6 +10992,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "cases/manifest.json",
         "candidate_package_validation_command",
         "Candidate package validation",
+        "candidate_promotions",
+        "issue-metadata.json",
         "Package checks",
         "共用的 rerun 动作",
         "python scripts/validate_cases.py",

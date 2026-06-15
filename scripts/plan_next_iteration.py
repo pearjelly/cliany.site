@@ -453,6 +453,7 @@ class CandidatePromotion:
     promotion_evidence: dict[str, Any]
     promotion_evidence_primary_task: dict[str, Any]
     evidence_bundle_primary_next_task: dict[str, Any]
+    candidate_package_validation_command: str
     evidence_bundle_command: str
     evidence_bundle_json_command: str
     issue_body: str
@@ -471,6 +472,7 @@ class CandidatePromotion:
             "promotion_evidence": self.promotion_evidence,
             "promotion_evidence_primary_task": self.promotion_evidence_primary_task,
             "evidence_bundle_primary_next_task": self.evidence_bundle_primary_next_task,
+            "candidate_package_validation_command": self.candidate_package_validation_command,
             "evidence_bundle_command": self.evidence_bundle_command,
             "evidence_bundle_json_command": self.evidence_bundle_json_command,
             "issue_body": self.issue_body,
@@ -675,6 +677,13 @@ def _candidate_package_validation_command(packages_dir: Path | None) -> str | No
     return (
         "python scripts/validate_cases.py "
         f"--packages-dir {quoted_packages_dir} --include-candidate-packages --strict"
+    )
+
+
+def _default_candidate_package_validation_command() -> str:
+    return (
+        "python scripts/validate_cases.py "
+        "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
     )
 
 
@@ -1149,6 +1158,7 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 promotion_evidence=promotion_evidence,
                 promotion_evidence_primary_task=evidence_bundle_primary_next_task,
                 evidence_bundle_primary_next_task=evidence_bundle_primary_next_task,
+                candidate_package_validation_command=_default_candidate_package_validation_command(),
                 evidence_bundle_command=_candidate_evidence_bundle_command(str(case.id)),
                 evidence_bundle_json_command=_candidate_evidence_bundle_json_command(str(case.id)),
                 issue_body=_candidate_issue_body(
@@ -1885,6 +1895,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "promotion_evidence": promotion.promotion_evidence,
                 "promotion_evidence_primary_task": promotion.promotion_evidence_primary_task,
                 "evidence_bundle_primary_next_task": promotion.evidence_bundle_primary_next_task,
+                "candidate_package_validation_command": promotion.candidate_package_validation_command,
                 "evidence_bundle_command": promotion.evidence_bundle_command,
                 "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
                 "issue_body_name": body_path.name,
@@ -2530,6 +2541,7 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
             "promotion_evidence": item["promotion_evidence"],
             "promotion_evidence_primary_task": item["promotion_evidence_primary_task"],
             "evidence_bundle_primary_next_task": item["evidence_bundle_primary_next_task"],
+            "candidate_package_validation_command": item["candidate_package_validation_command"],
             "evidence_bundle_command": item["evidence_bundle_command"],
             "evidence_bundle_json_command": item["evidence_bundle_json_command"],
             "issue_body_name": item["issue_body_name"],
@@ -2570,6 +2582,7 @@ def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[di
             "promotion_evidence": promotion.promotion_evidence,
             "promotion_evidence_primary_task": promotion.promotion_evidence_primary_task,
             "evidence_bundle_primary_next_task": promotion.evidence_bundle_primary_next_task,
+            "candidate_package_validation_command": promotion.candidate_package_validation_command,
             "evidence_bundle_command": promotion.evidence_bundle_command,
             "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
             "issue_body_name": f"{promotion.case_id}.md",
@@ -4217,9 +4230,10 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
         "",
         (
             "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands | "
-            "Primary Evidence Task | Evidence Bundle Primary Next Task | Evidence Bundle | Evidence Bundle JSON |"
+            "Primary Evidence Task | Evidence Bundle Primary Next Task | Candidate Package Validation | "
+            "Evidence Bundle | Evidence Bundle JSON |"
         ),
-        "|------|------------|------------|--------------------|-----------------------------|-----------------------|-----------------------------------|-----------------|----------------------|",
+        "|------|------------|------------|--------------------|-----------------------------|-----------------------|-----------------------------------|------------------------------|-----------------|----------------------|",
     ]
     for promotion in promotions:
         primary_task = promotion.promotion_evidence_primary_task.get("task") or "Not declared."
@@ -4227,8 +4241,9 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
         lines.append(
             f"| `{promotion.case_id}` | `{promotion.case_id}.md` | {promotion.target_url or 'Not declared.'} | "
             f"{len(promotion.commands)} | {len(promotion.offline_commands)} | "
-            f"`{primary_task}` | `{evidence_bundle_primary_task}` | `{promotion.evidence_bundle_command}` | "
-            f"`{promotion.evidence_bundle_json_command}` |"
+            f"`{primary_task}` | `{evidence_bundle_primary_task}` | "
+            f"`{promotion.candidate_package_validation_command}` | "
+            f"`{promotion.evidence_bundle_command}` | `{promotion.evidence_bundle_json_command}` |"
         )
     return "\n".join(lines)
 
