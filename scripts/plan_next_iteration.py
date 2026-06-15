@@ -24,6 +24,7 @@ ARTIFACT_MANIFEST_KEYS = (
     "artifact_bundle_summary",
     "candidate_count",
     "candidate_cases",
+    "case_promotion_evidence_summary",
     "blockers",
     "next_actions",
     "candidate_issue_gate",
@@ -1650,6 +1651,7 @@ def _render_issue_artifacts_readme(
     body_files = "\n".join(f"- `{promotion.case_id}.md`" for promotion in plan.candidate_promotions)
     body_files = body_files or "- No candidate issue body files were generated."
     candidate_summary = _issue_artifact_candidate_summary(plan.candidate_promotions)
+    case_promotion_evidence_summary = _case_promotion_evidence_markdown(plan.case_promotion_evidence_summary)
     body_inventory = _issue_artifact_body_inventory_markdown(plan.candidate_promotions)
     body_summary = _issue_artifact_body_summary_markdown(plan.candidate_promotions)
     gate_quick_summary = _issue_artifact_gate_quick_summary(plan)
@@ -1673,10 +1675,10 @@ Generated for target version `{plan.target_version}`.
 
 - `issue-metadata.json`: structured issue title, labels, reproduction context, body file name,
   body file path, and `gh issue create` command.
-- `artifact-manifest.json`: schema version, candidate cases, blockers, next actions, file names, review order,
-  review checklist, candidate issue gate, publication status, publication ref context, worktree status,
-  release draft handoff, reproduction command, publish commands, and validation commands for this candidate
-  issue artifact bundle.
+- `artifact-manifest.json`: schema version, candidate cases, promotion evidence summary, blockers,
+  next actions, file names, review order, review checklist, candidate issue gate, publication status,
+  publication ref context, worktree status, release draft handoff, reproduction command, publish commands,
+  and validation commands for this candidate issue artifact bundle.
 - `publication-handoff.json`: publication status, candidate issue gate, visibility, next actions,
   publication next actions, ref context, worktree status, and publish commands to review first.
 - `release-draft-handoff.json`: schema version, target version, release draft ok status, release draft path,
@@ -1690,6 +1692,8 @@ Generated for target version `{plan.target_version}`.
 {body_files}
 
 {candidate_summary}
+
+{case_promotion_evidence_summary}
 
 {body_inventory}
 
@@ -2198,6 +2202,7 @@ def _artifact_manifest_payload_without_summary(
         "target_version": plan.target_version,
         "candidate_count": len(candidate_cases),
         "candidate_cases": candidate_cases,
+        "case_promotion_evidence_summary": plan.case_promotion_evidence_summary,
         "blockers": plan.blockers,
         "next_actions": plan.next_actions,
         "candidate_issue_gate": plan.candidate_issue_gate,

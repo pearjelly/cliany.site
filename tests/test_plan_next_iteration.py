@@ -1528,6 +1528,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "artifact_bundle_summary": artifact_bundle_summary,
         "candidate_count": 2,
         "candidate_cases": ["pypi-project-search", "npm-package-search"],
+        "case_promotion_evidence_summary": plan.case_promotion_evidence_summary,
         "blockers": ["release draft validation failed", "latest local release is not published"],
         "next_actions": plan.next_actions,
         "candidate_issue_gate": _blocked_candidate_issue_gate(),
@@ -1684,6 +1685,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert artifact_manifest["artifact_bundle_summary"]["candidate_cases_last_case"] == artifact_manifest[
         "candidate_cases"
     ][-1]
+    assert artifact_manifest["case_promotion_evidence_summary"] == plan.case_promotion_evidence_summary
     assert artifact_manifest["artifact_bundle_summary"][
         "issue_body_inventory_preview"
     ] == artifact_manifest["issue_body_inventory"][
@@ -1851,7 +1853,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "# cliany-site Candidate Issue Artifacts" in readme
     assert "Generated for target version `0.16.2`." in readme
     assert "`issue-metadata.json`: structured issue title, labels, reproduction context" in readme
-    assert "`artifact-manifest.json`: schema version, candidate cases, blockers, next actions" in readme
+    assert (
+        "`artifact-manifest.json`: schema version, candidate cases, promotion evidence summary,"
+    ) in readme
     assert "review checklist, candidate issue gate, publication status" in readme
     assert "release draft" in readme
     assert "handoff, reproduction" in readme
@@ -1863,6 +1867,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "| `pypi-project-search` | `pypi-project-search.md` | "
         "https://pypi.org/search/?q=cliany-site | 2 | 2 |"
+    ) in readme
+    assert "## Candidate Promotion Evidence Summary" in readme
+    assert "| pending_count | `6` |" in readme
+    assert "| primary_next_action | `Generate pypi.org-<version>.cliany-adapter.tar.gz.` |" in readme
+    assert (
+        "| `pypi-project-search` | `adapter_package` | `pending` | - | "
+        "Generate pypi.org-<version>.cliany-adapter.tar.gz. |"
     ) in readme
     assert "## Issue Body Inventory" in readme
     assert "| Case | Issue Body | Bytes | SHA-256 |" in readme
