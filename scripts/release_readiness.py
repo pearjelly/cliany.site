@@ -139,6 +139,7 @@ class ReadinessReport:
         publication_ref_context = _publication_ref_context(publication_payload)
         publication_next_actions = publication_payload["next_actions"]
         publication_publish_commands = publication_payload["publish_commands"]
+        publication_summary = _publication_summary(publication_payload)
         return {
             "ok": self.ok,
             "current_version": self.current_version,
@@ -156,6 +157,7 @@ class ReadinessReport:
             "package_gate": self.package_gate.to_dict(),
             "publication": publication_payload,
             "publication_ok": publication_payload["ok"],
+            "publication_summary": publication_summary,
             "publication_ref_context": publication_ref_context,
             "publication_worktree_clean": publication_payload["worktree_clean"],
             "publication_worktree_status_count": len(publication_payload["worktree_status"]),
@@ -652,6 +654,7 @@ def build_report(
 
 def _print_text(report: ReadinessReport) -> None:
     publication_payload = report.publication.to_dict()
+    publication_summary = _publication_summary(publication_payload)
     publication_ref_context = _publication_ref_context(publication_payload)
     tag_publish_decision = publication_payload["tag_publish_decision"]
     publication_next_actions = list(publication_payload["next_actions"])
@@ -684,6 +687,14 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"release_workflow: {report.release_workflow.ok}")
     print(f"project_metadata: {report.project_metadata.ok}")
     print(f"publication: {publication_payload['ok']}")
+    print(
+        "publication_summary: "
+        f"status={publication_summary['status']}, "
+        f"worktree_clean={str(bool(publication_summary['worktree_clean'])).lower()}, "
+        f"ahead={publication_summary['ahead_count']}, "
+        f"tag_decision={publication_summary['tag_decision_status']}, "
+        f"publish_commands={publication_summary['publish_command_count']}"
+    )
     print(
         "publication_worktree: "
         f"clean={str(bool(publication_payload['worktree_clean'])).lower()}, "
@@ -819,6 +830,30 @@ def _publication_ref_context(publication_payload: dict[str, Any]) -> dict[str, A
     }
 
 
+def _publication_summary(publication_payload: dict[str, Any]) -> dict[str, Any]:
+    next_actions = list(publication_payload["next_actions"])
+    publish_commands = list(publication_payload["publish_commands"])
+    tag_publish_decision = publication_payload["tag_publish_decision"]
+    return {
+        "ok": publication_payload["ok"],
+        "status": "published" if publication_payload["ok"] else "blocked",
+        "worktree_clean": publication_payload["worktree_clean"],
+        "branch": publication_payload["branch"],
+        "upstream": publication_payload["upstream"],
+        "remote": publication_payload["remote"],
+        "ahead_count": publication_payload["ahead_count"],
+        "behind_count": publication_payload["behind_count"],
+        "latest_tag": publication_payload["latest_tag"],
+        "tag_points_at_head": publication_payload["tag_points_at_head"],
+        "tag_decision_status": tag_publish_decision["status"],
+        "tag_can_push": tag_publish_decision["can_push_tag"],
+        "next_action_count": len(next_actions),
+        "primary_next_action": next_actions[0] if next_actions else None,
+        "publish_command_count": len(publish_commands),
+        "primary_publish_command": publish_commands[0] if publish_commands else None,
+    }
+
+
 def _next_action_lines(report: ReadinessReport) -> list[str]:
     lines: list[str] = []
     if report.cadence.commit_day_count < report.cadence.min_commit_days:
@@ -932,6 +967,7 @@ def _candidate_command_plan_summary_lines(report: ReadinessReport) -> list[str]:
 
 def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
     publication_payload = report.publication.to_dict()
+    publication_summary = _publication_summary(publication_payload)
     ref_context = _publication_ref_context(publication_payload)
     tag_publish_decision = publication_payload["tag_publish_decision"]
     publication_next_actions = _publication_next_actions(report)
@@ -943,6 +979,10 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
         "## Publication Publish Commands",
         "",
         f"- publication_ok: `{str(report.publication.ok).lower()}`",
+        f"- publication_summary_status: `{_markdown_cell(publication_summary['status'])}`",
+        f"- publication_summary_branch: `{_markdown_cell(publication_summary['branch'])}`",
+        f"- publication_summary_ahead_count: `{_markdown_cell(publication_summary['ahead_count'])}`",
+        f"- publication_summary_latest_tag: `{_markdown_cell(publication_summary['latest_tag'])}`",
         f"- tag_publish_decision: `{_markdown_cell(tag_publish_decision['status'])}`",
         f"- tag_can_push: `{str(bool(tag_publish_decision['can_push_tag'])).lower()}`",
         f"- tag_required_action: `{_markdown_cell(tag_publish_decision.get('required_action'))}`",
