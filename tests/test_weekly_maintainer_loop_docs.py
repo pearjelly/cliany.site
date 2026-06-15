@@ -259,6 +259,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "target URL",
         "candidate commands",
         "offline validation commands",
+        "candidate_package_validation_command",
         "子列表",
         "审阅清单",
         "artifact-manifest.json",

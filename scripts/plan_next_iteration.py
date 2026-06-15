@@ -2351,7 +2351,7 @@ def _issue_artifact_review_checklist() -> list[str]:
         "Confirm Publication Next Actions are resolved or intentionally deferred before running create-issues.sh.",
         (
             "Confirm issue-metadata.json has the expected target URL, candidate commands, "
-            "and offline validation commands for each case."
+            "offline validation commands, and candidate_package_validation_command for each case."
         ),
         "Review each body file for scope, tasks, validation evidence, and non-goals.",
         (

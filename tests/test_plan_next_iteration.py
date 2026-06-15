@@ -1122,7 +1122,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         (
             "Confirm issue-metadata.json has the expected target URL, candidate commands, "
-            "and offline validation commands for each case."
+            "offline validation commands, and candidate_package_validation_command for each case."
         ),
         "Review each body file for scope, tasks, validation evidence, and non-goals.",
         (
@@ -2055,7 +2055,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "Confirm Publication Next Actions are resolved or intentionally deferred before running create-issues.sh.",
             (
                 "Confirm issue-metadata.json has the expected target URL, candidate commands, "
-                "and offline validation commands for each case."
+                "offline validation commands, and candidate_package_validation_command for each case."
             ),
             "Review each body file for scope, tasks, validation evidence, and non-goals.",
             (
@@ -3595,7 +3595,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "Confirm Publication Next Actions are resolved or intentionally deferred" in readme
     assert "before running create-issues.sh" in readme
     assert "expected target URL, candidate commands" in readme
-    assert "offline validation commands for each case" in readme
+    assert (
+        "offline validation commands, and candidate_package_validation_command for each case"
+        in readme
+    )
     assert "release publication preflight" in readme
     assert "python scripts/check_release_publication.py --strict --json" in readme
     assert "/tmp/cliany-issue-publication-check.json" in readme

@@ -10995,6 +10995,7 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "candidate_promotions",
         "issue-metadata.json",
         "Validation Evidence",
+        "review checklist",
         "cliany-site cases --case-id pypi-project-search --issue-template",
         "Package checks",
         "共用的 rerun 动作",
