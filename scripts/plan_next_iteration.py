@@ -998,7 +998,8 @@ def _publication_visibility(publication: Any) -> dict[str, str]:
 
 def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
     release_draft_issues = _release_draft_issues(readiness)
-    evidence = _candidate_issue_gate_evidence(readiness, publication)
+    target_version = str(getattr(readiness, "target_version", "") or "") or None
+    evidence = _candidate_issue_gate_evidence(readiness, publication, target_version)
     reason_codes = _candidate_issue_gate_reason_codes(release_draft_issues, publication)
     reason_descriptions = _candidate_issue_gate_reason_descriptions(reason_codes)
     release_draft_actions = _release_draft_required_actions(release_draft_issues)
@@ -1116,10 +1117,12 @@ def _candidate_issue_gate_reason_descriptions(reason_codes: list[str]) -> dict[s
     return {code: descriptions[code] for code in reason_codes if code in descriptions}
 
 
-def _candidate_issue_gate_evidence(readiness: Any, publication: Any) -> dict[str, Any]:
+def _candidate_issue_gate_evidence(
+    readiness: Any, publication: Any, target_version: str | None = None
+) -> dict[str, Any]:
     release_draft_issues = _release_draft_issues(readiness)
     publication_visibility = _publication_visibility(publication)
-    tag_decision = _publication_tag_publish_decision(publication)
+    tag_decision = _publication_tag_publish_decision(publication, target_version)
     draft = getattr(readiness, "draft", None)
     return {
         "publication_ok": bool(getattr(publication, "ok", False)),
@@ -1132,6 +1135,17 @@ def _candidate_issue_gate_evidence(readiness: Any, publication: Any) -> dict[str
         "publication_tag_decision_status": tag_decision.get("status"),
         "publication_tag_can_push": tag_decision.get("can_push_tag"),
         "publication_tag_required_action": tag_decision.get("required_action"),
+        "publication_target_tag": tag_decision.get("target_tag"),
+        "publication_target_tag_status": tag_decision.get("target_tag_status"),
+        "publication_target_tag_primary_command": tag_decision.get(
+            "target_tag_primary_command"
+        ),
+        "publication_target_tag_commands_sha256": tag_decision.get(
+            "target_tag_commands_sha256"
+        ),
+        "publication_target_tag_required_action": tag_decision.get(
+            "target_tag_required_action"
+        ),
         "release_draft_ok": bool(getattr(draft, "ok", False)),
         "release_draft_path": _release_draft_evidence_path(readiness),
         "release_draft_issue_count": len(release_draft_issues),
@@ -2196,6 +2210,20 @@ def _candidate_issue_gate_evidence_markdown(evidence: object) -> str:
         ("publication_tag_decision_status", evidence.get("publication_tag_decision_status")),
         ("publication_tag_can_push", evidence.get("publication_tag_can_push")),
         ("publication_tag_required_action", evidence.get("publication_tag_required_action")),
+        ("publication_target_tag", evidence.get("publication_target_tag")),
+        ("publication_target_tag_status", evidence.get("publication_target_tag_status")),
+        (
+            "publication_target_tag_primary_command",
+            evidence.get("publication_target_tag_primary_command"),
+        ),
+        (
+            "publication_target_tag_commands_sha256",
+            evidence.get("publication_target_tag_commands_sha256"),
+        ),
+        (
+            "publication_target_tag_required_action",
+            evidence.get("publication_target_tag_required_action"),
+        ),
         ("release_draft_ok", evidence.get("release_draft_ok")),
         ("release_draft_path", evidence.get("release_draft_path")),
         ("release_draft_issue_count", evidence.get("release_draft_issue_count")),
@@ -2509,6 +2537,18 @@ def _render_issue_artifacts_readme(
     gate_tag_required_action = _format_context_value(
         _candidate_issue_gate_evidence_value(plan, "publication_tag_required_action")
     )
+    gate_target_tag = _format_context_value(
+        _candidate_issue_gate_evidence_value(plan, "publication_target_tag")
+    )
+    gate_target_tag_status = _format_context_value(
+        _candidate_issue_gate_evidence_value(plan, "publication_target_tag_status")
+    )
+    gate_target_tag_primary_command = _format_context_value(
+        _candidate_issue_gate_evidence_value(plan, "publication_target_tag_primary_command")
+    )
+    gate_target_tag_commands_sha256 = _format_context_value(
+        _candidate_issue_gate_evidence_value(plan, "publication_target_tag_commands_sha256")
+    )
     gate_draft_ok = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_ok"))
     gate_draft_issues = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_issue_count"))
     create_issues_safety = _issue_artifact_create_issues_safety(Path("create-issues.sh"))
@@ -2573,6 +2613,10 @@ Generated for target version `{plan.target_version}`.
 - gate_evidence_tag_decision: `{gate_tag_decision}`
 - gate_evidence_tag_can_push: `{gate_tag_can_push}`
 - gate_evidence_tag_required_action: `{gate_tag_required_action}`
+- gate_evidence_target_tag: `{gate_target_tag}`
+- gate_evidence_target_tag_status: `{gate_target_tag_status}`
+- gate_evidence_target_tag_primary_command: `{gate_target_tag_primary_command}`
+- gate_evidence_target_tag_commands_sha256: `{gate_target_tag_commands_sha256}`
 - gate_evidence_release_draft_ok: `{gate_draft_ok}`
 - gate_evidence_release_draft_issues: `{gate_draft_issues}`
 - visibility: `{_format_context_value(plan.publication_visibility.get("status"))}`
