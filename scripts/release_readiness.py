@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
@@ -158,6 +159,7 @@ class ReadinessReport:
             "publication": publication_payload,
             "publication_ok": publication_payload["ok"],
             "publication_summary": publication_summary,
+            "publication_summary_sha256": _stable_json_sha256(publication_summary),
             "publication_ref_context": publication_ref_context,
             "publication_worktree_clean": publication_payload["worktree_clean"],
             "publication_worktree_status_count": len(publication_payload["worktree_status"]),
@@ -695,6 +697,7 @@ def _print_text(report: ReadinessReport) -> None:
         f"tag_decision={publication_summary['tag_decision_status']}, "
         f"publish_commands={publication_summary['publish_command_count']}"
     )
+    print(f"publication_summary_sha256: {_stable_json_sha256(publication_summary)}")
     print(
         "publication_worktree: "
         f"clean={str(bool(publication_payload['worktree_clean'])).lower()}, "
@@ -854,6 +857,11 @@ def _publication_summary(publication_payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _stable_json_sha256(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 def _next_action_lines(report: ReadinessReport) -> list[str]:
     lines: list[str] = []
     if report.cadence.commit_day_count < report.cadence.min_commit_days:
@@ -983,6 +991,7 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
         f"- publication_summary_branch: `{_markdown_cell(publication_summary['branch'])}`",
         f"- publication_summary_ahead_count: `{_markdown_cell(publication_summary['ahead_count'])}`",
         f"- publication_summary_latest_tag: `{_markdown_cell(publication_summary['latest_tag'])}`",
+        f"- publication_summary_sha256: `{_stable_json_sha256(publication_summary)}`",
         f"- tag_publish_decision: `{_markdown_cell(tag_publish_decision['status'])}`",
         f"- tag_can_push: `{str(bool(tag_publish_decision['can_push_tag'])).lower()}`",
         f"- tag_required_action: `{_markdown_cell(tag_publish_decision.get('required_action'))}`",

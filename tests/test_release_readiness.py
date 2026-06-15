@@ -602,6 +602,7 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert publication_summary["primary_next_action"] == publication_next_actions[0]
     assert publication_summary["publish_command_count"] == len(publish_commands)
     assert publication_summary["primary_publish_command"] == publish_commands[0]
+    assert payload["publication_summary_sha256"] == release_readiness._stable_json_sha256(publication_summary)
     assert publication_ref_context["branch"] == payload["publication"]["branch"]
     assert publication_ref_context["latest_tag"] == payload["publication"]["latest_tag"]
     assert publication_ref_context["remote_checked"] == payload["publication"]["remote_checked"]
@@ -671,6 +672,7 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- publication_summary_status: `blocked`" in text
     assert "- publication_summary_branch: `master`" in text
     assert "- publication_summary_latest_tag: `v0.1.0`" in text
+    assert "- publication_summary_sha256: `" in text
     assert "- tag_publish_decision: `manual_decision_required`" in text
     assert "- tag_can_push: `false`" in text
     assert "- tag_required_action: `Move to the latest tag commit or create a new release tag at HEAD " in text
@@ -796,6 +798,7 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     assert "candidate_command_plan_summary: all_declared=true, commands=0/0, missing=0" in output
     assert "publication: False" in output
     assert "publication_summary: status=blocked, worktree_clean=true, ahead=None" in output
+    assert "publication_summary_sha256:" in output
     assert "publication_worktree: clean=true, status_count=0" in output
     assert "publication_worktree_status:" not in output
     assert "publication_ref_context: branch=master, upstream=(none), ahead=None, latest_tag=v0.1.0" in output
