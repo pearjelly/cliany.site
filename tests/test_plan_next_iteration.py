@@ -520,6 +520,10 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         data["case_promotion_evidence_summary"]["primary_task_detail"]
         == data["case_promotion_evidence_summary"]["primary_task"]
     )
+    assert (
+        data["case_promotion_evidence_summary"]["primary_next_task"]
+        == data["case_promotion_evidence_summary"]["primary_task_detail"]
+    )
     assert data["candidate_promotions"][0] == {
         "case_id": "pypi-project-search",
         "issue_title": "Promote candidate case `pypi-project-search` toward active",
@@ -1287,6 +1291,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "case_promotion_evidence_primary_evidence_sha256": _stable_json_sha256(""),
         "case_promotion_evidence_primary_detail_sha256": _stable_json_sha256(
             plan.case_promotion_evidence_summary["primary_task_detail"]
+        ),
+        "case_promotion_evidence_primary_next_task_sha256": _stable_json_sha256(
+            plan.case_promotion_evidence_summary["primary_next_task"]
         ),
         "body_count": 2,
         "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
@@ -2452,6 +2459,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "case_promotion_evidence_primary_detail_sha256: "
         f"`{artifact_bundle_summary['case_promotion_evidence_primary_detail_sha256']}`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_primary_next_task_sha256: "
+        f"`{artifact_bundle_summary['case_promotion_evidence_primary_next_task_sha256']}`"
     ) in readme
     assert (
         "issue_body_inventory_preview_count: "

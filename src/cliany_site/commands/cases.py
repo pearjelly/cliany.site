@@ -351,6 +351,7 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
         "blocked_count": status_counts.get("blocked", 0),
         "complete_count": status_counts.get("complete", 0),
         "primary_task_detail": primary,
+        "primary_next_task": primary,
         "primary_case_id": primary.get("case_id", ""),
         "primary_task": primary.get("task", ""),
         "primary_next_action": primary.get("next_action", ""),

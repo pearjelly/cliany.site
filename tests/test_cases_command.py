@@ -25,6 +25,10 @@ def test_cases_command_returns_catalog_summary(tmp_home):
     assert data["promotion_evidence_summary"]["primary_task_detail"]["task"] == "adapter_package"
     assert data["promotion_evidence_summary"]["primary_task_detail"]["status"] == "pending"
     assert data["promotion_evidence_summary"]["primary_task_detail"]["evidence"] == ""
+    assert (
+        data["promotion_evidence_summary"]["primary_next_task"]
+        == data["promotion_evidence_summary"]["primary_task_detail"]
+    )
     assert any(case["id"] == "suitecrm-accounts" for case in data["cases"])
     assert any("offline_commands" in case for case in data["cases"])
 
@@ -47,6 +51,10 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
         "evidence": "",
         "next_action": data["promotion_evidence_summary"]["primary_next_action"],
     }
+    assert (
+        data["promotion_evidence_summary"]["primary_next_task"]
+        == data["promotion_evidence_summary"]["primary_task_detail"]
+    )
     assert "Generate pypi.org" in data["promotion_evidence_summary"]["primary_next_action"]
     assert {case["status"] for case in data["cases"]} == {"candidate"}
     assert all("promotion" in case for case in data["cases"])

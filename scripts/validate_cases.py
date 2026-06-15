@@ -617,6 +617,7 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
         "complete_tasks": complete_tasks,
         "primary_task": primary,
         "primary_task_detail": primary,
+        "primary_next_task": primary,
         "primary_next_action": primary["next_action"] if primary else "",
     }
 
@@ -756,6 +757,7 @@ def _candidate_promotion_evidence_summary_lines(summary: dict[str, Any]) -> list
         f"| complete_count | `{summary.get('complete_count', 0)}` |",
         f"| primary_next_action | {_markdown_cell(summary.get('primary_next_action') or '-')} |",
         f"| primary_task_detail | `{json.dumps(summary.get('primary_task_detail') or {}, ensure_ascii=False)}` |",
+        f"| primary_next_task | `{json.dumps(summary.get('primary_next_task') or {}, ensure_ascii=False)}` |",
         "",
         "| Case | Task | Status | Evidence | Next Action |",
         "|------|------|--------|----------|-------------|",

@@ -124,6 +124,7 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "case_promotion_evidence_primary_status",
     "case_promotion_evidence_primary_evidence_sha256",
     "case_promotion_evidence_primary_detail_sha256",
+    "case_promotion_evidence_primary_next_task_sha256",
     "body_count",
     "issue_body_inventory_preview_count",
     "issue_body_inventory_preview",
@@ -1038,7 +1039,15 @@ def _case_dict_value(case: Any, field_name: str) -> dict[str, Any]:
 def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
     summary = getattr(cases_report, "promotion_evidence_summary", None)
     if isinstance(summary, dict):
-        return summary
+        normalized = dict(summary)
+        if "primary_next_task" not in normalized:
+            if "primary_task_detail" in normalized:
+                normalized["primary_next_task"] = normalized["primary_task_detail"]
+            else:
+                primary_task = normalized.get("primary_task")
+                if isinstance(primary_task, dict):
+                    normalized["primary_next_task"] = primary_task
+        return normalized
 
     cases = getattr(cases_report, "cases", [])
     status_counts = {status: 0 for status in ("blocked", "complete", "pending")}
@@ -1092,6 +1101,7 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
         "complete_tasks": complete_tasks,
         "primary_task": primary,
         "primary_task_detail": primary,
+        "primary_next_task": primary,
         "primary_next_action": primary["next_action"] if primary else "",
     }
 
@@ -2828,6 +2838,11 @@ def _issue_artifact_bundle_summary(
     case_promotion_evidence_primary_task = plan.case_promotion_evidence_summary.get("primary_task")
     if not isinstance(case_promotion_evidence_primary_task, dict):
         case_promotion_evidence_primary_task = {}
+    case_promotion_evidence_primary_next_task = plan.case_promotion_evidence_summary.get(
+        "primary_next_task"
+    )
+    if not isinstance(case_promotion_evidence_primary_next_task, dict):
+        case_promotion_evidence_primary_next_task = {}
     blocker_boundary = {
         "first_item": plan.blockers[0] if plan.blockers else None,
         "last_item": plan.blockers[-1] if plan.blockers else None,
@@ -3021,6 +3036,9 @@ def _issue_artifact_bundle_summary(
         ),
         "case_promotion_evidence_primary_detail_sha256": _stable_json_sha256(
             case_promotion_evidence_primary_task
+        ),
+        "case_promotion_evidence_primary_next_task_sha256": _stable_json_sha256(
+            case_promotion_evidence_primary_next_task
         ),
         "body_count": issue_body_summary["body_count"],
         "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
@@ -3703,6 +3721,8 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['case_promotion_evidence_primary_evidence_sha256']}`",
             "- case_promotion_evidence_primary_detail_sha256: "
             f"`{summary['case_promotion_evidence_primary_detail_sha256']}`",
+            "- case_promotion_evidence_primary_next_task_sha256: "
+            f"`{summary['case_promotion_evidence_primary_next_task_sha256']}`",
             f"- body_count: `{summary['body_count']}`",
             f"- issue_body_inventory_preview_count: `{summary['issue_body_inventory_preview_count']}`",
             "- issue_body_inventory_preview: "
