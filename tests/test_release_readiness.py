@@ -617,6 +617,15 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert payload["publication_worktree_clean"] is True
     assert payload["publication_worktree_status_count"] == 0
     assert payload["publication_worktree_status"] == []
+    assert payload["publication_blockers"] == [
+        "latest local release is not published",
+        "latest local release tag is not published",
+    ]
+    assert payload["publication_blocker_count"] == len(payload["publication_blockers"])
+    assert payload["publication_primary_blocker"] == "latest local release is not published"
+    assert payload["publication_blockers_sha256"] == release_readiness._stable_json_sha256(
+        payload["publication_blockers"]
+    )
     assert payload["publication"]["publish_commands"] == publish_commands
     assert payload["publication_tag_publish_decision"] == payload["publication"]["tag_publish_decision"]
     assert payload["publication_tag_publish_decision"]["status"] == "needs_remote_check"
@@ -699,6 +708,11 @@ def test_release_readiness_writes_markdown_report(tmp_path):
         "- publication_summary_primary_publish_command: "
         f"`{publication_summary['primary_publish_command']}`"
     ) in text
+    assert "- publication_blocker_count: `3`" in text
+    assert "- publication_blockers_sha256: `" in text
+    assert "- publication_primary_blocker: `latest local release is not published`" in text
+    assert "### Publication Blockers" in text
+    assert "- latest local release is not published" in text
     assert "- tag_publish_decision: `manual_decision_required`" in text
     assert "- tag_can_push: `false`" in text
     assert "- tag_required_action: `Move to the latest tag commit or create a new release tag at HEAD " in text
@@ -833,6 +847,10 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
         "publication_summary_primary_publish_command: "
         f"{publication_summary['primary_publish_command']}"
     ) in output
+    assert "publication_blocker_count: 3" in output
+    assert "publication_blockers_sha256:" in output
+    assert "publication_primary_blocker: latest local release is not published" in output
+    assert "publication_blockers:" in output
     assert "publication_worktree: clean=true, status_count=0" in output
     assert "publication_worktree_status:" not in output
     assert "publication_ref_context: branch=master, upstream=(none), ahead=None, latest_tag=v0.1.0" in output

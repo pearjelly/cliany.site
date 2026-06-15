@@ -138,6 +138,7 @@ class ReadinessReport:
     def to_dict(self) -> dict[str, Any]:
         publication_payload = self.publication.to_dict()
         publication_ref_context = _publication_ref_context(publication_payload)
+        publication_blockers = _publication_blockers(self.publication)
         publication_next_actions = publication_payload["next_actions"]
         publication_publish_commands = publication_payload["publish_commands"]
         publication_summary = _publication_summary(publication_payload)
@@ -168,6 +169,10 @@ class ReadinessReport:
             "publication_worktree_status_count": len(publication_payload["worktree_status"]),
             "publication_worktree_status": publication_payload["worktree_status"],
             "publication_tag_publish_decision": publication_payload["tag_publish_decision"],
+            "publication_blocker_count": len(publication_blockers),
+            "publication_blockers_sha256": _stable_json_sha256(publication_blockers),
+            "publication_primary_blocker": publication_blockers[0] if publication_blockers else None,
+            "publication_blockers": publication_blockers,
             "publication_next_action_count": publication_payload["next_action_count"],
             "publication_next_actions_sha256": _stable_json_sha256(publication_next_actions),
             "publication_primary_next_action": publication_next_actions[0] if publication_next_actions else None,
@@ -591,6 +596,23 @@ def _cadence_blockers(report: CadenceReport) -> list[str]:
     return blockers
 
 
+def _publication_blockers(report: PublicationReport) -> list[str]:
+    blockers: list[str] = []
+    if report.ok:
+        return blockers
+    if not report.worktree_clean:
+        blockers.append("publication worktree is dirty")
+    if report.branch_published is not True:
+        blockers.append("latest local release is not published")
+    if report.latest_tag and not report.tag_points_at_head:
+        blockers.append("latest release tag does not point at HEAD")
+    if report.tag_published is not True:
+        blockers.append("latest local release tag is not published")
+    if not report.latest_tag:
+        blockers.append("release tag is missing")
+    return blockers
+
+
 def build_report(
     root: Path = ROOT,
     *,
@@ -668,6 +690,7 @@ def _print_text(report: ReadinessReport) -> None:
     publication_payload = report.publication.to_dict()
     publication_summary = _publication_summary(publication_payload)
     publication_ref_context = _publication_ref_context(publication_payload)
+    publication_blockers = _publication_blockers(report.publication)
     tag_publish_decision = publication_payload["tag_publish_decision"]
     publication_next_actions = list(publication_payload["next_actions"])
     publication_publish_commands = list(publication_payload["publish_commands"])
@@ -710,6 +733,13 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"publication_summary_sha256: {_stable_json_sha256(publication_summary)}")
     print(f"publication_summary_primary_next_action: {publication_summary['primary_next_action']}")
     print(f"publication_summary_primary_publish_command: {publication_summary['primary_publish_command']}")
+    print(f"publication_blocker_count: {len(publication_blockers)}")
+    print(f"publication_blockers_sha256: {_stable_json_sha256(publication_blockers)}")
+    if publication_blockers:
+        print(f"publication_primary_blocker: {publication_blockers[0]}")
+        print("publication_blockers:")
+        for blocker in publication_blockers:
+            print(f"- {blocker}")
     print(
         "publication_worktree: "
         f"clean={str(bool(publication_payload['worktree_clean'])).lower()}, "
@@ -993,6 +1023,7 @@ def _candidate_command_plan_summary_lines(report: ReadinessReport) -> list[str]:
 def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
     publication_payload = report.publication.to_dict()
     publication_summary = _publication_summary(publication_payload)
+    publication_blockers = _publication_blockers(report.publication)
     ref_context = _publication_ref_context(publication_payload)
     tag_publish_decision = publication_payload["tag_publish_decision"]
     publication_next_actions = _publication_next_actions(report)
@@ -1014,6 +1045,9 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
             "- publication_summary_primary_publish_command: "
             f"`{_markdown_cell(publication_summary['primary_publish_command'])}`"
         ),
+        f"- publication_blocker_count: `{len(publication_blockers)}`",
+        f"- publication_blockers_sha256: `{_stable_json_sha256(publication_blockers)}`",
+        f"- publication_primary_blocker: `{_markdown_cell(publication_blockers[0] if publication_blockers else None)}`",
         f"- tag_publish_decision: `{_markdown_cell(tag_publish_decision['status'])}`",
         f"- tag_can_push: `{str(bool(tag_publish_decision['can_push_tag'])).lower()}`",
         f"- tag_required_action: `{_markdown_cell(tag_publish_decision.get('required_action'))}`",
@@ -1031,6 +1065,15 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
                 "### Publication Next Actions",
                 "",
                 *(f"- {action}" for action in publication_next_actions),
+                "",
+            ]
+        )
+    if publication_blockers:
+        lines.extend(
+            [
+                "### Publication Blockers",
+                "",
+                *(f"- {blocker}" for blocker in publication_blockers),
                 "",
             ]
         )
