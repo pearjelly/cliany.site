@@ -497,6 +497,10 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "python scripts/check_release_publication.py --json",
     ]
     assert data["publication_publish_command_count"] == 1
+    assert data["publication_publish_commands_sha256"] == _stable_json_sha256(
+        data["publication_publish_commands"]
+    )
+    assert data["publication_primary_publish_command"] == data["publication_publish_commands"][0]
     assert data["publication_visibility"] == {
         "status": "dirty_worktree",
         "summary": "Worktree has uncommitted changes; resolve them before publishing release refs.",
@@ -541,6 +545,10 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "Push tag `v0.16.1` after the branch is published.",
     ]
     assert data["publication_next_action_count"] == 3
+    assert data["publication_next_actions_sha256"] == _stable_json_sha256(
+        data["publication_next_actions"]
+    )
+    assert data["publication_primary_next_action"] == data["publication_next_actions"][0]
     assert any("Push `master`" in action for action in data["next_actions"])
     assert data["case_promotion_evidence_summary"]["candidate_count"] == 2
     assert data["case_promotion_evidence_summary"]["task_count"] == 6
@@ -802,7 +810,23 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in text
     assert "## Publication Publish Commands" in text
     assert "| publication_next_action_count | `3` |" in text
+    assert (
+        "| publication_next_actions_sha256 | "
+        f"`{_stable_json_sha256(plan.publication_next_actions)}` |"
+    ) in text
+    assert (
+        "| publication_primary_next_action | "
+        "`Commit, stash, or discard local worktree changes before publishing release refs.` |"
+    ) in text
     assert "| publication_publish_command_count | `1` |" in text
+    assert (
+        "| publication_publish_commands_sha256 | "
+        f"`{_stable_json_sha256(plan.publication_publish_commands)}` |"
+    ) in text
+    assert (
+        "| publication_primary_publish_command | "
+        "`python scripts/check_release_publication.py --json` |"
+    ) in text
     assert "| commit_cadence_status | `needs_more_commit_days` |" in text
     assert "| commit_cadence_missing_commit_days | `1` |" in text
     assert "| commit_cadence_summary | 2/3 commit days; 1 more unique day(s) needed. |" in text
@@ -911,7 +935,19 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
     assert "    task: adapter_package" in text
     assert "candidate_issue_gate:" in text
     assert "publication_next_action_count: 3" in text
+    assert f"publication_next_actions_sha256: {_stable_json_sha256(plan.publication_next_actions)}" in text
+    assert (
+        "publication_primary_next_action: "
+        "Commit, stash, or discard local worktree changes before publishing release refs."
+        in text
+    )
     assert "publication_publish_command_count: 1" in text
+    assert (
+        f"publication_publish_commands_sha256: "
+        f"{_stable_json_sha256(plan.publication_publish_commands)}"
+        in text
+    )
+    assert "publication_primary_publish_command: python scripts/check_release_publication.py --json" in text
     assert "- reason_code_count: 3" in text
     assert f"- reason_codes_sha256: {_blocked_candidate_issue_gate()['reason_codes_sha256']}" in text
     assert "- required_action_count: 5" in text

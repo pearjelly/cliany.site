@@ -555,8 +555,18 @@ class IterationPlan:
             "publication_visibility": self.publication_visibility,
             "publication_tag_publish_decision": self.publication_tag_publish_decision,
             "publication_next_action_count": self.publication_next_action_count,
+            "publication_next_actions_sha256": _stable_json_sha256(self.publication_next_actions),
+            "publication_primary_next_action": (
+                self.publication_next_actions[0] if self.publication_next_actions else None
+            ),
             "publication_next_actions": self.publication_next_actions,
             "publication_publish_command_count": self.publication_publish_command_count,
+            "publication_publish_commands_sha256": _stable_json_sha256(
+                self.publication_publish_commands
+            ),
+            "publication_primary_publish_command": (
+                self.publication_publish_commands[0] if self.publication_publish_commands else None
+            ),
             "publication_publish_commands": self.publication_publish_commands,
             "publication_ref_context": self.publication_ref_context,
             "publication_worktree_clean": self.publication_worktree_clean,
@@ -1605,11 +1615,20 @@ def _print_text(plan: IterationPlan) -> None:
     for key, value in plan.publication_tag_publish_decision.items():
         print(f"- {key}: {value}")
     print(f"publication_next_action_count: {plan.publication_next_action_count}")
+    print(f"publication_next_actions_sha256: {_stable_json_sha256(plan.publication_next_actions)}")
+    if plan.publication_next_actions:
+        print(f"publication_primary_next_action: {plan.publication_next_actions[0]}")
     if plan.publication_next_actions:
         print("publication_next_actions:")
         for action in plan.publication_next_actions:
             print(f"- {action}")
     print(f"publication_publish_command_count: {plan.publication_publish_command_count}")
+    print(
+        "publication_publish_commands_sha256: "
+        f"{_stable_json_sha256(plan.publication_publish_commands)}"
+    )
+    if plan.publication_publish_commands:
+        print(f"publication_primary_publish_command: {plan.publication_publish_commands[0]}")
     if plan.publication_publish_commands:
         print("publication_publish_commands:")
         for command in plan.publication_publish_commands:
@@ -1661,6 +1680,12 @@ def _render_markdown(plan: IterationPlan) -> str:
     primary_candidate_action = _format_context_value(
         plan.case_promotion_evidence_summary.get("primary_next_action")
     )
+    primary_publication_action = _format_context_value(
+        plan.publication_next_actions[0] if plan.publication_next_actions else None
+    )
+    primary_publication_command = _format_context_value(
+        plan.publication_publish_commands[0] if plan.publication_publish_commands else None
+    )
     command_plan_all_declared = str(
         bool(plan.case_promotion_command_plan_summary.get("all_declared"))
     ).lower()
@@ -1700,7 +1725,11 @@ def _render_markdown(plan: IterationPlan) -> str:
 | readiness_ok | `{str(plan.readiness_ok).lower()}` |
 | publication_ok | `{str(plan.publication_ok).lower()}` |
 | publication_next_action_count | `{plan.publication_next_action_count}` |
+| publication_next_actions_sha256 | `{_stable_json_sha256(plan.publication_next_actions)}` |
+| publication_primary_next_action | `{primary_publication_action}` |
 | publication_publish_command_count | `{plan.publication_publish_command_count}` |
+| publication_publish_commands_sha256 | `{_stable_json_sha256(plan.publication_publish_commands)}` |
+| publication_primary_publish_command | `{primary_publication_command}` |
 | publication_publish_script_path | `{plan.publication_publish_script_path}` |
 | publication_publish_script_path_sha256 | `{plan.publication_publish_script_path_sha256}` |
 | publication_publish_script_command_sha256 | `{plan.publication_publish_script_command_sha256}` |
