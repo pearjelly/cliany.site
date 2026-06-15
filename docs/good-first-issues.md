@@ -23,7 +23,7 @@
 | `cases` | 为 candidate 的 `metadata_validation` 子任务补充离线验收说明或失败样例 | `cases/README.md`, `scripts/validate_cases.py`, `tests/test_validate_cases.py` | `pytest tests/test_validate_cases.py -q --no-cov` |
 | `cases` | 为 candidate 的 `online_smoke` 子任务整理只读命令、质量字段和 PR 证据模板 | `cases/README.md`, `docs/good-first-issues.md` | `git diff --check` |
 | `cases` | 把 `case-catalog-report` 中 Candidate Promotion Tasks / 带 `Reproduction Context` 和 `Evidence Bundle` 的 Issue Body Template 复制成 GitHub issue 草稿 | `scripts/validate_cases.py`, `cases/README.md` | `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md` |
-| `cases` | 为 candidate promotion issue 附上机器可读证据包，并用 `primary_next_task` 标出首要 case/task/status/evidence | `docs/good-first-issues.md`, `cases/manifest.json` | `python -m cliany_site --json cases --case-id pypi-project-search --evidence-bundle --json` |
+| `cases` | 为 candidate promotion issue 附上机器可读证据包，并用 `primary_next_task` 标出首要 case/task/status/evidence，用 `promotion_command_plan` 标出三步执行命令 | `docs/good-first-issues.md`, `cases/manifest.json` | `python -m cliany_site --json cases --case-id pypi-project-search --evidence-bundle --json` |
 | `doctor` | 为一个已有 doctor check 补充更具体的 action 文案，并覆盖 human/JSON 输出 | `src/cliany_site/commands/doctor.py`, `tests/test_doctor_v3.py` | `pytest tests/test_doctor_v3.py -q --no-cov` |
 | `release` | 改进 release readiness 或 cadence 的 `next_actions` 文案，让阻塞项更可执行 | `scripts/release_readiness.py`, `scripts/check_release_cadence.py` | `python scripts/release_readiness.py --json` 和 `pytest tests/test_release_readiness.py tests/test_release_cadence.py -q --no-cov` |
 | `extract` | 为抽取质量补一个空结果、全空字段或部分缺字段的离线 fixture 回归 | `tests/fixtures/`, `tests/test_extract_quality.py` | `pytest tests/test_extract_quality.py tests/test_search_extraction_gap_fixture.py -q --no-cov` |
@@ -37,7 +37,7 @@
 - **推荐验证命令**：复制上表验证列中的命令，并说明是否需要 `CLIANY_QA_OFFLINE=1`。
 - **相关文件链接**：指向主要文件、fixture、issue 模板或案例 manifest。
 - **复现上下文**：candidate promotion issue 应保留 `Issue Body Template` 里的 `Reproduction Context`，包括 target URL、candidate commands 和 offline validation commands。
-- **证据包命令**：candidate promotion issue 应附上 `cliany-site cases --case-id <id> --evidence-bundle --json` 输出，并优先引用其中的 `primary_next_task`，方便维护者确认 pending tasks、当前 evidence、首要 case/task/status 和下一步动作。
+- **证据包命令**：candidate promotion issue 应附上 `cliany-site cases --case-id <id> --evidence-bundle --json` 输出，并优先引用其中的 `primary_next_task` 和 `promotion_command_plan`，方便维护者确认 pending tasks、当前 evidence、首要 case/task/status、下一步动作，以及 adapter package、metadata validation、online smoke 对应的执行命令。
 - **验收证据**：要求 PR 描述粘贴本地命令结果，文档改动至少包含 `git diff --check`。
 - **明确非目标**：写清不需要真实 LLM key、不要访问第三方站点、不要写入 `~/.cliany-site/` 运行时状态。
 
@@ -59,4 +59,4 @@
 - 明确的非目标，例如“不需要真实 LLM key”“不要访问第三方站点”。
 
 如果任务来自真实案例库，优先引用 `cases/manifest.json` 中的 `promotion` 字段，保持 issue、case report 和 release readiness artifact 的下一步一致。
-如果任务来自 candidate promotion，优先复制带 `Reproduction Context` 和 `Evidence Bundle` 的 `Issue Body Template`，并附上 `cliany-site cases --case-id <id> --evidence-bundle --json` 的机器可读输出；把 `primary_next_task` 写进 issue 摘要或首条评论，让 issue 描述和 `cases/manifest.json` 中的 `promotion_evidence` 保持一致。
+如果任务来自 candidate promotion，优先复制带 `Reproduction Context`、`Promotion Command Plan` 和 `Evidence Bundle` 的 `Issue Body Template`，并附上 `cliany-site cases --case-id <id> --evidence-bundle --json` 的机器可读输出；把 `primary_next_task` 和 `promotion_command_plan` 写进 issue 摘要或首条评论，让 issue 描述和 `cases/manifest.json` 中的 `promotion_evidence` 保持一致。

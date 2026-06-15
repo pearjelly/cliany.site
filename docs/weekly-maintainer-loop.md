@@ -36,6 +36,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 Candidate issue artifacts 的 review checklist 会要求维护者核对 `issue-metadata.json` 中的 `candidate_package_validation_command`，确保候选包验证命令和 target URL、candidate commands、offline validation commands 一起通过创建 issue 前的复核。
 
+`cliany-site cases --case-id <id> --evidence-bundle --json`、candidate issue body 和 `issue-metadata.json` 也会输出 `promotion_command_plan`，把 candidate 晋级拆成 `adapter_package`、`metadata_validation`、`online_smoke` 三条可执行命令；只读 evidence bundle 的维护工具不必从自然语言 next action 推断该运行哪条命令。
+
 `Candidate Issue Body Templates` 里的每个 body 还会包含 `Primary Evidence Task` 小节，直接展示当前首要待补 evidence task、状态、现有证据和下一步；已经 `complete` 且带 evidence 的 task 不会被选为首要待办。
 
 `plan_next_iteration.py` 的默认文本输出会在 `candidate_promotions` 下展开 `evidence_bundle_primary_next_task`；Markdown report 的 `Candidate Issue Metadata` 表也会展示 `Evidence Bundle Primary Next Task`，不用生成 issue artifacts 也能看到 evidence bundle 首要下一步。

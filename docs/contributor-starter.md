@@ -35,14 +35,14 @@ pytest tests/test_cases_manifest.py tests/test_release_cadence.py -q --no-cov
 |------|------|--------------|
 | Bug / 回归 | `.github/ISSUE_TEMPLATE/bug_report.yml` | 复现步骤、目标 URL、错误码、`doctor --json`、AXTree snapshot 或最小 HTML fixture |
 | 功能建议 | `.github/ISSUE_TEMPLATE/feature_request.yml` | 真实问题、期望行为、替代方案 |
-| 真实 demo 候选 | `.github/ISSUE_TEMPLATE/case_proposal.yml` | 只读工作流、期望 CLI 命令、离线 JSON envelope 样例、验证方式；如果要推进 active，参考带 `Reproduction Context` 和 `Evidence Bundle` 的 `Candidate Promotion Tasks` / `Issue Body Template` 补充 `adapter_package`、`metadata_validation`、`online_smoke` 证据 |
+| 真实 demo 候选 | `.github/ISSUE_TEMPLATE/case_proposal.yml` | 只读工作流、期望 CLI 命令、离线 JSON envelope 样例、验证方式；如果要推进 active，参考带 `Reproduction Context`、`Promotion Command Plan` 和 `Evidence Bundle` 的 `Candidate Promotion Tasks` / `Issue Body Template` 补充 `adapter_package`、`metadata_validation`、`online_smoke` 证据 |
 | PR 提交 | `.github/PULL_REQUEST_TEMPLATE.md` | 按改动类型选择 `validate_cases.py`、`release_readiness.py`、`CLIANY_QA_OFFLINE=1` 或相关 pytest |
 
 ## Good First Issues
 
 这些任务适合第一次贡献，通常不需要 Chrome、真实 LLM key 或第三方站点在线。
 
-维护者创建 GitHub issue 时，可以直接从 [Good First Issues](good-first-issues.md) 候选池选择任务；每个任务都带推荐验证命令，candidate promotion 的 Issue Body Template 会保留 `Reproduction Context` 和 `Evidence Bundle`，机器可读证据包里的 `primary_next_task` 会标出首要 case/task/status/evidence，便于首次贡献者按 PR 模板提交证据。
+维护者创建 GitHub issue 时，可以直接从 [Good First Issues](good-first-issues.md) 候选池选择任务；每个任务都带推荐验证命令，candidate promotion 的 Issue Body Template 会保留 `Reproduction Context`、`Promotion Command Plan` 和 `Evidence Bundle`，机器可读证据包里的 `primary_next_task` 会标出首要 case/task/status/evidence，`promotion_command_plan` 会标出 adapter package、metadata validation 和 online smoke 命令，便于首次贡献者按 PR 模板提交证据。
 
 | 方向 | 可以做什么 | 主要文件 | 验证 |
 |------|------------|----------|------|

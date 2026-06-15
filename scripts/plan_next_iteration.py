@@ -456,6 +456,7 @@ class CandidatePromotion:
     promotion_evidence_primary_task: dict[str, Any]
     evidence_bundle_primary_next_task: dict[str, Any]
     candidate_package_validation_command: str
+    promotion_command_plan: list[dict[str, Any]]
     evidence_bundle_command: str
     evidence_bundle_json_command: str
     issue_body: str
@@ -475,6 +476,7 @@ class CandidatePromotion:
             "promotion_evidence_primary_task": self.promotion_evidence_primary_task,
             "evidence_bundle_primary_next_task": self.evidence_bundle_primary_next_task,
             "candidate_package_validation_command": self.candidate_package_validation_command,
+            "promotion_command_plan": self.promotion_command_plan,
             "evidence_bundle_command": self.evidence_bundle_command,
             "evidence_bundle_json_command": self.evidence_bundle_json_command,
             "issue_body": self.issue_body,
@@ -1155,28 +1157,37 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
             continue
         promotion_evidence = _case_dict_value(case, "promotion_evidence")
         evidence_bundle_primary_next_task = _candidate_promotion_primary_task(promotion_evidence)
+        commands = _case_string_list(case, "commands")
+        offline_commands = _case_string_list(case, "offline_commands")
+        candidate_package_validation_command = _default_candidate_package_validation_command()
+        promotion_command_plan = _candidate_promotion_command_plan(
+            commands=commands,
+            candidate_package_validation_command=candidate_package_validation_command,
+        )
         promotions.append(
             CandidatePromotion(
                 case_id=str(case.id),
                 issue_title=_candidate_issue_title(str(case.id)),
                 issue_labels=["case-proposal", "good first issue"],
                 target_url=_case_string_value(case, "target_url"),
-                commands=_case_string_list(case, "commands"),
-                offline_commands=_case_string_list(case, "offline_commands"),
+                commands=commands,
+                offline_commands=offline_commands,
                 adapter_package=_promotion_value(promotion, "adapter_package"),
                 metadata_validation=_promotion_value(promotion, "metadata_validation"),
                 online_smoke=_promotion_value(promotion, "online_smoke"),
                 promotion_evidence=promotion_evidence,
                 promotion_evidence_primary_task=evidence_bundle_primary_next_task,
                 evidence_bundle_primary_next_task=evidence_bundle_primary_next_task,
-                candidate_package_validation_command=_default_candidate_package_validation_command(),
+                candidate_package_validation_command=candidate_package_validation_command,
+                promotion_command_plan=promotion_command_plan,
                 evidence_bundle_command=_candidate_evidence_bundle_command(str(case.id)),
                 evidence_bundle_json_command=_candidate_evidence_bundle_json_command(str(case.id)),
                 issue_body=_candidate_issue_body(
                     case_id=str(case.id),
                     target_url=_case_string_value(case, "target_url"),
-                    commands=_case_string_list(case, "commands"),
-                    offline_commands=_case_string_list(case, "offline_commands"),
+                    commands=commands,
+                    offline_commands=offline_commands,
+                    promotion_command_plan=promotion_command_plan,
                     adapter_package=_promotion_value(promotion, "adapter_package"),
                     metadata_validation=_promotion_value(promotion, "metadata_validation"),
                     online_smoke=_promotion_value(promotion, "online_smoke"),
@@ -1224,12 +1235,46 @@ def _candidate_issue_title(case_id: str) -> str:
     return f"Promote candidate case `{case_id}` toward active"
 
 
+def _candidate_promotion_command_plan(
+    *,
+    commands: list[str],
+    candidate_package_validation_command: str,
+) -> list[dict[str, Any]]:
+    explore_commands = [command for command in commands if command.startswith("cliany-site explore ")]
+    adapter_commands = [
+        command
+        for command in commands
+        if command.startswith("cliany-site ") and not command.startswith("cliany-site explore ")
+    ]
+    plan = [
+        {
+            "task": "adapter_package",
+            "command": explore_commands[0] if explore_commands else "",
+            "source": "commands.explore",
+        },
+        {
+            "task": "metadata_validation",
+            "command": candidate_package_validation_command,
+            "source": "candidate_package_validation_command",
+        },
+        {
+            "task": "online_smoke",
+            "command": adapter_commands[0] if adapter_commands else "",
+            "source": "commands.adapter",
+        },
+    ]
+    for item in plan:
+        item["missing"] = not bool(item["command"])
+    return plan
+
+
 def _candidate_issue_body(
     *,
     case_id: str,
     target_url: str,
     commands: list[str],
     offline_commands: list[str],
+    promotion_command_plan: list[dict[str, Any]],
     adapter_package: str,
     metadata_validation: str,
     online_smoke: str,
@@ -1237,6 +1282,10 @@ def _candidate_issue_body(
 ) -> str:
     command_lines = [f"  - `{command}`" for command in commands] or ["  - Not declared."]
     offline_command_lines = [f"  - `{command}`" for command in offline_commands] or ["  - Not declared."]
+    promotion_command_lines = [
+        f"- `{item['task']}`: `{item['command'] or 'Not declared.'}`"
+        for item in promotion_command_plan
+    ] or ["- No promotion command plan declared."]
     task_descriptions = {
         "adapter_package": adapter_package,
         "metadata_validation": metadata_validation,
@@ -1287,6 +1336,9 @@ def _candidate_issue_body(
             *command_lines,
             "- Offline validation commands:",
             *offline_command_lines,
+            "",
+            "## Promotion Command Plan",
+            *promotion_command_lines,
             "",
             "## Tasks",
             *task_lines,
@@ -1940,6 +1992,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "promotion_evidence_primary_task": promotion.promotion_evidence_primary_task,
                 "evidence_bundle_primary_next_task": promotion.evidence_bundle_primary_next_task,
                 "candidate_package_validation_command": promotion.candidate_package_validation_command,
+                "promotion_command_plan": promotion.promotion_command_plan,
                 "evidence_bundle_command": promotion.evidence_bundle_command,
                 "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
                 "issue_body_name": body_path.name,
@@ -2399,7 +2452,8 @@ def _issue_artifact_review_checklist() -> list[str]:
         "Confirm Publication Next Actions are resolved or intentionally deferred before running create-issues.sh.",
         (
             "Confirm issue-metadata.json has the expected target URL, candidate commands, "
-            "offline validation commands, and candidate_package_validation_command for each case."
+            "offline validation commands, candidate_package_validation_command, "
+            "and promotion_command_plan for each case."
         ),
         "Review each body file for scope, tasks, validation evidence, and non-goals.",
         (
@@ -2603,6 +2657,7 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
             "promotion_evidence_primary_task": item["promotion_evidence_primary_task"],
             "evidence_bundle_primary_next_task": item["evidence_bundle_primary_next_task"],
             "candidate_package_validation_command": item["candidate_package_validation_command"],
+            "promotion_command_plan": item["promotion_command_plan"],
             "evidence_bundle_command": item["evidence_bundle_command"],
             "evidence_bundle_json_command": item["evidence_bundle_json_command"],
             "issue_body_name": item["issue_body_name"],
@@ -2644,6 +2699,7 @@ def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[di
             "promotion_evidence_primary_task": promotion.promotion_evidence_primary_task,
             "evidence_bundle_primary_next_task": promotion.evidence_bundle_primary_next_task,
             "candidate_package_validation_command": promotion.candidate_package_validation_command,
+            "promotion_command_plan": promotion.promotion_command_plan,
             "evidence_bundle_command": promotion.evidence_bundle_command,
             "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
             "issue_body_name": f"{promotion.case_id}.md",

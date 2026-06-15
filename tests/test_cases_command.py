@@ -60,6 +60,16 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
     assert {case["status"] for case in data["cases"]} == {"candidate"}
     assert all("promotion" in case for case in data["cases"])
     assert all("promotion_evidence" in case for case in data["cases"])
+    assert all("promotion_command_plan" in case for case in data["cases"])
+    assert data["cases"][0]["promotion_command_plan"][0] == {
+        "task": "adapter_package",
+        "command": (
+            'cliany-site explore "https://pypi.org" '
+            '"search Python packages for cliany-site and list project names" --json'
+        ),
+        "source": "commands.explore",
+        "missing": False,
+    }
 
 
 def test_cases_command_filters_exact_case_with_implicit_detail(tmp_home):
@@ -197,6 +207,22 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "- Task: `adapter_package`" in template
     assert "- Status: `pending`" in template
     assert "## Reproduction Context" in template
+    assert "## Promotion Command Plan" in template
+    assert (
+        '`adapter_package`: `cliany-site explore "https://pypi.org" '
+        '"search Python packages for cliany-site and list project names" --json`'
+        in template
+    )
+    assert (
+        "`metadata_validation`: `python scripts/validate_cases.py "
+        "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`"
+        in template
+    )
+    assert (
+        "`online_smoke`: `cliany-site pypi.org search-projects --query cliany-site "
+        "--limit 5 --json`"
+        in template
+    )
     assert "`adapter_package`" in template
     assert "Generate pypi.org" in template
     assert "## Evidence Bundle" in template
@@ -328,6 +354,34 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["primary_next_task"]["task"] == "adapter_package"
     assert bundle["primary_next_task"] == bundle["primary_pending_task"]
     assert bundle["primary_next_action"].startswith("Generate pypi.org")
+    assert bundle["promotion_command_plan_count"] == 3
+    assert bundle["promotion_command_plan_missing_tasks"] == []
+    assert bundle["promotion_command_plan"] == [
+        {
+            "task": "adapter_package",
+            "command": (
+                'cliany-site explore "https://pypi.org" '
+                '"search Python packages for cliany-site and list project names" --json'
+            ),
+            "source": "commands.explore",
+            "missing": False,
+        },
+        {
+            "task": "metadata_validation",
+            "command": (
+                "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+                "--include-candidate-packages --strict"
+            ),
+            "source": "candidate_package_validation_command",
+            "missing": False,
+        },
+        {
+            "task": "online_smoke",
+            "command": "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json",
+            "source": "commands.adapter",
+            "missing": False,
+        },
+    ]
     assert bundle["tasks"][0]["task"] == "adapter_package"
     assert bundle["tasks"][0]["complete"] is False
     assert "python scripts/validate_cases.py --strict" in bundle["offline_commands"]
@@ -432,6 +486,19 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "Primary next task: `adapter_package`" in result.output
     assert "Primary incomplete task: `adapter_package`" in result.output
     assert "## Candidate package validation" in result.output
+    assert "## Promotion command plan" in result.output
+    assert "`adapter_package` (commands.explore): `cliany-site explore" in result.output
+    assert (
+        "`metadata_validation` (candidate_package_validation_command): "
+        "`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "--include-candidate-packages --strict`"
+        in result.output
+    )
+    assert (
+        "`online_smoke` (commands.adapter): "
+        "`cliany-site pypi.org search-projects --query cliany-site --limit 5 --json`"
+        in result.output
+    )
     assert (
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict"

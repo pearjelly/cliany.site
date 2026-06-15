@@ -54,12 +54,46 @@ def _promotion_evidence(package_next_action: str, smoke_next_action: str) -> dic
     }
 
 
+def _pypi_promotion_command_plan(*, explore_query: str = "search Python packages") -> list[dict[str, object]]:
+    return [
+        {
+            "task": "adapter_package",
+            "command": f'cliany-site explore "https://pypi.org" "{explore_query}" --json',
+            "source": "commands.explore",
+            "missing": False,
+        },
+        {
+            "task": "metadata_validation",
+            "command": (
+                "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+                "--include-candidate-packages --strict"
+            ),
+            "source": "candidate_package_validation_command",
+            "missing": False,
+        },
+        {
+            "task": "online_smoke",
+            "command": "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json",
+            "source": "commands.adapter",
+            "missing": False,
+        },
+    ]
+
+
 def test_candidate_issue_body_checks_complete_tasks():
     issue_body = plan_next_iteration._candidate_issue_body(
         case_id="mixed-candidate",
         target_url="https://example.test/search",
         commands=["cliany-site example.test search --json"],
         offline_commands=["python scripts/validate_cases.py --strict"],
+        promotion_command_plan=[
+            {
+                "task": "online_smoke",
+                "command": "cliany-site example.test search --json",
+                "source": "commands.adapter",
+                "missing": False,
+            }
+        ],
         adapter_package="Build adapter package.",
         metadata_validation="Validate metadata.",
         online_smoke="Run online smoke.",
@@ -86,6 +120,8 @@ def test_candidate_issue_body_checks_complete_tasks():
     assert "- Task: `online_smoke`" in issue_body
     assert "- Status: `pending`" in issue_body
     assert "- Next action: Run read-only smoke." in issue_body
+    assert "## Promotion Command Plan" in issue_body
+    assert "- `online_smoke`: `cliany-site example.test search --json`" in issue_body
     assert "- [x] `adapter_package`: Build adapter package." in issue_body
     assert "- [ ] `metadata_validation`: Validate metadata." in issue_body
     assert "- [ ] `online_smoke`: Run online smoke." in issue_body
@@ -572,6 +608,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
             "--include-candidate-packages --strict"
         ),
+        "promotion_command_plan": _pypi_promotion_command_plan(),
         "evidence_bundle_command": (
             "cliany-site cases --case-id pypi-project-search --evidence-bundle"
         ),
@@ -594,6 +631,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- Offline validation commands:\n"
             "  - `python scripts/validate_cases.py --strict`\n"
             "  - `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md`\n\n"
+            "## Promotion Command Plan\n"
+            '- `adapter_package`: `cliany-site explore "https://pypi.org" "search Python packages" --json`\n'
+            "- `metadata_validation`: `python scripts/validate_cases.py "
+            "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`\n"
+            "- `online_smoke`: `cliany-site pypi.org search-projects --query cliany-site "
+            "--limit 5 --json`\n\n"
             "## Tasks\n"
             "- [ ] `adapter_package`: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n"
             "  - Current status: `pending`\n"
@@ -956,6 +999,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "promotion_evidence_primary_task": item["promotion_evidence_primary_task"],
             "evidence_bundle_primary_next_task": item["evidence_bundle_primary_next_task"],
             "candidate_package_validation_command": item["candidate_package_validation_command"],
+            "promotion_command_plan": item["promotion_command_plan"],
             "evidence_bundle_command": item["evidence_bundle_command"],
             "evidence_bundle_json_command": item["evidence_bundle_json_command"],
             "issue_body_name": item["issue_body_name"],
@@ -1200,7 +1244,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         (
             "Confirm issue-metadata.json has the expected target URL, candidate commands, "
-            "offline validation commands, and candidate_package_validation_command for each case."
+            "offline validation commands, candidate_package_validation_command, "
+            "and promotion_command_plan for each case."
         ),
         "Review each body file for scope, tasks, validation evidence, and non-goals.",
         (
@@ -2001,6 +2046,20 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "- Offline validation commands:\n  - `python scripts/validate_cases.py --strict`" in body
     assert 'cliany-site explore "https://pypi.org" "search Python packages" --json' in body
     assert "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md" in body
+    assert "## Promotion Command Plan" in body
+    assert (
+        '`adapter_package`: `cliany-site explore "https://pypi.org" "search Python packages" --json`'
+        in body
+    )
+    assert (
+        "`metadata_validation`: `python scripts/validate_cases.py "
+        "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`"
+        in body
+    )
+    assert (
+        "`online_smoke`: `cliany-site pypi.org search-projects --query cliany-site --limit 5 --json`"
+        in body
+    )
     assert "## Evidence Bundle" in body
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle" in body
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in body
@@ -2043,6 +2102,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict"
     )
+    assert metadata[0]["promotion_command_plan"] == _pypi_promotion_command_plan()
     assert (
         metadata[0]["evidence_bundle_command"]
         == "cliany-site cases --case-id pypi-project-search --evidence-bundle"
@@ -2136,10 +2196,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "Confirm the latest local release has been published before creating new candidate work.",
             "Confirm release draft issues are resolved or intentionally deferred before tagging the target version.",
             "Confirm Publication Next Actions are resolved or intentionally deferred before running create-issues.sh.",
-            (
-                "Confirm issue-metadata.json has the expected target URL, candidate commands, "
-                "offline validation commands, and candidate_package_validation_command for each case."
-            ),
+                (
+                    "Confirm issue-metadata.json has the expected target URL, candidate commands, "
+                    "offline validation commands, candidate_package_validation_command, "
+                    "and promotion_command_plan for each case."
+                ),
             "Review each body file for scope, tasks, validation evidence, and non-goals.",
             (
                 "Keep cases as candidate until adapter package, metadata validation, "
@@ -3724,7 +3785,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "before running create-issues.sh" in readme
     assert "expected target URL, candidate commands" in readme
     assert (
-        "offline validation commands, and candidate_package_validation_command for each case"
+        "offline validation commands, candidate_package_validation_command, "
+        "and promotion_command_plan for each case"
         in readme
     )
     assert "release publication preflight" in readme

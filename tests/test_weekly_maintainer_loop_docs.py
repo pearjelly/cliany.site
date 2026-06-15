@@ -432,6 +432,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "case_promotion_evidence_primary_next_task_sha256",
         "case_promotion_evidence_primary_next_task",
         "case_promotion_evidence_primary_next_action",
+        "promotion_command_plan",
         "plan_report_command",
         "publication-handoff.json.plan_report_command",
         "release-draft-handoff.json.plan_report_command",

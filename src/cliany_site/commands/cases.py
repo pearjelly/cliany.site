@@ -52,6 +52,46 @@ def _offline_commands(case: dict[str, Any]) -> list[str]:
     return [str(command) for command in commands]
 
 
+def _candidate_explore_commands(case: dict[str, Any]) -> list[str]:
+    commands = case.get("commands") if isinstance(case.get("commands"), list) else []
+    return [str(command) for command in commands if str(command).startswith("cliany-site explore ")]
+
+
+def _candidate_adapter_commands(case: dict[str, Any]) -> list[str]:
+    commands = case.get("commands") if isinstance(case.get("commands"), list) else []
+    return [
+        str(command)
+        for command in commands
+        if str(command).startswith("cliany-site ") and not str(command).startswith("cliany-site explore ")
+    ]
+
+
+def _candidate_promotion_command_plan(case: dict[str, Any]) -> list[dict[str, Any]]:
+    explore_commands = _candidate_explore_commands(case)
+    adapter_commands = _candidate_adapter_commands(case)
+    adapter_domain = case.get("adapter_domain")
+    plan = [
+        {
+            "task": "adapter_package",
+            "command": explore_commands[0] if explore_commands else "",
+            "source": "commands.explore",
+        },
+        {
+            "task": "metadata_validation",
+            "command": CANDIDATE_PACKAGE_VALIDATION_COMMAND if adapter_domain else "",
+            "source": "candidate_package_validation_command",
+        },
+        {
+            "task": "online_smoke",
+            "command": adapter_commands[0] if adapter_commands else "",
+            "source": "commands.adapter",
+        },
+    ]
+    for item in plan:
+        item["missing"] = not bool(item["command"])
+    return plan
+
+
 def _compact_case(case: dict[str, Any], *, detail: bool) -> dict[str, Any]:
     item: dict[str, Any] = {
         "id": case.get("id"),
@@ -69,6 +109,8 @@ def _compact_case(case: dict[str, Any], *, detail: bool) -> dict[str, Any]:
         for key in ("source_release", "validation", "promotion", "promotion_evidence"):
             if key in case:
                 item[key] = case.get(key)
+        if case.get("status") == "candidate":
+            item["promotion_command_plan"] = _candidate_promotion_command_plan(case)
     return item
 
 
@@ -117,6 +159,11 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
     lines.extend(f"  - `{command}`" for command in commands)
     lines.append("- Offline validation commands:")
     lines.extend(f"  - `{command}`" for command in offline_commands)
+    lines.extend(["", "## Promotion Command Plan"])
+    for item in _candidate_promotion_command_plan(case):
+        command = item["command"] or "Not declared."
+        lines.append(f"- `{item['task']}`: `{command}`")
+
     lines.extend(["", "## Tasks"])
 
     for task in PROMOTION_TASKS:
@@ -225,6 +272,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
     primary_incomplete_task = incomplete_tasks[0] if incomplete_tasks else None
     primary_next_action_task = primary_pending_task or primary_blocked_task or primary_incomplete_task or {}
     primary_next_task = dict(primary_next_action_task) if primary_next_action_task else None
+    promotion_command_plan = _candidate_promotion_command_plan(case)
     return {
         "case_id": case_id,
         "title": case.get("title"),
@@ -238,6 +286,11 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "candidate_package_validation_command": CANDIDATE_PACKAGE_VALIDATION_COMMAND
         if adapter_domain
         else "",
+        "promotion_command_plan": promotion_command_plan,
+        "promotion_command_plan_count": len(promotion_command_plan),
+        "promotion_command_plan_missing_tasks": [
+            item["task"] for item in promotion_command_plan if item["missing"]
+        ],
         "tasks": tasks,
         "status_counts": {
             "pending": status_counts.get("pending", 0),
@@ -300,6 +353,10 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
                 f"- `{bundle['candidate_package_validation_command']}`",
             ]
         )
+    lines.extend(["", "## Promotion command plan"])
+    for item in bundle.get("promotion_command_plan", []):
+        command = item.get("command") or "Not declared."
+        lines.append(f"- `{item['task']}` ({item['source']}): `{command}`")
     lines.extend(["", "## Promotion evidence"])
 
     for task in bundle.get("tasks", []):
