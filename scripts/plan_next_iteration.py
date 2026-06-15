@@ -2198,6 +2198,7 @@ Generated for target version `{plan.target_version}`.
 - release_draft_issues_sha256: `{_stable_json_sha256(plan.release_draft_issues)}`
 - release_draft_issues:
 {_issue_artifact_release_draft_issues(plan)}
+- plan_report_command: `{plan.plan_report_command}`
 
 ## Review Checklist
 
@@ -2547,6 +2548,7 @@ def _release_draft_handoff(plan: IterationPlan) -> dict[str, Any]:
         "release_draft_required_actions": required_actions,
         "release_draft_issues_sha256": _stable_json_sha256(plan.release_draft_issues),
         "release_draft_issues": plan.release_draft_issues,
+        "plan_report_command": plan.plan_report_command,
         "target_version": plan.target_version,
     }
 

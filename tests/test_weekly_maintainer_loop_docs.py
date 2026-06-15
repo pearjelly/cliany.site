@@ -434,6 +434,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "case_promotion_evidence_primary_next_action",
         "plan_report_command",
         "publication-handoff.json.plan_report_command",
+        "release-draft-handoff.json.plan_report_command",
         "/tmp/cliany-next-iteration.md",
         "当前证据 hash",
         "首要任务对象 hash",

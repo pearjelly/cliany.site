@@ -1014,6 +1014,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "release draft is missing",
             "release draft missing snippet: ## 发版前验证",
         ],
+        "plan_report_command": (
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+            "--report /tmp/cliany-next-iteration.md"
+        ),
         "target_version": "0.16.2",
     }
     release_draft_handoff_keys = list(expected_release_draft_handoff)
@@ -3113,7 +3117,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_worktree_status_boundary_sha256: "
         f"`{artifact_bundle_summary['publication_worktree_status_boundary_sha256']}`"
     ) in readme
-    assert "release_draft_handoff_key_count: `15`" in readme
+    assert "release_draft_handoff_key_count: `16`" in readme
     assert "release_draft_handoff_schema_version: `1`" in readme
     assert "release_draft_handoff_primary_issue: `release draft is missing`" in readme
     assert (
@@ -3660,6 +3664,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "- release draft is missing" in readme
     assert "- release draft missing snippet: ## 发版前验证" in readme
+    assert (
+        "plan_report_command: "
+        "`python scripts/plan_next_iteration.py --target-version 0.16.2 "
+        "--report /tmp/cliany-next-iteration.md`"
+    ) in readme
     assert "Confirm release draft issues are resolved or intentionally deferred" in readme
     assert "Confirm Publication Next Actions are resolved or intentionally deferred" in readme
     assert "before running create-issues.sh" in readme
