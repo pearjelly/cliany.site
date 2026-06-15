@@ -1045,6 +1045,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "case_promotion_evidence_primary_next_action": (
             "Generate pypi.org-<version>.cliany-adapter.tar.gz."
         ),
+        "case_promotion_evidence_primary_case_id": "pypi-project-search",
+        "case_promotion_evidence_primary_task": "adapter_package",
+        "case_promotion_evidence_primary_status": "pending",
+        "case_promotion_evidence_primary_evidence_sha256": _stable_json_sha256(""),
         "body_count": 2,
         "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
         "issue_body_inventory_preview": list(issue_body_inventory_preview),
@@ -2108,6 +2112,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "case_promotion_evidence_primary_next_action: "
         "`Generate pypi.org-<version>.cliany-adapter.tar.gz.`"
+    ) in readme
+    assert "case_promotion_evidence_primary_case_id: `pypi-project-search`" in readme
+    assert "case_promotion_evidence_primary_task: `adapter_package`" in readme
+    assert "case_promotion_evidence_primary_status: `pending`" in readme
+    assert (
+        "case_promotion_evidence_primary_evidence_sha256: "
+        f"`{_stable_json_sha256('')}`"
     ) in readme
     assert (
         "issue_body_inventory_preview_count: "

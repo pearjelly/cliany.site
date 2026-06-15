@@ -117,6 +117,10 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "case_promotion_evidence_blocked_count",
     "case_promotion_evidence_complete_count",
     "case_promotion_evidence_primary_next_action",
+    "case_promotion_evidence_primary_case_id",
+    "case_promotion_evidence_primary_task",
+    "case_promotion_evidence_primary_status",
+    "case_promotion_evidence_primary_evidence_sha256",
     "body_count",
     "issue_body_inventory_preview_count",
     "issue_body_inventory_preview",
@@ -2444,6 +2448,9 @@ def _issue_artifact_bundle_summary(
     }
     case_promotion_evidence_summary_key_preview = case_promotion_evidence_summary_keys[:8]
     case_promotion_evidence_summary_key_tail = case_promotion_evidence_summary_keys[-8:]
+    case_promotion_evidence_primary_task = plan.case_promotion_evidence_summary.get("primary_task")
+    if not isinstance(case_promotion_evidence_primary_task, dict):
+        case_promotion_evidence_primary_task = {}
     blocker_boundary = {
         "first_item": plan.blockers[0] if plan.blockers else None,
         "last_item": plan.blockers[-1] if plan.blockers else None,
@@ -2622,6 +2629,18 @@ def _issue_artifact_bundle_summary(
         ),
         "case_promotion_evidence_primary_next_action": (
             plan.case_promotion_evidence_summary.get("primary_next_action")
+        ),
+        "case_promotion_evidence_primary_case_id": (
+            case_promotion_evidence_primary_task.get("case_id")
+        ),
+        "case_promotion_evidence_primary_task": (
+            case_promotion_evidence_primary_task.get("task")
+        ),
+        "case_promotion_evidence_primary_status": (
+            case_promotion_evidence_primary_task.get("status")
+        ),
+        "case_promotion_evidence_primary_evidence_sha256": _stable_json_sha256(
+            case_promotion_evidence_primary_task.get("evidence")
         ),
         "body_count": issue_body_summary["body_count"],
         "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
@@ -3227,6 +3246,14 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['case_promotion_evidence_complete_count']}`",
             "- case_promotion_evidence_primary_next_action: "
             f"{_summary_inline_code(summary['case_promotion_evidence_primary_next_action'])}",
+            "- case_promotion_evidence_primary_case_id: "
+            f"{_summary_inline_code(summary['case_promotion_evidence_primary_case_id'])}",
+            "- case_promotion_evidence_primary_task: "
+            f"{_summary_inline_code(summary['case_promotion_evidence_primary_task'])}",
+            "- case_promotion_evidence_primary_status: "
+            f"{_summary_inline_code(summary['case_promotion_evidence_primary_status'])}",
+            "- case_promotion_evidence_primary_evidence_sha256: "
+            f"`{summary['case_promotion_evidence_primary_evidence_sha256']}`",
             f"- body_count: `{summary['body_count']}`",
             f"- issue_body_inventory_preview_count: `{summary['issue_body_inventory_preview_count']}`",
             "- issue_body_inventory_preview: "
