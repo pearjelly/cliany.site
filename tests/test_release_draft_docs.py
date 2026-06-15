@@ -10903,6 +10903,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "commit_cadence_primary_next_action",
         "commit_cadence_commit_days_sha256",
         "commit_cadence_next_actions_sha256",
+        "Commit Cadence",
+        "Commit Cadence Next Actions",
         "gate_primary_reason_code",
         "gate_primary_reason_description",
         "gate_primary_required_action",

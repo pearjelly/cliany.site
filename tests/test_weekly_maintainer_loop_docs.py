@@ -65,6 +65,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "commit_cadence_min_commit_days",
         "commit_cadence_commit_days_sha256",
         "commit_cadence_next_actions_sha256",
+        "Commit Cadence",
+        "Commit Cadence Next Actions",
         "primary_reason_code",
         "primary_reason_description",
         "primary_required_action",

@@ -3177,6 +3177,20 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ) in readme
     assert "## Candidate Issue Gate Quick Summary" in readme
     assert readme.index("## Candidate Issue Gate Quick Summary") < readme.index("## Artifact Bundle Summary")
+    assert "## Commit Cadence" in readme
+    assert readme.index("## Candidate Issue Gate Quick Summary") < readme.index("## Commit Cadence")
+    assert readme.index("## Commit Cadence") < readme.index("## Artifact Bundle Summary")
+    assert "- summary: `2/3 commit days; 1 more unique day(s) needed.`" in readme
+    assert "- commit_day_count: `2`" in readme
+    assert "- min_commit_days: `3`" in readme
+    assert "- missing_commit_days: `1`" in readme
+    assert "- commit_days: `(none)`" in readme
+    assert (
+        "- primary_next_action: "
+        f"{plan_next_iteration._summary_inline_code('Ship verified slices on `1` more unique commit days this week.')}"
+    ) in readme
+    assert "### Commit Cadence Next Actions" in readme
+    assert "- Ship verified slices on `1` more unique commit days this week." in readme
     assert "- status: `blocked_by_publication`" in readme
     assert "- can_create_issues: `false`" in readme
     assert "- requires_maintainer_review: `true`" in readme

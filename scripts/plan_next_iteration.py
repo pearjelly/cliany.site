@@ -1887,6 +1887,7 @@ def _render_issue_artifacts_readme(
     body_inventory = _issue_artifact_body_inventory_markdown(plan.candidate_promotions)
     body_summary = _issue_artifact_body_summary_markdown(plan.candidate_promotions)
     gate_quick_summary = _issue_artifact_gate_quick_summary(plan)
+    commit_cadence_summary = _issue_artifact_commit_cadence_markdown(plan)
     bundle_summary = _issue_artifact_bundle_summary_markdown(plan, summary=artifact_bundle_summary)
     gate_reason_codes = _issue_artifact_gate_reason_codes(plan)
     gate_reason_descriptions = _issue_artifact_gate_reason_descriptions(plan)
@@ -1941,6 +1942,8 @@ Generated for target version `{plan.target_version}`.
 {body_summary}
 
 {gate_quick_summary}
+
+{commit_cadence_summary}
 
 {bundle_summary}
 
@@ -2131,6 +2134,37 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
             f"`{_format_context_value(_candidate_issue_gate_evidence_value(plan, 'release_draft_path'))}`",
             f"- visibility: `{_format_context_value(plan.publication_visibility.get('status'))}`",
             f"- visibility_summary: {_summary_inline_code(plan.publication_visibility.get('summary'))}",
+        ]
+    )
+
+
+def _issue_artifact_commit_cadence_markdown(plan: IterationPlan) -> str:
+    commit_days = plan.commit_cadence.get("commit_days")
+    if not isinstance(commit_days, list) or not commit_days:
+        commit_days_text = "`(none)`"
+    else:
+        commit_days_text = ", ".join(f"`{day}`" for day in commit_days)
+    next_actions = plan.commit_cadence.get("next_actions")
+    if isinstance(next_actions, list) and next_actions:
+        next_actions_text = "\n".join(f"- {action}" for action in next_actions)
+    else:
+        next_actions_text = "- No commit cadence next actions are needed."
+    return "\n".join(
+        [
+            "## Commit Cadence",
+            "",
+            f"- status: `{_format_context_value(plan.commit_cadence.get('status'))}`",
+            f"- summary: {_summary_inline_code(plan.commit_cadence.get('summary'))}",
+            f"- commit_day_count: `{_format_context_value(plan.commit_cadence.get('commit_day_count'))}`",
+            f"- min_commit_days: `{_format_context_value(plan.commit_cadence.get('min_commit_days'))}`",
+            f"- missing_commit_days: `{_format_context_value(plan.commit_cadence.get('missing_commit_days'))}`",
+            f"- commit_days: {commit_days_text}",
+            "- primary_next_action: "
+            f"{_summary_inline_code(_commit_cadence_primary_next_action(plan))}",
+            "",
+            "### Commit Cadence Next Actions",
+            "",
+            next_actions_text,
         ]
     )
 
