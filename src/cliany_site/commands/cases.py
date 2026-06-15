@@ -309,6 +309,7 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
             if not isinstance(task_evidence, dict):
                 continue
             status = str(task_evidence.get("status") or "pending")
+            evidence_value = str(task_evidence.get("evidence") or "")
             next_action = str(task_evidence.get("next_action") or "")
             status_counts[status] += 1
             task_status_counts[task][status] += 1
@@ -319,6 +320,7 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
                         "case_id": case_id,
                         "task": task,
                         "status": status,
+                        "evidence": evidence_value,
                         "next_action": next_action,
                     }
                 )
@@ -343,6 +345,7 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
         "pending_count": status_counts.get("pending", 0),
         "blocked_count": status_counts.get("blocked", 0),
         "complete_count": status_counts.get("complete", 0),
+        "primary_task_detail": primary,
         "primary_case_id": primary.get("case_id", ""),
         "primary_task": primary.get("task", ""),
         "primary_next_action": primary.get("next_action", ""),

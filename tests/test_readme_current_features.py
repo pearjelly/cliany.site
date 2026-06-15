@@ -18,6 +18,7 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "scripts/release_readiness.py" in text
         assert "scripts/check_release_publication.py --json" in text
         assert "cliany-site cases --case-id pypi-project-search --json" in text
+        assert "promotion_evidence_summary.primary_task_detail" in text
         assert "cliany-site cases --case-id pypi-project-search --issue-template" in text
         assert "issue_template_primary_task" in text
         assert "cliany-site cases --case-id pypi-project-search --evidence-bundle" in text
