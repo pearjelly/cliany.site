@@ -55,6 +55,7 @@ class CaseCheck:
     package: dict[str, Any] | None = None
     promotion: dict[str, Any] | None = None
     promotion_evidence: dict[str, Any] | None = None
+    promotion_command_plan: list[dict[str, Any]] = field(default_factory=list)
     offline_commands: list[str] = field(default_factory=list)
 
     @property
@@ -77,6 +78,14 @@ class CaseCheck:
             data["promotion"] = self.promotion
         if self.promotion_evidence is not None:
             data["promotion_evidence"] = self.promotion_evidence
+        if self.promotion_command_plan:
+            data["promotion_command_plan"] = self.promotion_command_plan
+            data["promotion_command_plan_count"] = len(self.promotion_command_plan)
+            data["promotion_command_plan_missing_tasks"] = [
+                str(item.get("task") or "")
+                for item in self.promotion_command_plan
+                if item.get("missing")
+            ]
         if self.offline_commands:
             data["offline_commands"] = self.offline_commands
         return data
@@ -572,6 +581,7 @@ def _check_case(
                         f"adapter command domain mismatch: expected {adapter_domain!r}, got {command_domain!r}"
                     )
     elif status == "candidate":
+        check.promotion_command_plan = _candidate_promotion_command_plan(commands)
         adapter_domain = str(case.get("adapter_domain") or "")
         if not adapter_domain:
             check.issues.append("candidate case requires adapter_domain")

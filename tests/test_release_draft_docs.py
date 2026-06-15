@@ -10936,6 +10936,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "cliany-site cases --case-id pypi-project-search --evidence-bundle",
         "cliany-site cases --case-id pypi-project-search --evidence-bundle --json",
         "promotion_command_plan",
+        "promotion_command_plan_count",
+        "promotion_command_plan_missing_tasks",
         "Promotion Command Plan",
         "Candidate Evidence Bundle Commands",
         "evidence_bundle_command",

@@ -85,6 +85,8 @@ def test_cases_readme_documents_candidate_evidence_bundle_handoff():
         "Candidate Evidence Bundle Commands",
         "Candidate Promotion Tasks",
         "Promotion Command Plan",
+        "promotion_command_plan_count",
+        "promotion_command_plan_missing_tasks",
         "primary_next_task",
         "case/task/status/evidence",
         "cliany-site cases --case-id <id> --evidence-bundle",

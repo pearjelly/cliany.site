@@ -147,6 +147,16 @@ def test_current_cases_manifest_validates_without_packages():
     assert report.promotion_evidence_summary["candidate_count"] == report.candidate
     assert report.promotion_evidence_summary["pending_count"] == report.candidate * 3
     assert report.promotion_evidence_summary["primary_next_action"]
+    candidate_cases = [case for case in report.to_dict()["cases"] if case["status"] == "candidate"]
+    assert candidate_cases
+    for case in candidate_cases:
+        assert case["promotion_command_plan_count"] == 3
+        assert case["promotion_command_plan_missing_tasks"] == []
+        assert [item["task"] for item in case["promotion_command_plan"]] == [
+            "adapter_package",
+            "metadata_validation",
+            "online_smoke",
+        ]
 
 
 def test_cases_report_flags_duplicate_ids(tmp_path):
@@ -236,6 +246,31 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     assert report.cases[0].promotion_evidence == case["promotion_evidence"]
     assert report.cases[0].to_dict()["promotion"]["online_smoke"].startswith("cliany-site demo.example.com")
     assert report.cases[0].to_dict()["promotion_evidence"]["adapter_package"]["status"] == "pending"
+    assert report.cases[0].to_dict()["promotion_command_plan"] == [
+        {
+            "task": "adapter_package",
+            "command": "",
+            "source": "commands.explore",
+            "missing": True,
+        },
+        {
+            "task": "metadata_validation",
+            "command": (
+                "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+                "--include-candidate-packages --strict"
+            ),
+            "source": "candidate_package_validation_command",
+            "missing": False,
+        },
+        {
+            "task": "online_smoke",
+            "command": "cliany-site demo.example.com list-items --json",
+            "source": "commands.adapter",
+            "missing": False,
+        },
+    ]
+    assert report.cases[0].to_dict()["promotion_command_plan_count"] == 3
+    assert report.cases[0].to_dict()["promotion_command_plan_missing_tasks"] == ["adapter_package"]
     summary = report.to_dict()["promotion_evidence_summary"]
     assert summary["candidate_count"] == 1
     assert summary["task_count"] == 3
