@@ -112,7 +112,7 @@
     },
     "promotion": {
       "adapter_package": "Generate and publish pypi.org-<version>.cliany-adapter.tar.gz in a future release.",
-      "metadata_validation": "Run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict once the package exists.",
+      "metadata_validation": "Run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict once the package exists.",
       "online_smoke": "Run cliany-site pypi.org search-projects --query cliany-site --limit 5 --json against PyPI and confirm non-empty project rows."
     },
     "promotion_evidence": {
@@ -124,7 +124,7 @@
       "metadata_validation": {
         "status": "pending",
         "evidence": null,
-        "next_action": "After the package exists, run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict and paste the result."
+        "next_action": "After the package exists, run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict and paste the result."
       },
       "online_smoke": {
         "status": "pending",
@@ -157,7 +157,7 @@
     },
     "promotion": {
       "adapter_package": "Generate and publish www.npmjs.com-<version>.cliany-adapter.tar.gz in a future release.",
-      "metadata_validation": "Run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict once the package exists.",
+      "metadata_validation": "Run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict once the package exists.",
       "online_smoke": "Run cliany-site www.npmjs.com search-packages --query playwright --limit 5 --json against npm and confirm non-empty package rows."
     },
     "promotion_evidence": {
@@ -169,7 +169,7 @@
       "metadata_validation": {
         "status": "pending",
         "evidence": null,
-        "next_action": "After the package exists, run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict and paste the result."
+        "next_action": "After the package exists, run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict and paste the result."
       },
       "online_smoke": {
         "status": "pending",
@@ -202,7 +202,7 @@
     },
     "promotion": {
       "adapter_package": "Generate and publish crates.io-<version>.cliany-adapter.tar.gz in a future release.",
-      "metadata_validation": "Run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict once the package exists.",
+      "metadata_validation": "Run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict once the package exists.",
       "online_smoke": "Run cliany-site crates.io search-crates --query serde --limit 5 --json against crates.io and confirm non-empty crate rows."
     },
     "promotion_evidence": {
@@ -214,7 +214,7 @@
       "metadata_validation": {
         "status": "pending",
         "evidence": null,
-        "next_action": "After the package exists, run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict and paste the result."
+        "next_action": "After the package exists, run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict and paste the result."
       },
       "online_smoke": {
         "status": "pending",

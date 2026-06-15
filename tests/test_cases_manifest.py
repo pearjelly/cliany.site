@@ -46,8 +46,10 @@ def test_cases_manifest_entries_are_actionable():
             assert all(command.startswith("cliany-site ") for command in case["commands"])
             assert case["promotion"]["adapter_package"]
             assert case["promotion"]["metadata_validation"]
+            assert "--include-candidate-packages" in case["promotion"]["metadata_validation"]
             assert case["promotion"]["online_smoke"]
             assert set(case["promotion_evidence"]) == {"adapter_package", "metadata_validation", "online_smoke"}
+            assert "--include-candidate-packages" in case["promotion_evidence"]["metadata_validation"]["next_action"]
             for evidence in case["promotion_evidence"].values():
                 assert evidence["status"] in {"pending", "complete", "blocked"}
                 assert evidence.get("evidence") or evidence.get("next_action")
@@ -89,6 +91,7 @@ def test_cases_readme_documents_candidate_evidence_bundle_handoff():
         "cliany-site cases --case-id pypi-project-search --evidence-bundle --json",
         "--issue-template",
         "promotion_evidence",
+        "--include-candidate-packages",
     ]
     for snippet in required:
         assert snippet in text

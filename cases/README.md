@@ -35,7 +35,7 @@
 `promotion` 至少包含：
 
 - `adapter_package`：要生成或发布的 adapter 包资产，候选新包名应沿用 `market publish` 生成的 `<domain>-<version>.cliany-adapter.tar.gz` 格式。
-- `metadata_validation`：包资产准备好后要运行的离线 metadata 校验。
+- `metadata_validation`：包资产准备好后要运行的离线 metadata 校验；candidate 包应使用 `--include-candidate-packages`，避免只校验 active release 包。
 - `online_smoke`：晋级前需要手动确认的公开只读 smoke 命令或结果。
 
 `promotion_evidence` 必须为同样三项任务记录结构化状态：
@@ -51,7 +51,7 @@
 | 子任务 | 适合贡献者 | 完成证据 |
 |--------|------------|----------|
 | `adapter_package` | 熟悉 `explore` / `market publish` 的维护者 | 生成 `<domain>-<version>.cliany-adapter.tar.gz`，并把包资产放到 release candidate 或本地 `~/.cliany-site/packages` |
-| `metadata_validation` | 首次贡献者或文档/测试贡献者 | 运行 `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict`，确认目标 active 包通过 schema v3、manifest hash 和 domain 校验 |
+| `metadata_validation` | 首次贡献者或文档/测试贡献者 | 运行 `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`，确认目标 candidate 包通过 schema v3、manifest hash 和 domain 校验 |
 | `online_smoke` | 能手动访问第三方公开站点的维护者 | 运行 candidate 声明的只读命令，保存 JSON envelope 摘要，并确认 `data.quality.ok=true` 和 `row_count>0` |
 
 每个 issue 都应引用对应 case id、`promotion` 字段、`promotion_evidence` 状态和推荐验证命令；如果任一子任务还没完成，案例继续保持 `candidate`，不要提前改成 `active`。
@@ -67,7 +67,7 @@
 - 如果只是提出候选场景，优先使用 GitHub 的 `Real Demo Case Proposal` issue 模板，说明目标 URL、只读工作流、期望命令、离线样例输出和验证方式。
 - 第三方站点不可用时，将 `status` 标记为 `degraded`，不要直接删除案例。
 - 每个 active 案例至少要有一个 `commands` 示例和一种 `validation` 方式。
-- 每个案例必须提供 `validation.offline_commands`，命令应保持本地可运行，例如 `python scripts/validate_cases.py --strict`、`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict` 或相关 pytest。
+- 每个案例必须提供 `validation.offline_commands`，命令应保持本地可运行，例如 `python scripts/validate_cases.py --strict`、`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict`、`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict` 或相关 pytest。
 - 每个 active/candidate 案例必须提供 `example_output`，指向 `cases/examples/` 下的离线 JSON envelope 样例；样例必须包含 `data.quality.ok=true`、`status=ok` 和正数 `row_count`，只展示字段形状和典型数据，不作为第三方站点实时内容承诺。
 - 每个 candidate 案例必须提供 `promotion_evidence`，并为 `adapter_package`、`metadata_validation`、`online_smoke` 记录当前状态；`pending` / `blocked` 必须写明 `next_action`，`complete` 必须写明 `evidence`。
 - 已知短板用 `known-gap` 记录，作为路线图输入，而不是藏在聊天记录里。
@@ -100,6 +100,12 @@ CI 的 `Case Catalog Validation` job 会上传 `case-catalog-report` artifact，
 ```bash
 python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict
 python scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --require-packages --strict
+```
+
+如果要给 candidate 案例补齐 adapter package evidence，使用显式 candidate 包检查命令，按 `<domain>-<version>.cliany-adapter.tar.gz` 约定定位候选包：
+
+```bash
+python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict
 ```
 
 当包校验失败时，`scripts/validate_cases.py --report` 会在 Package 列输出 `next:` 建议，例如重新生成 schema v3 metadata、修正 `adapter_domain`、重建 hash 或补齐 `commands.py` / `metadata.json`。这些建议只帮助维护者定位 release asset 问题，不会自动修改 `~/.cliany-site/packages`。

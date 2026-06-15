@@ -10988,6 +10988,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
             "python scripts/plan_next_iteration.py --target-version 0.16.227 "
             "--packages-dir ~/.cliany-site/packages --json"
         ),
+        "promotion_evidence.metadata_validation.next_action",
+        "cases/manifest.json",
         "Package checks",
         "共用的 rerun 动作",
         "python scripts/validate_cases.py",
