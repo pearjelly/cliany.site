@@ -25,6 +25,7 @@ ARTIFACT_MANIFEST_KEYS = (
     "candidate_count",
     "candidate_cases",
     "case_promotion_evidence_summary",
+    "case_promotion_command_plan_summary",
     "blockers",
     "next_actions",
     "commit_cadence",
@@ -126,6 +127,11 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "case_promotion_evidence_primary_evidence_sha256",
     "case_promotion_evidence_primary_detail_sha256",
     "case_promotion_evidence_primary_next_task_sha256",
+    "case_promotion_command_plan_summary_sha256",
+    "case_promotion_command_plan_candidate_count",
+    "case_promotion_command_plan_command_count",
+    "case_promotion_command_plan_missing_command_count",
+    "case_promotion_command_plan_all_declared",
     "body_count",
     "issue_body_inventory_preview_count",
     "issue_body_inventory_preview",
@@ -497,6 +503,7 @@ class IterationPlan:
     candidate_cases: list[str]
     candidate_promotions: list[CandidatePromotion]
     case_promotion_evidence_summary: dict[str, Any]
+    case_promotion_command_plan_summary: dict[str, Any]
     blockers: list[str]
     next_actions: list[str]
     validation_commands: list[str]
@@ -536,6 +543,7 @@ class IterationPlan:
             "candidate_cases": self.candidate_cases,
             "candidate_promotions": [promotion.to_dict() for promotion in self.candidate_promotions],
             "case_promotion_evidence_summary": self.case_promotion_evidence_summary,
+            "case_promotion_command_plan_summary": self.case_promotion_command_plan_summary,
             "case_promotion_evidence_primary_next_task": primary_next_task,
             "case_promotion_evidence_primary_next_action": (
                 self.case_promotion_evidence_summary.get("primary_next_action")
@@ -1147,6 +1155,63 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
     }
 
 
+def _case_promotion_command_plan_summary(cases_report: Any) -> dict[str, Any]:
+    summary = getattr(cases_report, "promotion_command_plan_summary", None)
+    if isinstance(summary, dict):
+        return dict(summary)
+
+    cases = getattr(cases_report, "cases", [])
+    candidate_count = 0
+    command_count = 0
+    missing_tasks: list[dict[str, str]] = []
+    missing_cases: list[dict[str, Any]] = []
+    task_missing_counts = {field_name: 0 for field_name in CANDIDATE_PROMOTION_FIELDS}
+
+    for case in cases:
+        if getattr(case, "status", None) != "candidate":
+            continue
+        candidate_count += 1
+        commands = _case_string_list(case, "commands")
+        command_plan = getattr(case, "promotion_command_plan", None)
+        if not isinstance(command_plan, list) or not command_plan:
+            command_plan = _candidate_promotion_command_plan(
+                commands=commands,
+                candidate_package_validation_command=_default_candidate_package_validation_command(),
+            )
+        command_count += len(command_plan)
+        case_missing_tasks: list[str] = []
+        for item in command_plan:
+            if not isinstance(item, dict) or not item.get("missing"):
+                continue
+            task = str(item.get("task") or "")
+            source = str(item.get("source") or "")
+            case_missing_tasks.append(task)
+            if task in task_missing_counts:
+                task_missing_counts[task] += 1
+            missing_tasks.append({"case_id": str(getattr(case, "id", "")), "task": task, "source": source})
+        if case_missing_tasks:
+            missing_cases.append(
+                {
+                    "case_id": str(getattr(case, "id", "")),
+                    "missing_task_count": len(case_missing_tasks),
+                    "missing_tasks": case_missing_tasks,
+                }
+            )
+
+    return {
+        "candidate_count": candidate_count,
+        "command_count": command_count,
+        "expected_command_count": candidate_count * len(CANDIDATE_PROMOTION_FIELDS),
+        "missing_command_count": len(missing_tasks),
+        "ready_candidate_count": candidate_count - len(missing_cases),
+        "all_declared": not missing_tasks,
+        "task_missing_counts": task_missing_counts,
+        "missing_tasks": missing_tasks,
+        "missing_cases": missing_cases,
+        "primary_missing_task": missing_tasks[0] if missing_tasks else None,
+    }
+
+
 def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
     promotions: list[CandidatePromotion] = []
     for case in readiness.cases.cases:
@@ -1391,6 +1456,7 @@ def build_plan(
     theme, release_slice = _recommended_slice(readiness, publication)
     candidate_promotions = _candidate_promotions(readiness)
     case_promotion_evidence_summary = _case_promotion_evidence_summary(readiness.cases)
+    case_promotion_command_plan_summary = _case_promotion_command_plan_summary(readiness.cases)
     publication_next_actions = _publication_next_actions(publication)
     publication_publish_commands = _publication_publish_commands(publication)
     commit_cadence = _commit_cadence(readiness)
@@ -1441,6 +1507,7 @@ def build_plan(
         candidate_cases=candidate_cases,
         candidate_promotions=candidate_promotions,
         case_promotion_evidence_summary=case_promotion_evidence_summary,
+        case_promotion_command_plan_summary=case_promotion_command_plan_summary,
         blockers=blockers,
         next_actions=_next_action_lines(readiness, publication),
         validation_commands=validation_commands,
@@ -1491,6 +1558,9 @@ def _print_text(plan: IterationPlan) -> None:
             print(f"- {case_id}")
     print("case_promotion_evidence_summary:")
     for key, value in plan.case_promotion_evidence_summary.items():
+        _print_text_item(key, value)
+    print("case_promotion_command_plan_summary:")
+    for key, value in plan.case_promotion_command_plan_summary.items():
         _print_text_item(key, value)
     primary_next_task = plan.case_promotion_evidence_summary.get("primary_next_task")
     if isinstance(primary_next_task, dict) and primary_next_task:
@@ -1591,6 +1661,10 @@ def _render_markdown(plan: IterationPlan) -> str:
     primary_candidate_action = _format_context_value(
         plan.case_promotion_evidence_summary.get("primary_next_action")
     )
+    command_plan_all_declared = str(
+        bool(plan.case_promotion_command_plan_summary.get("all_declared"))
+    ).lower()
+    command_plan_missing_count = plan.case_promotion_command_plan_summary.get("missing_command_count")
     blockers = "\n".join(f"- {blocker}" for blocker in plan.blockers) or "- None."
     next_actions = "\n".join(f"- {action}" for action in plan.next_actions)
     validation = "\n".join(f"- `{command}`" for command in plan.validation_commands)
@@ -1611,6 +1685,9 @@ def _render_markdown(plan: IterationPlan) -> str:
         plan.publication_publish_script_command,
     )
     case_promotion_evidence = _case_promotion_evidence_markdown(plan.case_promotion_evidence_summary)
+    case_promotion_command_plan = _case_promotion_command_plan_markdown(
+        plan.case_promotion_command_plan_summary
+    )
     promotion_lines = _candidate_promotion_markdown(plan.candidate_promotions)
     release_draft_issues = _release_draft_issues_markdown(plan.release_draft_issues)
     return f"""# cliany-site Next Iteration Plan
@@ -1635,6 +1712,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 | candidate_cases | {candidate_cases} |
 | case_promotion_evidence_primary_next_task | `{primary_candidate_task_value}` |
 | case_promotion_evidence_primary_next_action | `{primary_candidate_action}` |
+| case_promotion_command_plan_all_declared | `{command_plan_all_declared}` |
+| case_promotion_command_plan_missing_command_count | `{command_plan_missing_count}` |
 | plan_report_command | `{plan.plan_report_command}` |
 
 ## Recommended Slice
@@ -1650,6 +1729,8 @@ def _render_markdown(plan: IterationPlan) -> str:
 {next_actions}
 
 {case_promotion_evidence}
+
+{case_promotion_command_plan}
 
 {promotion_lines}
 
@@ -1719,6 +1800,37 @@ def _case_promotion_evidence_markdown(summary: dict[str, Any]) -> str:
             f"`{_format_context_value(task.get('status'))}` | "
             f"{_format_context_value(task.get('evidence') or '-')} | "
             f"{_format_context_value(task.get('next_action') or '-')} |"
+        )
+    return "\n".join(lines)
+
+
+def _case_promotion_command_plan_markdown(summary: dict[str, Any]) -> str:
+    rows = [
+        ("candidate_count", summary.get("candidate_count", 0)),
+        ("command_count", summary.get("command_count", 0)),
+        ("expected_command_count", summary.get("expected_command_count", 0)),
+        ("missing_command_count", summary.get("missing_command_count", 0)),
+        ("ready_candidate_count", summary.get("ready_candidate_count", 0)),
+        ("all_declared", str(bool(summary.get("all_declared"))).lower()),
+    ]
+    lines = [
+        "## Candidate Promotion Command Plan Summary",
+        "",
+        "| Metric | Value |",
+        "|--------|-------|",
+    ]
+    lines.extend(f"| {key} | `{_format_context_value(value)}` |" for key, value in rows)
+    lines.extend(["", "| Case | Missing Tasks |", "|------|---------------|"])
+    missing_cases = list(summary.get("missing_cases") or [])
+    if not missing_cases:
+        lines.append("| - | - |")
+        return "\n".join(lines)
+    for case in missing_cases:
+        missing_tasks = ", ".join(str(task) for task in case.get("missing_tasks") or [])
+        lines.append(
+            "| "
+            f"`{_format_context_value(case.get('case_id'))}` | "
+            f"`{_format_context_value(missing_tasks)}` |"
         )
     return "\n".join(lines)
 
@@ -2756,6 +2868,7 @@ def _artifact_manifest_payload_without_summary(
         "candidate_count": len(candidate_cases),
         "candidate_cases": candidate_cases,
         "case_promotion_evidence_summary": plan.case_promotion_evidence_summary,
+        "case_promotion_command_plan_summary": plan.case_promotion_command_plan_summary,
         "blockers": plan.blockers,
         "next_actions": plan.next_actions,
         "commit_cadence": plan.commit_cadence,
@@ -3001,6 +3114,7 @@ def _issue_artifact_bundle_summary(
     )
     if not isinstance(case_promotion_evidence_primary_next_task, dict):
         case_promotion_evidence_primary_next_task = {}
+    command_plan_summary = plan.case_promotion_command_plan_summary
     blocker_boundary = {
         "first_item": plan.blockers[0] if plan.blockers else None,
         "last_item": plan.blockers[-1] if plan.blockers else None,
@@ -3198,6 +3312,17 @@ def _issue_artifact_bundle_summary(
         "case_promotion_evidence_primary_next_task_sha256": _stable_json_sha256(
             case_promotion_evidence_primary_next_task
         ),
+        "case_promotion_command_plan_summary_sha256": _stable_json_sha256(
+            command_plan_summary
+        ),
+        "case_promotion_command_plan_candidate_count": command_plan_summary.get(
+            "candidate_count"
+        ),
+        "case_promotion_command_plan_command_count": command_plan_summary.get("command_count"),
+        "case_promotion_command_plan_missing_command_count": command_plan_summary.get(
+            "missing_command_count"
+        ),
+        "case_promotion_command_plan_all_declared": command_plan_summary.get("all_declared"),
         "body_count": issue_body_summary["body_count"],
         "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
         "issue_body_inventory_preview": list(issue_body_inventory_preview),
@@ -3882,6 +4007,16 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['case_promotion_evidence_primary_detail_sha256']}`",
             "- case_promotion_evidence_primary_next_task_sha256: "
             f"`{summary['case_promotion_evidence_primary_next_task_sha256']}`",
+            "- case_promotion_command_plan_summary_sha256: "
+            f"`{summary['case_promotion_command_plan_summary_sha256']}`",
+            "- case_promotion_command_plan_candidate_count: "
+            f"`{summary['case_promotion_command_plan_candidate_count']}`",
+            "- case_promotion_command_plan_command_count: "
+            f"`{summary['case_promotion_command_plan_command_count']}`",
+            "- case_promotion_command_plan_missing_command_count: "
+            f"`{summary['case_promotion_command_plan_missing_command_count']}`",
+            "- case_promotion_command_plan_all_declared: "
+            f"`{str(bool(summary['case_promotion_command_plan_all_declared'])).lower()}`",
             f"- body_count: `{summary['body_count']}`",
             f"- issue_body_inventory_preview_count: `{summary['issue_body_inventory_preview_count']}`",
             "- issue_body_inventory_preview: "

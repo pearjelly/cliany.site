@@ -38,6 +38,8 @@ Candidate issue artifacts 的 review checklist 会要求维护者核对 `issue-m
 
 `cliany-site cases --case-id <id> --evidence-bundle --json`、candidate issue body 和 `issue-metadata.json` 也会输出 `promotion_command_plan`，把 candidate 晋级拆成 `adapter_package`、`metadata_validation`、`online_smoke` 三条可执行命令；只读 evidence bundle 的维护工具不必从自然语言 next action 推断该运行哪条命令。
 
+`scripts/validate_cases.py --json` 会用 `promotion_command_plan_summary` 汇总 candidate 晋级命令是否完整；`plan_next_iteration.py` 会把它透传为 `case_promotion_command_plan_summary`，并写入默认文本输出、Markdown report、candidate issue artifacts manifest 和 `artifact_bundle_summary` compact 字段。只读周计划或 artifacts 的维护工具可以直接展示 `all_declared`、`missing_command_count`、candidate count、command count 和 summary hash，先拦截缺少 `explore` 或 adapter smoke 命令的 candidate。`artifact_bundle_summary` 中对应字段为 `case_promotion_command_plan_summary_sha256`、`case_promotion_command_plan_candidate_count`、`case_promotion_command_plan_command_count`、`case_promotion_command_plan_missing_command_count` 和 `case_promotion_command_plan_all_declared`。
+
 `Candidate Issue Body Templates` 里的每个 body 还会包含 `Primary Evidence Task` 小节，直接展示当前首要待补 evidence task、状态、现有证据和下一步；已经 `complete` 且带 evidence 的 task 不会被选为首要待办。
 
 `plan_next_iteration.py` 的默认文本输出会在 `candidate_promotions` 下展开 `evidence_bundle_primary_next_task`；Markdown report 的 `Candidate Issue Metadata` 表也会展示 `Evidence Bundle Primary Next Task`，不用生成 issue artifacts 也能看到 evidence bundle 首要下一步。

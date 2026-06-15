@@ -42,6 +42,7 @@
 - `scripts/validate_cases.py --report` 的 `Candidate Promotion Tasks` / `Issue Body Template` 现在也输出 `Promotion Command Plan`，让 case catalog report、cases CLI 和 candidate issue artifacts 使用同一组三步执行命令。
 - `scripts/validate_cases.py --json` 的 candidate case 条目现在输出 `promotion_command_plan`、`promotion_command_plan_count` 和 `promotion_command_plan_missing_tasks`，让自动化不用解析 Markdown report 就能读取三步晋级命令。
 - `scripts/validate_cases.py --json` 和 Markdown report 现在输出顶层 `promotion_command_plan_summary` / `Candidate Promotion Command Plan Summary`，汇总 candidate 晋级命令总数、缺失命令数、缺失 case/task 和 `all_declared` 状态。
+- `scripts/plan_next_iteration.py` 现在把 `promotion_command_plan_summary` 透传为 `case_promotion_command_plan_summary`，并写入默认文本输出、Markdown report、candidate issue artifacts manifest 和 `artifact_bundle_summary` compact 字段。
 - `artifact_bundle_summary` 现在输出 `case_promotion_evidence_primary_detail_sha256`，让只读整包摘要的工具能检测首要 candidate 晋级任务对象是否漂移。
 - `artifact_bundle_summary` 现在也输出 `case_promotion_evidence_primary_next_task_sha256`，让只读整包摘要的工具能单独检测 `primary_next_task` 漂移。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 `case_promotion_evidence_primary_next_task_sha256`，让周维护手册覆盖最新 artifact bundle summary 字段。

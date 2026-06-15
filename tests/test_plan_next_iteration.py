@@ -1298,6 +1298,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     }
     case_promotion_evidence_summary_key_preview = case_promotion_evidence_summary_keys[:8]
     case_promotion_evidence_summary_key_tail = case_promotion_evidence_summary_keys[-8:]
+    command_plan_summary = plan.case_promotion_command_plan_summary
     create_issues_safety = {
         "script": str(issues_dir / "create-issues.sh"),
         "dry_run_supported": True,
@@ -1483,6 +1484,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "case_promotion_evidence_primary_next_task_sha256": _stable_json_sha256(
             plan.case_promotion_evidence_summary["primary_next_task"]
         ),
+        "case_promotion_command_plan_summary_sha256": _stable_json_sha256(
+            command_plan_summary
+        ),
+        "case_promotion_command_plan_candidate_count": command_plan_summary["candidate_count"],
+        "case_promotion_command_plan_command_count": command_plan_summary["command_count"],
+        "case_promotion_command_plan_missing_command_count": command_plan_summary[
+            "missing_command_count"
+        ],
+        "case_promotion_command_plan_all_declared": command_plan_summary["all_declared"],
         "body_count": 2,
         "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
         "issue_body_inventory_preview": list(issue_body_inventory_preview),
@@ -2123,6 +2133,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "candidate_count": 2,
         "candidate_cases": ["pypi-project-search", "npm-package-search"],
         "case_promotion_evidence_summary": plan.case_promotion_evidence_summary,
+        "case_promotion_command_plan_summary": plan.case_promotion_command_plan_summary,
         "blockers": ["release draft validation failed", "latest local release is not published"],
         "next_actions": plan.next_actions,
         "commit_cadence": plan.commit_cadence,
@@ -2691,6 +2702,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "case_promotion_evidence_primary_next_task_sha256: "
         f"`{artifact_bundle_summary['case_promotion_evidence_primary_next_task_sha256']}`"
     ) in readme
+    assert (
+        "case_promotion_command_plan_summary_sha256: "
+        f"`{artifact_bundle_summary['case_promotion_command_plan_summary_sha256']}`"
+    ) in readme
+    assert "case_promotion_command_plan_candidate_count: `2`" in readme
+    assert "case_promotion_command_plan_command_count: `6`" in readme
+    assert "case_promotion_command_plan_missing_command_count: `1`" in readme
+    assert "case_promotion_command_plan_all_declared: `false`" in readme
     assert (
         "issue_body_inventory_preview_count: "
         f"`{artifact_bundle_summary['issue_body_inventory_preview_count']}`"
