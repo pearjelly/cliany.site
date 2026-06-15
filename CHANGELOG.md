@@ -34,6 +34,7 @@
 - `scripts/plan_next_iteration.py` 现在输出 `plan_report_command`，把生成 `/tmp/cliany-next-iteration.md` 的 Markdown 周计划命令与 `issue_artifacts_command` 一样结构化交给维护工具。
 - Candidate issue artifacts 的 `validation_commands` 现在包含 `plan_report_command`，让 artifacts README 和 manifest 都能直接复现 Markdown 周计划报告。
 - Candidate issue artifacts 的 `artifact-manifest.json` 现在带顶层 `plan_report_command`，`artifact_bundle_summary` 也输出 `plan_report_command_sha256`，让工具不用展开 validation commands 就能复现并检测周计划报告命令漂移。
+- Candidate issue artifacts 的 `publication-handoff.json` 和 README `Publication Handoff` 现在也展示 `plan_report_command`，让处理发布门禁的维护工具能直接跳回同一份 Markdown 周计划报告。
 - `artifact_bundle_summary` 现在输出 `case_promotion_evidence_primary_detail_sha256`，让只读整包摘要的工具能检测首要 candidate 晋级任务对象是否漂移。
 - `artifact_bundle_summary` 现在也输出 `case_promotion_evidence_primary_next_task_sha256`，让只读整包摘要的工具能单独检测 `primary_next_task` 漂移。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 `case_promotion_evidence_primary_next_task_sha256`，让周维护手册覆盖最新 artifact bundle summary 字段。

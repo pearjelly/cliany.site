@@ -2152,6 +2152,7 @@ Generated for target version `{plan.target_version}`.
 - commit_cadence_status: `{_format_context_value(plan.commit_cadence.get("status"))}`
 - commit_cadence_missing_commit_days: `{_format_context_value(plan.commit_cadence.get("missing_commit_days"))}`
 - commit_cadence_primary_next_action: `{_format_context_value(_commit_cadence_primary_next_action(plan))}`
+- plan_report_command: `{plan.plan_report_command}`
 - latest_tag: `{_format_context_value(plan.publication_ref_context.get("latest_tag"))}`
 - local_head: `{_format_context_value(plan.publication_ref_context.get("local_head"))}`
 - worktree_clean: `{str(plan.publication_worktree_clean).lower()}`
@@ -2489,6 +2490,7 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "commit_cadence_primary_next_action": _commit_cadence_primary_next_action(plan),
         "publication_next_actions": plan.publication_next_actions,
         "primary_next_action": _publication_primary_next_action(plan),
+        "plan_report_command": plan.plan_report_command,
         "ref_context": plan.publication_ref_context,
         "worktree_clean": plan.publication_worktree_clean,
         "worktree_status": plan.publication_worktree_status,

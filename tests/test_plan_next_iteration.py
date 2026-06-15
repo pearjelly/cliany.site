@@ -1058,6 +1058,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "Push tag `v0.16.1` after the branch is published.",
         ],
         "primary_next_action": "Commit, stash, or discard local worktree changes before publishing release refs.",
+        "plan_report_command": (
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+            "--report /tmp/cliany-next-iteration.md"
+        ),
         "ref_context": {
             "repo_root": "/repo/cliany.site",
             "branch": "master",
@@ -2954,7 +2958,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_primary_next_action: "
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
-    assert "publication_handoff_key_count: `25`" in readme
+    assert "publication_handoff_key_count: `26`" in readme
     assert "publication_handoff_schema_version: `1`" in readme
     assert "publication_handoff_first_key: `schema_version`" in readme
     assert "publication_handoff_last_key: `publish_script_command_sha256`" in readme
@@ -3584,6 +3588,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "tag_required_action: "
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
+    ) in readme
+    assert (
+        "plan_report_command: "
+        "`python scripts/plan_next_iteration.py --target-version 0.16.2 "
+        "--report /tmp/cliany-next-iteration.md`"
     ) in readme
     assert "latest_tag: `v0.16.1`" in readme
     assert "local_head: `abc123`" in readme

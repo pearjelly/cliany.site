@@ -214,6 +214,8 @@ Candidate issue artifacts `README.md` 会在 `Artifact Bundle Summary` 前展示
 
 `publication-handoff.json` 和 artifacts `README.md` 的 `Publication Handoff` 也会展示 `primary_next_action`，让只读取 handoff 的维护工具不必展开完整待办列表就能展示第一条发布同步待办。
 
+`publication-handoff.json.plan_report_command` 和 artifacts `README.md` 的 `Publication Handoff` 也会展示 `plan_report_command`，让处理发布门禁的维护工具能从 handoff 直接复现同一份 Markdown 周计划报告。
+
 `artifact_bundle_summary` 还会带上 `publication_ref_context_key_count`、`publication_ref_context_sha256`、`publication_ref_context_first_key`、`publication_ref_context_last_key`、`publication_ref_context_key_boundary_sha256`、`publication_publish_command_count` 和 `publication_publish_commands_sha256`，让工具只读整包摘要就能判断 publication ref context 结构/内容或 publish commands 数量/内容是否漂移，并快速检查 publication ref context key 首尾边界。
 
 `artifact_bundle_summary` 还会带上 `publication_primary_publish_command`，让工具只读整包摘要就能展示第一条发布同步命令。
