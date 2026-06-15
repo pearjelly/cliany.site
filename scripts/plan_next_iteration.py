@@ -259,6 +259,8 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "commit_cadence_commit_day_count",
     "commit_cadence_min_commit_days",
     "commit_cadence_missing_commit_days",
+    "commit_cadence_next_action_count",
+    "commit_cadence_primary_next_action",
     "commit_cadence_commit_days_sha256",
     "commit_cadence_next_actions_sha256",
     "publication_ref_context_key_count",
@@ -3168,6 +3170,12 @@ def _issue_artifact_bundle_summary(
         "commit_cadence_commit_day_count": plan.commit_cadence.get("commit_day_count"),
         "commit_cadence_min_commit_days": plan.commit_cadence.get("min_commit_days"),
         "commit_cadence_missing_commit_days": plan.commit_cadence.get("missing_commit_days"),
+        "commit_cadence_next_action_count": len(
+            plan.commit_cadence.get("next_actions", [])
+            if isinstance(plan.commit_cadence.get("next_actions"), list)
+            else []
+        ),
+        "commit_cadence_primary_next_action": _commit_cadence_primary_next_action(plan),
         "commit_cadence_commit_days_sha256": _stable_json_sha256(
             plan.commit_cadence.get("commit_days", [])
         ),
@@ -3813,6 +3821,9 @@ def _issue_artifact_bundle_summary_markdown(
             f"- commit_cadence_commit_day_count: `{summary['commit_cadence_commit_day_count']}`",
             f"- commit_cadence_min_commit_days: `{summary['commit_cadence_min_commit_days']}`",
             f"- commit_cadence_missing_commit_days: `{summary['commit_cadence_missing_commit_days']}`",
+            f"- commit_cadence_next_action_count: `{summary['commit_cadence_next_action_count']}`",
+            "- commit_cadence_primary_next_action: "
+            f"{_summary_inline_code(summary['commit_cadence_primary_next_action'])}",
             "- commit_cadence_commit_days_sha256: "
             f"`{summary['commit_cadence_commit_days_sha256']}`",
             "- commit_cadence_next_actions_sha256: "

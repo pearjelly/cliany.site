@@ -24,6 +24,7 @@
 - `plan_next_iteration.py` 现在输出结构化 `commit_cadence`，并在 Markdown report、`artifact-manifest.json` 和 `artifact_bundle_summary` 中展示提交天数状态、缺口和摘要 hash。
 - `publication-handoff.json` 和 artifacts `README.md` 的 `Publication Handoff` 现在展示 `commit_cadence` 状态、缺口和首要 cadence next action，帮助维护者先看到本周提交天数阻塞。
 - Candidate issue artifacts `README.md` 现在新增 `Commit Cadence` 小节，集中展示本周提交天数、缺口、已有提交日期和 cadence next actions。
+- `artifact_bundle_summary` 现在输出 `commit_cadence_next_action_count` 和 `commit_cadence_primary_next_action`，让只读整包摘要的工具能直接展示提交节奏下一步。
 
 ## [0.16.226] - 2026-06-15
 

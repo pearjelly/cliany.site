@@ -1438,6 +1438,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "commit_cadence_commit_day_count": 2,
         "commit_cadence_min_commit_days": 3,
         "commit_cadence_missing_commit_days": 1,
+        "commit_cadence_next_action_count": 1,
+        "commit_cadence_primary_next_action": (
+            "Ship verified slices on `1` more unique commit days this week."
+        ),
         "commit_cadence_commit_days_sha256": _stable_json_sha256([]),
         "commit_cadence_next_actions_sha256": _stable_json_sha256(
             ["Ship verified slices on `1` more unique commit days this week."]
@@ -2738,6 +2742,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "commit_cadence_commit_day_count: `2`" in readme
     assert "commit_cadence_min_commit_days: `3`" in readme
     assert "commit_cadence_missing_commit_days: `1`" in readme
+    assert "commit_cadence_next_action_count: `1`" in readme
+    assert (
+        "commit_cadence_primary_next_action: "
+        f"{plan_next_iteration._summary_inline_code('Ship verified slices on `1` more unique commit days this week.')}"
+    ) in readme
     assert f"commit_cadence_commit_days_sha256: `{_stable_json_sha256([])}`" in readme
     assert (
         "commit_cadence_next_actions_sha256: "
