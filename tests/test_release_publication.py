@@ -57,6 +57,14 @@ def test_release_publication_passes_when_branch_and_tag_are_pushed(tmp_path):
     assert report.to_dict()["next_action_count"] == 0
     assert report.to_dict()["next_actions"] == []
     assert report.to_dict()["publish_command_count"] == 0
+    assert report.to_dict()["tag_publish_decision"] == {
+        "status": "published",
+        "can_push_tag": False,
+        "latest_tag": "v0.1.0",
+        "tag_points_at_head": True,
+        "tag_published": True,
+        "required_action": None,
+    }
 
 
 def test_release_publication_reports_unpushed_release_commit_and_tag(tmp_path):
@@ -88,6 +96,14 @@ def test_release_publication_reports_unpushed_release_commit_and_tag(tmp_path):
         "git push origin v0.1.1",
         "python scripts/check_release_publication.py --remote --json",
     ]
+    assert report.to_dict()["tag_publish_decision"] == {
+        "status": "ready_to_push",
+        "can_push_tag": True,
+        "latest_tag": "v0.1.1",
+        "tag_points_at_head": True,
+        "tag_published": False,
+        "required_action": "Push tag `v0.1.1` after the branch is published.",
+    }
 
 
 def test_release_publication_reports_dirty_worktree_before_publish_commands(tmp_path):
@@ -108,6 +124,14 @@ def test_release_publication_reports_dirty_worktree_before_publish_commands(tmp_
         "- Commit, stash, or discard local worktree changes before publishing release refs."
     )
     assert payload["publish_commands"] == ["python scripts/check_release_publication.py --json"]
+    assert payload["tag_publish_decision"] == {
+        "status": "blocked_by_worktree",
+        "can_push_tag": False,
+        "latest_tag": "v0.1.1",
+        "tag_points_at_head": True,
+        "tag_published": False,
+        "required_action": "Commit, stash, or discard local worktree changes before publishing release refs.",
+    }
 
 
 def test_release_publication_remote_check_reports_missing_remote_tag(tmp_path):
@@ -169,11 +193,17 @@ def test_release_publication_writes_markdown_report(tmp_path):
     assert f"| repo_root | `{repo.resolve()}` |" in text
     assert "| worktree_clean | `true` |" in text
     assert "| latest_tag | `v0.1.1` |" in text
+    assert "| tag_publish_decision | `ready_to_push` |" in text
+    assert "| tag_can_push | `true` |" in text
     assert "| remote_checked | `true` |" in text
     assert "| next_action_count | `2` |" in text
     assert "| publish_command_count | `3` |" in text
     assert "## Refs" in text
     assert "## Next Actions" in text
+    assert "## Tag Publish Decision" in text
+    assert "- status: `ready_to_push`" in text
+    assert "- can_push_tag: `true`" in text
+    assert "- required_action: `Push tag `v0.1.1` after the branch is published.`" in text
     assert "## Worktree Status" in text
     assert "- Worktree is clean." in text
     assert "## Publish Commands" in text
@@ -232,7 +262,19 @@ def test_release_publication_publish_script_warns_when_tag_is_not_head(tmp_path)
     release_publication._write_publish_script(report, script_path)
 
     text = script_path.read_text(encoding="utf-8")
+    payload = report.to_dict()
     assert report.tag_points_at_head is False
+    assert payload["tag_publish_decision"] == {
+        "status": "manual_decision_required",
+        "can_push_tag": False,
+        "latest_tag": "v0.1.1",
+        "tag_points_at_head": False,
+        "tag_published": False,
+        "required_action": (
+            "Move to the latest tag commit or create a new release tag at HEAD "
+            "before publishing a tag."
+        ),
+    }
     assert "# Publication review notes:" in text
     assert "# - Latest tag v0.1.1 does not point at HEAD." in text
     assert "# - This script will not push that tag automatically." in text

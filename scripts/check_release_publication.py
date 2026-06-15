@@ -41,6 +41,7 @@ class PublicationReport:
     def to_dict(self) -> dict[str, Any]:
         next_actions = _next_action_lines(self)
         publish_commands = _publish_command_lines(self)
+        tag_publish_decision = _tag_publish_decision(self)
         return {
             "ok": self.ok,
             "repo_root": self.repo_root,
@@ -62,6 +63,7 @@ class PublicationReport:
             "remote_tag_commit": self.remote_tag_commit,
             "branch_published": self.branch_published,
             "tag_published": self.tag_published,
+            "tag_publish_decision": tag_publish_decision,
             "next_action_count": len(next_actions),
             "next_actions": next_actions,
             "publish_command_count": len(publish_commands),
@@ -248,9 +250,69 @@ def _publish_command_lines(report: PublicationReport) -> list[str]:
     return commands
 
 
+def _tag_publish_decision(report: PublicationReport) -> dict[str, Any]:
+    if not report.latest_tag:
+        return {
+            "status": "missing_tag",
+            "can_push_tag": False,
+            "latest_tag": None,
+            "tag_points_at_head": report.tag_points_at_head,
+            "tag_published": report.tag_published,
+            "required_action": "Create a release tag before publishing a tag.",
+        }
+    if not report.tag_points_at_head:
+        return {
+            "status": "manual_decision_required",
+            "can_push_tag": False,
+            "latest_tag": report.latest_tag,
+            "tag_points_at_head": False,
+            "tag_published": report.tag_published,
+            "required_action": (
+                "Move to the latest tag commit or create a new release tag at HEAD "
+                "before publishing a tag."
+            ),
+        }
+    if report.tag_published is True:
+        return {
+            "status": "published",
+            "can_push_tag": False,
+            "latest_tag": report.latest_tag,
+            "tag_points_at_head": True,
+            "tag_published": True,
+            "required_action": None,
+        }
+    if not report.worktree_clean:
+        return {
+            "status": "blocked_by_worktree",
+            "can_push_tag": False,
+            "latest_tag": report.latest_tag,
+            "tag_points_at_head": True,
+            "tag_published": report.tag_published,
+            "required_action": "Commit, stash, or discard local worktree changes before publishing release refs.",
+        }
+    if report.tag_published is False:
+        return {
+            "status": "ready_to_push",
+            "can_push_tag": True,
+            "latest_tag": report.latest_tag,
+            "tag_points_at_head": True,
+            "tag_published": False,
+            "required_action": f"Push tag `{report.latest_tag}` after the branch is published.",
+        }
+    return {
+        "status": "needs_remote_check",
+        "can_push_tag": False,
+        "latest_tag": report.latest_tag,
+        "tag_points_at_head": True,
+        "tag_published": report.tag_published,
+        "required_action": "Rerun with `--remote` to verify the live remote tag.",
+    }
+
+
 def _print_text(report: PublicationReport) -> None:
     next_actions = _next_action_lines(report)
     publish_commands = _publish_command_lines(report)
+    tag_publish_decision = _tag_publish_decision(report)
     print("=== cliany-site release publication ===")
     print(f"ok: {report.ok}")
     print(f"repo_root: {report.repo_root}")
@@ -264,6 +326,7 @@ def _print_text(report: PublicationReport) -> None:
     print(f"tag_points_at_head: {report.tag_points_at_head}")
     print(f"branch_published: {report.branch_published}")
     print(f"tag_published: {report.tag_published}")
+    print(f"tag_publish_decision: {tag_publish_decision['status']}")
     print(f"remote_checked: {report.remote_checked}")
     print(f"next_action_count: {len(next_actions)}")
     print(f"publish_command_count: {len(publish_commands)}")
@@ -296,6 +359,7 @@ def _format_value(value: object) -> str:
 def _write_markdown_report(report: PublicationReport, path: Path) -> None:
     next_actions = _next_action_lines(report)
     publish_commands = _publish_command_lines(report)
+    tag_publish_decision = _tag_publish_decision(report)
     lines = [
         "# cliany-site Release Publication",
         "",
@@ -313,6 +377,8 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
         f"| tag_points_at_head | `{_format_bool(report.tag_points_at_head)}` |",
         f"| branch_published | `{_format_bool(report.branch_published)}` |",
         f"| tag_published | `{_format_bool(report.tag_published)}` |",
+        f"| tag_publish_decision | `{tag_publish_decision['status']}` |",
+        f"| tag_can_push | `{_format_bool(tag_publish_decision['can_push_tag'])}` |",
         f"| remote_checked | `{_format_bool(report.remote_checked)}` |",
         f"| next_action_count | `{len(next_actions)}` |",
         f"| publish_command_count | `{len(publish_commands)}` |",
@@ -331,6 +397,17 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
         lines.extend(["", "## Next Actions", "", *next_actions])
     else:
         lines.extend(["", "## Next Actions", "", "- Release branch and tag are published."])
+    lines.extend(
+        [
+            "",
+            "## Tag Publish Decision",
+            "",
+            f"- status: `{tag_publish_decision['status']}`",
+            f"- can_push_tag: `{_format_bool(tag_publish_decision['can_push_tag'])}`",
+            f"- latest_tag: `{_format_value(tag_publish_decision['latest_tag'])}`",
+            f"- required_action: `{_format_value(tag_publish_decision['required_action'])}`",
+        ]
+    )
     if report.worktree_status:
         lines.extend(["", "## Worktree Status", "", "```text", *report.worktree_status, "```"])
     else:
