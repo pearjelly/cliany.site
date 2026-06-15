@@ -11,7 +11,7 @@
 - 新增内置 `cliany-site cases` 命令，可离线列出维护中的真实 demo、candidate 工作流、离线验证命令和 candidate 晋级下一步，并把 `cases/` 案例索引纳入 wheel 资源。
 - `cliany-site cases --case-id <id>` 现在可精确展开单个案例的命令、validation 和 promotion 详情，找不到案例时会返回可用 case id 列表。
 - `cliany-site cases --case-id <id>` 的人类输出现在展示目标 URL、文档、样例、validation 和 Promotion Tasks，方便贡献者直接复制执行下一步。
-- `cliany-site cases --case-id <id> --issue-template` 现在可为 candidate 案例输出可复制的 GitHub issue body。
+- `cliany-site cases --case-id <id> --issue-template` 现在可为 candidate 案例输出可复制的 GitHub issue body，并预填 human / JSON evidence bundle 命令。
 - `cliany-site cases --case-id <id> --evidence-bundle` 现在可为 candidate 案例输出结构化本地证据清单，列出待补 promotion tasks、命令和离线验证步骤。
 - `scripts/validate_cases.py --report` 现在输出 `Candidate Evidence Bundle Commands` 小节，直接链接每个 candidate 的 evidence bundle CLI 命令。
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 candidate issue artifacts 现在在 `candidate_promotions`、`issue-metadata.json`、issue metadata summary 和 artifacts `README.md` 中输出 `evidence_bundle_command` / `evidence_bundle_json_command`，让维护者能直接复制案例证据包命令。

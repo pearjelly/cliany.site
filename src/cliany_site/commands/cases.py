@@ -112,6 +112,11 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
+            "## Evidence Bundle",
+            f"- Human: `cliany-site cases --case-id {case_id} --evidence-bundle`",
+            f"- JSON: `cliany-site cases --case-id {case_id} --evidence-bundle --json`",
+            "- Attach or paste the JSON output in the issue once evidence changes.",
+            "",
             "## Validation Evidence",
             "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.",
             "- Paste the local `scripts/validate_cases.py --packages-dir` result.",

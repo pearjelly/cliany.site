@@ -107,6 +107,10 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "## Reproduction Context" in template
     assert "`adapter_package`" in template
     assert "Generate pypi.org" in template
+    assert "## Evidence Bundle" in template
+    assert "cliany-site cases --case-id pypi-project-search --evidence-bundle" in template
+    assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in template
+    assert "Attach or paste the JSON output in the issue once evidence changes." in template
     assert "Do not mark the case `active`" in template
 
 
@@ -120,7 +124,8 @@ def test_cases_command_issue_template_human_outputs_markdown(tmp_home):
 
     assert result.exit_code == 0
     assert "## Scope: promote candidate case `pypi-project-search`" in result.output
-    assert "cliany-site cases" not in result.output
+    assert "## Evidence Bundle" in result.output
+    assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in result.output
     assert "案例库" not in result.output
 
 
