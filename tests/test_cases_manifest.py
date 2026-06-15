@@ -3,6 +3,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "cases" / "manifest.json"
+README = ROOT / "cases" / "README.md"
 ALLOWED_STATUSES = {"active", "candidate", "degraded", "known-gap", "retired"}
 
 
@@ -72,3 +73,20 @@ def test_active_and_candidate_cases_have_local_example_outputs():
         assert payload["data"]["quality"]["ok"] is True
         assert payload["data"]["quality"]["status"] == "ok"
         assert payload["data"]["quality"]["row_count"] > 0
+
+
+def test_cases_readme_documents_candidate_evidence_bundle_handoff():
+    text = README.read_text(encoding="utf-8")
+
+    required = [
+        "Candidate Promotion Evidence Summary",
+        "Candidate Evidence Bundle Commands",
+        "Candidate Promotion Tasks",
+        "cliany-site cases --case-id <id> --evidence-bundle",
+        "cliany-site cases --case-id <id> --evidence-bundle --json",
+        "cliany-site cases --case-id pypi-project-search --evidence-bundle --json",
+        "--issue-template",
+        "promotion_evidence",
+    ]
+    for snippet in required:
+        assert snippet in text

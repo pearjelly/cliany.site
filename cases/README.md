@@ -56,7 +56,9 @@
 
 每个 issue 都应引用对应 case id、`promotion` 字段、`promotion_evidence` 状态和推荐验证命令；如果任一子任务还没完成，案例继续保持 `candidate`，不要提前改成 `active`。
 
-运行 `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md` 会在 Markdown 报告中生成 `Candidate Promotion Evidence Summary`、`Candidate Evidence Bundle Commands` 和 `Candidate Promotion Tasks` 小节。Evidence Bundle 命令会指向 `cliany-site cases --case-id <id> --evidence-bundle`，方便维护者先输出本地证据清单；Promotion Evidence Summary 汇总 candidate 数量、pending/blocked/complete 任务数和 primary next action；Promotion Tasks 可以直接把其中的 `Issue Body Template` 复制到 GitHub issue。模板会保留 `adapter_package`、`metadata_validation`、`online_smoke` 三类任务、`promotion_evidence` 当前状态、验收证据和非目标边界。
+运行 `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md` 会在 Markdown 报告中生成 `Candidate Promotion Evidence Summary`、`Candidate Evidence Bundle Commands` 和 `Candidate Promotion Tasks` 小节。Evidence Bundle 命令会指向 `cliany-site cases --case-id <id> --evidence-bundle` 和 `cliany-site cases --case-id <id> --evidence-bundle --json`，方便维护者先输出本地证据清单；Promotion Evidence Summary 汇总 candidate 数量、pending/blocked/complete 任务数和 primary next action；Promotion Tasks 可以直接把其中的 `Issue Body Template` 复制到 GitHub issue。模板会保留 `adapter_package`、`metadata_validation`、`online_smoke` 三类任务、`promotion_evidence` 当前状态、验收证据和非目标边界。
+
+创建 candidate promotion issue 时，正文可以复制 `--issue-template` 的输出，附件或评论应附上 `--evidence-bundle --json` 的机器可读结果，例如 `cliany-site cases --case-id pypi-project-search --evidence-bundle --json`。这样后续维护者能直接对比 issue、case report 和 `promotion_evidence`，确认哪些晋级证据仍在 pending。
 
 ## 维护规则
 
