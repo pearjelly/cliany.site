@@ -458,11 +458,19 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
 
     promotion = data.get("promotion_evidence_summary")
     if isinstance(promotion, dict) and promotion.get("primary_next_action"):
+        primary_task = promotion.get("primary_task_detail")
+        primary_task = primary_task if isinstance(primary_task, dict) else {}
+        primary_case_id = primary_task.get("case_id") or promotion.get("primary_case_id")
+        primary_task_name = primary_task.get("task") or promotion.get("primary_task")
+        primary_status = primary_task.get("status") or "unknown"
+        primary_evidence = primary_task.get("evidence") or "Not attached yet."
+        primary_next_action = primary_task.get("next_action") or promotion.get("primary_next_action")
         console.print("\n[bold]Candidate 下一步[/bold]")
         console.print(
-            f"- {promotion.get('primary_case_id')}/{promotion.get('primary_task')}: "
-            f"{promotion.get('primary_next_action')}"
+            f"- {primary_case_id}/{primary_task_name} ({primary_status}): "
+            f"{primary_next_action}"
         )
+        console.print(f"  evidence: {primary_evidence}")
 
     if detail:
         console.print("\n[bold]离线验证命令[/bold]")

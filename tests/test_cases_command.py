@@ -86,6 +86,17 @@ def test_cases_command_human_output_shows_first_commands(tmp_home):
     assert "cliany-site market install" in result.output
 
 
+def test_cases_command_human_candidate_next_step_shows_primary_detail(tmp_home):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["cases", "--status", "candidate"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert "Candidate 下一步" in result.output
+    assert "pypi-project-search/adapter_package (pending)" in result.output
+    assert "evidence: Not attached yet." in result.output
+    assert "package path or release asset name" in result.output
+
+
 def test_cases_command_human_case_detail_shows_all_commands(tmp_home):
     runner = CliRunner()
     result = runner.invoke(cli, ["cases", "--case-id", "pypi-project-search"], catch_exceptions=False)
