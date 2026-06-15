@@ -85,12 +85,17 @@ def test_good_first_issues_include_case_report_issue_draft_task():
         "case-catalog-report",
         "Candidate Promotion Tasks",
         "Issue Body Template",
+        "Reproduction Context",
+        "Evidence Bundle",
         "GitHub issue 草稿",
         "scripts/validate_cases.py",
         "cases/README.md",
         "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md",
         "cliany-site cases --case-id <id> --evidence-bundle --json",
         "promotion_evidence",
+        "target URL",
+        "candidate commands",
+        "offline validation commands",
     ]
     for snippet in required:
         assert snippet in text

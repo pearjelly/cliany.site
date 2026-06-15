@@ -18,6 +18,7 @@
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 candidate issue artifacts 现在在 `candidate_promotions`、`issue-metadata.json`、issue metadata summary 和 artifacts `README.md` 中输出 `evidence_bundle_command` / `evidence_bundle_json_command`，让维护者能直接复制案例证据包命令。
 - `scripts/plan_next_iteration.py` 生成的 candidate issue body 现在也包含 `Evidence Bundle` 小节，与 `cliany-site cases --case-id <id> --issue-template` 保持一致。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 candidate issue artifacts 的 evidence bundle 字段和 `Candidate Summary` 复制入口。
+- [docs/good-first-issues.md](docs/good-first-issues.md) 和 [docs/contributor-starter.md](docs/contributor-starter.md) 现在明确 candidate promotion 的 Issue Body Template 自带 `Reproduction Context` 与 `Evidence Bundle`。
 - README / README.zh 现在展示 `cliany-site cases --case-id pypi-project-search --evidence-bundle --json`，让维护者知道证据包也可机器读取。
 - 官网首页的贡献者路径现在展示 candidate evidence bundle JSON 命令，方便首次成功后的用户提交可复现案例证据。
 - [docs/good-first-issues.md](docs/good-first-issues.md) 现在要求 candidate promotion issue 附上 evidence bundle JSON，保持 issue、case report 和 `promotion_evidence` 同步。
