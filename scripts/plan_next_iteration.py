@@ -251,6 +251,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "publication_handoff_key_tail",
     "publication_handoff_key_tail_sha256",
     "publication_handoff_sha256",
+    "publication_handoff_candidate_issue_gate_primary_reason_code",
+    "publication_handoff_candidate_issue_gate_primary_reason_description",
+    "publication_handoff_candidate_issue_gate_primary_required_action",
     "publication_ref_context_key_count",
     "publication_ref_context_sha256",
     "publication_ref_context_first_key",
@@ -3046,6 +3049,15 @@ def _issue_artifact_bundle_summary(
             publication_handoff_key_tail
         ),
         "publication_handoff_sha256": _stable_json_sha256(publication_handoff),
+        "publication_handoff_candidate_issue_gate_primary_reason_code": publication_handoff.get(
+            "candidate_issue_gate_primary_reason_code"
+        ),
+        "publication_handoff_candidate_issue_gate_primary_reason_description": publication_handoff.get(
+            "candidate_issue_gate_primary_reason_description"
+        ),
+        "publication_handoff_candidate_issue_gate_primary_required_action": publication_handoff.get(
+            "candidate_issue_gate_primary_required_action"
+        ),
         "publication_ref_context_key_count": len(plan.publication_ref_context),
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
         "publication_ref_context_first_key": publication_ref_context_key_boundary[
@@ -3674,6 +3686,12 @@ def _issue_artifact_bundle_summary_markdown(
             "- publication_handoff_key_tail_sha256: "
             f"`{summary['publication_handoff_key_tail_sha256']}`",
             f"- publication_handoff_sha256: `{summary['publication_handoff_sha256']}`",
+            "- publication_handoff_candidate_issue_gate_primary_reason_code: "
+            f"{_summary_inline_code(summary['publication_handoff_candidate_issue_gate_primary_reason_code'])}",
+            "- publication_handoff_candidate_issue_gate_primary_reason_description: "
+            f"{_summary_inline_code(summary['publication_handoff_candidate_issue_gate_primary_reason_description'])}",
+            "- publication_handoff_candidate_issue_gate_primary_required_action: "
+            f"{_summary_inline_code(summary['publication_handoff_candidate_issue_gate_primary_required_action'])}",
             f"- publication_ref_context_key_count: `{summary['publication_ref_context_key_count']}`",
             f"- publication_ref_context_sha256: `{summary['publication_ref_context_sha256']}`",
             "- publication_ref_context_first_key: "

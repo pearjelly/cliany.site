@@ -20,6 +20,7 @@
 - `candidate_issue_gate.evidence` 现在包含 tag 发布决策状态、是否可推和 required action，artifacts `README.md` 的 `Publication Handoff` 也会展示同一组 gate evidence。
 - `candidate_issue_gate` 现在直接输出 `primary_reason_code`、`primary_reason_description` 和 `primary_required_action`，artifacts `README.md` 的 `Publication Handoff` 也会展示这组首要 gate 字段。
 - `publication-handoff.json` 现在把 `candidate_issue_gate_primary_reason_code`、`candidate_issue_gate_primary_reason_description` 和 `candidate_issue_gate_primary_required_action` 提升为顶层别名，方便只读 handoff 的工具展示首要 gate 状态。
+- `artifact_bundle_summary` 现在输出 `publication_handoff_candidate_issue_gate_primary_*` 字段，让只读整包摘要的工具也能确认 publication handoff 顶层 gate primary 别名。
 
 ## [0.16.226] - 2026-06-15
 
