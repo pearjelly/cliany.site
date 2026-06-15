@@ -58,6 +58,7 @@
 - `scripts/release_readiness.py` 的 `publication_tag_publish_decision` 和 `publication_summary` 现在也附带目标 release tag、目标 tag 状态、创建命令和命令 hash，让发版预检入口与周计划入口给出同一套 target tag 交接。
 - `scripts/release_readiness.py --json` 的顶层 `next_actions` 现在会在 publication 未公开时先展示 `publication_summary.primary_next_action`，再展示 cadence/readiness 修复动作，避免发版预检只提示提交日而漏掉发布同步。
 - `scripts/release_readiness.py --json` 的顶层 `next_actions` 现在也会在 publication 首项后展示目标 release tag 动作，让只读发版预检的工具不用展开 `publication_tag_publish_decision` 就能看到 `git tag v...` / `git push origin v...` 链路。
+- README / README.zh 和周维护手册现在说明自动化可比对 `target_tag_commands_sha256`，并优先读取 `publication_summary.target_tag*` 字段确认目标 release tag 命令是否漂移。
 - `scripts/release_readiness.py --json` 现在输出 `publication_blockers`、`publication_primary_blocker` 和 `publication_blockers_sha256`，让发版预检 artifact 顶层直接展示发布可见性阻塞原因。
 - `scripts/release_readiness.py --json` 顶层现在也展示 `next_action_count`、`primary_next_action` 和 `next_actions_sha256`，让维护工具不用展开 `next_actions` 就能显示首要发版预检动作并检测漂移。
 - `scripts/check_release_cadence.py` 的 JSON `next_actions` 现在保持纯文本，并输出 `primary_next_action` 与 `next_actions_sha256`，让 cadence audit 与 publication audit 的 action contract 保持一致。

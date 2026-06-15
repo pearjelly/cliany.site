@@ -31,6 +31,7 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "next_actions_sha256" in text
         assert "publication_next_actions_sha256" in text
         assert "publication_publish_commands_sha256" in text
+        assert "target_tag_commands_sha256" in text
         assert "github.com-1.0.0.cliany-adapter.tar.gz" in text
         assert "./github.com.cliany-adapter.tar.gz" not in text
         assert expected_partial_terms[filename] in text
