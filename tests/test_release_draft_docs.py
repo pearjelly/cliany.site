@@ -10958,6 +10958,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "publication_worktree_status_count",
         "publication_worktree_status",
         "Publication Worktree Status",
+        "publication_primary_next_action",
+        "publication_primary_publish_command",
         "all_declared",
         "missing_command_count",
         "artifact_bundle_summary",

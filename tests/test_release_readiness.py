@@ -606,11 +606,13 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert payload["publication_tag_publish_decision"]["can_push_tag"] is False
     assert payload["publication"]["next_actions"] == publication_next_actions
     assert payload["publication_next_action_count"] == len(publication_next_actions)
+    assert payload["publication_primary_next_action"] == publication_next_actions[0]
     assert (
         "- Rerun with `--remote` when network access is available to verify live remote refs."
         in publication_next_actions
     )
     assert payload["publication_publish_command_count"] == len(publish_commands)
+    assert payload["publication_primary_publish_command"] == publish_commands[0]
     assert "python scripts/check_release_publication.py --remote --json" in publish_commands
     assert payload["next_actions"] == [
         (
@@ -662,6 +664,7 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- tag_can_push: `false`" in text
     assert "- tag_required_action: `Move to the latest tag commit or create a new release tag at HEAD " in text
     assert "- publication_next_action_count: `" in text
+    assert "- publication_primary_next_action: `" in text
     assert "### Publication Next Actions" in text
     assert "- Move to the `v0.1.0` commit or create a new release tag at HEAD before publishing." in text
     assert "### Publication Ref Context" in text
@@ -673,6 +676,7 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- status_count: `0`" in text
     assert "- Worktree is clean." in text
     assert "- publish_command_count: `" in text
+    assert "- primary_publish_command: `git push -u origin master`" in text
     assert "python scripts/check_release_publication.py --remote --json" in text
     assert "| Does the week have enough commit days? | `3/3`: 2026-06-08, 2026-06-09, 2026-06-10 |" in text
     assert "| What is the next smallest release slice? | Ready to tag `v0.1.1` after final validation. |" in text
@@ -789,9 +793,11 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
         in output
     )
     assert "publication_next_action_count:" in output
+    assert "publication_primary_next_action: - Set an upstream branch for `master`" in output
     assert "publication_next_actions:" in output
     assert "- Move to the `v0.1.0` commit or create a new release tag at HEAD before publishing." in output
     assert "publication_publish_command_count:" in output
+    assert "publication_primary_publish_command: git push -u origin master" in output
     assert "publication_publish_commands:" in output
     assert "- python scripts/check_release_publication.py --remote --json" in output
     assert "package_gate_summary: checked=false, failed=0, missing=0, invalid=0, repair_actions=0" in output
