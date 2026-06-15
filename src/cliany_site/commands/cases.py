@@ -12,6 +12,11 @@ from cliany_site.response import print_response
 
 ALLOWED_STATUSES = ("active", "candidate", "degraded", "known-gap", "retired")
 PROMOTION_TASKS = ("adapter_package", "metadata_validation", "online_smoke")
+CANDIDATE_PACKAGES_DIR = "~/.cliany-site/packages"
+CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
+    "python scripts/validate_cases.py "
+    f"--packages-dir {CANDIDATE_PACKAGES_DIR} --include-candidate-packages --strict"
+)
 
 
 def _case_catalog_paths() -> list[Path]:
@@ -184,6 +189,7 @@ def _candidate_issue_primary_task(evidence: dict[str, Any]) -> dict[str, Any]:
 
 def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
     case_id = str(case.get("id") or "")
+    adapter_domain = case.get("adapter_domain")
     promotion = case.get("promotion") if isinstance(case.get("promotion"), dict) else {}
     evidence = case.get("promotion_evidence") if isinstance(case.get("promotion_evidence"), dict) else {}
     tasks: list[dict[str, Any]] = []
@@ -220,11 +226,14 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "title": case.get("title"),
         "status": case.get("status"),
         "target_url": case.get("target_url"),
-        "adapter_domain": case.get("adapter_domain"),
+        "adapter_domain": adapter_domain,
         "docs": case.get("docs"),
         "example_output": case.get("example_output"),
         "commands": case.get("commands") if isinstance(case.get("commands"), list) else [],
         "offline_commands": _offline_commands(case),
+        "candidate_package_validation_command": CANDIDATE_PACKAGE_VALIDATION_COMMAND
+        if adapter_domain
+        else "",
         "tasks": tasks,
         "status_counts": {
             "pending": status_counts.get("pending", 0),
@@ -279,6 +288,14 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
     lines.extend(f"- `{command}`" for command in bundle.get("commands", []))
     lines.extend(["", "## Offline validation"])
     lines.extend(f"- `{command}`" for command in bundle.get("offline_commands", []))
+    if bundle.get("candidate_package_validation_command"):
+        lines.extend(
+            [
+                "",
+                "## Candidate package validation",
+                f"- `{bundle['candidate_package_validation_command']}`",
+            ]
+        )
     lines.extend(["", "## Promotion evidence"])
 
     for task in bundle.get("tasks", []):

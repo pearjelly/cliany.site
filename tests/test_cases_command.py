@@ -319,6 +319,10 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["tasks"][0]["task"] == "adapter_package"
     assert bundle["tasks"][0]["complete"] is False
     assert "python scripts/validate_cases.py --strict" in bundle["offline_commands"]
+    assert bundle["candidate_package_validation_command"] == (
+        "python scripts/validate_cases.py "
+        "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
+    )
 
 
 def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatch):
@@ -415,6 +419,12 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "Incomplete tasks: `3`" in result.output
     assert "Primary next task: `adapter_package`" in result.output
     assert "Primary incomplete task: `adapter_package`" in result.output
+    assert "## Candidate package validation" in result.output
+    assert (
+        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "--include-candidate-packages --strict"
+        in result.output
+    )
     assert "## Promotion evidence" in result.output
     assert "`adapter_package`: `pending`" in result.output
     assert "cliany-site cases" not in result.output

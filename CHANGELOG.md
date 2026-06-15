@@ -47,6 +47,7 @@
 - `scripts/validate_cases.py --include-candidate-packages` 现在可显式校验 candidate adapter 包，按 `adapter_domain-<version>.cliany-adapter.tar.gz` 约定定位包文件，方便给 `pypi-project-search` 等候选案例补齐 adapter package evidence。
 - `scripts/plan_next_iteration.py --packages-dir ... --json` 的 validation commands 现在会包含 `python scripts/validate_cases.py --packages-dir ... --include-candidate-packages --strict`，让周初计划直接给出 candidate 包 evidence 的复现命令。
 - Candidate 案例的 `metadata_validation` 和 `promotion_evidence.metadata_validation.next_action` 现在统一使用 `--include-candidate-packages`，避免维护者照着 evidence 清单运行默认 active 包校验而漏掉候选包。
+- `cliany-site cases --case-id <id> --evidence-bundle --json` 现在输出 `candidate_package_validation_command`，人类 evidence bundle 也展示 `Candidate package validation` 小节，让候选包 evidence 命令无需从自然语言里解析。
 - README / README.zh 现在用 `promotion_evidence_summary.primary_next_task` 指引自动化读取首要 candidate 任务，避免新用户继续参考旧的 `primary_task_detail` 字段。
 - `cliany-site cases --case-id <id> --evidence-bundle --json` 现在输出 `primary_next_task`，并在人类证据包里展示 `Primary next task`，让脚本和维护者无需重建 pending/blocked/incomplete 优先级规则。
 - [cases/README.md](cases/README.md) 现在说明 `Candidate Promotion Evidence Summary` 会展示 `primary_next_task`，帮助贡献者直接定位首要 candidate case/task/status/evidence。
