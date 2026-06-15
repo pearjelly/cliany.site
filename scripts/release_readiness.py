@@ -642,6 +642,14 @@ def _print_text(report: ReadinessReport) -> None:
         f"known_gap {report.cases.known_gap}, total {report.cases.total}, "
         f"min_assets {report.min_case_assets})"
     )
+    command_plan_summary = report.cases.promotion_command_plan_summary
+    print(
+        "candidate_command_plan_summary: "
+        f"all_declared={str(bool(command_plan_summary.get('all_declared'))).lower()}, "
+        f"commands={command_plan_summary.get('command_count')}/"
+        f"{command_plan_summary.get('expected_command_count')}, "
+        f"missing={command_plan_summary.get('missing_command_count')}"
+    )
     print(f"draft: {report.draft.ok}")
     print(f"ci: {report.ci.ok}")
     print(f"release_workflow: {report.release_workflow.ok}")
@@ -766,7 +774,9 @@ def _next_action_lines(report: ReadinessReport) -> list[str]:
 
 
 def _markdown_cell(value: Any) -> str:
-    return str(value or "-").replace("|", "\\|").replace("\n", "<br>")
+    if value is None or value == "":
+        return "-"
+    return str(value).replace("|", "\\|").replace("\n", "<br>")
 
 
 def _candidate_promotion_rows(report: ReadinessReport) -> list[str]:
@@ -794,6 +804,34 @@ def _candidate_primary_next_task_rows(report: ReadinessReport) -> list[str]:
             f"{_markdown_cell(primary_task.get('next_action'))} |"
         )
     ]
+
+
+def _candidate_command_plan_summary_lines(report: ReadinessReport) -> list[str]:
+    summary = report.cases.promotion_command_plan_summary
+    lines = [
+        "",
+        "## Candidate Promotion Command Plan Summary",
+        "",
+        "| Metric | Value |",
+        "|--------|-------|",
+        f"| candidate_count | `{_markdown_cell(summary.get('candidate_count', 0))}` |",
+        f"| command_count | `{_markdown_cell(summary.get('command_count', 0))}` |",
+        f"| expected_command_count | `{_markdown_cell(summary.get('expected_command_count', 0))}` |",
+        f"| missing_command_count | `{_markdown_cell(summary.get('missing_command_count', 0))}` |",
+        f"| ready_candidate_count | `{_markdown_cell(summary.get('ready_candidate_count', 0))}` |",
+        f"| all_declared | `{str(bool(summary.get('all_declared'))).lower()}` |",
+        "",
+        "| Case | Missing Tasks |",
+        "|------|---------------|",
+    ]
+    missing_cases = list(summary.get("missing_cases") or [])
+    if not missing_cases:
+        lines.append("| - | - |")
+        return lines
+    for case in missing_cases:
+        missing_tasks = ", ".join(str(task) for task in case.get("missing_tasks") or [])
+        lines.append(f"| `{_markdown_cell(case.get('case_id'))}` | `{_markdown_cell(missing_tasks)}` |")
+    return lines
 
 
 def _case_package_rows(report: ReadinessReport) -> list[str]:
@@ -949,6 +987,8 @@ def _render_markdown_report(report: ReadinessReport) -> str:
                 *primary_next_task_rows,
             ]
         )
+    if report.cases.candidate:
+        lines.extend(_candidate_command_plan_summary_lines(report))
     candidate_rows = _candidate_promotion_rows(report)
     if candidate_rows:
         lines.extend(

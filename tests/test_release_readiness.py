@@ -52,6 +52,13 @@ def _build_report(repo: Path, **kwargs):
     return release_readiness.build_report(repo, min_case_assets=1, **kwargs)
 
 
+def test_markdown_cell_preserves_zero_and_false():
+    assert release_readiness._markdown_cell(0) == "0"
+    assert release_readiness._markdown_cell(False) == "False"
+    assert release_readiness._markdown_cell(None) == "-"
+    assert release_readiness._markdown_cell("") == "-"
+
+
 def _release_draft(target_version: str, current_version: str) -> str:
     return f"""# v{target_version} 发布草案
 
@@ -707,6 +714,12 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
         "| `candidate-case` | `adapter_package` | `pending` | Not attached yet. | "
         "Generate demo.example.com-<version>.cliany-adapter.tar.gz. |"
     ) in text
+    assert "## Candidate Promotion Command Plan Summary" in text
+    assert "| candidate_count | `1` |" in text
+    assert "| command_count | `3` |" in text
+    assert "| missing_command_count | `1` |" in text
+    assert "| all_declared | `false` |" in text
+    assert "| `candidate-case` | `adapter_package` |" in text
     assert "## Candidate Promotions" in text
     assert "| `candidate-case` |" in text
     assert "publish demo.example.com-<version>.cliany-adapter.tar.gz" in text
@@ -725,6 +738,7 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     output = capsys.readouterr().out
     assert "ok: True" in output
     assert "cases: True (active 1, candidate 0, known_gap 0, total 1, min_assets 1)" in output
+    assert "candidate_command_plan_summary: all_declared=true, commands=0/0, missing=0" in output
     assert "package_gate_summary: checked=false, failed=0, missing=0, invalid=0, repair_actions=0" in output
     assert "package_gate_primary_repair_action:" not in output
     assert "next_actions:" not in output
