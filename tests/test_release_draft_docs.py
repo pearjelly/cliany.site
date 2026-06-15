@@ -10963,6 +10963,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "primary_pending_task",
         "primary_blocked_task",
         "primary_incomplete_task",
+        "primary_next_task",
+        "Primary next task",
         "git tag v0.16.227",
     ]
     for snippet in required:

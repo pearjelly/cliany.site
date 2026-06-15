@@ -214,6 +214,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
     primary_blocked_task = blocked_tasks[0] if blocked_tasks else None
     primary_incomplete_task = incomplete_tasks[0] if incomplete_tasks else None
     primary_next_action_task = primary_pending_task or primary_blocked_task or primary_incomplete_task or {}
+    primary_next_task = dict(primary_next_action_task) if primary_next_action_task else None
     return {
         "case_id": case_id,
         "title": case.get("title"),
@@ -237,6 +238,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "primary_pending_task": primary_pending_task,
         "primary_blocked_task": primary_blocked_task,
         "primary_incomplete_task": primary_incomplete_task,
+        "primary_next_task": primary_next_task,
         "complete_task_count": len(complete_tasks),
         "pending_task_count": len(pending_tasks),
         "blocked_task_count": len(blocked_tasks),
@@ -261,6 +263,9 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
         f"- Complete tasks: `{bundle['complete_task_count']}`",
         f"- Incomplete tasks: `{bundle.get('incomplete_task_count', bundle['pending_task_count'])}`",
     ]
+    primary_next_task = bundle.get("primary_next_task")
+    if isinstance(primary_next_task, dict) and primary_next_task.get("task"):
+        lines.append(f"- Primary next task: `{primary_next_task['task']}`")
     primary_incomplete_task = bundle.get("primary_incomplete_task")
     if isinstance(primary_incomplete_task, dict) and primary_incomplete_task.get("task"):
         lines.append(f"- Primary incomplete task: `{primary_incomplete_task['task']}`")
