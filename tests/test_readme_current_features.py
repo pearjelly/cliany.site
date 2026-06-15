@@ -19,6 +19,7 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "scripts/check_release_publication.py --json" in text
         assert "cliany-site cases --case-id pypi-project-search --json" in text
         assert "cliany-site cases --case-id pypi-project-search --issue-template" in text
+        assert "cliany-site cases --case-id pypi-project-search --evidence-bundle" in text
         assert "Real Demo Case Proposal" in text
         assert "weekly-maintainer-loop.md" in text
         assert "next_actions" in text

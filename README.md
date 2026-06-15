@@ -121,6 +121,7 @@ cliany-site doctor --json
 cliany-site cases --json
 cliany-site cases --case-id pypi-project-search --json
 cliany-site cases --case-id pypi-project-search --issue-template
+cliany-site cases --case-id pypi-project-search --evidence-bundle
 
 # Explore web workflow (requires LLM)
 cliany-site explore "https://github.com" "Search and view results" --json
@@ -247,7 +248,7 @@ async with ClanySite() as cs:
 
 The following adapters are available as downloadable assets on [GitHub Release v0.14.1](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.1).
 The maintained case index lives in [cases/README.md](cases/README.md) and [cases/manifest.json](cases/manifest.json).
-Use `cliany-site cases --json` to inspect active demos, candidate workflows, offline validation commands, and candidate promotion next actions from the CLI. Use `cliany-site cases --case-id pypi-project-search --json` to open one case with validation and promotion details; omit `--json` for a copy-friendly human handoff with Promotion Tasks. Add `--issue-template` to print a GitHub issue body for a candidate promotion task.
+Use `cliany-site cases --json` to inspect active demos, candidate workflows, offline validation commands, and candidate promotion next actions from the CLI. Use `cliany-site cases --case-id pypi-project-search --json` to open one case with validation and promotion details; omit `--json` for a copy-friendly human handoff with Promotion Tasks. Add `--issue-template` to print a GitHub issue body for a candidate promotion task, or `--evidence-bundle` to print a structured local evidence checklist.
 
 ### SuiteCRM Demo (Enterprise CRM)
 ```bash
@@ -349,7 +350,7 @@ cliany-site market rollback github.com
 | `login <url>` | `[--json]` | Open URL to wait for login and save session. |
 | `explore <url> <workflow>` | `[--json] [--interactive] [--extend <domain>] [--record]` | Explore workflow and generate adapter. |
 | `list` | `[--json]` | List generated adapters. |
-| `cases` | `[--case-id <id>] [--status <status>] [--detail] [--issue-template] [--json]` | List maintained real demo cases and candidate workflows. |
+| `cases` | `[--case-id <id>] [--status <status>] [--detail] [--issue-template] [--evidence-bundle] [--json]` | List maintained real demo cases and candidate workflows. |
 | `verify <domain>` | `[--json]` | Statically verify adapter schema, signatures, and dependency integrity. |
 | `migrate` | `[--json] [--dry-run]` | Migrate all legacy adapters to schema v3. |
 | `replay <domain>` | `[--session <id>] [--step]` | Replay exploration recording with screenshots and actions. |

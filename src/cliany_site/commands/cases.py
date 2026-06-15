@@ -125,6 +125,85 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
+    case_id = str(case.get("id") or "")
+    promotion = case.get("promotion") if isinstance(case.get("promotion"), dict) else {}
+    evidence = case.get("promotion_evidence") if isinstance(case.get("promotion_evidence"), dict) else {}
+    tasks: list[dict[str, Any]] = []
+
+    for task in PROMOTION_TASKS:
+        task_evidence = evidence.get(task)
+        task_evidence = task_evidence if isinstance(task_evidence, dict) else {}
+        status = str(task_evidence.get("status") or "pending")
+        evidence_value = task_evidence.get("evidence")
+        next_action = str(task_evidence.get("next_action") or "")
+        tasks.append(
+            {
+                "task": task,
+                "status": status,
+                "description": promotion.get(task) or "",
+                "evidence": evidence_value,
+                "next_action": next_action,
+                "complete": status == "complete" and bool(evidence_value),
+            }
+        )
+
+    pending_tasks = [task for task in tasks if not task["complete"]]
+    return {
+        "case_id": case_id,
+        "title": case.get("title"),
+        "status": case.get("status"),
+        "target_url": case.get("target_url"),
+        "adapter_domain": case.get("adapter_domain"),
+        "docs": case.get("docs"),
+        "example_output": case.get("example_output"),
+        "commands": case.get("commands") if isinstance(case.get("commands"), list) else [],
+        "offline_commands": _offline_commands(case),
+        "tasks": tasks,
+        "pending_tasks": [task["task"] for task in pending_tasks],
+        "complete_task_count": sum(1 for task in tasks if task["complete"]),
+        "pending_task_count": len(pending_tasks),
+        "ready_to_promote": not pending_tasks,
+        "primary_next_action": pending_tasks[0]["next_action"] if pending_tasks else "",
+    }
+
+
+def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
+    lines = [
+        f"## Evidence bundle: `{bundle['case_id']}`",
+        "",
+        f"- Status: `{bundle['status']}`",
+        f"- Target URL: {bundle['target_url']}",
+        f"- Adapter domain: `{bundle['adapter_domain']}`",
+        f"- Docs: {bundle['docs']}",
+        f"- Example output: {bundle['example_output']}",
+        f"- Ready to promote: `{str(bundle['ready_to_promote']).lower()}`",
+        f"- Pending tasks: `{bundle['pending_task_count']}`",
+    ]
+    if bundle.get("primary_next_action"):
+        lines.append(f"- Primary next action: {bundle['primary_next_action']}")
+
+    lines.extend(["", "## Commands"])
+    lines.extend(f"- `{command}`" for command in bundle.get("commands", []))
+    lines.extend(["", "## Offline validation"])
+    lines.extend(f"- `{command}`" for command in bundle.get("offline_commands", []))
+    lines.extend(["", "## Promotion evidence"])
+
+    for task in bundle.get("tasks", []):
+        evidence_value = task.get("evidence") or "Not attached yet."
+        next_action = task.get("next_action") or "No next action declared."
+        lines.extend(
+            [
+                f"- `{task['task']}`: `{task['status']}`",
+                f"  - complete: `{str(task['complete']).lower()}`",
+                f"  - evidence: {evidence_value}",
+                f"  - next: {next_action}",
+            ]
+        )
+
+    return "\n".join(lines)
+
+
 def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
     status_counts: Counter[str] = Counter()
     task_status_counts: dict[str, Counter[str]] = {task: Counter() for task in PROMOTION_TASKS}
@@ -311,6 +390,7 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
 @click.option("--status", type=click.Choice(ALLOWED_STATUSES), default=None, help="只显示指定状态的案例")
 @click.option("--detail", is_flag=True, default=False, help="显示 promotion 和 validation 详情")
 @click.option("--issue-template", is_flag=True, default=False, help="为 candidate 案例输出 GitHub issue body")
+@click.option("--evidence-bundle", is_flag=True, default=False, help="为 candidate 案例输出本地证据包")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")
 @click.pass_context
 def cases_cmd(
@@ -319,6 +399,7 @@ def cases_cmd(
     status: str | None,
     detail: bool,
     issue_template: bool,
+    evidence_bundle: bool,
     json_mode: bool | None,
 ) -> None:
     """列出内置真实案例和候选工作流"""
@@ -351,12 +432,23 @@ def cases_cmd(
         return
 
     filtered_cases = [case for case in catalog_cases if status is None or case.get("status") == status]
-    if issue_template and not case_id:
+    if issue_template and evidence_bundle:
         result = err(
             "cases",
             ErrorCode.E_INVALID_PARAM,
-            "--issue-template 必须配合 --case-id 使用",
-            hint="例如：cliany-site cases --case-id pypi-project-search --issue-template",
+            "--issue-template 与 --evidence-bundle 不能同时使用",
+            hint="二选一：生成 issue body 或生成 evidence bundle。",
+            details={"case_id": case_id, "status_filter": status},
+        )
+        print_response(result, effective_json_mode)
+        return
+
+    if (issue_template or evidence_bundle) and not case_id:
+        result = err(
+            "cases",
+            ErrorCode.E_INVALID_PARAM,
+            "--issue-template / --evidence-bundle 必须配合 --case-id 使用",
+            hint="例如：cliany-site cases --case-id pypi-project-search --evidence-bundle",
             details={
                 "status_filter": status,
                 "available_case_ids": _case_ids(filtered_cases),
@@ -385,15 +477,16 @@ def cases_cmd(
 
     include_detail = detail or bool(case_id)
     rendered_issue_template = ""
-    if issue_template:
+    rendered_evidence_bundle: dict[str, Any] = {}
+    if issue_template or evidence_bundle:
         selected_case = filtered_cases[0]
         if selected_case.get("status") != "candidate":
             result = err(
                 "cases",
                 ErrorCode.E_INVALID_PARAM,
-                f"案例 {case_id} 不是 candidate，不能生成 promotion issue template",
+                f"案例 {case_id} 不是 candidate，不能生成 promotion 输出",
                 hint=(
-                    "仅 candidate 案例需要 promotion issue；"
+                    "仅 candidate 案例需要 promotion 输出；"
                     "运行 cliany-site cases --status candidate --json 查看候选项。"
                 ),
                 details={
@@ -403,7 +496,10 @@ def cases_cmd(
             )
             print_response(result, effective_json_mode)
             return
-        rendered_issue_template = _candidate_issue_template(selected_case)
+        if issue_template:
+            rendered_issue_template = _candidate_issue_template(selected_case)
+        if evidence_bundle:
+            rendered_evidence_bundle = _candidate_evidence_bundle(selected_case)
 
     data = {
         "source_path": str(source_path),
@@ -415,6 +511,8 @@ def cases_cmd(
     }
     if rendered_issue_template:
         data["issue_template"] = rendered_issue_template
+    if rendered_evidence_bundle:
+        data["evidence_bundle"] = rendered_evidence_bundle
     result = ok(command="cases", data=data, source="builtin")
 
     if effective_json_mode:
@@ -422,5 +520,8 @@ def cases_cmd(
         return
     if rendered_issue_template:
         click.echo(rendered_issue_template)
+        return
+    if rendered_evidence_bundle:
+        click.echo(_candidate_evidence_bundle_markdown(rendered_evidence_bundle))
         return
     _print_human_cases(data, detail=include_detail)
