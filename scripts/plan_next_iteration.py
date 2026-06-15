@@ -27,6 +27,7 @@ ARTIFACT_MANIFEST_KEYS = (
     "case_promotion_evidence_summary",
     "blockers",
     "next_actions",
+    "commit_cadence",
     "candidate_issue_gate",
     "publication_ok",
     "publication_visibility",
@@ -254,6 +255,12 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "publication_handoff_candidate_issue_gate_primary_reason_code",
     "publication_handoff_candidate_issue_gate_primary_reason_description",
     "publication_handoff_candidate_issue_gate_primary_required_action",
+    "commit_cadence_status",
+    "commit_cadence_commit_day_count",
+    "commit_cadence_min_commit_days",
+    "commit_cadence_missing_commit_days",
+    "commit_cadence_commit_days_sha256",
+    "commit_cadence_next_actions_sha256",
     "publication_ref_context_key_count",
     "publication_ref_context_sha256",
     "publication_ref_context_first_key",
@@ -467,6 +474,7 @@ class IterationPlan:
     readiness_ok: bool
     publication_ok: bool
     commit_days: str
+    commit_cadence: dict[str, Any]
     case_assets: str
     candidate_cases: list[str]
     candidate_promotions: list[CandidatePromotion]
@@ -501,6 +509,7 @@ class IterationPlan:
             "readiness_ok": self.readiness_ok,
             "publication_ok": self.publication_ok,
             "commit_days": self.commit_days,
+            "commit_cadence": self.commit_cadence,
             "case_assets": self.case_assets,
             "candidate_cases": self.candidate_cases,
             "candidate_promotions": [promotion.to_dict() for promotion in self.candidate_promotions],
@@ -897,6 +906,46 @@ def _release_draft_issues(readiness: Any) -> list[str]:
     return [str(issue) for issue in issues]
 
 
+def _commit_cadence(readiness: Any) -> dict[str, Any]:
+    cadence = getattr(readiness, "cadence", None)
+    to_dict = getattr(cadence, "to_dict", None)
+    payload = to_dict() if callable(to_dict) else {}
+    commit_days_value = payload.get("commit_days", getattr(cadence, "commit_days", []))
+    commit_days = (
+        [str(day) for day in commit_days_value]
+        if isinstance(commit_days_value, list)
+        else []
+    )
+    commit_day_count = int(payload.get("commit_day_count", getattr(cadence, "commit_day_count", 0)) or 0)
+    min_commit_days = int(payload.get("min_commit_days", getattr(cadence, "min_commit_days", 0)) or 0)
+    missing_commit_days = max(min_commit_days - commit_day_count, 0)
+    next_actions_value = payload.get("next_actions", getattr(cadence, "next_actions", []))
+    next_actions = (
+        [str(action).removeprefix("- ") for action in next_actions_value]
+        if isinstance(next_actions_value, list)
+        else []
+    )
+    if missing_commit_days and not next_actions:
+        next_actions = [
+            "Ship verified slices on "
+            f"`{missing_commit_days}` more unique commit days this week."
+        ]
+    return {
+        "status": "ready" if missing_commit_days == 0 else "needs_more_commit_days",
+        "commit_days": commit_days,
+        "commit_day_count": commit_day_count,
+        "min_commit_days": min_commit_days,
+        "missing_commit_days": missing_commit_days,
+        "next_actions": next_actions,
+        "summary": (
+            f"{commit_day_count}/{min_commit_days} commit days; "
+            f"{missing_commit_days} more unique day(s) needed."
+            if missing_commit_days
+            else f"{commit_day_count}/{min_commit_days} commit days; cadence satisfied."
+        ),
+    }
+
+
 def _next_action_lines(readiness: Any, publication: Any) -> list[str]:
     actions: list[str] = []
     if not publication.ok:
@@ -1161,6 +1210,7 @@ def build_plan(
     case_promotion_evidence_summary = _case_promotion_evidence_summary(readiness.cases)
     publication_next_actions = _publication_next_actions(publication)
     publication_publish_commands = _publication_publish_commands(publication)
+    commit_cadence = _commit_cadence(readiness)
     candidate_cases = [
         str(case.id)
         for case in readiness.cases.cases
@@ -1192,6 +1242,7 @@ def build_plan(
         readiness_ok=bool(readiness.ok),
         publication_ok=bool(publication.ok),
         commit_days=f"{readiness.cadence.commit_day_count}/{readiness.cadence.min_commit_days}",
+        commit_cadence=commit_cadence,
         case_assets=(
             f"active {readiness.cases.active}, candidate {readiness.cases.candidate}, "
             f"known_gap {readiness.cases.known_gap}, total {readiness.cases.total}/{readiness.min_case_assets}"
@@ -1233,6 +1284,9 @@ def _print_text(plan: IterationPlan) -> None:
     print(f"readiness_ok: {plan.readiness_ok}")
     print(f"publication_ok: {plan.publication_ok}")
     print(f"commit_days: {plan.commit_days}")
+    print("commit_cadence:")
+    for key, value in plan.commit_cadence.items():
+        _print_text_item(key, value)
     print(f"case_assets: {plan.case_assets}")
     print(f"release_draft_path: {plan.release_draft_path}")
     if plan.release_draft_issues:
@@ -1358,6 +1412,9 @@ def _render_markdown(plan: IterationPlan) -> str:
 | publication_publish_script_path_sha256 | `{plan.publication_publish_script_path_sha256}` |
 | publication_publish_script_command_sha256 | `{plan.publication_publish_script_command_sha256}` |
 | commit_days | `{plan.commit_days}` |
+| commit_cadence_status | `{plan.commit_cadence.get("status")}` |
+| commit_cadence_missing_commit_days | `{plan.commit_cadence.get("missing_commit_days")}` |
+| commit_cadence_summary | {plan.commit_cadence.get("summary")} |
 | case_assets | {plan.case_assets} |
 | candidate_cases | {candidate_cases} |
 
@@ -2397,6 +2454,7 @@ def _artifact_manifest_payload_without_summary(
         "case_promotion_evidence_summary": plan.case_promotion_evidence_summary,
         "blockers": plan.blockers,
         "next_actions": plan.next_actions,
+        "commit_cadence": plan.commit_cadence,
         "candidate_issue_gate": plan.candidate_issue_gate,
         "publication_ok": plan.publication_ok,
         "publication_visibility": plan.publication_visibility,
@@ -3058,6 +3116,16 @@ def _issue_artifact_bundle_summary(
         "publication_handoff_candidate_issue_gate_primary_required_action": publication_handoff.get(
             "candidate_issue_gate_primary_required_action"
         ),
+        "commit_cadence_status": plan.commit_cadence.get("status"),
+        "commit_cadence_commit_day_count": plan.commit_cadence.get("commit_day_count"),
+        "commit_cadence_min_commit_days": plan.commit_cadence.get("min_commit_days"),
+        "commit_cadence_missing_commit_days": plan.commit_cadence.get("missing_commit_days"),
+        "commit_cadence_commit_days_sha256": _stable_json_sha256(
+            plan.commit_cadence.get("commit_days", [])
+        ),
+        "commit_cadence_next_actions_sha256": _stable_json_sha256(
+            plan.commit_cadence.get("next_actions", [])
+        ),
         "publication_ref_context_key_count": len(plan.publication_ref_context),
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
         "publication_ref_context_first_key": publication_ref_context_key_boundary[
@@ -3692,6 +3760,15 @@ def _issue_artifact_bundle_summary_markdown(
             f"{_summary_inline_code(summary['publication_handoff_candidate_issue_gate_primary_reason_description'])}",
             "- publication_handoff_candidate_issue_gate_primary_required_action: "
             f"{_summary_inline_code(summary['publication_handoff_candidate_issue_gate_primary_required_action'])}",
+            "- commit_cadence_status: "
+            f"{_summary_inline_code(summary['commit_cadence_status'])}",
+            f"- commit_cadence_commit_day_count: `{summary['commit_cadence_commit_day_count']}`",
+            f"- commit_cadence_min_commit_days: `{summary['commit_cadence_min_commit_days']}`",
+            f"- commit_cadence_missing_commit_days: `{summary['commit_cadence_missing_commit_days']}`",
+            "- commit_cadence_commit_days_sha256: "
+            f"`{summary['commit_cadence_commit_days_sha256']}`",
+            "- commit_cadence_next_actions_sha256: "
+            f"`{summary['commit_cadence_next_actions_sha256']}`",
             f"- publication_ref_context_key_count: `{summary['publication_ref_context_key_count']}`",
             f"- publication_ref_context_sha256: `{summary['publication_ref_context_sha256']}`",
             "- publication_ref_context_first_key: "

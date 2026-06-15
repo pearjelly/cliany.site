@@ -405,6 +405,15 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         == "python scripts/plan_next_iteration.py --target-version 0.16.2 "
         "--issues-dir /tmp/cliany-candidate-issues"
     )
+    assert data["commit_cadence"] == {
+        "status": "needs_more_commit_days",
+        "commit_days": [],
+        "commit_day_count": 2,
+        "min_commit_days": 3,
+        "missing_commit_days": 1,
+        "next_actions": ["Ship verified slices on `1` more unique commit days this week."],
+        "summary": "2/3 commit days; 1 more unique day(s) needed.",
+    }
     assert data["candidate_issue_gate"] == _blocked_candidate_issue_gate()
     assert not str(data["candidate_issue_gate"]["evidence"]["release_draft_path"]).startswith("/")
     assert data["publication_publish_commands"] == [
@@ -578,6 +587,9 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert "## Publication Publish Commands" in text
     assert "| publication_next_action_count | `3` |" in text
     assert "| publication_publish_command_count | `1` |" in text
+    assert "| commit_cadence_status | `needs_more_commit_days` |" in text
+    assert "| commit_cadence_missing_commit_days | `1` |" in text
+    assert "| commit_cadence_summary | 2/3 commit days; 1 more unique day(s) needed. |" in text
     assert "## Candidate Issue Gate" in text
     assert "status: `blocked_by_publication`" in text
     assert "can_create_issues: `false`" in text
@@ -662,6 +674,9 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
     plan_next_iteration._print_text(plan)
 
     text = capsys.readouterr().out
+    assert "commit_cadence:" in text
+    assert "- status: needs_more_commit_days" in text
+    assert "- missing_commit_days: 1" in text
     assert "candidate_issue_gate:" in text
     assert "publication_next_action_count: 3" in text
     assert "publication_publish_command_count: 1" in text
@@ -1413,6 +1428,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_handoff_candidate_issue_gate_primary_required_action": (
             expected_publication_handoff["candidate_issue_gate_primary_required_action"]
         ),
+        "commit_cadence_status": "needs_more_commit_days",
+        "commit_cadence_commit_day_count": 2,
+        "commit_cadence_min_commit_days": 3,
+        "commit_cadence_missing_commit_days": 1,
+        "commit_cadence_commit_days_sha256": _stable_json_sha256([]),
+        "commit_cadence_next_actions_sha256": _stable_json_sha256(
+            ["Ship verified slices on `1` more unique commit days this week."]
+        ),
         "publication_ref_context_key_count": len(plan.publication_ref_context),
         "publication_ref_context_sha256": _stable_json_sha256(plan.publication_ref_context),
         "publication_ref_context_first_key": "repo_root",
@@ -1761,6 +1784,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "case_promotion_evidence_summary": plan.case_promotion_evidence_summary,
         "blockers": ["release draft validation failed", "latest local release is not published"],
         "next_actions": plan.next_actions,
+        "commit_cadence": plan.commit_cadence,
         "candidate_issue_gate": _blocked_candidate_issue_gate(),
         "publication_ok": False,
         "publication_visibility": {
@@ -2697,6 +2721,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "publication_handoff_candidate_issue_gate_primary_required_action: "
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
+    ) in readme
+    assert "commit_cadence_status: `needs_more_commit_days`" in readme
+    assert "commit_cadence_commit_day_count: `2`" in readme
+    assert "commit_cadence_min_commit_days: `3`" in readme
+    assert "commit_cadence_missing_commit_days: `1`" in readme
+    assert f"commit_cadence_commit_days_sha256: `{_stable_json_sha256([])}`" in readme
+    assert (
+        "commit_cadence_next_actions_sha256: "
+        f"`{_stable_json_sha256(['Ship verified slices on `1` more unique commit days this week.'])}`"
     ) in readme
     assert (
         f"publication_ref_context_key_count: "
