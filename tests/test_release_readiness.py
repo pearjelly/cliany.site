@@ -1190,3 +1190,8 @@ def test_release_readiness_markdown_report_includes_case_package_checks(tmp_path
     assert "demo.example.com.cliany-adapter-v0.1.0.tar.gz" in text
     assert "domain mismatch: expected 'demo.example.com', got 'other.example.com'" in text
     assert "Regenerate the package for the manifest adapter_domain or fix the case adapter_domain." in text
+    package_next_action = (
+        "- `demo-case` package: "
+        "Regenerate the package for the manifest adapter_domain or fix the case adapter_domain."
+    )
+    assert package_next_action in report.to_dict()["next_actions"]

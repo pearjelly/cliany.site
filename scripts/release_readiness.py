@@ -645,6 +645,19 @@ def _report_issue_lines(report: ReadinessReport) -> list[str]:
     return lines
 
 
+def _case_package_next_action_lines(report: ReadinessReport) -> list[str]:
+    lines: list[str] = []
+    for case in report.cases.cases:
+        package = case.package
+        if package is None or package.get("ok"):
+            continue
+        for action in package.get("next_actions") or []:
+            line = f"- `{case.id}` package: {action}"
+            if line not in lines:
+                lines.append(line)
+    return lines
+
+
 def _next_action_lines(report: ReadinessReport) -> list[str]:
     lines: list[str] = []
     if report.cadence.commit_day_count < report.cadence.min_commit_days:
@@ -665,6 +678,7 @@ def _next_action_lines(report: ReadinessReport) -> list[str]:
         lines.append("- Update `CHANGELOG.md` Unreleased content and compare link before release.")
     if not report.cases.ok:
         lines.append("- Run `python scripts/validate_cases.py --strict` and fix the listed case catalog issues.")
+        lines.extend(_case_package_next_action_lines(report))
     if report.cases.total < report.min_case_assets:
         lines.append(
             "- Add verified active or candidate case assets until the catalog reaches "

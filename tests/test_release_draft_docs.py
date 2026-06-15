@@ -10962,6 +10962,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
             "python scripts/release_readiness.py --packages-dir ~/.cliany-site/packages "
             "--report /tmp/cliany-release-readiness.md"
         ),
+        "python scripts/release_readiness.py --json --packages-dir ~/.cliany-site/packages",
+        "失败 case package 的修复动作",
         "python scripts/validate_cases.py",
         "README / README.zh",
         "当前 evidence",
