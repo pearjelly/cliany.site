@@ -591,8 +591,12 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     payload = report.to_dict()
     publish_commands = payload["publication_publish_commands"]
     publication_next_actions = payload["publication_next_actions"]
+    publication_ref_context = payload["publication_ref_context"]
     assert payload["blockers"] == ["commit days 1/3"]
     assert payload["publication_ok"] is False
+    assert publication_ref_context["branch"] == payload["publication"]["branch"]
+    assert publication_ref_context["latest_tag"] == payload["publication"]["latest_tag"]
+    assert publication_ref_context["remote_checked"] == payload["publication"]["remote_checked"]
     assert payload["publication"]["publish_commands"] == publish_commands
     assert payload["publication_tag_publish_decision"] == payload["publication"]["tag_publish_decision"]
     assert payload["publication_tag_publish_decision"]["status"] == "needs_remote_check"
@@ -657,6 +661,10 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- publication_next_action_count: `" in text
     assert "### Publication Next Actions" in text
     assert "- Move to the `v0.1.0` commit or create a new release tag at HEAD before publishing." in text
+    assert "### Publication Ref Context" in text
+    assert "| branch | `master` |" in text
+    assert "| latest_tag | `v0.1.0` |" in text
+    assert "| tag_points_at_head | `false` |" in text
     assert "- publish_command_count: `" in text
     assert "python scripts/check_release_publication.py --remote --json" in text
     assert "| Does the week have enough commit days? | `3/3`: 2026-06-08, 2026-06-09, 2026-06-10 |" in text
@@ -765,6 +773,7 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     assert "cases: True (active 1, candidate 0, known_gap 0, total 1, min_assets 1)" in output
     assert "candidate_command_plan_summary: all_declared=true, commands=0/0, missing=0" in output
     assert "publication: False" in output
+    assert "publication_ref_context: branch=master, upstream=(none), ahead=None, latest_tag=v0.1.0" in output
     assert "publication_tag_publish_decision: status=manual_decision_required, can_push_tag=false" in output
     assert (
         "publication_tag_required_action: Move to the latest tag commit or create a new release tag at HEAD"

@@ -136,6 +136,7 @@ class ReadinessReport:
 
     def to_dict(self) -> dict[str, Any]:
         publication_payload = self.publication.to_dict()
+        publication_ref_context = _publication_ref_context(publication_payload)
         return {
             "ok": self.ok,
             "current_version": self.current_version,
@@ -153,6 +154,7 @@ class ReadinessReport:
             "package_gate": self.package_gate.to_dict(),
             "publication": publication_payload,
             "publication_ok": publication_payload["ok"],
+            "publication_ref_context": publication_ref_context,
             "publication_tag_publish_decision": publication_payload["tag_publish_decision"],
             "publication_next_action_count": publication_payload["next_action_count"],
             "publication_next_actions": publication_payload["next_actions"],
@@ -641,6 +643,7 @@ def build_report(
 
 def _print_text(report: ReadinessReport) -> None:
     publication_payload = report.publication.to_dict()
+    publication_ref_context = _publication_ref_context(publication_payload)
     tag_publish_decision = publication_payload["tag_publish_decision"]
     publication_next_actions = list(publication_payload["next_actions"])
     publication_publish_commands = list(publication_payload["publish_commands"])
@@ -672,6 +675,14 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"release_workflow: {report.release_workflow.ok}")
     print(f"project_metadata: {report.project_metadata.ok}")
     print(f"publication: {publication_payload['ok']}")
+    print(
+        "publication_ref_context: "
+        f"branch={publication_ref_context['branch'] or '(detached)'}, "
+        f"upstream={publication_ref_context['upstream'] or '(none)'}, "
+        f"ahead={publication_ref_context['ahead_count']}, "
+        f"latest_tag={publication_ref_context['latest_tag'] or '(none)'}, "
+        f"tag_points_at_head={str(bool(publication_ref_context['tag_points_at_head'])).lower()}"
+    )
     print(
         "publication_tag_publish_decision: "
         f"status={tag_publish_decision['status']}, "
@@ -764,6 +775,26 @@ def _publication_publish_commands(report: ReadinessReport) -> list[str]:
 
 def _publication_next_actions(report: ReadinessReport) -> list[str]:
     return [str(action) for action in report.publication.to_dict()["next_actions"]]
+
+
+def _publication_ref_context(publication_payload: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "repo_root": publication_payload["repo_root"],
+        "branch": publication_payload["branch"],
+        "upstream": publication_payload["upstream"],
+        "remote": publication_payload["remote"],
+        "local_head": publication_payload["local_head"],
+        "upstream_head": publication_payload["upstream_head"],
+        "ahead_count": publication_payload["ahead_count"],
+        "behind_count": publication_payload["behind_count"],
+        "latest_tag": publication_payload["latest_tag"],
+        "tag_commit": publication_payload["tag_commit"],
+        "tag_points_at_head": publication_payload["tag_points_at_head"],
+        "tag_commit_in_upstream": publication_payload["tag_commit_in_upstream"],
+        "branch_published": publication_payload["branch_published"],
+        "tag_published": publication_payload["tag_published"],
+        "remote_checked": publication_payload["remote_checked"],
+    }
 
 
 def _next_action_lines(report: ReadinessReport) -> list[str]:
@@ -879,6 +910,7 @@ def _candidate_command_plan_summary_lines(report: ReadinessReport) -> list[str]:
 
 def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
     publication_payload = report.publication.to_dict()
+    ref_context = _publication_ref_context(publication_payload)
     tag_publish_decision = publication_payload["tag_publish_decision"]
     publication_next_actions = _publication_next_actions(report)
     commands = _publication_publish_commands(report)
@@ -896,6 +928,29 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
     ]
     if publication_next_actions:
         lines.extend(["### Publication Next Actions", "", *publication_next_actions, ""])
+    lines.extend(
+        [
+            "### Publication Ref Context",
+            "",
+            "| Field | Value |",
+            "|-------|-------|",
+            f"| branch | `{_markdown_cell(ref_context['branch'])}` |",
+            f"| upstream | `{_markdown_cell(ref_context['upstream'])}` |",
+            f"| remote | `{_markdown_cell(ref_context['remote'])}` |",
+            f"| local_head | `{_markdown_cell(ref_context['local_head'])}` |",
+            f"| upstream_head | `{_markdown_cell(ref_context['upstream_head'])}` |",
+            f"| ahead_count | `{_markdown_cell(ref_context['ahead_count'])}` |",
+            f"| behind_count | `{_markdown_cell(ref_context['behind_count'])}` |",
+            f"| latest_tag | `{_markdown_cell(ref_context['latest_tag'])}` |",
+            f"| tag_commit | `{_markdown_cell(ref_context['tag_commit'])}` |",
+            f"| tag_points_at_head | `{str(bool(ref_context['tag_points_at_head'])).lower()}` |",
+            f"| tag_commit_in_upstream | `{_markdown_cell(ref_context['tag_commit_in_upstream'])}` |",
+            f"| branch_published | `{_markdown_cell(ref_context['branch_published'])}` |",
+            f"| tag_published | `{_markdown_cell(ref_context['tag_published'])}` |",
+            f"| remote_checked | `{str(bool(ref_context['remote_checked'])).lower()}` |",
+            "",
+        ]
+    )
     if commands:
         lines.extend(["```bash", *commands, "```"])
     else:

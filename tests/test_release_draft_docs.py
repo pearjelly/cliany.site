@@ -10952,6 +10952,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "publication_next_actions",
         "publication_next_action_count",
         "Publication Next Actions",
+        "publication_ref_context",
+        "Publication Ref Context",
         "all_declared",
         "missing_command_count",
         "artifact_bundle_summary",
