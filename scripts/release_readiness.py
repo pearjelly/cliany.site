@@ -155,6 +155,9 @@ class ReadinessReport:
             "publication": publication_payload,
             "publication_ok": publication_payload["ok"],
             "publication_ref_context": publication_ref_context,
+            "publication_worktree_clean": publication_payload["worktree_clean"],
+            "publication_worktree_status_count": len(publication_payload["worktree_status"]),
+            "publication_worktree_status": publication_payload["worktree_status"],
             "publication_tag_publish_decision": publication_payload["tag_publish_decision"],
             "publication_next_action_count": publication_payload["next_action_count"],
             "publication_next_actions": publication_payload["next_actions"],
@@ -676,6 +679,15 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"project_metadata: {report.project_metadata.ok}")
     print(f"publication: {publication_payload['ok']}")
     print(
+        "publication_worktree: "
+        f"clean={str(bool(publication_payload['worktree_clean'])).lower()}, "
+        f"status_count={len(publication_payload['worktree_status'])}"
+    )
+    if publication_payload["worktree_status"]:
+        print("publication_worktree_status:")
+        for status_line in publication_payload["worktree_status"]:
+            print(f"- {status_line}")
+    print(
         "publication_ref_context: "
         f"branch={publication_ref_context['branch'] or '(detached)'}, "
         f"upstream={publication_ref_context['upstream'] or '(none)'}, "
@@ -951,6 +963,19 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
             "",
         ]
     )
+    lines.extend(
+        [
+            "### Publication Worktree Status",
+            "",
+            f"- clean: `{str(bool(publication_payload['worktree_clean'])).lower()}`",
+            f"- status_count: `{len(publication_payload['worktree_status'])}`",
+            "",
+        ]
+    )
+    if publication_payload["worktree_status"]:
+        lines.extend(["```text", *publication_payload["worktree_status"], "```", ""])
+    else:
+        lines.extend(["- Worktree is clean.", ""])
     if commands:
         lines.extend(["```bash", *commands, "```"])
     else:

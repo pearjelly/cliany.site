@@ -48,6 +48,7 @@
 - `scripts/release_readiness.py` 现在也把 `publication_tag_publish_decision` 提升到顶层 JSON、默认文本输出和 Markdown report，维护者无需展开 publication audit 就能看到 tag 是否可推和人工决策动作。
 - `scripts/release_readiness.py` 现在也把 `publication_next_actions` 和 `publication_next_action_count` 提升到顶层 JSON、默认文本输出和 Markdown report，让发版预检 artifact 直接列出发布可见性待办。
 - `scripts/release_readiness.py` 现在也把 `publication_ref_context` 提升到顶层 JSON、默认文本输出和 Markdown report，让维护者直接看到发布待办对应的 branch、upstream、HEAD、tag 和 ahead/behind refs。
+- `scripts/release_readiness.py` 现在也把 `publication_worktree_clean`、`publication_worktree_status_count` 和 `publication_worktree_status` 提升到顶层 JSON、默认文本输出和 Markdown report，让维护者在发版预检 artifact 里直接判断本地改动是否阻塞发布命令。
 - `artifact_bundle_summary` 现在输出 `case_promotion_evidence_primary_detail_sha256`，让只读整包摘要的工具能检测首要 candidate 晋级任务对象是否漂移。
 - `artifact_bundle_summary` 现在也输出 `case_promotion_evidence_primary_next_task_sha256`，让只读整包摘要的工具能单独检测 `primary_next_task` 漂移。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 `case_promotion_evidence_primary_next_task_sha256`，让周维护手册覆盖最新 artifact bundle summary 字段。
