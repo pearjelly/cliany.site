@@ -54,6 +54,7 @@
 - `scripts/release_readiness.py` 现在输出顶层 `publication_summary`，把发布状态、worktree、branch/tag、ahead/behind、tag 决策、首要动作和首条发布命令压缩成一个机器可读摘要。
 - `scripts/release_readiness.py` 现在输出 `publication_summary_sha256`，让只读发版预检 artifact 的工具能检测 publication summary 是否漂移。
 - `scripts/release_readiness.py` 现在也输出 `publication_summary_primary_next_action` 和 `publication_summary_primary_publish_command` 顶层别名，让只读摘要字段族的工具不用展开 nested summary。
+- `scripts/check_release_cadence.py` 的 JSON `next_actions` 现在保持纯文本，并输出 `primary_next_action` 与 `next_actions_sha256`，让 cadence audit 与 publication audit 的 action contract 保持一致。
 - `scripts/check_release_publication.py` 的 JSON `next_actions` 现在保持纯文本，不再混入 Markdown bullet，文本和 Markdown report 仍由渲染层输出列表符号。
 - `scripts/check_release_publication.py` 现在也输出 `primary_next_action`、`next_actions_sha256`、`primary_publish_command` 和 `publish_commands_sha256`，让 publication audit 自身能直接展示首项并检测 action/command 列表漂移。
 - `scripts/plan_next_iteration.py` 现在把 publication next actions / publish commands 的 primary 和 SHA-256 摘要提升到顶层 JSON、默认文本输出和 Markdown report。

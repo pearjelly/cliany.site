@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -36,6 +37,7 @@ class CadenceReport:
     dirty: bool
 
     def to_dict(self) -> dict[str, Any]:
+        next_actions = _next_action_lines(self)
         return {
             "ok": self.ok,
             "version": self.version,
@@ -53,7 +55,9 @@ class CadenceReport:
             "changelog_unreleased_compare_actual": self.changelog_unreleased_compare_actual,
             "changelog_ok": self.changelog_ok,
             "dirty": self.dirty,
-            "next_actions": _next_action_lines(self),
+            "next_actions_sha256": _stable_json_sha256(next_actions),
+            "primary_next_action": next_actions[0] if next_actions else None,
+            "next_actions": next_actions,
         }
 
 
@@ -136,6 +140,11 @@ def _missing_commit_days(report: CadenceReport) -> int:
     return max(report.min_commit_days - report.commit_day_count, 0)
 
 
+def _stable_json_sha256(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
 def build_report(root: Path, today: date, min_commit_days: int) -> CadenceReport:
     version = _project_version(root)
     latest_tag = _latest_tag(root)
@@ -190,9 +199,11 @@ def _print_text(report: CadenceReport) -> None:
     print(f"ok: {report.ok}")
     next_actions = _next_action_lines(report)
     if next_actions:
+        print(f"next_actions_sha256: {_stable_json_sha256(next_actions)}")
+        print(f"primary_next_action: {next_actions[0]}")
         print("next_actions:")
         for action in next_actions:
-            print(action)
+            print(f"- {action}")
 
 
 def _next_action_lines(report: CadenceReport) -> list[str]:
@@ -200,24 +211,24 @@ def _next_action_lines(report: CadenceReport) -> list[str]:
     if report.commit_day_count < report.min_commit_days:
         missing_days = _missing_commit_days(report)
         actions.append(
-            "- Ship verified slices on "
+            "Ship verified slices on "
             f"`{missing_days}` more unique commit days this week; current commit days are "
             f"`{report.commit_day_count}/{report.min_commit_days}`."
         )
     if not report.tag_matches_version:
         actions.append(
-            f"- Align the latest tag `{report.latest_tag or '(none)'}` with pyproject version `{report.version}` "
+            f"Align the latest tag `{report.latest_tag or '(none)'}` with pyproject version `{report.version}` "
             f"or publish the expected tag `{report.expected_tag}`."
         )
     if not report.changelog_ok:
-        actions.append("- Add an Unreleased CHANGELOG entry before cutting the next release.")
+        actions.append("Add an Unreleased CHANGELOG entry before cutting the next release.")
     if not report.changelog_unreleased_compare_ok:
         actions.append(
-            "- Update the CHANGELOG `[Unreleased]` compare link to "
+            "Update the CHANGELOG `[Unreleased]` compare link to "
             f"`{report.changelog_unreleased_compare_expected}`."
         )
     if report.dirty:
-        actions.append("- Commit or revert the working tree before tagging a release.")
+        actions.append("Commit or revert the working tree before tagging a release.")
     return actions
 
 

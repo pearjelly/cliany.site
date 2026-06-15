@@ -10970,6 +10970,7 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "不带 Markdown bullet 前缀",
         "primary_next_action",
         "next_actions_sha256",
+        "check_release_cadence.py --json",
         "primary_publish_command",
         "publish_commands_sha256",
         "publication_next_actions_sha256",

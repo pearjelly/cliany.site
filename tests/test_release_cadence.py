@@ -83,6 +83,8 @@ def test_release_cadence_report_passes_with_three_commit_days(tmp_path):
     assert report.changelog_unreleased_compare_actual == report.changelog_unreleased_compare_expected
     assert report.dirty is False
     assert report.to_dict()["missing_commit_days"] == 0
+    assert report.to_dict()["primary_next_action"] is None
+    assert report.to_dict()["next_actions_sha256"] == release_cadence._stable_json_sha256([])
     assert report.to_dict()["next_actions"] == []
 
 
@@ -96,8 +98,12 @@ def test_release_cadence_report_fails_when_week_has_too_few_days(tmp_path):
     assert report.min_commit_days == 3
     assert report.to_dict()["missing_commit_days"] == 2
     assert report.to_dict()["next_actions"] == [
-        "- Ship verified slices on `2` more unique commit days this week; current commit days are `1/3`."
+        "Ship verified slices on `2` more unique commit days this week; current commit days are `1/3`."
     ]
+    assert report.to_dict()["primary_next_action"] == report.to_dict()["next_actions"][0]
+    assert report.to_dict()["next_actions_sha256"] == release_cadence._stable_json_sha256(
+        report.to_dict()["next_actions"]
+    )
 
 
 def test_release_cadence_allows_empty_unreleased_when_head_is_tagged(tmp_path):
@@ -167,7 +173,7 @@ def test_release_cadence_fails_when_unreleased_compare_link_is_stale(tmp_path):
     )
     assert report.to_dict()["next_actions"] == [
         (
-            "- Update the CHANGELOG `[Unreleased]` compare link to "
+            "Update the CHANGELOG `[Unreleased]` compare link to "
             "`https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD`."
         )
     ]
@@ -181,6 +187,8 @@ def test_release_cadence_text_output_includes_next_actions_when_blocked(tmp_path
 
     output = capsys.readouterr().out
     assert "ok: False" in output
+    assert "next_actions_sha256:" in output
+    assert "primary_next_action: Ship verified slices on `2` more unique commit days this week" in output
     assert "next_actions:" in output
     assert "- Ship verified slices on `2` more unique commit days this week" in output
 
