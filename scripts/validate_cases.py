@@ -22,6 +22,10 @@ REQUIRED_PACKAGE_FILES = {"commands.py", "metadata.json"}
 PACKAGE_EXTENSION = ".cliany-adapter.tar.gz"
 PROMOTION_FIELDS = ("adapter_package", "metadata_validation", "online_smoke")
 PROMOTION_EVIDENCE_STATUSES = {"pending", "complete", "blocked"}
+CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
+    "python scripts/validate_cases.py "
+    "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
+)
 BUILTIN_GROUPS = {
     "browser",
     "cases",
@@ -783,6 +787,35 @@ def _command_summary(commands: list[str]) -> str:
     return "<br>".join(commands) if commands else "-"
 
 
+def _candidate_promotion_command_plan(commands: list[str]) -> list[dict[str, Any]]:
+    explore_commands = [command for command in commands if command.startswith("cliany-site explore ")]
+    adapter_commands = [
+        command
+        for command in commands
+        if command.startswith("cliany-site ") and not command.startswith("cliany-site explore ")
+    ]
+    plan = [
+        {
+            "task": "adapter_package",
+            "command": explore_commands[0] if explore_commands else "",
+            "source": "commands.explore",
+        },
+        {
+            "task": "metadata_validation",
+            "command": CANDIDATE_PACKAGE_VALIDATION_COMMAND,
+            "source": "candidate_package_validation_command",
+        },
+        {
+            "task": "online_smoke",
+            "command": adapter_commands[0] if adapter_commands else "",
+            "source": "commands.adapter",
+        },
+    ]
+    for item in plan:
+        item["missing"] = not bool(item["command"])
+    return plan
+
+
 def _package_summary(package: dict[str, Any] | None) -> str:
     if package is None:
         return "-"
@@ -863,6 +896,10 @@ def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
         offline_command_lines = [
             f"  - `{command}`" for command in case.offline_commands
         ] or ["  - Not declared."]
+        promotion_command_lines = [
+            f"- `{item['task']}`: `{item['command'] or 'Not declared.'}`"
+            for item in _candidate_promotion_command_plan(case.commands)
+        ]
         task_lines: list[str] = []
         issue_task_lines: list[str] = []
         for field_name in PROMOTION_FIELDS:
@@ -907,6 +944,9 @@ def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
                 *command_lines,
                 "- Offline validation commands:",
                 *offline_command_lines,
+                "",
+                "## Promotion Command Plan",
+                *promotion_command_lines,
                 "",
                 "## Tasks",
                 *issue_task_lines,

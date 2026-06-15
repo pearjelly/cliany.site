@@ -39,6 +39,7 @@
 - Candidate issue artifacts 的 `publication-handoff.json`、`release-draft-handoff.json` 和对应 README handoff 小节现在也展示 `issue_artifacts_command`，让只读取 handoff 的维护工具能直接重新生成整包候选任务 artifacts。
 - Candidate issue artifacts 的 `publication-handoff.json`、`release-draft-handoff.json` 和对应 README handoff 小节现在也展示 `plan_report_command_sha256` 与 `issue_artifacts_command_sha256`，让只读取 handoff 的维护工具能检测复现命令漂移。
 - `cliany-site cases --case-id <id> --evidence-bundle --json`、candidate issue body 和 candidate issue artifacts 的 `issue-metadata.json` 现在输出 `promotion_command_plan`，把 adapter package、metadata validation 和 online smoke 映射到可执行命令。
+- `scripts/validate_cases.py --report` 的 `Candidate Promotion Tasks` / `Issue Body Template` 现在也输出 `Promotion Command Plan`，让 case catalog report、cases CLI 和 candidate issue artifacts 使用同一组三步执行命令。
 - `artifact_bundle_summary` 现在输出 `case_promotion_evidence_primary_detail_sha256`，让只读整包摘要的工具能检测首要 candidate 晋级任务对象是否漂移。
 - `artifact_bundle_summary` 现在也输出 `case_promotion_evidence_primary_next_task_sha256`，让只读整包摘要的工具能单独检测 `primary_next_task` 漂移。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 `case_promotion_evidence_primary_next_task_sha256`，让周维护手册覆盖最新 artifact bundle summary 字段。

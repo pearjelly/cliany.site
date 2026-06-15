@@ -758,6 +758,14 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "- Target URL: https://demo.example.com/" in text
     assert "- Candidate commands:\n  - `cliany-site demo.example.com list-items --json`" in text
     assert "- Offline validation commands:\n  - `python scripts/validate_cases.py --strict`" in text
+    assert "## Promotion Command Plan" in text
+    assert "- `adapter_package`: `Not declared.`" in text
+    assert (
+        "- `metadata_validation`: `python scripts/validate_cases.py "
+        "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`"
+        in text
+    )
+    assert "- `online_smoke`: `cliany-site demo.example.com list-items --json`" in text
     assert "  - Current status: `pending`" in text
     assert "  - Current evidence: Not attached yet." in text
     assert "## Evidence Bundle" in text
