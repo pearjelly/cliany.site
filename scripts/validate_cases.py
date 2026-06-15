@@ -101,6 +101,7 @@ class CasesReport:
     checked_packages: bool
     checked_candidate_packages: bool
     promotion_evidence_summary: dict[str, Any]
+    promotion_command_plan_summary: dict[str, Any]
     cases: list[CaseCheck]
 
     def to_dict(self) -> dict[str, Any]:
@@ -113,6 +114,7 @@ class CasesReport:
             "checked_packages": self.checked_packages,
             "checked_candidate_packages": self.checked_candidate_packages,
             "promotion_evidence_summary": self.promotion_evidence_summary,
+            "promotion_command_plan_summary": self.promotion_command_plan_summary,
             "cases": [case.to_dict() for case in self.cases],
         }
 
@@ -675,6 +677,48 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
     }
 
 
+def _build_promotion_command_plan_summary(checks: list[CaseCheck]) -> dict[str, Any]:
+    candidate_checks = [check for check in checks if check.status == "candidate"]
+    missing_tasks: list[dict[str, str]] = []
+    missing_cases: list[dict[str, Any]] = []
+    task_missing_counts = {field_name: 0 for field_name in PROMOTION_FIELDS}
+    command_count = 0
+
+    for check in candidate_checks:
+        command_count += len(check.promotion_command_plan)
+        case_missing_tasks: list[str] = []
+        for item in check.promotion_command_plan:
+            if not item.get("missing"):
+                continue
+            task = str(item.get("task") or "")
+            source = str(item.get("source") or "")
+            case_missing_tasks.append(task)
+            if task in task_missing_counts:
+                task_missing_counts[task] += 1
+            missing_tasks.append({"case_id": check.id, "task": task, "source": source})
+        if case_missing_tasks:
+            missing_cases.append(
+                {
+                    "case_id": check.id,
+                    "missing_task_count": len(case_missing_tasks),
+                    "missing_tasks": case_missing_tasks,
+                }
+            )
+
+    return {
+        "candidate_count": len(candidate_checks),
+        "command_count": command_count,
+        "expected_command_count": len(candidate_checks) * len(PROMOTION_FIELDS),
+        "missing_command_count": len(missing_tasks),
+        "ready_candidate_count": len(candidate_checks) - len(missing_cases),
+        "all_declared": not missing_tasks,
+        "task_missing_counts": task_missing_counts,
+        "missing_tasks": missing_tasks,
+        "missing_cases": missing_cases,
+        "primary_missing_task": missing_tasks[0] if missing_tasks else None,
+    }
+
+
 def build_report(
     root: Path = ROOT,
     packages_dir: Path | None = None,
@@ -706,6 +750,7 @@ def build_report(
         checked_packages=packages_dir is not None,
         checked_candidate_packages=packages_dir is not None and include_candidate_packages,
         promotion_evidence_summary=_build_promotion_evidence_summary(checks),
+        promotion_command_plan_summary=_build_promotion_command_plan_summary(checks),
         cases=checks,
     )
 
@@ -721,6 +766,9 @@ def _print_text(report: CasesReport) -> None:
     print(f"promotion_evidence_pending: {report.promotion_evidence_summary['pending_count']}")
     print(f"promotion_evidence_blocked: {report.promotion_evidence_summary['blocked_count']}")
     print(f"promotion_evidence_complete: {report.promotion_evidence_summary['complete_count']}")
+    plan_summary = report.promotion_command_plan_summary
+    print(f"promotion_command_plan_all_declared: {str(plan_summary['all_declared']).lower()}")
+    print(f"promotion_command_plan_missing: {plan_summary['missing_command_count']}")
     if report.promotion_evidence_summary["primary_next_action"]:
         primary_task = report.promotion_evidence_summary.get("primary_next_task")
         primary_task = primary_task if isinstance(primary_task, dict) else {}
@@ -882,6 +930,39 @@ def _candidate_promotion_evidence_summary_lines(summary: dict[str, Any]) -> list
     return lines
 
 
+def _candidate_promotion_command_plan_summary_lines(summary: dict[str, Any]) -> list[str]:
+    lines = [
+        "",
+        "## Candidate Promotion Command Plan Summary",
+        "",
+        "| Metric | Value |",
+        "|--------|-------|",
+        f"| candidate_count | `{summary.get('candidate_count', 0)}` |",
+        f"| command_count | `{summary.get('command_count', 0)}` |",
+        f"| expected_command_count | `{summary.get('expected_command_count', 0)}` |",
+        f"| missing_command_count | `{summary.get('missing_command_count', 0)}` |",
+        f"| ready_candidate_count | `{summary.get('ready_candidate_count', 0)}` |",
+        f"| all_declared | `{str(bool(summary.get('all_declared'))).lower()}` |",
+        f"| task_missing_counts | `{json.dumps(summary.get('task_missing_counts') or {}, ensure_ascii=False)}` |",
+        f"| primary_missing_task | `{json.dumps(summary.get('primary_missing_task') or {}, ensure_ascii=False)}` |",
+        "",
+        "| Case | Missing Tasks |",
+        "|------|---------------|",
+    ]
+    missing_cases = list(summary.get("missing_cases") or [])
+    if not missing_cases:
+        lines.append("| - | - |")
+        return lines
+    for case in missing_cases:
+        missing_tasks = ", ".join(str(task) for task in case.get("missing_tasks") or [])
+        lines.append(
+            "| "
+            f"`{_markdown_cell(case.get('case_id'))}` | "
+            f"`{_markdown_cell(missing_tasks)}` |"
+        )
+    return lines
+
+
 def _markdown_cell(value: object) -> str:
     return str(value or "-").replace("|", "\\|").replace("\n", "<br>")
 
@@ -908,7 +989,7 @@ def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
         ] or ["  - Not declared."]
         promotion_command_lines = [
             f"- `{item['task']}`: `{item['command'] or 'Not declared.'}`"
-            for item in _candidate_promotion_command_plan(case.commands)
+            for item in case.promotion_command_plan
         ]
         task_lines: list[str] = []
         issue_task_lines: list[str] = []
@@ -1069,6 +1150,7 @@ def _render_markdown_report(report: CasesReport) -> str:
     lines.extend(_candidate_handoff_lines(report))
     lines.extend(_candidate_evidence_bundle_command_lines(report))
     lines.extend(_candidate_promotion_evidence_summary_lines(report.promotion_evidence_summary))
+    lines.extend(_candidate_promotion_command_plan_summary_lines(report.promotion_command_plan_summary))
     lines.extend(_candidate_promotion_task_lines(report))
     return "\n".join(lines) + "\n"
 

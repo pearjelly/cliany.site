@@ -84,6 +84,8 @@ def test_cases_readme_documents_candidate_evidence_bundle_handoff():
         "Candidate Promotion Evidence Summary",
         "Candidate Evidence Bundle Commands",
         "Candidate Promotion Tasks",
+        "Candidate Promotion Command Plan Summary",
+        "promotion_command_plan_summary",
         "Promotion Command Plan",
         "promotion_command_plan_count",
         "promotion_command_plan_missing_tasks",

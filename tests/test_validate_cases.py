@@ -147,6 +147,22 @@ def test_current_cases_manifest_validates_without_packages():
     assert report.promotion_evidence_summary["candidate_count"] == report.candidate
     assert report.promotion_evidence_summary["pending_count"] == report.candidate * 3
     assert report.promotion_evidence_summary["primary_next_action"]
+    assert report.promotion_command_plan_summary == {
+        "candidate_count": report.candidate,
+        "command_count": report.candidate * 3,
+        "expected_command_count": report.candidate * 3,
+        "missing_command_count": 0,
+        "ready_candidate_count": report.candidate,
+        "all_declared": True,
+        "task_missing_counts": {
+            "adapter_package": 0,
+            "metadata_validation": 0,
+            "online_smoke": 0,
+        },
+        "missing_tasks": [],
+        "missing_cases": [],
+        "primary_missing_task": None,
+    }
     candidate_cases = [case for case in report.to_dict()["cases"] if case["status"] == "candidate"]
     assert candidate_cases
     for case in candidate_cases:
@@ -271,6 +287,38 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     ]
     assert report.cases[0].to_dict()["promotion_command_plan_count"] == 3
     assert report.cases[0].to_dict()["promotion_command_plan_missing_tasks"] == ["adapter_package"]
+    assert report.to_dict()["promotion_command_plan_summary"] == {
+        "candidate_count": 1,
+        "command_count": 3,
+        "expected_command_count": 3,
+        "missing_command_count": 1,
+        "ready_candidate_count": 0,
+        "all_declared": False,
+        "task_missing_counts": {
+            "adapter_package": 1,
+            "metadata_validation": 0,
+            "online_smoke": 0,
+        },
+        "missing_tasks": [
+            {
+                "case_id": "candidate-case",
+                "task": "adapter_package",
+                "source": "commands.explore",
+            }
+        ],
+        "missing_cases": [
+            {
+                "case_id": "candidate-case",
+                "missing_task_count": 1,
+                "missing_tasks": ["adapter_package"],
+            }
+        ],
+        "primary_missing_task": {
+            "case_id": "candidate-case",
+            "task": "adapter_package",
+            "source": "commands.explore",
+        },
+    }
     summary = report.to_dict()["promotion_evidence_summary"]
     assert summary["candidate_count"] == 1
     assert summary["task_count"] == 3
@@ -777,6 +825,11 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "primary_task_detail" in text
     assert "primary_next_task" in text
     assert "| `candidate-case` | `adapter_package` | `pending` | - | Generate the adapter package. |" in text
+    assert "## Candidate Promotion Command Plan Summary" in text
+    assert "| command_count | `3` |" in text
+    assert "| missing_command_count | `1` |" in text
+    assert "| all_declared | `false` |" in text
+    assert "| `candidate-case` | `adapter_package` |" in text
     assert "## Candidate Promotion Tasks" in text
     assert "### `candidate-case`" in text
     assert "- [ ] `adapter_package`: publish demo.example.com-<version>.cliany-adapter.tar.gz" in text

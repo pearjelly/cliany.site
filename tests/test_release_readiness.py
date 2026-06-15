@@ -557,6 +557,22 @@ def test_release_readiness_passes_for_minimal_ready_repo(tmp_path):
     assert report.package_gate.ok is True
     assert report.package_gate.required is False
     assert report.package_gate.checked is False
+    assert report.to_dict()["cases"]["promotion_command_plan_summary"] == {
+        "candidate_count": 0,
+        "command_count": 0,
+        "expected_command_count": 0,
+        "missing_command_count": 0,
+        "ready_candidate_count": 0,
+        "all_declared": True,
+        "task_missing_counts": {
+            "adapter_package": 0,
+            "metadata_validation": 0,
+            "online_smoke": 0,
+        },
+        "missing_tasks": [],
+        "missing_cases": [],
+        "primary_missing_task": None,
+    }
     assert report.to_dict()["next_actions"] == []
 
 
