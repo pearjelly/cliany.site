@@ -14,6 +14,7 @@
 - `cliany-site cases --case-id <id> --issue-template` 现在可为 candidate 案例输出可复制的 GitHub issue body，并预填 human / JSON evidence bundle 命令。
 - `cliany-site cases --case-id <id> --evidence-bundle` 现在可为 candidate 案例输出结构化本地证据清单，列出待补 promotion tasks、命令和离线验证步骤。
 - `scripts/validate_cases.py --report` 现在输出 `Candidate Evidence Bundle Commands` 小节，直接链接每个 candidate 的 evidence bundle CLI 命令。
+- `scripts/validate_cases.py --report` 的 `Issue Body Template` 现在包含 `Reproduction Context` 和 `Evidence Bundle` 小节，让 case report 复制出的 issue body 与 CLI/计划器模板一致。
 - `scripts/plan_next_iteration.py --issues-dir` 生成的 candidate issue artifacts 现在在 `candidate_promotions`、`issue-metadata.json`、issue metadata summary 和 artifacts `README.md` 中输出 `evidence_bundle_command` / `evidence_bundle_json_command`，让维护者能直接复制案例证据包命令。
 - `scripts/plan_next_iteration.py` 生成的 candidate issue body 现在也包含 `Evidence Bundle` 小节，与 `cliany-site cases --case-id <id> --issue-template` 保持一致。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在同步说明 candidate issue artifacts 的 evidence bundle 字段和 `Candidate Summary` 复制入口。

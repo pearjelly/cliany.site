@@ -790,6 +790,10 @@ def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
     for case in candidates:
         promotion = case.promotion or {}
         evidence = case.promotion_evidence or {}
+        command_lines = [f"  - `{command}`" for command in case.commands] or ["  - Not declared."]
+        offline_command_lines = [
+            f"  - `{command}`" for command in case.offline_commands
+        ] or ["  - Not declared."]
         task_lines: list[str] = []
         issue_task_lines: list[str] = []
         for field_name in PROMOTION_FIELDS:
@@ -828,8 +832,20 @@ def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
                 "",
                 "Move this candidate case one step closer to `active` without changing its status early.",
                 "",
+                "## Reproduction Context",
+                f"- Target URL: {case.target_url or 'Not declared.'}",
+                "- Candidate commands:",
+                *command_lines,
+                "- Offline validation commands:",
+                *offline_command_lines,
+                "",
                 "## Tasks",
                 *issue_task_lines,
+                "",
+                "## Evidence Bundle",
+                f"- Human: `cliany-site cases --case-id {case.id} --evidence-bundle`",
+                f"- JSON: `cliany-site cases --case-id {case.id} --evidence-bundle --json`",
+                "- Attach or paste the JSON output in the issue once evidence changes.",
                 "",
                 "## Validation Evidence",
                 "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.",

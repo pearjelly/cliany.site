@@ -672,8 +672,16 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "row_count>0" in text
     assert "#### Issue Body Template" in text
     assert "## Scope: promote candidate case `candidate-case`" in text
+    assert "## Reproduction Context" in text
+    assert "- Target URL: https://demo.example.com/" in text
+    assert "- Candidate commands:\n  - `cliany-site demo.example.com list-items --json`" in text
+    assert "- Offline validation commands:\n  - `python scripts/validate_cases.py --strict`" in text
     assert "  - Current status: `pending`" in text
     assert "  - Current evidence: Not attached yet." in text
+    assert "## Evidence Bundle" in text
+    assert "cliany-site cases --case-id candidate-case --evidence-bundle" in text
+    assert "cliany-site cases --case-id candidate-case --evidence-bundle --json" in text
+    assert "Attach or paste the JSON output in the issue once evidence changes." in text
     assert "## Validation Evidence" in text
     assert "## Non-goals" in text
     assert "Do not mark the case `active` until all three promotion tasks are complete." in text
