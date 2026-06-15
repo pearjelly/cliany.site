@@ -515,6 +515,9 @@ class IterationPlan:
     release_draft_issues: list[str]
 
     def to_dict(self) -> dict[str, Any]:
+        primary_next_task = self.case_promotion_evidence_summary.get("primary_next_task")
+        if not isinstance(primary_next_task, dict):
+            primary_next_task = None
         return {
             "current_version": self.current_version,
             "target_version": self.target_version,
@@ -528,6 +531,10 @@ class IterationPlan:
             "candidate_cases": self.candidate_cases,
             "candidate_promotions": [promotion.to_dict() for promotion in self.candidate_promotions],
             "case_promotion_evidence_summary": self.case_promotion_evidence_summary,
+            "case_promotion_evidence_primary_next_task": primary_next_task,
+            "case_promotion_evidence_primary_next_action": (
+                self.case_promotion_evidence_summary.get("primary_next_action")
+            ),
             "blockers": self.blockers,
             "next_actions": self.next_actions,
             "validation_commands": self.validation_commands,
@@ -1424,6 +1431,14 @@ def _print_text(plan: IterationPlan) -> None:
     print("case_promotion_evidence_summary:")
     for key, value in plan.case_promotion_evidence_summary.items():
         _print_text_item(key, value)
+    primary_next_task = plan.case_promotion_evidence_summary.get("primary_next_task")
+    if isinstance(primary_next_task, dict) and primary_next_task:
+        print("case_promotion_evidence_primary_next_task:")
+        for key, value in primary_next_task.items():
+            print(f"  {key}: {value}")
+    primary_next_action = plan.case_promotion_evidence_summary.get("primary_next_action")
+    if primary_next_action:
+        print(f"case_promotion_evidence_primary_next_action: {primary_next_action}")
     if plan.candidate_promotions:
         print("candidate_promotions:")
         for promotion in plan.candidate_promotions:

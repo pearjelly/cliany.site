@@ -524,6 +524,14 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         data["case_promotion_evidence_summary"]["primary_next_task"]
         == data["case_promotion_evidence_summary"]["primary_task_detail"]
     )
+    assert (
+        data["case_promotion_evidence_primary_next_task"]
+        == data["case_promotion_evidence_summary"]["primary_next_task"]
+    )
+    assert (
+        data["case_promotion_evidence_primary_next_action"]
+        == data["case_promotion_evidence_summary"]["primary_next_action"]
+    )
     assert data["candidate_promotions"][0] == {
         "case_id": "pypi-project-search",
         "issue_title": "Promote candidate case `pypi-project-search` toward active",
@@ -821,6 +829,14 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
     assert "commit_cadence:" in text
     assert "- status: needs_more_commit_days" in text
     assert "- missing_commit_days: 1" in text
+    assert "case_promotion_evidence_primary_next_task:" in text
+    assert "  case_id: pypi-project-search" in text
+    assert "  task: adapter_package" in text
+    assert (
+        "case_promotion_evidence_primary_next_action: "
+        "Generate pypi.org-<version>.cliany-adapter.tar.gz."
+        in text
+    )
     assert "candidate_promotions:" in text
     assert "  evidence_bundle_primary_next_task:" in text
     assert "    task: adapter_package" in text

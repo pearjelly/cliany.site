@@ -10944,6 +10944,8 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
         "Markdown report",
         "case_promotion_evidence_summary.primary_task_detail",
         "case_promotion_evidence_summary.primary_next_task",
+        "case_promotion_evidence_primary_next_task",
+        "case_promotion_evidence_primary_next_action",
         "artifact_bundle_summary.case_promotion_evidence_primary_detail_sha256",
         "artifact_bundle_summary.case_promotion_evidence_primary_next_task_sha256",
         "Primary Evidence Task",

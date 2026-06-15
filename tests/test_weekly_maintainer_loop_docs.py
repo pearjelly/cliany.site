@@ -430,6 +430,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "case_promotion_evidence_primary_evidence_sha256",
         "case_promotion_evidence_primary_detail_sha256",
         "case_promotion_evidence_primary_next_task_sha256",
+        "case_promotion_evidence_primary_next_task",
+        "case_promotion_evidence_primary_next_action",
         "当前证据 hash",
         "首要任务对象 hash",
         "primary_next_task",
