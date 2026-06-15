@@ -2200,6 +2200,15 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "schema_version": 1,
         "publication_ok": plan.publication_ok,
         "candidate_issue_gate": plan.candidate_issue_gate,
+        "candidate_issue_gate_primary_reason_code": plan.candidate_issue_gate.get(
+            "primary_reason_code"
+        ),
+        "candidate_issue_gate_primary_reason_description": plan.candidate_issue_gate.get(
+            "primary_reason_description"
+        ),
+        "candidate_issue_gate_primary_required_action": plan.candidate_issue_gate.get(
+            "primary_required_action"
+        ),
         "visibility": plan.publication_visibility,
         "tag_publish_decision": plan.publication_tag_publish_decision,
         "next_actions": plan.next_actions,

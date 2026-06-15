@@ -824,6 +824,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "schema_version": 1,
         "publication_ok": False,
         "candidate_issue_gate": _blocked_candidate_issue_gate(),
+        "candidate_issue_gate_primary_reason_code": "publication_not_published",
+        "candidate_issue_gate_primary_reason_description": (
+            "The latest local release branch or tag is not visible upstream."
+        ),
+        "candidate_issue_gate_primary_required_action": (
+            "Commit, stash, or discard local worktree changes before publishing release refs."
+        ),
         "visibility": {
             "status": "dirty_worktree",
             "summary": "Worktree has uncommitted changes; resolve them before publishing release refs.",
@@ -2634,7 +2641,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_primary_next_action: "
         "`Commit, stash, or discard local worktree changes before publishing release refs.`"
     ) in readme
-    assert "publication_handoff_key_count: `18`" in readme
+    assert "publication_handoff_key_count: `21`" in readme
     assert "publication_handoff_schema_version: `1`" in readme
     assert "publication_handoff_first_key: `schema_version`" in readme
     assert "publication_handoff_last_key: `publish_script_command_sha256`" in readme
