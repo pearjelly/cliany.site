@@ -441,6 +441,7 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
 
 def _write_publish_script(report: PublicationReport, path: Path) -> None:
     commands = _publish_command_lines(report)
+    next_actions = _next_action_lines(report)
     repo_root = report.repo_root
     expected_local_head = report.local_head or ""
     expected_latest_tag = report.latest_tag or ""
@@ -463,6 +464,12 @@ def _write_publish_script(report: PublicationReport, path: Path) -> None:
         f"# - ahead_count: {_format_value(report.ahead_count)}",
         f"# - behind_count: {_format_value(report.behind_count)}",
         f"# - remote_checked: {_format_bool(report.remote_checked)}",
+        f"# - next_action_count: {len(next_actions)}",
+        f"# - next_actions_sha256: {_stable_json_sha256(next_actions)}",
+        f"# - primary_next_action: {_format_value(next_actions[0] if next_actions else None)}",
+        f"# - publish_command_count: {len(commands)}",
+        f"# - publish_commands_sha256: {_stable_json_sha256(commands)}",
+        f"# - primary_publish_command: {_format_value(commands[0] if commands else None)}",
         *_publish_script_review_notes(report),
         "",
         f"REPO_ROOT={shlex.quote(repo_root)}",

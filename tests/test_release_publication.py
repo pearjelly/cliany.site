@@ -238,6 +238,7 @@ def test_release_publication_writes_reviewable_publish_script(tmp_path):
 
     release_publication._write_publish_script(report, script_path)
 
+    payload = report.to_dict()
     text = script_path.read_text(encoding="utf-8")
     assert text.startswith("#!/usr/bin/env bash\nset -euo pipefail\n")
     assert "Review these commands before running" in text
@@ -252,6 +253,20 @@ def test_release_publication_writes_reviewable_publish_script(tmp_path):
     assert "# - ahead_count: 1" in text
     assert "# - behind_count: 0" in text
     assert "# - remote_checked: false" in text
+    assert "# - next_action_count: 3" in text
+    assert (
+        f"# - next_actions_sha256: "
+        f"{release_publication._stable_json_sha256(payload['next_actions'])}"
+        in text
+    )
+    assert f"# - primary_next_action: {payload['primary_next_action']}" in text
+    assert "# - publish_command_count: 3" in text
+    assert (
+        f"# - publish_commands_sha256: "
+        f"{release_publication._stable_json_sha256(payload['publish_commands'])}"
+        in text
+    )
+    assert f"# - primary_publish_command: {payload['primary_publish_command']}" in text
     assert f"REPO_ROOT={repo.resolve()}" in text
     assert 'cd "$REPO_ROOT"' in text
     assert 'CURRENT_REPO_ROOT="$(git rev-parse --show-toplevel)"' in text
