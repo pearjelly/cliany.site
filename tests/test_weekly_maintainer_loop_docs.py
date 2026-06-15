@@ -178,6 +178,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "publication_summary.latest_tag",
         "publication_summary.primary_next_action",
         "publication_summary.primary_publish_command",
+        "publication_summary_primary_next_action",
+        "publication_summary_primary_publish_command",
         "publication_worktree_status_count",
         "publication_worktree_status_sha256",
         "release_draft_handoff_key_count",

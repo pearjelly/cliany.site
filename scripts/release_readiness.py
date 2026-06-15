@@ -160,6 +160,8 @@ class ReadinessReport:
             "publication_ok": publication_payload["ok"],
             "publication_summary": publication_summary,
             "publication_summary_sha256": _stable_json_sha256(publication_summary),
+            "publication_summary_primary_next_action": publication_summary["primary_next_action"],
+            "publication_summary_primary_publish_command": publication_summary["primary_publish_command"],
             "publication_ref_context": publication_ref_context,
             "publication_worktree_clean": publication_payload["worktree_clean"],
             "publication_worktree_status_count": len(publication_payload["worktree_status"]),
@@ -698,6 +700,8 @@ def _print_text(report: ReadinessReport) -> None:
         f"publish_commands={publication_summary['publish_command_count']}"
     )
     print(f"publication_summary_sha256: {_stable_json_sha256(publication_summary)}")
+    print(f"publication_summary_primary_next_action: {publication_summary['primary_next_action']}")
+    print(f"publication_summary_primary_publish_command: {publication_summary['primary_publish_command']}")
     print(
         "publication_worktree: "
         f"clean={str(bool(publication_payload['worktree_clean'])).lower()}, "
@@ -728,7 +732,7 @@ def _print_text(report: ReadinessReport) -> None:
     if publication_next_actions:
         print("publication_next_actions:")
         for action in publication_next_actions:
-            print(action)
+            print(f"- {action}")
     print(f"publication_publish_command_count: {len(publication_publish_commands)}")
     if publication_publish_commands:
         print(f"publication_primary_publish_command: {publication_publish_commands[0]}")
@@ -992,6 +996,11 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
         f"- publication_summary_ahead_count: `{_markdown_cell(publication_summary['ahead_count'])}`",
         f"- publication_summary_latest_tag: `{_markdown_cell(publication_summary['latest_tag'])}`",
         f"- publication_summary_sha256: `{_stable_json_sha256(publication_summary)}`",
+        f"- publication_summary_primary_next_action: `{_markdown_cell(publication_summary['primary_next_action'])}`",
+        (
+            "- publication_summary_primary_publish_command: "
+            f"`{_markdown_cell(publication_summary['primary_publish_command'])}`"
+        ),
         f"- tag_publish_decision: `{_markdown_cell(tag_publish_decision['status'])}`",
         f"- tag_can_push: `{str(bool(tag_publish_decision['can_push_tag'])).lower()}`",
         f"- tag_required_action: `{_markdown_cell(tag_publish_decision.get('required_action'))}`",
@@ -1002,7 +1011,14 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
         "",
     ]
     if publication_next_actions:
-        lines.extend(["### Publication Next Actions", "", *publication_next_actions, ""])
+        lines.extend(
+            [
+                "### Publication Next Actions",
+                "",
+                *(f"- {action}" for action in publication_next_actions),
+                "",
+            ]
+        )
     lines.extend(
         [
             "### Publication Ref Context",

@@ -195,35 +195,35 @@ def _next_action_lines(report: PublicationReport) -> list[str]:
     actions: list[str] = []
     branch = report.branch or "HEAD"
     if not report.worktree_clean:
-        actions.append("- Commit, stash, or discard local worktree changes before publishing release refs.")
+        actions.append("Commit, stash, or discard local worktree changes before publishing release refs.")
     if not report.upstream:
-        actions.append(f"- Set an upstream branch for `{branch}` before checking publication status.")
+        actions.append(f"Set an upstream branch for `{branch}` before checking publication status.")
     if report.ahead_count and report.ahead_count > 0:
         actions.append(
-            f"- Push `{branch}` to `{report.remote}`; local branch is ahead by "
+            f"Push `{branch}` to `{report.remote}`; local branch is ahead by "
             f"`{report.ahead_count}` commits."
         )
     if report.behind_count and report.behind_count > 0:
         actions.append(
-            f"- Reconcile `{branch}` with `{report.upstream}`; local branch is behind by "
+            f"Reconcile `{branch}` with `{report.upstream}`; local branch is behind by "
             f"`{report.behind_count}` commits."
         )
     if not report.latest_tag:
-        actions.append("- Create a release tag before checking publication status.")
+        actions.append("Create a release tag before checking publication status.")
     elif not report.tag_points_at_head:
         actions.append(
-            f"- Move to the `{report.latest_tag}` commit or create a new release tag at HEAD before publishing."
+            f"Move to the `{report.latest_tag}` commit or create a new release tag at HEAD before publishing."
         )
     if report.latest_tag and report.tag_published is False:
         if report.remote_checked:
-            actions.append(f"- Push tag `{report.latest_tag}` to `{report.remote}`; remote tag is missing or stale.")
+            actions.append(f"Push tag `{report.latest_tag}` to `{report.remote}`; remote tag is missing or stale.")
         else:
             actions.append(
-                f"- Push tag `{report.latest_tag}` after the branch is published, or rerun with `--remote` "
+                f"Push tag `{report.latest_tag}` after the branch is published, or rerun with `--remote` "
                 "to verify the live remote tag."
             )
     if not report.remote_checked:
-        actions.append("- Rerun with `--remote` when network access is available to verify live remote refs.")
+        actions.append("Rerun with `--remote` when network access is available to verify live remote refs.")
     return actions
 
 
@@ -337,7 +337,7 @@ def _print_text(report: PublicationReport) -> None:
     if next_actions:
         print("next_actions:")
         for action in next_actions:
-            print(action)
+            print(f"- {action}")
     if publish_commands:
         print("publish_commands:")
         for command in publish_commands:
@@ -394,7 +394,7 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
         f"| remote tag commit | `{_format_value(report.remote_tag_commit)}` |",
     ]
     if next_actions:
-        lines.extend(["", "## Next Actions", "", *next_actions])
+        lines.extend(["", "## Next Actions", "", *(f"- {action}" for action in next_actions)])
     else:
         lines.extend(["", "## Next Actions", "", "- Release branch and tag are published."])
     lines.extend(

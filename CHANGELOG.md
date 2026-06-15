@@ -52,6 +52,8 @@
 - `scripts/release_readiness.py` 现在也输出 `publication_primary_next_action` 和 `publication_primary_publish_command`，让只读发版预检摘要的工具可以直接展示首要发布待办与首条发布命令。
 - `scripts/release_readiness.py` 现在输出顶层 `publication_summary`，把发布状态、worktree、branch/tag、ahead/behind、tag 决策、首要动作和首条发布命令压缩成一个机器可读摘要。
 - `scripts/release_readiness.py` 现在输出 `publication_summary_sha256`，让只读发版预检 artifact 的工具能检测 publication summary 是否漂移。
+- `scripts/release_readiness.py` 现在也输出 `publication_summary_primary_next_action` 和 `publication_summary_primary_publish_command` 顶层别名，让只读摘要字段族的工具不用展开 nested summary。
+- `scripts/check_release_publication.py` 的 JSON `next_actions` 现在保持纯文本，不再混入 Markdown bullet，文本和 Markdown report 仍由渲染层输出列表符号。
 - [docs/weekly-maintainer-loop.md](docs/weekly-maintainer-loop.md) 现在说明维护者如何先读 `publication_summary`、`publication_summary_sha256`、首要发布动作和首条发布命令，再决定是否展开发布详情。
 - `artifact_bundle_summary` 现在输出 `case_promotion_evidence_primary_detail_sha256`，让只读整包摘要的工具能检测首要 candidate 晋级任务对象是否漂移。
 - `artifact_bundle_summary` 现在也输出 `case_promotion_evidence_primary_next_task_sha256`，让只读整包摘要的工具能单独检测 `primary_next_task` 漂移。

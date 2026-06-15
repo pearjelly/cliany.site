@@ -83,12 +83,12 @@ def test_release_publication_reports_unpushed_release_commit_and_tag(tmp_path):
     assert report.tag_published is False
     assert report.to_dict()["next_action_count"] == 3
     assert report.to_dict()["next_actions"] == [
-        "- Push `master` to `origin`; local branch is ahead by `1` commits.",
+        "Push `master` to `origin`; local branch is ahead by `1` commits.",
         (
-            "- Push tag `v0.1.1` after the branch is published, or rerun with `--remote` "
+            "Push tag `v0.1.1` after the branch is published, or rerun with `--remote` "
             "to verify the live remote tag."
         ),
-        "- Rerun with `--remote` when network access is available to verify live remote refs.",
+        "Rerun with `--remote` when network access is available to verify live remote refs.",
     ]
     assert report.to_dict()["publish_command_count"] == 3
     assert report.to_dict()["publish_commands"] == [
@@ -121,7 +121,7 @@ def test_release_publication_reports_dirty_worktree_before_publish_commands(tmp_
     assert payload["worktree_clean"] is False
     assert payload["worktree_status"] == ["?? scratch.txt"]
     assert payload["next_actions"][0] == (
-        "- Commit, stash, or discard local worktree changes before publishing release refs."
+        "Commit, stash, or discard local worktree changes before publishing release refs."
     )
     assert payload["publish_commands"] == ["python scripts/check_release_publication.py --json"]
     assert payload["tag_publish_decision"] == {
@@ -148,7 +148,7 @@ def test_release_publication_remote_check_reports_missing_remote_tag(tmp_path):
     assert report.remote_branch_head == report.local_head
     assert report.remote_tag_commit is None
     assert report.to_dict()["next_actions"] == [
-        "- Push tag `v0.1.1` to `origin`; remote tag is missing or stale."
+        "Push tag `v0.1.1` to `origin`; remote tag is missing or stale."
     ]
     assert report.to_dict()["publish_commands"] == [
         "git push origin v0.1.1",

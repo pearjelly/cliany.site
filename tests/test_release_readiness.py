@@ -603,6 +603,11 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert publication_summary["publish_command_count"] == len(publish_commands)
     assert publication_summary["primary_publish_command"] == publish_commands[0]
     assert payload["publication_summary_sha256"] == release_readiness._stable_json_sha256(publication_summary)
+    assert payload["publication_summary_primary_next_action"] == publication_summary["primary_next_action"]
+    assert (
+        payload["publication_summary_primary_publish_command"]
+        == publication_summary["primary_publish_command"]
+    )
     assert publication_ref_context["branch"] == payload["publication"]["branch"]
     assert publication_ref_context["latest_tag"] == payload["publication"]["latest_tag"]
     assert publication_ref_context["remote_checked"] == payload["publication"]["remote_checked"]
@@ -617,7 +622,7 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert payload["publication_next_action_count"] == len(publication_next_actions)
     assert payload["publication_primary_next_action"] == publication_next_actions[0]
     assert (
-        "- Rerun with `--remote` when network access is available to verify live remote refs."
+        "Rerun with `--remote` when network access is available to verify live remote refs."
         in publication_next_actions
     )
     assert payload["publication_publish_command_count"] == len(publish_commands)
@@ -657,6 +662,7 @@ def test_release_readiness_writes_markdown_report(tmp_path):
 
     release_readiness._write_markdown_report(report, report_path)
 
+    publication_summary = report.to_dict()["publication_summary"]
     text = report_path.read_text(encoding="utf-8")
     assert "# cliany-site Release Readiness" in text
     assert "| ok | `true` |" in text
@@ -673,6 +679,11 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- publication_summary_branch: `master`" in text
     assert "- publication_summary_latest_tag: `v0.1.0`" in text
     assert "- publication_summary_sha256: `" in text
+    assert "- publication_summary_primary_next_action: `" in text
+    assert (
+        "- publication_summary_primary_publish_command: "
+        f"`{publication_summary['primary_publish_command']}`"
+    ) in text
     assert "- tag_publish_decision: `manual_decision_required`" in text
     assert "- tag_can_push: `false`" in text
     assert "- tag_required_action: `Move to the latest tag commit or create a new release tag at HEAD " in text
@@ -792,6 +803,7 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
 
     release_readiness._print_text(report)
 
+    publication_summary = report.to_dict()["publication_summary"]
     output = capsys.readouterr().out
     assert "ok: True" in output
     assert "cases: True (active 1, candidate 0, known_gap 0, total 1, min_assets 1)" in output
@@ -799,6 +811,11 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     assert "publication: False" in output
     assert "publication_summary: status=blocked, worktree_clean=true, ahead=None" in output
     assert "publication_summary_sha256:" in output
+    assert "publication_summary_primary_next_action:" in output
+    assert (
+        "publication_summary_primary_publish_command: "
+        f"{publication_summary['primary_publish_command']}"
+    ) in output
     assert "publication_worktree: clean=true, status_count=0" in output
     assert "publication_worktree_status:" not in output
     assert "publication_ref_context: branch=master, upstream=(none), ahead=None, latest_tag=v0.1.0" in output
@@ -808,7 +825,7 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
         in output
     )
     assert "publication_next_action_count:" in output
-    assert "publication_primary_next_action: - Set an upstream branch for `master`" in output
+    assert "publication_primary_next_action: Set an upstream branch for `master`" in output
     assert "publication_next_actions:" in output
     assert "- Move to the `v0.1.0` commit or create a new release tag at HEAD before publishing." in output
     assert "publication_publish_command_count:" in output
