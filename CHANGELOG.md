@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.222] - 2026-06-15
+
+### Added
+- Candidate issue artifacts 的 `artifact-manifest.json` 现在带顶层 `case_promotion_evidence_summary`，让只读 manifest 的维护工具能直接看到 candidate 晋级证据摘要。
+- Candidate issue artifacts `README.md` 现在展示 `Candidate Promotion Evidence Summary` 小节，把 pending/blocked/complete 数量、primary next action 和任务明细放进人工审阅入口。
+- 新增 `docs/releases/v0.16.222-draft.md`，把下一版 patch release 聚焦到 candidate issue artifacts 的证据摘要可见性。
+
 ## [0.16.221] - 2026-06-13
 
 ### Added
@@ -1954,7 +1961,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.221...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.222...HEAD
+[0.16.222]: https://github.com/pearjelly/cliany.site/compare/v0.16.221...v0.16.222
 [0.16.221]: https://github.com/pearjelly/cliany.site/compare/v0.16.220...v0.16.221
 [0.16.220]: https://github.com/pearjelly/cliany.site/compare/v0.16.219...v0.16.220
 [0.16.219]: https://github.com/pearjelly/cliany.site/compare/v0.16.218...v0.16.219
