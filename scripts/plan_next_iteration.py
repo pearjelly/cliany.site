@@ -241,6 +241,11 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "publication_target_tag_command_count",
     "publication_target_tag_commands_sha256",
     "publication_target_tag_required_action_sha256",
+    "publication_target_tag_release_gate_status",
+    "publication_target_tag_release_gate_blocker_count",
+    "publication_target_tag_release_gate_primary_blocker",
+    "publication_target_tag_release_gate_required_action_sha256",
+    "publication_target_tag_release_gate_blockers_sha256",
     "publication_blocker_count",
     "publication_blockers_sha256",
     "publication_primary_blocker",
@@ -667,17 +672,30 @@ def _publication_publish_commands(publication: Any) -> list[str]:
 
 
 def _publication_tag_publish_decision(
-    publication: Any, target_version: str | None = None
+    publication: Any,
+    target_version: str | None = None,
+    *,
+    readiness_blockers: list[str] | None = None,
 ) -> dict[str, Any]:
     decision = getattr(publication, "tag_publish_decision", None)
     if isinstance(decision, dict):
-        return _with_target_tag_guidance(dict(decision), publication, target_version)
+        return _with_target_tag_guidance(
+            dict(decision),
+            publication,
+            target_version,
+            readiness_blockers=readiness_blockers,
+        )
     to_dict = getattr(publication, "to_dict", None)
     if callable(to_dict):
         payload = to_dict()
         decision = payload.get("tag_publish_decision")
         if isinstance(decision, dict):
-            return _with_target_tag_guidance(dict(decision), publication, target_version)
+            return _with_target_tag_guidance(
+                dict(decision),
+                publication,
+                target_version,
+                readiness_blockers=readiness_blockers,
+            )
 
     latest_tag = getattr(publication, "latest_tag", None)
     tag_points_at_head = bool(getattr(publication, "tag_points_at_head", False))
@@ -694,6 +712,7 @@ def _publication_tag_publish_decision(
             },
             publication,
             target_version,
+            readiness_blockers=readiness_blockers,
         )
     if not tag_points_at_head:
         return _with_target_tag_guidance(
@@ -710,6 +729,7 @@ def _publication_tag_publish_decision(
             },
             publication,
             target_version,
+            readiness_blockers=readiness_blockers,
         )
     if tag_published is True:
         return _with_target_tag_guidance(
@@ -723,6 +743,7 @@ def _publication_tag_publish_decision(
             },
             publication,
             target_version,
+            readiness_blockers=readiness_blockers,
         )
     if not _publication_worktree_clean(publication):
         return _with_target_tag_guidance(
@@ -736,6 +757,7 @@ def _publication_tag_publish_decision(
             },
             publication,
             target_version,
+            readiness_blockers=readiness_blockers,
         )
     if tag_published is False:
         return _with_target_tag_guidance(
@@ -749,6 +771,7 @@ def _publication_tag_publish_decision(
             },
             publication,
             target_version,
+            readiness_blockers=readiness_blockers,
         )
     return _with_target_tag_guidance(
         {
@@ -761,6 +784,7 @@ def _publication_tag_publish_decision(
         },
         publication,
         target_version,
+        readiness_blockers=readiness_blockers,
     )
 
 
@@ -774,12 +798,17 @@ def _target_tag_name(target_version: str | None) -> str | None:
 
 
 def _with_target_tag_guidance(
-    decision: dict[str, Any], publication: Any, target_version: str | None
+    decision: dict[str, Any],
+    publication: Any,
+    target_version: str | None,
+    *,
+    readiness_blockers: list[str] | None = None,
 ) -> dict[str, Any]:
     target_tag = _target_tag_name(target_version)
     if target_tag is None:
         return decision
 
+    blockers = list(readiness_blockers or [])
     latest_tag = decision.get("latest_tag")
     tag_points_at_head = bool(decision.get("tag_points_at_head", False))
     target_tag_matches_latest = latest_tag == target_tag
@@ -816,6 +845,18 @@ def _with_target_tag_guidance(
         "target_tag_commands_sha256": _stable_json_sha256(commands),
         "target_tag_primary_command": commands[0] if commands else None,
         "target_tag_commands": commands,
+        "target_tag_release_gate_status": (
+            "blocked_by_readiness" if blockers else "ready_for_publication_review"
+        ),
+        "target_tag_release_gate_blocker_count": len(blockers),
+        "target_tag_release_gate_blockers_sha256": _stable_json_sha256(blockers),
+        "target_tag_release_gate_primary_blocker": blockers[0] if blockers else None,
+        "target_tag_release_gate_required_action": (
+            f"Clear release readiness blockers before creating target tag `{target_tag}`."
+            if blockers
+            else required_action
+        ),
+        "target_tag_release_gate_blockers": blockers,
     }
 
 
@@ -1223,7 +1264,11 @@ def _candidate_issue_gate_evidence(
 ) -> dict[str, Any]:
     release_draft_issues = _release_draft_issues(readiness)
     publication_visibility = _publication_visibility(publication)
-    tag_decision = _publication_tag_publish_decision(publication, target_version)
+    tag_decision = _publication_tag_publish_decision(
+        publication,
+        target_version,
+        readiness_blockers=list(getattr(readiness, "blockers", []) or []),
+    )
     draft = getattr(readiness, "draft", None)
     return {
         "publication_ok": bool(getattr(publication, "ok", False)),
@@ -1246,6 +1291,21 @@ def _candidate_issue_gate_evidence(
         ),
         "publication_target_tag_required_action": tag_decision.get(
             "target_tag_required_action"
+        ),
+        "publication_target_tag_release_gate_status": tag_decision.get(
+            "target_tag_release_gate_status"
+        ),
+        "publication_target_tag_release_gate_blocker_count": tag_decision.get(
+            "target_tag_release_gate_blocker_count"
+        ),
+        "publication_target_tag_release_gate_primary_blocker": tag_decision.get(
+            "target_tag_release_gate_primary_blocker"
+        ),
+        "publication_target_tag_release_gate_required_action": tag_decision.get(
+            "target_tag_release_gate_required_action"
+        ),
+        "publication_target_tag_release_gate_blockers_sha256": tag_decision.get(
+            "target_tag_release_gate_blockers_sha256"
         ),
         "release_draft_ok": bool(getattr(draft, "ok", False)),
         "release_draft_path": _release_draft_evidence_path(readiness),
@@ -1786,7 +1846,9 @@ def build_plan(
     publication_next_actions = _publication_next_actions(publication)
     publication_publish_commands = _publication_publish_commands(publication)
     publication_tag_publish_decision = _publication_tag_publish_decision(
-        publication, str(readiness.target_version)
+        publication,
+        str(readiness.target_version),
+        readiness_blockers=list(getattr(readiness, "blockers", []) or []),
     )
     next_actions = _next_action_lines(readiness, publication)
     standard_release_flow = _standard_release_flow(
@@ -2286,6 +2348,22 @@ def _publication_tag_publish_decision_markdown(decision: dict[str, Any]) -> str:
         ("tag_points_at_head", _format_context_value(decision.get("tag_points_at_head"))),
         ("tag_published", _format_context_value(decision.get("tag_published"))),
         ("required_action", _format_context_value(decision.get("required_action"))),
+        (
+            "target_tag_release_gate_status",
+            _format_context_value(decision.get("target_tag_release_gate_status")),
+        ),
+        (
+            "target_tag_release_gate_blocker_count",
+            _format_context_value(decision.get("target_tag_release_gate_blocker_count")),
+        ),
+        (
+            "target_tag_release_gate_primary_blocker",
+            _format_context_value(decision.get("target_tag_release_gate_primary_blocker")),
+        ),
+        (
+            "target_tag_release_gate_blockers_sha256",
+            _format_context_value(decision.get("target_tag_release_gate_blockers_sha256")),
+        ),
     ]
     lines = ["## Publication Tag Publish Decision", "", "| Field | Value |", "|-------|-------|"]
     lines.extend(f"| {field} | `{value}` |" for field, value in rows)
@@ -2370,6 +2448,26 @@ def _candidate_issue_gate_evidence_markdown(evidence: object) -> str:
         (
             "publication_target_tag_required_action",
             evidence.get("publication_target_tag_required_action"),
+        ),
+        (
+            "publication_target_tag_release_gate_status",
+            evidence.get("publication_target_tag_release_gate_status"),
+        ),
+        (
+            "publication_target_tag_release_gate_blocker_count",
+            evidence.get("publication_target_tag_release_gate_blocker_count"),
+        ),
+        (
+            "publication_target_tag_release_gate_primary_blocker",
+            evidence.get("publication_target_tag_release_gate_primary_blocker"),
+        ),
+        (
+            "publication_target_tag_release_gate_required_action",
+            evidence.get("publication_target_tag_release_gate_required_action"),
+        ),
+        (
+            "publication_target_tag_release_gate_blockers_sha256",
+            evidence.get("publication_target_tag_release_gate_blockers_sha256"),
         ),
         ("release_draft_ok", evidence.get("release_draft_ok")),
         ("release_draft_path", evidence.get("release_draft_path")),
@@ -2732,6 +2830,26 @@ def _render_issue_artifacts_readme(
     gate_target_tag_commands_sha256 = _format_context_value(
         _candidate_issue_gate_evidence_value(plan, "publication_target_tag_commands_sha256")
     )
+    gate_target_tag_release_gate_status = _format_context_value(
+        _candidate_issue_gate_evidence_value(
+            plan, "publication_target_tag_release_gate_status"
+        )
+    )
+    gate_target_tag_release_gate_blocker_count = _format_context_value(
+        _candidate_issue_gate_evidence_value(
+            plan, "publication_target_tag_release_gate_blocker_count"
+        )
+    )
+    gate_target_tag_release_gate_primary_blocker = _format_context_value(
+        _candidate_issue_gate_evidence_value(
+            plan, "publication_target_tag_release_gate_primary_blocker"
+        )
+    )
+    gate_target_tag_release_gate_blockers_sha256 = _format_context_value(
+        _candidate_issue_gate_evidence_value(
+            plan, "publication_target_tag_release_gate_blockers_sha256"
+        )
+    )
     gate_draft_ok = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_ok"))
     gate_draft_issues = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_issue_count"))
     create_issues_safety = _issue_artifact_create_issues_safety(Path("create-issues.sh"))
@@ -2811,6 +2929,10 @@ Generated for target version `{plan.target_version}`.
 - gate_evidence_target_tag_status: `{gate_target_tag_status}`
 - gate_evidence_target_tag_primary_command: `{gate_target_tag_primary_command}`
 - gate_evidence_target_tag_commands_sha256: `{gate_target_tag_commands_sha256}`
+- gate_evidence_target_tag_release_gate_status: `{gate_target_tag_release_gate_status}`
+- gate_evidence_target_tag_release_gate_blocker_count: `{gate_target_tag_release_gate_blocker_count}`
+- gate_evidence_target_tag_release_gate_primary_blocker: `{gate_target_tag_release_gate_primary_blocker}`
+- gate_evidence_target_tag_release_gate_blockers_sha256: `{gate_target_tag_release_gate_blockers_sha256}`
 - gate_evidence_release_draft_ok: `{gate_draft_ok}`
 - gate_evidence_release_draft_issues: `{gate_draft_issues}`
 - visibility: `{_format_context_value(plan.publication_visibility.get("status"))}`
@@ -4070,6 +4192,29 @@ def _issue_artifact_bundle_summary(
         "publication_target_tag_required_action_sha256": _stable_json_sha256(
             plan.publication_tag_publish_decision.get("target_tag_required_action")
         ),
+        "publication_target_tag_release_gate_status": (
+            plan.publication_tag_publish_decision.get("target_tag_release_gate_status")
+        ),
+        "publication_target_tag_release_gate_blocker_count": (
+            plan.publication_tag_publish_decision.get(
+                "target_tag_release_gate_blocker_count"
+            )
+        ),
+        "publication_target_tag_release_gate_primary_blocker": (
+            plan.publication_tag_publish_decision.get(
+                "target_tag_release_gate_primary_blocker"
+            )
+        ),
+        "publication_target_tag_release_gate_required_action_sha256": _stable_json_sha256(
+            plan.publication_tag_publish_decision.get(
+                "target_tag_release_gate_required_action"
+            )
+        ),
+        "publication_target_tag_release_gate_blockers_sha256": (
+            plan.publication_tag_publish_decision.get(
+                "target_tag_release_gate_blockers_sha256"
+            )
+        ),
         "publication_blocker_count": len(plan.publication_blockers),
         "publication_blockers_sha256": _stable_json_sha256(plan.publication_blockers),
         "publication_primary_blocker": _publication_primary_blocker(plan),
@@ -4755,6 +4900,16 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['publication_target_tag_commands_sha256']}`",
             "- publication_target_tag_required_action_sha256: "
             f"`{summary['publication_target_tag_required_action_sha256']}`",
+            "- publication_target_tag_release_gate_status: "
+            f"{_summary_inline_code(summary['publication_target_tag_release_gate_status'])}",
+            "- publication_target_tag_release_gate_blocker_count: "
+            f"`{summary['publication_target_tag_release_gate_blocker_count']}`",
+            "- publication_target_tag_release_gate_primary_blocker: "
+            f"{_summary_inline_code(summary['publication_target_tag_release_gate_primary_blocker'])}",
+            "- publication_target_tag_release_gate_required_action_sha256: "
+            f"`{summary['publication_target_tag_release_gate_required_action_sha256']}`",
+            "- publication_target_tag_release_gate_blockers_sha256: "
+            f"`{summary['publication_target_tag_release_gate_blockers_sha256']}`",
             f"- blocker_count: `{summary['blocker_count']}`",
             f"- blockers_sha256: `{summary['blockers_sha256']}`",
             "- blocker_first_item: "

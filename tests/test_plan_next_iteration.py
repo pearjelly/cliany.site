@@ -23,6 +23,37 @@ def _stable_json_sha256(value: object) -> str:
     return hashlib.sha256(digest_source).hexdigest()
 
 
+def _target_tag_release_gate_fields(
+    blockers: list[str] | None = None,
+    *,
+    target_tag: str = "v0.16.2",
+) -> dict[str, object]:
+    blocker_list = list(blockers or ["release draft validation failed"])
+    return {
+        "target_tag_release_gate_status": "blocked_by_readiness",
+        "target_tag_release_gate_blocker_count": len(blocker_list),
+        "target_tag_release_gate_blockers_sha256": _stable_json_sha256(blocker_list),
+        "target_tag_release_gate_primary_blocker": blocker_list[0] if blocker_list else None,
+        "target_tag_release_gate_required_action": (
+            f"Clear release readiness blockers before creating target tag `{target_tag}`."
+        ),
+        "target_tag_release_gate_blockers": blocker_list,
+    }
+
+
+def _candidate_gate_target_tag_release_gate_fields(
+    blockers: list[str] | None = None,
+    *,
+    target_tag: str = "v0.16.2",
+) -> dict[str, object]:
+    fields = _target_tag_release_gate_fields(blockers, target_tag=target_tag)
+    return {
+        f"publication_{key}": value
+        for key, value in fields.items()
+        if key != "target_tag_release_gate_blockers"
+    }
+
+
 def _write_pyproject(root: Path, version: str = "0.16.1") -> None:
     (root / "pyproject.toml").write_text(
         f"""
@@ -351,6 +382,7 @@ def _blocked_candidate_issue_gate() -> dict[str, object]:
                 "Commit, stash, or discard local worktree changes before creating target tag "
                 "`v0.16.2`."
             ),
+            **_candidate_gate_target_tag_release_gate_fields(),
             "release_draft_ok": False,
             "release_draft_path": "docs/releases/v0.16.2-draft.md",
             "release_draft_issue_count": 2,
@@ -409,6 +441,14 @@ def test_plan_surfaces_tag_mismatch_before_publication(tmp_path):
     ]
     assert plan.publication_tag_publish_decision["target_tag_commands_sha256"] == (
         _stable_json_sha256(plan.publication_tag_publish_decision["target_tag_commands"])
+    )
+    assert (
+        plan.publication_tag_publish_decision["target_tag_release_gate_status"]
+        == "blocked_by_readiness"
+    )
+    assert (
+        plan.publication_tag_publish_decision["target_tag_release_gate_primary_blocker"]
+        == "release draft validation failed"
     )
     assert plan.next_actions[:3] == [
         "Push `master` to `origin`; local branch is ahead by `2` commits.",
@@ -529,6 +569,7 @@ def test_candidate_issue_gate_allows_creation_after_publication_with_release_dra
                 "After final release readiness is clean, create target tag `v0.16.2` "
                 "at HEAD and push it after the branch is published."
             ),
+            **_candidate_gate_target_tag_release_gate_fields(),
             "release_draft_ok": False,
             "release_draft_path": "docs/releases/v0.16.2-draft.md",
             "release_draft_issue_count": 2,
@@ -1289,6 +1330,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "target_tag_primary_command": "git tag v0.16.2",
         "target_tag_commands": ["git tag v0.16.2", "git push origin v0.16.2"],
+        **_target_tag_release_gate_fields(),
     }
     expected_publication_blockers = [
         "publication worktree is dirty",
@@ -1899,6 +1941,21 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "publication_target_tag_required_action_sha256": _stable_json_sha256(
             expected_tag_publish_decision["target_tag_required_action"]
         ),
+        "publication_target_tag_release_gate_status": expected_tag_publish_decision[
+            "target_tag_release_gate_status"
+        ],
+        "publication_target_tag_release_gate_blocker_count": expected_tag_publish_decision[
+            "target_tag_release_gate_blocker_count"
+        ],
+        "publication_target_tag_release_gate_primary_blocker": expected_tag_publish_decision[
+            "target_tag_release_gate_primary_blocker"
+        ],
+        "publication_target_tag_release_gate_required_action_sha256": _stable_json_sha256(
+            expected_tag_publish_decision["target_tag_release_gate_required_action"]
+        ),
+        "publication_target_tag_release_gate_blockers_sha256": expected_tag_publish_decision[
+            "target_tag_release_gate_blockers_sha256"
+        ],
         "publication_blocker_count": len(expected_publication_blockers),
         "publication_blockers_sha256": _stable_json_sha256(expected_publication_blockers),
         "publication_primary_blocker": expected_publication_blockers[0],
@@ -3266,6 +3323,26 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"`{artifact_bundle_summary['publication_target_tag_required_action_sha256']}`"
     ) in readme
     assert (
+        "publication_target_tag_release_gate_status: "
+        f"`{artifact_bundle_summary['publication_target_tag_release_gate_status']}`"
+    ) in readme
+    assert (
+        "publication_target_tag_release_gate_blocker_count: "
+        f"`{artifact_bundle_summary['publication_target_tag_release_gate_blocker_count']}`"
+    ) in readme
+    assert (
+        "publication_target_tag_release_gate_primary_blocker: "
+        f"`{artifact_bundle_summary['publication_target_tag_release_gate_primary_blocker']}`"
+    ) in readme
+    assert (
+        "publication_target_tag_release_gate_required_action_sha256: "
+        f"`{artifact_bundle_summary['publication_target_tag_release_gate_required_action_sha256']}`"
+    ) in readme
+    assert (
+        "publication_target_tag_release_gate_blockers_sha256: "
+        f"`{artifact_bundle_summary['publication_target_tag_release_gate_blockers_sha256']}`"
+    ) in readme
+    assert (
         "publication_blocker_count: "
         f"`{artifact_bundle_summary['publication_blocker_count']}`"
     ) in readme
@@ -3827,7 +3904,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"candidate_issue_gate_summary_sha256: "
         f"`{artifact_bundle_summary['candidate_issue_gate_summary_sha256']}`"
     ) in readme
-    assert "candidate_issue_gate_evidence_key_count: `18`" in readme
+    assert (
+        "candidate_issue_gate_evidence_key_count: "
+        f"`{len(_blocked_candidate_issue_gate()['evidence'])}`"
+    ) in readme
     assert (
         f"candidate_issue_gate_evidence_sha256: "
         f"`{artifact_bundle_summary['candidate_issue_gate_evidence_sha256']}`"
@@ -4005,6 +4085,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         f"gate_evidence_target_tag_commands_sha256: "
         f"`{_stable_json_sha256(['git tag v0.16.2', 'git push origin v0.16.2'])}`"
+    ) in readme
+    assert "gate_evidence_target_tag_release_gate_status: `blocked_by_readiness`" in readme
+    assert "gate_evidence_target_tag_release_gate_blocker_count: `1`" in readme
+    assert (
+        "gate_evidence_target_tag_release_gate_primary_blocker: "
+        "`release draft validation failed`"
+    ) in readme
+    assert (
+        f"gate_evidence_target_tag_release_gate_blockers_sha256: "
+        f"`{_stable_json_sha256(['release draft validation failed'])}`"
     ) in readme
     assert "gate_evidence_tag_can_push: `false`" in readme
     assert (

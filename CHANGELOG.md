@@ -74,6 +74,7 @@
 - `scripts/plan_next_iteration.py` 现在把 publication next actions / publish commands 的 primary 和 SHA-256 摘要提升到顶层 JSON、默认文本输出和 Markdown report。
 - `scripts/plan_next_iteration.py` 现在也透传 `publication_blockers`、`publication_primary_blocker` 和 `publication_blockers_sha256` 到顶层 JSON、默认文本输出、Markdown report 与 candidate issue artifacts，帮助维护者先看发布阻塞原因再执行同步命令。
 - `scripts/plan_next_iteration.py` 的 `publication_tag_publish_decision` 现在附带目标 release tag 建议、`git tag v...` / `git push origin v...` 命令和命令 hash，让维护者在 latest tag 不指向 HEAD 时也能直接看到应该创建哪个新 tag。
+- `scripts/plan_next_iteration.py` 现在也把 `target_tag_release_gate_*` 字段透传到周计划、candidate issue gate evidence 和 artifacts compact summary；只读周计划/artifacts 的维护工具可以直接识别目标 tag 是否仍 `blocked_by_readiness`。
 - `scripts/plan_next_iteration.py` 的顶层 `next_actions` 现在会在 tag mismatch 时用目标 release tag 动作替换旧 tag 推送提示，避免维护者误把不在 HEAD 的旧 tag 当作下一步发布对象。
 - `scripts/plan_next_iteration.py` 现在也透传 `standard_release_flow`、`standard_release_flow_status`、`standard_release_flow_primary_next_action`、`standard_release_flow_command_count`、`standard_release_flow_commands_sha256` 和 `standard_release_flow_sha256`，并在标准发版流程阻塞时优先把 `standard_release_flow.primary_next_action` 放到顶层 `next_actions[0]`。
 - Candidate issue artifacts 的 `artifact-manifest.json`、`publication-handoff.json`、artifacts `README.md` 和 `artifact_bundle_summary` 现在也展示 standard release flow 摘要，让只读候选任务交接包的维护工具不会漏掉提交后的标准发版 gate。
