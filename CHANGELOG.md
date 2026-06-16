@@ -56,6 +56,7 @@
 - `scripts/release_readiness.py` 现在输出 `publication_summary_sha256`，让只读发版预检 artifact 的工具能检测 publication summary 是否漂移。
 - `scripts/release_readiness.py` 现在也输出 `publication_summary_primary_next_action` 和 `publication_summary_primary_publish_command` 顶层别名，让只读摘要字段族的工具不用展开 nested summary。
 - `scripts/release_readiness.py` 的 `publication_tag_publish_decision` 和 `publication_summary` 现在也附带目标 release tag、目标 tag 状态、创建命令和命令 hash，让发版预检入口与周计划入口给出同一套 target tag 交接。
+- `scripts/release_readiness.py` 的 `publication_tag_publish_decision` 和 `publication_summary` 现在也输出 `target_tag_release_gate_*` 字段；当提交日、草案或其他 readiness blocker 未清除时，目标 tag 会明确标记为 `blocked_by_readiness`，避免维护者把 `git tag v...` 命令误当成立刻可执行。
 - `scripts/release_readiness.py --json` 的顶层 `next_actions` 现在会在 publication 未公开时先展示 `publication_summary.primary_next_action`，再展示 cadence/readiness 修复动作，避免发版预检只提示提交日而漏掉发布同步。
 - `scripts/release_readiness.py --json` 的顶层 `next_actions` 现在也会在 publication 首项后展示目标 release tag 动作，让只读发版预检的工具不用展开 `publication_tag_publish_decision` 就能看到 `git tag v...` / `git push origin v...` 链路。
 - README / README.zh 和周维护手册现在说明自动化可比对 `target_tag_commands_sha256`，并优先读取 `publication_summary.target_tag*` 字段确认目标 release tag 命令是否漂移。

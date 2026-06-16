@@ -645,6 +645,30 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
         payload["publication_tag_publish_decision"]["target_tag_status"]
         == "create_target_tag_at_head"
     )
+    assert (
+        payload["publication_tag_publish_decision"]["target_tag_release_gate_status"]
+        == "blocked_by_readiness"
+    )
+    assert (
+        payload["publication_tag_publish_decision"]["target_tag_release_gate_blocker_count"]
+        == len(payload["blockers"])
+    )
+    assert (
+        payload["publication_tag_publish_decision"]["target_tag_release_gate_blockers"]
+        == payload["blockers"]
+    )
+    assert (
+        payload["publication_tag_publish_decision"]["target_tag_release_gate_primary_blocker"]
+        == "commit days 1/3"
+    )
+    assert (
+        payload["publication_tag_publish_decision"]["target_tag_release_gate_blockers_sha256"]
+        == release_readiness._stable_json_sha256(payload["blockers"])
+    )
+    assert (
+        payload["publication_tag_publish_decision"]["target_tag_release_gate_required_action"]
+        == "Clear release readiness blockers before creating target tag `v0.1.1`."
+    )
     assert payload["publication_tag_publish_decision"]["target_tag_commands"] == [
         "git tag v0.1.1",
         "git push origin v0.1.1",
@@ -656,6 +680,9 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     )
     assert publication_summary["target_tag"] == "v0.1.1"
     assert publication_summary["target_tag_primary_command"] == "git tag v0.1.1"
+    assert publication_summary["target_tag_release_gate_status"] == "blocked_by_readiness"
+    assert publication_summary["target_tag_release_gate_blocker_count"] == len(payload["blockers"])
+    assert publication_summary["target_tag_release_gate_primary_blocker"] == "commit days 1/3"
     assert payload["publication"]["next_actions"] == publication_next_actions
     assert payload["publication_next_action_count"] == len(publication_next_actions)
     assert payload["publication_next_actions_sha256"] == release_readiness._stable_json_sha256(
@@ -769,6 +796,12 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- publication_summary_latest_tag: `v0.1.0`" in text
     assert "- publication_summary_target_tag: `v0.1.1`" in text
     assert "- publication_summary_target_tag_status: `create_target_tag_at_head`" in text
+    assert (
+        "- publication_summary_target_tag_release_gate_status: "
+        "`ready_for_publication_review`"
+    ) in text
+    assert "- publication_summary_target_tag_release_gate_blocker_count: `0`" in text
+    assert "- publication_summary_target_tag_release_gate_primary_blocker: `-`" in text
     assert "- publication_summary_sha256: `" in text
     assert "- publication_summary_primary_next_action: `" in text
     assert (
@@ -785,6 +818,14 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- tag_required_action: `Move to the latest tag commit or create a new release tag at HEAD " in text
     assert "- target_tag: `v0.1.1`" in text
     assert "- target_tag_status: `create_target_tag_at_head`" in text
+    assert "- target_tag_release_gate_status: `ready_for_publication_review`" in text
+    assert "- target_tag_release_gate_blocker_count: `0`" in text
+    assert "- target_tag_release_gate_primary_blocker: `-`" in text
+    assert (
+        "- target_tag_release_gate_required_action: "
+        "`After final release readiness is clean, create target tag `v0.1.1` at HEAD "
+    ) in text
+    assert "- target_tag_release_gate_blockers_sha256: `" in text
     assert "- target_tag_commands_sha256: `" in text
     assert "- target_tag_primary_command: `git tag v0.1.1`" in text
     assert "- publication_next_action_count: `" in text
@@ -953,6 +994,9 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     )
     assert "publication_target_tag: v0.1.1" in output
     assert "publication_target_tag_status: create_target_tag_at_head" in output
+    assert "publication_target_tag_release_gate_status: ready_for_publication_review" in output
+    assert "publication_target_tag_release_gate_blocker_count: 0" in output
+    assert "publication_target_tag_release_gate_primary_blocker:" not in output
     assert "publication_target_tag_commands_sha256:" in output
     assert "publication_target_tag_primary_command: git tag v0.1.1" in output
     assert "publication_next_action_count:" in output
@@ -984,6 +1028,9 @@ def test_release_readiness_text_output_includes_next_actions_when_blocked(tmp_pa
     output = capsys.readouterr().out
     assert "blockers:" in output
     assert "- commit days 1/3" in output
+    assert "publication_target_tag_release_gate_status: blocked_by_readiness" in output
+    assert "publication_target_tag_release_gate_blocker_count: 1" in output
+    assert "publication_target_tag_release_gate_primary_blocker: commit days 1/3" in output
     assert "next_actions:" in output
     assert (
         "- Ship verified slices on `2` more unique commit days this week; "

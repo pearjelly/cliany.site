@@ -790,6 +790,19 @@ def _print_text(report: ReadinessReport) -> None:
     if tag_publish_decision.get("target_tag"):
         print(f"publication_target_tag: {tag_publish_decision['target_tag']}")
         print(f"publication_target_tag_status: {tag_publish_decision['target_tag_status']}")
+        print(
+            "publication_target_tag_release_gate_status: "
+            f"{tag_publish_decision['target_tag_release_gate_status']}"
+        )
+        print(
+            "publication_target_tag_release_gate_blocker_count: "
+            f"{tag_publish_decision['target_tag_release_gate_blocker_count']}"
+        )
+        if tag_publish_decision.get("target_tag_release_gate_primary_blocker"):
+            print(
+                "publication_target_tag_release_gate_primary_blocker: "
+                f"{tag_publish_decision['target_tag_release_gate_primary_blocker']}"
+            )
         print(f"publication_target_tag_commands_sha256: {tag_publish_decision['target_tag_commands_sha256']}")
         if tag_publish_decision.get("target_tag_primary_command"):
             print(
@@ -911,19 +924,25 @@ def _publication_payload(report: ReadinessReport) -> dict[str, Any]:
     return {
         **payload,
         "tag_publish_decision": _publication_tag_publish_decision(
-            payload, report.target_version
+            payload,
+            report.target_version,
+            readiness_blockers=report.blockers,
         ),
     }
 
 
 def _publication_tag_publish_decision(
-    publication_payload: dict[str, Any], target_version: str | None
+    publication_payload: dict[str, Any],
+    target_version: str | None,
+    *,
+    readiness_blockers: list[str] | None = None,
 ) -> dict[str, Any]:
     decision = dict(publication_payload["tag_publish_decision"])
     target_tag = _target_tag_name(target_version)
     if target_tag is None:
         return decision
 
+    blockers = list(readiness_blockers or [])
     latest_tag = decision.get("latest_tag")
     tag_points_at_head = bool(decision.get("tag_points_at_head", False))
     target_tag_matches_latest = latest_tag == target_tag
@@ -960,6 +979,18 @@ def _publication_tag_publish_decision(
         "target_tag_commands_sha256": _stable_json_sha256(commands),
         "target_tag_primary_command": commands[0] if commands else None,
         "target_tag_commands": commands,
+        "target_tag_release_gate_status": (
+            "blocked_by_readiness" if blockers else "ready_for_publication_review"
+        ),
+        "target_tag_release_gate_blocker_count": len(blockers),
+        "target_tag_release_gate_blockers_sha256": _stable_json_sha256(blockers),
+        "target_tag_release_gate_primary_blocker": blockers[0] if blockers else None,
+        "target_tag_release_gate_required_action": (
+            f"Clear release readiness blockers before creating target tag `{target_tag}`."
+            if blockers
+            else required_action
+        ),
+        "target_tag_release_gate_blockers": blockers,
     }
 
 
@@ -1012,6 +1043,15 @@ def _publication_summary(publication_payload: dict[str, Any]) -> dict[str, Any]:
         "target_tag": tag_publish_decision.get("target_tag"),
         "target_tag_status": tag_publish_decision.get("target_tag_status"),
         "target_tag_primary_command": tag_publish_decision.get("target_tag_primary_command"),
+        "target_tag_release_gate_status": tag_publish_decision.get(
+            "target_tag_release_gate_status"
+        ),
+        "target_tag_release_gate_blocker_count": tag_publish_decision.get(
+            "target_tag_release_gate_blocker_count"
+        ),
+        "target_tag_release_gate_primary_blocker": tag_publish_decision.get(
+            "target_tag_release_gate_primary_blocker"
+        ),
         "next_action_count": len(next_actions),
         "primary_next_action": next_actions[0] if next_actions else None,
         "publish_command_count": len(publish_commands),
@@ -1281,6 +1321,18 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
         f"- publication_summary_latest_tag: `{_markdown_cell(publication_summary['latest_tag'])}`",
         f"- publication_summary_target_tag: `{_markdown_cell(publication_summary['target_tag'])}`",
         f"- publication_summary_target_tag_status: `{_markdown_cell(publication_summary['target_tag_status'])}`",
+        (
+            "- publication_summary_target_tag_release_gate_status: "
+            f"`{_markdown_cell(publication_summary['target_tag_release_gate_status'])}`"
+        ),
+        (
+            "- publication_summary_target_tag_release_gate_blocker_count: "
+            f"`{_markdown_cell(publication_summary['target_tag_release_gate_blocker_count'])}`"
+        ),
+        (
+            "- publication_summary_target_tag_release_gate_primary_blocker: "
+            f"`{_markdown_cell(publication_summary['target_tag_release_gate_primary_blocker'])}`"
+        ),
         f"- publication_summary_sha256: `{_stable_json_sha256(publication_summary)}`",
         f"- publication_summary_primary_next_action: `{_markdown_cell(publication_summary['primary_next_action'])}`",
         (
@@ -1295,6 +1347,26 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
         f"- tag_required_action: `{_markdown_cell(tag_publish_decision.get('required_action'))}`",
         f"- target_tag: `{_markdown_cell(tag_publish_decision.get('target_tag'))}`",
         f"- target_tag_status: `{_markdown_cell(tag_publish_decision.get('target_tag_status'))}`",
+        (
+            "- target_tag_release_gate_status: "
+            f"`{_markdown_cell(tag_publish_decision.get('target_tag_release_gate_status'))}`"
+        ),
+        (
+            "- target_tag_release_gate_blocker_count: "
+            f"`{_markdown_cell(tag_publish_decision.get('target_tag_release_gate_blocker_count'))}`"
+        ),
+        (
+            "- target_tag_release_gate_primary_blocker: "
+            f"`{_markdown_cell(tag_publish_decision.get('target_tag_release_gate_primary_blocker'))}`"
+        ),
+        (
+            "- target_tag_release_gate_required_action: "
+            f"`{_markdown_cell(tag_publish_decision.get('target_tag_release_gate_required_action'))}`"
+        ),
+        (
+            "- target_tag_release_gate_blockers_sha256: "
+            f"`{_markdown_cell(tag_publish_decision.get('target_tag_release_gate_blockers_sha256'))}`"
+        ),
         (
             "- target_tag_required_action: "
             f"`{_markdown_cell(tag_publish_decision.get('target_tag_required_action'))}`"
