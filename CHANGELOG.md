@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.227] - 2026-06-16
+
 ### Added
 - 新增内置 `cliany-site cases` 命令，可离线列出维护中的真实 demo、candidate 工作流、离线验证命令和 candidate 晋级下一步，并把 `cases/` 案例索引纳入 wheel 资源。
 - `cliany-site cases --case-id <id>` 现在可精确展开单个案例的命令、validation 和 promotion 详情，找不到案例时会返回可用 case id 列表。

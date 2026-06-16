@@ -492,7 +492,7 @@ wheels = [
 
 [[package]]
 name = "cliany-site"
-version = "0.14.1"
+version = "0.16.227"
 source = { editable = "." }
 dependencies = [
     { name = "browser-use" },
