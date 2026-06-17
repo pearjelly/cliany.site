@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Added
+- `cliany-site cases --case-id <id> --evidence-bundle --json` 现在把每个 promotion task 和对应可执行命令绑定到 `tasks` / `task_handoffs`，并输出 `primary_next_task_command*` 与 `primary_next_task_handoff`，让贡献者和自动化不用重新拼接 evidence、command plan 与下一步说明。
+
 ## [0.16.227] - 2026-06-16
 
 ### Added

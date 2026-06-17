@@ -238,11 +238,30 @@ def _candidate_issue_primary_task(evidence: dict[str, Any]) -> dict[str, Any]:
     return dict(primary)
 
 
+def _candidate_task_handoff(
+    *,
+    task: str,
+    command: str,
+    command_missing: bool,
+    next_action: str,
+) -> str:
+    if command_missing:
+        followup = next_action or "Attach evidence before promotion."
+        return f"No executable command declared for `{task}`; {followup}"
+    if next_action:
+        return f"Run `{command}`; then {next_action}"
+    return f"Run `{command}` and attach the evidence before promotion."
+
+
 def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
     case_id = str(case.get("id") or "")
     adapter_domain = case.get("adapter_domain")
     promotion = case.get("promotion") if isinstance(case.get("promotion"), dict) else {}
     evidence = case.get("promotion_evidence") if isinstance(case.get("promotion_evidence"), dict) else {}
+    promotion_command_plan = _candidate_promotion_command_plan(case)
+    command_plan_by_task = {
+        str(item.get("task") or ""): item for item in promotion_command_plan if isinstance(item, dict)
+    }
     tasks: list[dict[str, Any]] = []
 
     for task in PROMOTION_TASKS:
@@ -251,6 +270,16 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         status = str(task_evidence.get("status") or "pending")
         evidence_value = task_evidence.get("evidence")
         next_action = str(task_evidence.get("next_action") or "")
+        command_plan_item = command_plan_by_task.get(task, {})
+        command = str(command_plan_item.get("command") or "")
+        command_source = str(command_plan_item.get("source") or "")
+        command_missing = bool(command_plan_item.get("missing", not command))
+        handoff = _candidate_task_handoff(
+            task=task,
+            command=command,
+            command_missing=command_missing,
+            next_action=next_action,
+        )
         tasks.append(
             {
                 "task": task,
@@ -258,6 +287,10 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                 "description": promotion.get(task) or "",
                 "evidence": evidence_value,
                 "next_action": next_action,
+                "command": command,
+                "command_source": command_source,
+                "command_missing": command_missing,
+                "handoff": handoff,
                 "complete": status == "complete" and bool(evidence_value),
             }
         )
@@ -272,7 +305,6 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
     primary_incomplete_task = incomplete_tasks[0] if incomplete_tasks else None
     primary_next_action_task = primary_pending_task or primary_blocked_task or primary_incomplete_task or {}
     primary_next_task = dict(primary_next_action_task) if primary_next_action_task else None
-    promotion_command_plan = _candidate_promotion_command_plan(case)
     return {
         "case_id": case_id,
         "title": case.get("title"),
@@ -305,6 +337,22 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "primary_blocked_task": primary_blocked_task,
         "primary_incomplete_task": primary_incomplete_task,
         "primary_next_task": primary_next_task,
+        "primary_next_task_command": primary_next_action_task.get("command", ""),
+        "primary_next_task_command_source": primary_next_action_task.get("command_source", ""),
+        "primary_next_task_command_missing": bool(primary_next_action_task.get("command_missing", False)),
+        "primary_next_task_handoff": primary_next_action_task.get("handoff", ""),
+        "task_handoffs": [
+            {
+                "task": task["task"],
+                "status": task["status"],
+                "command": task["command"],
+                "command_source": task["command_source"],
+                "command_missing": task["command_missing"],
+                "complete": task["complete"],
+                "handoff": task["handoff"],
+            }
+            for task in tasks
+        ],
         "complete_task_count": len(complete_tasks),
         "pending_task_count": len(pending_tasks),
         "blocked_task_count": len(blocked_tasks),
@@ -332,6 +380,10 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
     primary_next_task = bundle.get("primary_next_task")
     if isinstance(primary_next_task, dict) and primary_next_task.get("task"):
         lines.append(f"- Primary next task: `{primary_next_task['task']}`")
+        if primary_next_task.get("command"):
+            lines.append(f"- Primary next command: `{primary_next_task['command']}`")
+        if primary_next_task.get("handoff"):
+            lines.append(f"- Primary next handoff: {primary_next_task['handoff']}")
     primary_incomplete_task = bundle.get("primary_incomplete_task")
     if isinstance(primary_incomplete_task, dict) and primary_incomplete_task.get("task"):
         lines.append(f"- Primary incomplete task: `{primary_incomplete_task['task']}`")
@@ -362,12 +414,17 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
     for task in bundle.get("tasks", []):
         evidence_value = task.get("evidence") or "Not attached yet."
         next_action = task.get("next_action") or "No next action declared."
+        command = task.get("command") or "Not declared."
+        handoff = task.get("handoff") or "No handoff declared."
         lines.extend(
             [
                 f"- `{task['task']}`: `{task['status']}`",
                 f"  - complete: `{str(task['complete']).lower()}`",
+                f"  - command: `{command}`",
+                f"  - command_missing: `{str(task.get('command_missing', False)).lower()}`",
                 f"  - evidence: {evidence_value}",
                 f"  - next: {next_action}",
+                f"  - handoff: {handoff}",
             ]
         )
 

@@ -353,7 +353,28 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["primary_incomplete_task"]["task"] == "adapter_package"
     assert bundle["primary_next_task"]["task"] == "adapter_package"
     assert bundle["primary_next_task"] == bundle["primary_pending_task"]
+    assert bundle["primary_next_task_command"] == (
+        'cliany-site explore "https://pypi.org" '
+        '"search Python packages for cliany-site and list project names" --json'
+    )
+    assert bundle["primary_next_task_command_source"] == "commands.explore"
+    assert bundle["primary_next_task_command_missing"] is False
+    assert bundle["primary_next_task_handoff"].startswith(
+        'Run `cliany-site explore "https://pypi.org"'
+    )
     assert bundle["primary_next_action"].startswith("Generate pypi.org")
+    assert bundle["task_handoffs"][0] == {
+        "task": "adapter_package",
+        "status": "pending",
+        "command": (
+            'cliany-site explore "https://pypi.org" '
+            '"search Python packages for cliany-site and list project names" --json'
+        ),
+        "command_source": "commands.explore",
+        "command_missing": False,
+        "complete": False,
+        "handoff": bundle["tasks"][0]["handoff"],
+    }
     assert bundle["promotion_command_plan_count"] == 3
     assert bundle["promotion_command_plan_missing_tasks"] == []
     assert bundle["promotion_command_plan"] == [
@@ -384,6 +405,11 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     ]
     assert bundle["tasks"][0]["task"] == "adapter_package"
     assert bundle["tasks"][0]["complete"] is False
+    assert bundle["tasks"][0]["command_source"] == "commands.explore"
+    assert bundle["tasks"][0]["command_missing"] is False
+    assert bundle["tasks"][0]["handoff"].startswith(
+        'Run `cliany-site explore "https://pypi.org"'
+    )
     assert "python scripts/validate_cases.py --strict" in bundle["offline_commands"]
     assert bundle["candidate_package_validation_command"] == (
         "python scripts/validate_cases.py "
@@ -450,12 +476,21 @@ def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatc
     assert bundle["primary_incomplete_task"]["task"] == "adapter_package"
     assert bundle["primary_next_task"]["task"] == "adapter_package"
     assert bundle["primary_next_task"] == bundle["primary_pending_task"]
+    assert bundle["primary_next_task_command"] == ""
+    assert bundle["primary_next_task_command_source"] == "commands.explore"
+    assert bundle["primary_next_task_command_missing"] is True
+    assert bundle["primary_next_task_handoff"] == (
+        "No executable command declared for `adapter_package`; Package the adapter."
+    )
     assert bundle["pending_task_count"] == 1
     assert bundle["blocked_task_count"] == 1
     assert bundle["complete_task_count"] == 1
     assert bundle["incomplete_task_count"] == 2
     assert bundle["ready_to_promote"] is False
     assert bundle["primary_next_action"] == "Package the adapter."
+    assert bundle["tasks"][0]["command_missing"] is True
+    assert bundle["tasks"][0]["handoff"] == bundle["primary_next_task_handoff"]
+    assert bundle["task_handoffs"][0]["handoff"] == bundle["primary_next_task_handoff"]
 
     human = runner.invoke(
         cli,
@@ -465,6 +500,7 @@ def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatc
 
     assert human.exit_code == 0
     assert "Primary next task: `adapter_package`" in human.output
+    assert "Primary next handoff: No executable command declared for `adapter_package`" in human.output
     assert "Primary incomplete task: `adapter_package`" in human.output
     assert "Blocked tasks: `1`" in human.output
     assert "Blocked task names: `metadata_validation`" in human.output
@@ -484,6 +520,8 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "Blocked tasks: `0`" in result.output
     assert "Incomplete tasks: `3`" in result.output
     assert "Primary next task: `adapter_package`" in result.output
+    assert "Primary next command: `cliany-site explore" in result.output
+    assert "Primary next handoff: Run `cliany-site explore" in result.output
     assert "Primary incomplete task: `adapter_package`" in result.output
     assert "## Candidate package validation" in result.output
     assert "## Promotion command plan" in result.output
@@ -506,6 +544,8 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     )
     assert "## Promotion evidence" in result.output
     assert "`adapter_package`: `pending`" in result.output
+    assert "command_missing: `false`" in result.output
+    assert "handoff: Run `cliany-site explore" in result.output
     assert "cliany-site cases" not in result.output
 
 
