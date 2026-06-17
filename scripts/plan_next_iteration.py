@@ -1920,6 +1920,7 @@ def build_plan(
     today: date | None = None,
     target_version: str | None = None,
     min_commit_days: int = 3,
+    max_daily_releases: int = 3,
     min_case_assets: int = 8,
     packages_dir: Path | None = None,
     require_packages: bool = False,
@@ -1932,6 +1933,7 @@ def build_plan(
         root,
         today=today or date.today(),
         min_commit_days=min_commit_days,
+        max_daily_releases=max_daily_releases,
         min_case_assets=min_case_assets,
         target_version=expected_target,
         packages_dir=packages_dir,
@@ -5435,6 +5437,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="Output machine-readable JSON.")
     parser.add_argument("--target-version", help="Target release version. Defaults to next patch version.")
     parser.add_argument("--min-days", type=int, default=3, help="Minimum unique commit days expected this week.")
+    parser.add_argument("--max-daily-releases", type=int, default=3, help="Maximum release tags allowed per day.")
     parser.add_argument("--min-case-assets", type=int, default=8, help="Minimum tracked case assets expected.")
     parser.add_argument("--today", help="Override current date as YYYY-MM-DD, for audits.")
     parser.add_argument("--report", type=Path, help="Optional Markdown plan report path.")
@@ -5457,6 +5460,7 @@ def main(argv: list[str] | None = None) -> int:
         today=today,
         target_version=args.target_version,
         min_commit_days=args.min_days,
+        max_daily_releases=args.max_daily_releases,
         min_case_assets=args.min_case_assets,
         packages_dir=args.packages_dir,
         require_packages=args.require_packages,

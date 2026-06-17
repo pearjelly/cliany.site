@@ -641,6 +641,7 @@ def build_report(
     *,
     today: date | None = None,
     min_commit_days: int = 3,
+    max_daily_releases: int = 3,
     min_case_assets: int = MIN_CASE_ASSETS,
     target_version: str | None = None,
     release_tag: str | None = None,
@@ -652,7 +653,12 @@ def build_report(
         _strip_v_prefix(release_tag) if release_tag else _next_patch_version(current_version)
     )
     draft_base_version = _previous_tag_version(root, release_tag) if release_tag else current_version
-    cadence = build_cadence_report(root, today=today or date.today(), min_commit_days=min_commit_days)
+    cadence = build_cadence_report(
+        root,
+        today=today or date.today(),
+        min_commit_days=min_commit_days,
+        max_daily_releases=max_daily_releases,
+    )
     cases = build_cases_report(root, packages_dir=packages_dir)
     draft = _build_draft_report(root, draft_base_version or current_version, expected_target)
     ci = _build_ci_report(root)
@@ -1703,6 +1709,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="Output machine-readable JSON.")
     parser.add_argument("--strict", action="store_true", help="Exit non-zero when release readiness fails.")
     parser.add_argument("--min-days", type=int, default=3, help="Minimum unique commit days expected this week.")
+    parser.add_argument("--max-daily-releases", type=int, default=3, help="Maximum release tags allowed per day.")
     parser.add_argument(
         "--min-case-assets",
         type=int,
@@ -1728,6 +1735,7 @@ def main(argv: list[str] | None = None) -> int:
         ROOT,
         today=today,
         min_commit_days=args.min_days,
+        max_daily_releases=args.max_daily_releases,
         min_case_assets=args.min_case_assets,
         target_version=args.target_version,
         release_tag=args.release_tag,

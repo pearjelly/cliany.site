@@ -801,6 +801,7 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- publication_summary_branch: `master`" in text
     assert "- publication_summary_latest_tag: `v0.1.0`" in text
     assert "- publication_summary_target_tag: `v0.1.1`" in text
+
     assert "- publication_summary_target_tag_status: `create_target_tag_at_head`" in text
     assert (
         "- publication_summary_target_tag_release_gate_status: "
@@ -874,6 +875,27 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     ) in text
     assert "## Next Actions" in text
     assert "- Set an upstream branch for `master` before checking publication status." in text
+
+
+def test_release_readiness_respects_custom_daily_release_cap(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    _commit(repo, "notes/release-1.md", "release 1", "2026-06-10")
+    _git(repo, "tag", "v0.1.1")
+    _commit(repo, "notes/release-2.md", "release 2", "2026-06-10")
+    _git(repo, "tag", "v0.1.2")
+
+    report = _build_report(
+        repo,
+        today=date(2026, 6, 10),
+        min_commit_days=1,
+        max_daily_releases=1,
+    )
+
+    assert report.cadence.release_tags_today == ["v0.1.1", "v0.1.2"]
+    assert report.cadence.release_count_today == 2
+    assert report.cadence.max_daily_releases == 1
+    assert report.cadence.daily_release_limit_ok is False
+    assert "daily release tags 2/1 exceed the allowed maximum" in report.blockers
 
 
 def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_path):

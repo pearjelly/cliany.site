@@ -47,6 +47,7 @@ def test_release_cadence_doc_explains_readiness_triage():
         "release_count_today",
         "max_daily_releases",
         "daily_release_limit_ok",
+        "--max-daily-releases",
         "超过 3 个版本/日",
         "每日发布循环",
         "standard_release_flow_primary_next_action",

@@ -72,11 +72,13 @@ python scripts/release_readiness.py
 python scripts/release_readiness.py --json
 python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 python scripts/release_readiness.py --target-version 0.15.0 --json
+python scripts/release_readiness.py --target-version 0.15.0 --max-daily-releases 3 --json
 python scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --require-packages --strict
 
 # 汇总检查发布节奏（默认只报告，不失败）
 python scripts/check_release_cadence.py
 python scripts/check_release_cadence.py --json
+python scripts/check_release_cadence.py --max-daily-releases 3 --json
 
 # 检查最新本地 release commit/tag 是否已经可从 upstream 或远端看到
 python scripts/check_release_publication.py
@@ -122,7 +124,7 @@ CI 的 `Release Readiness Report` job 会在 PR/主分支生成 `release-readine
 
 `check_release_publication.py` 用于发布后的本地审计：默认只读取本地 upstream 跟踪信息，不访问网络；传入 `--remote` 时会用 `git ls-remote` 检查实时远端 branch 和 tag refs。它会报告当前分支相对 upstream 的 ahead/behind、最新 tag 是否指向 HEAD、tag commit 是否已进入 upstream，以及需要执行的 `next_actions`。JSON、文本和 Markdown report 还会输出 `worktree_clean`、`worktree_status` 和 `publish_commands`，把 `git push origin master`、`git push origin vX.Y.Z` 和 `python scripts/check_release_publication.py --remote --json` 这类可复制命令放在一起；如果 worktree 不干净，`next_actions` 会先要求提交、stash 或丢弃本地改动，`publish_commands` 只保留重新运行 publication audit 的命令，避免维护者从 JSON 里直接复制 push。传入 `--report /tmp/cliany-release-publication.md` 时会保存 Markdown 报告，便于发版复盘或 CI artifact 留档；传入 `--publish-script /tmp/cliany-publish-release.sh` 时会写出可审阅的 shell 脚本并设置可执行权限，脚本顶部会带 `Publication context` 注释，列出 repo_root、branch、upstream、latest_tag、local_head、tag_commit、ahead_count 和 remote_checked，方便维护者确认脚本对应的本地 release。脚本执行时会先进入 `REPO_ROOT`，确认 `git rev-parse --show-toplevel` 仍是生成时的仓库根目录，再用 `EXPECTED_LOCAL_HEAD`、`EXPECTED_LATEST_TAG` 和 `EXPECTED_TAG_COMMIT` 做本地 stale preflight，并运行 `git status --porcelain` 确认工作区干净；如果当前 repo root、HEAD、latest tag、tag commit 或 worktree 状态已经变化，会打印 `Publish script is stale` 并退出，不执行后续 push。 当本地已经完成 tag 但尚未公开发布时，先运行 `python scripts/check_release_publication.py --json --publish-script /tmp/cliany-publish-release.sh`，确认需要 push 的 branch/tag，再由维护者手动决定是否触发真实 GitHub Release/PyPI 流程。
 
-`check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、当天 release tag 数量是否不超过 3、`CHANGELOG.md` Unreleased 是否有内容、`[Unreleased]` compare 链接是否指向最新 tag 到 `HEAD`，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截。
+`check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、当天 release tag 数量是否不超过 3、`CHANGELOG.md` Unreleased 是否有内容、`[Unreleased]` compare 链接是否指向最新 tag 到 `HEAD`，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截；`--max-daily-releases` 可在 `check_release_cadence.py`、`release_readiness.py` 和 `plan_next_iteration.py` 三个入口使用，默认值为 3。
 
 当 cadence 未满足时，`check_release_cadence.py` 的文本输出和 `--json` 都会包含纯文本 `next_actions`，提示维护者继续补足本周提交天数、暂停超过 3 个版本/日的 tag 发布、修正 tag/version、更新 CHANGELOG compare 链接或清理工作区；渲染为文本时才添加列表符号。JSON 输出还会包含 `missing_commit_days`、`release_count_today`、`max_daily_releases`、`daily_release_limit_ok`、`primary_next_action` 和 `next_actions_sha256`，便于维护脚本直接判断本周还差几个独立提交日、当天是否已经达到发布上限、展示首要节奏动作并检测 action list 是否漂移。每日版本发布前也读取这些字段，确保“每天发版”不会掩盖本周提交日不足、tag/version 不一致、超过每日发布上限或未清理工作区。
 
