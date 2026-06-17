@@ -224,6 +224,11 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "- Status: `pending`" in template
     assert "## Reproduction Context" in template
     assert "## Promotion Command Plan" in template
+    assert "## LLM Preflight Gate" in template
+    assert "- Command: `cliany-site doctor --llm-live --json`" in template
+    assert "generate_adapters.ready=false" in template
+    assert "E_LLM_UNAVAILABLE" in template
+    assert "leave adapter_package pending or blocked" in template
     assert "## Acceptance Criteria" in template
     assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in template
     assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in template
@@ -271,6 +276,8 @@ def test_cases_command_issue_template_human_outputs_markdown(tmp_home):
     assert "## Scope: promote candidate case `pypi-project-search`" in result.output
     assert "## Evidence Bundle" in result.output
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in result.output
+    assert "## LLM Preflight Gate" in result.output
+    assert "E_LLM_UNAVAILABLE" in result.output
     assert "Candidate package validation command" in result.output
     assert (
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
@@ -419,6 +426,8 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         "handoff": bundle["tasks"][0]["handoff"],
     }
     assert bundle["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
+    assert "generate_adapters.ready=false" in bundle["llm_live_preflight_blocker_note"]
+    assert "E_LLM_UNAVAILABLE" in bundle["llm_live_preflight_blocker_note"]
     assert bundle["promotion_command_plan_count"] == 4
     assert bundle["promotion_command_plan_missing_tasks"] == []
     assert bundle["promotion_command_plan"] == [
@@ -577,6 +586,9 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "Primary next acceptance: Attach the generated" in result.output
     assert "Primary incomplete task: `adapter_package`" in result.output
     assert "## Candidate package validation" in result.output
+    assert "## LLM live preflight" in result.output
+    assert "Blocker handling: Run the live LLM preflight before explore." in result.output
+    assert "E_LLM_UNAVAILABLE" in result.output
     assert "## Promotion command plan" in result.output
     assert "## Acceptance criteria" in result.output
     assert "`online_smoke`: Paste the read-only adapter command JSON envelope summary" in result.output

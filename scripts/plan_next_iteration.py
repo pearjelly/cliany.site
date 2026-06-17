@@ -29,6 +29,11 @@ CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
 )
 LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
+LLM_LIVE_PREFLIGHT_BLOCKER_NOTE = (
+    "Run the live LLM preflight before explore. If generate_adapters.ready=false "
+    "or llm_live reports E_LLM_UNAVAILABLE, stop candidate promotion, attach the "
+    "doctor JSON/error summary, and leave adapter_package pending or blocked."
+)
 CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -1826,6 +1831,10 @@ def _candidate_issue_body(
             "",
             "## Promotion Command Plan",
             *promotion_command_lines,
+            "",
+            "## LLM Preflight Gate",
+            f"- Command: `{LLM_LIVE_PREFLIGHT_COMMAND}`",
+            f"- Blocker handling: {LLM_LIVE_PREFLIGHT_BLOCKER_NOTE}",
             "",
             "## Acceptance Criteria",
             *acceptance_lines,

@@ -160,6 +160,10 @@ def test_candidate_issue_body_checks_complete_tasks():
     assert "- Acceptance criteria: Paste the read-only adapter command JSON envelope summary" in issue_body
     assert "## Promotion Command Plan" in issue_body
     assert "- `online_smoke`: `cliany-site example.test search --json`" in issue_body
+    assert "## LLM Preflight Gate" in issue_body
+    assert "- Command: `cliany-site doctor --llm-live --json`" in issue_body
+    assert "generate_adapters.ready=false" in issue_body
+    assert "E_LLM_UNAVAILABLE" in issue_body
     assert "## Acceptance Criteria" in issue_body
     assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in issue_body
     assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in issue_body
@@ -816,6 +820,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`\n"
             "- `online_smoke`: `cliany-site pypi.org search-projects --query cliany-site "
             "--limit 5 --json`\n\n"
+            "## LLM Preflight Gate\n"
+            "- Command: `cliany-site doctor --llm-live --json`\n"
+            "- Blocker handling: Run the live LLM preflight before explore. "
+            "If generate_adapters.ready=false or llm_live reports E_LLM_UNAVAILABLE, "
+            "stop candidate promotion, attach the doctor JSON/error summary, and leave "
+            "adapter_package pending or blocked.\n\n"
             "## Acceptance Criteria\n"
             "- `adapter_package`: Attach the generated "
             "<domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name.\n"

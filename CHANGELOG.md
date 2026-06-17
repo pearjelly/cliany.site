@@ -7,6 +7,15 @@
 
 ## [Unreleased]
 
+## [0.16.239] - 2026-06-17
+
+### Added
+- Candidate promotion issue templates now include an explicit `LLM Preflight Gate` that tells maintainers to run `cliany-site doctor --llm-live --json` before any real `explore`.
+- `cliany-site cases --case-id <id> --evidence-bundle --json` now exposes `llm_live_preflight_blocker_note`, and the human evidence bundle prints the same blocker handling guidance.
+- `scripts/plan_next_iteration.py` generated candidate issue bodies and `scripts/validate_cases.py --report` issue templates now share the same preflight failure contract.
+- [cases/README.md](cases/README.md) documents that `generate_adapters.ready=false` or `E_LLM_UNAVAILABLE` should stop candidate promotion and be attached as blocker evidence instead of being treated as adapter package evidence.
+- 新增 `docs/releases/v0.16.239-draft.md`，记录本版在 live LLM 仍返回 502 时对 candidate handoff 的阻塞证据边界加固。
+
 ## [0.16.238] - 2026-06-17
 
 ### Added
@@ -2207,7 +2216,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.238...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.239...HEAD
+[0.16.239]: https://github.com/pearjelly/cliany.site/compare/v0.16.238...v0.16.239
 [0.16.238]: https://github.com/pearjelly/cliany.site/compare/v0.16.237...v0.16.238
 [0.16.237]: https://github.com/pearjelly/cliany.site/compare/v0.16.236...v0.16.237
 [0.16.236]: https://github.com/pearjelly/cliany.site/compare/v0.16.235...v0.16.236

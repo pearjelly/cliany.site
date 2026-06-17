@@ -24,6 +24,11 @@ CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     f"--packages-dir {CANDIDATE_PACKAGES_DIR} --include-candidate-packages --strict"
 )
 LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
+LLM_LIVE_PREFLIGHT_BLOCKER_NOTE = (
+    "Run the live LLM preflight before explore. If generate_adapters.ready=false "
+    "or llm_live reports E_LLM_UNAVAILABLE, stop candidate promotion, attach the "
+    "doctor JSON/error summary, and leave adapter_package pending or blocked."
+)
 PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -192,6 +197,15 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
         command = item["command"] or "Not declared."
         lines.append(f"- `{item['task']}`: `{command}`")
 
+    lines.extend(
+        [
+            "",
+            "## LLM Preflight Gate",
+            f"- Command: `{LLM_LIVE_PREFLIGHT_COMMAND}`",
+            f"- Blocker handling: {LLM_LIVE_PREFLIGHT_BLOCKER_NOTE}",
+        ]
+    )
+
     lines.extend(["", "## Acceptance Criteria"])
     for task in PROMOTION_TASKS:
         lines.append(f"- `{task}`: {PROMOTION_ACCEPTANCE_CRITERIA[task]}")
@@ -351,6 +365,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "commands": case.get("commands") if isinstance(case.get("commands"), list) else [],
         "offline_commands": _offline_commands(case),
         "llm_live_preflight_command": LLM_LIVE_PREFLIGHT_COMMAND,
+        "llm_live_preflight_blocker_note": LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
         "candidate_package_validation_command": CANDIDATE_PACKAGE_VALIDATION_COMMAND
         if adapter_domain
         else "",
@@ -452,6 +467,8 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
                 f"- `{bundle['llm_live_preflight_command']}`",
             ]
         )
+        if bundle.get("llm_live_preflight_blocker_note"):
+            lines.append(f"- Blocker handling: {bundle['llm_live_preflight_blocker_note']}")
     if bundle.get("candidate_package_validation_command"):
         lines.extend(
             [

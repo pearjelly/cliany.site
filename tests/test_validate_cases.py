@@ -874,6 +874,10 @@ def test_cases_report_writes_markdown_report(tmp_path):
         in text
     )
     assert "- `online_smoke`: `cliany-site demo.example.com list-items --json`" in text
+    assert "## LLM Preflight Gate" in text
+    assert "- Command: `cliany-site doctor --llm-live --json`" in text
+    assert "generate_adapters.ready=false" in text
+    assert "E_LLM_UNAVAILABLE" in text
     assert "## Acceptance Criteria" in text
     assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in text
     assert "  - Current status: `pending`" in text

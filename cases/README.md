@@ -57,6 +57,8 @@
 
 每个 issue 都应引用对应 case id、`promotion` 字段、`promotion_evidence` 状态和推荐验证命令；如果任一子任务还没完成，案例继续保持 `candidate`，不要提前改成 `active`。
 
+如果 `cliany-site doctor --llm-live --json` 显示 `generate_adapters.ready=false`，或 `llm_live` 返回 `E_LLM_UNAVAILABLE`，维护者应停止本轮 `explore`，把 doctor JSON / 错误摘要贴回 issue，并让 `adapter_package` 保持 `pending` 或标记为 `blocked`；不要用失败的上游调用伪造成 adapter package 证据。
+
 运行 `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md` 会在 Markdown 报告中生成 `Candidate Promotion Evidence Summary`、`Candidate Promotion Command Plan Summary`、`Candidate Evidence Bundle Commands` 和 `Candidate Promotion Tasks` 小节。Evidence Bundle 命令会指向 `cliany-site cases --case-id <id> --evidence-bundle` 和 `cliany-site cases --case-id <id> --evidence-bundle --json`，方便维护者先输出本地证据清单；Promotion Evidence Summary 汇总 candidate 数量、pending/blocked/complete 任务数、`primary_next_task` 和 primary next action，让维护者和自动化能直接定位首要 case/task/status/evidence；Promotion Command Plan Summary 汇总 `promotion_command_plan_summary` 的 candidate 数量、命令总数、缺失命令数、缺失 case/task 和 `all_declared` 状态；Promotion Tasks 可以直接把其中的 `Issue Body Template` 复制到 GitHub issue。模板会保留 `Reproduction Context`、`Promotion Command Plan`、`Acceptance Criteria`、`adapter_package`、`metadata_validation`、`online_smoke` 三类证据任务、`promotion_evidence` 当前状态、验收证据和非目标边界。`python scripts/validate_cases.py --json` 的 candidate 条目也会输出 `promotion_command_plan`、`promotion_command_plan_count` 和 `promotion_command_plan_missing_tasks`，让自动化可以直接读取包含 `llm_live_preflight` 的四步执行计划而不必解析 Markdown。
 
 创建 candidate promotion issue 时，正文可以复制 `--issue-template` 的输出，附件或评论应附上 `--evidence-bundle --json` 的机器可读结果，例如 `cliany-site cases --case-id pypi-project-search --evidence-bundle --json`。这样后续维护者能直接对比 issue、case report 和 `promotion_evidence`，确认哪些晋级证据仍在 pending。
