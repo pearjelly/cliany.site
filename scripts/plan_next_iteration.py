@@ -1679,6 +1679,7 @@ def _candidate_promotion_primary_task(evidence: dict[str, Any]) -> dict[str, Any
                 "status": status,
                 "evidence": evidence_value,
                 "next_action": str(task.get("next_action") or ""),
+                "acceptance_criteria": CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA[field_name],
             }
         )
 

@@ -759,12 +759,20 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "status": "pending",
             "evidence": "",
             "next_action": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
+            "acceptance_criteria": (
+                "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
+                "package path or GitHub Release asset name."
+            ),
         },
         "evidence_bundle_primary_next_task": {
             "task": "adapter_package",
             "status": "pending",
             "evidence": "",
             "next_action": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
+            "acceptance_criteria": (
+                "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
+                "package path or GitHub Release asset name."
+            ),
         },
         "candidate_package_validation_command": (
             "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
@@ -2431,12 +2439,20 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "status": "pending",
         "evidence": "",
         "next_action": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
+        "acceptance_criteria": (
+            "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
+            "package path or GitHub Release asset name."
+        ),
     }
     assert metadata[0]["evidence_bundle_primary_next_task"] == {
         "task": "adapter_package",
         "status": "pending",
         "evidence": "",
         "next_action": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
+        "acceptance_criteria": (
+            "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
+            "package path or GitHub Release asset name."
+        ),
     }
     assert metadata[0]["candidate_package_validation_command"] == (
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "

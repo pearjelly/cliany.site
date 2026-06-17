@@ -664,6 +664,7 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
                 "status": status,
                 "evidence": str(task.get("evidence") or ""),
                 "next_action": str(task.get("next_action") or ""),
+                "acceptance_criteria": PROMOTION_ACCEPTANCE_CRITERIA[field_name],
             }
             if status == "pending":
                 pending_tasks.append(entry)
@@ -688,6 +689,9 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
         "primary_task_detail": primary,
         "primary_next_task": primary,
         "primary_next_action": primary["next_action"] if primary else "",
+        "primary_next_task_acceptance_criteria": (
+            primary["acceptance_criteria"] if primary else ""
+        ),
     }
 
 
@@ -797,6 +801,10 @@ def _print_text(report: CasesReport) -> None:
         print(f"promotion_evidence_primary: {primary_case_id}/{primary_task_name} ({primary_status})")
         print(f"promotion_evidence_evidence: {primary_evidence}")
         print(f"promotion_evidence_next: {report.promotion_evidence_summary['primary_next_action']}")
+        print(
+            "promotion_evidence_acceptance: "
+            f"{report.promotion_evidence_summary['primary_next_task_acceptance_criteria']}"
+        )
     print(f"ok: {report.ok}")
     for check in report.cases:
         status = "ok" if check.ok else "fail"
@@ -918,11 +926,12 @@ def _candidate_promotion_evidence_summary_lines(summary: dict[str, Any]) -> list
         f"| blocked_count | `{summary.get('blocked_count', 0)}` |",
         f"| complete_count | `{summary.get('complete_count', 0)}` |",
         f"| primary_next_action | {_markdown_cell(summary.get('primary_next_action') or '-')} |",
+        f"| primary_next_task_acceptance_criteria | {_markdown_cell(summary.get('primary_next_task_acceptance_criteria') or '-')} |",
         f"| primary_task_detail | `{json.dumps(summary.get('primary_task_detail') or {}, ensure_ascii=False)}` |",
         f"| primary_next_task | `{json.dumps(summary.get('primary_next_task') or {}, ensure_ascii=False)}` |",
         "",
-        "| Case | Task | Status | Evidence | Next Action |",
-        "|------|------|--------|----------|-------------|",
+        "| Case | Task | Status | Evidence | Next Action | Acceptance Criteria |",
+        "|------|------|--------|----------|-------------|---------------------|",
     ]
     task_rows = [
         *list(summary.get("pending_tasks") or []),
@@ -939,7 +948,8 @@ def _candidate_promotion_evidence_summary_lines(summary: dict[str, Any]) -> list
             f"`{_markdown_cell(task.get('task'))}` | "
             f"`{_markdown_cell(task.get('status'))}` | "
             f"{_markdown_cell(task.get('evidence') or '-')} | "
-            f"{_markdown_cell(task.get('next_action') or '-')} |"
+            f"{_markdown_cell(task.get('next_action') or '-')} | "
+            f"{_markdown_cell(task.get('acceptance_criteria') or '-')} |"
         )
     return lines
 

@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+## [0.16.232] - 2026-06-17
+
+### Added
+- `cliany-site cases --json` 的 `promotion_evidence_summary.primary_next_task` 现在包含 `acceptance_criteria`，并新增顶层 `primary_next_task_acceptance_criteria`，让自动化不用展开单案例 evidence bundle 就能读取首要 candidate 任务的完成证据要求。
+- `cliany-site cases` 的人类输出现在在 Candidate 下一步和单案例 Promotion Tasks 中显示 acceptance，维护者查看 CLI 文本输出时也能直接看到 proof contract。
+- `scripts/validate_cases.py` 的文本输出、JSON summary 和 Markdown report 现在同步展示 primary acceptance criteria，并在 Candidate Promotion Evidence Summary 表格中为每个任务列出 Acceptance Criteria。
+- `scripts/plan_next_iteration.py` 的 candidate promotion 摘要现在也会在 primary task 中携带 `acceptance_criteria`，让计划产物和 case/report 产物使用同一套 proof contract。
+- README、README.zh、cases README 和官网 quickstart 现在同步说明全局 candidate summary 的 `primary_next_task_acceptance_criteria` 字段。
+- 新增 `docs/releases/v0.16.232-draft.md`，把本版 patch 聚焦到 candidate promotion summary 的验收标准可见性。
+
 ## [0.16.231] - 2026-06-17
 
 ### Added
@@ -2146,7 +2156,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.231...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.232...HEAD
+[0.16.232]: https://github.com/pearjelly/cliany.site/compare/v0.16.231...v0.16.232
 [0.16.231]: https://github.com/pearjelly/cliany.site/compare/v0.16.230...v0.16.231
 [0.16.230]: https://github.com/pearjelly/cliany.site/compare/v0.16.229...v0.16.230
 [0.16.229]: https://github.com/pearjelly/cliany.site/compare/v0.16.228...v0.16.229

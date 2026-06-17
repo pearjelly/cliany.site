@@ -150,8 +150,8 @@ const I18N = {
     en: 'Use the <code>Real Demo Case Proposal</code> issue template for public, read-only workflows; generate candidate promotion issues with <code>cliany-site cases --case-id pypi-project-search --issue-template</code>, including <code>Acceptance Criteria</code>.'
   },
   'qs.contribute.validate': {
-    zh: '候选案例应关联 <code>cases/manifest.json</code>、<code>cases/examples/</code>、<code>python scripts/validate_cases.py --strict</code> 和带 <code>acceptance_criteria</code> 的 <code>cliany-site cases --case-id pypi-project-search --evidence-bundle --json</code>。',
-    en: 'Candidate cases should point to <code>cases/manifest.json</code>, <code>cases/examples/</code>, <code>python scripts/validate_cases.py --strict</code>, and <code>cliany-site cases --case-id pypi-project-search --evidence-bundle --json</code> with <code>acceptance_criteria</code>.'
+    zh: '候选案例应关联 <code>cases/manifest.json</code>、<code>cases/examples/</code>、<code>python scripts/validate_cases.py --strict</code> 和带 <code>primary_next_task_acceptance_criteria</code> 的 <code>cliany-site cases --json</code>。',
+    en: 'Candidate cases should point to <code>cases/manifest.json</code>, <code>cases/examples/</code>, <code>python scripts/validate_cases.py --strict</code>, and <code>cliany-site cases --json</code> with <code>primary_next_task_acceptance_criteria</code>.'
   },
   'qs.contribute.goodfirst': {
     zh: '首次贡献者可以从 <code>docs/good-first-issues.md</code> 开始，选择默认离线、可本地验证的任务。',

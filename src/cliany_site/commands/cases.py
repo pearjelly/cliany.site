@@ -489,6 +489,7 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
             status = str(task_evidence.get("status") or "pending")
             evidence_value = str(task_evidence.get("evidence") or "")
             next_action = str(task_evidence.get("next_action") or "")
+            acceptance_criteria = PROMOTION_ACCEPTANCE_CRITERIA[task]
             status_counts[status] += 1
             task_status_counts[task][status] += 1
             task_count += 1
@@ -500,6 +501,7 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
                         "status": status,
                         "evidence": evidence_value,
                         "next_action": next_action,
+                        "acceptance_criteria": acceptance_criteria,
                     }
                 )
 
@@ -528,6 +530,7 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
         "primary_case_id": primary.get("case_id", ""),
         "primary_task": primary.get("task", ""),
         "primary_next_action": primary.get("next_action", ""),
+        "primary_next_task_acceptance_criteria": primary.get("acceptance_criteria", ""),
     }
 
 
@@ -582,6 +585,7 @@ def _print_single_case_detail(console: Any, case: dict[str, Any]) -> None:
             console.print(f"- {task}: {status}")
             console.print(f"  evidence: {evidence_value}")
             console.print(f"  next: {next_action}")
+            console.print(f"  acceptance: {PROMOTION_ACCEPTANCE_CRITERIA[task]}")
 
 
 def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
@@ -644,12 +648,18 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
         primary_status = primary_task.get("status") or "unknown"
         primary_evidence = primary_task.get("evidence") or "Not attached yet."
         primary_next_action = primary_task.get("next_action") or promotion.get("primary_next_action")
+        primary_acceptance = (
+            primary_task.get("acceptance_criteria")
+            or promotion.get("primary_next_task_acceptance_criteria")
+        )
         console.print("\n[bold]Candidate 下一步[/bold]")
         console.print(
             f"- {primary_case_id}/{primary_task_name} ({primary_status}): "
             f"{primary_next_action}"
         )
         console.print(f"  evidence: {primary_evidence}")
+        if primary_acceptance:
+            console.print(f"  acceptance: {primary_acceptance}")
 
     if detail:
         console.print("\n[bold]离线验证命令[/bold]")

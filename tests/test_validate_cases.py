@@ -330,9 +330,14 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         "status": "pending",
         "evidence": "",
         "next_action": "Generate the adapter package.",
+        "acceptance_criteria": (
+            "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
+            "package path or GitHub Release asset name."
+        ),
     }
     assert summary["primary_task_detail"] == summary["primary_task"]
     assert summary["primary_next_task"] == summary["primary_task_detail"]
+    assert summary["primary_next_task_acceptance_criteria"].startswith("Attach the generated")
     assert summary["primary_next_action"] == "Generate the adapter package."
     assert report.cases[0].to_dict()["offline_commands"] == ["python scripts/validate_cases.py --strict"]
     assert report.cases[0].to_dict()["target_url"] == "https://demo.example.com/"
@@ -822,9 +827,13 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "## Candidate Promotion Evidence Summary" in text
     assert "| pending_count | `3` |" in text
     assert "| primary_next_action | Generate the adapter package. |" in text
+    assert "| primary_next_task_acceptance_criteria | Attach the generated" in text
     assert "primary_task_detail" in text
     assert "primary_next_task" in text
-    assert "| `candidate-case` | `adapter_package` | `pending` | - | Generate the adapter package. |" in text
+    assert (
+        "| `candidate-case` | `adapter_package` | `pending` | - | "
+        "Generate the adapter package. | Attach the generated"
+    ) in text
     assert "## Candidate Promotion Command Plan Summary" in text
     assert "| command_count | `3` |" in text
     assert "| missing_command_count | `1` |" in text

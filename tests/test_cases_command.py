@@ -26,6 +26,12 @@ def test_cases_command_returns_catalog_summary(tmp_home):
     assert data["promotion_evidence_summary"]["primary_task_detail"]["task"] == "adapter_package"
     assert data["promotion_evidence_summary"]["primary_task_detail"]["status"] == "pending"
     assert data["promotion_evidence_summary"]["primary_task_detail"]["evidence"] == ""
+    assert data["promotion_evidence_summary"]["primary_task_detail"][
+        "acceptance_criteria"
+    ].startswith("Attach the generated")
+    assert data["promotion_evidence_summary"][
+        "primary_next_task_acceptance_criteria"
+    ].startswith("Attach the generated")
     assert (
         data["promotion_evidence_summary"]["primary_next_task"]
         == data["promotion_evidence_summary"]["primary_task_detail"]
@@ -51,6 +57,9 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
         "status": "pending",
         "evidence": "",
         "next_action": data["promotion_evidence_summary"]["primary_next_action"],
+        "acceptance_criteria": data["promotion_evidence_summary"][
+            "primary_next_task_acceptance_criteria"
+        ],
     }
     assert (
         data["promotion_evidence_summary"]["primary_next_task"]
@@ -113,6 +122,7 @@ def test_cases_command_human_candidate_next_step_shows_primary_detail(tmp_home):
     assert "Candidate 下一步" in result.output
     assert "pypi-project-search/adapter_package (pending)" in result.output
     assert "evidence: Not attached yet." in result.output
+    assert "acceptance: Attach the generated" in result.output
     assert "package path or release asset name" in result.output
 
 

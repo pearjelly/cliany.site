@@ -22,8 +22,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Acceptance Criteria" in index
     assert "cases/manifest.json" in index
     assert "python scripts/validate_cases.py --strict" in index
-    assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in index
-    assert "acceptance_criteria" in index
+    assert "cliany-site cases --json" in index
+    assert "primary_next_task_acceptance_criteria" in index
     assert "docs/good-first-issues.md" in index
     assert "docs/weekly-maintainer-loop.md" in index
     assert "python scripts/release_readiness.py --json" in index
@@ -32,7 +32,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "daily release loop" in index
     assert "10-Minute Success Path" in script
     assert "Run a real demo adapter first" in script
-    assert "acceptance_criteria" in script
+    assert "primary_next_task_acceptance_criteria" in script
     assert "Generate Your Own" in script
     assert "After Your First Success" in script
     assert "cliany-site cases --case-id pypi-project-search --issue-template" in script
