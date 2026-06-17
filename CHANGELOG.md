@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+## [0.16.240] - 2026-06-17
+
+### Added
+- `cliany-site cases --promotion-plan --json` now exposes the live LLM preflight command and blocker handling note at the plan, candidate, primary task, and task queue levels.
+- Human promotion plan output now prints the live LLM preflight gate and `E_LLM_UNAVAILABLE` blocker handling before maintainers run candidate `explore`.
+- Promotion plan tests now lock the queue-level LLM blocker contract so candidate adapters are not generated while live preflight is unavailable.
+- 新增 `docs/releases/v0.16.240-draft.md`，记录本版将 live LLM 阻断规则提升到 candidate promotion queue 总入口。
+
 ## [0.16.239] - 2026-06-17
 
 ### Added
@@ -2216,7 +2224,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.239...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.240...HEAD
+[0.16.240]: https://github.com/pearjelly/cliany.site/compare/v0.16.239...v0.16.240
 [0.16.239]: https://github.com/pearjelly/cliany.site/compare/v0.16.238...v0.16.239
 [0.16.238]: https://github.com/pearjelly/cliany.site/compare/v0.16.237...v0.16.238
 [0.16.237]: https://github.com/pearjelly/cliany.site/compare/v0.16.236...v0.16.237

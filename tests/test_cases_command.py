@@ -637,6 +637,13 @@ def test_cases_command_promotion_plan_json(tmp_home):
     assert plan["primary_command"].startswith('cliany-site explore "https://pypi.org"')
     assert plan["primary_handoff"].startswith('Run `cliany-site explore "https://pypi.org"')
     assert plan["primary_acceptance_criteria"].startswith("Attach the generated")
+    assert plan["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
+    assert plan["primary_llm_live_preflight_command"] == plan["llm_live_preflight_command"]
+    assert "E_LLM_UNAVAILABLE" in plan["llm_live_preflight_blocker_note"]
+    assert (
+        plan["primary_llm_live_preflight_blocker_note"]
+        == plan["llm_live_preflight_blocker_note"]
+    )
     assert plan["primary_next_item"] == plan["task_queue"][0]
     assert plan["task_queue"][0] == {
         "case_id": "pypi-project-search",
@@ -654,10 +661,16 @@ def test_cases_command_promotion_plan_json(tmp_home):
         "evidence_bundle_json_command": (
             "cliany-site cases --case-id pypi-project-search --evidence-bundle --json"
         ),
+        "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
+        "llm_live_preflight_blocker_note": plan["llm_live_preflight_blocker_note"],
     }
     assert plan["candidates"][0]["case_id"] == "pypi-project-search"
     assert plan["candidates"][0]["primary_task"] == "adapter_package"
     assert plan["candidates"][0]["primary_status"] == "pending"
+    assert (
+        plan["candidates"][0]["llm_live_preflight_blocker_note"]
+        == plan["llm_live_preflight_blocker_note"]
+    )
     assert plan["candidates"][0]["evidence_bundle_json_command"].endswith(
         "--evidence-bundle --json"
     )
@@ -673,6 +686,9 @@ def test_cases_command_promotion_plan_human_outputs_queue(tmp_home):
 
     assert result.exit_code == 0
     assert "## Candidate promotion plan" in result.output
+    assert "- LLM live preflight: `cliany-site doctor --llm-live --json`" in result.output
+    assert "LLM blocker handling: Run the live LLM preflight before explore" in result.output
+    assert "E_LLM_UNAVAILABLE" in result.output
     assert "## Primary next item" in result.output
     assert "- Case: `pypi-project-search`" in result.output
     assert "- Task: `adapter_package`" in result.output

@@ -522,6 +522,10 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         case_id = str(bundle.get("case_id") or "")
         evidence_bundle_command = f"cliany-site cases --case-id {case_id} --evidence-bundle"
         evidence_bundle_json_command = f"{evidence_bundle_command} --json"
+        llm_live_preflight_command = str(bundle.get("llm_live_preflight_command") or "")
+        llm_live_preflight_blocker_note = str(
+            bundle.get("llm_live_preflight_blocker_note") or ""
+        )
         candidate_item = {
             "case_id": case_id,
             "title": bundle.get("title"),
@@ -546,6 +550,8 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
             ),
             "evidence_bundle_command": evidence_bundle_command,
             "evidence_bundle_json_command": evidence_bundle_json_command,
+            "llm_live_preflight_command": llm_live_preflight_command,
+            "llm_live_preflight_blocker_note": llm_live_preflight_blocker_note,
         }
         candidates.append(candidate_item)
 
@@ -564,6 +570,8 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
                     "acceptance_criteria": task.get("acceptance_criteria", ""),
                     "evidence_bundle_command": evidence_bundle_command,
                     "evidence_bundle_json_command": evidence_bundle_json_command,
+                    "llm_live_preflight_command": llm_live_preflight_command,
+                    "llm_live_preflight_blocker_note": llm_live_preflight_blocker_note,
                 }
             )
 
@@ -581,6 +589,14 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         "primary_command": primary_next_item.get("command", ""),
         "primary_handoff": primary_next_item.get("handoff", ""),
         "primary_acceptance_criteria": primary_next_item.get("acceptance_criteria", ""),
+        "primary_llm_live_preflight_command": primary_next_item.get(
+            "llm_live_preflight_command", ""
+        ),
+        "primary_llm_live_preflight_blocker_note": primary_next_item.get(
+            "llm_live_preflight_blocker_note", ""
+        ),
+        "llm_live_preflight_command": LLM_LIVE_PREFLIGHT_COMMAND,
+        "llm_live_preflight_blocker_note": LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
         "candidates": candidates,
         "task_queue": task_queue,
     }
@@ -596,6 +612,8 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
         f"- Blocked tasks: `{plan['blocked_task_count']}`",
         f"- Complete tasks: `{plan['complete_task_count']}`",
         f"- Incomplete tasks: `{plan['incomplete_task_count']}`",
+        f"- LLM live preflight: `{plan['llm_live_preflight_command']}`",
+        f"- LLM blocker handling: {plan['llm_live_preflight_blocker_note']}",
     ]
     primary_next_item = plan.get("primary_next_item")
     if isinstance(primary_next_item, dict) and primary_next_item.get("case_id"):
@@ -615,6 +633,10 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                 (
                     "- Evidence bundle JSON: "
                     f"`{primary_next_item['evidence_bundle_json_command']}`"
+                ),
+                (
+                    "- LLM blocker handling: "
+                    f"{primary_next_item.get('llm_live_preflight_blocker_note')}"
                 ),
             ]
         )
@@ -641,6 +663,10 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                     "  - acceptance: "
                     f"{candidate.get('primary_acceptance_criteria') or 'Not declared.'}"
                 ),
+                (
+                    "  - llm_blocker: "
+                    f"{candidate.get('llm_live_preflight_blocker_note') or 'Not declared.'}"
+                ),
                 f"  - evidence_bundle_json: `{candidate['evidence_bundle_json_command']}`",
             ]
         )
@@ -655,6 +681,10 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                 f"  - command_missing: `{str(item.get('command_missing', False)).lower()}`",
                 f"  - handoff: {item.get('handoff') or 'No handoff declared.'}",
                 f"  - acceptance: {item.get('acceptance_criteria') or 'Not declared.'}",
+                (
+                    "  - llm_blocker: "
+                    f"{item.get('llm_live_preflight_blocker_note') or 'Not declared.'}"
+                ),
             ]
         )
     return "\n".join(lines)
