@@ -88,6 +88,12 @@ def _promotion_evidence(package_next_action: str, smoke_next_action: str) -> dic
 def _pypi_promotion_command_plan(*, explore_query: str = "search Python packages") -> list[dict[str, object]]:
     return [
         {
+            "task": "llm_live_preflight",
+            "command": "cliany-site doctor --llm-live --json",
+            "source": "doctor.llm_live",
+            "missing": False,
+        },
+        {
             "task": "adapter_package",
             "command": f'cliany-site explore "https://pypi.org" "{explore_query}" --json',
             "source": "commands.explore",
@@ -804,6 +810,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "  - `python scripts/validate_cases.py --strict`\n"
             "  - `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md`\n\n"
             "## Promotion Command Plan\n"
+            "- `llm_live_preflight`: `cliany-site doctor --llm-live --json`\n"
             '- `adapter_package`: `cliany-site explore "https://pypi.org" "search Python packages" --json`\n'
             "- `metadata_validation`: `python scripts/validate_cases.py "
             "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`\n"
@@ -3074,7 +3081,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"`{artifact_bundle_summary['case_promotion_command_plan_summary_sha256']}`"
     ) in readme
     assert "case_promotion_command_plan_candidate_count: `2`" in readme
-    assert "case_promotion_command_plan_command_count: `6`" in readme
+    assert "case_promotion_command_plan_command_count: `8`" in readme
     assert "case_promotion_command_plan_missing_command_count: `1`" in readme
     assert "case_promotion_command_plan_all_declared: `false`" in readme
     assert "standard_release_flow_status: `blocked`" in readme

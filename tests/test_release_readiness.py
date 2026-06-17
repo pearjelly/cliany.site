@@ -568,6 +568,7 @@ def test_release_readiness_passes_for_minimal_ready_repo(tmp_path):
         "ready_candidate_count": 0,
         "all_declared": True,
         "task_missing_counts": {
+            "llm_live_preflight": 0,
             "adapter_package": 0,
             "metadata_validation": 0,
             "online_smoke": 0,
@@ -943,7 +944,8 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
     ) in text
     assert "## Candidate Promotion Command Plan Summary" in text
     assert "| candidate_count | `1` |" in text
-    assert "| command_count | `3` |" in text
+    assert "| command_count | `4` |" in text
+    assert "| expected_command_count | `4` |" in text
     assert "| missing_command_count | `1` |" in text
     assert "| all_declared | `false` |" in text
     assert "| `candidate-case` | `adapter_package` |" in text

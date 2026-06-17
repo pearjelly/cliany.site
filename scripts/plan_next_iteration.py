@@ -18,10 +18,17 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
 ARTIFACT_MANIFEST_SCHEMA_VERSION = 1
 CANDIDATE_PROMOTION_FIELDS = ("adapter_package", "metadata_validation", "online_smoke")
+CANDIDATE_PROMOTION_COMMAND_PLAN_FIELDS = (
+    "llm_live_preflight",
+    "adapter_package",
+    "metadata_validation",
+    "online_smoke",
+)
 CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     "python scripts/validate_cases.py "
     "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
 )
+LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
 CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -1565,7 +1572,7 @@ def _case_promotion_command_plan_summary(cases_report: Any) -> dict[str, Any]:
     command_count = 0
     missing_tasks: list[dict[str, str]] = []
     missing_cases: list[dict[str, Any]] = []
-    task_missing_counts = {field_name: 0 for field_name in CANDIDATE_PROMOTION_FIELDS}
+    task_missing_counts = {field_name: 0 for field_name in CANDIDATE_PROMOTION_COMMAND_PLAN_FIELDS}
 
     for case in cases:
         if getattr(case, "status", None) != "candidate":
@@ -1601,7 +1608,7 @@ def _case_promotion_command_plan_summary(cases_report: Any) -> dict[str, Any]:
     return {
         "candidate_count": candidate_count,
         "command_count": command_count,
-        "expected_command_count": candidate_count * len(CANDIDATE_PROMOTION_FIELDS),
+        "expected_command_count": candidate_count * len(CANDIDATE_PROMOTION_COMMAND_PLAN_FIELDS),
         "missing_command_count": len(missing_tasks),
         "ready_candidate_count": candidate_count - len(missing_cases),
         "all_declared": not missing_tasks,
@@ -1713,6 +1720,11 @@ def _candidate_promotion_command_plan(
         if command.startswith("cliany-site ") and not command.startswith("cliany-site explore ")
     ]
     plan = [
+        {
+            "task": "llm_live_preflight",
+            "command": LLM_LIVE_PREFLIGHT_COMMAND,
+            "source": "doctor.llm_live",
+        },
         {
             "task": "adapter_package",
             "command": explore_commands[0] if explore_commands else "",

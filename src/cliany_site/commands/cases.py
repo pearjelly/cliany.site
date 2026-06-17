@@ -12,11 +12,18 @@ from cliany_site.response import print_response
 
 ALLOWED_STATUSES = ("active", "candidate", "degraded", "known-gap", "retired")
 PROMOTION_TASKS = ("adapter_package", "metadata_validation", "online_smoke")
+PROMOTION_COMMAND_PLAN_TASKS = (
+    "llm_live_preflight",
+    "adapter_package",
+    "metadata_validation",
+    "online_smoke",
+)
 CANDIDATE_PACKAGES_DIR = "~/.cliany-site/packages"
 CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     "python scripts/validate_cases.py "
     f"--packages-dir {CANDIDATE_PACKAGES_DIR} --include-candidate-packages --strict"
 )
+LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
 PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -85,6 +92,11 @@ def _candidate_promotion_command_plan(case: dict[str, Any]) -> list[dict[str, An
     adapter_commands = _candidate_adapter_commands(case)
     adapter_domain = case.get("adapter_domain")
     plan = [
+        {
+            "task": "llm_live_preflight",
+            "command": LLM_LIVE_PREFLIGHT_COMMAND,
+            "source": "doctor.llm_live",
+        },
         {
             "task": "adapter_package",
             "command": explore_commands[0] if explore_commands else "",
@@ -338,6 +350,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "example_output": case.get("example_output"),
         "commands": case.get("commands") if isinstance(case.get("commands"), list) else [],
         "offline_commands": _offline_commands(case),
+        "llm_live_preflight_command": LLM_LIVE_PREFLIGHT_COMMAND,
         "candidate_package_validation_command": CANDIDATE_PACKAGE_VALIDATION_COMMAND
         if adapter_domain
         else "",
@@ -431,6 +444,14 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
     lines.extend(f"- `{command}`" for command in bundle.get("commands", []))
     lines.extend(["", "## Offline validation"])
     lines.extend(f"- `{command}`" for command in bundle.get("offline_commands", []))
+    if bundle.get("llm_live_preflight_command"):
+        lines.extend(
+            [
+                "",
+                "## LLM live preflight",
+                f"- `{bundle['llm_live_preflight_command']}`",
+            ]
+        )
     if bundle.get("candidate_package_validation_command"):
         lines.extend(
             [

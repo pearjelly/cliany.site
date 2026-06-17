@@ -7,6 +7,15 @@
 
 ## [Unreleased]
 
+## [0.16.237] - 2026-06-17
+
+### Added
+- Candidate 晋级命令计划现在以 `llm_live_preflight` 开头，统一提示先运行 `cliany-site doctor --llm-live --json`，再进入真实 `explore`、package validation 和 online smoke。
+- `cliany-site cases --promotion-plan`、`--case-id ... --evidence-bundle --json`、`scripts/validate_cases.py --json/report` 和 `scripts/plan_next_iteration.py` 的 candidate handoff 现在共享包含 live preflight 的四步命令计划。
+- Candidate evidence contract 仍只把 `adapter_package`、`metadata_validation` 和 `online_smoke` 作为晋级证据任务；本版不改变任何 candidate 状态，也不伪造 adapter package 证据。
+- README、README.zh、cases README、周维护手册、good-first-issues 和官网 quickstart 现在同步说明 candidate promotion command plan 的 live preflight 边界。
+- 新增 `docs/releases/v0.16.237-draft.md`，记录本版从 live LLM 502 阻塞中提炼出的 candidate promotion handoff 改进。
+
 ## [0.16.236] - 2026-06-17
 
 ### Added
@@ -2189,7 +2198,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.236...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.237...HEAD
+[0.16.237]: https://github.com/pearjelly/cliany.site/compare/v0.16.236...v0.16.237
 [0.16.236]: https://github.com/pearjelly/cliany.site/compare/v0.16.235...v0.16.236
 [0.16.235]: https://github.com/pearjelly/cliany.site/compare/v0.16.234...v0.16.235
 [0.16.234]: https://github.com/pearjelly/cliany.site/compare/v0.16.233...v0.16.234

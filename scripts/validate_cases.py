@@ -21,11 +21,18 @@ INSTALL_RE = re.compile(r"^cliany-site market install (?P<path>\S+)")
 REQUIRED_PACKAGE_FILES = {"commands.py", "metadata.json"}
 PACKAGE_EXTENSION = ".cliany-adapter.tar.gz"
 PROMOTION_FIELDS = ("adapter_package", "metadata_validation", "online_smoke")
+PROMOTION_COMMAND_PLAN_FIELDS = (
+    "llm_live_preflight",
+    "adapter_package",
+    "metadata_validation",
+    "online_smoke",
+)
 PROMOTION_EVIDENCE_STATUSES = {"pending", "complete", "blocked"}
 CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     "python scripts/validate_cases.py "
     "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
 )
+LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
 PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -699,7 +706,7 @@ def _build_promotion_command_plan_summary(checks: list[CaseCheck]) -> dict[str, 
     candidate_checks = [check for check in checks if check.status == "candidate"]
     missing_tasks: list[dict[str, str]] = []
     missing_cases: list[dict[str, Any]] = []
-    task_missing_counts = {field_name: 0 for field_name in PROMOTION_FIELDS}
+    task_missing_counts = {field_name: 0 for field_name in PROMOTION_COMMAND_PLAN_FIELDS}
     command_count = 0
 
     for check in candidate_checks:
@@ -726,7 +733,7 @@ def _build_promotion_command_plan_summary(checks: list[CaseCheck]) -> dict[str, 
     return {
         "candidate_count": len(candidate_checks),
         "command_count": command_count,
-        "expected_command_count": len(candidate_checks) * len(PROMOTION_FIELDS),
+        "expected_command_count": len(candidate_checks) * len(PROMOTION_COMMAND_PLAN_FIELDS),
         "missing_command_count": len(missing_tasks),
         "ready_candidate_count": len(candidate_checks) - len(missing_cases),
         "all_declared": not missing_tasks,
@@ -876,6 +883,11 @@ def _candidate_promotion_command_plan(commands: list[str]) -> list[dict[str, Any
     ]
     plan = [
         {
+            "task": "llm_live_preflight",
+            "command": LLM_LIVE_PREFLIGHT_COMMAND,
+            "source": "doctor.llm_live",
+        },
+        {
             "task": "adapter_package",
             "command": explore_commands[0] if explore_commands else "",
             "source": "commands.explore",
@@ -926,7 +938,8 @@ def _candidate_promotion_evidence_summary_lines(summary: dict[str, Any]) -> list
         f"| blocked_count | `{summary.get('blocked_count', 0)}` |",
         f"| complete_count | `{summary.get('complete_count', 0)}` |",
         f"| primary_next_action | {_markdown_cell(summary.get('primary_next_action') or '-')} |",
-        f"| primary_next_task_acceptance_criteria | {_markdown_cell(summary.get('primary_next_task_acceptance_criteria') or '-')} |",
+        "| primary_next_task_acceptance_criteria | "
+        f"{_markdown_cell(summary.get('primary_next_task_acceptance_criteria') or '-')} |",
         f"| primary_task_detail | `{json.dumps(summary.get('primary_task_detail') or {}, ensure_ascii=False)}` |",
         f"| primary_next_task | `{json.dumps(summary.get('primary_next_task') or {}, ensure_ascii=False)}` |",
         "",

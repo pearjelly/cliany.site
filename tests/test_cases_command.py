@@ -71,6 +71,12 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
     assert all("promotion_evidence" in case for case in data["cases"])
     assert all("promotion_command_plan" in case for case in data["cases"])
     assert data["cases"][0]["promotion_command_plan"][0] == {
+        "task": "llm_live_preflight",
+        "command": "cliany-site doctor --llm-live --json",
+        "source": "doctor.llm_live",
+        "missing": False,
+    }
+    assert data["cases"][0]["promotion_command_plan"][1] == {
         "task": "adapter_package",
         "command": (
             'cliany-site explore "https://pypi.org" '
@@ -412,9 +418,16 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         "complete": False,
         "handoff": bundle["tasks"][0]["handoff"],
     }
-    assert bundle["promotion_command_plan_count"] == 3
+    assert bundle["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
+    assert bundle["promotion_command_plan_count"] == 4
     assert bundle["promotion_command_plan_missing_tasks"] == []
     assert bundle["promotion_command_plan"] == [
+        {
+            "task": "llm_live_preflight",
+            "command": "cliany-site doctor --llm-live --json",
+            "source": "doctor.llm_live",
+            "missing": False,
+        },
         {
             "task": "adapter_package",
             "command": (
