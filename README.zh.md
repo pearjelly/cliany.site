@@ -118,6 +118,9 @@ pip install -e .
 # 环境确认
 cliany-site doctor --json
 
+# explore 前可选：真实调用一次 provider 做 live preflight
+cliany-site doctor --llm-live --json
+
 # 查看维护中的真实 demo 案例
 cliany-site cases --json
 cliany-site cases --status candidate --promotion-plan
@@ -195,7 +198,10 @@ unset CLIANY_BROWSER_PROVIDER
 
 ```bash
 cliany-site doctor --json
+cliany-site doctor --llm-live --json
 ```
+
+默认 `doctor` 只检查本地配置、CDP、目录和 key，不会真实调用 LLM provider。准备运行耗时较长的 `explore` 前，可以追加 `--llm-live` 做一次真实 provider 预检；如果遇到网关、限流或服务不可用，会以 `llm_live` warning 返回 `details.error_code=E_LLM_UNAVAILABLE`。
 
 ## 使用示例
 

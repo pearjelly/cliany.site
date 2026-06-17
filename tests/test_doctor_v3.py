@@ -226,6 +226,114 @@ def test_doctor_recommends_explore_when_llm_and_cdp_are_ready(tmp_home, no_llm, 
     )
 
 
+def test_doctor_does_not_call_llm_live_by_default(tmp_home, no_llm, monkeypatch):
+    """doctor 默认只检查 key/config，不触发真实 LLM 调用。"""
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    async def fail_if_called(*_args, **_kwargs):
+        raise AssertionError("llm live preflight should be opt-in")
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.setenv("CLIANY_ANTHROPIC_API_KEY", "test")
+    monkeypatch.setattr("cliany_site.explorer.engine._invoke_llm_with_retry", fail_if_called)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["--json", "doctor"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    checks = data["data"]["checks"]
+    assert "llm_live" not in {check["name"] for check in checks}
+    assert data["data"]["summary"]["ready_for_explore"] is True
+
+
+def test_doctor_llm_live_success_keeps_explore_ready(tmp_home, no_llm, monkeypatch):
+    """doctor --llm-live 成功时输出 llm_live=ok。"""
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    class FakeLLM:
+        pass
+
+    async def fake_invoke(_llm, _prompt, **_kwargs):
+        return object()
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.setenv("CLIANY_ANTHROPIC_API_KEY", "test")
+    monkeypatch.setattr("cliany_site.explorer.engine._get_llm", lambda: FakeLLM())
+    monkeypatch.setattr("cliany_site.explorer.engine._invoke_llm_with_retry", fake_invoke)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["--json", "doctor", "--llm-live"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    checks = data["data"]["checks"]
+    live_check = next(check for check in checks if check["name"] == "llm_live")
+    assert live_check["status"] == "ok"
+    assert live_check["details"]["phase"] == "llm_preflight"
+    assert data["data"]["summary"]["ready_for_explore"] is True
+    assert data["data"]["summary"]["capabilities"]["generate_adapters"]["ready"] is True
+
+
+def test_doctor_llm_live_unavailable_blocks_explore_ready(tmp_home, no_llm, monkeypatch):
+    """doctor --llm-live 将 LLM 上游 502 前置为 should_fix。"""
+    from cliany_site.errors import LlmUnavailableError
+
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    class FakeLLM:
+        pass
+
+    async def fake_invoke(_llm, _prompt, **_kwargs):
+        raise LlmUnavailableError("LLM upstream returned 502 Bad Gateway", status_code=502)
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("CLIANY_OPENAI_API_KEY", "test")
+    monkeypatch.setenv("CLIANY_OPENAI_BASE_URL", "https://example.com/v1")
+    monkeypatch.setattr("cliany_site.explorer.engine._get_llm", lambda: FakeLLM())
+    monkeypatch.setattr("cliany_site.explorer.engine._invoke_llm_with_retry", fake_invoke)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["--json", "doctor", "--llm-live"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    live_check = next(check for check in data["data"]["checks"] if check["name"] == "llm_live")
+    assert live_check["status"] == "warning"
+    assert live_check["severity"] == "should_fix"
+    assert live_check["details"] == {
+        "provider": "openai",
+        "error_code": "E_LLM_UNAVAILABLE",
+        "message": "LLM upstream returned 502 Bad Gateway",
+        "retryable": True,
+        "status_code": 502,
+        "phase": "llm_preflight",
+    }
+
+    summary = data["data"]["summary"]
+    assert summary["ready_for_demo_adapters"] is True
+    assert summary["ready_for_explore"] is False
+    assert any(item["name"] == "llm_live" for item in summary["should_fix"])
+    assert summary["capabilities"]["generate_adapters"]["ready"] is False
+    assert summary["capabilities"]["generate_adapters"]["blockers"] == ["llm_live"]
+
+
 def test_legacy_adapter_count(tmp_home, no_llm, monkeypatch):
     """Test that legacy_adapter_count counts adapters with schema_version != 3"""
     class MockCDP:

@@ -255,7 +255,7 @@ cliany-site workflow validate workflow.yaml --json</code></pre>
 
         <h2 id="faq">常见问题</h2>
         <h3>Chrome 无法连接怎么办？</h3>
-        <p>运行 <code>cliany-site doctor --json</code> 检查 CDP 状态。工具会自动尝试启动 Chrome；如果失败，可手动启动：</p>
+        <p>运行 <code>cliany-site doctor --json</code> 检查 CDP 状态。默认检查不会真实调用 LLM provider；在耗时较长的 <code>explore</code> 前，可以运行 <code>cliany-site doctor --llm-live --json</code> 做一次真实 provider 预检。若上游网关、限流或服务不可用，输出会包含 <code>llm_live</code> warning 和 <code>details.error_code=E_LLM_UNAVAILABLE</code>。工具会自动尝试启动 Chrome；如果失败，可手动启动：</p>
         <pre><code>/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
   --remote-debugging-port=9222 \
   --user-data-dir=/tmp/chrome-debug</code></pre>

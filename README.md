@@ -118,6 +118,9 @@ pip install -e .
 # Check environment
 cliany-site doctor --json
 
+# Optional live provider preflight before explore
+cliany-site doctor --llm-live --json
+
 # Discover maintained real demo cases
 cliany-site cases --json
 cliany-site cases --status candidate --promotion-plan
@@ -189,7 +192,10 @@ For more details, see the [Obscura Experimental Guide](docs/walkthroughs/obscura
 
 ```bash
 cliany-site doctor --json
+cliany-site doctor --llm-live --json
 ```
+
+By default, `doctor` checks local configuration, CDP, directories, and keys without calling the LLM provider. Add `--llm-live` when you want a real provider preflight before a longer `explore`; retryable gateway, rate-limit, or service outages appear as a `llm_live` warning with `details.error_code=E_LLM_UNAVAILABLE`.
 
 ## Usage Examples
 

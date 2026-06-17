@@ -41,6 +41,10 @@ _CHECK_ACTIONS: dict[str, dict[str, str]] = {
         "fail": "将 CLIANY_LLM_PROVIDER 设置为 anthropic 或 openai。",
         "ok": "LLM provider 配置有效。",
     },
+    "llm_live": {
+        "warning": "LLM 上游暂不可用；请稍后重试，或切换 CLIANY_LLM_PROVIDER / CLIANY_OPENAI_BASE_URL。",
+        "ok": "LLM provider live preflight 通过，可以发起 explore。",
+    },
     "openai_base_url": {
         "fail": "检查 CLIANY_OPENAI_BASE_URL，需是可规范化为 /v1 的 OpenAI-compatible base URL。",
         "ok": "OpenAI-compatible base URL 配置有效。",
@@ -117,7 +121,7 @@ def _build_capabilities(checks: list[dict[str, Any]]) -> dict[str, dict[str, Any
         },
         "generate_adapters": {
             "label": "使用 explore 生成新 adapter",
-            "blockers": blocked_by(("cdp", "dirs", "llm_provider", "openai_base_url"), ("llm",)),
+            "blockers": blocked_by(("cdp", "dirs", "llm_provider", "openai_base_url"), ("llm", "llm_live")),
             "next_step": "可以运行 cliany-site explore 生成自己的站点命令。",
         },
     }
@@ -158,7 +162,7 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
         summary["counts"][severity] += 1
     summary["ready_for_demo_adapters"] = not summary["must_fix"]
     summary["ready_for_explore"] = not summary["must_fix"] and not any(
-        item["name"] == "llm" for item in summary["should_fix"]
+        item["name"] in {"llm", "llm_live"} for item in summary["should_fix"]
     )
     summary["capabilities"] = _build_capabilities(checks)
     summary["demo_adapter_quickstart"] = _demo_adapter_quickstart()
@@ -247,8 +251,9 @@ def _print_doctor_human(result: Envelope) -> None:
 
 @click.command("doctor")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出模式")
+@click.option("--llm-live", is_flag=True, default=False, help="实际调用一次 LLM provider，检查上游是否可用")
 @click.pass_context
-def doctor(ctx: click.Context, json_mode: bool | None):
+def doctor(ctx: click.Context, json_mode: bool | None, llm_live: bool):
     """检查运行环境（CDP / LLM API key / 目录）"""
     root_ctx = ctx.find_root()
     root_obj = root_ctx.obj if isinstance(root_ctx.obj, dict) else {}
@@ -257,7 +262,7 @@ def doctor(ctx: click.Context, json_mode: bool | None):
     from cliany_site.browser.cdp import cdp_from_context
 
     cdp_conn = cdp_from_context(ctx)
-    result = asyncio.run(_run_checks(cdp_conn))
+    result = asyncio.run(_run_checks(cdp_conn, llm_live=llm_live))
     if effective_json_mode:
         print_response(result, json_mode=True, exit_on_error=True)
         return
@@ -266,7 +271,75 @@ def doctor(ctx: click.Context, json_mode: bool | None):
         raise SystemExit(1)
 
 
-async def _run_checks(cdp_conn: Any = None) -> Envelope:
+async def _run_llm_live_check(has_llm: bool, provider: str) -> dict[str, Any]:
+    if not has_llm:
+        return {
+            "name": "llm_live",
+            "status": "warning",
+            "duration_ms": 0,
+            "details": {
+                "provider": provider,
+                "skipped": True,
+                "reason": "missing_llm_key",
+            },
+        }
+
+    from cliany_site.errors import LlmUnavailableError
+    from cliany_site.explorer.engine import _get_llm, _invoke_llm_with_retry
+
+    t0 = time.monotonic()
+    try:
+        llm = _get_llm()
+        await _invoke_llm_with_retry(
+            llm,
+            "Reply with OK only.",
+            max_attempts=1,
+            base_delay=0,
+            backoff_factor=1,
+        )
+        duration_ms = int((time.monotonic() - t0) * 1000)
+        return {
+            "name": "llm_live",
+            "status": "ok",
+            "duration_ms": duration_ms,
+            "details": {
+                "provider": provider,
+                "retryable": False,
+                "phase": "llm_preflight",
+            },
+        }
+    except LlmUnavailableError as exc:
+        duration_ms = int((time.monotonic() - t0) * 1000)
+        return {
+            "name": "llm_live",
+            "status": "warning",
+            "duration_ms": duration_ms,
+            "details": {
+                "provider": provider,
+                "error_code": ErrorCode.E_LLM_UNAVAILABLE,
+                "message": str(exc),
+                "retryable": exc.retryable,
+                "status_code": exc.status_code,
+                "phase": "llm_preflight",
+            },
+        }
+    except Exception as exc:
+        duration_ms = int((time.monotonic() - t0) * 1000)
+        return {
+            "name": "llm_live",
+            "status": "warning",
+            "duration_ms": duration_ms,
+            "details": {
+                "provider": provider,
+                "error_code": ErrorCode.E_UNKNOWN,
+                "message": str(exc),
+                "retryable": False,
+                "phase": "llm_preflight",
+            },
+        }
+
+
+async def _run_checks(cdp_conn: Any = None, *, llm_live: bool = False) -> Envelope:
     from cliany_site.browser.cdp import CDPConnection
     from cliany_site.explorer.engine import _load_dotenv, _normalize_openai_base_url
 
@@ -329,6 +402,9 @@ async def _run_checks(cdp_conn: Any = None) -> Envelope:
                 "duration_ms": 0,
                 "details": {"base_url": base_url}
             })
+
+    if llm_live:
+        checks.append(await _run_llm_live_check(has_llm, provider))
 
     cfg = get_config()
     adapters_dir = cfg.adapters_dir

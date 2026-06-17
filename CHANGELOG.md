@@ -7,6 +7,15 @@
 
 ## [Unreleased]
 
+## [0.16.236] - 2026-06-17
+
+### Added
+- `doctor --llm-live` 现在可选择性发起一次真实 LLM provider 预检，在 `explore` 前暴露上游网关、限流或服务不可用故障。
+- `doctor --llm-live --json` 会在 `checks` 中输出 `llm_live`，并在上游不可用时返回 `details.error_code=E_LLM_UNAVAILABLE`、`retryable`、`status_code` 和 `phase=llm_preflight`。
+- `doctor` 的 `summary.ready_for_explore` 和 `capabilities.generate_adapters` 现在会把失败的 live preflight 作为 `llm_live` should-fix blocker，但默认 `doctor` 仍只做离线 key/config/CDP/目录检查。
+- README、README.zh、官网 quickstart 和官网文档现在说明如何用 `doctor --llm-live` 在长时间 `explore` 前确认 provider 真实可用。
+- 新增 `docs/releases/v0.16.236-draft.md`，记录本版从真实 PyPI candidate 探索 502 阻塞中提炼出的 LLM live preflight。
+
 ## [0.16.235] - 2026-06-17
 
 ### Added
@@ -2180,7 +2189,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.235...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.236...HEAD
+[0.16.236]: https://github.com/pearjelly/cliany.site/compare/v0.16.235...v0.16.236
 [0.16.235]: https://github.com/pearjelly/cliany.site/compare/v0.16.234...v0.16.235
 [0.16.234]: https://github.com/pearjelly/cliany.site/compare/v0.16.233...v0.16.234
 [0.16.233]: https://github.com/pearjelly/cliany.site/compare/v0.16.232...v0.16.233
