@@ -633,6 +633,10 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "commit_day_count": 2,
         "min_commit_days": 3,
         "missing_commit_days": 1,
+        "release_tags_today": [],
+        "release_count_today": 0,
+        "max_daily_releases": 3,
+        "daily_release_limit_ok": True,
         "next_actions": ["Ship verified slices on `1` more unique commit days this week."],
         "summary": "2/3 commit days; 1 more unique day(s) needed.",
     }
@@ -2094,11 +2098,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "commit_cadence_commit_day_count": 2,
         "commit_cadence_min_commit_days": 3,
         "commit_cadence_missing_commit_days": 1,
+        "commit_cadence_release_count_today": 0,
+        "commit_cadence_max_daily_releases": 3,
+        "commit_cadence_daily_release_limit_ok": True,
         "commit_cadence_next_action_count": 1,
         "commit_cadence_primary_next_action": (
             "Ship verified slices on `1` more unique commit days this week."
         ),
         "commit_cadence_commit_days_sha256": _stable_json_sha256([]),
+        "commit_cadence_release_tags_today_sha256": _stable_json_sha256([]),
         "commit_cadence_next_actions_sha256": _stable_json_sha256(
             ["Ship verified slices on `1` more unique commit days this week."]
         ),

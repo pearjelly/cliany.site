@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/check_release_cadence.py --json` now reports `release_tags_today`, `release_count_today`, `max_daily_releases`, and `daily_release_limit_ok` so maintainers can enforce the 1-3 releases/day rule before tagging.
+- `scripts/release_readiness.py` now treats an exceeded daily release cap as a cadence blocker and surfaces the pause-release next action in text and Markdown reports.
+- `scripts/plan_next_iteration.py` now carries the daily release cap fields into `commit_cadence`, issue artifact summaries, and artifact README handoff sections.
+- README、README.zh、路线图、发布节奏文档和官网源码现在同步说明每天 1~3 个可验证版本的发布纪律。
+- 新增 `docs/releases/v0.16.242-draft.md`，把下一版聚焦到每日发布上限的机器可读门禁。
+
 ## [0.16.241] - 2026-06-17
 
 ### Added

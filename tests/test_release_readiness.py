@@ -786,7 +786,10 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "# cliany-site Release Readiness" in text
     assert "| ok | `true` |" in text
     assert "| target_version | `0.1.1` |" in text
-    assert "| cadence | `true` | commit days `3/3`: 2026-06-08, 2026-06-09, 2026-06-10 |" in text
+    assert (
+        "| cadence | `true` | commit days `3/3`: 2026-06-08, 2026-06-09, 2026-06-10; "
+        "daily releases `0/3` |"
+    ) in text
     assert "| cases | `true` | active `1`, candidate `0`, known_gap `0`, total `1`, min_assets `1` |" in text
     assert "| release_workflow | `true` |" in text
     assert "| project_metadata | `true` |" in text

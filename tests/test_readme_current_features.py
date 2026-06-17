@@ -34,9 +34,12 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "Real Demo Case Proposal" in text
         assert "weekly-maintainer-loop.md" in text
         assert (
-            "at least one verified version per day" in text
-            or "每天至少一个可验证版本" in text
+            "one to three verified versions per day" in text
+            or "每天 1~3 个可验证版本" in text
         )
+        assert "release_count_today" in text
+        assert "max_daily_releases" in text
+        assert "daily_release_limit_ok" in text
         assert "next_actions" in text
         assert "primary_next_action" in text
         assert "next_actions_sha256" in text

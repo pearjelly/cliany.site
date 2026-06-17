@@ -419,7 +419,7 @@ cliany-site/src/cliany_site/
 
 ## 路线图 / Roadmap
 
-当前迭代计划见 [docs/roadmap-2026-q3.md](docs/roadmap-2026-q3.md)。发布与提交节奏见 [docs/release-cadence.md](docs/release-cadence.md)：每天至少一个可验证版本，每周至少三天有提交记录。维护者可按 [每周维护者循环](docs/weekly-maintainer-loop.md) 选择下一块可验证发布切片，并读取 `scripts/release_readiness.py --json`、`scripts/check_release_cadence.py --json` 或 `scripts/check_release_publication.py --json` 输出的 `next_actions` 与 `primary_next_action`，同时确认最新本地 tag 是否已经公开可见。自动化可比对 `next_actions_sha256`、`publication_blockers_sha256`、`publication_next_actions_sha256`、`publication_publish_commands_sha256` 和 `target_tag_commands_sha256`，无需解析 Markdown report 就能检测发布动作是否漂移。
+当前迭代计划见 [docs/roadmap-2026-q3.md](docs/roadmap-2026-q3.md)。发布与提交节奏见 [docs/release-cadence.md](docs/release-cadence.md)：每天 1~3 个可验证版本，每周至少三天有提交记录。维护者可按 [每周维护者循环](docs/weekly-maintainer-loop.md) 选择下一块可验证发布切片，并读取 `scripts/release_readiness.py --json`、`scripts/check_release_cadence.py --json` 或 `scripts/check_release_publication.py --json` 输出的 `next_actions`、`primary_next_action`、`release_count_today`、`max_daily_releases` 与 `daily_release_limit_ok`，同时确认最新本地 tag 是否已经公开可见。自动化可比对 `next_actions_sha256`、`publication_blockers_sha256`、`publication_next_actions_sha256`、`publication_publish_commands_sha256` 和 `target_tag_commands_sha256`，无需解析 Markdown report 就能检测发布动作是否漂移。
 
 ## 贡献指南 / Contributing
 

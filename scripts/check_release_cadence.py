@@ -28,6 +28,10 @@ class CadenceReport:
     commit_days: list[str]
     commit_day_count: int
     min_commit_days: int
+    release_tags_today: list[str]
+    release_count_today: int
+    max_daily_releases: int
+    daily_release_limit_ok: bool
     commits_since_latest_tag: int | None
     changelog_unreleased_has_content: bool
     changelog_unreleased_compare_ok: bool
@@ -48,6 +52,10 @@ class CadenceReport:
             "commit_day_count": self.commit_day_count,
             "min_commit_days": self.min_commit_days,
             "missing_commit_days": _missing_commit_days(self),
+            "release_tags_today": self.release_tags_today,
+            "release_count_today": self.release_count_today,
+            "max_daily_releases": self.max_daily_releases,
+            "daily_release_limit_ok": self.daily_release_limit_ok,
             "commits_since_latest_tag": self.commits_since_latest_tag,
             "changelog_unreleased_has_content": self.changelog_unreleased_has_content,
             "changelog_unreleased_compare_ok": self.changelog_unreleased_compare_ok,
@@ -102,6 +110,22 @@ def _commits_since_tag(root: Path, tag: str | None) -> int | None:
     return int(output) if output is not None else None
 
 
+def _release_tags_on(root: Path, day: date) -> list[str]:
+    output = _optional_git(["for-each-ref", "--format=%(refname:short)", "refs/tags/v*"], root)
+    if not output:
+        return []
+
+    tags: list[str] = []
+    for tag in output.splitlines():
+        tag = tag.strip()
+        if not tag:
+            continue
+        commit_day = _optional_git(["log", "-1", "--format=%cd", "--date=short", tag], root)
+        if commit_day == day.isoformat():
+            tags.append(tag)
+    return sorted(tags)
+
+
 def _changelog_unreleased_has_content(root: Path) -> bool:
     changelog = (root / "CHANGELOG.md").read_text(encoding="utf-8")
     marker = "## [Unreleased]"
@@ -145,11 +169,17 @@ def _stable_json_sha256(value: Any) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def build_report(root: Path, today: date, min_commit_days: int) -> CadenceReport:
+def build_report(
+    root: Path,
+    today: date,
+    min_commit_days: int,
+    max_daily_releases: int = 3,
+) -> CadenceReport:
     version = _project_version(root)
     latest_tag = _latest_tag(root)
     expected_tag = f"v{version}"
     commit_days = _commit_days_since(root, _week_start(today))
+    release_tags_today = _release_tags_on(root, today)
     changelog_has_content = _changelog_unreleased_has_content(root)
     dirty = _is_dirty(root)
     commits_since_latest_tag = _commits_since_tag(root, latest_tag)
@@ -158,6 +188,7 @@ def build_report(root: Path, today: date, min_commit_days: int) -> CadenceReport
     changelog_ok = changelog_has_content or commits_since_latest_tag == 0
     ok = (
         len(commit_days) >= min_commit_days
+        and len(release_tags_today) <= max_daily_releases
         and tag_matches_version
         and changelog_ok
         and compare_ok
@@ -172,6 +203,10 @@ def build_report(root: Path, today: date, min_commit_days: int) -> CadenceReport
         commit_days=commit_days,
         commit_day_count=len(commit_days),
         min_commit_days=min_commit_days,
+        release_tags_today=release_tags_today,
+        release_count_today=len(release_tags_today),
+        max_daily_releases=max_daily_releases,
+        daily_release_limit_ok=len(release_tags_today) <= max_daily_releases,
         commits_since_latest_tag=commits_since_latest_tag,
         changelog_unreleased_has_content=changelog_has_content,
         changelog_unreleased_compare_ok=compare_ok,
@@ -189,6 +224,12 @@ def _print_text(report: CadenceReport) -> None:
     print(f"expected_tag: {report.expected_tag}")
     print(f"tag_matches_version: {report.tag_matches_version}")
     print(f"commit_days: {report.commit_day_count}/{report.min_commit_days} {', '.join(report.commit_days)}")
+    print(
+        "release_tags_today: "
+        f"{report.release_count_today}/{report.max_daily_releases} "
+        f"{', '.join(report.release_tags_today)}"
+    )
+    print(f"daily_release_limit_ok: {report.daily_release_limit_ok}")
     print(f"commits_since_latest_tag: {report.commits_since_latest_tag}")
     print(f"changelog_unreleased_has_content: {report.changelog_unreleased_has_content}")
     print(f"changelog_unreleased_compare_ok: {report.changelog_unreleased_compare_ok}")
@@ -215,6 +256,12 @@ def _next_action_lines(report: CadenceReport) -> list[str]:
             f"`{missing_days}` more unique commit days this week; current commit days are "
             f"`{report.commit_day_count}/{report.min_commit_days}`."
         )
+    if not report.daily_release_limit_ok:
+        actions.append(
+            "Pause release tagging until the next day; today's release tags are "
+            f"`{report.release_count_today}/{report.max_daily_releases}`: "
+            f"`{', '.join(report.release_tags_today)}`."
+        )
     if not report.tag_matches_version:
         actions.append(
             f"Align the latest tag `{report.latest_tag or '(none)'}` with pyproject version `{report.version}` "
@@ -237,11 +284,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="Output machine-readable JSON.")
     parser.add_argument("--strict", action="store_true", help="Exit non-zero when cadence checks are not satisfied.")
     parser.add_argument("--min-days", type=int, default=3, help="Minimum unique commit days expected this week.")
+    parser.add_argument("--max-daily-releases", type=int, default=3, help="Maximum release tags allowed per day.")
     parser.add_argument("--today", help="Override current date as YYYY-MM-DD, for tests or audits.")
     args = parser.parse_args(argv)
 
     today = datetime.strptime(args.today, "%Y-%m-%d").date() if args.today else date.today()
-    report = build_report(ROOT, today=today, min_commit_days=args.min_days)
+    report = build_report(
+        ROOT,
+        today=today,
+        min_commit_days=args.min_days,
+        max_daily_releases=args.max_daily_releases,
+    )
     if args.json:
         print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
     else:

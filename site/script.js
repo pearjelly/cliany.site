@@ -159,16 +159,16 @@ const I18N = {
   },
   'qs.maintainer.title': { zh: '维护者循环', en: 'Maintainer Loop' },
   'qs.maintainer.desc': {
-    zh: '使用每日发布循环、每周维护者循环和 release readiness 的 next_actions，把路线图拆成小而可验证的发布切片。',
-    en: 'Use the daily release loop, weekly maintainer loop, and release readiness next_actions to turn the roadmap into small verified releases.'
+    zh: '使用每天 1~3 个版本的发布循环、每周维护者循环和 release readiness 的 next_actions，把路线图拆成小而可验证的发布切片。',
+    en: 'Use the 1-3 releases/day loop, weekly maintainer loop, and release readiness next_actions to turn the roadmap into small verified releases.'
   },
   'qs.maintainer.loop': {
     zh: '选择下一块发布切片时，从 <code>docs/weekly-maintainer-loop.md</code> 开始。',
     en: 'Start from <code>docs/weekly-maintainer-loop.md</code> when choosing the next release slice.'
   },
   'qs.maintainer.actions': {
-    zh: '读取 <code>python scripts/release_readiness.py --json</code> 或 <code>python scripts/check_release_cadence.py --json</code> 输出的 <code>next_actions</code>。',
-    en: 'Read <code>next_actions</code> from <code>python scripts/release_readiness.py --json</code> or <code>python scripts/check_release_cadence.py --json</code>.'
+    zh: '读取 <code>python scripts/release_readiness.py --json</code> 或 <code>python scripts/check_release_cadence.py --json</code> 输出的 <code>next_actions</code>、<code>release_count_today</code>、<code>max_daily_releases</code> 和 <code>daily_release_limit_ok</code>。',
+    en: 'Read <code>next_actions</code>, <code>release_count_today</code>, <code>max_daily_releases</code>, and <code>daily_release_limit_ok</code> from <code>python scripts/release_readiness.py --json</code> or <code>python scripts/check_release_cadence.py --json</code>.'
   },
 
   'obscura.title': { zh: '实验性功能：Obscura Browser Provider', en: 'Experimental: Obscura Browser Provider' },

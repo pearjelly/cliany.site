@@ -73,6 +73,10 @@ def test_release_cadence_report_passes_with_three_commit_days(tmp_path):
     assert report.latest_tag == "v0.1.0"
     assert report.tag_matches_version is True
     assert report.commit_days == ["2026-06-08", "2026-06-09", "2026-06-10"]
+    assert report.release_tags_today == []
+    assert report.release_count_today == 0
+    assert report.max_daily_releases == 3
+    assert report.daily_release_limit_ok is True
     assert report.commits_since_latest_tag == 2
     assert report.changelog_unreleased_has_content is True
     assert report.changelog_unreleased_compare_ok is True
@@ -86,6 +90,27 @@ def test_release_cadence_report_passes_with_three_commit_days(tmp_path):
     assert report.to_dict()["primary_next_action"] is None
     assert report.to_dict()["next_actions_sha256"] == release_cadence._stable_json_sha256([])
     assert report.to_dict()["next_actions"] == []
+
+
+def test_release_cadence_blocks_more_than_three_release_tags_per_day(tmp_path):
+    repo = _init_repo(tmp_path)
+    for index in range(1, 5):
+        _commit(repo, f"release-{index}.txt", str(index), "2026-06-10")
+        _git(repo, "tag", f"v0.1.{index}")
+
+    report = release_cadence.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert report.release_tags_today == ["v0.1.1", "v0.1.2", "v0.1.3", "v0.1.4"]
+    assert report.release_count_today == 4
+    assert report.max_daily_releases == 3
+    assert report.daily_release_limit_ok is False
+    assert report.to_dict()["release_count_today"] == 4
+    assert report.to_dict()["daily_release_limit_ok"] is False
+    assert (
+        "Pause release tagging until the next day; today's release tags are "
+        "`4/3`: `v0.1.1, v0.1.2, v0.1.3, v0.1.4`."
+    ) in report.to_dict()["next_actions"]
 
 
 def test_release_cadence_report_fails_when_week_has_too_few_days(tmp_path):

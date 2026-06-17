@@ -32,7 +32,10 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "python scripts/release_readiness.py --json" in index
     assert "python scripts/check_release_cadence.py --json" in index
     assert "next_actions" in index
-    assert "daily release loop" in index
+    assert "release_count_today" in index
+    assert "max_daily_releases" in index
+    assert "daily_release_limit_ok" in index
+    assert "1-3 releases/day loop" in index
     assert "10-Minute Success Path" in script
     assert "Run a real demo adapter first" in script
     assert "primary_next_task_acceptance_criteria" in script
@@ -45,3 +48,6 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Acceptance Criteria" in script
     assert "First-time contributors" in script
     assert "Maintainer Loop" in script
+    assert "release_count_today" in script
+    assert "max_daily_releases" in script
+    assert "daily_release_limit_ok" in script

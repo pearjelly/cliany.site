@@ -332,9 +332,13 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "commit_cadence_commit_day_count",
     "commit_cadence_min_commit_days",
     "commit_cadence_missing_commit_days",
+    "commit_cadence_release_count_today",
+    "commit_cadence_max_daily_releases",
+    "commit_cadence_daily_release_limit_ok",
     "commit_cadence_next_action_count",
     "commit_cadence_primary_next_action",
     "commit_cadence_commit_days_sha256",
+    "commit_cadence_release_tags_today_sha256",
     "commit_cadence_next_actions_sha256",
     "publication_ref_context_key_count",
     "publication_ref_context_sha256",
@@ -1384,6 +1388,24 @@ def _commit_cadence(readiness: Any) -> dict[str, Any]:
     commit_day_count = int(payload.get("commit_day_count", getattr(cadence, "commit_day_count", 0)) or 0)
     min_commit_days = int(payload.get("min_commit_days", getattr(cadence, "min_commit_days", 0)) or 0)
     missing_commit_days = max(min_commit_days - commit_day_count, 0)
+    release_tags_today_value = payload.get("release_tags_today", getattr(cadence, "release_tags_today", []))
+    release_tags_today = (
+        [str(tag) for tag in release_tags_today_value]
+        if isinstance(release_tags_today_value, list)
+        else []
+    )
+    release_count_today = int(
+        payload.get("release_count_today", getattr(cadence, "release_count_today", len(release_tags_today))) or 0
+    )
+    max_daily_releases = int(
+        payload.get("max_daily_releases", getattr(cadence, "max_daily_releases", 3)) or 3
+    )
+    daily_release_limit_ok = bool(
+        payload.get(
+            "daily_release_limit_ok",
+            getattr(cadence, "daily_release_limit_ok", release_count_today <= max_daily_releases),
+        )
+    )
     next_actions_value = payload.get("next_actions", getattr(cadence, "next_actions", []))
     next_actions = (
         [str(action).removeprefix("- ") for action in next_actions_value]
@@ -1395,18 +1417,41 @@ def _commit_cadence(readiness: Any) -> dict[str, Any]:
             "Ship verified slices on "
             f"`{missing_commit_days}` more unique commit days this week."
         ]
+    if not daily_release_limit_ok and not next_actions:
+        next_actions = [
+            "Pause release tagging until the next day; today's release cap has been exceeded."
+        ]
+    status = "ready"
+    if missing_commit_days:
+        status = "needs_more_commit_days"
+    if not daily_release_limit_ok:
+        status = "release_cap_exceeded"
     return {
-        "status": "ready" if missing_commit_days == 0 else "needs_more_commit_days",
+        "status": status,
         "commit_days": commit_days,
         "commit_day_count": commit_day_count,
         "min_commit_days": min_commit_days,
         "missing_commit_days": missing_commit_days,
+        "release_tags_today": release_tags_today,
+        "release_count_today": release_count_today,
+        "max_daily_releases": max_daily_releases,
+        "daily_release_limit_ok": daily_release_limit_ok,
         "next_actions": next_actions,
         "summary": (
             f"{commit_day_count}/{min_commit_days} commit days; "
             f"{missing_commit_days} more unique day(s) needed."
             if missing_commit_days
-            else f"{commit_day_count}/{min_commit_days} commit days; cadence satisfied."
+            else (
+                f"{commit_day_count}/{min_commit_days} commit days; "
+                f"daily releases {release_count_today}/{max_daily_releases}; "
+                "cadence satisfied."
+                if daily_release_limit_ok
+                else (
+                    f"{commit_day_count}/{min_commit_days} commit days; "
+                    f"daily releases {release_count_today}/{max_daily_releases}; "
+                    "release cap exceeded."
+                )
+            )
         ),
     }
 
@@ -3198,6 +3243,11 @@ def _issue_artifact_commit_cadence_markdown(plan: IterationPlan) -> str:
         commit_days_text = "`(none)`"
     else:
         commit_days_text = ", ".join(f"`{day}`" for day in commit_days)
+    release_tags_today = plan.commit_cadence.get("release_tags_today")
+    if not isinstance(release_tags_today, list) or not release_tags_today:
+        release_tags_today_text = "`(none)`"
+    else:
+        release_tags_today_text = ", ".join(f"`{tag}`" for tag in release_tags_today)
     next_actions = plan.commit_cadence.get("next_actions")
     if isinstance(next_actions, list) and next_actions:
         next_actions_text = "\n".join(f"- {action}" for action in next_actions)
@@ -3213,6 +3263,10 @@ def _issue_artifact_commit_cadence_markdown(plan: IterationPlan) -> str:
             f"- min_commit_days: `{_format_context_value(plan.commit_cadence.get('min_commit_days'))}`",
             f"- missing_commit_days: `{_format_context_value(plan.commit_cadence.get('missing_commit_days'))}`",
             f"- commit_days: {commit_days_text}",
+            f"- release_count_today: `{_format_context_value(plan.commit_cadence.get('release_count_today'))}`",
+            f"- max_daily_releases: `{_format_context_value(plan.commit_cadence.get('max_daily_releases'))}`",
+            f"- daily_release_limit_ok: `{_format_context_value(plan.commit_cadence.get('daily_release_limit_ok'))}`",
+            f"- release_tags_today: {release_tags_today_text}",
             "- primary_next_action: "
             f"{_summary_inline_code(_commit_cadence_primary_next_action(plan))}",
             "",
@@ -4368,6 +4422,9 @@ def _issue_artifact_bundle_summary(
         "commit_cadence_commit_day_count": plan.commit_cadence.get("commit_day_count"),
         "commit_cadence_min_commit_days": plan.commit_cadence.get("min_commit_days"),
         "commit_cadence_missing_commit_days": plan.commit_cadence.get("missing_commit_days"),
+        "commit_cadence_release_count_today": plan.commit_cadence.get("release_count_today"),
+        "commit_cadence_max_daily_releases": plan.commit_cadence.get("max_daily_releases"),
+        "commit_cadence_daily_release_limit_ok": plan.commit_cadence.get("daily_release_limit_ok"),
         "commit_cadence_next_action_count": len(
             plan.commit_cadence.get("next_actions", [])
             if isinstance(plan.commit_cadence.get("next_actions"), list)
@@ -4376,6 +4433,9 @@ def _issue_artifact_bundle_summary(
         "commit_cadence_primary_next_action": _commit_cadence_primary_next_action(plan),
         "commit_cadence_commit_days_sha256": _stable_json_sha256(
             plan.commit_cadence.get("commit_days", [])
+        ),
+        "commit_cadence_release_tags_today_sha256": _stable_json_sha256(
+            plan.commit_cadence.get("release_tags_today", [])
         ),
         "commit_cadence_next_actions_sha256": _stable_json_sha256(
             plan.commit_cadence.get("next_actions", [])
@@ -5068,11 +5128,16 @@ def _issue_artifact_bundle_summary_markdown(
             f"- commit_cadence_commit_day_count: `{summary['commit_cadence_commit_day_count']}`",
             f"- commit_cadence_min_commit_days: `{summary['commit_cadence_min_commit_days']}`",
             f"- commit_cadence_missing_commit_days: `{summary['commit_cadence_missing_commit_days']}`",
+            f"- commit_cadence_release_count_today: `{summary['commit_cadence_release_count_today']}`",
+            f"- commit_cadence_max_daily_releases: `{summary['commit_cadence_max_daily_releases']}`",
+            f"- commit_cadence_daily_release_limit_ok: `{summary['commit_cadence_daily_release_limit_ok']}`",
             f"- commit_cadence_next_action_count: `{summary['commit_cadence_next_action_count']}`",
             "- commit_cadence_primary_next_action: "
             f"{_summary_inline_code(summary['commit_cadence_primary_next_action'])}",
             "- commit_cadence_commit_days_sha256: "
             f"`{summary['commit_cadence_commit_days_sha256']}`",
+            "- commit_cadence_release_tags_today_sha256: "
+            f"`{summary['commit_cadence_release_tags_today_sha256']}`",
             "- commit_cadence_next_actions_sha256: "
             f"`{summary['commit_cadence_next_actions_sha256']}`",
             f"- publication_ref_context_key_count: `{summary['publication_ref_context_key_count']}`",

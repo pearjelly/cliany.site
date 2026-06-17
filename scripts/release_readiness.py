@@ -599,6 +599,11 @@ def _cadence_blockers(report: CadenceReport) -> list[str]:
     blockers: list[str] = []
     if report.commit_day_count < report.min_commit_days:
         blockers.append(f"commit days {report.commit_day_count}/{report.min_commit_days}")
+    if not report.daily_release_limit_ok:
+        blockers.append(
+            "daily release tags "
+            f"{report.release_count_today}/{report.max_daily_releases} exceed the allowed maximum"
+        )
     if not report.tag_matches_version:
         blockers.append(f"latest tag {report.latest_tag or '(none)'} != {report.expected_tag}")
     if not report.changelog_ok:
@@ -1180,6 +1185,12 @@ def _next_action_lines(report: ReadinessReport) -> list[str]:
             f"`{report.cadence.commit_day_count}/{report.cadence.min_commit_days}`. "
             "Use `docs/weekly-maintainer-loop.md` to pick the next slice."
         )
+    if not report.cadence.daily_release_limit_ok:
+        lines.append(
+            "Pause release tagging until the next day; today's release tags are "
+            f"`{report.cadence.release_count_today}/{report.cadence.max_daily_releases}`: "
+            f"`{', '.join(report.cadence.release_tags_today)}`."
+        )
     if report.cadence.dirty:
         lines.append("Commit or revert the working tree before tagging a release.")
     if any(blocker.startswith("release tag ") and "does not point at HEAD" in blocker for blocker in report.blockers):
@@ -1553,6 +1564,11 @@ def _weekly_review_rows(report: ReadinessReport) -> list[str]:
             f"`{report.cadence.commit_day_count}/{report.cadence.min_commit_days}`: "
             f"{', '.join(report.cadence.commit_days) or '-'} |"
         ),
+        (
+            "| Is today's release count within the cap? | "
+            f"`{report.cadence.release_count_today}/{report.cadence.max_daily_releases}`: "
+            f"{', '.join(report.cadence.release_tags_today) or '-'} |"
+        ),
         f"| What is the next smallest release slice? | {_markdown_cell(next_slice)} |",
     ]
 
@@ -1578,7 +1594,8 @@ def _render_markdown_report(report: ReadinessReport) -> str:
         "|------|--------|--------|",
         (
             f"| cadence | `{str(report.cadence.ok).lower()}` | "
-            f"commit days `{report.cadence.commit_day_count}/{report.cadence.min_commit_days}`: {commit_days} |"
+            f"commit days `{report.cadence.commit_day_count}/{report.cadence.min_commit_days}`: {commit_days}; "
+            f"daily releases `{report.cadence.release_count_today}/{report.cadence.max_daily_releases}` |"
         ),
         (
             f"| cases | `{str(report.cases.ok).lower()}` | "
