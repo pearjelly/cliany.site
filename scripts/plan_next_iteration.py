@@ -18,6 +18,24 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
 ARTIFACT_MANIFEST_SCHEMA_VERSION = 1
 CANDIDATE_PROMOTION_FIELDS = ("adapter_package", "metadata_validation", "online_smoke")
+CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
+    "python scripts/validate_cases.py "
+    "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
+)
+CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA = {
+    "adapter_package": (
+        "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
+        "or GitHub Release asset name."
+    ),
+    "metadata_validation": (
+        f"Paste `{CANDIDATE_PACKAGE_VALIDATION_COMMAND}` output showing the candidate "
+        "package passed schema v3, manifest hash, and adapter_domain validation."
+    ),
+    "online_smoke": (
+        "Paste the read-only adapter command JSON envelope summary with ok=true, "
+        "data.quality.ok=true, and row_count>0."
+    ),
+}
 ARTIFACT_MANIFEST_KEYS = (
     "schema_version",
     "target_version",
@@ -1042,10 +1060,7 @@ def _candidate_package_validation_command(packages_dir: Path | None) -> str | No
 
 
 def _default_candidate_package_validation_command() -> str:
-    return (
-        "python scripts/validate_cases.py "
-        "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
-    )
+    return CANDIDATE_PACKAGE_VALIDATION_COMMAND
 
 
 def _publication_worktree_clean(publication: Any) -> bool:
@@ -1745,11 +1760,15 @@ def _candidate_issue_body(
     if primary_task:
         primary_evidence = primary_task.get("evidence") or "Not attached yet."
         primary_next_action = primary_task.get("next_action") or "Not declared."
+        primary_acceptance = CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA.get(
+            str(primary_task.get("task") or ""), ""
+        )
         primary_task_lines = [
             f"- Task: `{primary_task['task']}`",
             f"- Status: `{primary_task['status']}`",
             f"- Current evidence: {primary_evidence}",
             f"- Next action: {primary_next_action}",
+            f"- Acceptance criteria: {primary_acceptance}",
         ]
     else:
         primary_task_lines = ["- All promotion tasks already have complete evidence."]
@@ -1769,8 +1788,13 @@ def _candidate_issue_body(
                 f"  - Current status: `{status}`",
                 f"  - Current evidence: {evidence}",
                 f"  - Next action: {next_action}",
+                f"  - Acceptance criteria: {CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA[task_name]}",
             ]
         )
+    acceptance_lines = [
+        f"- `{task_name}`: {CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA[task_name]}"
+        for task_name in CANDIDATE_PROMOTION_FIELDS
+    ]
     return "\n".join(
         [
             f"## Scope: promote candidate case `{case_id}`",
@@ -1789,6 +1813,9 @@ def _candidate_issue_body(
             "",
             "## Promotion Command Plan",
             *promotion_command_lines,
+            "",
+            "## Acceptance Criteria",
+            *acceptance_lines,
             "",
             "## Tasks",
             *task_lines,

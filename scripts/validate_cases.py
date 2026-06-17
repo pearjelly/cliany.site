@@ -26,6 +26,20 @@ CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     "python scripts/validate_cases.py "
     "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
 )
+PROMOTION_ACCEPTANCE_CRITERIA = {
+    "adapter_package": (
+        "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
+        "or GitHub Release asset name."
+    ),
+    "metadata_validation": (
+        f"Paste `{CANDIDATE_PACKAGE_VALIDATION_COMMAND}` output showing the candidate "
+        "package passed schema v3, manifest hash, and adapter_domain validation."
+    ),
+    "online_smoke": (
+        "Paste the read-only adapter command JSON envelope summary with ok=true, "
+        "data.quality.ok=true, and row_count>0."
+    ),
+}
 BUILTIN_GROUPS = {
     "browser",
     "cases",
@@ -991,6 +1005,10 @@ def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
             f"- `{item['task']}`: `{item['command'] or 'Not declared.'}`"
             for item in case.promotion_command_plan
         ]
+        acceptance_lines = [
+            f"- `{field_name}`: {PROMOTION_ACCEPTANCE_CRITERIA[field_name]}"
+            for field_name in PROMOTION_FIELDS
+        ]
         task_lines: list[str] = []
         issue_task_lines: list[str] = []
         for field_name in PROMOTION_FIELDS:
@@ -1005,6 +1023,7 @@ def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
                     f"  - Status: `{status}`",
                     f"  - Evidence: {evidence_value}",
                     f"  - Next action: {next_action}",
+                    f"  - Acceptance criteria: {PROMOTION_ACCEPTANCE_CRITERIA[field_name]}",
                 ]
             )
             issue_task_lines.extend(
@@ -1013,6 +1032,7 @@ def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
                     f"  - Current status: `{status}`",
                     f"  - Current evidence: {evidence_value}",
                     f"  - Next action: {next_action}",
+                    f"  - Acceptance criteria: {PROMOTION_ACCEPTANCE_CRITERIA[field_name]}",
                 ]
             )
         lines.extend(
@@ -1038,6 +1058,9 @@ def _candidate_promotion_task_lines(report: CasesReport) -> list[str]:
                 "",
                 "## Promotion Command Plan",
                 *promotion_command_lines,
+                "",
+                "## Acceptance Criteria",
+                *acceptance_lines,
                 "",
                 "## Tasks",
                 *issue_task_lines,

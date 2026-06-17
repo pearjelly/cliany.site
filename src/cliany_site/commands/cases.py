@@ -151,12 +151,14 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
     if primary_task:
         current_evidence = primary_task.get("evidence") or "Not attached yet."
         next_action = primary_task.get("next_action") or "No next action declared."
+        acceptance_criteria = PROMOTION_ACCEPTANCE_CRITERIA.get(primary_task["task"], "")
         lines.extend(
             [
                 f"- Task: `{primary_task['task']}`",
                 f"- Status: `{primary_task['status']}`",
                 f"- Current evidence: {current_evidence}",
                 f"- Next action: {next_action}",
+                f"- Acceptance criteria: {acceptance_criteria}",
             ]
         )
     else:
@@ -178,6 +180,10 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
         command = item["command"] or "Not declared."
         lines.append(f"- `{item['task']}`: `{command}`")
 
+    lines.extend(["", "## Acceptance Criteria"])
+    for task in PROMOTION_TASKS:
+        lines.append(f"- `{task}`: {PROMOTION_ACCEPTANCE_CRITERIA[task]}")
+
     lines.extend(["", "## Tasks"])
 
     for task in PROMOTION_TASKS:
@@ -195,6 +201,7 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
                 f"  - Current status: `{status}`",
                 f"  - Current evidence: {current_evidence}",
                 f"  - Next action: {next_action}",
+                f"  - Acceptance criteria: {PROMOTION_ACCEPTANCE_CRITERIA[task]}",
             ]
         )
 

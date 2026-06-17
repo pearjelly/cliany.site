@@ -836,6 +836,7 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "  - Status: `pending`" in text
     assert "  - Evidence: Not attached yet." in text
     assert "  - Next action: Generate the adapter package." in text
+    assert "  - Acceptance criteria: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in text
     assert f"- [ ] `metadata_validation`: {metadata_validation}" in text
     assert "- [ ] `online_smoke`: cliany-site demo.example.com list-items --json" in text
     assert "data.quality.ok=true" in text
@@ -854,8 +855,11 @@ def test_cases_report_writes_markdown_report(tmp_path):
         in text
     )
     assert "- `online_smoke`: `cliany-site demo.example.com list-items --json`" in text
+    assert "## Acceptance Criteria" in text
+    assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in text
     assert "  - Current status: `pending`" in text
     assert "  - Current evidence: Not attached yet." in text
+    assert "  - Acceptance criteria: Paste the read-only adapter command JSON envelope summary" in text
     assert "## Evidence Bundle" in text
     assert "cliany-site cases --case-id candidate-case --evidence-bundle" in text
     assert "cliany-site cases --case-id candidate-case --evidence-bundle --json" in text

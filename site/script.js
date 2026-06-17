@@ -146,8 +146,8 @@ const I18N = {
     en: 'Ran a real public workflow? Propose it through the Real Demo Case Proposal path so it can become a validated case with an offline JSON example.'
   },
   'qs.contribute.case': {
-    zh: '使用 <code>Real Demo Case Proposal</code> issue 模板提交公开、只读工作流。',
-    en: 'Use the <code>Real Demo Case Proposal</code> issue template for public, read-only workflows.'
+    zh: '使用 <code>Real Demo Case Proposal</code> issue 模板提交公开、只读工作流；candidate 晋级 issue 可由带 <code>Acceptance Criteria</code> 的 <code>cliany-site cases --case-id pypi-project-search --issue-template</code> 生成。',
+    en: 'Use the <code>Real Demo Case Proposal</code> issue template for public, read-only workflows; generate candidate promotion issues with <code>cliany-site cases --case-id pypi-project-search --issue-template</code>, including <code>Acceptance Criteria</code>.'
   },
   'qs.contribute.validate': {
     zh: '候选案例应关联 <code>cases/manifest.json</code>、<code>cases/examples/</code>、<code>python scripts/validate_cases.py --strict</code> 和带 <code>acceptance_criteria</code> 的 <code>cliany-site cases --case-id pypi-project-search --evidence-bundle --json</code>。',

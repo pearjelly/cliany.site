@@ -7,6 +7,15 @@
 
 ## [Unreleased]
 
+## [0.16.231] - 2026-06-17
+
+### Added
+- `cliany-site cases --case-id <id> --issue-template` 现在把首要 evidence task 和每个 promotion task 的 Acceptance Criteria 直接写入 GitHub issue body，让 candidate 晋级 issue 能同时交接命令、当前状态和完成证据要求。
+- `scripts/plan_next_iteration.py` 生成的 candidate issue body 现在与 cases CLI 使用同一套验收标准，计划器输出、issue artifacts 和手工 CLI 入口不再需要分别维护 proof 文案。
+- `scripts/validate_cases.py --report` 的 Candidate Promotion Tasks / Issue Body Template 现在同步展示 `Acceptance Criteria`，让离线案例报告也能作为可复制的 candidate promotion issue 来源。
+- README、README.zh、cases README 和官网 quickstart 现在同步说明 candidate issue template 也包含 evidence task 的验收标准。
+- 新增 `docs/releases/v0.16.231-draft.md`，把本版 patch 聚焦到 candidate promotion issue 模板的可验收交接。
+
 ## [0.16.230] - 2026-06-17
 
 ### Added
@@ -2137,7 +2146,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.230...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.231...HEAD
+[0.16.231]: https://github.com/pearjelly/cliany.site/compare/v0.16.230...v0.16.231
 [0.16.230]: https://github.com/pearjelly/cliany.site/compare/v0.16.229...v0.16.230
 [0.16.229]: https://github.com/pearjelly/cliany.site/compare/v0.16.228...v0.16.229
 [0.16.228]: https://github.com/pearjelly/cliany.site/compare/v0.16.227...v0.16.228

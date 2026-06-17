@@ -208,6 +208,10 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "- Status: `pending`" in template
     assert "## Reproduction Context" in template
     assert "## Promotion Command Plan" in template
+    assert "## Acceptance Criteria" in template
+    assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in template
+    assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in template
+    assert "`online_smoke`: Paste the read-only adapter command JSON envelope summary" in template
     assert (
         '`adapter_package`: `cliany-site explore "https://pypi.org" '
         '"search Python packages for cliany-site and list project names" --json`'
@@ -224,6 +228,7 @@ def test_cases_command_issue_template_json(tmp_home):
         in template
     )
     assert "`adapter_package`" in template
+    assert "Acceptance criteria: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in template
     assert "Generate pypi.org" in template
     assert "## Evidence Bundle" in template
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle" in template
@@ -321,6 +326,8 @@ def test_cases_command_issue_template_checks_complete_tasks(tmp_home, monkeypatc
     assert "- Task: `online_smoke`" in result.output
     assert "- Status: `pending`" in result.output
     assert "- Next action: Run read-only smoke." in result.output
+    assert "- Acceptance criteria: Paste the read-only adapter command JSON envelope summary" in result.output
+    assert "## Acceptance Criteria" in result.output
     assert "- [x] `adapter_package`: Build adapter package." in result.output
     assert "- [ ] `metadata_validation`: Validate metadata." in result.output
     assert "- [ ] `online_smoke`: Run online smoke." in result.output

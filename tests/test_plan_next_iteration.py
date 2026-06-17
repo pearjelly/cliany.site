@@ -151,9 +151,14 @@ def test_candidate_issue_body_checks_complete_tasks():
     assert "- Task: `online_smoke`" in issue_body
     assert "- Status: `pending`" in issue_body
     assert "- Next action: Run read-only smoke." in issue_body
+    assert "- Acceptance criteria: Paste the read-only adapter command JSON envelope summary" in issue_body
     assert "## Promotion Command Plan" in issue_body
     assert "- `online_smoke`: `cliany-site example.test search --json`" in issue_body
+    assert "## Acceptance Criteria" in issue_body
+    assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in issue_body
+    assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in issue_body
     assert "- [x] `adapter_package`: Build adapter package." in issue_body
+    assert "  - Acceptance criteria: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in issue_body
     assert "- [ ] `metadata_validation`: Validate metadata." in issue_body
     assert "- [ ] `online_smoke`: Run online smoke." in issue_body
 
@@ -779,7 +784,9 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- Task: `adapter_package`\n"
             "- Status: `pending`\n"
             "- Current evidence: Not attached yet.\n"
-            "- Next action: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n\n"
+            "- Next action: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n"
+            "- Acceptance criteria: Attach the generated "
+            "<domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name.\n\n"
             "## Reproduction Context\n"
             "- Target URL: https://pypi.org/search/?q=cliany-site\n"
             "- Candidate commands:\n"
@@ -794,19 +801,36 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`\n"
             "- `online_smoke`: `cliany-site pypi.org search-projects --query cliany-site "
             "--limit 5 --json`\n\n"
+            "## Acceptance Criteria\n"
+            "- `adapter_package`: Attach the generated "
+            "<domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name.\n"
+            "- `metadata_validation`: Paste `python scripts/validate_cases.py "
+            "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict` "
+            "output showing the candidate package passed schema v3, manifest hash, "
+            "and adapter_domain validation.\n"
+            "- `online_smoke`: Paste the read-only adapter command JSON envelope summary "
+            "with ok=true, data.quality.ok=true, and row_count>0.\n\n"
             "## Tasks\n"
             "- [ ] `adapter_package`: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n"
             "  - Current status: `pending`\n"
             "  - Current evidence: Not attached yet.\n"
             "  - Next action: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n"
+            "  - Acceptance criteria: Attach the generated "
+            "<domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name.\n"
             "- [ ] `metadata_validation`: Run validate_cases with --packages-dir.\n"
             "  - Current status: `pending`\n"
             "  - Current evidence: Not attached yet.\n"
             "  - Next action: Run validate_cases with --packages-dir.\n"
+            "  - Acceptance criteria: Paste `python scripts/validate_cases.py "
+            "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict` "
+            "output showing the candidate package passed schema v3, manifest hash, "
+            "and adapter_domain validation.\n"
             "- [ ] `online_smoke`: Run read-only PyPI search smoke.\n"
             "  - Current status: `pending`\n"
             "  - Current evidence: Not attached yet.\n"
-            "  - Next action: Run read-only PyPI search smoke.\n\n"
+            "  - Next action: Run read-only PyPI search smoke.\n"
+            "  - Acceptance criteria: Paste the read-only adapter command JSON envelope summary "
+            "with ok=true, data.quality.ok=true, and row_count>0.\n\n"
             "## Evidence Bundle\n"
             "- Human: `cliany-site cases --case-id pypi-project-search --evidence-bundle`\n"
             "- JSON: `cliany-site cases --case-id pypi-project-search --evidence-bundle --json`\n"

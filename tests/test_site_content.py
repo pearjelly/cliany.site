@@ -18,6 +18,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json" in docs
     assert "不需要先配置 LLM key" in docs
     assert "Real Demo Case Proposal" in index
+    assert "cliany-site cases --case-id pypi-project-search --issue-template" in index
+    assert "Acceptance Criteria" in index
     assert "cases/manifest.json" in index
     assert "python scripts/validate_cases.py --strict" in index
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in index
@@ -33,5 +35,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "acceptance_criteria" in script
     assert "Generate Your Own" in script
     assert "After Your First Success" in script
+    assert "cliany-site cases --case-id pypi-project-search --issue-template" in script
+    assert "Acceptance Criteria" in script
     assert "First-time contributors" in script
     assert "Maintainer Loop" in script
