@@ -10,7 +10,7 @@ updates:
     commit-message:
       prefix: "deps"
 
-  # 监控 GitHub Actions：actions/checkout@v4、astral-sh/setup-uv@v5、actions/setup-python@v5、actions/upload-artifact@v4
+  # 监控 GitHub Actions：actions/checkout@v4、astral-sh/setup-uv@v5、actions/setup-python@v5、actions/upload-artifact@v4、actions/download-artifact@v4
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

@@ -95,6 +95,9 @@ python scripts/release_readiness.py --strict
 def _ci_workflow() -> str:
     return """name: CI
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   case-catalog:
     name: Case Catalog Validation
@@ -151,6 +154,9 @@ on:
 permissions:
   contents: write
   id-token: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
   release-preflight:
@@ -1108,6 +1114,22 @@ def test_release_readiness_blocks_missing_ci_extract_gate(tmp_path):
     assert any("extract-quality:" in issue for issue in report.ci.issues)
 
 
+def test_release_readiness_blocks_ci_workflow_without_node24_actions_opt_in(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    ci_workflow = _ci_workflow().replace(
+        'env:\n  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"\n\n',
+        "",
+    )
+    (repo / ".github" / "workflows" / "ci.yml").write_text(ci_workflow, encoding="utf-8")
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "CI release gates validation failed" in report.blockers
+    assert report.ci.ok is False
+    assert any("FORCE_JAVASCRIPT_ACTIONS_TO_NODE24" in issue for issue in report.ci.issues)
+
+
 def test_release_readiness_blocks_missing_release_workflow_pypi_publish(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     (repo / ".github" / "workflows" / "release.yml").write_text(
@@ -1121,6 +1143,22 @@ def test_release_readiness_blocks_missing_release_workflow_pypi_publish(tmp_path
     assert "release workflow validation failed" in report.blockers
     assert report.release_workflow.ok is False
     assert any("pypa/gh-action-pypi-publish@release/v1" in issue for issue in report.release_workflow.issues)
+
+
+def test_release_readiness_blocks_release_workflow_without_node24_actions_opt_in(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    release_workflow = _release_workflow().replace(
+        'env:\n  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"\n\n',
+        "",
+    )
+    (repo / ".github" / "workflows" / "release.yml").write_text(release_workflow, encoding="utf-8")
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "release workflow validation failed" in report.blockers
+    assert report.release_workflow.ok is False
+    assert any("FORCE_JAVASCRIPT_ACTIONS_TO_NODE24" in issue for issue in report.release_workflow.issues)
 
 
 def test_release_readiness_blocks_missing_project_description(tmp_path):

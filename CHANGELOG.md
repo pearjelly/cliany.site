@@ -7,6 +7,15 @@
 
 ## [Unreleased]
 
+## [0.16.238] - 2026-06-17
+
+### Added
+- 所有 GitHub Actions workflow 现在声明 `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true`，提前切到 Node 24 runtime，避免每日发布链路继续产生 Node 20 deprecation annotations。
+- `scripts/release_readiness.py` 现在把 CI 和 release workflow 的 Node 24 opt-in 纳入门禁；缺失该环境变量时会阻塞发版预检。
+- release readiness 测试新增 CI / release workflow 缺少 Node 24 opt-in 的回归覆盖，确保发布基础设施不会静默退回 Node 20。
+- Dependabot 的 GitHub Actions 注释现在也列出 `actions/download-artifact@v4`，与 release workflow 的实际 action surface 对齐。
+- 新增 `docs/releases/v0.16.238-draft.md`，记录本版从 v0.16.237 GitHub Actions annotation 中提炼出的发布链路加固。
+
 ## [0.16.237] - 2026-06-17
 
 ### Added
@@ -2198,7 +2207,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.237...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.238...HEAD
+[0.16.238]: https://github.com/pearjelly/cliany.site/compare/v0.16.237...v0.16.238
 [0.16.237]: https://github.com/pearjelly/cliany.site/compare/v0.16.236...v0.16.237
 [0.16.236]: https://github.com/pearjelly/cliany.site/compare/v0.16.235...v0.16.236
 [0.16.235]: https://github.com/pearjelly/cliany.site/compare/v0.16.234...v0.16.235

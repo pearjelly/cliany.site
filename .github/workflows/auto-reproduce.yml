@@ -4,6 +4,9 @@ on:
   issues:
     types: [labeled]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   auto-reproduce:
     if: github.event.label.name == 'auto-reproduce'

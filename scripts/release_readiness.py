@@ -29,6 +29,7 @@ RELEASE_PREFLIGHT_COMMAND = (
     '--release-tag "${{ github.ref_name }}" '
     "--report release-readiness-report.md"
 )
+NODE24_ACTIONS_ENV_SNIPPET = 'FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"'
 PROMOTION_FIELDS = ("adapter_package", "metadata_validation", "online_smoke")
 
 
@@ -287,6 +288,7 @@ def _build_ci_report(root: Path) -> CiReport:
     required_snippets = [
         "case-catalog:",
         "Case Catalog Validation",
+        NODE24_ACTIONS_ENV_SNIPPET,
         "python scripts/validate_cases.py --strict --report case-catalog-report.md",
         "pytest tests/test_validate_cases.py tests/test_cases_manifest.py -q --no-cov",
         "case-catalog-report",
@@ -326,6 +328,7 @@ def _build_release_workflow_report(root: Path) -> ReleaseWorkflowReport:
         'tags: ["v*"]',
         "contents: write",
         "id-token: write",
+        NODE24_ACTIONS_ENV_SNIPPET,
         "release-preflight:",
         "Release Preflight",
         "fetch-depth: 0",
