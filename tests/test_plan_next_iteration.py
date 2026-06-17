@@ -2845,13 +2845,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "## Candidate Summary" in readme
     assert (
         "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands | "
-        "Primary Evidence Task | Evidence Bundle Primary Next Task | Candidate Package Validation | "
-        "Evidence Bundle | Evidence Bundle JSON |"
+        "Primary Evidence Task | Primary Evidence Status | Primary Acceptance Criteria | "
+        "Evidence Bundle Primary Next Task | Candidate Package Validation | Evidence Bundle | "
+        "Evidence Bundle JSON |"
     ) in readme
     assert (
         "| `pypi-project-search` | `pypi-project-search.md` | "
         "https://pypi.org/search/?q=cliany-site | 2 | 2 | "
-        "`adapter_package` | `adapter_package` | "
+        "`adapter_package` | `pending` | "
+        "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
+        "package path or GitHub Release asset name. | `adapter_package` | "
         "`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict` | "
         "`cliany-site cases --case-id pypi-project-search --evidence-bundle` | "
@@ -2860,9 +2863,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "## Candidate Promotion Evidence Summary" in readme
     assert "| pending_count | `6` |" in readme
     assert "| primary_next_action | `Generate pypi.org-<version>.cliany-adapter.tar.gz.` |" in readme
+    assert "| primary_next_task_acceptance_criteria | `-" in readme
     assert (
         "| `pypi-project-search` | `adapter_package` | `pending` | - | "
-        "Generate pypi.org-<version>.cliany-adapter.tar.gz. |"
+        "Generate pypi.org-<version>.cliany-adapter.tar.gz. | - |"
     ) in readme
     assert "## Issue Body Inventory" in readme
     assert "| Case | Issue Body | Bytes | SHA-256 |" in readme

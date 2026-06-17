@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+## [0.16.233] - 2026-06-17
+
+### Added
+- `scripts/plan_next_iteration.py --issues-dir` 生成的 artifacts `README.md` 现在在 `Candidate Summary` 中展示 `Primary Evidence Status` 和 `Primary Acceptance Criteria`，维护者创建 candidate issue 前即可看到首要 evidence task 的状态和验收标准。
+- Candidate issue artifacts README 的 `Candidate Promotion Evidence Summary` 现在展示 `primary_next_task_acceptance_criteria`，任务表也新增 `Acceptance Criteria` 列，让 issue artifacts 与 cases CLI / case report 使用同一套 proof contract。
+- README、README.zh、cases README、good first issues 指南和官网 quickstart 现在同步说明 `--issues-dir` 生成的候选 issue artifacts 会暴露 primary evidence status / acceptance criteria。
+- 新增 `docs/releases/v0.16.233-draft.md`，把本版 patch 聚焦到 candidate issue artifacts 的验收标准可见性。
+
 ## [0.16.232] - 2026-06-17
 
 ### Added
@@ -2156,7 +2164,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.232...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.233...HEAD
+[0.16.233]: https://github.com/pearjelly/cliany.site/compare/v0.16.232...v0.16.233
 [0.16.232]: https://github.com/pearjelly/cliany.site/compare/v0.16.231...v0.16.232
 [0.16.231]: https://github.com/pearjelly/cliany.site/compare/v0.16.230...v0.16.231
 [0.16.230]: https://github.com/pearjelly/cliany.site/compare/v0.16.229...v0.16.230

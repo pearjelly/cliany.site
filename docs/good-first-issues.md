@@ -37,7 +37,7 @@
 - **推荐验证命令**：复制上表验证列中的命令，并说明是否需要 `CLIANY_QA_OFFLINE=1`。
 - **相关文件链接**：指向主要文件、fixture、issue 模板或案例 manifest。
 - **复现上下文**：candidate promotion issue 应保留 `Issue Body Template` 里的 `Reproduction Context`，包括 target URL、candidate commands 和 offline validation commands。
-- **证据包命令**：candidate promotion issue 应附上 `cliany-site cases --case-id <id> --evidence-bundle --json` 输出，并优先引用其中的 `primary_next_task` 和 `promotion_command_plan`，方便维护者确认 pending tasks、当前 evidence、首要 case/task/status、下一步动作，以及 adapter package、metadata validation、online smoke 对应的执行命令。
+- **证据包命令**：candidate promotion issue 应附上 `cliany-site cases --case-id <id> --evidence-bundle --json` 输出，并优先引用其中的 `primary_next_task` 和 `promotion_command_plan`，方便维护者确认 pending tasks、当前 evidence、首要 case/task/status、下一步动作，以及 adapter package、metadata validation、online smoke 对应的执行命令。使用 `python scripts/plan_next_iteration.py --issues-dir /tmp/cliany-candidate-issues` 生成 issue artifacts 时，先审阅 README `Candidate Summary` 中的 `Primary Evidence Status` / `Primary Acceptance Criteria`，再创建 GitHub issue。
 - **验收证据**：要求 PR 描述粘贴本地命令结果，文档改动至少包含 `git diff --check`。
 - **明确非目标**：写清不需要真实 LLM key、不要访问第三方站点、不要写入 `~/.cliany-site/` 运行时状态。
 

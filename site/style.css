@@ -653,6 +653,7 @@ html.js .steps-flow.visible .step-connector {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: 2rem;
+  min-width: 0;
   transition: opacity 0.6s ease-out, transform 0.6s ease-out;
 }
 
@@ -723,6 +724,8 @@ html.js .qs-grid.visible .qs-card {
   font-family: var(--font-mono);
   font-size: 0.9em;
   color: var(--color-accent);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .code-block-container {
@@ -730,6 +733,8 @@ html.js .qs-grid.visible .qs-card {
   background: var(--color-bg-dark);
   border-radius: var(--radius-sm);
   padding: 1.5rem;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .code-block {
@@ -737,6 +742,7 @@ html.js .qs-grid.visible .qs-card {
   font-size: 0.9rem;
   color: var(--color-white);
   overflow-x: auto;
+  max-width: 100%;
 }
 
 .copy-btn {

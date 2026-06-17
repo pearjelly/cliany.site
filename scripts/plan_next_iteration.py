@@ -2277,6 +2277,10 @@ def _case_promotion_evidence_markdown(summary: dict[str, Any]) -> str:
         ("blocked_count", summary.get("blocked_count", 0)),
         ("complete_count", summary.get("complete_count", 0)),
         ("primary_next_action", summary.get("primary_next_action") or "-"),
+        (
+            "primary_next_task_acceptance_criteria",
+            summary.get("primary_next_task_acceptance_criteria") or "-",
+        ),
     ]
     lines = [
         "## Candidate Promotion Evidence Summary",
@@ -2288,8 +2292,8 @@ def _case_promotion_evidence_markdown(summary: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
-            "| Case | Task | Status | Evidence | Next Action |",
-            "|------|------|--------|----------|-------------|",
+            "| Case | Task | Status | Evidence | Next Action | Acceptance Criteria |",
+            "|------|------|--------|----------|-------------|---------------------|",
         ]
     )
     tasks = [
@@ -2298,7 +2302,7 @@ def _case_promotion_evidence_markdown(summary: dict[str, Any]) -> str:
         *list(summary.get("complete_tasks") or []),
     ]
     if not tasks:
-        lines.append("| - | - | - | - | - |")
+        lines.append("| - | - | - | - | - | - |")
         return "\n".join(lines)
     for task in tasks:
         lines.append(
@@ -2307,7 +2311,8 @@ def _case_promotion_evidence_markdown(summary: dict[str, Any]) -> str:
             f"`{_format_context_value(task.get('task'))}` | "
             f"`{_format_context_value(task.get('status'))}` | "
             f"{_format_context_value(task.get('evidence') or '-')} | "
-            f"{_format_context_value(task.get('next_action') or '-')} |"
+            f"{_format_context_value(task.get('next_action') or '-')} | "
+            f"{_format_context_value(task.get('acceptance_criteria') or '-')} |"
         )
     return "\n".join(lines)
 
@@ -5280,18 +5285,25 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
         "",
         (
             "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands | "
-            "Primary Evidence Task | Evidence Bundle Primary Next Task | Candidate Package Validation | "
-            "Evidence Bundle | Evidence Bundle JSON |"
+            "Primary Evidence Task | Primary Evidence Status | Primary Acceptance Criteria | "
+            "Evidence Bundle Primary Next Task | Candidate Package Validation | Evidence Bundle | "
+            "Evidence Bundle JSON |"
         ),
-        "|------|------------|------------|--------------------|-----------------------------|-----------------------|-----------------------------------|------------------------------|-----------------|----------------------|",
+        "|------|------------|------------|--------------------|-----------------------------|-----------------------|-------------------------|-----------------------------|-----------------------------------|------------------------------|-----------------|----------------------|",
     ]
     for promotion in promotions:
         primary_task = promotion.promotion_evidence_primary_task.get("task") or "Not declared."
+        primary_status = promotion.promotion_evidence_primary_task.get("status") or "unknown"
+        primary_acceptance = (
+            promotion.promotion_evidence_primary_task.get("acceptance_criteria")
+            or "Not declared."
+        )
         evidence_bundle_primary_task = promotion.evidence_bundle_primary_next_task.get("task") or "Not declared."
         lines.append(
             f"| `{promotion.case_id}` | `{promotion.case_id}.md` | {promotion.target_url or 'Not declared.'} | "
             f"{len(promotion.commands)} | {len(promotion.offline_commands)} | "
-            f"`{primary_task}` | `{evidence_bundle_primary_task}` | "
+            f"`{primary_task}` | `{primary_status}` | {primary_acceptance} | "
+            f"`{evidence_bundle_primary_task}` | "
             f"`{promotion.candidate_package_validation_command}` | "
             f"`{promotion.evidence_bundle_command}` | `{promotion.evidence_bundle_json_command}` |"
         )
