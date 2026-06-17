@@ -469,6 +469,159 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
+    candidate_bundles = [
+        _candidate_evidence_bundle(case)
+        for case in cases
+        if case.get("status") == "candidate"
+    ]
+    candidates: list[dict[str, Any]] = []
+    task_queue: list[dict[str, Any]] = []
+
+    for bundle in candidate_bundles:
+        primary_next_task = bundle.get("primary_next_task")
+        primary_next_task = primary_next_task if isinstance(primary_next_task, dict) else {}
+        case_id = str(bundle.get("case_id") or "")
+        evidence_bundle_command = f"cliany-site cases --case-id {case_id} --evidence-bundle"
+        evidence_bundle_json_command = f"{evidence_bundle_command} --json"
+        candidate_item = {
+            "case_id": case_id,
+            "title": bundle.get("title"),
+            "status": bundle.get("status"),
+            "target_url": bundle.get("target_url"),
+            "adapter_domain": bundle.get("adapter_domain"),
+            "ready_to_promote": bundle.get("ready_to_promote"),
+            "pending_task_count": bundle.get("pending_task_count"),
+            "blocked_task_count": bundle.get("blocked_task_count"),
+            "complete_task_count": bundle.get("complete_task_count"),
+            "incomplete_task_count": bundle.get("incomplete_task_count"),
+            "primary_task": primary_next_task.get("task", ""),
+            "primary_status": primary_next_task.get("status", ""),
+            "primary_command": bundle.get("primary_next_task_command", ""),
+            "primary_command_missing": bundle.get("primary_next_task_command_missing", False),
+            "primary_handoff": bundle.get("primary_next_task_handoff", ""),
+            "primary_acceptance_criteria": bundle.get(
+                "primary_next_task_acceptance_criteria", ""
+            ),
+            "promotion_command_plan_missing_tasks": bundle.get(
+                "promotion_command_plan_missing_tasks", []
+            ),
+            "evidence_bundle_command": evidence_bundle_command,
+            "evidence_bundle_json_command": evidence_bundle_json_command,
+        }
+        candidates.append(candidate_item)
+
+        for task in bundle.get("tasks", []):
+            if task.get("complete"):
+                continue
+            task_queue.append(
+                {
+                    "case_id": case_id,
+                    "task": task.get("task", ""),
+                    "status": task.get("status", ""),
+                    "command": task.get("command", ""),
+                    "command_source": task.get("command_source", ""),
+                    "command_missing": task.get("command_missing", False),
+                    "handoff": task.get("handoff", ""),
+                    "acceptance_criteria": task.get("acceptance_criteria", ""),
+                    "evidence_bundle_command": evidence_bundle_command,
+                    "evidence_bundle_json_command": evidence_bundle_json_command,
+                }
+            )
+
+    primary_next_item = task_queue[0] if task_queue else {}
+    return {
+        "candidate_count": len(candidates),
+        "ready_to_promote_count": sum(1 for item in candidates if item["ready_to_promote"]),
+        "pending_task_count": sum(int(item.get("pending_task_count") or 0) for item in candidates),
+        "blocked_task_count": sum(int(item.get("blocked_task_count") or 0) for item in candidates),
+        "complete_task_count": sum(int(item.get("complete_task_count") or 0) for item in candidates),
+        "incomplete_task_count": len(task_queue),
+        "primary_next_item": primary_next_item,
+        "primary_case_id": primary_next_item.get("case_id", ""),
+        "primary_task": primary_next_item.get("task", ""),
+        "primary_command": primary_next_item.get("command", ""),
+        "primary_handoff": primary_next_item.get("handoff", ""),
+        "primary_acceptance_criteria": primary_next_item.get("acceptance_criteria", ""),
+        "candidates": candidates,
+        "task_queue": task_queue,
+    }
+
+
+def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
+    lines = [
+        "## Candidate promotion plan",
+        "",
+        f"- Candidate cases: `{plan['candidate_count']}`",
+        f"- Ready to promote: `{plan['ready_to_promote_count']}`",
+        f"- Pending tasks: `{plan['pending_task_count']}`",
+        f"- Blocked tasks: `{plan['blocked_task_count']}`",
+        f"- Complete tasks: `{plan['complete_task_count']}`",
+        f"- Incomplete tasks: `{plan['incomplete_task_count']}`",
+    ]
+    primary_next_item = plan.get("primary_next_item")
+    if isinstance(primary_next_item, dict) and primary_next_item.get("case_id"):
+        lines.extend(
+            [
+                "",
+                "## Primary next item",
+                f"- Case: `{primary_next_item['case_id']}`",
+                f"- Task: `{primary_next_item['task']}`",
+                f"- Status: `{primary_next_item['status']}`",
+                f"- Command: `{primary_next_item.get('command') or 'Not declared.'}`",
+                f"- Handoff: {primary_next_item.get('handoff') or 'No handoff declared.'}",
+                (
+                    "- Acceptance criteria: "
+                    f"{primary_next_item.get('acceptance_criteria') or 'Not declared.'}"
+                ),
+                (
+                    "- Evidence bundle JSON: "
+                    f"`{primary_next_item['evidence_bundle_json_command']}`"
+                ),
+            ]
+        )
+    elif not plan.get("candidate_count"):
+        lines.extend(["", "No candidate cases matched the current filters."])
+    else:
+        lines.extend(["", "All matched candidate tasks are complete."])
+
+    lines.extend(["", "## Candidate queue"])
+    for candidate in plan.get("candidates", []):
+        command = candidate.get("primary_command") or "Not declared."
+        lines.extend(
+            [
+                f"- `{candidate['case_id']}`",
+                f"  - target: {candidate.get('target_url')}",
+                f"  - ready_to_promote: `{str(candidate.get('ready_to_promote')).lower()}`",
+                (
+                    f"  - primary: `{candidate.get('primary_task') or '-'}` "
+                    f"({candidate.get('primary_status') or '-'})"
+                ),
+                f"  - command: `{command}`",
+                f"  - handoff: {candidate.get('primary_handoff') or 'No handoff declared.'}",
+                (
+                    "  - acceptance: "
+                    f"{candidate.get('primary_acceptance_criteria') or 'Not declared.'}"
+                ),
+                f"  - evidence_bundle_json: `{candidate['evidence_bundle_json_command']}`",
+            ]
+        )
+
+    lines.extend(["", "## Incomplete task queue"])
+    for item in plan.get("task_queue", []):
+        command = item.get("command") or "Not declared."
+        lines.extend(
+            [
+                f"- `{item['case_id']}/{item['task']}` ({item['status']})",
+                f"  - command: `{command}`",
+                f"  - command_missing: `{str(item.get('command_missing', False)).lower()}`",
+                f"  - handoff: {item.get('handoff') or 'No handoff declared.'}",
+                f"  - acceptance: {item.get('acceptance_criteria') or 'Not declared.'}",
+            ]
+        )
+    return "\n".join(lines)
+
+
 def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
     status_counts: Counter[str] = Counter()
     task_status_counts: dict[str, Counter[str]] = {task: Counter() for task in PROMOTION_TASKS}
@@ -678,6 +831,7 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
 @click.option("--detail", is_flag=True, default=False, help="显示 promotion 和 validation 详情")
 @click.option("--issue-template", is_flag=True, default=False, help="为 candidate 案例输出 GitHub issue body")
 @click.option("--evidence-bundle", is_flag=True, default=False, help="为 candidate 案例输出本地证据包")
+@click.option("--promotion-plan", is_flag=True, default=False, help="输出 candidate 晋级队列和首要证据任务")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")
 @click.pass_context
 def cases_cmd(
@@ -687,6 +841,7 @@ def cases_cmd(
     detail: bool,
     issue_template: bool,
     evidence_bundle: bool,
+    promotion_plan: bool,
     json_mode: bool | None,
 ) -> None:
     """列出内置真实案例和候选工作流"""
@@ -719,12 +874,12 @@ def cases_cmd(
         return
 
     filtered_cases = [case for case in catalog_cases if status is None or case.get("status") == status]
-    if issue_template and evidence_bundle:
+    if sum(1 for flag in (issue_template, evidence_bundle, promotion_plan) if flag) > 1:
         result = err(
             "cases",
             ErrorCode.E_INVALID_PARAM,
-            "--issue-template 与 --evidence-bundle 不能同时使用",
-            hint="二选一：生成 issue body 或生成 evidence bundle。",
+            "--issue-template、--evidence-bundle 与 --promotion-plan 不能同时使用",
+            hint="三选一：生成 issue body、生成 evidence bundle，或输出 candidate promotion plan。",
             details={"case_id": case_id, "status_filter": status},
         )
         print_response(result, effective_json_mode)
@@ -766,6 +921,7 @@ def cases_cmd(
     rendered_issue_template = ""
     rendered_issue_template_primary_task: dict[str, Any] = {}
     rendered_evidence_bundle: dict[str, Any] = {}
+    rendered_promotion_plan: dict[str, Any] = {}
     if issue_template or evidence_bundle:
         selected_case = filtered_cases[0]
         if selected_case.get("status") != "candidate":
@@ -794,6 +950,8 @@ def cases_cmd(
             rendered_issue_template_primary_task = _candidate_issue_primary_task(evidence)
         if evidence_bundle:
             rendered_evidence_bundle = _candidate_evidence_bundle(selected_case)
+    if promotion_plan:
+        rendered_promotion_plan = _candidate_promotion_plan(filtered_cases)
 
     data = {
         "source_path": str(source_path),
@@ -808,6 +966,8 @@ def cases_cmd(
         data["issue_template_primary_task"] = rendered_issue_template_primary_task
     if rendered_evidence_bundle:
         data["evidence_bundle"] = rendered_evidence_bundle
+    if rendered_promotion_plan:
+        data["promotion_plan"] = rendered_promotion_plan
     result = ok(command="cases", data=data, source="builtin")
 
     if effective_json_mode:
@@ -818,5 +978,8 @@ def cases_cmd(
         return
     if rendered_evidence_bundle:
         click.echo(_candidate_evidence_bundle_markdown(rendered_evidence_bundle))
+        return
+    if rendered_promotion_plan:
+        click.echo(_candidate_promotion_plan_markdown(rendered_promotion_plan))
         return
     _print_human_cases(data, detail=include_detail)

@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+## [0.16.234] - 2026-06-17
+
+### Added
+- `cliany-site cases --promotion-plan` 现在输出 candidate 晋级队列，汇总每个候选案例的首要 evidence task、执行命令、handoff、验收标准和 evidence bundle 命令，维护者不用逐个展开单案例 bundle 也能安排真实案例晋级工作。
+- `cliany-site cases --json --promotion-plan` 新增机器可读 `promotion_plan`，包含全局 `primary_next_item`、每个 candidate 的 primary task 摘要，以及所有未完成 promotion task 的 `task_queue`。
+- README、README.zh、cases README 和官网 quickstart 现在同步说明 `--promotion-plan` 可作为 candidate 晋级队列入口。
+- 新增 `docs/releases/v0.16.234-draft.md`，把本版 patch 聚焦到 candidate promotion queue 的可执行交接。
+
 ## [0.16.233] - 2026-06-17
 
 ### Added
@@ -2164,7 +2172,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.233...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.234...HEAD
+[0.16.234]: https://github.com/pearjelly/cliany.site/compare/v0.16.233...v0.16.234
 [0.16.233]: https://github.com/pearjelly/cliany.site/compare/v0.16.232...v0.16.233
 [0.16.232]: https://github.com/pearjelly/cliany.site/compare/v0.16.231...v0.16.232
 [0.16.231]: https://github.com/pearjelly/cliany.site/compare/v0.16.230...v0.16.231

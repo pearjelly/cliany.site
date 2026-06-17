@@ -119,6 +119,8 @@ cliany-site doctor --json
 
 # Discover maintained real demo cases
 cliany-site cases --json
+cliany-site cases --status candidate --promotion-plan
+cliany-site cases --json --status candidate --promotion-plan
 cliany-site cases --case-id pypi-project-search --json
 cliany-site cases --case-id pypi-project-search --issue-template
 cliany-site cases --case-id pypi-project-search --evidence-bundle
@@ -249,7 +251,7 @@ async with ClanySite() as cs:
 
 The following adapters are available as downloadable assets on [GitHub Release v0.14.1](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.1).
 The maintained case index lives in [cases/README.md](cases/README.md) and [cases/manifest.json](cases/manifest.json).
-Use `cliany-site cases --json` to inspect active demos, candidate workflows, offline validation commands, and candidate promotion next actions from the CLI; `promotion_evidence_summary.primary_next_task` points automation at the first candidate task to advance, while `promotion_evidence_summary.primary_next_task_acceptance_criteria` states the proof required for that task. Use `cliany-site cases --case-id pypi-project-search --json` to open one case with validation and promotion details; omit `--json` for a copy-friendly human handoff with Promotion Tasks. Add `--issue-template` to print a GitHub issue body for a candidate promotion task, including Acceptance Criteria for each evidence task; combine it with `--json` to also read `issue_template_primary_task` without parsing Markdown. Add `--evidence-bundle` to print a structured local evidence checklist; combine it with `--json` for a machine-readable evidence bundle, including `promotion_command_plan` for adapter package, metadata validation, and online smoke commands plus `acceptance_criteria` for the proof each task must attach. Use `python scripts/plan_next_iteration.py --issues-dir /tmp/cliany-candidate-issues` to generate reviewable candidate issue artifacts; the artifacts README shows `Primary Evidence Status`, `Primary Acceptance Criteria`, and `primary_next_task_acceptance_criteria` before maintainers create issues.
+Use `cliany-site cases --json` to inspect active demos, candidate workflows, offline validation commands, and candidate promotion next actions from the CLI; `promotion_evidence_summary.primary_next_task` points automation at the first candidate task to advance, while `promotion_evidence_summary.primary_next_task_acceptance_criteria` states the proof required for that task. Add `--promotion-plan` to print the candidate promotion queue across all matched candidates; combine it with `--json` to read `promotion_plan.primary_next_item`, per-candidate primary tasks, and the incomplete `task_queue`. Use `cliany-site cases --case-id pypi-project-search --json` to open one case with validation and promotion details; omit `--json` for a copy-friendly human handoff with Promotion Tasks. Add `--issue-template` to print a GitHub issue body for a candidate promotion task, including Acceptance Criteria for each evidence task; combine it with `--json` to also read `issue_template_primary_task` without parsing Markdown. Add `--evidence-bundle` to print a structured local evidence checklist; combine it with `--json` for a machine-readable evidence bundle, including `promotion_command_plan` for adapter package, metadata validation, and online smoke commands plus `acceptance_criteria` for the proof each task must attach. Use `python scripts/plan_next_iteration.py --issues-dir /tmp/cliany-candidate-issues` to generate reviewable candidate issue artifacts; the artifacts README shows `Primary Evidence Status`, `Primary Acceptance Criteria`, and `primary_next_task_acceptance_criteria` before maintainers create issues.
 
 ### SuiteCRM Demo (Enterprise CRM)
 ```bash
@@ -351,7 +353,7 @@ cliany-site market rollback github.com
 | `login <url>` | `[--json]` | Open URL to wait for login and save session. |
 | `explore <url> <workflow>` | `[--json] [--interactive] [--extend <domain>] [--record]` | Explore workflow and generate adapter. |
 | `list` | `[--json]` | List generated adapters. |
-| `cases` | `[--case-id <id>] [--status <status>] [--detail] [--issue-template] [--evidence-bundle] [--json]` | List maintained real demo cases and candidate workflows. |
+| `cases` | `[--case-id <id>] [--status <status>] [--detail] [--issue-template] [--evidence-bundle] [--promotion-plan] [--json]` | List maintained real demo cases and candidate workflows. |
 | `verify <domain>` | `[--json]` | Statically verify adapter schema, signatures, and dependency integrity. |
 | `migrate` | `[--json] [--dry-run]` | Migrate all legacy adapters to schema v3. |
 | `replay <domain>` | `[--session <id>] [--step]` | Replay exploration recording with screenshots and actions. |

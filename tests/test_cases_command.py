@@ -592,6 +592,77 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "cliany-site cases" not in result.output
 
 
+def test_cases_command_promotion_plan_json(tmp_home):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["--json", "cases", "--status", "candidate", "--promotion-plan"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    plan = payload["data"]["promotion_plan"]
+    assert plan["candidate_count"] >= 3
+    assert plan["ready_to_promote_count"] == 0
+    assert plan["pending_task_count"] >= 9
+    assert plan["incomplete_task_count"] >= 9
+    assert plan["primary_case_id"] == "pypi-project-search"
+    assert plan["primary_task"] == "adapter_package"
+    assert plan["primary_command"].startswith('cliany-site explore "https://pypi.org"')
+    assert plan["primary_handoff"].startswith('Run `cliany-site explore "https://pypi.org"')
+    assert plan["primary_acceptance_criteria"].startswith("Attach the generated")
+    assert plan["primary_next_item"] == plan["task_queue"][0]
+    assert plan["task_queue"][0] == {
+        "case_id": "pypi-project-search",
+        "task": "adapter_package",
+        "status": "pending",
+        "command": (
+            'cliany-site explore "https://pypi.org" '
+            '"search Python packages for cliany-site and list project names" --json'
+        ),
+        "command_source": "commands.explore",
+        "command_missing": False,
+        "handoff": plan["primary_handoff"],
+        "acceptance_criteria": plan["primary_acceptance_criteria"],
+        "evidence_bundle_command": "cliany-site cases --case-id pypi-project-search --evidence-bundle",
+        "evidence_bundle_json_command": (
+            "cliany-site cases --case-id pypi-project-search --evidence-bundle --json"
+        ),
+    }
+    assert plan["candidates"][0]["case_id"] == "pypi-project-search"
+    assert plan["candidates"][0]["primary_task"] == "adapter_package"
+    assert plan["candidates"][0]["primary_status"] == "pending"
+    assert plan["candidates"][0]["evidence_bundle_json_command"].endswith(
+        "--evidence-bundle --json"
+    )
+
+
+def test_cases_command_promotion_plan_human_outputs_queue(tmp_home):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["cases", "--status", "candidate", "--promotion-plan"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "## Candidate promotion plan" in result.output
+    assert "## Primary next item" in result.output
+    assert "- Case: `pypi-project-search`" in result.output
+    assert "- Task: `adapter_package`" in result.output
+    assert (
+        "Evidence bundle JSON: "
+        "`cliany-site cases --case-id pypi-project-search --evidence-bundle --json`"
+        in result.output
+    )
+    assert "## Candidate queue" in result.output
+    assert "ready_to_promote: `false`" in result.output
+    assert "## Incomplete task queue" in result.output
+    assert "`pypi-project-search/adapter_package` (pending)" in result.output
+    assert "acceptance: Attach the generated" in result.output
+
+
 def test_cases_command_issue_template_requires_case_id(tmp_home):
     runner = CliRunner()
     result = runner.invoke(cli, ["--json", "cases", "--issue-template"], catch_exceptions=True)
@@ -635,7 +706,35 @@ def test_cases_command_rejects_issue_template_and_evidence_bundle_together(tmp_h
     payload = json.loads(result.output)
     assert payload["ok"] is False
     assert payload["error"]["code"] == "E_INVALID_PARAM"
-    assert "--issue-template 与 --evidence-bundle 不能同时使用" in payload["error"]["message"]
+    assert (
+        "--issue-template、--evidence-bundle 与 --promotion-plan 不能同时使用"
+        in payload["error"]["message"]
+    )
+
+
+def test_cases_command_rejects_promotion_plan_with_other_renderers(tmp_home):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "--json",
+            "cases",
+            "--case-id",
+            "pypi-project-search",
+            "--evidence-bundle",
+            "--promotion-plan",
+        ],
+        catch_exceptions=True,
+    )
+
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    assert payload["ok"] is False
+    assert payload["error"]["code"] == "E_INVALID_PARAM"
+    assert (
+        "--issue-template、--evidence-bundle 与 --promotion-plan 不能同时使用"
+        in payload["error"]["message"]
+    )
 
 
 def test_cases_command_issue_template_rejects_active_case(tmp_home):

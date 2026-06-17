@@ -62,6 +62,8 @@
 
 Evidence bundle 的 JSON 会为每个任务输出 `acceptance_criteria`，并在顶层提供同名任务到验收条件的映射。`primary_next_task_acceptance_criteria` 会把当前首要任务需要贴的证据单独抬出来，避免自动化只知道要运行哪条命令，却不知道应该把什么结果作为完成证据。人类 Markdown 输出也会展示 `Acceptance criteria` 小节，方便直接复制到 GitHub issue 评论。
 
+如果要一次查看所有 candidate 的可执行晋级队列，可以运行 `cliany-site cases --status candidate --promotion-plan`。该输出会按 manifest 顺序列出每个 candidate 的首要 task、命令、handoff、acceptance 和 evidence bundle JSON 命令；追加 `--json` 后可读取 `promotion_plan.primary_next_item`、`promotion_plan.candidates` 和未完成任务的 `promotion_plan.task_queue`，用于维护脚本或 issue bot 排队处理真实证据。
+
 ## 维护规则
 
 - 新增真实 demo 时，先更新 `manifest.json`，再补充 README/官网展示。
