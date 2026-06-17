@@ -19,6 +19,21 @@ class ExplorerError(ClanySiteError):
     """工作流探索（LLM 交互 / AXTree 采集）相关异常"""
 
 
+class LlmUnavailableError(ExplorerError):
+    """LLM 上游服务不可用、限流或网关错误"""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int | None = None,
+        retryable: bool = True,
+    ) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+        self.retryable = retryable
+
+
 class CodegenError(ClanySiteError):
     """代码生成（adapter 输出 / 模板渲染）相关异常"""
 
@@ -94,6 +109,10 @@ ERROR_FIX_HINTS: dict[str, str] = {
     "E_PARSE_FAILED": "解析失败：页面结构可能已变更；尝试 --heal 或重新 explore 该域。",
     "E_EMPTY_RESULT": "命令期望返回非空列表，但提取结果为空；可能是登录态过期、过滤条件过严或选择器失配。",
     "E_LLM_DISABLED": "请设置 CLIANY_ANTHROPIC_API_KEY 或 CLIANY_OPENAI_API_KEY 环境变量",
+    "E_LLM_UNAVAILABLE": (
+        "LLM 上游服务暂不可用或限流；请稍后重试，或切换 CLIANY_LLM_PROVIDER / "
+        "CLIANY_OPENAI_BASE_URL。"
+    ),
     "E_LEGACY_ADAPTER": "请运行 cliany-site migrate --json 升级旧版 adapter",
     "E_VERIFY_STATIC": "请运行 cliany-site verify <domain> --json 查看详细验证失败原因",
     "E_VERIFY_SMOKE": "请先运行 cliany-site verify <domain> --json，查看静态校验结果后再重试",

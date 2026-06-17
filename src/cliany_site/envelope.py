@@ -42,6 +42,7 @@ class ErrorCode:
     E_PARSE_FAILED = "E_PARSE_FAILED"
     E_EMPTY_RESULT = "E_EMPTY_RESULT"
     E_LLM_DISABLED = "E_LLM_DISABLED"
+    E_LLM_UNAVAILABLE = "E_LLM_UNAVAILABLE"
     E_LEGACY_ADAPTER = "E_LEGACY_ADAPTER"
     E_VERIFY_STATIC = "E_VERIFY_STATIC"
     E_VERIFY_SMOKE = "E_VERIFY_SMOKE"
@@ -74,6 +75,7 @@ class ErrorCode:
             CdpError,
             CodegenError,
             ExplorerError,
+            LlmUnavailableError,
             SecurityError,
             SessionError,
             WorkflowError,
@@ -82,6 +84,7 @@ class ErrorCode:
         mapping = {
             CdpError: cls.E_CDP_UNAVAILABLE,
             SessionError: cls.E_SESSION_EXPIRED,
+            LlmUnavailableError: cls.E_LLM_UNAVAILABLE,
             ExplorerError: cls.E_LLM_DISABLED,
             CodegenError: cls.E_UNKNOWN,
             AdapterLoadError: cls.E_LEGACY_ADAPTER,

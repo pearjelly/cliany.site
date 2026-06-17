@@ -457,6 +457,7 @@ cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json</code
             <h3 class="qs-title" data-i18n="qs.step4">Step 4: Generate Your Own</h3>
             <div class="code-block-container">
               <pre class="code-block"><code># Configure LLM only when you are ready to explore
+# Retryable provider outages return E_LLM_UNAVAILABLE
 export CLIANY_LLM_PROVIDER=anthropic
 export CLIANY_ANTHROPIC_API_KEY="sk-ant-..."
 cliany-site explore "https://github.com" "search repos" --json</code></pre>

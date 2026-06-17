@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+## [0.16.235] - 2026-06-17
+
+### Added
+- `explore --json` 现在会把可重试的 LLM 上游网关、限流和服务不可用故障归类为 `E_LLM_UNAVAILABLE`，并在 `details` 中返回 `retryable`、`status_code` 和 `phase`，方便维护自动化决定是否稍后重试或切换 provider。
+- LLM 重试日志和最终错误信封现在会清洗上游 HTML 网关页，只保留 `502 Bad Gateway` 等简短原因，避免 JSON 输出和日志被原始 HTML 污染。
+- README、README.zh 和官网文档现在说明 `E_LLM_UNAVAILABLE` 是 `explore` 阶段的可重试 LLM 上游故障，不代表 adapter 或 AXTree selector 失效。
+- 新增 `docs/releases/v0.16.235-draft.md`，记录本版从真实 PyPI candidate 探索 502 故障中提炼出的错误信封加固。
+
 ## [0.16.234] - 2026-06-17
 
 ### Added
@@ -2172,7 +2180,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.234...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.235...HEAD
+[0.16.235]: https://github.com/pearjelly/cliany.site/compare/v0.16.234...v0.16.235
 [0.16.234]: https://github.com/pearjelly/cliany.site/compare/v0.16.233...v0.16.234
 [0.16.233]: https://github.com/pearjelly/cliany.site/compare/v0.16.232...v0.16.233
 [0.16.232]: https://github.com/pearjelly/cliany.site/compare/v0.16.231...v0.16.232

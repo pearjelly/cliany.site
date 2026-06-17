@@ -63,6 +63,7 @@ def explore_cmd(
             save_adapter,
         )
         from cliany_site.codegen.merger import AdapterMerger
+        from cliany_site.errors import LlmUnavailableError
         from cliany_site.explorer.engine import (
             WorkflowExplorer,
             _load_dotenv,
@@ -88,10 +89,14 @@ def explore_cmd(
                 )
             _gate = feature_gate("explore", _snap)
             if not _gate.allowed:
+                message = (
+                    "Obscura provider 暂不支持 explore（需要 AXTree/accessibility）。"
+                    "请改用 Chrome（unset CLIANY_BROWSER_PROVIDER）或参阅文档。"
+                )
                 return err(
                     "explore",
                     ErrorCode.E_MISSING_CAPABILITY,
-                    "Obscura provider 暂不支持 explore（需要 AXTree/accessibility）。请改用 Chrome（unset CLIANY_BROWSER_PROVIDER）或参阅文档。",
+                    message,
                     hint="Obscura 当前缺少 AXTree/accessibility 能力，无法执行 explore。",
                     details={
                         "suggested_action": "unset CLIANY_BROWSER_PROVIDER",
@@ -181,6 +186,18 @@ def explore_cmd(
                 cdp_url=cdp_url, headless=headless, interactive=interactive, extend_domain=extend
             )
             explore_result = await explorer.explore(url, workflow_description, progress=reporter, record=record)
+        except LlmUnavailableError as e:
+            return err(
+                "explore",
+                ErrorCode.E_LLM_UNAVAILABLE,
+                f"LLM 上游暂不可用: {e}",
+                hint="请稍后重试；如果持续失败，请切换 CLIANY_LLM_PROVIDER 或检查 CLIANY_OPENAI_BASE_URL。",
+                details={
+                    "retryable": e.retryable,
+                    "status_code": e.status_code,
+                    "phase": "llm_invoke",
+                },
+            )
         except ValueError as e:
             if "CLIANY_QA_FAKE_LLM_RESPONSES" in str(e):
                 return err(

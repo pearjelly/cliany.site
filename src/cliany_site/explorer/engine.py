@@ -6,6 +6,7 @@ import logging
 import os
 import re
 import time
+import warnings
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -18,8 +19,10 @@ from cliany_site.browser.axtree import capture_axtree, serialize_axtree
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.browser.screenshot import capture_screenshot
 from cliany_site.browser.selector import format_selector_candidates_section
+from cliany_site.capability import sniff_api_endpoints
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
 from cliany_site.config import get_config
+from cliany_site.errors import LlmUnavailableError
 from cliany_site.explorer.models import (
     ActionStep,
     CommandSuggestion,
@@ -35,9 +38,6 @@ from cliany_site.explorer.prompts import (
 )
 from cliany_site.extract_writer import save_extract_markdown
 from cliany_site.progress import NullProgressReporter, ProgressReporter
-
-import warnings
-from cliany_site.capability import sniff_api_endpoints
 
 logger = logging.getLogger(__name__)
 
@@ -234,6 +234,7 @@ def _get_llm(role: str = "explore"):
         if not fake_path:
             raise ValueError("CLIANY_QA_OFFLINE=1 requires CLIANY_QA_FAKE_LLM_RESPONSES")
         import json as _json
+
         from cliany_site.testing.fake_llm import FakeChatModel
         return FakeChatModel(responses=_json.loads(Path(fake_path).read_text()))
 
@@ -323,14 +324,67 @@ def _parse_llm_response(text: str) -> dict:
 _RETRYABLE_STATUS_CODES = frozenset({429, 500, 502, 503, 504})
 
 
-def _is_retryable_error(exc: Exception) -> bool:
+def _extract_status_code(exc: Exception) -> int | None:
     for target in (exc, exc.__cause__):
         if target is None:
             continue
         status_code = getattr(target, "status_code", None)
-        if isinstance(status_code, int) and status_code in _RETRYABLE_STATUS_CODES:
-            return True
-    return False
+        if isinstance(status_code, int):
+            return status_code
+        response = getattr(target, "response", None)
+        response_status = getattr(response, "status_code", None)
+        if isinstance(response_status, int):
+            return response_status
+    return None
+
+
+def _looks_like_llm_gateway_error(message: str) -> bool:
+    lowered = message.lower()
+    return any(
+        marker in lowered
+        for marker in (
+            "bad gateway",
+            "gateway timeout",
+            "service unavailable",
+            "rate limit",
+            "too many requests",
+            "connection reset",
+            "connection refused",
+            "timed out",
+            "<html",
+        )
+    )
+
+
+def _llm_error_summary(exc: Exception) -> str:
+    raw_message = str(exc).strip()
+    status_code = _extract_status_code(exc)
+
+    title_match = re.search(r"<title>\s*([^<]+?)\s*</title>", raw_message, flags=re.IGNORECASE | re.DOTALL)
+    if title_match:
+        title = re.sub(r"\s+", " ", title_match.group(1)).strip()
+        if status_code is not None and str(status_code) not in title:
+            return f"LLM upstream returned HTTP {status_code}: {title}"
+        return f"LLM upstream returned {title}"
+
+    if status_code is not None:
+        return f"LLM upstream returned HTTP {status_code}"
+
+    if _looks_like_llm_gateway_error(raw_message):
+        compact = re.sub(r"\s+", " ", raw_message)
+        compact = re.sub(r"<[^>]+>", " ", compact)
+        compact = re.sub(r"\s+", " ", compact).strip()
+        if compact:
+            return f"LLM upstream unavailable: {compact[:160]}"
+
+    return "LLM upstream unavailable after retries"
+
+
+def _is_retryable_error(exc: Exception) -> bool:
+    status_code = _extract_status_code(exc)
+    if isinstance(status_code, int) and status_code in _RETRYABLE_STATUS_CODES:
+        return True
+    return _looks_like_llm_gateway_error(str(exc))
 
 
 async def _invoke_llm_with_retry(
@@ -350,14 +404,21 @@ async def _invoke_llm_with_retry(
                 messages = [prompt] if not isinstance(prompt, list) else prompt
                 return await llm.ainvoke(messages)
         except Exception as exc:
-            if not _is_retryable_error(exc) or attempt >= max_attempts - 1:
+            retryable = _is_retryable_error(exc)
+            if retryable and attempt >= max_attempts - 1:
+                raise LlmUnavailableError(
+                    _llm_error_summary(exc),
+                    status_code=_extract_status_code(exc),
+                    retryable=True,
+                ) from exc
+            if not retryable:
                 raise
             delay = base_delay * (backoff_factor**attempt)
             logger.warning(
                 "LLM 调用失败 (第 %d/%d 次): %s — %.1f 秒后重试",
                 attempt + 1,
                 max_attempts,
-                exc,
+                _llm_error_summary(exc),
                 delay,
             )
             await asyncio.sleep(delay)
@@ -959,7 +1020,7 @@ class WorkflowExplorer:
         except Exception as _sniff_err:
             warnings.warn(f"capability sniffing failed: {_sniff_err}", UserWarning, stacklevel=2)
             result.api_endpoints = []
-        
+
         result.capability = {
             "mode": "auto",
             "endpoints_count": len(result.api_endpoints),

@@ -28,6 +28,7 @@ cliany-site is built on browser-use and Large Language Models (LLMs), enabling f
 - **Zero-Intrusion Exploration** — Chrome CDP captures page AXTree without script injection.
 - **LLM-Driven Code Generation** — Claude / GPT-4o understands page semantics and generates Python CLI commands automatically.
 - **LLM Call Retry Mechanism** — Automatic retries during network fluctuations to improve exploration success rates.
+- **Retryable LLM Outage Signal** — `explore --json` reports gateway, rate-limit, or service outages as `E_LLM_UNAVAILABLE` with sanitized retry details instead of raw upstream HTML.
 - **Unified JSON Envelope** — All commands support `--json`, outputting a machine-readable `{ok, data, error, meta}` envelope (v1).
 - **Persistent Sessions** — Maintains Cookie / LocalStorage login states across commands.
 - **Dynamic Adapter Loading** — Automatically registers CLI subcommands by domain, allowing for easy expansion.
@@ -158,6 +159,8 @@ export CLIANY_OPENAI_API_KEY="sk-..."
 ```
 
 Also supports `.env` file configuration. Search order: `~/.config/cliany-site/.env` → `~/.cliany-site/.env` → project directory `.env` → environment variables.
+
+If `explore --json` returns `E_LLM_UNAVAILABLE`, the LLM provider returned a retryable upstream outage such as `502 Bad Gateway`, rate limiting, or service unavailable. The JSON envelope includes `details.retryable`, `details.status_code`, and `details.phase`; retry later or switch `CLIANY_LLM_PROVIDER` / `CLIANY_OPENAI_BASE_URL`. This does not mean the generated adapter or AXTree selector map is broken.
 
 ### Experimental: Obscura Browser Provider
 

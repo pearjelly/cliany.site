@@ -56,13 +56,14 @@
     aside nav a { display: block; padding: 0.3rem 0; color: var(--muted); font-size: 0.875rem; }
     aside nav a:hover { color: var(--accent); text-decoration: none; }
     aside nav .section-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 1rem 0 0.25rem; }
+    main { min-width: 0; }
     h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.25; }
     h2 { font-size: 1.4rem; font-weight: 600; margin: 2.5rem 0 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border); }
     h3 { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.5rem; }
     p { margin-bottom: 1rem; }
     pre { background: var(--dark); color: #D3C6AA; padding: 1rem 1.25rem; border-radius: var(--radius); overflow-x: auto; margin: 1rem 0; font-family: var(--mono); font-size: 0.875rem; line-height: 1.6; }
-    code { font-family: var(--mono); font-size: 0.875em; background: var(--surface); padding: 0.1em 0.35em; border-radius: 4px; }
-    pre code { background: none; padding: 0; font-size: inherit; }
+    code { font-family: var(--mono); font-size: 0.875em; background: var(--surface); padding: 0.1em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+    pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
     table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.875rem; }
     th { background: var(--surface); font-weight: 600; text-align: left; padding: 0.6rem 0.75rem; border: 1px solid var(--border); }
     td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); }
@@ -129,6 +130,7 @@ export CLIANY_ANTHROPIC_API_KEY="sk-ant-..."
 export CLIANY_LLM_PROVIDER=openai
 export CLIANY_OPENAI_API_KEY="sk-..."</code></pre>
         <p>也可以写入 <code>.env</code> 文件，查找顺序：<code>~/.config/cliany-site/.env</code> → <code>~/.cliany-site/.env</code> → 项目目录 <code>.env</code> → 系统环境变量。</p>
+        <p><code>explore --json</code> 遇到 LLM 网关、限流或服务暂不可用时会返回 <code>E_LLM_UNAVAILABLE</code>，并在 <code>details.retryable</code>、<code>details.status_code</code> 和 <code>details.phase</code> 中给出可重试上下文；错误消息会清洗原始 HTML 网关页。</p>
 
         <h2 id="quickstart">10 分钟成功路径</h2>
         <p>首次运行先验证一个真实只读 demo adapter；不需要先配置 LLM key。跑通后再进入 <a href="#config">配置 LLM</a> 和 <a href="#explore">explore</a>。</p>

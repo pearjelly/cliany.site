@@ -1,23 +1,27 @@
 import json
-import pytest
-from typing import Any
 
-from cliany_site.envelope import ok, err, ErrorCode, Envelope
-from cliany_site.errors import CdpError, SessionError, ExplorerError, ERROR_FIX_HINTS
+import pytest
+
+from cliany_site.envelope import ErrorCode, err, ok
+from cliany_site.errors import ERROR_FIX_HINTS, CdpError, ExplorerError, LlmUnavailableError, SessionError
 
 try:
     import jsonschema
+
     HAS_JSONSCHEMA = True
 except ImportError:
     HAS_JSONSCHEMA = False
 
 if HAS_JSONSCHEMA:
-    with open("schemas/envelope.v1.json", "r", encoding="utf-8") as f:
+    with open("schemas/envelope.v1.json", encoding="utf-8") as f:
         SCHEMA = json.load(f)
     validate = jsonschema.validate
 else:
     SCHEMA = None
-    validate = lambda data, schema: None  # noop
+
+    def validate(data, schema):
+        return None
+
 
 def test_ok_returns_valid_envelope():
     """ok() 返回符合 schema 的 Envelope"""
@@ -75,6 +79,11 @@ def test_from_exception_explorer_error():
     code = ErrorCode.from_exception(ExplorerError("test"))
     assert code == ErrorCode.E_LLM_DISABLED
 
+def test_from_exception_llm_unavailable_error():
+    """from_exception(LlmUnavailableError()) 返回 E_LLM_UNAVAILABLE"""
+    code = ErrorCode.from_exception(LlmUnavailableError("test"))
+    assert code == ErrorCode.E_LLM_UNAVAILABLE
+
 def test_from_exception_unknown_error():
     """from_exception(RuntimeError()) 返回 E_UNKNOWN"""
     code = ErrorCode.from_exception(RuntimeError("test"))
@@ -104,13 +113,13 @@ def test_schema_validation_fails_on_missing_ok():
     """schema 校验：缺 ok 字段的 dict 应校验失败"""
     if not HAS_JSONSCHEMA:
         pytest.skip("jsonschema not available")
-    
+
     invalid_envelope = {
         "version": "1",
         "command": "test",
         "data": None,
         "error": None,
-        "meta": {"duration_ms": 0, "source": "builtin"}
+        "meta": {"duration_ms": 0, "source": "builtin"},
     }
     with pytest.raises(jsonschema.ValidationError):
         validate(invalid_envelope, SCHEMA)
@@ -133,6 +142,7 @@ def test_err_with_custom_source():
         ErrorCode.E_SESSION_EXPIRED,
         ErrorCode.E_SELECTOR_NOT_FOUND,
         ErrorCode.E_LLM_DISABLED,
+        ErrorCode.E_LLM_UNAVAILABLE,
         ErrorCode.E_LEGACY_ADAPTER,
         ErrorCode.E_VERIFY_STATIC,
         ErrorCode.E_VERIFY_SMOKE,
