@@ -7,9 +7,6 @@
 
 ## [Unreleased]
 
-### Added
-- `cliany-site cases --case-id <id> --evidence-bundle --json` 现在把每个 promotion task 和对应可执行命令绑定到 `tasks` / `task_handoffs`，并输出 `primary_next_task_command*` 与 `primary_next_task_handoff`，让贡献者和自动化不用重新拼接 evidence、command plan 与下一步说明。
-
 ## [0.16.227] - 2026-06-16
 
 ### Added
@@ -106,6 +103,7 @@
 - `cliany-site cases --case-id <id> --evidence-bundle --json` 现在输出 `candidate_package_validation_command`，人类 evidence bundle 也展示 `Candidate package validation` 小节，让候选包 evidence 命令无需从自然语言里解析。
 - `scripts/plan_next_iteration.py` 的 `candidate_promotions`、`issue-metadata.json` 和 artifacts `README.md` 现在也输出 `candidate_package_validation_command`，让候选包 evidence 命令贯穿周计划和 issue artifacts。
 - Candidate issue body 和 `cliany-site cases --case-id <id> --issue-template` 现在在 `Validation Evidence` 中直接展示 candidate package validation command，减少创建 issue 后的命令查找。
+- `cliany-site cases --case-id <id> --evidence-bundle --json` 现在把每个 promotion task 和对应可执行命令绑定到 `tasks` / `task_handoffs`，并输出 `primary_next_task_command*` 与 `primary_next_task_handoff`，让贡献者和自动化不用重新拼接 evidence、command plan 与下一步说明。
 - Candidate issue artifacts 的 review checklist 现在要求核对 `issue-metadata.json` 中的 `candidate_package_validation_command`，避免创建 issue 前漏审候选包验证命令。
 - README / README.zh 现在用 `promotion_evidence_summary.primary_next_task` 指引自动化读取首要 candidate 任务，避免新用户继续参考旧的 `primary_task_detail` 字段。
 - `cliany-site cases --case-id <id> --evidence-bundle --json` 现在输出 `primary_next_task`，并在人类证据包里展示 `Primary next task`，让脚本和维护者无需重建 pending/blocked/incomplete 优先级规则。
