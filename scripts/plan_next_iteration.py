@@ -526,6 +526,8 @@ class CandidatePromotion:
     evidence_bundle_primary_next_task: dict[str, Any]
     candidate_package_validation_command: str
     promotion_command_plan: list[dict[str, Any]]
+    llm_live_preflight_command: str
+    llm_live_preflight_blocker_note: str
     evidence_bundle_command: str
     evidence_bundle_json_command: str
     issue_body: str
@@ -546,6 +548,8 @@ class CandidatePromotion:
             "evidence_bundle_primary_next_task": self.evidence_bundle_primary_next_task,
             "candidate_package_validation_command": self.candidate_package_validation_command,
             "promotion_command_plan": self.promotion_command_plan,
+            "llm_live_preflight_command": self.llm_live_preflight_command,
+            "llm_live_preflight_blocker_note": self.llm_live_preflight_blocker_note,
             "evidence_bundle_command": self.evidence_bundle_command,
             "evidence_bundle_json_command": self.evidence_bundle_json_command,
             "issue_body": self.issue_body,
@@ -1657,6 +1661,8 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 evidence_bundle_primary_next_task=evidence_bundle_primary_next_task,
                 candidate_package_validation_command=candidate_package_validation_command,
                 promotion_command_plan=promotion_command_plan,
+                llm_live_preflight_command=LLM_LIVE_PREFLIGHT_COMMAND,
+                llm_live_preflight_blocker_note=LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
                 evidence_bundle_command=_candidate_evidence_bundle_command(str(case.id)),
                 evidence_bundle_json_command=_candidate_evidence_bundle_json_command(str(case.id)),
                 issue_body=_candidate_issue_body(
@@ -2649,13 +2655,19 @@ def _candidate_promotion_markdown(promotions: list[CandidatePromotion]) -> str:
     lines = [
         "## Candidate Issue Metadata",
         "",
-        "| Case | Issue Title | Labels | Evidence Bundle Primary Next Task |",
-        "|------|-------------|--------|-----------------------------------|",
+        (
+            "| Case | Issue Title | Labels | Evidence Bundle Primary Next Task | "
+            "LLM Live Preflight | LLM Blocker Handling |"
+        ),
+        "|------|-------------|--------|-----------------------------------|--------------------|----------------------|",
     ]
     for promotion in promotions:
         labels = ", ".join(f"`{label}`" for label in promotion.issue_labels)
         primary_task = promotion.evidence_bundle_primary_next_task.get("task") or "Not declared."
-        lines.append(f"| `{promotion.case_id}` | {promotion.issue_title} | {labels} | `{primary_task}` |")
+        lines.append(
+            f"| `{promotion.case_id}` | {promotion.issue_title} | {labels} | `{primary_task}` | "
+            f"`{promotion.llm_live_preflight_command}` | {promotion.llm_live_preflight_blocker_note} |"
+        )
 
     lines.extend(
         [
@@ -2734,6 +2746,8 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "evidence_bundle_primary_next_task": promotion.evidence_bundle_primary_next_task,
                 "candidate_package_validation_command": promotion.candidate_package_validation_command,
                 "promotion_command_plan": promotion.promotion_command_plan,
+                "llm_live_preflight_command": promotion.llm_live_preflight_command,
+                "llm_live_preflight_blocker_note": promotion.llm_live_preflight_blocker_note,
                 "evidence_bundle_command": promotion.evidence_bundle_command,
                 "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
                 "issue_body_name": body_path.name,
@@ -3259,7 +3273,8 @@ def _issue_artifact_review_checklist() -> list[str]:
         (
             "Confirm issue-metadata.json has the expected target URL, candidate commands, "
             "offline validation commands, candidate_package_validation_command, "
-            "and promotion_command_plan for each case."
+            "promotion_command_plan, llm_live_preflight_command, and "
+            "llm_live_preflight_blocker_note for each case."
         ),
         "Review each body file for scope, tasks, validation evidence, and non-goals.",
         (
@@ -3484,6 +3499,8 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
             "evidence_bundle_primary_next_task": item["evidence_bundle_primary_next_task"],
             "candidate_package_validation_command": item["candidate_package_validation_command"],
             "promotion_command_plan": item["promotion_command_plan"],
+            "llm_live_preflight_command": item["llm_live_preflight_command"],
+            "llm_live_preflight_blocker_note": item["llm_live_preflight_blocker_note"],
             "evidence_bundle_command": item["evidence_bundle_command"],
             "evidence_bundle_json_command": item["evidence_bundle_json_command"],
             "issue_body_name": item["issue_body_name"],
@@ -3526,6 +3543,8 @@ def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[di
             "evidence_bundle_primary_next_task": promotion.evidence_bundle_primary_next_task,
             "candidate_package_validation_command": promotion.candidate_package_validation_command,
             "promotion_command_plan": promotion.promotion_command_plan,
+            "llm_live_preflight_command": promotion.llm_live_preflight_command,
+            "llm_live_preflight_blocker_note": promotion.llm_live_preflight_blocker_note,
             "evidence_bundle_command": promotion.evidence_bundle_command,
             "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
             "issue_body_name": f"{promotion.case_id}.md",

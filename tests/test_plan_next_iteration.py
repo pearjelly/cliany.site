@@ -789,6 +789,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "--include-candidate-packages --strict"
         ),
         "promotion_command_plan": _pypi_promotion_command_plan(),
+        "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
+        "llm_live_preflight_blocker_note": (
+            "Run the live LLM preflight before explore. If generate_adapters.ready=false "
+            "or llm_live reports E_LLM_UNAVAILABLE, stop candidate promotion, attach the "
+            "doctor JSON/error summary, and leave adapter_package pending or blocked."
+        ),
         "evidence_bundle_command": (
             "cliany-site cases --case-id pypi-project-search --evidence-bundle"
         ),
@@ -1278,6 +1284,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "evidence_bundle_primary_next_task": item["evidence_bundle_primary_next_task"],
             "candidate_package_validation_command": item["candidate_package_validation_command"],
             "promotion_command_plan": item["promotion_command_plan"],
+            "llm_live_preflight_command": item["llm_live_preflight_command"],
+            "llm_live_preflight_blocker_note": item["llm_live_preflight_blocker_note"],
             "evidence_bundle_command": item["evidence_bundle_command"],
             "evidence_bundle_json_command": item["evidence_bundle_json_command"],
             "issue_body_name": item["issue_body_name"],
@@ -1556,7 +1564,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         (
             "Confirm issue-metadata.json has the expected target URL, candidate commands, "
             "offline validation commands, candidate_package_validation_command, "
-            "and promotion_command_plan for each case."
+            "promotion_command_plan, llm_live_preflight_command, and "
+            "llm_live_preflight_blocker_note for each case."
         ),
         "Review each body file for scope, tasks, validation evidence, and non-goals.",
         (
@@ -2476,6 +2485,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "--include-candidate-packages --strict"
     )
     assert metadata[0]["promotion_command_plan"] == _pypi_promotion_command_plan()
+    assert metadata[0]["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
+    assert "E_LLM_UNAVAILABLE" in metadata[0]["llm_live_preflight_blocker_note"]
     assert (
         metadata[0]["evidence_bundle_command"]
         == "cliany-site cases --case-id pypi-project-search --evidence-bundle"
@@ -2590,7 +2601,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 (
                     "Confirm issue-metadata.json has the expected target URL, candidate commands, "
                     "offline validation commands, candidate_package_validation_command, "
-                    "and promotion_command_plan for each case."
+                    "promotion_command_plan, llm_live_preflight_command, and "
+                    "llm_live_preflight_blocker_note for each case."
                 ),
             "Review each body file for scope, tasks, validation evidence, and non-goals.",
             (
@@ -4289,7 +4301,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "expected target URL, candidate commands" in readme
     assert (
         "offline validation commands, candidate_package_validation_command, "
-        "and promotion_command_plan for each case"
+        "promotion_command_plan, llm_live_preflight_command, and "
+        "llm_live_preflight_blocker_note for each case"
         in readme
     )
     assert "release publication preflight" in readme

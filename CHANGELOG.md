@@ -7,6 +7,15 @@
 
 ## [Unreleased]
 
+## [0.16.241] - 2026-06-17
+
+### Added
+- `scripts/plan_next_iteration.py --json` candidate promotion records now expose `llm_live_preflight_command` and `llm_live_preflight_blocker_note` without requiring automation to parse issue body Markdown.
+- Generated candidate issue artifacts now include the same LLM preflight fields in `issue-metadata.json` and metadata summaries.
+- Candidate issue artifact README tables and review checklists now surface the live LLM blocker contract before maintainers create promotion issues.
+- Planner tests now lock the machine-readable `E_LLM_UNAVAILABLE` handoff for issue artifacts and candidate promotion JSON.
+- 新增 `docs/releases/v0.16.241-draft.md`，记录本版在 live LLM 仍返回 502 时对 planner / issue artifact 交接面的加固。
+
 ## [0.16.240] - 2026-06-17
 
 ### Added
@@ -2224,7 +2233,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.240...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.241...HEAD
+[0.16.241]: https://github.com/pearjelly/cliany.site/compare/v0.16.240...v0.16.241
 [0.16.240]: https://github.com/pearjelly/cliany.site/compare/v0.16.239...v0.16.240
 [0.16.239]: https://github.com/pearjelly/cliany.site/compare/v0.16.238...v0.16.239
 [0.16.238]: https://github.com/pearjelly/cliany.site/compare/v0.16.237...v0.16.238
