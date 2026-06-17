@@ -1069,6 +1069,15 @@ def _package_gate_args(*, packages_dir: Path | None, require_packages: bool) -> 
     return f" {' '.join(args)}" if args else ""
 
 
+def _remote_audit_args(*, remote_check: bool, remote_name: str) -> str:
+    args: list[str] = []
+    if remote_check:
+        args.append("--remote")
+    if remote_name != "origin":
+        args.extend(["--remote-name", shlex.quote(remote_name)])
+    return f" {' '.join(args)}" if args else ""
+
+
 def _candidate_package_validation_command(packages_dir: Path | None) -> str | None:
     if packages_dir is None:
         return None
@@ -1119,6 +1128,19 @@ def _publication_ref_context(publication: Any) -> dict[str, Any]:
     return {field: getattr(publication, field, payload.get(field, None)) for field in fields}
 
 
+def _latest_release_visible(publication: Any) -> bool:
+    if not _publication_worktree_clean(publication):
+        return False
+    if bool(getattr(publication, "ok", False)):
+        return True
+    latest_tag = str(getattr(publication, "latest_tag", "") or "")
+    return bool(
+        latest_tag
+        and getattr(publication, "branch_published", None) is True
+        and getattr(publication, "tag_published", None) is True
+    )
+
+
 def _publication_visibility(publication: Any) -> dict[str, str]:
     if not _publication_worktree_clean(publication):
         return {
@@ -1138,6 +1160,15 @@ def _publication_visibility(publication: Any) -> dict[str, str]:
     tag_published = getattr(publication, "tag_published", None)
     tag_points_at_head = getattr(publication, "tag_points_at_head", None)
     remote_checked = bool(getattr(publication, "remote_checked", False))
+
+    if _latest_release_visible(publication) and tag_points_at_head is False:
+        return {
+            "status": "published_with_unreleased_head",
+            "summary": (
+                f"Latest release `{latest_tag}` is visible on `{remote}`; HEAD contains "
+                "unreleased changes that need a new target tag before the next release."
+            ),
+        }
 
     if isinstance(ahead_count, int) and ahead_count > 0:
         if latest_tag != "(no tag)" and tag_points_at_head is False:
@@ -1180,7 +1211,7 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
     reason_codes = _candidate_issue_gate_reason_codes(release_draft_issues, publication)
     reason_descriptions = _candidate_issue_gate_reason_descriptions(reason_codes)
     release_draft_actions = _release_draft_required_actions(release_draft_issues)
-    if not bool(getattr(publication, "ok", False)):
+    if not _latest_release_visible(publication):
         publication_actions = _publication_next_actions(publication) or [
             "Run python scripts/check_release_publication.py --json and resolve publication blockers."
         ]
@@ -1266,7 +1297,7 @@ def _stable_json_sha256(value: object) -> str:
 
 def _candidate_issue_gate_reason_codes(release_draft_issues: list[str], publication: Any) -> list[str]:
     codes: list[str] = []
-    if not bool(getattr(publication, "ok", False)):
+    if not _latest_release_visible(publication):
         codes.append("publication_not_published")
         visibility_status = _publication_visibility(publication).get("status")
         if visibility_status == "dirty_worktree":
@@ -1496,7 +1527,7 @@ def _next_action_lines(readiness: Any, publication: Any) -> list[str]:
 
 
 def _recommended_slice(readiness: Any, publication: Any) -> tuple[str, str]:
-    if not publication.ok:
+    if not _latest_release_visible(publication):
         return (
             "发布可见性",
             "先让最新本地 tag 和分支在远端可见，再继续扩大下一版范围。",
@@ -1921,6 +1952,8 @@ def build_plan(
     target_version: str | None = None,
     min_commit_days: int = 3,
     max_daily_releases: int = 3,
+    remote_check: bool = False,
+    remote_name: str = "origin",
     min_case_assets: int = 8,
     packages_dir: Path | None = None,
     require_packages: bool = False,
@@ -1934,12 +1967,18 @@ def build_plan(
         today=today or date.today(),
         min_commit_days=min_commit_days,
         max_daily_releases=max_daily_releases,
+        remote_check=remote_check,
+        remote_name=remote_name,
         min_case_assets=min_case_assets,
         target_version=expected_target,
         packages_dir=packages_dir,
         require_packages=require_packages,
     )
-    publication = publication_report or build_publication_report(root)
+    publication = publication_report or build_publication_report(
+        root,
+        remote_check=remote_check,
+        remote=remote_name,
+    )
     theme, release_slice = _recommended_slice(readiness, publication)
     candidate_promotions = _candidate_promotions(readiness)
     case_promotion_evidence_summary = _case_promotion_evidence_summary(readiness.cases)
@@ -1967,13 +2006,16 @@ def build_plan(
         if case.status == "candidate"
     ]
     blockers = [*readiness.blockers]
-    if not publication.ok:
+    if not _latest_release_visible(publication):
         blockers.append("latest local release is not published")
 
     package_args = _package_gate_args(packages_dir=packages_dir, require_packages=require_packages)
+    remote_args = _remote_audit_args(remote_check=remote_check, remote_name=remote_name)
     validation_commands = [
-        f"python scripts/plan_next_iteration.py --target-version {readiness.target_version}{package_args} --json",
-        f"python scripts/release_readiness.py --target-version {readiness.target_version}{package_args} --json",
+        f"python scripts/plan_next_iteration.py --target-version {readiness.target_version}"
+        f"{package_args}{remote_args} --json",
+        f"python scripts/release_readiness.py --target-version {readiness.target_version}"
+        f"{package_args}{remote_args} --json",
         "python scripts/check_release_publication.py --json",
         "python scripts/validate_cases.py --strict",
     ]
@@ -1982,11 +2024,11 @@ def build_plan(
         validation_commands.append(candidate_package_validation_command)
     plan_report_command = (
         f"python scripts/plan_next_iteration.py --target-version {readiness.target_version}"
-        f"{package_args} --report /tmp/cliany-next-iteration.md"
+        f"{package_args}{remote_args} --report /tmp/cliany-next-iteration.md"
     )
     issue_artifacts_command = (
         f"python scripts/plan_next_iteration.py --target-version {readiness.target_version}"
-        f"{package_args} --issues-dir /tmp/cliany-candidate-issues"
+        f"{package_args}{remote_args} --issues-dir /tmp/cliany-candidate-issues"
     )
     publication_publish_script_command = (
         "python scripts/check_release_publication.py --json "
@@ -5438,6 +5480,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--target-version", help="Target release version. Defaults to next patch version.")
     parser.add_argument("--min-days", type=int, default=3, help="Minimum unique commit days expected this week.")
     parser.add_argument("--max-daily-releases", type=int, default=3, help="Maximum release tags allowed per day.")
+    parser.add_argument(
+        "--remote",
+        action="store_true",
+        help="Check live remote branch and tag refs in publication inputs.",
+    )
+    parser.add_argument("--remote-name", default="origin", help="Fallback remote name when no upstream is configured.")
     parser.add_argument("--min-case-assets", type=int, default=8, help="Minimum tracked case assets expected.")
     parser.add_argument("--today", help="Override current date as YYYY-MM-DD, for audits.")
     parser.add_argument("--report", type=Path, help="Optional Markdown plan report path.")
@@ -5461,6 +5509,8 @@ def main(argv: list[str] | None = None) -> int:
         target_version=args.target_version,
         min_commit_days=args.min_days,
         max_daily_releases=args.max_daily_releases,
+        remote_check=args.remote,
+        remote_name=args.remote_name,
         min_case_assets=args.min_case_assets,
         packages_dir=args.packages_dir,
         require_packages=args.require_packages,

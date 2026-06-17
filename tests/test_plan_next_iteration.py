@@ -304,6 +304,35 @@ def _published_publication_report() -> SimpleNamespace:
     )
 
 
+def _published_release_with_unreleased_head_report() -> SimpleNamespace:
+    return SimpleNamespace(
+        ok=False,
+        repo_root="/repo/cliany.site",
+        branch="master",
+        upstream="origin/master",
+        remote="origin",
+        local_head="new123",
+        upstream_head="new123",
+        ahead_count=0,
+        behind_count=0,
+        latest_tag="v0.16.1",
+        tag_commit="old123",
+        tag_points_at_head=False,
+        tag_commit_in_upstream=True,
+        branch_published=True,
+        tag_published=True,
+        remote_branch_head="new123",
+        remote_tag_commit="old123",
+        remote_checked=True,
+        worktree_clean=True,
+        worktree_status=[],
+        next_actions=[
+            "Move to the `v0.16.1` commit or create a new release tag at HEAD before publishing.",
+        ],
+        publish_commands=[],
+    )
+
+
 def _tag_mismatch_publication_report() -> SimpleNamespace:
     return SimpleNamespace(
         ok=False,
@@ -590,6 +619,31 @@ def test_candidate_issue_gate_allows_creation_after_publication_with_release_dra
             "release_draft_issue_count": 2,
         },
     }
+
+
+def test_plan_treats_published_release_with_unreleased_head_as_visible(tmp_path):
+    _write_pyproject(tmp_path, version="0.16.1")
+
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=_readiness_report(),
+        publication_report=_published_release_with_unreleased_head_report(),
+    )
+
+    assert plan.publication_visibility == {
+        "status": "published_with_unreleased_head",
+        "summary": (
+            "Latest release `v0.16.1` is visible on `origin`; HEAD contains unreleased "
+            "changes that need a new target tag before the next release."
+        ),
+    }
+    assert "latest local release is not published" not in plan.blockers
+    assert plan.recommended_theme == "真实案例库"
+    assert plan.candidate_issue_gate["status"] == "review_required"
+    assert plan.candidate_issue_gate["reason_codes"] == ["release_draft_issues"]
+    assert plan.candidate_issue_gate["evidence"]["publication_visibility_status"] == (
+        "published_with_unreleased_head"
+    )
 
 
 def test_summary_inline_code_uses_wider_fence_for_backticks():
@@ -943,6 +997,36 @@ def test_plan_passes_package_gate_args_to_readiness(tmp_path, monkeypatch):
     assert captured["root"] == tmp_path
     assert captured["packages_dir"] == packages_dir
     assert captured["require_packages"] is True
+
+
+def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, monkeypatch):
+    _write_pyproject(tmp_path)
+    captured: dict[str, dict[str, object]] = {}
+
+    def fake_build_readiness_report(root: Path, **kwargs: object):
+        captured["readiness"] = {"root": root, **kwargs}
+        return _readiness_report()
+
+    def fake_build_publication_report(root: Path, **kwargs: object):
+        captured["publication"] = {"root": root, **kwargs}
+        return _published_publication_report()
+
+    monkeypatch.setattr(plan_next_iteration, "build_readiness_report", fake_build_readiness_report)
+    monkeypatch.setattr(plan_next_iteration, "build_publication_report", fake_build_publication_report)
+
+    plan_next_iteration.build_plan(
+        tmp_path,
+        target_version="0.16.2",
+        remote_check=True,
+        remote_name="upstream",
+    )
+
+    assert captured["readiness"]["root"] == tmp_path
+    assert captured["readiness"]["remote_check"] is True
+    assert captured["readiness"]["remote_name"] == "upstream"
+    assert captured["publication"]["root"] == tmp_path
+    assert captured["publication"]["remote_check"] is True
+    assert captured["publication"]["remote"] == "upstream"
 
 
 def test_plan_next_actions_skip_release_draft_when_draft_is_valid(tmp_path):

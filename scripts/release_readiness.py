@@ -642,6 +642,8 @@ def build_report(
     today: date | None = None,
     min_commit_days: int = 3,
     max_daily_releases: int = 3,
+    remote_check: bool = False,
+    remote_name: str = "origin",
     min_case_assets: int = MIN_CASE_ASSETS,
     target_version: str | None = None,
     release_tag: str | None = None,
@@ -664,7 +666,7 @@ def build_report(
     ci = _build_ci_report(root)
     release_workflow = _build_release_workflow_report(root)
     project_metadata = _build_project_metadata_report(root)
-    publication = build_publication_report(root)
+    publication = build_publication_report(root, remote_check=remote_check, remote=remote_name)
     package_gate = _build_package_gate_report(
         packages_dir=packages_dir,
         require_packages=require_packages,
@@ -1711,6 +1713,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--min-days", type=int, default=3, help="Minimum unique commit days expected this week.")
     parser.add_argument("--max-daily-releases", type=int, default=3, help="Maximum release tags allowed per day.")
     parser.add_argument(
+        "--remote",
+        action="store_true",
+        help="Check live remote branch and tag refs in the publication summary.",
+    )
+    parser.add_argument("--remote-name", default="origin", help="Fallback remote name when no upstream is configured.")
+    parser.add_argument(
         "--min-case-assets",
         type=int,
         default=MIN_CASE_ASSETS,
@@ -1736,6 +1744,8 @@ def main(argv: list[str] | None = None) -> int:
         today=today,
         min_commit_days=args.min_days,
         max_daily_releases=args.max_daily_releases,
+        remote_check=args.remote,
+        remote_name=args.remote_name,
         min_case_assets=args.min_case_assets,
         target_version=args.target_version,
         release_tag=args.release_tag,

@@ -8,6 +8,7 @@ from dataclasses import replace
 from datetime import date
 from io import BytesIO
 from pathlib import Path
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
@@ -896,6 +897,24 @@ def test_release_readiness_respects_custom_daily_release_cap(tmp_path):
     assert report.cadence.max_daily_releases == 1
     assert report.cadence.daily_release_limit_ok is False
     assert "daily release tags 2/1 exceed the allowed maximum" in report.blockers
+
+
+def test_release_readiness_cli_passes_remote_publication_check(monkeypatch, capsys):
+    captured: dict[str, object] = {}
+
+    def fake_build_report(root: Path, **kwargs):
+        captured["root"] = root
+        captured.update(kwargs)
+        return SimpleNamespace(ok=True, to_dict=lambda: {"ok": True})
+
+    monkeypatch.setattr(release_readiness, "build_report", fake_build_report)
+
+    result = release_readiness.main(["--remote", "--remote-name", "upstream", "--json"])
+
+    assert result == 0
+    assert captured["remote_check"] is True
+    assert captured["remote_name"] == "upstream"
+    assert json.loads(capsys.readouterr().out) == {"ok": True}
 
 
 def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_path):
