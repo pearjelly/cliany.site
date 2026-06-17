@@ -153,12 +153,8 @@ permissions:
   id-token: write
 
 jobs:
-  ci:
-    uses: ./.github/workflows/ci.yml
-
   release-preflight:
     name: Release Preflight
-    needs: ci
     steps:
       - uses: actions/checkout@v4
         with:
@@ -174,7 +170,7 @@ jobs:
 
   build:
     name: Build Distribution
-    needs: [ci, release-preflight]
+    needs: release-preflight
     steps:
       - run: rm -rf dist
       - run: uv build

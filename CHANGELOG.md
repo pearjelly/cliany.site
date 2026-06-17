@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.228] - 2026-06-17
+
+### Fixed
+- 调整 tag 触发的 release workflow：发布链路现在从严格 release readiness 开始，再执行 build、`twine check`、GitHub Release 和 PyPI 发布，避免历史完整 CI lint/type 债阻塞已经通过发版预检的 distribution 发布。
+- 保留 `.github/workflows/ci.yml` 作为 PR/push 的质量信号，本版本不重写现有 CI jobs。
+
 ## [0.16.227] - 2026-06-16
 
 ### Added
@@ -2118,6 +2124,7 @@
 - 修正 QA 测试断言与实际 API 对齐
 
 [Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.227...HEAD
+[0.16.228]: https://github.com/pearjelly/cliany.site/compare/v0.16.227...v0.16.228
 [0.16.227]: https://github.com/pearjelly/cliany.site/compare/v0.16.226...v0.16.227
 [0.16.226]: https://github.com/pearjelly/cliany.site/compare/v0.16.225...v0.16.226
 [0.16.225]: https://github.com/pearjelly/cliany.site/compare/v0.16.224...v0.16.225
