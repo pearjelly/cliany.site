@@ -24,7 +24,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: 安装依赖
@@ -40,7 +40,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: 安装依赖
@@ -59,7 +59,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: 安装依赖
@@ -81,7 +81,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: 安装依赖
@@ -97,7 +97,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: 安装测试依赖
@@ -123,7 +123,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: 生成发布 readiness 摘要
@@ -147,7 +147,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: 安装测试依赖
@@ -169,7 +169,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: 安装依赖
@@ -186,7 +186,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: 安装依赖
