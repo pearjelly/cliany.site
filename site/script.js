@@ -159,8 +159,8 @@ const I18N = {
   },
   'qs.maintainer.title': { zh: '维护者循环', en: 'Maintainer Loop' },
   'qs.maintainer.desc': {
-    zh: '使用每周维护者循环和 release readiness 的 next_actions，把路线图拆成小而可验证的发布切片。',
-    en: 'Use the weekly maintainer loop and release readiness next_actions to turn the roadmap into small verified releases.'
+    zh: '使用每日发布循环、每周维护者循环和 release readiness 的 next_actions，把路线图拆成小而可验证的发布切片。',
+    en: 'Use the daily release loop, weekly maintainer loop, and release readiness next_actions to turn the roadmap into small verified releases.'
   },
   'qs.maintainer.loop': {
     zh: '选择下一块发布切片时，从 <code>docs/weekly-maintainer-loop.md</code> 开始。',

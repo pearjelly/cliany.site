@@ -26,6 +26,10 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in text
         assert "Real Demo Case Proposal" in text
         assert "weekly-maintainer-loop.md" in text
+        assert (
+            "at least one verified version per day" in text
+            or "每天至少一个可验证版本" in text
+        )
         assert "next_actions" in text
         assert "primary_next_action" in text
         assert "next_actions_sha256" in text

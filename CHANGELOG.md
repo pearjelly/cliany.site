@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.229] - 2026-06-17
+
+### Added
+- Q3 路线图和发布节奏文档现在明确采用“每天至少一个可验证版本”的 release train，同时保留每周至少三天提交记录作为健康度门禁。
+- 新增 `docs/releases/v0.16.229-draft.md`，把下一版 patch 聚焦到每日发布节奏固化和 candidate 案例晋级路线。
+
 ## [0.16.228] - 2026-06-17
 
 ### Fixed
@@ -2123,7 +2129,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.228...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.229...HEAD
+[0.16.229]: https://github.com/pearjelly/cliany.site/compare/v0.16.228...v0.16.229
 [0.16.228]: https://github.com/pearjelly/cliany.site/compare/v0.16.227...v0.16.228
 [0.16.227]: https://github.com/pearjelly/cliany.site/compare/v0.16.226...v0.16.227
 [0.16.226]: https://github.com/pearjelly/cliany.site/compare/v0.16.225...v0.16.226

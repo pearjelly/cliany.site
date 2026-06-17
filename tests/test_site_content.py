@@ -26,6 +26,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "python scripts/release_readiness.py --json" in index
     assert "python scripts/check_release_cadence.py --json" in index
     assert "next_actions" in index
+    assert "daily release loop" in index
     assert "10-Minute Success Path" in script
     assert "Run a real demo adapter first" in script
     assert "Generate Your Own" in script

@@ -42,6 +42,10 @@ def test_release_cadence_doc_explains_readiness_triage():
         "纯文本 `next_actions`",
         "先修具体 gate 失败原因",
         "python scripts/release_readiness.py --strict",
+        "每天至少发布 1 个可验证版本",
+        "每日发布循环",
+        "standard_release_flow_primary_next_action",
+        "GitHub Release 和 PyPI",
         "project_metadata",
         "package_gate",
     ]

@@ -5,10 +5,23 @@
 
 ## 目标
 
-- 至少每周发布 1 个版本。
+- 每天至少发布 1 个可验证版本。
 - 每周至少 3 天有提交记录。
 - 每个版本都能说明用户价值、验证方式和风险。
 - PR/CI 默认零真实 LLM key，避免污染贡献者和 fork PR 环境。
+
+## 每日发布循环
+
+每日版本必须是小切片：要么推进一个真实案例、一个贡献者入口、一个 adapter 生命周期证据、一个失败语义修复，或一个发布/官网同步门禁。当天没有足够代码改动时，允许发布文档、案例证据或 release handoff patch，但仍要走完整发布流程。
+
+推荐顺序：
+
+1. 运行 `python scripts/plan_next_iteration.py --json`，读取 `recommended_theme`、`recommended_slice`、`primary_next_action` 和 `standard_release_flow_primary_next_action`。
+2. 选择能当天验证的最小切片，并在 `docs/releases/vX.Y.Z-draft.md` 写清用户价值、风险、验证命令和剩余阻塞。
+3. 实现或补证据后运行 `python scripts/release_readiness.py --strict --target-version X.Y.Z`、`python scripts/validate_cases.py --strict`，必要时加相关 `pytest` 或 `qa/*.sh`。
+4. 更新 `CHANGELOG.md`、`pyproject.toml`、README/README.zh/官网中受影响入口。
+5. 创建并推送 `vX.Y.Z` tag，等待 `.github/workflows/release.yml` 更新 GitHub Release 和 PyPI。
+6. 对官网有影响时按 `AGENTS.md` 的 Vercel 步骤在 `site/` 部署，并在 release notes 里记录官网同步。
 
 ## 周节奏
 
@@ -18,7 +31,7 @@
 | 周三 | 合并核心实现 | 提交 `feat` 或 `fix`，补充针对性测试 |
 | 周五 | 发版准备与发布 | 更新版本号、CHANGELOG、README/官网必要入口，打 tag |
 
-允许周末发布补丁，但补丁不能替代下一周的正式 release train。
+允许周末发布补丁，但补丁不能替代下一周的正式 release train。每日发布是对这个周节奏的更细粒度执行，不降低三天提交记录和发版门禁要求。
 
 维护者每周选题、实现和复盘的操作顺序见 [每周维护者循环](weekly-maintainer-loop.md)。当 readiness 只剩提交天数不足时，继续做小而可验证的增量；当存在具体 gate issue 时，优先关闭 gate issue 再扩展新功能。
 
@@ -109,13 +122,13 @@ CI 的 `Release Readiness Report` job 会在 PR/主分支生成 `release-readine
 
 `check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、`CHANGELOG.md` Unreleased 是否有内容、`[Unreleased]` compare 链接是否指向最新 tag 到 `HEAD`，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截。
 
-当 cadence 未满足时，`check_release_cadence.py` 的文本输出和 `--json` 都会包含纯文本 `next_actions`，提示维护者继续补足本周提交天数、修正 tag/version、更新 CHANGELOG compare 链接或清理工作区；渲染为文本时才添加列表符号。JSON 输出还会包含 `missing_commit_days`、`primary_next_action` 和 `next_actions_sha256`，便于维护脚本直接判断本周还差几个独立提交日、展示首要节奏动作并检测 action list 是否漂移。
+当 cadence 未满足时，`check_release_cadence.py` 的文本输出和 `--json` 都会包含纯文本 `next_actions`，提示维护者继续补足本周提交天数、修正 tag/version、更新 CHANGELOG compare 链接或清理工作区；渲染为文本时才添加列表符号。JSON 输出还会包含 `missing_commit_days`、`primary_next_action` 和 `next_actions_sha256`，便于维护脚本直接判断本周还差几个独立提交日、展示首要节奏动作并检测 action list 是否漂移。每日版本发布前也读取这些字段，确保“每天发版”不会掩盖本周提交日不足、tag/version 不一致或未清理工作区。
 
 `validate_cases.py` 会检查 `cases/manifest.json` 的结构、文档链接和 Markdown 锚点、active 案例命令域名一致性、离线样例输出和验证说明；传入 `--report` 时会生成 Markdown 验收报告，CI 会上传为 `case-catalog-report` artifact；传入 `--packages-dir ~/.cliany-site/packages` 时，还会离线检查 demo adapter 包中的 `manifest.json`、tarball 安全路径、声明文件哈希和 metadata schema v3。
 
 ## 提交规则
 
-每周至少保留三天有意义提交：
+每周至少保留三天有意义提交；每天发布时优先复用这三类提交节奏：
 
 - 第一天：计划、测试样本、复现输入或文档入口。
 - 第二天：功能实现、bug 修复或行为收敛。
