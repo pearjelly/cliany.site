@@ -17,6 +17,20 @@ CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     "python scripts/validate_cases.py "
     f"--packages-dir {CANDIDATE_PACKAGES_DIR} --include-candidate-packages --strict"
 )
+PROMOTION_ACCEPTANCE_CRITERIA = {
+    "adapter_package": (
+        "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
+        "or GitHub Release asset name."
+    ),
+    "metadata_validation": (
+        f"Paste `{CANDIDATE_PACKAGE_VALIDATION_COMMAND}` output showing the candidate "
+        "package passed schema v3, manifest hash, and adapter_domain validation."
+    ),
+    "online_smoke": (
+        "Paste the read-only adapter command JSON envelope summary with ok=true, "
+        "data.quality.ok=true, and row_count>0."
+    ),
+}
 
 
 def _case_catalog_paths() -> list[Path]:
@@ -270,6 +284,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         status = str(task_evidence.get("status") or "pending")
         evidence_value = task_evidence.get("evidence")
         next_action = str(task_evidence.get("next_action") or "")
+        acceptance_criteria = PROMOTION_ACCEPTANCE_CRITERIA[task]
         command_plan_item = command_plan_by_task.get(task, {})
         command = str(command_plan_item.get("command") or "")
         command_source = str(command_plan_item.get("source") or "")
@@ -287,6 +302,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                 "description": promotion.get(task) or "",
                 "evidence": evidence_value,
                 "next_action": next_action,
+                "acceptance_criteria": acceptance_criteria,
                 "command": command,
                 "command_source": command_source,
                 "command_missing": command_missing,
@@ -323,6 +339,9 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "promotion_command_plan_missing_tasks": [
             item["task"] for item in promotion_command_plan if item["missing"]
         ],
+        "acceptance_criteria": {
+            task: PROMOTION_ACCEPTANCE_CRITERIA[task] for task in PROMOTION_TASKS
+        },
         "tasks": tasks,
         "status_counts": {
             "pending": status_counts.get("pending", 0),
@@ -341,6 +360,9 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "primary_next_task_command_source": primary_next_action_task.get("command_source", ""),
         "primary_next_task_command_missing": bool(primary_next_action_task.get("command_missing", False)),
         "primary_next_task_handoff": primary_next_action_task.get("handoff", ""),
+        "primary_next_task_acceptance_criteria": primary_next_action_task.get(
+            "acceptance_criteria", ""
+        ),
         "task_handoffs": [
             {
                 "task": task["task"],
@@ -348,6 +370,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                 "command": task["command"],
                 "command_source": task["command_source"],
                 "command_missing": task["command_missing"],
+                "acceptance_criteria": task["acceptance_criteria"],
                 "complete": task["complete"],
                 "handoff": task["handoff"],
             }
@@ -384,6 +407,10 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
             lines.append(f"- Primary next command: `{primary_next_task['command']}`")
         if primary_next_task.get("handoff"):
             lines.append(f"- Primary next handoff: {primary_next_task['handoff']}")
+        if primary_next_task.get("acceptance_criteria"):
+            lines.append(
+                f"- Primary next acceptance: {primary_next_task['acceptance_criteria']}"
+            )
     primary_incomplete_task = bundle.get("primary_incomplete_task")
     if isinstance(primary_incomplete_task, dict) and primary_incomplete_task.get("task"):
         lines.append(f"- Primary incomplete task: `{primary_incomplete_task['task']}`")
@@ -409,6 +436,9 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
     for item in bundle.get("promotion_command_plan", []):
         command = item.get("command") or "Not declared."
         lines.append(f"- `{item['task']}` ({item['source']}): `{command}`")
+    lines.extend(["", "## Acceptance criteria"])
+    for task, criteria in bundle.get("acceptance_criteria", {}).items():
+        lines.append(f"- `{task}`: {criteria}")
     lines.extend(["", "## Promotion evidence"])
 
     for task in bundle.get("tasks", []):
@@ -424,6 +454,7 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
                 f"  - command_missing: `{str(task.get('command_missing', False)).lower()}`",
                 f"  - evidence: {evidence_value}",
                 f"  - next: {next_action}",
+                f"  - acceptance: {task.get('acceptance_criteria')}",
                 f"  - handoff: {handoff}",
             ]
         )

@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+## [0.16.230] - 2026-06-17
+
+### Added
+- `cliany-site cases --case-id <id> --evidence-bundle --json` 现在输出任务级和顶层 `acceptance_criteria`，并新增 `primary_next_task_acceptance_criteria`，让 candidate 晋级自动化能同时读取下一步命令和完成证据要求。
+- `cliany-site cases --case-id <id> --evidence-bundle` 的人类 Markdown 输出新增 Acceptance criteria 小节，并在首要任务摘要中展示 primary acceptance。
+- README、README.zh、cases README 和官网 quickstart 现在同步说明 evidence bundle 的验收条件字段。
+- 新增 `docs/releases/v0.16.230-draft.md`，把本版 patch 聚焦到 candidate promotion 证据验收合同。
+
 ## [0.16.229] - 2026-06-17
 
 ### Added
@@ -2129,7 +2137,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.229...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.230...HEAD
+[0.16.230]: https://github.com/pearjelly/cliany.site/compare/v0.16.229...v0.16.230
 [0.16.229]: https://github.com/pearjelly/cliany.site/compare/v0.16.228...v0.16.229
 [0.16.228]: https://github.com/pearjelly/cliany.site/compare/v0.16.227...v0.16.228
 [0.16.227]: https://github.com/pearjelly/cliany.site/compare/v0.16.226...v0.16.227

@@ -362,7 +362,26 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["primary_next_task_handoff"].startswith(
         'Run `cliany-site explore "https://pypi.org"'
     )
+    assert bundle["primary_next_task_acceptance_criteria"] == (
+        "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
+        "or GitHub Release asset name."
+    )
     assert bundle["primary_next_action"].startswith("Generate pypi.org")
+    assert bundle["acceptance_criteria"] == {
+        "adapter_package": (
+            "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
+            "or GitHub Release asset name."
+        ),
+        "metadata_validation": (
+            "Paste `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+            "--include-candidate-packages --strict` output showing the candidate package "
+            "passed schema v3, manifest hash, and adapter_domain validation."
+        ),
+        "online_smoke": (
+            "Paste the read-only adapter command JSON envelope summary with ok=true, "
+            "data.quality.ok=true, and row_count>0."
+        ),
+    }
     assert bundle["task_handoffs"][0] == {
         "task": "adapter_package",
         "status": "pending",
@@ -372,6 +391,7 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         ),
         "command_source": "commands.explore",
         "command_missing": False,
+        "acceptance_criteria": bundle["tasks"][0]["acceptance_criteria"],
         "complete": False,
         "handoff": bundle["tasks"][0]["handoff"],
     }
@@ -407,6 +427,7 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["tasks"][0]["complete"] is False
     assert bundle["tasks"][0]["command_source"] == "commands.explore"
     assert bundle["tasks"][0]["command_missing"] is False
+    assert bundle["tasks"][0]["acceptance_criteria"].startswith("Attach the generated")
     assert bundle["tasks"][0]["handoff"].startswith(
         'Run `cliany-site explore "https://pypi.org"'
     )
@@ -482,6 +503,7 @@ def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatc
     assert bundle["primary_next_task_handoff"] == (
         "No executable command declared for `adapter_package`; Package the adapter."
     )
+    assert bundle["primary_next_task_acceptance_criteria"].startswith("Attach the generated")
     assert bundle["pending_task_count"] == 1
     assert bundle["blocked_task_count"] == 1
     assert bundle["complete_task_count"] == 1
@@ -522,9 +544,12 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "Primary next task: `adapter_package`" in result.output
     assert "Primary next command: `cliany-site explore" in result.output
     assert "Primary next handoff: Run `cliany-site explore" in result.output
+    assert "Primary next acceptance: Attach the generated" in result.output
     assert "Primary incomplete task: `adapter_package`" in result.output
     assert "## Candidate package validation" in result.output
     assert "## Promotion command plan" in result.output
+    assert "## Acceptance criteria" in result.output
+    assert "`online_smoke`: Paste the read-only adapter command JSON envelope summary" in result.output
     assert "`adapter_package` (commands.explore): `cliany-site explore" in result.output
     assert (
         "`metadata_validation` (candidate_package_validation_command): "
@@ -545,6 +570,7 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "## Promotion evidence" in result.output
     assert "`adapter_package`: `pending`" in result.output
     assert "command_missing: `false`" in result.output
+    assert "acceptance: Attach the generated" in result.output
     assert "handoff: Run `cliany-site explore" in result.output
     assert "cliany-site cases" not in result.output
 
