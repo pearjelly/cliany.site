@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.242] - 2026-06-18
+
 ### Added
 - `scripts/check_release_cadence.py --json` now reports `release_tags_today`, `release_count_today`, `max_daily_releases`, and `daily_release_limit_ok` so maintainers can enforce the 1-3 releases/day rule before tagging.
 - `scripts/release_readiness.py` now treats an exceeded daily release cap as a cadence blocker and surfaces the pause-release next action in text and Markdown reports.
@@ -2243,7 +2245,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.241...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.242...HEAD
+[0.16.242]: https://github.com/pearjelly/cliany.site/compare/v0.16.241...v0.16.242
 [0.16.241]: https://github.com/pearjelly/cliany.site/compare/v0.16.240...v0.16.241
 [0.16.240]: https://github.com/pearjelly/cliany.site/compare/v0.16.239...v0.16.240
 [0.16.239]: https://github.com/pearjelly/cliany.site/compare/v0.16.238...v0.16.239
