@@ -7,6 +7,15 @@
 
 ## [Unreleased]
 
+## [0.16.243] - 2026-06-19
+
+### Security
+- `save_adapter()` now audits generated adapter code before writing `commands.py`; critical findings such as `eval()` abort generation with `SecurityError`.
+- Added a regression test that proves unsafe generated adapter code is blocked before any adapter file is written.
+
+### Fixed
+- Release readiness tests now initialize fixture repositories with an explicit `master` branch, avoiding host `init.defaultBranch` drift.
+
 ## [0.16.242] - 2026-06-18
 
 ### Added
@@ -2245,7 +2254,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.242...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.243...HEAD
+[0.16.243]: https://github.com/pearjelly/cliany.site/compare/v0.16.242...v0.16.243
 [0.16.242]: https://github.com/pearjelly/cliany.site/compare/v0.16.241...v0.16.242
 [0.16.241]: https://github.com/pearjelly/cliany.site/compare/v0.16.240...v0.16.241
 [0.16.240]: https://github.com/pearjelly/cliany.site/compare/v0.16.239...v0.16.240
