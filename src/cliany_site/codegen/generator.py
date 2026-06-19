@@ -12,6 +12,7 @@ from typing import Any
 
 from cliany_site.atoms.models import AtomCommand
 from cliany_site.atoms.storage import load_atom, load_atoms
+from cliany_site.audit import audit_source
 from cliany_site.codegen.naming import (
     sanitize_docstring_text,
     sanitize_inline_text,
@@ -26,6 +27,7 @@ from cliany_site.codegen.templates import (
     render_empty_command_block_v2,
 )
 from cliany_site.config import get_config
+from cliany_site.errors import SecurityError
 from cliany_site.explorer.models import ActionStep, ExploreResult
 
 METADATA_SCHEMA_VERSION = 3
@@ -331,6 +333,7 @@ def save_adapter(
     metadata: dict | None = None,
     explore_result: ExploreResult | None = None,
 ) -> str:
+    _raise_for_critical_audit_findings(code, domain)
     adapter_dir = get_config().adapters_dir / _safe_domain(domain)
     adapter_dir.mkdir(parents=True, exist_ok=True)
     logger.info("保存 adapter: domain=%s path=%s", domain, adapter_dir)
@@ -467,6 +470,18 @@ def save_adapter(
             logger.debug("保存 AXTree 快照失败: %s", exc)
 
     return str(commands_path.resolve())
+
+
+def _raise_for_critical_audit_findings(code: str, domain: str) -> None:
+    findings = audit_source(code, filename=f"<generated:{domain}>")
+    critical = [finding for finding in findings if finding.severity == "critical"]
+    if not critical:
+        return
+
+    first = critical[0]
+    raise SecurityError(
+        f"生成代码安全审计未通过: {first.message} (line {first.line}, col {first.col})"
+    )
 
 
 def _safe_domain(domain: str) -> str:

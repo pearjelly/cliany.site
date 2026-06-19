@@ -8,7 +8,8 @@ import jsonschema
 import pytest
 
 from cliany_site.codegen.generator import save_adapter
-from cliany_site.explorer.models import ActionStep, CommandSuggestion, ExploreResult, PageInfo
+from cliany_site.errors import SecurityError
+from cliany_site.explorer.models import CommandSuggestion, ExploreResult
 
 _MINIMAL_CODE = """\
 # 自动生成 — DO NOT EDIT
@@ -113,6 +114,17 @@ class TestSignatureCorrectness:
             (tmp_home / ".cliany-site" / "adapters" / "domain-b.com" / "metadata.json").read_text()
         )
         assert meta_a["signature"] != meta_b["signature"]
+
+
+class TestSaveAdapterAudit:
+    def test_blocks_critical_audit_findings_before_writing_commands(self, tmp_home):
+        dangerous_code = _MINIMAL_CODE + "\nresult = eval('1 + 1')\n"
+
+        with pytest.raises(SecurityError, match="安全审计未通过"):
+            save_adapter("evil.com", dangerous_code)
+
+        commands_path = tmp_home / ".cliany-site" / "adapters" / "evil.com" / "commands.py"
+        assert not commands_path.exists()
 
 
 class TestV3DefaultAxtreeValues:

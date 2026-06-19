@@ -380,7 +380,7 @@ def _readme_content() -> str:
 def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
     repo = tmp_path / "repo"
     repo.mkdir()
-    _git(repo, "init")
+    _git(repo, "init", "-b", "master")
     (repo / "cases").mkdir()
     (repo / "docs" / "releases").mkdir(parents=True)
     (repo / ".github" / "workflows").mkdir(parents=True)
