@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.244] - 2026-06-20
+
+### Fixed
+- Restored the main CI quality gates by applying the current ruff cleanup and mypy type-narrowing fixes across `src/`.
+- Generic pytest jobs now skip the embodied Playwright test module when Playwright is not installed, avoiding collection-time failures outside the dedicated embodied workflow.
+- The embodied CI workflow now installs the Playwright Python package before installing Chromium, so its headless CDP/AXTree test runs in the intended job.
+
 ## [0.16.243] - 2026-06-19
 
 ### Security
@@ -2254,7 +2261,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.243...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.244...HEAD
+[0.16.244]: https://github.com/pearjelly/cliany.site/compare/v0.16.243...v0.16.244
 [0.16.243]: https://github.com/pearjelly/cliany.site/compare/v0.16.242...v0.16.243
 [0.16.242]: https://github.com/pearjelly/cliany.site/compare/v0.16.241...v0.16.242
 [0.16.241]: https://github.com/pearjelly/cliany.site/compare/v0.16.240...v0.16.241
