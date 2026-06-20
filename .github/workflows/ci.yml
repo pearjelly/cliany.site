@@ -76,6 +76,9 @@ jobs:
   test-windows:
     name: Test Windows (pytest)
     runs-on: windows-latest
+    env:
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
