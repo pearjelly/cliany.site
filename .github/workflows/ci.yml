@@ -91,6 +91,10 @@ jobs:
         run: uv pip install -e ".[test]" --system
       - name: 运行核心测试 (排除 perf/qa)
         run: |
+          $ErrorActionPreference = "Continue"
+          if (Get-Variable PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue) {
+            $PSNativeCommandUseErrorActionPreference = $false
+          }
           $testArgs = @(
             "-m", "pytest", "-q", "--tb=short", "--no-cov",
             "--junitxml=windows-pytest.xml",
