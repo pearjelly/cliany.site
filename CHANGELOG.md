@@ -11,6 +11,7 @@
 - `explore --json` now reports missing QA offline fake LLM configuration before CDP preflight, keeping deterministic offline tests independent of whether Chrome is available.
 - CI Obscura smoke now reuses the already installed test environment instead of `uv run`, avoiding a fresh environment without the configured pytest coverage plugin.
 - Windows CI now runs pytest in UTF-8 mode and keeps `tmp_home` isolated through Windows home environment variables, avoiding encoding failures and adapter-state leakage.
+- Candidate issue artifact files now use stable LF newlines, and POSIX executable-bit integrity assertions no longer run on Windows where that bit is not meaningful.
 
 ## [0.16.244] - 2026-06-20
 

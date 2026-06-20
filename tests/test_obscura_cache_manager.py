@@ -2,7 +2,6 @@ import io
 import sys
 import tarfile
 import zipfile
-from pathlib import Path
 
 import pytest
 
@@ -10,7 +9,6 @@ from cliany_site.binary.cache import CacheError, CacheManager, _detect_archive_p
 from cliany_site.binary.platforms import PlatformTarget
 from cliany_site.binary.releases import ArtifactSpec
 from cliany_site.envelope import ErrorCode
-
 
 EXE_NAME = "obscura.exe" if sys.platform == "win32" else "obscura"
 
@@ -248,6 +246,8 @@ class TestCacheManagerIntegrity:
         assert mgr.check_integrity("1.0.0") is False
 
     def test_check_integrity_non_executable(self, tmp_path):
+        if sys.platform == "win32":
+            pytest.skip("Windows does not expose POSIX executable bits")
         mgr = CacheManager(cache_root=tmp_path)
         mgr.install(_make_artifact(version="1.0.0"), _make_tar_gz())
         binary = tmp_path / "1.0.0" / EXE_NAME

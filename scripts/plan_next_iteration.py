@@ -2819,7 +2819,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     issue_body_summary = _issue_body_summary(issue_body_inventory)
     for promotion in plan.candidate_promotions:
         body_path = directory / f"{promotion.case_id}.md"
-        body_path.write_text(promotion.issue_body + "\n", encoding="utf-8")
+        body_path.write_text(promotion.issue_body + "\n", encoding="utf-8", newline="\n")
         labels = [*promotion.issue_labels]
         create_command = _gh_issue_create_command(promotion, body_path)
         metadata.append(
@@ -2892,23 +2892,35 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     (directory / "artifact-manifest.json").write_text(
         json.dumps(artifact_manifest, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
-    (directory / "issue-metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
+    (directory / "issue-metadata.json").write_text(
+        json.dumps(metadata, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     publication_handoff = _publication_handoff(plan)
     (directory / "publication-handoff.json").write_text(
         json.dumps(publication_handoff, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
     release_draft_handoff = _release_draft_handoff(plan)
     (directory / "release-draft-handoff.json").write_text(
         json.dumps(release_draft_handoff, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
+        newline="\n",
     )
-    script_path.write_text("\n".join(_candidate_issue_script_lines(issue_commands)) + "\n", encoding="utf-8")
+    script_path.write_text(
+        "\n".join(_candidate_issue_script_lines(issue_commands)) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     script_path.chmod(0o755)
     (directory / "README.md").write_text(
         _render_issue_artifacts_readme(plan, artifact_bundle_summary=artifact_bundle_summary),
         encoding="utf-8",
+        newline="\n",
     )
 
 
