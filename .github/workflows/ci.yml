@@ -91,7 +91,7 @@ jobs:
         run: uv pip install -e ".[test]" --system
       - name: 运行核心测试 (排除 perf/qa)
         run: >
-          pytest -q --tb=short --no-cov
+          python -m pytest -q --tb=short --no-cov
           tests/test_agent_md.py
           tests/test_atomic_io.py
           tests/test_cli_integration.py
