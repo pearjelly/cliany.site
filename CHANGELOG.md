@@ -17,8 +17,7 @@
 - Windows CI invokes the smoke suite with `python -m pytest` to avoid an anomalous non-zero exit from the `pytest` console script after passing tests.
 - Windows CI now checks the smoke suite JUnit XML before accepting that anomalous non-zero exit, so real Windows test failures still fail the job.
 - Windows CI disables PowerShell native-command fail-fast around pytest so the JUnit-based result check can run.
-- Windows CI now launches pytest through PowerShell `Start-Process` so the job can inspect the pytest exit code and JUnit report explicitly.
-- Windows CI now treats the JUnit XML as authoritative for the smoke suite and clears PowerShell's retained native exit code when the report has zero failures/errors.
+- Windows CI now calls pytest directly from PowerShell, logs the native exit code plus JUnit status, and treats a zero-failure smoke report as authoritative.
 
 ## [0.16.244] - 2026-06-20
 
