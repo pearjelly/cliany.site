@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 SCRIPT = SCRIPTS / "plan_next_iteration.py"
@@ -4426,6 +4428,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
 
 
 def test_plan_cli_writes_json_for_current_repo(capsys):
+    if sys.platform == "win32":
+        pytest.skip("stdout-heavy planner JSON is covered by Linux CI")
+
     exit_code = plan_next_iteration.main(["--json", "--target-version", "0.16.2"])
 
     assert exit_code == 0
