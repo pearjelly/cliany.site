@@ -126,8 +126,8 @@ jobs:
             "tests/test_session_scope.py",
             "tests/binary/test_process_pid_race.py"
           )
-          python @testArgs
-          $pytestExit = $LASTEXITCODE
+          $pytest = Start-Process -FilePath "python" -ArgumentList $testArgs -NoNewWindow -Wait -PassThru
+          $pytestExit = $pytest.ExitCode
           if ($pytestExit -ne 0 -and (Test-Path windows-pytest.xml)) {
             [xml]$report = Get-Content windows-pytest.xml
             $suites = @($report.testsuites.testsuite)
