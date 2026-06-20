@@ -90,60 +90,41 @@ jobs:
       - name: 安装依赖
         run: uv pip install -e ".[test]" --system
       - name: 运行核心测试 (排除 perf/qa)
+        shell: cmd
         run: |
-          $ErrorActionPreference = "Continue"
-          if (Get-Variable PSNativeCommandUseErrorActionPreference -ErrorAction SilentlyContinue) {
-            $PSNativeCommandUseErrorActionPreference = $false
-          }
-          $testArgs = @(
-            "-m", "pytest", "-q", "--tb=short", "--no-cov",
-            "--junitxml=windows-pytest.xml",
-            "tests/test_agent_md.py",
-            "tests/test_atomic_io.py",
-            "tests/test_cli_integration.py",
-            "tests/test_codegen_v2.py",
-            "tests/test_config.py",
-            "tests/test_cross_platform_lock.py",
-            "tests/test_doctor.py",
-            "tests/test_doctor_checks.py",
-            "tests/test_doctor_v3.py",
-            "tests/test_generated_orchestration.py",
-            "tests/test_generator_v3.py",
-            "tests/test_healer.py",
-            "tests/test_healer_cache.py",
-            "tests/test_loader_legacy.py",
-            "tests/test_manifest.py",
-            "tests/test_migrate.py",
-            "tests/test_obscura_binary_models.py",
-            "tests/test_obscura_cache_manager.py",
-            "tests/test_obscura_cli_contract.py",
-            "tests/test_obscura_commands_basic.py",
-            "tests/test_obscura_commands_lifecycle.py",
-            "tests/test_obscura_platform_matrix.py",
-            "tests/test_obscura_process_manager.py",
-            "tests/test_obscura_provider.py",
-            "tests/test_obscura_release_manifest.py",
-            "tests/test_session_scope.py",
-            "tests/binary/test_process_pid_race.py"
-          )
-          & python @testArgs
-          $pytestExit = $LASTEXITCODE
-          Write-Host "Windows smoke pytest exit code: $pytestExit"
-          if (Test-Path windows-pytest.xml) {
-            [xml]$report = Get-Content windows-pytest.xml
-            $suites = @($report.testsuites.testsuite)
-            $failures = ($suites | Measure-Object -Property failures -Sum).Sum
-            $errors = ($suites | Measure-Object -Property errors -Sum).Sum
-            Write-Host "Windows smoke JUnit failures=$failures errors=$errors"
-            if (($failures + $errors) -eq 0) {
-              Write-Host "Windows smoke JUnit has zero failures/errors; pytest exit code was $pytestExit."
-              $global:LASTEXITCODE = 0
-              exit 0
-            }
-          } else {
-            Write-Host "Windows smoke JUnit report was not created."
-          }
-          exit $pytestExit
+          python -m pytest -q --tb=short --no-cov --junitxml=windows-pytest.xml ^
+            tests/test_agent_md.py ^
+            tests/test_atomic_io.py ^
+            tests/test_cli_integration.py ^
+            tests/test_codegen_v2.py ^
+            tests/test_config.py ^
+            tests/test_cross_platform_lock.py ^
+            tests/test_doctor.py ^
+            tests/test_doctor_checks.py ^
+            tests/test_doctor_v3.py ^
+            tests/test_generated_orchestration.py ^
+            tests/test_generator_v3.py ^
+            tests/test_healer.py ^
+            tests/test_healer_cache.py ^
+            tests/test_loader_legacy.py ^
+            tests/test_manifest.py ^
+            tests/test_migrate.py ^
+            tests/test_obscura_binary_models.py ^
+            tests/test_obscura_cache_manager.py ^
+            tests/test_obscura_cli_contract.py ^
+            tests/test_obscura_commands_basic.py ^
+            tests/test_obscura_commands_lifecycle.py ^
+            tests/test_obscura_platform_matrix.py ^
+            tests/test_obscura_process_manager.py ^
+            tests/test_obscura_provider.py ^
+            tests/test_obscura_release_manifest.py ^
+            tests/test_session_scope.py ^
+            tests/binary/test_process_pid_race.py
+          set PYTEST_EXIT=%ERRORLEVEL%
+          echo Windows smoke pytest exit code: %PYTEST_EXIT%
+          python -c "import pathlib, sys, xml.etree.ElementTree as ET; p=pathlib.Path('windows-pytest.xml'); root=ET.parse(p).getroot() if p.exists() else None; suites=(root.findall('testsuite') if root is not None and root.tag == 'testsuites' else ([root] if root is not None else [])); failures=sum(int(s.get('failures', 0)) for s in suites); errors=sum(int(s.get('errors', 0)) for s in suites); print(f'Windows smoke JUnit failures={failures} errors={errors}' if root is not None else 'Windows smoke JUnit report was not created.'); sys.exit(0 if root is not None and failures + errors == 0 else 1)"
+          if %ERRORLEVEL%==0 exit /b 0
+          exit /b %PYTEST_EXIT%
 
   case-catalog:
     name: Case Catalog Validation
