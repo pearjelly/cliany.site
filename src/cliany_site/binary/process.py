@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import contextlib
 import os
 import signal
 import socket
@@ -9,7 +10,7 @@ import time
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import cast
 
 import portalocker
 
@@ -33,8 +34,8 @@ class ProcessHandle:
 @dataclass
 class ProcessStatus:
     state: str  # "running" | "stopped" | "stale"
-    pid: Optional[int]
-    port: Optional[int]
+    pid: int | None
+    port: int | None
     pid_file: Path
     stale: bool
 
@@ -47,7 +48,7 @@ class CleanupResult:
 
 
 class ProcessManager:
-    def __init__(self, pid_file: Optional[Path] = None):
+    def __init__(self, pid_file: Path | None = None):
         self.pid_file = pid_file or Path.home() / ".cliany-site" / "run" / "obscura.pid"
 
     def _write_pid_file(self, pid: int) -> None:
@@ -69,7 +70,7 @@ class ProcessManager:
                 tmp_path = Path(tmp.name)
             os.replace(tmp_path, self.pid_file)
 
-    def _read_pid_file(self) -> Optional[int]:
+    def _read_pid_file(self) -> int | None:
         if not self.pid_file.exists():
             return None
         try:
@@ -126,7 +127,7 @@ class ProcessManager:
         url = f"http://localhost:{port}/json/version"
         try:
             with urllib.request.urlopen(url, timeout=timeout) as resp:
-                return resp.status == 200
+                return cast(bool, resp.status == 200)
         except Exception:  # noqa: BLE001
             return False
 
@@ -146,7 +147,7 @@ class ProcessManager:
     def start(
         self,
         binary_path: Path,
-        port: Optional[int] = None,
+        port: int | None = None,
         *,
         timeout: float = 30.0,
     ) -> ProcessHandle:
@@ -195,10 +196,8 @@ class ProcessManager:
                 except ProcessLookupError:
                     break
             else:
-                try:
+                with contextlib.suppress(ProcessLookupError):
                     os.kill(pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
         except ProcessLookupError:
             pass
 

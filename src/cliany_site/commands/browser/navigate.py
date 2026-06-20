@@ -100,7 +100,7 @@ async def _run_navigate(cdp, url: str, wait_state: str, timeout: int) -> Envelop
                 await page.wait_for_load_state(wait_state, timeout=timeout * 1000)
         finally:
             await cdp.disconnect()
-    except (OSError, RuntimeError, TimeoutError, asyncio.TimeoutError) as exc:
+    except (OSError, RuntimeError, TimeoutError) as exc:
         if isinstance(exc, (TimeoutError, asyncio.TimeoutError)):
             return err(
                 command="browser navigate",

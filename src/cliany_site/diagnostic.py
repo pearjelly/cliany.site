@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any, cast
 
 
 def collect_diagnostic_context(
@@ -104,7 +105,7 @@ def _parse_llm_response(raw: Any) -> dict | None:
             text = match.group(0)
 
     try:
-        return json.loads(text)
+        return cast(dict[Any, Any], json.loads(text))
     except (json.JSONDecodeError, ValueError):
         return None
 

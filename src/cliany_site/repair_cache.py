@@ -1,8 +1,8 @@
-from pathlib import Path
-from typing import TypedDict
-import json
 import hashlib
-from datetime import datetime, UTC
+import json
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import TypedDict, cast
 
 from cliany_site.atomic_io import atomic_read_json, atomic_write_json
 
@@ -29,7 +29,7 @@ def lookup(domain: str, selector_old: str, axtree_subtree_hash: str) -> str | No
     key = f"{selector_old}:{axtree_subtree_hash}"
     entry = data.get(key)
     if entry:
-        return entry['selector_new']
+        return cast(str, entry['selector_new'])
     return None
 
 

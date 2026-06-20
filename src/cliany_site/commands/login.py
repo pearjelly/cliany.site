@@ -56,7 +56,8 @@ async def _capture_session(url: str, cdp_conn: Any = None) -> Any:
             return err(
                 "login",
                 ErrorCode.E_MISSING_CAPABILITY,
-                "Obscura provider 暂不支持 login（需要 navigation/cookies）。请改用 Chrome（unset CLIANY_BROWSER_PROVIDER）或参阅文档。",
+                "Obscura provider 暂不支持 login（需要 navigation/cookies）。"
+                "请改用 Chrome（unset CLIANY_BROWSER_PROVIDER）或参阅文档。",
                 hint=f"Obscura 当前缺少 navigation/cookies 能力，无法执行 login。({_gate.reason})",
                 details={
                     "suggested_action": "unset CLIANY_BROWSER_PROVIDER",

@@ -33,11 +33,7 @@ def is_visible(node: dict[str, Any]) -> bool:
         return False
 
     bbox = node.get("bbox") or {}
-    if isinstance(bbox, dict) and bbox:
-        if bbox.get("width", 1) == 0 and bbox.get("height", 1) == 0:
-            return False
-
-    return True
+    return not (isinstance(bbox, dict) and bbox and bbox.get("width", 1) == 0 and bbox.get("height", 1) == 0)
 
 
 def is_occluded(node: dict[str, Any], all_nodes: list[dict[str, Any]]) -> bool:

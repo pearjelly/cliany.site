@@ -19,11 +19,11 @@ from textual.widgets import (
 )
 from textual.widgets.data_table import CellDoesNotExist
 
-from cliany_site.errors import UNSAFE_ARCHIVE, UnsafeArchiveError
 from cliany_site.activity_log import read_recent_logs
 from cliany_site.atoms.storage import list_atoms
 from cliany_site.browser.launcher import find_chrome_binary
 from cliany_site.config import get_config
+from cliany_site.errors import UNSAFE_ARCHIVE, UnsafeArchiveError
 from cliany_site.explorer.engine import _load_dotenv
 from cliany_site.loader import discover_adapters
 from cliany_site.tui.screens.adapter_detail import AdapterDetailScreen
@@ -279,7 +279,10 @@ class AdapterListScreen(Screen):
                         self.app.notify(f"适配器已存在，将被覆盖: {domain}", severity="warning")
 
                     get_config().adapters_dir.mkdir(parents=True, exist_ok=True)
-                    tar.extractall(path=get_config().adapters_dir, members=_safe_tar_members(tar, get_config().adapters_dir))
+                    tar.extractall(
+                        path=get_config().adapters_dir,
+                        members=_safe_tar_members(tar, get_config().adapters_dir),
+                    )
                     self.app.notify("导入成功")
                     self._load_data()
                     self._update_env_status()

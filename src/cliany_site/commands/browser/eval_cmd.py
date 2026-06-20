@@ -26,6 +26,7 @@ def eval_cmd(
     """在当前页面执行 JavaScript 表达式（需显式传 --allow-eval）"""
     root_obj = ctx.find_root().obj if isinstance(ctx.find_root().obj, dict) else {}
     effective_json = json_mode if json_mode is not None else bool(root_obj.get("json_mode"))
+    result: Envelope
 
     if not allow_eval:
         result = err(

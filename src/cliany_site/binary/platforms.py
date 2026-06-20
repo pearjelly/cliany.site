@@ -93,14 +93,14 @@ def get_artifact_filename(target: PlatformTarget) -> str:
     """返回 Obscura release artifact 文件名"""
     # 基于实际 release 命名格式
     if target.target_key == "darwin-arm64":
-        return f"obscura-aarch64-macos.tar.gz"
+        return "obscura-aarch64-macos.tar.gz"
     elif target.target_key == "darwin-x86_64":
-        return f"obscura-x86_64-macos.tar.gz"
+        return "obscura-x86_64-macos.tar.gz"
     elif target.target_key == "linux-x86_64":
-        return f"obscura-x86_64-linux.tar.gz"
+        return "obscura-x86_64-linux.tar.gz"
     elif target.target_key == "linux-aarch64":
-        return f"obscura-aarch64-linux.tar.gz"
+        return "obscura-aarch64-linux.tar.gz"
     elif target.target_key == "windows-x86_64":
-        return f"obscura-x86_64-windows.zip"
+        return "obscura-x86_64-windows.zip"
     else:
         raise UnsupportedPlatformError(target.target_key, hint=SUPPORTED_PLATFORM_HINT)

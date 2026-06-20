@@ -1,15 +1,14 @@
 import dataclasses
 import json
+import os
 import tempfile
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-import os
-from cliany_site.browser.network_capture import NetworkCapture, start_network_capture, stop_network_capture
 from cliany_site.browser.console_capture import ConsoleCapture, start_console_capture, stop_console_capture
-
+from cliany_site.browser.network_capture import NetworkCapture, start_network_capture, stop_network_capture
 from cliany_site.explorer.models import RecordingManifest, StepRecord
 
 

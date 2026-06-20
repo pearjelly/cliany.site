@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
+from typing import Any, cast
 
 import click
 
@@ -48,17 +49,18 @@ def extract(
     root_obj = ctx.find_root().obj if isinstance(ctx.find_root().obj, dict) else {}
     effective_json = json_mode if json_mode is not None else bool(root_obj.get("json_mode"))
     cdp = cdp_from_context(ctx)
-    fields = _parse_fields_json(fields_json)
-    if isinstance(fields, dict) and fields.get("ok") is False:
-        print_envelope(fields, effective_json)
+    parsed_fields = _parse_fields_json(fields_json)
+    if isinstance(parsed_fields, dict) and parsed_fields.get("ok") is False:
+        print_envelope(cast(Envelope, parsed_fields), effective_json)
         ctx.exit(1)
+    fields = cast(dict[str, Any] | None, parsed_fields)
     result = asyncio.run(_run_extract(cdp, selector, fmt, mode, fields, strict_quality=strict_quality))
     print_envelope(result, effective_json)
     if not result.get("ok"):
         ctx.exit(1)
 
 
-def _parse_fields_json(fields_json: str | None) -> dict | None | Envelope:
+def _parse_fields_json(fields_json: str | None) -> dict[str, Any] | None | Envelope:
     if not fields_json:
         return None
     try:
@@ -105,7 +107,7 @@ async def _run_extract(
         finally:
             await cdp.disconnect()
         if isinstance(content, dict) and not content.get("ok", True):
-            return content
+            return cast(Envelope, content)
     except (OSError, RuntimeError) as exc:
         return err(
             command="browser extract",
@@ -159,7 +161,7 @@ async def _do_structured_extract(
                 message="无法获取当前页面",
                 details={"selector": selector, "mode": mode},
             )
-        return await page.evaluate(js_expr)
+        return cast(object, await page.evaluate(js_expr))
     except (OSError, RuntimeError, ValueError) as exc:
         return err(
             command="browser extract",

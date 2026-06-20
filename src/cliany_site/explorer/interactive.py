@@ -130,7 +130,7 @@ class InteractiveController:
                     cdp_session = maybe_session
                 maybe_session_id = getattr(cdp_session, "session_id", None)
                 session_id = str(maybe_session_id) if maybe_session_id else None
-        except (AttributeError, RuntimeError, asyncio.TimeoutError) as exc:
+        except (TimeoutError, AttributeError, RuntimeError) as exc:
             logger.warning(
                 "获取 CDP session 失败，将继续尝试回退: %s",
                 exc,
@@ -193,7 +193,7 @@ class InteractiveController:
 
         try:
             await self._try_browser_back(browser_session, fallback_url)
-        except (asyncio.TimeoutError, ConnectionError, RuntimeError, OSError) as exc:
+        except (TimeoutError, ConnectionError, RuntimeError, OSError) as exc:
             logger.warning(
                 "执行浏览器回退失败（继续流程）: %s",
                 exc,

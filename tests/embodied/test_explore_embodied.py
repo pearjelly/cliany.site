@@ -4,7 +4,9 @@
 import socket
 
 import pytest
-from playwright.async_api import async_playwright
+
+playwright_async_api = pytest.importorskip("playwright.async_api")
+async_playwright = playwright_async_api.async_playwright
 
 
 def _pick_free_port() -> int:

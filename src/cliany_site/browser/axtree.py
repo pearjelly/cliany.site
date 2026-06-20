@@ -103,7 +103,7 @@ async def capture_axtree(browser_session: Any) -> dict:
     if os.environ.get("CLIANY_AXTREE_PRUNE", "1") != "0":
         selector_map, pruning_meta = prune_selector_map(selector_map)
     else:
-        pruning_meta: dict = {"original_count": 0, "pruned_count": 0, "pruning_ratio": 0.0}
+        pruning_meta = {"original_count": 0, "pruned_count": 0, "pruning_ratio": 0.0}
 
     if nested_stats["iframe_count"] > 0 or nested_stats["shadow_root_count"] > 0:
         logger.info(

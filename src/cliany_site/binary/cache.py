@@ -7,7 +7,6 @@ import sys
 import tarfile
 import zipfile
 from pathlib import Path
-from typing import List, Optional
 
 from cliany_site.binary.releases import ArtifactSpec
 from cliany_site.envelope import ErrorCode
@@ -38,7 +37,7 @@ def _active_file(cache_root: Path) -> Path:
     return cache_root / "active"
 
 
-def _find_binary(version_dir: Path, exe_name: str) -> Optional[Path]:
+def _find_binary(version_dir: Path, exe_name: str) -> Path | None:
     for p in version_dir.rglob(exe_name):
         if p.is_file():
             return p
@@ -49,7 +48,7 @@ def _fix_executable(path: Path) -> None:
     path.chmod(path.stat().st_mode | 0o111)
 
 
-def _remove_quarantine(path: Path) -> Optional[str]:
+def _remove_quarantine(path: Path) -> str | None:
     """仅在 macOS 上运行 xattr -dr；失败返回 warning 字符串，不抛异常。"""
     if sys.platform != "darwin":
         return None
@@ -69,7 +68,7 @@ def _remove_quarantine(path: Path) -> Optional[str]:
     return None
 
 
-def _detect_archive_prefix(names: List[str]) -> str:
+def _detect_archive_prefix(names: list[str]) -> str:
     """返回归档内公共顶层目录前缀（含尾部 /）；若根层有直接文件则返回空字符串。"""
     if not names:
         return ""
@@ -105,7 +104,7 @@ class CacheManager:
         active     (当前 active 版本文本文件)
     """
 
-    def __init__(self, cache_root: Optional[Path] = None):
+    def __init__(self, cache_root: Path | None = None):
         if cache_root is None:
             cache_root = Path.home() / ".cliany-site" / "bin" / "obscura"
         self.cache_root = cache_root
@@ -177,7 +176,7 @@ class CacheManager:
             )
         return binary_path
 
-    def list_versions(self) -> List[str]:
+    def list_versions(self) -> list[str]:
         if not self.cache_root.exists():
             return []
         return sorted(
@@ -208,7 +207,7 @@ class CacheManager:
             return False
         return bool(binary_path.stat().st_mode & 0o100)
 
-    def get_active_version(self) -> Optional[str]:
+    def get_active_version(self) -> str | None:
         """返回当前 active 版本号，若未设置则返回 None。"""
         active_f = _active_file(self.cache_root)
         if not active_f.exists():
@@ -227,7 +226,7 @@ class CacheManager:
         self.cache_root.mkdir(parents=True, exist_ok=True)
         _active_file(self.cache_root).write_text(version, encoding="utf-8")
 
-    def _get_active_version(self) -> Optional[str]:
+    def _get_active_version(self) -> str | None:
         return self.get_active_version()
 
     def _extract_archive(self, archive_path: Path, filename: str, dest_dir: Path) -> None:

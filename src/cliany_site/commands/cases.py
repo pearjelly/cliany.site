@@ -7,7 +7,7 @@ from typing import Any
 
 import click
 
-from cliany_site.envelope import ErrorCode, err, ok
+from cliany_site.envelope import Envelope, ErrorCode, err, ok
 from cliany_site.response import print_response
 
 ALLOWED_STATUSES = ("active", "candidate", "degraded", "known-gap", "retired")
@@ -79,12 +79,14 @@ def _offline_commands(case: dict[str, Any]) -> list[str]:
 
 
 def _candidate_explore_commands(case: dict[str, Any]) -> list[str]:
-    commands = case.get("commands") if isinstance(case.get("commands"), list) else []
+    raw_commands = case.get("commands")
+    commands = raw_commands if isinstance(raw_commands, list) else []
     return [str(command) for command in commands if str(command).startswith("cliany-site explore ")]
 
 
 def _candidate_adapter_commands(case: dict[str, Any]) -> list[str]:
-    commands = case.get("commands") if isinstance(case.get("commands"), list) else []
+    raw_commands = case.get("commands")
+    commands = raw_commands if isinstance(raw_commands, list) else []
     return [
         str(command)
         for command in commands
@@ -96,7 +98,7 @@ def _candidate_promotion_command_plan(case: dict[str, Any]) -> list[dict[str, An
     explore_commands = _candidate_explore_commands(case)
     adapter_commands = _candidate_adapter_commands(case)
     adapter_domain = case.get("adapter_domain")
-    plan = [
+    plan: list[dict[str, Any]] = [
         {
             "task": "llm_live_preflight",
             "command": LLM_LIVE_PREFLIGHT_COMMAND,
@@ -152,10 +154,13 @@ def _case_ids(cases: list[dict[str, Any]]) -> list[str]:
 def _candidate_issue_template(case: dict[str, Any]) -> str:
     case_id = str(case.get("id") or "")
     target_url = str(case.get("target_url") or "")
-    commands = case.get("commands") if isinstance(case.get("commands"), list) else []
+    raw_commands = case.get("commands")
+    commands = raw_commands if isinstance(raw_commands, list) else []
     offline_commands = _offline_commands(case)
-    promotion = case.get("promotion") if isinstance(case.get("promotion"), dict) else {}
-    evidence = case.get("promotion_evidence") if isinstance(case.get("promotion_evidence"), dict) else {}
+    raw_promotion = case.get("promotion")
+    promotion: dict[str, Any] = raw_promotion if isinstance(raw_promotion, dict) else {}
+    raw_evidence = case.get("promotion_evidence")
+    evidence: dict[str, Any] = raw_evidence if isinstance(raw_evidence, dict) else {}
     primary_task = _candidate_issue_primary_task(evidence)
 
     lines = [
@@ -303,8 +308,10 @@ def _candidate_task_handoff(
 def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
     case_id = str(case.get("id") or "")
     adapter_domain = case.get("adapter_domain")
-    promotion = case.get("promotion") if isinstance(case.get("promotion"), dict) else {}
-    evidence = case.get("promotion_evidence") if isinstance(case.get("promotion_evidence"), dict) else {}
+    raw_promotion = case.get("promotion")
+    promotion: dict[str, Any] = raw_promotion if isinstance(raw_promotion, dict) else {}
+    raw_evidence = case.get("promotion_evidence")
+    evidence: dict[str, Any] = raw_evidence if isinstance(raw_evidence, dict) else {}
     promotion_command_plan = _candidate_promotion_command_plan(case)
     command_plan_by_task = {
         str(item.get("task") or ""): item for item in promotion_command_plan if isinstance(item, dict)
@@ -916,6 +923,7 @@ def cases_cmd(
     root_ctx = ctx.find_root()
     root_obj = root_ctx.obj if isinstance(root_ctx.obj, dict) else {}
     effective_json_mode = json_mode if json_mode is not None else bool(root_obj.get("json_mode", False))
+    result: Envelope
 
     try:
         catalog_cases, source_path, checked_paths = _load_cases_manifest()
@@ -1010,11 +1018,8 @@ def cases_cmd(
             return
         if issue_template:
             rendered_issue_template = _candidate_issue_template(selected_case)
-            evidence = (
-                selected_case.get("promotion_evidence")
-                if isinstance(selected_case.get("promotion_evidence"), dict)
-                else {}
-            )
+            raw_evidence = selected_case.get("promotion_evidence")
+            evidence: dict[str, Any] = raw_evidence if isinstance(raw_evidence, dict) else {}
             rendered_issue_template_primary_task = _candidate_issue_primary_task(evidence)
         if evidence_bundle:
             rendered_evidence_bundle = _candidate_evidence_bundle(selected_case)

@@ -1,7 +1,7 @@
 import os
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
+from typing import Any
 
 _SIZE_CAP = 1_048_576  # 1 MB hard limit — not configurable
 
@@ -14,12 +14,12 @@ def _get_attr_or_dict(obj: Any, key: str, default: Any = None) -> Any:
 
 @dataclass
 class NetworkCapture:
-    requests: List[Dict[str, Any]] = field(default_factory=list)
+    requests: list[dict[str, Any]] = field(default_factory=list)
     truncated: bool = False
     total_size: int = 0
     _enabled: bool = True
 
-    def _add_request(self, entry: Dict[str, Any]) -> None:
+    def _add_request(self, entry: dict[str, Any]) -> None:
         if not self._enabled or self.truncated:
             return
 
@@ -89,7 +89,7 @@ def start_network_capture(session: Any) -> NetworkCapture:
     capture = NetworkCapture()
 
     if hasattr(session, "cdp_client"):
-        client = getattr(session, "cdp_client")
+        client = session.cdp_client
         if hasattr(client, "on"):
             client.on(
                 "Network.responseReceived",
@@ -103,7 +103,7 @@ def start_network_capture(session: Any) -> NetworkCapture:
     return capture
 
 
-def stop_network_capture(capture: NetworkCapture) -> Dict[str, Any]:
+def stop_network_capture(capture: NetworkCapture) -> dict[str, Any]:
     return {
         "requests": capture.requests,
         "truncated": capture.truncated,

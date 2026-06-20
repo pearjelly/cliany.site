@@ -92,7 +92,7 @@ class Healer:
 
         # 计算 cache key
         from cliany_site.repair_cache import compute_subtree_hash
-        
+
         _selector = ""
         _err = failure_envelope.get("error") or {}
         _details = _err.get("details") or {}

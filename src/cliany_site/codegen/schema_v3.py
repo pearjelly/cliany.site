@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, List, TypedDict
+from typing import Any, TypedDict
 
 
 class CompoundsMeta(TypedDict, total=False):
     role: str
-    children: List[Any]
+    children: list[Any]
     ref: str
 
 
@@ -26,11 +26,11 @@ class MetadataV3(TypedDict, total=False):
     domain: str
     generated_at: str
     generator_version: str
-    commands: List[Any]
-    canonical_actions: List[Any]
-    selector_pool: List[Any]
-    smoke: List[Any]
-    heal_history: List[Any]
+    commands: list[Any]
+    canonical_actions: list[Any]
+    selector_pool: list[Any]
+    smoke: list[Any]
+    heal_history: list[Any]
     axtree: dict
     capability: CapabilityMeta
-    api_endpoints: List[Any]
+    api_endpoints: list[Any]

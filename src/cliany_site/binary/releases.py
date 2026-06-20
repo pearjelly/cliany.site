@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from cliany_site.binary.platforms import PlatformTarget, get_artifact_filename
 from cliany_site.envelope import ErrorCode
@@ -34,7 +33,7 @@ class DownloadError(Exception):
 
 
 def resolve_release(
-    version: Optional[str],
+    version: str | None,
     platform: PlatformTarget,
     *,
     offline: bool = False,

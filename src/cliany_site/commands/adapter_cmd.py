@@ -77,6 +77,7 @@ def accept_heal(ctx: click.Context, domain: str, json_mode: bool | None) -> None
     root_ctx = ctx.find_root()
     root_obj = root_ctx.obj if isinstance(root_ctx.obj, dict) else {}
     effective_json = json_mode if json_mode is not None else bool(root_obj.get("json_mode", False))
+    envelope: Envelope
 
     cfg = get_config()
     healed_path = cfg.adapters_dir / domain / "metadata.healed.json"

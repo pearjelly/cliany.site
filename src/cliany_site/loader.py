@@ -16,7 +16,11 @@ import portalocker
 from cliany_site.codegen.generator import METADATA_SCHEMA_VERSION
 from cliany_site.config import get_config
 from cliany_site.errors import LOCK_TIMEOUT
-from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata  # type: ignore[reportUnknownVariableType]  # metadata.py 未标注 dict 类型参数
+from cliany_site.metadata import (  # type: ignore[reportUnknownVariableType]  # metadata.py 未标注 dict 类型参数
+    LegacyMetadataError,
+    MetadataParseError,
+    load_metadata,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -215,7 +219,7 @@ def build_manifest(registry: LazyAdapterRegistry) -> dict[str, Any]:
             try:
                 mtime_ns = metadata_path.stat().st_mtime_ns
                 last_modified = datetime.datetime.fromtimestamp(
-                    mtime_ns / 1e9, tz=datetime.timezone.utc
+                    mtime_ns / 1e9, tz=datetime.UTC
                 ).isoformat()
             except OSError:
                 pass
@@ -227,7 +231,7 @@ def build_manifest(registry: LazyAdapterRegistry) -> dict[str, Any]:
         }
     return {
         "schema_version": METADATA_SCHEMA_VERSION,
-        "generated_at": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
+        "generated_at": datetime.datetime.now(tz=datetime.UTC).isoformat(),
         "adapters": adapters,
     }
 
@@ -263,7 +267,7 @@ def load_or_rebuild(registry: LazyAdapterRegistry) -> dict[str, Any]:
                 empty_adapters: dict[str, Any] = {}
                 manifest = {
                     "schema_version": METADATA_SCHEMA_VERSION,
-                    "generated_at": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
+                    "generated_at": datetime.datetime.now(tz=datetime.UTC).isoformat(),
                     "adapters": empty_adapters,
                 }
 
@@ -286,5 +290,5 @@ def load_or_rebuild(registry: LazyAdapterRegistry) -> dict[str, Any]:
     except portalocker.LockException as _lock_exc:
         from cliany_site.errors import AdapterLoadError
         _exc = AdapterLoadError(f"获取 manifest 锁超时，请稍后重试: {_lock_exc}")
-        setattr(_exc, "error_code", LOCK_TIMEOUT)
+        _exc.error_code = LOCK_TIMEOUT
         raise _exc from _lock_exc

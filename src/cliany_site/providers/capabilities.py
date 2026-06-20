@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -15,7 +14,7 @@ class CapabilitySnapshot:
     supports_network_events: bool
     supports_console_events: bool
     platform: str = ""
-    cdp_domains: Optional[list] = field(default=None)
+    cdp_domains: list | None = field(default=None)
 
 
 @dataclass

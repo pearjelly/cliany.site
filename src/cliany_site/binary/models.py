@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
@@ -13,20 +12,20 @@ class BinaryVersion:
     platform: str
     path: Path
     is_ready: bool
-    installed_at: Optional[datetime] = None
+    installed_at: datetime | None = None
 
 
 @dataclass
 class BinaryState:
     cache_dir: Path
-    active_version: Optional[str]
+    active_version: str | None
     installed_versions: list
     auto_upgrade_enabled: bool = False
 
 
 @dataclass
 class BinaryConfig:
-    pinned_version: Optional[str] = None
+    pinned_version: str | None = None
     auto_upgrade: bool = False
     min_version: str = "0.1.2"
 
@@ -60,7 +59,7 @@ def install_version(state: BinaryState, version: str, platform: str) -> BinarySt
         platform=platform,
         path=exe,
         is_ready=True,
-        installed_at=datetime.now(timezone.utc),
+        installed_at=datetime.now(UTC),
     )
 
     existing = [v for v in state.installed_versions if v.version != version]
@@ -89,7 +88,7 @@ def use_version(state: BinaryState, version: str) -> BinaryState:
 def rollback_version(state: BinaryState) -> BinaryState:
     sorted_versions = sorted(
         state.installed_versions,
-        key=lambda v: v.installed_at or datetime.min.replace(tzinfo=timezone.utc),
+        key=lambda v: v.installed_at or datetime.min.replace(tzinfo=UTC),
     )
     if len(sorted_versions) < 2:
         raise ValueError("没有可回滚的历史版本")
@@ -104,7 +103,7 @@ def rollback_version(state: BinaryState) -> BinaryState:
     return use_version(state, target.version)
 
 
-def get_active_version(cache_dir: Path) -> Optional[str]:
+def get_active_version(cache_dir: Path) -> str | None:
     active = _active_file(cache_dir)
     if not active.exists():
         return None

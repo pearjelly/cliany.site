@@ -4,13 +4,14 @@ from __future__ import annotations
 import re
 import sys
 from pathlib import Path
+from typing import cast
 
 import click
 
 from cliany_site.binary.cache import CacheError, CacheManager
 from cliany_site.binary.platforms import UnsupportedPlatformError, normalize_platform
 from cliany_site.binary.process import ProcessManager
-from cliany_site.envelope import ErrorCode, err, ok
+from cliany_site.envelope import Envelope, ErrorCode, err, ok
 from cliany_site.errors import BINARY_DOWNLOAD_FAILED, ClanySiteError
 from cliany_site.response import print_response
 
@@ -25,7 +26,6 @@ def _effective_json(ctx: click.Context, json_mode: bool | None) -> bool:
 
 
 def _download_with_retry(url: str, timeout: int = 60, max_attempts: int = 3, base_backoff: float = 1.0) -> bytes:
-    import socket
     import time
     import urllib.request
     from urllib.error import HTTPError, URLError
@@ -34,12 +34,12 @@ def _download_with_retry(url: str, timeout: int = 60, max_attempts: int = 3, bas
     for attempt in range(max_attempts):
         try:
             with urllib.request.urlopen(url, timeout=timeout) as resp:
-                return resp.read()
+                return cast(bytes, resp.read())
         except HTTPError as e:
             if e.code and 400 <= e.code < 500:
                 raise
             last_exc = e
-        except (URLError, socket.timeout, ConnectionResetError) as e:
+        except (TimeoutError, URLError, ConnectionResetError) as e:
             last_exc = e
 
         if attempt < max_attempts - 1:
@@ -79,6 +79,7 @@ def install_cmd(ctx: click.Context, version: str, json_mode: bool | None):
     import platform as _platform
 
     json_mode = _effective_json(ctx, json_mode)
+    result: Envelope
 
     if not version or not _VERSION_RE.match(version):
         result = err("obscura.install", ErrorCode.E_INVALID_PARAM,
@@ -129,13 +130,14 @@ def install_cmd(ctx: click.Context, version: str, json_mode: bool | None):
 def use_cmd(ctx: click.Context, version: str, json_mode: bool | None):
     """切换 active Obscura 版本。"""
     json_mode = _effective_json(ctx, json_mode)
+    result: Envelope
     cache_mgr = CacheManager()
 
     try:
         cache_mgr.set_active_version(version)
         binary_path = cache_mgr.get_binary_path(version)
     except CacheError as exc:
-        result = err("obscura.use", exc.error_code, str(exc))
+        result = err("obscura.use", exc.error_code or ErrorCode.E_UNKNOWN, str(exc))
         print_response(result, json_mode=json_mode, exit_on_error=False)
         sys.exit(1)
 
@@ -201,6 +203,7 @@ def status_cmd(ctx: click.Context, json_mode: bool | None):
 def clean_cmd(ctx: click.Context, version: str | None, all_versions: bool, json_mode: bool | None):
     """删除指定版本缓存（或 --all 删除全部非活跃版本）。"""
     json_mode = _effective_json(ctx, json_mode)
+    result: Envelope
 
     if not version and not all_versions:
         result = err("obscura.clean", ErrorCode.E_INVALID_PARAM, "必须提供 --version 或 --all 参数")
@@ -218,7 +221,7 @@ def clean_cmd(ctx: click.Context, version: str | None, all_versions: bool, json_
         try:
             cache_mgr.remove_version(version)
         except CacheError as exc:
-            result = err("obscura.clean", exc.error_code, str(exc))
+            result = err("obscura.clean", exc.error_code or ErrorCode.E_UNKNOWN, str(exc))
             print_response(result, json_mode=json_mode, exit_on_error=False)
             sys.exit(1)
         result = ok("obscura.clean", {"removed": [version], "skipped": []})
@@ -250,6 +253,7 @@ def clean_cmd(ctx: click.Context, version: str | None, all_versions: bool, json_
 def rollback_cmd(ctx: click.Context, json_mode: bool | None):
     """将 active version 回退到已安装的上一个版本。"""
     json_mode = _effective_json(ctx, json_mode)
+    result: Envelope
     cache_mgr = CacheManager()
 
     installed = cache_mgr.list_versions()
@@ -277,7 +281,7 @@ def rollback_cmd(ctx: click.Context, json_mode: bool | None):
     try:
         cache_mgr.set_active_version(prev_version)
     except CacheError as exc:
-        result = err("obscura.rollback", exc.error_code, str(exc))
+        result = err("obscura.rollback", exc.error_code or ErrorCode.E_UNKNOWN, str(exc))
         print_response(result, json_mode=json_mode, exit_on_error=False)
         sys.exit(1)
 
@@ -297,6 +301,7 @@ def upgrade_cmd(ctx: click.Context, version: str, json_mode: bool | None):
     import platform as _platform
 
     json_mode = _effective_json(ctx, json_mode)
+    result: Envelope
 
     if not version or not _VERSION_RE.match(version):
         result = err("obscura.upgrade", ErrorCode.E_INVALID_PARAM,
@@ -325,7 +330,7 @@ def upgrade_cmd(ctx: click.Context, version: str, json_mode: bool | None):
     try:
         cache_mgr.set_active_version(version)
     except CacheError as exc:
-        result = err("obscura.upgrade", exc.error_code, str(exc))
+        result = err("obscura.upgrade", exc.error_code or ErrorCode.E_UNKNOWN, str(exc))
         print_response(result, json_mode=json_mode, exit_on_error=False)
         sys.exit(1)
 

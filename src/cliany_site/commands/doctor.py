@@ -108,7 +108,7 @@ def _build_capabilities(checks: list[dict[str, Any]]) -> dict[str, dict[str, Any
                 blockers.append(name)
         return blockers
 
-    capabilities = {
+    capabilities: dict[str, dict[str, Any]] = {
         "manage_adapters": {
             "label": "安装、查看和校验已有 adapter",
             "blockers": blocked_by(("dirs",)),
@@ -556,7 +556,7 @@ async def _run_checks(cdp_conn: Any = None, *, llm_live: bool = False) -> Envelo
     summary = _enrich_checks(checks)
 
     # 新增字段
-    data = {"checks": checks, "summary": summary}
+    data: dict[str, Any] = {"checks": checks, "summary": summary}
     data["schema_version"] = 3
 
     # manifest_status

@@ -553,10 +553,9 @@ async def _execute_api_step(endpoint: ApiEndpoint, action: dict) -> dict:
     GET 请求目标 endpoint.url，返回响应 JSON。
     """
     import aiohttp
-    async with aiohttp.ClientSession() as session:
-        async with session.get(endpoint.url) as r:
-            r.raise_for_status()
-            data = await r.json()
+    async with aiohttp.ClientSession() as session, session.get(endpoint.url) as r:
+        r.raise_for_status()
+        data = await r.json()
     return {"success": True, "mode": "api", "data": data}
 
 
@@ -592,7 +591,7 @@ async def execute_action_steps(
     _api_endpoints: list[ApiEndpoint] = []
     if metadata:
         for ep_dict in (metadata.get("api_endpoints") or []):
-            try:
+            with contextlib.suppress(KeyError, TypeError):
                 _api_endpoints.append(ApiEndpoint(
                     url=ep_dict["url"],
                     method=ep_dict.get("method", "GET"),
@@ -600,8 +599,6 @@ async def execute_action_steps(
                     sample_response_keys=ep_dict.get("sample_response_keys", []),
                     content_type=ep_dict.get("content_type", "application/json"),
                 ))
-            except (KeyError, TypeError):
-                pass
 
     # 检查 force_browser flag
     import click as _click
@@ -713,7 +710,11 @@ async def execute_action_steps(
                             completed_indices.append(idx)
                             continue
                         except Exception as _api_err:
-                            warnings.warn(f"API step failed: {_api_err}, falling back to browser", UserWarning, stacklevel=2)
+                            warnings.warn(
+                                f"API step failed: {_api_err}, falling back to browser",
+                                UserWarning,
+                                stacklevel=2,
+                            )
                             # fall through to browser execution
 
                 elif action_type == "navigate":

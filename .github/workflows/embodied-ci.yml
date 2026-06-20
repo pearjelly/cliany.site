@@ -31,8 +31,8 @@ jobs:
         with:
           python-version: "3.11"
       - name: 安装依赖
-        run: uv pip install -e ".[test]" --system
+        run: uv pip install -e ".[test]" playwright --system
       - name: 安装 Playwright Chromium
-        run: python3 -m playwright install --with-deps chromium
+        run: python -m playwright install --with-deps chromium
       - name: 运行具身测试
         run: pytest tests/embodied/ -m embodied -v --no-cov

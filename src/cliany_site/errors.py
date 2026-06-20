@@ -6,6 +6,8 @@
 class ClanySiteError(Exception):
     """cliany-site 所有自定义异常的基类"""
 
+    error_code: str | None = None
+
 
 class CdpError(ClanySiteError):
     """CDP 连接 / 浏览器通信相关异常"""

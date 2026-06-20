@@ -12,7 +12,8 @@ def _print_envelope(result: Envelope, json_mode: bool) -> None:
     if json_mode:
         click.echo(json.dumps(result, ensure_ascii=False, indent=2))
     elif result.get("ok"):
-        data = result.get("data", {})
+        raw_data = result.get("data")
+        data = raw_data if isinstance(raw_data, dict) else {}
         click.echo(f"✓ 页面状态  url={data.get('url', '')}  title={data.get('title', '')}")
     else:
         error_info = result.get("error")

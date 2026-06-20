@@ -30,6 +30,7 @@ from urllib.parse import urlparse
 
 if TYPE_CHECKING:
     from browser_use.browser.session import BrowserSession
+
     from cliany_site.browser.cdp import CDPConnection
 
 from cliany_site.config import get_config
