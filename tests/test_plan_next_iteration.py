@@ -2949,7 +2949,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "  exit 1" in script
     assert "--body-file" in script
     assert "pypi-project-search.md" in script
-    assert oct((issues_dir / "create-issues.sh").stat().st_mode & 0o777) == "0o755"
+    if sys.platform != "win32":
+        assert oct((issues_dir / "create-issues.sh").stat().st_mode & 0o777) == "0o755"
     assert "# cliany-site Candidate Issue Artifacts" in readme
     assert "Generated for target version `0.16.2`." in readme
     assert "`issue-metadata.json`: structured issue title, labels, reproduction context" in readme
