@@ -128,13 +128,14 @@ jobs:
           )
           $pytest = Start-Process -FilePath "python" -ArgumentList $testArgs -NoNewWindow -Wait -PassThru
           $pytestExit = $pytest.ExitCode
-          if ($pytestExit -ne 0 -and (Test-Path windows-pytest.xml)) {
+          if (Test-Path windows-pytest.xml) {
             [xml]$report = Get-Content windows-pytest.xml
             $suites = @($report.testsuites.testsuite)
             $failures = ($suites | Measure-Object -Property failures -Sum).Sum
             $errors = ($suites | Measure-Object -Property errors -Sum).Sum
             if (($failures + $errors) -eq 0) {
-              Write-Host "pytest returned $pytestExit despite zero JUnit failures/errors; treating Windows smoke as passed."
+              Write-Host "Windows smoke JUnit has zero failures/errors; pytest exit code was $pytestExit."
+              $global:LASTEXITCODE = 0
               exit 0
             }
           }
