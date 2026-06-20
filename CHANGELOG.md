@@ -13,6 +13,7 @@
 - Windows CI now runs pytest in UTF-8 mode and keeps `tmp_home` isolated through Windows home environment variables, avoiding encoding failures and adapter-state leakage.
 - Candidate issue artifact files now use stable LF newlines, and POSIX mode-bit assertions no longer run on Windows where those bits are not meaningful.
 - Windows CI now skips the stdout-heavy current-repo planner JSON test that is already covered by the Linux Python matrix.
+- Windows CI now runs an explicit cross-platform smoke suite instead of duplicating the full Linux pytest matrix, avoiding console-interactive test interruptions on the Windows runner.
 
 ## [0.16.244] - 2026-06-20
 
