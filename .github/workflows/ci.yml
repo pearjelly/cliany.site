@@ -175,7 +175,7 @@ jobs:
       - name: 安装依赖
         run: uv pip install -e ".[test]" --system
       - name: Obscura smoke (mock-based)
-        run: uv run pytest -q tests/test_obscura_provider.py tests/test_obscura_explore_compat.py tests/test_obscura_browser_commands.py tests/test_obscura_session_recording.py tests/test_obscura_benchmark.py
+        run: pytest -q tests/test_obscura_provider.py tests/test_obscura_explore_compat.py tests/test_obscura_browser_commands.py tests/test_obscura_session_recording.py tests/test_obscura_benchmark.py
 
   benchmark-regression:
     name: Benchmark Regression

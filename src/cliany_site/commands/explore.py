@@ -105,15 +105,6 @@ def explore_cmd(
                     },
                 )
 
-        cdp = cdp_from_context(ctx)
-        if not await cdp.check_available():
-            return err(
-                "explore",
-                ErrorCode.E_CDP_UNAVAILABLE,
-                "Chrome CDP 不可用",
-                hint="启动 Chrome 并开启 --remote-debugging-port=9222",
-            )
-
         qa_offline = os.getenv("CLIANY_QA_OFFLINE") == "1"
         if qa_offline and not os.getenv("CLIANY_QA_FAKE_LLM_RESPONSES"):
             return err(
@@ -122,6 +113,15 @@ def explore_cmd(
                 "CLIANY_QA_OFFLINE=1 requires CLIANY_QA_FAKE_LLM_RESPONSES",
                 hint="set CLIANY_QA_FAKE_LLM_RESPONSES to a JSON file path",
                 source="builtin",
+            )
+
+        cdp = cdp_from_context(ctx)
+        if not await cdp.check_available():
+            return err(
+                "explore",
+                ErrorCode.E_CDP_UNAVAILABLE,
+                "Chrome CDP 不可用",
+                hint="启动 Chrome 并开启 --remote-debugging-port=9222",
             )
 
         if not qa_offline:
