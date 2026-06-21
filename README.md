@@ -100,6 +100,8 @@ cliany-site is built on browser-use and Large Language Models (LLMs), enabling f
 
 For a guided first run, see [10-minute success path](docs/quickstart-10min.md). It starts with a real demo adapter before requiring LLM setup, then points successful users toward the `Real Demo Case Proposal` path for contributing new public read-only cases.
 
+For upcoming work, see the user-facing [public roadmap](docs/public-roadmap.md) and the maintainer [Q3 roadmap](docs/roadmap-2026-q3.md).
+
 ### Installation
 
 ```bash
