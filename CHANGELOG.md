@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.245] - 2026-06-21
+
 ### Fixed
 - `explore --json` now reports missing QA offline fake LLM configuration before CDP preflight, keeping deterministic offline tests independent of whether Chrome is available.
 - CI Obscura smoke now reuses the already installed test environment instead of `uv run`, avoiding a fresh environment without the configured pytest coverage plugin.
@@ -2273,7 +2275,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.244...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.245...HEAD
+[0.16.245]: https://github.com/pearjelly/cliany.site/compare/v0.16.244...v0.16.245
 [0.16.244]: https://github.com/pearjelly/cliany.site/compare/v0.16.243...v0.16.244
 [0.16.243]: https://github.com/pearjelly/cliany.site/compare/v0.16.242...v0.16.243
 [0.16.242]: https://github.com/pearjelly/cliany.site/compare/v0.16.241...v0.16.242

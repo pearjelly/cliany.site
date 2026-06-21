@@ -1,7 +1,6 @@
 import json
 from unittest.mock import MagicMock, patch
 
-import pytest
 from click.testing import CliRunner
 
 from cliany_site.providers.capabilities import CapabilitySnapshot, feature_gate
@@ -93,6 +92,8 @@ class TestExploreCommandGate:
 
     def test_chrome_provider_passes_gate_hits_cdp_check(self, tmp_home, monkeypatch):
         monkeypatch.delenv("CLIANY_BROWSER_PROVIDER", raising=False)
+        monkeypatch.delenv("CLIANY_QA_OFFLINE", raising=False)
+        monkeypatch.delenv("CLIANY_QA_FAKE_LLM_RESPONSES", raising=False)
         from cliany_site.config import reset_config
         reset_config()
 
@@ -118,6 +119,8 @@ class TestExploreCommandGate:
 
     def test_explicit_chrome_provider_not_gated(self, tmp_home, monkeypatch):
         monkeypatch.setenv("CLIANY_BROWSER_PROVIDER", "chrome")
+        monkeypatch.delenv("CLIANY_QA_OFFLINE", raising=False)
+        monkeypatch.delenv("CLIANY_QA_FAKE_LLM_RESPONSES", raising=False)
         from cliany_site.config import reset_config
         reset_config()
 
