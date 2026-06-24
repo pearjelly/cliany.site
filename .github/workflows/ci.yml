@@ -67,7 +67,7 @@ jobs:
       - name: 运行测试
         run: pytest tests/ -v --tb=short --cov=cliany_site --cov-report=xml --cov-report=term
       - name: 上传 coverage artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-${{ matrix.python-version }}
           path: coverage.xml
@@ -147,7 +147,7 @@ jobs:
           pytest tests/test_validate_cases.py tests/test_cases_manifest.py -q --no-cov
       - name: 上传案例库验收报告
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: case-catalog-report
           path: case-catalog-report.md
@@ -170,7 +170,7 @@ jobs:
           python scripts/release_readiness.py --json --report release-readiness-report.md
       - name: 上传发布 readiness 报告
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-readiness-report
           path: release-readiness-report.md
