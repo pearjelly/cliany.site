@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.246] - 2026-06-25
+
 ### Added
 - 新增用户公开路线图，并将维护者 Q3 路线图校准到 v0.16.245 后的真实案例晋级、adapter 生命周期、抽取质量和 1.0 alpha readiness 重点。
 
@@ -2278,7 +2280,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.245...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.246...HEAD
+[0.16.246]: https://github.com/pearjelly/cliany.site/compare/v0.16.245...v0.16.246
 [0.16.245]: https://github.com/pearjelly/cliany.site/compare/v0.16.244...v0.16.245
 [0.16.244]: https://github.com/pearjelly/cliany.site/compare/v0.16.243...v0.16.244
 [0.16.243]: https://github.com/pearjelly/cliany.site/compare/v0.16.242...v0.16.243
