@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Added
+- 新增 `v0.16.247` 发布草案，将下一版聚焦到 `pypi-project-search` candidate 晋级证据与 live LLM preflight 门禁。
+
 ## [0.16.246] - 2026-06-25
 
 ### Added
