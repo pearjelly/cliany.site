@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.247] - 2026-06-28
+
 ### Added
 - 新增 `v0.16.247` 发布草案，将下一版聚焦到 `pypi-project-search` candidate 晋级证据与 live LLM preflight 门禁。
 
@@ -2283,7 +2285,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.246...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.247...HEAD
+[0.16.247]: https://github.com/pearjelly/cliany.site/compare/v0.16.246...v0.16.247
 [0.16.246]: https://github.com/pearjelly/cliany.site/compare/v0.16.245...v0.16.246
 [0.16.245]: https://github.com/pearjelly/cliany.site/compare/v0.16.244...v0.16.245
 [0.16.244]: https://github.com/pearjelly/cliany.site/compare/v0.16.243...v0.16.244
