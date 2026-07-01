@@ -656,6 +656,14 @@ def _target_daily_release_limit_blocker(
     )
 
 
+def _has_target_daily_release_limit_blocker(blockers: list[str]) -> bool:
+    return any(
+        blocker.startswith("creating target tag ")
+        and "today would exceed the daily release cap" in blocker
+        for blocker in blockers
+    )
+
+
 def _publication_blockers(report: PublicationReport) -> list[str]:
     blockers: list[str] = []
     if report.ok:
@@ -1009,7 +1017,11 @@ def _publication_tag_publish_decision(
     create_command = f"git tag {shlex.quote(target_tag)}"
     push_command = f"git push {shlex.quote(remote)} {shlex.quote(target_tag)}"
 
-    if target_tag_matches_latest and tag_points_at_head:
+    if _has_target_daily_release_limit_blocker(blockers):
+        target_status = "blocked_by_daily_release_cap"
+        required_action = f"Pause release tagging until the next day before creating target tag `{target_tag}`."
+        commands = []
+    elif target_tag_matches_latest and tag_points_at_head:
         target_status = "current_tag_at_head"
         required_action = decision.get("required_action")
         commands: list[str] = []

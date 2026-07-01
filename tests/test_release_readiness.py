@@ -986,6 +986,10 @@ def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path):
         "Pause release tagging until the next day; creating `v0.1.4` today would make "
         "release tags `4/3`."
     ) in payload["next_actions"]
+    assert not any("git tag v0.1.4" in action for action in payload["next_actions"])
+    assert payload["publication_tag_publish_decision"]["target_tag_command_count"] == 0
+    assert payload["publication_tag_publish_decision"]["target_tag_primary_command"] is None
+    assert payload["publication_tag_publish_decision"]["target_tag_commands"] == []
     assert (
         payload["publication_tag_publish_decision"]["target_tag_release_gate_status"]
         == "blocked_by_readiness"

@@ -836,6 +836,14 @@ def _target_tag_name(target_version: str | None) -> str | None:
     return version if version.startswith("v") else f"v{version}"
 
 
+def _has_target_daily_release_limit_blocker(blockers: list[str]) -> bool:
+    return any(
+        blocker.startswith("creating target tag ")
+        and "today would exceed the daily release cap" in blocker
+        for blocker in blockers
+    )
+
+
 def _with_target_tag_guidance(
     decision: dict[str, Any],
     publication: Any,
@@ -855,7 +863,11 @@ def _with_target_tag_guidance(
     create_command = f"git tag {shlex.quote(target_tag)}"
     push_command = f"git push {shlex.quote(remote)} {shlex.quote(target_tag)}"
 
-    if target_tag_matches_latest and tag_points_at_head:
+    if _has_target_daily_release_limit_blocker(blockers):
+        target_status = "blocked_by_daily_release_cap"
+        required_action = f"Pause release tagging until the next day before creating target tag `{target_tag}`."
+        commands = []
+    elif target_tag_matches_latest and tag_points_at_head:
         target_status = "current_tag_at_head"
         required_action = decision.get("required_action")
         commands: list[str] = []
@@ -910,9 +922,18 @@ def _publication_next_actions(publication: Any) -> list[str]:
     return [str(action).removeprefix("- ") for action in payload.get("next_actions", [])]
 
 
-def _publication_plan_next_actions(publication: Any, target_version: str | None) -> list[str]:
+def _publication_plan_next_actions(
+    publication: Any,
+    target_version: str | None,
+    *,
+    readiness_blockers: list[str] | None = None,
+) -> list[str]:
     actions = _publication_next_actions(publication)
-    decision = _publication_tag_publish_decision(publication, target_version)
+    decision = _publication_tag_publish_decision(
+        publication,
+        target_version,
+        readiness_blockers=readiness_blockers,
+    )
     if decision.get("status") != "manual_decision_required":
         return actions
     if decision.get("target_tag_status") not in {
@@ -945,6 +966,11 @@ def _publication_plan_next_actions(publication: Any, target_version: str | None)
 
 
 def _target_tag_next_action(decision: dict[str, Any]) -> str | None:
+    if decision.get("target_tag_status") not in {
+        "blocked_by_worktree",
+        "create_target_tag_at_head",
+    }:
+        return None
     action = decision.get("target_tag_required_action")
     if not action:
         return None
@@ -1505,13 +1531,17 @@ def _next_action_lines(readiness: Any, publication: Any) -> list[str]:
             actions.append(standard_primary_action)
             target_tag_action = _target_tag_next_action(
                 _publication_tag_publish_decision(
-                    publication, str(getattr(readiness, "target_version", "") or "")
+                    publication,
+                    str(getattr(readiness, "target_version", "") or ""),
+                    readiness_blockers=list(getattr(readiness, "blockers", [])),
                 )
             )
             if target_tag_action:
                 actions.append(target_tag_action)
         publication_actions = _publication_plan_next_actions(
-            publication, str(getattr(readiness, "target_version", "") or "")
+            publication,
+            str(getattr(readiness, "target_version", "") or ""),
+            readiness_blockers=list(getattr(readiness, "blockers", [])),
         )
         if publication_actions:
             actions.extend(publication_actions)

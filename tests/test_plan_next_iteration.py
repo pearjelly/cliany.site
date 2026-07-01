@@ -578,6 +578,14 @@ def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path):
         "creating target tag v0.16.2 today would exceed the daily release cap 4/3"
     ]
     readiness.next_actions = [cadence_action, pause_action]
+    readiness.standard_release_flow = {
+        "status": "blocked",
+        "target_version": "0.16.2",
+        "target_tag": "v0.16.2",
+        "primary_next_action": (
+            "Move to the `v0.16.1` commit or create a new release tag at HEAD before publishing."
+        ),
+    }
 
     plan = plan_next_iteration.build_plan(
         tmp_path,
@@ -590,6 +598,9 @@ def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path):
     assert pause_action in data["next_actions"]
     assert cadence_action in plan.next_actions
     assert "Ship verified slices on `1` more unique commit days this week." not in plan.next_actions
+    assert plan.publication_tag_publish_decision["target_tag_commands"] == []
+    assert plan.publication_tag_publish_decision["target_tag_command_count"] == 0
+    assert not any("git tag v0.16.2" in action for action in plan.next_actions)
 
 
 def test_candidate_issue_gate_allows_creation_after_publication_with_release_draft_review(tmp_path):
