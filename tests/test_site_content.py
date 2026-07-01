@@ -46,6 +46,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "case_promotion_evidence_primary_llm_live_preflight_required" in index
     assert "case_promotion_evidence_primary_llm_live_preflight_blocker_comment" in index
     assert "case_promotion_evidence_primary_doctor_preflight_blocker_comment" in index
+    assert "doctor_preflight_evidence_fields" in index
     assert "1-3 releases/day loop" in index
     assert "Current baseline: v0.16.253" in index
     assert "website alias inspect" in index
@@ -70,6 +71,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "daily_release_resume_date" in script
     assert "case_promotion_evidence_primary_llm_live_preflight_blocker_comment" in script
     assert "case_promotion_evidence_primary_doctor_preflight_blocker_comment" in script
+    assert "doctor_preflight_evidence_fields" in script
     assert "Current baseline: v0.16.253" in script
     assert "website alias inspect" in script
     assert "pypi_latest_version" in script

@@ -68,6 +68,18 @@ LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = (
     "checks[llm_live].details.phase",
     "checks[llm_live].details.message",
 )
+DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = (
+    "summary.ready_for_explore",
+    "summary.capabilities.run_browser_workflows.ready",
+    "summary.capabilities.generate_adapters.ready",
+    "checks[cdp].status",
+    "checks[cdp].action",
+    "checks[llm_live].status",
+    "checks[llm_live].details.error_code",
+    "checks[llm_live].details.retryable",
+    "checks[llm_live].details.phase",
+    "checks[llm_live].details.message",
+)
 WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
 WEBSITE_INSPECT_COMMAND = "cd site && vercel inspect www.cliany.site --wait --timeout 90s"
 CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA = {
@@ -638,6 +650,7 @@ class CandidatePromotion:
     llm_live_preflight_blocker_note: str
     llm_live_preflight_blocker_comment: str
     doctor_preflight_blocker_comment: str
+    doctor_preflight_evidence_fields: list[str]
     llm_live_preflight_evidence_fields: list[str]
     evidence_bundle_command: str
     evidence_bundle_json_command: str
@@ -673,6 +686,7 @@ class CandidatePromotion:
             "doctor_preflight_blocker_comment": (
                 self.doctor_preflight_blocker_comment
             ),
+            "doctor_preflight_evidence_fields": self.doctor_preflight_evidence_fields,
             "llm_live_preflight_evidence_fields": self.llm_live_preflight_evidence_fields,
             "evidence_bundle_command": self.evidence_bundle_command,
             "evidence_bundle_json_command": self.evidence_bundle_json_command,
@@ -2152,6 +2166,9 @@ def _llm_live_preflight_task_fields(task_name: str) -> dict[str, Any]:
         "llm_live_preflight_evidence_fields": (
             list(LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS) if required else []
         ),
+        "doctor_preflight_evidence_fields": (
+            list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS) if required else []
+        ),
     }
 
 
@@ -2169,10 +2186,40 @@ def _llm_live_preflight_evidence_fields_from_summary(summary: dict[str, Any]) ->
     return [str(field_name) for field_name in fields if field_name]
 
 
+def _task_with_doctor_preflight_evidence_fields(task: Any) -> Any:
+    if not isinstance(task, dict):
+        return task
+    normalized = dict(task)
+    required = normalized.get("llm_live_preflight_required")
+    if required is True:
+        normalized["doctor_preflight_evidence_fields"] = list(
+            DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+        )
+    elif "doctor_preflight_evidence_fields" not in normalized:
+        normalized["doctor_preflight_evidence_fields"] = []
+    return normalized
+
+
+def _tasks_with_doctor_preflight_evidence_fields(tasks: Any) -> Any:
+    if not isinstance(tasks, list):
+        return tasks
+    return [_task_with_doctor_preflight_evidence_fields(task) for task in tasks]
+
+
 def _summary_with_llm_live_preflight_evidence_fields(
     summary: dict[str, Any],
 ) -> dict[str, Any]:
     normalized = dict(summary)
+    for key in ("primary_task", "primary_task_detail", "primary_next_task"):
+        if key in normalized:
+            normalized[key] = _task_with_doctor_preflight_evidence_fields(
+                normalized[key]
+            )
+    for key in ("pending_tasks", "blocked_tasks", "complete_tasks"):
+        if key in normalized:
+            normalized[key] = _tasks_with_doctor_preflight_evidence_fields(
+                normalized[key]
+            )
     fields = _llm_live_preflight_evidence_fields_from_summary(normalized)
     normalized["llm_live_preflight_evidence_fields"] = fields
     normalized["llm_live_preflight_evidence_field_count"] = len(fields)
@@ -2463,6 +2510,7 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 llm_live_preflight_blocker_note=LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
                 llm_live_preflight_blocker_comment=LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT,
                 doctor_preflight_blocker_comment=DOCTOR_PREFLIGHT_BLOCKER_COMMENT,
+                doctor_preflight_evidence_fields=list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS),
                 llm_live_preflight_evidence_fields=list(
                     LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
                 ),
@@ -2811,6 +2859,9 @@ def _candidate_issue_body(
             "",
             "## Doctor Preflight Blocker Comment",
             DOCTOR_PREFLIGHT_BLOCKER_COMMENT,
+            "",
+            "## Doctor Preflight Evidence Fields",
+            *(f"- `{field}`" for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS),
             "",
             "## LLM Preflight Evidence Fields",
             *(f"- `{field}`" for field in LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS),
@@ -4105,6 +4156,9 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "llm_live_preflight_evidence_fields": list(
                     promotion.llm_live_preflight_evidence_fields
                 ),
+                "doctor_preflight_evidence_fields": list(
+                    promotion.doctor_preflight_evidence_fields
+                ),
                 "evidence_bundle_command": promotion.evidence_bundle_command,
                 "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
                 "issue_body_name": body_path.name,
@@ -4819,7 +4873,8 @@ def _issue_artifact_review_checklist() -> list[str]:
             "offline validation commands, candidate_package_validation_command, "
             "promotion_command_plan, llm_live_preflight_required, "
             "llm_live_preflight_command, llm_live_preflight_blocker_note, and "
-            "llm_live_preflight_evidence_fields for each case."
+            "llm_live_preflight_evidence_fields / doctor_preflight_evidence_fields "
+            "for each case."
         ),
         "Review each body file for scope, tasks, validation evidence, and non-goals.",
         (
@@ -5143,6 +5198,9 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
             "llm_live_preflight_evidence_fields": item[
                 "llm_live_preflight_evidence_fields"
             ],
+            "doctor_preflight_evidence_fields": item[
+                "doctor_preflight_evidence_fields"
+            ],
             "evidence_bundle_command": item["evidence_bundle_command"],
             "evidence_bundle_json_command": item["evidence_bundle_json_command"],
             "issue_body_name": item["issue_body_name"],
@@ -5194,6 +5252,9 @@ def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[di
             "llm_live_preflight_blocker_note": promotion.llm_live_preflight_blocker_note,
             "llm_live_preflight_evidence_fields": list(
                 promotion.llm_live_preflight_evidence_fields
+            ),
+            "doctor_preflight_evidence_fields": list(
+                promotion.doctor_preflight_evidence_fields
             ),
             "evidence_bundle_command": promotion.evidence_bundle_command,
             "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
@@ -7266,9 +7327,10 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
             "Priority Rank | Priority Reason | Primary Evidence Task | Primary Evidence Status | "
             "Primary Acceptance Criteria | Evidence Bundle Primary Next Task | "
             "Evidence Bundle Primary Runbook | LLM Preflight Evidence Fields | "
+            "Doctor Preflight Evidence Fields | "
             "Candidate Package Validation | Evidence Bundle | Evidence Bundle JSON |"
         ),
-        "|------|------------|------------|--------------------|-----------------------------|---------------|-----------------|-----------------------|-------------------------|-----------------------------|-----------------------------------|---------------------------------|-------------------------------|------------------------------|-----------------|----------------------|",
+        "|------|------------|------------|--------------------|-----------------------------|---------------|-----------------|-----------------------|-------------------------|-----------------------------|-----------------------------------|---------------------------------|-------------------------------|----------------------------------|------------------------------|-----------------|----------------------|",
     ]
     for promotion in promotions:
         primary_task = promotion.promotion_evidence_primary_task.get("task") or "Not declared."
@@ -7284,6 +7346,9 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
         evidence_fields = ", ".join(
             f"`{field}`" for field in promotion.llm_live_preflight_evidence_fields
         )
+        doctor_evidence_fields = ", ".join(
+            f"`{field}`" for field in promotion.doctor_preflight_evidence_fields
+        )
         lines.append(
             f"| `{promotion.case_id}` | `{promotion.case_id}.md` | {promotion.target_url or 'Not declared.'} | "
             f"{len(promotion.commands)} | {len(promotion.offline_commands)} | "
@@ -7292,6 +7357,7 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
             f"`{evidence_bundle_primary_task}` | "
             f"`{primary_runbook}` | "
             f"{evidence_fields or 'Not declared.'} | "
+            f"{doctor_evidence_fields or 'Not declared.'} | "
             f"`{promotion.candidate_package_validation_command}` | "
             f"`{promotion.evidence_bundle_command}` | `{promotion.evidence_bundle_json_command}` |"
         )

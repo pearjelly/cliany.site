@@ -45,6 +45,18 @@ DOCTOR_PREFLIGHT_BLOCKER_COMMENT = (
     "`summary.ready_for_explore=true` and "
     "`summary.capabilities.generate_adapters.ready=true`."
 )
+DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = [
+    "summary.ready_for_explore",
+    "summary.capabilities.run_browser_workflows.ready",
+    "summary.capabilities.generate_adapters.ready",
+    "checks[cdp].status",
+    "checks[cdp].action",
+    "checks[llm_live].status",
+    "checks[llm_live].details.error_code",
+    "checks[llm_live].details.retryable",
+    "checks[llm_live].details.phase",
+    "checks[llm_live].details.message",
+]
 
 
 def _stable_json_sha256(value: object) -> str:
@@ -137,6 +149,37 @@ def _promotion_evidence(package_next_action: str, smoke_next_action: str) -> dic
             "next_action": smoke_next_action,
         },
     }
+
+
+def test_existing_case_promotion_summary_gets_doctor_preflight_fields() -> None:
+    report = SimpleNamespace(
+        promotion_evidence_summary={
+            "primary_task": {
+                "case_id": "pypi-project-search",
+                "task": "adapter_package",
+                "llm_live_preflight_required": True,
+            },
+            "pending_tasks": [
+                {
+                    "case_id": "pypi-project-search",
+                    "task": "adapter_package",
+                    "llm_live_preflight_required": True,
+                }
+            ],
+        }
+    )
+
+    summary = plan_next_iteration._case_promotion_evidence_summary(report)
+
+    assert summary["primary_task"]["doctor_preflight_evidence_fields"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+    )
+    assert summary["primary_next_task"]["doctor_preflight_evidence_fields"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+    )
+    assert summary["pending_tasks"][0]["doctor_preflight_evidence_fields"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+    )
 
 
 def test_candidate_issue_script_uses_python3_default_with_override() -> None:
@@ -284,6 +327,9 @@ def test_candidate_issue_body_checks_complete_tasks():
     assert LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT in issue_body
     assert "## Doctor Preflight Blocker Comment" in issue_body
     assert DOCTOR_PREFLIGHT_BLOCKER_COMMENT in issue_body
+    assert "## Doctor Preflight Evidence Fields" in issue_body
+    assert "- `summary.capabilities.run_browser_workflows.ready`" in issue_body
+    assert "- `checks[cdp].action`" in issue_body
     assert "## Acceptance Criteria" in issue_body
     assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in issue_body
     assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in issue_body
@@ -1133,6 +1179,9 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "llm_live_preflight_evidence_fields": list(
             plan_next_iteration.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
         ),
+        "doctor_preflight_evidence_fields": list(
+            plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+        ),
     }
     assert (
         data["case_promotion_evidence_summary"]["primary_task_detail"]
@@ -1250,6 +1299,9 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "llm_live_preflight_evidence_fields": list(
                 plan_next_iteration.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
             ),
+            "doctor_preflight_evidence_fields": list(
+                plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+            ),
         },
         "evidence_bundle_primary_next_task": {
             "task": "adapter_package",
@@ -1271,6 +1323,9 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "llm_live_preflight_evidence_fields": list(
                 plan_next_iteration.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
             ),
+            "doctor_preflight_evidence_fields": list(
+                plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+            ),
         },
         "evidence_bundle_primary_next_task_runbook": _pypi_primary_runbook(),
         "candidate_package_validation_command": (
@@ -1287,6 +1342,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         ),
         "llm_live_preflight_blocker_comment": LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT,
         "doctor_preflight_blocker_comment": DOCTOR_PREFLIGHT_BLOCKER_COMMENT,
+        "doctor_preflight_evidence_fields": DOCTOR_PREFLIGHT_EVIDENCE_FIELDS,
         "llm_live_preflight_evidence_fields": [
             "summary.ready_for_explore",
             "summary.llm_live_preflight",
@@ -1358,6 +1414,17 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             f"{LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT}\n\n"
             "## Doctor Preflight Blocker Comment\n"
             f"{DOCTOR_PREFLIGHT_BLOCKER_COMMENT}\n\n"
+            "## Doctor Preflight Evidence Fields\n"
+            "- `summary.ready_for_explore`\n"
+            "- `summary.capabilities.run_browser_workflows.ready`\n"
+            "- `summary.capabilities.generate_adapters.ready`\n"
+            "- `checks[cdp].status`\n"
+            "- `checks[cdp].action`\n"
+            "- `checks[llm_live].status`\n"
+            "- `checks[llm_live].details.error_code`\n"
+            "- `checks[llm_live].details.retryable`\n"
+            "- `checks[llm_live].details.phase`\n"
+            "- `checks[llm_live].details.message`\n\n"
             "## LLM Preflight Evidence Fields\n"
             "- `summary.ready_for_explore`\n"
             "- `summary.llm_live_preflight`\n"
@@ -2072,6 +2139,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "llm_live_preflight_evidence_fields": item[
                 "llm_live_preflight_evidence_fields"
             ],
+            "doctor_preflight_evidence_fields": item[
+                "doctor_preflight_evidence_fields"
+            ],
             "evidence_bundle_command": item["evidence_bundle_command"],
             "evidence_bundle_json_command": item["evidence_bundle_json_command"],
             "issue_body_name": item["issue_body_name"],
@@ -2408,7 +2478,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "offline validation commands, candidate_package_validation_command, "
             "promotion_command_plan, llm_live_preflight_required, "
             "llm_live_preflight_command, llm_live_preflight_blocker_note, and "
-            "llm_live_preflight_evidence_fields for each case."
+            "llm_live_preflight_evidence_fields / doctor_preflight_evidence_fields "
+            "for each case."
         ),
         "Review each body file for scope, tasks, validation evidence, and non-goals.",
         (
@@ -3431,6 +3502,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "llm_live_preflight_evidence_fields": list(
             plan_next_iteration.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
         ),
+        "doctor_preflight_evidence_fields": list(
+            plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+        ),
     }
     assert metadata[0]["evidence_bundle_primary_next_task"] == {
         "task": "adapter_package",
@@ -3451,6 +3525,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "llm_live_preflight_evidence_fields": list(
             plan_next_iteration.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
+        ),
+        "doctor_preflight_evidence_fields": list(
+            plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         ),
     }
     assert metadata[0]["evidence_bundle_primary_next_task_runbook"] == _pypi_primary_runbook()
@@ -3473,6 +3550,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "checks[llm_live].details.phase",
         "checks[llm_live].details.message",
     ]
+    assert metadata[0]["doctor_preflight_evidence_fields"] == DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
     assert (
         metadata[0]["evidence_bundle_command"]
         == "cliany-site cases --case-id pypi-project-search --evidence-bundle"
@@ -3658,7 +3736,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
                 "offline validation commands, candidate_package_validation_command, "
                 "promotion_command_plan, llm_live_preflight_required, "
                 "llm_live_preflight_command, llm_live_preflight_blocker_note, and "
-                "llm_live_preflight_evidence_fields for each case."
+                "llm_live_preflight_evidence_fields / doctor_preflight_evidence_fields "
+                "for each case."
             ),
             "Review each body file for scope, tasks, validation evidence, and non-goals.",
             (
@@ -3952,6 +4031,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "Priority Rank | Priority Reason | Primary Evidence Task | Primary Evidence Status | "
         "Primary Acceptance Criteria | Evidence Bundle Primary Next Task | "
         "Evidence Bundle Primary Runbook | LLM Preflight Evidence Fields | "
+        "Doctor Preflight Evidence Fields | "
         "Candidate Package Validation | Evidence Bundle | Evidence Bundle JSON |"
     ) in readme
     assert (
@@ -3966,6 +4046,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "`summary.capabilities.generate_adapters.ready`, "
         "`checks[llm_live].status`, `checks[llm_live].details.error_code`, "
         "`checks[llm_live].details.retryable`, `checks[llm_live].details.status_code`, "
+        "`checks[llm_live].details.phase`, `checks[llm_live].details.message` | "
+        "`summary.ready_for_explore`, `summary.capabilities.run_browser_workflows.ready`, "
+        "`summary.capabilities.generate_adapters.ready`, `checks[cdp].status`, "
+        "`checks[cdp].action`, `checks[llm_live].status`, "
+        "`checks[llm_live].details.error_code`, `checks[llm_live].details.retryable`, "
         "`checks[llm_live].details.phase`, `checks[llm_live].details.message` | "
         "`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict` | "
@@ -5558,7 +5643,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "offline validation commands, candidate_package_validation_command, "
         "promotion_command_plan, llm_live_preflight_required, "
         "llm_live_preflight_command, llm_live_preflight_blocker_note, and "
-        "llm_live_preflight_evidence_fields for each case"
+        "llm_live_preflight_evidence_fields / doctor_preflight_evidence_fields for each case"
         in readme
     )
     assert "candidate issue gate preflight" in readme
