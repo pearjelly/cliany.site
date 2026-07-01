@@ -343,6 +343,8 @@ def _template_content(filename: str) -> str:
             "id: promotion\n"
             "Candidate Promotion Tasks\n"
             "Issue Body Template\n"
+            "primary_next_task_runbook\n"
+            "case_promotion_evidence_primary_runbook_steps\n"
             "adapter_package\n"
             "metadata_validation\n"
             "online_smoke\n"
@@ -1590,6 +1592,25 @@ def test_release_readiness_blocks_stale_contributor_starter_candidate_runbook_al
     assert "project metadata validation failed" in report.blockers
     assert (
         "open source metadata file missing snippet: docs/contributor-starter.md: "
+        "primary_next_task_runbook"
+    ) in report.project_metadata.issues
+
+
+def test_release_readiness_blocks_stale_case_proposal_candidate_runbook_alias(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    template_path = repo / ".github" / "ISSUE_TEMPLATE" / "case_proposal.yml"
+    text = template_path.read_text(encoding="utf-8")
+    template_path.write_text(
+        text.replace("primary_next_task_runbook\n", ""),
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file missing snippet: .github/ISSUE_TEMPLATE/case_proposal.yml: "
         "primary_next_task_runbook"
     ) in report.project_metadata.issues
 

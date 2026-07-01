@@ -548,6 +548,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "id: promotion",
             "Candidate Promotion Tasks",
             "Issue Body Template",
+            "primary_next_task_runbook",
+            "case_promotion_evidence_primary_runbook_steps",
             "adapter_package",
             "metadata_validation",
             "online_smoke",
