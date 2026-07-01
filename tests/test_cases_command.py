@@ -18,6 +18,17 @@ DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = [
     "checks[llm_live].details.phase",
     "checks[llm_live].details.message",
 ]
+LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = [
+    "summary.ready_for_explore",
+    "summary.llm_live_preflight",
+    "summary.capabilities.generate_adapters.ready",
+    "checks[llm_live].status",
+    "checks[llm_live].details.error_code",
+    "checks[llm_live].details.retryable",
+    "checks[llm_live].details.status_code",
+    "checks[llm_live].details.phase",
+    "checks[llm_live].details.message",
+]
 
 
 def test_cases_command_returns_catalog_summary(tmp_home):
@@ -269,21 +280,42 @@ def test_cases_command_issue_template_json(tmp_home):
     payload = json.loads(result.output)
     template = payload["data"]["issue_template"]
     primary_task = payload["data"]["issue_template_primary_task"]
-    assert primary_task == {
-        "task": "adapter_package",
-        "status": "pending",
-        "evidence": "",
-        "next_action": (
-            "Generate pypi.org-<version>.cliany-adapter.tar.gz with cliany-site explore "
-            "and market publish, then attach the package path or release asset name."
-        ),
-        "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
-    }
+    assert primary_task["task"] == "adapter_package"
+    assert primary_task["status"] == "pending"
+    assert primary_task["evidence"] == ""
+    assert primary_task["next_action"] == (
+        "Generate pypi.org-<version>.cliany-adapter.tar.gz with cliany-site explore "
+        "and market publish, then attach the package path or release asset name."
+    )
+    assert primary_task["expected_adapter_package"] == (
+        "pypi.org-<version>.cliany-adapter.tar.gz"
+    )
+    assert primary_task["acceptance_criteria"].startswith("Attach the generated")
+    assert primary_task["llm_live_preflight_required"] is True
+    assert primary_task["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
+    assert "E_LLM_UNAVAILABLE" in primary_task["llm_live_preflight_blocker_note"]
+    assert primary_task["llm_live_preflight_evidence_fields"] == (
+        LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
+    )
+    assert primary_task["doctor_preflight_evidence_fields"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+    )
+    assert primary_task["runbook"][0]["step"] == "llm_live_preflight"
+    assert primary_task["runbook"][0]["command"] == "cliany-site doctor --llm-live --json"
+    assert primary_task["runbook"][1]["step"] == "adapter_package"
+    assert primary_task["runbook"][2]["step"] == "acceptance"
     assert "## Scope: promote candidate case `pypi-project-search`" in template
     assert "## Primary Evidence Task" in template
     assert "- Task: `adapter_package`" in template
     assert "- Status: `pending`" in template
     assert "- Expected adapter package: `pypi.org-<version>.cliany-adapter.tar.gz`" in template
+    assert "## Primary Runbook" in template
+    assert "- `llm_live_preflight`: `cliany-site doctor --llm-live --json`" in template
+    assert (
+        '- `adapter_package`: `cliany-site explore "https://pypi.org" '
+        '"search Python packages for cliany-site and list project names" --json`'
+        in template
+    )
     assert "## Reproduction Context" in template
     assert "## Promotion Command Plan" in template
     assert "## LLM Preflight Gate" in template
@@ -303,6 +335,12 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "`checks[llm_live].details.status_code`" in template
     assert "`checks[llm_live].details.phase`" in template
     assert "`checks[llm_live].details.message`" in template
+    assert "## Doctor Preflight Blocker Comment" in template
+    assert "Doctor preflight is blocking candidate promotion." in template
+    assert "checks[cdp].status" in template
+    assert "## Doctor Preflight Evidence Fields" in template
+    assert "`summary.capabilities.run_browser_workflows.ready`" in template
+    assert "`checks[cdp].action`" in template
     assert "## Acceptance Criteria" in template
     assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in template
     assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in template
@@ -352,8 +390,12 @@ def test_cases_command_issue_template_human_outputs_markdown(tmp_home):
     assert "## Evidence Bundle" in result.output
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in result.output
     assert "## LLM Preflight Gate" in result.output
+    assert "## Primary Runbook" in result.output
+    assert "## Doctor Preflight Blocker Comment" in result.output
+    assert "## Doctor Preflight Evidence Fields" in result.output
     assert "E_LLM_UNAVAILABLE" in result.output
     assert "provider connection failure" in result.output
+    assert "checks[cdp].status" in result.output
     assert "Candidate package validation command" in result.output
     assert (
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
@@ -415,13 +457,20 @@ def test_cases_command_issue_template_checks_complete_tasks(tmp_home, monkeypatc
             catch_exceptions=False,
         ).output
     )
-    assert payload["data"]["issue_template_primary_task"] == {
-        "task": "online_smoke",
-        "status": "pending",
-        "evidence": "",
-        "next_action": "Run read-only smoke.",
-        "expected_adapter_package": "example.test-<version>.cliany-adapter.tar.gz",
-    }
+    primary_task = payload["data"]["issue_template_primary_task"]
+    assert primary_task["task"] == "online_smoke"
+    assert primary_task["status"] == "pending"
+    assert primary_task["evidence"] == ""
+    assert primary_task["next_action"] == "Run read-only smoke."
+    assert primary_task["expected_adapter_package"] == (
+        "example.test-<version>.cliany-adapter.tar.gz"
+    )
+    assert primary_task["acceptance_criteria"].startswith("Paste the read-only")
+    assert primary_task["llm_live_preflight_required"] is False
+    assert primary_task["llm_live_preflight_evidence_fields"] == []
+    assert primary_task["doctor_preflight_evidence_fields"] == []
+    assert primary_task["runbook"][0]["step"] == "online_smoke"
+    assert primary_task["runbook"][1]["step"] == "acceptance"
     assert "## Primary Evidence Task" in result.output
     assert "- Task: `online_smoke`" in result.output
     assert "- Status: `pending`" in result.output

@@ -177,7 +177,78 @@ def _case_ids(cases: list[dict[str, Any]]) -> list[str]:
     return [str(case.get("id")) for case in cases if case.get("id")]
 
 
+def _join_backticked_fields(fields: tuple[str, ...]) -> str:
+    quoted = [f"`{field}`" for field in fields]
+    if not quoted:
+        return ""
+    if len(quoted) == 1:
+        return quoted[0]
+    return f"{', '.join(quoted[:-1])}, and {quoted[-1]}"
+
+
+def _llm_live_preflight_blocker_comment() -> str:
+    fields = _join_backticked_fields(LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS)
+    return (
+        "LLM live preflight is blocking candidate promotion. Paste the doctor JSON "
+        f"fields {fields}; keep `adapter_package` pending or blocked until "
+        "`summary.llm_live_preflight.ready=true` and "
+        "`summary.capabilities.generate_adapters.ready=true`."
+    )
+
+
+def _doctor_preflight_blocker_comment() -> str:
+    fields = _join_backticked_fields(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS)
+    return (
+        "Doctor preflight is blocking candidate promotion. Paste the doctor JSON "
+        f"fields {fields}; keep `adapter_package` pending or blocked until "
+        "`summary.ready_for_explore=true` and "
+        "`summary.capabilities.generate_adapters.ready=true`."
+    )
+
+
+def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
+    primary = bundle.get("primary_next_task")
+    if not isinstance(primary, dict) or not primary.get("task"):
+        return {}
+    runbook = primary.get("runbook")
+    return {
+        "task": str(primary.get("task") or ""),
+        "status": str(primary.get("status") or "pending"),
+        "evidence": primary.get("evidence") or "",
+        "next_action": str(primary.get("next_action") or ""),
+        "acceptance_criteria": str(primary.get("acceptance_criteria") or ""),
+        "expected_adapter_package": str(
+            primary.get("expected_adapter_package")
+            or bundle.get("expected_adapter_package")
+            or ""
+        ),
+        "llm_live_preflight_required": bool(
+            primary.get("llm_live_preflight_required")
+        ),
+        "llm_live_preflight_command": str(
+            primary.get("llm_live_preflight_command") or ""
+        ),
+        "llm_live_preflight_blocker_note": str(
+            primary.get("llm_live_preflight_blocker_note") or ""
+        ),
+        "llm_live_preflight_evidence_fields": list(
+            primary.get("llm_live_preflight_evidence_fields") or []
+        ),
+        "doctor_preflight_evidence_fields": list(
+            primary.get("doctor_preflight_evidence_fields") or []
+        ),
+        "command": str(primary.get("command") or ""),
+        "command_source": str(primary.get("command_source") or ""),
+        "command_missing": bool(primary.get("command_missing", False)),
+        "handoff": str(primary.get("handoff") or ""),
+        "runbook": [step for step in runbook if isinstance(step, dict)]
+        if isinstance(runbook, list)
+        else [],
+    }
+
+
 def _candidate_issue_template(case: dict[str, Any]) -> str:
+    bundle = _candidate_evidence_bundle(case)
     case_id = str(case.get("id") or "")
     target_url = str(case.get("target_url") or "")
     raw_commands = case.get("commands")
@@ -187,10 +258,8 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
     promotion: dict[str, Any] = raw_promotion if isinstance(raw_promotion, dict) else {}
     raw_evidence = case.get("promotion_evidence")
     evidence: dict[str, Any] = raw_evidence if isinstance(raw_evidence, dict) else {}
-    expected_adapter_package = _expected_adapter_package(case.get("adapter_domain"))
-    primary_task = _candidate_issue_primary_task(evidence)
-    if primary_task and expected_adapter_package:
-        primary_task["expected_adapter_package"] = expected_adapter_package
+    expected_adapter_package = str(bundle.get("expected_adapter_package") or "")
+    primary_task = _candidate_issue_primary_task_from_bundle(bundle)
 
     lines = [
         f"## Scope: promote candidate case `{case_id}`",
@@ -202,7 +271,7 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
     if primary_task:
         current_evidence = primary_task.get("evidence") or "Not attached yet."
         next_action = primary_task.get("next_action") or "No next action declared."
-        acceptance_criteria = PROMOTION_ACCEPTANCE_CRITERIA.get(primary_task["task"], "")
+        acceptance_criteria = primary_task.get("acceptance_criteria") or ""
         lines.extend(
             [
                 f"- Task: `{primary_task['task']}`",
@@ -215,6 +284,17 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
         )
     else:
         lines.append("- All promotion tasks already have complete evidence.")
+
+    runbook = primary_task.get("runbook") if primary_task else []
+    if isinstance(runbook, list) and runbook:
+        lines.extend(["", "## Primary Runbook"])
+        for step in runbook:
+            if not isinstance(step, dict):
+                continue
+            command = step.get("command") or "No command."
+            lines.append(f"- `{step.get('step')}`: `{command}`")
+            if step.get("handoff"):
+                lines.append(f"  - handoff: {step['handoff']}")
 
     lines.extend(
         [
@@ -239,10 +319,16 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
             f"- Command: `{LLM_LIVE_PREFLIGHT_COMMAND}`",
             f"- Blocker handling: {LLM_LIVE_PREFLIGHT_BLOCKER_NOTE}",
             "",
+            "## LLM Preflight Blocker Comment",
+            _llm_live_preflight_blocker_comment(),
+            "",
             "## LLM Preflight Evidence Fields",
         ]
     )
     lines.extend(f"- `{field}`" for field in LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS)
+    lines.extend(["", "## Doctor Preflight Blocker Comment", _doctor_preflight_blocker_comment()])
+    lines.extend(["", "## Doctor Preflight Evidence Fields"])
+    lines.extend(f"- `{field}`" for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS)
 
     lines.extend(["", "## Acceptance Criteria"])
     for task in PROMOTION_TASKS:
@@ -1311,16 +1397,11 @@ def cases_cmd(
             return
         if issue_template:
             rendered_issue_template = _candidate_issue_template(selected_case)
-            raw_evidence = selected_case.get("promotion_evidence")
-            evidence: dict[str, Any] = raw_evidence if isinstance(raw_evidence, dict) else {}
-            rendered_issue_template_primary_task = _candidate_issue_primary_task(evidence)
-            expected_adapter_package = _expected_adapter_package(
-                selected_case.get("adapter_domain")
-            )
-            if rendered_issue_template_primary_task and expected_adapter_package:
-                rendered_issue_template_primary_task["expected_adapter_package"] = (
-                    expected_adapter_package
+            rendered_issue_template_primary_task = (
+                _candidate_issue_primary_task_from_bundle(
+                    _candidate_evidence_bundle(selected_case)
                 )
+            )
         if evidence_bundle:
             rendered_evidence_bundle = _candidate_evidence_bundle(selected_case)
     if promotion_plan:
