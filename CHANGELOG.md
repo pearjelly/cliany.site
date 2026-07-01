@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.249] - 2026-07-01
+
 ### Added
 - 新增 `v0.16.249` 发布草案，并将公开 / 维护者路线图与官网维护者循环基线校准到 `v0.16.248`；本轮继续记录 `pypi-project-search` live LLM preflight 阻塞，不伪造 candidate adapter package 证据。
 
@@ -2295,7 +2297,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.248...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.249...HEAD
+[0.16.249]: https://github.com/pearjelly/cliany.site/compare/v0.16.248...v0.16.249
 [0.16.248]: https://github.com/pearjelly/cliany.site/compare/v0.16.247...v0.16.248
 [0.16.247]: https://github.com/pearjelly/cliany.site/compare/v0.16.246...v0.16.247
 [0.16.246]: https://github.com/pearjelly/cliany.site/compare/v0.16.245...v0.16.246
