@@ -1143,6 +1143,17 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
         "| `candidate-case` | `adapter_package` | `pending` | Not attached yet. | "
         "Generate demo.example.com-<version>.cliany-adapter.tar.gz. |"
     ) in text
+    assert "## Candidate Primary Runbook" in text
+    assert "| `llm_live_preflight` | `cliany-site doctor --llm-live --json` | `true` |" in text
+    assert (
+        "| `adapter_package` | No command. | `false` | "
+        "No executable command declared for `adapter_package`; "
+        "Generate demo.example.com-<version>.cliany-adapter.tar.gz. |"
+    ) in text
+    assert (
+        "| `acceptance` | No command. | `true` | "
+        "Attach the generated <domain>-<version>.cliany-adapter.tar.gz"
+    ) in text
     assert "## Candidate Promotion Command Plan Summary" in text
     assert "| candidate_count | `1` |" in text
     assert "| command_count | `4` |" in text

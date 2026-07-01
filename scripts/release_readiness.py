@@ -1403,6 +1403,28 @@ def _candidate_primary_next_task_rows(report: ReadinessReport) -> list[str]:
     ]
 
 
+def _candidate_primary_runbook_rows(report: ReadinessReport) -> list[str]:
+    runbook = report.cases.promotion_evidence_summary.get("primary_next_task_runbook")
+    if not isinstance(runbook, list) or not runbook:
+        return []
+
+    rows: list[str] = []
+    for step in runbook:
+        if not isinstance(step, dict):
+            continue
+        command = str(step.get("command") or "")
+        command_cell = f"`{_markdown_cell(command)}`" if command else "No command."
+        required = str(bool(step.get("required"))).lower()
+        rows.append(
+            "| "
+            f"`{_markdown_cell(step.get('step'))}` | "
+            f"{command_cell} | "
+            f"`{required}` | "
+            f"{_markdown_cell(step.get('handoff') or '-')} |"
+        )
+    return rows
+
+
 def _candidate_command_plan_summary_lines(report: ReadinessReport) -> list[str]:
     summary = report.cases.promotion_command_plan_summary
     lines = [
@@ -1782,6 +1804,18 @@ def _render_markdown_report(report: ReadinessReport) -> str:
                 "| Case | Task | Status | Evidence | Next Action |",
                 "|------|------|--------|----------|-------------|",
                 *primary_next_task_rows,
+            ]
+        )
+    primary_runbook_rows = _candidate_primary_runbook_rows(report)
+    if primary_runbook_rows:
+        lines.extend(
+            [
+                "",
+                "## Candidate Primary Runbook",
+                "",
+                "| Step | Command | Required | Handoff |",
+                "|------|---------|----------|---------|",
+                *primary_runbook_rows,
             ]
         )
     if report.cases.candidate:

@@ -348,6 +348,32 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     }
     assert summary["primary_task_detail"] == summary["primary_task"]
     assert summary["primary_next_task"] == summary["primary_task_detail"]
+    assert summary["primary_next_task_runbook"] == [
+        {
+            "step": "llm_live_preflight",
+            "command": "cliany-site doctor --llm-live --json",
+            "required": True,
+            "handoff": validate_cases.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
+        },
+        {
+            "step": "adapter_package",
+            "command": "",
+            "required": False,
+            "handoff": (
+                "No executable command declared for `adapter_package`; "
+                "Generate the adapter package."
+            ),
+        },
+        {
+            "step": "acceptance",
+            "command": "",
+            "required": True,
+            "handoff": (
+                "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
+                "package path or GitHub Release asset name."
+            ),
+        },
+    ]
     assert summary["primary_next_task_acceptance_criteria"].startswith("Attach the generated")
     assert summary["primary_next_action"] == "Generate the adapter package."
     assert report.cases[0].to_dict()["offline_commands"] == ["python scripts/validate_cases.py --strict"]
@@ -908,6 +934,16 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "| primary_next_task_acceptance_criteria | Attach the generated" in text
     assert "primary_task_detail" in text
     assert "primary_next_task" in text
+    assert "## Candidate Primary Runbook" in text
+    assert "| `llm_live_preflight` | `cliany-site doctor --llm-live --json` | `true` |" in text
+    assert (
+        "| `adapter_package` | No command. | `false` | "
+        "No executable command declared for `adapter_package`; Generate the adapter package. |"
+    ) in text
+    assert (
+        "| `acceptance` | No command. | `true` | "
+        "Attach the generated <domain>-<version>.cliany-adapter.tar.gz"
+    ) in text
     assert (
         "| `candidate-case` | `adapter_package` | `pending` | - | "
         "Generate the adapter package. | Attach the generated"
@@ -989,6 +1025,7 @@ def test_cases_report_prints_candidate_promotion_checklist(tmp_path, capsys):
     assert "promotion_evidence_primary: candidate-case/adapter_package (pending)" in text
     assert "promotion_evidence_evidence: Not attached yet." in text
     assert "promotion_evidence_next: Generate the adapter package." in text
+    assert "promotion_evidence_primary_runbook: llm_live_preflight -> adapter_package -> acceptance" in text
     assert "promotion:" in text
     assert "adapter_package: publish demo.example.com-<version>.cliany-adapter.tar.gz" in text
     assert f"metadata_validation: {metadata_validation}" in text

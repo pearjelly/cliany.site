@@ -650,6 +650,95 @@ def _check_case(
     return check
 
 
+def _candidate_task_handoff(
+    *,
+    task: str,
+    command: str,
+    command_missing: bool,
+    next_action: str,
+) -> str:
+    if command_missing:
+        followup = next_action or "Attach evidence before promotion."
+        return f"No executable command declared for `{task}`; {followup}"
+    if next_action:
+        return f"Run `{command}`; then {next_action}"
+    return f"Run `{command}` and attach the evidence before promotion."
+
+
+def _candidate_task_runbook(
+    *,
+    task: str,
+    command: str,
+    command_missing: bool,
+    handoff: str,
+    acceptance_criteria: str,
+) -> list[dict[str, Any]]:
+    steps: list[dict[str, Any]] = []
+    if task == "adapter_package":
+        steps.append(
+            {
+                "step": "llm_live_preflight",
+                "command": LLM_LIVE_PREFLIGHT_COMMAND,
+                "required": True,
+                "handoff": LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
+            }
+        )
+    steps.append(
+        {
+            "step": task,
+            "command": command,
+            "required": not command_missing,
+            "handoff": handoff,
+        }
+    )
+    steps.append(
+        {
+            "step": "acceptance",
+            "command": "",
+            "required": True,
+            "handoff": acceptance_criteria,
+        }
+    )
+    return steps
+
+
+def _primary_task_runbook(
+    primary: dict[str, Any] | None,
+    ranked_candidate_checks: list[CaseCheck],
+) -> list[dict[str, Any]]:
+    if not primary:
+        return []
+
+    task = str(primary.get("task") or "")
+    case_id = str(primary.get("case_id") or "")
+    check = next((item for item in ranked_candidate_checks if item.id == case_id), None)
+    command_plan_by_task = {
+        str(item.get("task") or ""): item
+        for item in (check.promotion_command_plan if check is not None else [])
+        if isinstance(item, dict)
+    }
+    command_plan_item = command_plan_by_task.get(task, {})
+    command = str(command_plan_item.get("command") or "")
+    command_missing = bool(command_plan_item.get("missing", not command))
+    next_action = str(primary.get("next_action") or "")
+    handoff = _candidate_task_handoff(
+        task=task,
+        command=command,
+        command_missing=command_missing,
+        next_action=next_action,
+    )
+    acceptance_criteria = str(
+        primary.get("acceptance_criteria") or PROMOTION_ACCEPTANCE_CRITERIA.get(task, "")
+    )
+    return _candidate_task_runbook(
+        task=task,
+        command=command,
+        command_missing=command_missing,
+        handoff=handoff,
+        acceptance_criteria=acceptance_criteria,
+    )
+
+
 def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]:
     candidate_checks = [check for check in checks if check.status == "candidate"]
     ranked_candidate_checks = [
@@ -697,6 +786,7 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
                 complete_tasks.append(entry)
 
     primary = pending_tasks[0] if pending_tasks else (blocked_tasks[0] if blocked_tasks else None)
+    primary_runbook = _primary_task_runbook(primary, ranked_candidate_checks)
     return {
         "candidate_count": len(candidate_checks),
         "task_count": sum(status_counts.values()),
@@ -711,6 +801,7 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
         "primary_task": primary,
         "primary_task_detail": primary,
         "primary_next_task": primary,
+        "primary_next_task_runbook": primary_runbook,
         "primary_next_action": primary["next_action"] if primary else "",
         "primary_next_task_acceptance_criteria": (
             primary["acceptance_criteria"] if primary else ""
@@ -869,6 +960,9 @@ def _print_text(report: CasesReport) -> None:
         print(f"promotion_evidence_primary: {primary_case_id}/{primary_task_name} ({primary_status})")
         print(f"promotion_evidence_evidence: {primary_evidence}")
         print(f"promotion_evidence_next: {report.promotion_evidence_summary['primary_next_action']}")
+        primary_runbook = report.promotion_evidence_summary.get("primary_next_task_runbook")
+        if isinstance(primary_runbook, list) and primary_runbook:
+            print(f"promotion_evidence_primary_runbook: {_runbook_step_summary(primary_runbook)}")
         print(
             "promotion_evidence_acceptance: "
             f"{report.promotion_evidence_summary['primary_next_task_acceptance_criteria']}"
@@ -1024,6 +1118,58 @@ def _candidate_promotion_evidence_summary_lines(summary: dict[str, Any]) -> list
             f"{_markdown_cell(task.get('evidence') or '-')} | "
             f"{_markdown_cell(task.get('next_action') or '-')} | "
             f"{_markdown_cell(task.get('acceptance_criteria') or '-')} |"
+        )
+    return lines
+
+
+def _runbook_step_summary(runbook: list[dict[str, Any]]) -> str:
+    return " -> ".join(str(step.get("step") or "") for step in runbook if step.get("step"))
+
+
+def _runbook_command_cell(step: dict[str, Any]) -> str:
+    command = str(step.get("command") or "")
+    if not command:
+        return "No command."
+    return f"`{_markdown_cell(command)}`"
+
+
+def _candidate_primary_runbook_lines(summary: dict[str, Any]) -> list[str]:
+    runbook = summary.get("primary_next_task_runbook")
+    if not isinstance(runbook, list) or not runbook:
+        return []
+
+    primary_task = summary.get("primary_next_task")
+    primary_task = primary_task if isinstance(primary_task, dict) else {}
+    lines = [
+        "",
+        "## Candidate Primary Runbook",
+        "",
+    ]
+    if primary_task:
+        lines.extend(
+            [
+                f"- Case: `{_markdown_cell(primary_task.get('case_id'))}`",
+                f"- Task: `{_markdown_cell(primary_task.get('task'))}`",
+                f"- Status: `{_markdown_cell(primary_task.get('status'))}`",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "| Step | Command | Required | Handoff |",
+            "|------|---------|----------|---------|",
+        ]
+    )
+    for step in runbook:
+        if not isinstance(step, dict):
+            continue
+        required = str(bool(step.get("required"))).lower()
+        lines.append(
+            "| "
+            f"`{_markdown_cell(step.get('step'))}` | "
+            f"{_runbook_command_cell(step)} | "
+            f"`{required}` | "
+            f"{_markdown_cell(step.get('handoff') or '-')} |"
         )
     return lines
 
@@ -1261,6 +1407,7 @@ def _render_markdown_report(report: CasesReport) -> str:
     lines.extend(_candidate_handoff_lines(report))
     lines.extend(_candidate_evidence_bundle_command_lines(report))
     lines.extend(_candidate_promotion_evidence_summary_lines(report.promotion_evidence_summary))
+    lines.extend(_candidate_primary_runbook_lines(report.promotion_evidence_summary))
     lines.extend(_candidate_promotion_command_plan_summary_lines(report.promotion_command_plan_summary))
     lines.extend(_candidate_promotion_task_lines(report))
     return "\n".join(lines) + "\n"
