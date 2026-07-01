@@ -1150,6 +1150,12 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
         console.print(f"  evidence: {primary_evidence}")
         if primary_acceptance:
             console.print(f"  acceptance: {primary_acceptance}")
+        preflight_required = primary_task.get("llm_live_preflight_required")
+        if isinstance(preflight_required, bool):
+            console.print(f"  preflight_required: {str(preflight_required).lower()}")
+        preflight_blocker_note = primary_task.get("llm_live_preflight_blocker_note")
+        if preflight_blocker_note:
+            console.print(f"  preflight_blocker: {preflight_blocker_note}")
         first_runbook_command = promotion.get("primary_next_task_runbook_first_command")
         if first_runbook_command:
             first_runbook_step = promotion.get("primary_next_task_runbook_first_step")

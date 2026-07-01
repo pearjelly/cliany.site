@@ -30,6 +30,8 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "issue_template_primary_task" in text
         assert "expected_adapter_package" in text
         assert "llm_live_preflight_required" in text
+        assert "preflight_required" in text
+        assert "preflight_blocker" in text
         assert "cliany-site cases --case-id pypi-project-search --evidence-bundle" in text
         assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in text
         assert "acceptance_criteria" in text

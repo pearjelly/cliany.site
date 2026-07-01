@@ -28,6 +28,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site cases --json" in index
     assert "cliany-site cases --status candidate --promotion-plan" in index
     assert "primary_next_task_acceptance_criteria" in index
+    assert "preflight_required" in index
+    assert "preflight_blocker" in index
     assert "python scripts/plan_next_iteration.py --issues-dir" in index
     assert "Primary Acceptance Criteria" in index
     assert "docs/good-first-issues.md" in index

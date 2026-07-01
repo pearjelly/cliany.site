@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Changed
+- Candidate human handoffs now render `preflight_required`, `preflight_blocker`, and `runbook_first` in the `Candidate 下一步` section, so non-JSON users see the live LLM gate before starting a real `explore`.
 - Candidate promotion task objects now expose `llm_live_preflight_required`, `llm_live_preflight_command`, `llm_live_preflight_blocker_note`, and `llm_live_preflight_evidence_fields`, so summary-only tools can record live LLM blockers without expanding runbooks.
 - Candidate promotion handoffs now expose `expected_adapter_package` across the cases CLI issue templates, evidence bundles, promotion plans, case validation summaries, next-iteration planner metadata, and generated issue bodies.
 - Release readiness and next-iteration planning now expose `daily_release_cap_blocked`, `daily_release_resume_date`, and `daily_release_resume_date_sha256` when the target tag would exceed the daily release cap, so maintainers can see the exact next eligible release date instead of inferring it from prose.

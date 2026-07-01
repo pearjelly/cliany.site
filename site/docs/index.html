@@ -265,7 +265,7 @@ cliany-site workflow validate workflow.yaml --json</code></pre>
         <pre><code>cliany-site explore "https://your-site.com" "原有任务" --extend your-site.com</code></pre>
 
         <h3>如何创建 candidate promotion issue？</h3>
-        <p>先运行 <code>cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json</code>，在 issue 摘要中引用 <code>primary_next_task_runbook</code>、<code>llm_live_preflight_required</code> 和 <code>expected_adapter_package</code>，确保贡献者先做 live LLM preflight、再执行当前 evidence task，并上传正确的 adapter release asset。若 preflight 未通过，贴回 doctor JSON 中的 <code>summary.llm_live_preflight</code> 作为 blocker 证据。若使用 <code>python scripts/plan_next_iteration.py --issues-dir /tmp/cliany-candidate-issues</code> 生成 artifacts，先对比 <code>case_promotion_evidence_primary_runbook_steps</code> / hash 是否漂移，再创建 GitHub issue。</p>
+        <p>先运行 <code>cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json</code>，在 issue 摘要中引用 <code>primary_next_task_runbook</code>、<code>llm_live_preflight_required</code> 和 <code>expected_adapter_package</code>，确保贡献者先做 live LLM preflight、再执行当前 evidence task，并上传正确的 adapter release asset。普通 <code>cliany-site cases --status candidate</code> 输出也会展示 <code>preflight_required</code>、<code>preflight_blocker</code> 和 <code>runbook_first</code>，方便非 JSON 交接。若 preflight 未通过，贴回 doctor JSON 中的 <code>summary.llm_live_preflight</code> 作为 blocker 证据。若使用 <code>python scripts/plan_next_iteration.py --issues-dir /tmp/cliany-candidate-issues</code> 生成 artifacts，先对比 <code>case_promotion_evidence_primary_runbook_steps</code> / hash 是否漂移，再创建 GitHub issue。</p>
 
         <h3>如何在服务器/Docker 中使用？</h3>
         <pre><code>cliany-site explore "https://github.com" "搜索仓库" \

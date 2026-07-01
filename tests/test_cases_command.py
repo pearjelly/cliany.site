@@ -174,6 +174,8 @@ def test_cases_command_human_candidate_next_step_shows_primary_detail(tmp_home):
     assert "evidence: Not attached yet." in result.output
     assert "acceptance: Attach the generated" in result.output
     assert "package path or release asset name" in result.output
+    assert "preflight_required: true" in result.output
+    assert "preflight_blocker: Run the live LLM preflight before explore." in result.output
 
 
 def test_cases_human_output_uses_primary_next_task(capsys):
