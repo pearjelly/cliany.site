@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Added
+- 新增 `v0.16.249` 发布草案，并将公开 / 维护者路线图与官网维护者循环基线校准到 `v0.16.248`；本轮继续记录 `pypi-project-search` live LLM preflight 阻塞，不伪造 candidate adapter package 证据。
+
 ## [0.16.248] - 2026-07-01
 
 ### Added

@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-06-21
-- **Current baseline:** v0.16.245
+- **Updated:** 2026-07-01
+- **Current baseline:** v0.16.248
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -12,9 +12,9 @@ cliany-site turns real browser workflows into reusable CLI commands. The Q3 road
 - A real case catalog with CRM, DevOps, knowledge-base, and package-search workflows.
 - Structured JSON envelopes for success and failure, including retryable LLM outage reporting through `E_LLM_UNAVAILABLE`.
 - Adapter verification, marketplace packaging, metadata validation, and generated-code security checks.
-- Release readiness checks that keep GitHub Release, PyPI, CI, changelog, and case catalog validation tied together.
+- Release readiness and publication checks that keep GitHub Release, PyPI, CI, changelog, website publication, and case catalog validation tied together.
 
-## Near Term: 2026-06-22 to 2026-07-07
+## Near Term: 2026-07-01 to 2026-07-07
 
 The next focus is turning candidate real-world cases into verified active demos.
 
@@ -24,6 +24,7 @@ Planned outcomes:
 - Publish downloadable adapter assets that users can install and verify locally.
 - Keep candidate cases clearly labeled until release assets and online smoke evidence exist.
 - Improve the public quickstart and website so users can pick a real demo without reading internal maintainer docs.
+- Keep live LLM preflight failures visible as blockers instead of treating them as adapter evidence.
 
 ## Mid Term: 2026-07-08 to 2026-07-28
 
