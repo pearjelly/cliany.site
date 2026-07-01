@@ -658,6 +658,8 @@ def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path):
         "creating target tag v0.16.2 today would exceed the daily release cap 4/3"
     ]
     readiness.next_actions = [cadence_action, pause_action]
+    readiness.daily_release_cap_blocked = True
+    readiness.daily_release_resume_date = "2026-06-11"
     readiness.standard_release_flow = {
         "status": "blocked",
         "target_version": "0.16.2",
@@ -675,8 +677,13 @@ def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path):
     data = plan.to_dict()
 
     assert plan.next_actions[0] == pause_action
+    assert plan.daily_release_cap_blocked is True
+    assert plan.daily_release_resume_date == "2026-06-11"
     assert pause_action in plan.next_actions
     assert pause_action in data["next_actions"]
+    assert data["daily_release_cap_blocked"] is True
+    assert data["daily_release_resume_date"] == "2026-06-11"
+    assert data["daily_release_resume_date_sha256"] == _stable_json_sha256("2026-06-11")
     assert cadence_action in plan.next_actions
     assert "Ship verified slices on `1` more unique commit days this week." not in plan.next_actions
     assert plan.publication_tag_publish_decision["target_tag_commands"] == []

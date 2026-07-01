@@ -1120,6 +1120,11 @@ def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path):
     assert report.cadence.release_tags_today == ["v0.1.1", "v0.1.2", "v0.1.3"]
     assert report.cadence.daily_release_limit_ok is True
     assert report.ok is False
+    assert payload["daily_release_cap_blocked"] is True
+    assert payload["daily_release_resume_date"] == "2026-06-11"
+    assert payload["daily_release_resume_date_sha256"] == release_readiness._stable_json_sha256(
+        "2026-06-11"
+    )
     assert (
         "creating target tag v0.1.4 today would exceed the daily release cap 4/3"
         in report.blockers

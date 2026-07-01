@@ -11,7 +11,7 @@ import subprocess
 import sys
 import tomllib
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -179,6 +179,7 @@ class ReadinessReport:
         standard_release_flow_distribution_audit_command = (
             _standard_release_flow_distribution_audit_command(standard_release_flow)
         )
+        daily_release_resume_date = _target_daily_release_resume_date(self)
         return {
             "ok": self.ok,
             "current_version": self.current_version,
@@ -186,6 +187,13 @@ class ReadinessReport:
             "release_mode": self.release_mode,
             "release_tag": self.release_tag,
             "blockers": self.blockers,
+            "daily_release_cap_blocked": daily_release_resume_date is not None,
+            "daily_release_resume_date": daily_release_resume_date,
+            "daily_release_resume_date_sha256": (
+                _stable_json_sha256(daily_release_resume_date)
+                if daily_release_resume_date
+                else None
+            ),
             "min_case_assets": self.min_case_assets,
             "cadence": self.cadence.to_dict(),
             "cases": self.cases.to_dict(),
@@ -815,6 +823,23 @@ def _target_daily_release_limit_next_action(report: ReadinessReport) -> str | No
         f"`{target_tag}` today would make release tags "
         f"`{projected_count}/{report.cadence.max_daily_releases}`."
     )
+
+
+def _target_daily_release_resume_date(report: ReadinessReport) -> str | None:
+    target_daily_context = _target_daily_release_limit_context(
+        report.cadence,
+        report.target_version,
+        release_tag=report.release_tag,
+    )
+    if target_daily_context is None:
+        return None
+
+    cadence_today = getattr(report.cadence, "today", None)
+    if isinstance(cadence_today, datetime):
+        cadence_today = cadence_today.date()
+    if not isinstance(cadence_today, date):
+        return None
+    return (cadence_today + timedelta(days=1)).isoformat()
 
 
 def _mentions_create_new_release_tag(action: str) -> bool:

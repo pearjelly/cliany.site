@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class CadenceReport:
     ok: bool
     version: str
+    today: date
     latest_tag: str | None
     expected_tag: str
     tag_matches_version: bool
@@ -199,6 +200,7 @@ def build_report(
     return CadenceReport(
         ok=ok,
         version=version,
+        today=today,
         latest_tag=latest_tag,
         expected_tag=expected_tag,
         tag_matches_version=tag_matches_version,

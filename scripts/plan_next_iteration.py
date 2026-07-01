@@ -10,7 +10,7 @@ import shlex
 import sys
 import tomllib
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -645,6 +645,8 @@ class IterationPlan:
     recommended_slice: str
     readiness_ok: bool
     publication_ok: bool
+    daily_release_cap_blocked: bool
+    daily_release_resume_date: str | None
     commit_days: str
     commit_cadence: dict[str, Any]
     case_assets: str
@@ -714,6 +716,13 @@ class IterationPlan:
             "recommended_slice": self.recommended_slice,
             "readiness_ok": self.readiness_ok,
             "publication_ok": self.publication_ok,
+            "daily_release_cap_blocked": self.daily_release_cap_blocked,
+            "daily_release_resume_date": self.daily_release_resume_date,
+            "daily_release_resume_date_sha256": (
+                _stable_json_sha256(self.daily_release_resume_date)
+                if self.daily_release_resume_date
+                else None
+            ),
             "commit_days": self.commit_days,
             "commit_cadence": self.commit_cadence,
             "case_assets": self.case_assets,
@@ -1177,6 +1186,38 @@ def _readiness_payload(readiness: Any) -> dict[str, Any]:
         return {}
     payload = to_dict()
     return payload if isinstance(payload, dict) else {}
+
+
+def _readiness_daily_release_cap_blocked(readiness: Any) -> bool:
+    value = getattr(readiness, "daily_release_cap_blocked", None)
+    if value is not None:
+        return bool(value)
+    payload = _readiness_payload(readiness)
+    if "daily_release_cap_blocked" in payload:
+        return bool(payload["daily_release_cap_blocked"])
+    return _has_target_daily_release_limit_blocker(list(getattr(readiness, "blockers", []) or []))
+
+
+def _readiness_daily_release_resume_date(readiness: Any) -> str | None:
+    value = getattr(readiness, "daily_release_resume_date", None)
+    if value:
+        return str(value)
+
+    payload = _readiness_payload(readiness)
+    value = payload.get("daily_release_resume_date")
+    if value:
+        return str(value)
+
+    if not _readiness_daily_release_cap_blocked(readiness):
+        return None
+
+    cadence = getattr(readiness, "cadence", None)
+    cadence_today = getattr(cadence, "today", None)
+    if isinstance(cadence_today, datetime):
+        cadence_today = cadence_today.date()
+    if not isinstance(cadence_today, date):
+        return None
+    return (cadence_today + timedelta(days=1)).isoformat()
 
 
 def _readiness_standard_release_flow(readiness: Any) -> dict[str, Any]:
@@ -2725,6 +2766,7 @@ def build_plan(
         str(readiness.target_version),
         readiness_blockers=list(getattr(readiness, "blockers", []) or []),
     )
+    daily_release_resume_date = _readiness_daily_release_resume_date(readiness)
     next_actions = _next_action_lines(readiness, publication)
     standard_release_flow = _standard_release_flow(
         readiness,
@@ -2777,6 +2819,8 @@ def build_plan(
         recommended_slice=release_slice,
         readiness_ok=bool(readiness.ok),
         publication_ok=bool(publication.ok),
+        daily_release_cap_blocked=_readiness_daily_release_cap_blocked(readiness),
+        daily_release_resume_date=daily_release_resume_date,
         commit_days=f"{readiness.cadence.commit_day_count}/{readiness.cadence.min_commit_days}",
         commit_cadence=commit_cadence,
         case_assets=(
