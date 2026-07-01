@@ -1069,10 +1069,18 @@ def test_standard_release_flow_preserves_remote_name():
     assert "python scripts/check_release_publication.py --remote --remote-name upstream --json" in (
         flow["commands"]
     )
+    assert "cd site && vercel link --yes --project cliany.site && vercel --prod --yes" in (
+        flow["commands"]
+    )
     assert flow["steps"][0]["command"] == (
         "python scripts/release_readiness.py --strict --target-version 0.1.1 "
         "--remote --remote-name upstream"
     )
+    assert flow["steps"][-2] == {
+        "name": "website_deploy",
+        "status": "pending",
+        "command": "cd site && vercel link --yes --project cliany.site && vercel --prod --yes",
+    }
     assert flow["steps"][-1]["command"] == (
         "python scripts/check_release_publication.py --remote --remote-name upstream --json"
     )

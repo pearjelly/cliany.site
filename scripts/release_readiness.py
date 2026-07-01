@@ -1225,6 +1225,7 @@ def _standard_release_flow(
     target_tag_commands = [
         str(command) for command in tag_publish_decision.get("target_tag_commands") or []
     ]
+    website_deploy_command = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
     remote_audit_command = _remote_publication_audit_command(report)
 
     commands = [
@@ -1233,6 +1234,7 @@ def _standard_release_flow(
         case_validation_command,
         *[str(command) for command in publication_payload["publish_commands"]],
         *target_tag_commands,
+        website_deploy_command,
         remote_audit_command,
     ]
     commands = list(dict.fromkeys(command for command in commands if command))
@@ -1285,6 +1287,11 @@ def _standard_release_flow(
                 "name": "target_tag",
                 "status": tag_publish_decision.get("target_tag_status"),
                 "commands": target_tag_commands,
+            },
+            {
+                "name": "website_deploy",
+                "status": "pending",
+                "command": website_deploy_command,
             },
             {
                 "name": "remote_publication_audit",

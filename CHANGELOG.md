@@ -16,6 +16,7 @@
 - Next-iteration Markdown reports now show candidate issue priority rank and reason in the Candidate Issue Metadata table, so maintainers can review queue order without generating issue artifacts.
 - Next-iteration validation commands and candidate issue artifacts now preserve remote audit arguments for `check_release_publication.py`, so copied validation steps re-check the same remote refs as the planner run.
 - Release readiness and next-iteration standard release flow commands now preserve `--remote-name` on strict readiness checks, remote publication audits, and publish-script generation commands.
+- Release readiness standard release flow commands now include the production website deployment command `cd site && vercel link --yes --project cliany.site && vercel --prod --yes`, so GitHub Release, PyPI, and website sync stay in the same checklist.
 - Candidate evidence bundles and promotion plans now expose `primary_next_task_runbook` / `primary_runbook`, giving maintainers an ordered preflight-first checklist for the current candidate task.
 - Next-iteration candidate issue artifacts now carry the primary candidate runbook through planner JSON, issue metadata, generated issue bodies, and artifact README summaries.
 - Case validation and release readiness Markdown reports now render the same primary candidate runbook, so maintainers see the live LLM preflight, current evidence command, and acceptance step without opening the cases CLI.
