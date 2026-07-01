@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.248] - 2026-07-01
+
 ### Added
 - 新增 `v0.16.248` 发布草案，将下一版继续聚焦 `pypi-project-search` candidate 晋级证据、live LLM preflight 门禁和 release cadence 累积。
 - `scripts/check_release_publication.py` 新增显式 `--distribution` 发布后审计，可核对最新本地 tag 对应的 GitHub Release 与 PyPI 版本是否已经公开可见。
@@ -2290,7 +2292,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.247...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.248...HEAD
+[0.16.248]: https://github.com/pearjelly/cliany.site/compare/v0.16.247...v0.16.248
 [0.16.247]: https://github.com/pearjelly/cliany.site/compare/v0.16.246...v0.16.247
 [0.16.246]: https://github.com/pearjelly/cliany.site/compare/v0.16.245...v0.16.246
 [0.16.245]: https://github.com/pearjelly/cliany.site/compare/v0.16.244...v0.16.245
