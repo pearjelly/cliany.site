@@ -669,10 +669,16 @@ def test_cases_command_promotion_plan_json(tmp_home):
         ),
         "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
         "llm_live_preflight_blocker_note": plan["llm_live_preflight_blocker_note"],
+        "priority_rank": 1,
+        "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
     }
     assert plan["candidates"][0]["case_id"] == "pypi-project-search"
     assert plan["candidates"][0]["primary_task"] == "adapter_package"
     assert plan["candidates"][0]["primary_status"] == "pending"
+    assert plan["candidates"][0]["priority_rank"] == 1
+    assert plan["candidates"][0]["priority_reason"] == (
+        "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0"
+    )
     assert (
         plan["candidates"][0]["llm_live_preflight_blocker_note"]
         == plan["llm_live_preflight_blocker_note"]
@@ -705,9 +711,12 @@ def test_cases_command_promotion_plan_human_outputs_queue(tmp_home):
         in result.output
     )
     assert "## Candidate queue" in result.output
+    assert "priority: `1`" in result.output
+    assert "priority_reason: rank 1: complete 0/3, pending 3, blocked 0, missing commands 0" in result.output
     assert "ready_to_promote: `false`" in result.output
     assert "## Incomplete task queue" in result.output
     assert "`pypi-project-search/adapter_package` (pending)" in result.output
+    assert "priority_reason: rank 1: complete 0/3, pending 3, blocked 0, missing commands 0" in result.output
     assert "acceptance: Attach the generated" in result.output
 
 
@@ -799,9 +808,26 @@ def test_cases_command_promotion_plan_prioritizes_closest_candidate(tmp_home, mo
     assert plan["primary_case_id"] == "nearly-ready-candidate"
     assert plan["primary_task"] == "metadata_validation"
     assert plan["primary_next_item"]["case_id"] == "nearly-ready-candidate"
+    assert plan["primary_next_item"]["priority_rank"] == 1
+    assert plan["primary_next_item"]["priority_reason"] == (
+        "rank 1: complete 1/3, pending 2, blocked 0, missing commands 0"
+    )
     assert plan["candidates"][0]["case_id"] == "nearly-ready-candidate"
+    assert plan["candidates"][0]["priority_rank"] == 1
+    assert plan["candidates"][0]["priority_reason"] == (
+        "rank 1: complete 1/3, pending 2, blocked 0, missing commands 0"
+    )
+    assert plan["candidates"][1]["case_id"] == "empty-candidate"
+    assert plan["candidates"][1]["priority_rank"] == 2
+    assert plan["candidates"][1]["priority_reason"] == (
+        "rank 2: complete 0/3, pending 3, blocked 0, missing commands 0"
+    )
     assert plan["task_queue"][0]["case_id"] == "nearly-ready-candidate"
     assert plan["task_queue"][0]["task"] == "metadata_validation"
+    assert plan["task_queue"][0]["priority_rank"] == 1
+    assert plan["task_queue"][0]["priority_reason"] == (
+        "rank 1: complete 1/3, pending 2, blocked 0, missing commands 0"
+    )
 
 
 def test_cases_command_issue_template_requires_case_id(tmp_home):

@@ -9,6 +9,7 @@
 
 ### Changed
 - Candidate promotion plan and release planning evidence now prioritize candidate cases with more completed promotion evidence and fewer blockers before falling back to manifest order, so maintainers can keep pushing the closest case toward `active`.
+- Candidate promotion plan output now includes stable `priority_rank` and `priority_reason` fields in JSON and human markdown, making the candidate queue ordering auditable for maintainers and issue handoffs.
 
 ### Fixed
 - Release readiness now projects whether creating the target tag today would exceed the daily release cap, so planning `v0.16.251` after `v0.16.248`、`v0.16.249` 和 `v0.16.250` 已发布时会明确暂停 tag，而不是继续给出第四个同日 release 命令。

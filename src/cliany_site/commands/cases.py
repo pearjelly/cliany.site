@@ -531,7 +531,7 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
     candidates: list[dict[str, Any]] = []
     task_queue: list[dict[str, Any]] = []
 
-    for bundle in ranked_bundles:
+    for priority_rank, bundle in enumerate(ranked_bundles, start=1):
         primary_next_task = bundle.get("primary_next_task")
         primary_next_task = primary_next_task if isinstance(primary_next_task, dict) else {}
         case_id = str(bundle.get("case_id") or "")
@@ -541,6 +541,7 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         llm_live_preflight_blocker_note = str(
             bundle.get("llm_live_preflight_blocker_note") or ""
         )
+        priority_reason = _candidate_bundle_priority_reason(bundle, priority_rank)
         candidate_item = {
             "case_id": case_id,
             "title": bundle.get("title"),
@@ -567,6 +568,8 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
             "evidence_bundle_json_command": evidence_bundle_json_command,
             "llm_live_preflight_command": llm_live_preflight_command,
             "llm_live_preflight_blocker_note": llm_live_preflight_blocker_note,
+            "priority_rank": priority_rank,
+            "priority_reason": priority_reason,
         }
         candidates.append(candidate_item)
 
@@ -587,6 +590,8 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
                     "evidence_bundle_json_command": evidence_bundle_json_command,
                     "llm_live_preflight_command": llm_live_preflight_command,
                     "llm_live_preflight_blocker_note": llm_live_preflight_blocker_note,
+                    "priority_rank": priority_rank,
+                    "priority_reason": priority_reason,
                 }
             )
 
@@ -635,6 +640,18 @@ def _candidate_bundle_priority_key(bundle: dict[str, Any], index: int) -> tuple[
     )
 
 
+def _candidate_bundle_priority_reason(bundle: dict[str, Any], rank: int) -> str:
+    complete_count = int(bundle.get("complete_task_count") or 0)
+    pending_count = int(bundle.get("pending_task_count") or 0)
+    blocked_count = int(bundle.get("blocked_task_count") or 0)
+    missing_command_count = len(bundle.get("promotion_command_plan_missing_tasks") or [])
+    return (
+        f"rank {rank}: complete {complete_count}/{len(PROMOTION_TASKS)}, "
+        f"pending {pending_count}, blocked {blocked_count}, "
+        f"missing commands {missing_command_count}"
+    )
+
+
 def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
     lines = [
         "## Candidate promotion plan",
@@ -657,6 +674,8 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                 f"- Case: `{primary_next_item['case_id']}`",
                 f"- Task: `{primary_next_item['task']}`",
                 f"- Status: `{primary_next_item['status']}`",
+                f"- Priority: `{primary_next_item.get('priority_rank')}`",
+                f"- Priority reason: {primary_next_item.get('priority_reason')}",
                 f"- Command: `{primary_next_item.get('command') or 'Not declared.'}`",
                 f"- Handoff: {primary_next_item.get('handoff') or 'No handoff declared.'}",
                 (
@@ -685,6 +704,8 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
             [
                 f"- `{candidate['case_id']}`",
                 f"  - target: {candidate.get('target_url')}",
+                f"  - priority: `{candidate.get('priority_rank')}`",
+                f"  - priority_reason: {candidate.get('priority_reason')}",
                 f"  - ready_to_promote: `{str(candidate.get('ready_to_promote')).lower()}`",
                 (
                     f"  - primary: `{candidate.get('primary_task') or '-'}` "
@@ -710,6 +731,8 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
         lines.extend(
             [
                 f"- `{item['case_id']}/{item['task']}` ({item['status']})",
+                f"  - priority: `{item.get('priority_rank')}`",
+                f"  - priority_reason: {item.get('priority_reason')}",
                 f"  - command: `{command}`",
                 f"  - command_missing: `{str(item.get('command_missing', False)).lower()}`",
                 f"  - handoff: {item.get('handoff') or 'No handoff declared.'}",
