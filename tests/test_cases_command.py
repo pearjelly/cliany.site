@@ -379,6 +379,10 @@ def test_cases_command_issue_template_json(tmp_home):
         in template
     )
     assert "## Reproduction Context" in template
+    assert "## Promotion Command Plan Summary" in template
+    assert "- command_count: `4`" in template
+    assert "- missing_command_count: `0`" in template
+    assert "- all_declared: `true`" in template
     assert "## Promotion Command Plan" in template
     assert (
         f"  - command_sha256: `{LLM_LIVE_PREFLIGHT_COMMAND_SHA256}`"

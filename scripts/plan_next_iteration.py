@@ -2903,6 +2903,14 @@ def _candidate_issue_body(
 ) -> str:
     command_lines = [f"  - `{command}`" for command in commands] or ["  - Not declared."]
     offline_command_lines = [f"  - `{command}`" for command in offline_commands] or ["  - Not declared."]
+    missing_command_count = sum(
+        1 for item in promotion_command_plan if item.get("missing")
+    )
+    promotion_command_summary_lines = [
+        f"- command_count: `{len(promotion_command_plan)}`",
+        f"- missing_command_count: `{missing_command_count}`",
+        f"- all_declared: `{str(bool(promotion_command_plan) and missing_command_count == 0).lower()}`",
+    ]
     promotion_command_lines: list[str] = []
     for item in promotion_command_plan:
         command = item.get("command") or "Not declared."
@@ -2989,6 +2997,9 @@ def _candidate_issue_body(
             *command_lines,
             "- Offline validation commands:",
             *offline_command_lines,
+            "",
+            "## Promotion Command Plan Summary",
+            *promotion_command_summary_lines,
             "",
             "## Promotion Command Plan",
             *promotion_command_lines,

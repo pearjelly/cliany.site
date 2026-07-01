@@ -1534,6 +1534,10 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- Offline validation commands:\n"
             "  - `python scripts/validate_cases.py --strict`\n"
             "  - `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md`\n\n"
+            "## Promotion Command Plan Summary\n"
+            "- command_count: `4`\n"
+            "- missing_command_count: `0`\n"
+            "- all_declared: `true`\n\n"
             "## Promotion Command Plan\n"
             "- `llm_live_preflight`: `cliany-site doctor --llm-live --json`\n"
             f"  - command_sha256: `{_command_sha256(preflight_command)}`\n"
@@ -3630,6 +3634,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "- Offline validation commands:\n  - `python scripts/validate_cases.py --strict`" in body
     assert 'cliany-site explore "https://pypi.org" "search Python packages" --json' in body
     assert "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md" in body
+    assert "## Promotion Command Plan Summary" in body
+    assert "- command_count: `4`" in body
+    assert "- missing_command_count: `0`" in body
+    assert "- all_declared: `true`" in body
     assert "## Promotion Command Plan" in body
     assert (
         f"  - command_sha256: `{_command_sha256('cliany-site doctor --llm-live --json')}`"

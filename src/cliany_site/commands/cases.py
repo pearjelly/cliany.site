@@ -388,8 +388,22 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
     lines.extend(f"  - `{command}`" for command in commands)
     lines.append("- Offline validation commands:")
     lines.extend(f"  - `{command}`" for command in offline_commands)
-    lines.extend(["", "## Promotion Command Plan"])
-    for item in _candidate_promotion_command_plan(case):
+    promotion_command_plan = _candidate_promotion_command_plan(case)
+    missing_command_count = sum(
+        1 for item in promotion_command_plan if item.get("missing")
+    )
+    lines.extend(
+        [
+            "",
+            "## Promotion Command Plan Summary",
+            f"- command_count: `{len(promotion_command_plan)}`",
+            f"- missing_command_count: `{missing_command_count}`",
+            f"- all_declared: `{str(bool(promotion_command_plan) and missing_command_count == 0).lower()}`",
+            "",
+            "## Promotion Command Plan",
+        ]
+    )
+    for item in promotion_command_plan:
         command = item["command"] or "Not declared."
         lines.append(f"- `{item['task']}`: `{command}`")
         lines.append(f"  - command_sha256: `{item.get('command_sha256') or '-'}`")
