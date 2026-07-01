@@ -1169,12 +1169,13 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
     monkeypatch.setattr(plan_next_iteration, "build_readiness_report", fake_build_readiness_report)
     monkeypatch.setattr(plan_next_iteration, "build_publication_report", fake_build_publication_report)
 
-    plan_next_iteration.build_plan(
+    plan = plan_next_iteration.build_plan(
         tmp_path,
         target_version="0.16.2",
         remote_check=True,
         remote_name="upstream",
     )
+    data = plan.to_dict()
 
     assert captured["readiness"]["root"] == tmp_path
     assert captured["readiness"]["remote_check"] is True
@@ -1182,6 +1183,22 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
     assert captured["publication"]["root"] == tmp_path
     assert captured["publication"]["remote_check"] is True
     assert captured["publication"]["remote"] == "upstream"
+    assert data["validation_commands"][0] == (
+        "python scripts/plan_next_iteration.py --target-version 0.16.2 "
+        "--remote --remote-name upstream --json"
+    )
+    assert data["validation_commands"][1] == (
+        "python scripts/release_readiness.py --target-version 0.16.2 "
+        "--remote --remote-name upstream --json"
+    )
+    assert (
+        "python scripts/check_release_publication.py --remote --remote-name upstream --json"
+        in data["validation_commands"]
+    )
+    assert (
+        "python scripts/check_release_publication.py --remote --remote-name upstream --json"
+        in plan_next_iteration._issue_artifact_validation_commands(plan)
+    )
 
 
 def test_plan_next_actions_skip_release_draft_when_draft_is_valid(tmp_path):

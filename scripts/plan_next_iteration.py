@@ -1122,6 +1122,11 @@ def _remote_audit_args(*, remote_check: bool, remote_name: str) -> str:
     return f" {' '.join(args)}" if args else ""
 
 
+def _publication_audit_validation_command(*, remote_check: bool, remote_name: str) -> str:
+    remote_args = _remote_audit_args(remote_check=remote_check, remote_name=remote_name)
+    return f"python scripts/check_release_publication.py{remote_args} --json"
+
+
 def _candidate_package_validation_command(packages_dir: Path | None) -> str | None:
     if packages_dir is None:
         return None
@@ -2232,7 +2237,7 @@ def build_plan(
         f"{package_args}{remote_args} --json",
         f"python scripts/release_readiness.py --target-version {readiness.target_version}"
         f"{package_args}{remote_args} --json",
-        "python scripts/check_release_publication.py --json",
+        _publication_audit_validation_command(remote_check=remote_check, remote_name=remote_name),
         "python scripts/validate_cases.py --strict",
     ]
     candidate_package_validation_command = _candidate_package_validation_command(packages_dir)
@@ -3701,10 +3706,7 @@ def _issue_artifact_validation_commands(plan: IterationPlan) -> list[str]:
     return [
         plan.issue_artifacts_command,
         plan.plan_report_command,
-        f"python scripts/plan_next_iteration.py --target-version {plan.target_version} --json",
-        f"python scripts/release_readiness.py --target-version {plan.target_version} --json",
-        "python scripts/check_release_publication.py --json",
-        "python scripts/validate_cases.py --strict",
+        *plan.validation_commands,
     ]
 
 

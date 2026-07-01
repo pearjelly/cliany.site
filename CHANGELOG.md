@@ -14,6 +14,7 @@
 - Candidate promotion issue artifacts now carry `priority_rank` and `priority_reason` through issue metadata, primary evidence tasks, and generated issue bodies, so candidate handoffs preserve the same ordering explanation as the planner summary.
 - Candidate issue artifact README summaries now show promotion priority rank and reason beside each candidate, so maintainers can review ordering without opening JSON metadata.
 - Next-iteration Markdown reports now show candidate issue priority rank and reason in the Candidate Issue Metadata table, so maintainers can review queue order without generating issue artifacts.
+- Next-iteration validation commands and candidate issue artifacts now preserve remote audit arguments for `check_release_publication.py`, so copied validation steps re-check the same remote refs as the planner run.
 
 ### Fixed
 - Release readiness now projects whether creating the target tag today would exceed the daily release cap, so planning `v0.16.251` after `v0.16.248`、`v0.16.249` 和 `v0.16.250` 已发布时会明确暂停 tag，而不是继续给出第四个同日 release 命令。
