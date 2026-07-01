@@ -19,6 +19,7 @@ PROMOTION_COMMAND_PLAN_TASKS = (
     "metadata_validation",
     "online_smoke",
 )
+PACKAGE_EXTENSION = ".cliany-adapter.tar.gz"
 CANDIDATE_PACKAGES_DIR = "~/.cliany-site/packages"
 CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     "python scripts/validate_cases.py "
@@ -174,7 +175,10 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
     promotion: dict[str, Any] = raw_promotion if isinstance(raw_promotion, dict) else {}
     raw_evidence = case.get("promotion_evidence")
     evidence: dict[str, Any] = raw_evidence if isinstance(raw_evidence, dict) else {}
+    expected_adapter_package = _expected_adapter_package(case.get("adapter_domain"))
     primary_task = _candidate_issue_primary_task(evidence)
+    if primary_task and expected_adapter_package:
+        primary_task["expected_adapter_package"] = expected_adapter_package
 
     lines = [
         f"## Scope: promote candidate case `{case_id}`",
@@ -194,6 +198,7 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
                 f"- Current evidence: {current_evidence}",
                 f"- Next action: {next_action}",
                 f"- Acceptance criteria: {acceptance_criteria}",
+                f"- Expected adapter package: `{expected_adapter_package or '-'}`",
             ]
         )
     else:
@@ -262,6 +267,7 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
             "",
             "## Validation Evidence",
             "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.",
+            f"- Expected adapter package: `{expected_adapter_package or '-'}`",
             (
                 "- Candidate package validation command: "
                 f"`{CANDIDATE_PACKAGE_VALIDATION_COMMAND}`"
@@ -371,6 +377,14 @@ def _sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def _expected_adapter_package(adapter_domain: Any) -> str:
+    domain = str(adapter_domain or "").strip()
+    if not domain:
+        return ""
+    safe_domain = domain.replace("/", "_").replace(":", "_")
+    return f"{safe_domain}-<version>{PACKAGE_EXTENSION}"
+
+
 def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
     case_id = str(case.get("id") or "")
     adapter_domain = case.get("adapter_domain")
@@ -378,6 +392,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
     promotion: dict[str, Any] = raw_promotion if isinstance(raw_promotion, dict) else {}
     raw_evidence = case.get("promotion_evidence")
     evidence: dict[str, Any] = raw_evidence if isinstance(raw_evidence, dict) else {}
+    expected_adapter_package = _expected_adapter_package(adapter_domain)
     promotion_command_plan = _candidate_promotion_command_plan(case)
     command_plan_by_task = {
         str(item.get("task") or ""): item for item in promotion_command_plan if isinstance(item, dict)
@@ -416,6 +431,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                 "evidence": evidence_value,
                 "next_action": next_action,
                 "acceptance_criteria": acceptance_criteria,
+                "expected_adapter_package": expected_adapter_package,
                 "command": command,
                 "command_source": command_source,
                 "command_missing": command_missing,
@@ -444,6 +460,10 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "status": case.get("status"),
         "target_url": case.get("target_url"),
         "adapter_domain": adapter_domain,
+        "expected_adapter_package": expected_adapter_package,
+        "expected_adapter_package_sha256": (
+            _sha256_text(expected_adapter_package) if expected_adapter_package else ""
+        ),
         "docs": case.get("docs"),
         "example_output": case.get("example_output"),
         "commands": case.get("commands") if isinstance(case.get("commands"), list) else [],
@@ -499,6 +519,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                 "command_source": task["command_source"],
                 "command_missing": task["command_missing"],
                 "acceptance_criteria": task["acceptance_criteria"],
+                "expected_adapter_package": task["expected_adapter_package"],
                 "complete": task["complete"],
                 "handoff": task["handoff"],
             }
@@ -520,6 +541,7 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
         f"- Status: `{bundle['status']}`",
         f"- Target URL: {bundle['target_url']}",
         f"- Adapter domain: `{bundle['adapter_domain']}`",
+        f"- Expected adapter package: `{bundle.get('expected_adapter_package') or '-'}`",
         f"- Docs: {bundle['docs']}",
         f"- Example output: {bundle['example_output']}",
         f"- Ready to promote: `{str(bundle['ready_to_promote']).lower()}`",
@@ -643,6 +665,7 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         llm_live_preflight_blocker_note = str(
             bundle.get("llm_live_preflight_blocker_note") or ""
         )
+        expected_adapter_package = str(bundle.get("expected_adapter_package") or "")
         priority_reason = _candidate_bundle_priority_reason(bundle, priority_rank)
         candidate_item = {
             "case_id": case_id,
@@ -650,6 +673,7 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
             "status": bundle.get("status"),
             "target_url": bundle.get("target_url"),
             "adapter_domain": bundle.get("adapter_domain"),
+            "expected_adapter_package": expected_adapter_package,
             "ready_to_promote": bundle.get("ready_to_promote"),
             "pending_task_count": bundle.get("pending_task_count"),
             "blocked_task_count": bundle.get("blocked_task_count"),
@@ -684,6 +708,7 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
                     "case_id": case_id,
                     "task": task.get("task", ""),
                     "status": task.get("status", ""),
+                    "expected_adapter_package": expected_adapter_package,
                     "command": task.get("command", ""),
                     "command_source": task.get("command_source", ""),
                     "command_missing": task.get("command_missing", False),
@@ -713,6 +738,9 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         "primary_command": primary_next_item.get("command", ""),
         "primary_handoff": primary_next_item.get("handoff", ""),
         "primary_acceptance_criteria": primary_next_item.get("acceptance_criteria", ""),
+        "primary_expected_adapter_package": primary_next_item.get(
+            "expected_adapter_package", ""
+        ),
         "primary_runbook": primary_next_item.get("runbook", []),
         "primary_llm_live_preflight_command": primary_next_item.get(
             "llm_live_preflight_command", ""
@@ -782,6 +810,10 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                 f"- Priority: `{primary_next_item.get('priority_rank')}`",
                 f"- Priority reason: {primary_next_item.get('priority_reason')}",
                 f"- Command: `{primary_next_item.get('command') or 'Not declared.'}`",
+                (
+                    "- Expected adapter package: "
+                    f"`{primary_next_item.get('expected_adapter_package') or '-'}`"
+                ),
                 f"- Handoff: {primary_next_item.get('handoff') or 'No handoff declared.'}",
                 (
                     "- Acceptance criteria: "
@@ -819,6 +851,7 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
             [
                 f"- `{candidate['case_id']}`",
                 f"  - target: {candidate.get('target_url')}",
+                f"  - expected_adapter_package: `{candidate.get('expected_adapter_package') or '-'}`",
                 f"  - priority: `{candidate.get('priority_rank')}`",
                 f"  - priority_reason: {candidate.get('priority_reason')}",
                 f"  - ready_to_promote: `{str(candidate.get('ready_to_promote')).lower()}`",
@@ -849,6 +882,7 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                 f"  - priority: `{item.get('priority_rank')}`",
                 f"  - priority_reason: {item.get('priority_reason')}",
                 f"  - command: `{command}`",
+                f"  - expected_adapter_package: `{item.get('expected_adapter_package') or '-'}`",
                 f"  - command_missing: `{str(item.get('command_missing', False)).lower()}`",
                 f"  - handoff: {item.get('handoff') or 'No handoff declared.'}",
                 f"  - acceptance: {item.get('acceptance_criteria') or 'Not declared.'}",
@@ -1224,6 +1258,13 @@ def cases_cmd(
             raw_evidence = selected_case.get("promotion_evidence")
             evidence: dict[str, Any] = raw_evidence if isinstance(raw_evidence, dict) else {}
             rendered_issue_template_primary_task = _candidate_issue_primary_task(evidence)
+            expected_adapter_package = _expected_adapter_package(
+                selected_case.get("adapter_domain")
+            )
+            if rendered_issue_template_primary_task and expected_adapter_package:
+                rendered_issue_template_primary_task["expected_adapter_package"] = (
+                    expected_adapter_package
+                )
         if evidence_bundle:
             rendered_evidence_bundle = _candidate_evidence_bundle(selected_case)
     if promotion_plan:

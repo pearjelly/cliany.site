@@ -341,11 +341,16 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         "next_action": "Generate the adapter package.",
         "priority_rank": 1,
         "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 1",
+        "expected_adapter_package": "demo.example.com-<version>.cliany-adapter.tar.gz",
         "acceptance_criteria": (
             "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
             "package path or GitHub Release asset name."
         ),
     }
+    assert (
+        summary["pending_tasks"][0]["expected_adapter_package"]
+        == "demo.example.com-<version>.cliany-adapter.tar.gz"
+    )
     assert summary["primary_task_detail"] == summary["primary_task"]
     assert summary["primary_next_task"] == summary["primary_task_detail"]
     assert summary["primary_next_task_runbook"] == [
@@ -590,6 +595,7 @@ def test_cases_report_prioritizes_candidate_with_more_complete_evidence(tmp_path
         "next_action": "Run validate_cases with --packages-dir.",
         "priority_rank": 1,
         "priority_reason": "rank 1: complete 1/3, pending 2, blocked 0, missing commands 0",
+        "expected_adapter_package": "ready.example-<version>.cliany-adapter.tar.gz",
         "acceptance_criteria": (
             "Paste `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
             "--include-candidate-packages --strict` output showing the candidate package "

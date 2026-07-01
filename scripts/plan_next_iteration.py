@@ -28,6 +28,7 @@ CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     "python scripts/validate_cases.py "
     "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
 )
+PACKAGE_EXTENSION = ".cliany-adapter.tar.gz"
 LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
 LLM_LIVE_PREFLIGHT_BLOCKER_NOTE = (
     "Run the live LLM preflight before explore. If generate_adapters.ready=false "
@@ -596,6 +597,7 @@ class CandidatePromotion:
     commands: list[str]
     offline_commands: list[str]
     adapter_package: str
+    expected_adapter_package: str
     metadata_validation: str
     online_smoke: str
     priority_rank: int | None
@@ -622,6 +624,7 @@ class CandidatePromotion:
             "commands": self.commands,
             "offline_commands": self.offline_commands,
             "adapter_package": self.adapter_package,
+            "expected_adapter_package": self.expected_adapter_package,
             "metadata_validation": self.metadata_validation,
             "online_smoke": self.online_smoke,
             "priority_rank": self.priority_rank,
@@ -2094,6 +2097,14 @@ def _case_string_value(case: Any, field_name: str) -> str:
     return str(value or "")
 
 
+def _expected_adapter_package(adapter_domain: str) -> str:
+    domain = str(adapter_domain or "").strip()
+    if not domain:
+        return ""
+    safe_domain = domain.replace("/", "_").replace(":", "_")
+    return f"{safe_domain}-<version>{PACKAGE_EXTENSION}"
+
+
 def _case_dict_value(case: Any, field_name: str) -> dict[str, Any]:
     value = getattr(case, field_name, None)
     if value is None and isinstance(case, dict):
@@ -2155,6 +2166,9 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
     for priority_rank, case in enumerate(ranked_candidate_cases, start=1):
         evidence = _case_dict_value(case, "promotion_evidence")
         priority_reason = _case_promotion_priority_reason(case, priority_rank)
+        expected_adapter_package = _expected_adapter_package(
+            _case_string_value(case, "adapter_domain")
+        )
         for field_name in CANDIDATE_PROMOTION_FIELDS:
             task = evidence.get(field_name)
             if not isinstance(task, dict):
@@ -2171,6 +2185,7 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
                 "next_action": str(task.get("next_action") or ""),
                 "priority_rank": priority_rank,
                 "priority_reason": priority_reason,
+                "expected_adapter_package": expected_adapter_package,
             }
             if status == "pending":
                 pending_tasks.append(entry)
@@ -2357,11 +2372,15 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
         promotion_evidence = _case_dict_value(case, "promotion_evidence")
         evidence_bundle_primary_next_task = _candidate_promotion_primary_task(promotion_evidence)
         priority_reason = _case_promotion_priority_reason(case, priority_rank)
+        expected_adapter_package = _expected_adapter_package(
+            _case_string_value(case, "adapter_domain")
+        )
         if evidence_bundle_primary_next_task:
             evidence_bundle_primary_next_task = {
                 **evidence_bundle_primary_next_task,
                 "priority_rank": priority_rank,
                 "priority_reason": priority_reason,
+                "expected_adapter_package": expected_adapter_package,
             }
         evidence_bundle_primary_next_task_runbook = _candidate_primary_task_runbook(
             evidence_bundle_primary_next_task,
@@ -2376,6 +2395,7 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 commands=commands,
                 offline_commands=offline_commands,
                 adapter_package=_promotion_value(promotion, "adapter_package"),
+                expected_adapter_package=expected_adapter_package,
                 metadata_validation=_promotion_value(promotion, "metadata_validation"),
                 online_smoke=_promotion_value(promotion, "online_smoke"),
                 priority_rank=priority_rank,
@@ -2405,6 +2425,7 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                     metadata_validation=_promotion_value(promotion, "metadata_validation"),
                     online_smoke=_promotion_value(promotion, "online_smoke"),
                     promotion_evidence=promotion_evidence,
+                    expected_adapter_package=expected_adapter_package,
                     primary_task=evidence_bundle_primary_next_task,
                     primary_runbook=evidence_bundle_primary_next_task_runbook,
                 ),
@@ -2607,6 +2628,7 @@ def _candidate_issue_body(
     metadata_validation: str,
     online_smoke: str,
     promotion_evidence: dict[str, Any],
+    expected_adapter_package: str = "",
     primary_task: dict[str, Any] | None = None,
     primary_runbook: list[dict[str, Any]] | None = None,
 ) -> str:
@@ -2642,6 +2664,7 @@ def _candidate_issue_body(
             f"- Current evidence: {primary_evidence}",
             f"- Next action: {primary_next_action}",
             f"- Acceptance criteria: {primary_acceptance}",
+            f"- Expected adapter package: `{expected_adapter_package or '-'}`",
         ]
     else:
         primary_task_lines = ["- All promotion tasks already have complete evidence."]
@@ -2712,6 +2735,7 @@ def _candidate_issue_body(
             "",
             "## Validation Evidence",
             "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.",
+            f"- Expected adapter package: `{expected_adapter_package or '-'}`",
             (
                 "- Candidate package validation command: "
                 f"`{_default_candidate_package_validation_command()}`"

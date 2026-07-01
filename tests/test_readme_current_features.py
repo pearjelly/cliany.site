@@ -28,6 +28,7 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "promotion_evidence_summary.primary_task_detail" not in text
         assert "cliany-site cases --case-id pypi-project-search --issue-template" in text
         assert "issue_template_primary_task" in text
+        assert "expected_adapter_package" in text
         assert "cliany-site cases --case-id pypi-project-search --evidence-bundle" in text
         assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in text
         assert "acceptance_criteria" in text

@@ -88,6 +88,7 @@ class CaseCheck:
     id: str
     status: str
     target_url: str | None = None
+    adapter_domain: str | None = None
     commands: list[str] = field(default_factory=list)
     issues: list[str] = field(default_factory=list)
     package: dict[str, Any] | None = None
@@ -110,6 +111,8 @@ class CaseCheck:
             "commands": self.commands,
             "issues": self.issues,
         }
+        if self.adapter_domain is not None:
+            data["adapter_domain"] = self.adapter_domain
         if self.package is not None:
             data["package"] = self.package
         if self.promotion is not None:
@@ -573,8 +576,15 @@ def _check_case(
     case_id = str(case.get("id") or "(missing-id)")
     status = str(case.get("status") or "")
     target_url = str(case.get("target_url") or "")
+    adapter_domain = str(case.get("adapter_domain") or "")
     commands = [str(command) for command in case.get("commands") or []]
-    check = CaseCheck(id=case_id, status=status, target_url=target_url or None, commands=commands)
+    check = CaseCheck(
+        id=case_id,
+        status=status,
+        target_url=target_url or None,
+        adapter_domain=adapter_domain or None,
+        commands=commands,
+    )
 
     for field_name in ("id", "title", "category", "status", "target_url", "docs", "validation"):
         if not case.get(field_name):
@@ -602,7 +612,6 @@ def _check_case(
     if example_output:
         check.issues.extend(_validate_example_output(root, case_id, example_output, expected_commands))
     if status == "active":
-        adapter_domain = str(case.get("adapter_domain") or "")
         if not adapter_domain:
             check.issues.append("active case requires adapter_domain")
         if not case.get("source_release"):
@@ -627,7 +636,6 @@ def _check_case(
                     )
     elif status == "candidate":
         check.promotion_command_plan = _candidate_promotion_command_plan(commands)
-        adapter_domain = str(case.get("adapter_domain") or "")
         if not adapter_domain:
             check.issues.append("candidate case requires adapter_domain")
         if not commands:
@@ -792,6 +800,11 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
                 "next_action": str(task.get("next_action") or ""),
                 "priority_rank": priority_rank,
                 "priority_reason": priority_reason,
+                "expected_adapter_package": (
+                    _market_package_name_hint(check.adapter_domain)
+                    if check.adapter_domain
+                    else ""
+                ),
                 "acceptance_criteria": PROMOTION_ACCEPTANCE_CRITERIA[field_name],
             }
             if status == "pending":

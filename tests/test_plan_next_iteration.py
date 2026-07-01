@@ -216,6 +216,7 @@ def test_candidate_issue_body_checks_complete_tasks():
         target_url="https://example.test/search",
         commands=["cliany-site example.test search --json"],
         offline_commands=["python scripts/validate_cases.py --strict"],
+        expected_adapter_package="example.test-<version>.cliany-adapter.tar.gz",
         promotion_command_plan=[
             {
                 "task": "online_smoke",
@@ -249,6 +250,7 @@ def test_candidate_issue_body_checks_complete_tasks():
     assert "## Primary Evidence Task" in issue_body
     assert "- Task: `online_smoke`" in issue_body
     assert "- Status: `pending`" in issue_body
+    assert "- Expected adapter package: `example.test-<version>.cliany-adapter.tar.gz`" in issue_body
     assert "- Next action: Run read-only smoke." in issue_body
     assert "- Acceptance criteria: Paste the read-only adapter command JSON envelope summary" in issue_body
     assert "## Promotion Command Plan" in issue_body
@@ -295,6 +297,7 @@ def _readiness_report() -> SimpleNamespace:
                     id="pypi-project-search",
                     status="candidate",
                     target_url="https://pypi.org/search/?q=cliany-site",
+                    adapter_domain="pypi.org",
                     commands=[
                         'cliany-site explore "https://pypi.org" "search Python packages" --json',
                         "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json",
@@ -317,6 +320,7 @@ def _readiness_report() -> SimpleNamespace:
                     id="npm-package-search",
                     status="candidate",
                     target_url="https://www.npmjs.com/search?q=playwright",
+                    adapter_domain="www.npmjs.com",
                     commands=[
                         "cliany-site www.npmjs.com search-packages --query playwright --limit 5 --json",
                     ],
@@ -547,7 +551,15 @@ def test_plan_defaults_to_next_patch_version(tmp_path):
     assert plan.case_promotion_evidence_summary["primary_next_task"]["priority_reason"] == (
         "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0"
     )
+    assert (
+        plan.case_promotion_evidence_summary["primary_next_task"]["expected_adapter_package"]
+        == "pypi.org-<version>.cliany-adapter.tar.gz"
+    )
     assert plan.candidate_promotions[0].case_id == "pypi-project-search"
+    assert (
+        plan.candidate_promotions[0].expected_adapter_package
+        == "pypi.org-<version>.cliany-adapter.tar.gz"
+    )
     assert plan.candidate_promotions[0].priority_rank == 1
     assert plan.candidate_promotions[0].priority_reason == (
         "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0"
@@ -1087,6 +1099,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "next_action": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
         "priority_rank": 1,
         "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
+        "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
     }
     assert (
         data["case_promotion_evidence_summary"]["primary_task_detail"]
@@ -1149,6 +1162,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md",
         ],
         "adapter_package": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
+        "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
         "metadata_validation": "Run validate_cases with --packages-dir.",
         "online_smoke": "Run read-only PyPI search smoke.",
         "priority_rank": 1,
@@ -1168,6 +1182,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             ),
             "priority_rank": 1,
             "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
+            "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
         },
         "evidence_bundle_primary_next_task": {
             "task": "adapter_package",
@@ -1180,6 +1195,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             ),
             "priority_rank": 1,
             "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
+            "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
         },
         "evidence_bundle_primary_next_task_runbook": _pypi_primary_runbook(),
         "candidate_package_validation_command": (
@@ -1222,7 +1238,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- Current evidence: Not attached yet.\n"
             "- Next action: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n"
             "- Acceptance criteria: Attach the generated "
-            "<domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name.\n\n"
+            "<domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name.\n"
+            "- Expected adapter package: `pypi.org-<version>.cliany-adapter.tar.gz`\n\n"
             "## Primary Runbook\n"
             "- `llm_live_preflight`: `cliany-site doctor --llm-live --json`\n"
             "  - required: `true`\n"
@@ -1306,6 +1323,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- Attach or paste the JSON output in the issue once evidence changes.\n\n"
             "## Validation Evidence\n"
             "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.\n"
+            "- Expected adapter package: `pypi.org-<version>.cliany-adapter.tar.gz`\n"
             "- Candidate package validation command: `python scripts/validate_cases.py "
             "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`\n"
             "- Paste the local `scripts/validate_cases.py --packages-dir` result.\n"
@@ -3309,6 +3327,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "priority_rank": 1,
         "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
+        "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
     }
     assert metadata[0]["evidence_bundle_primary_next_task"] == {
         "task": "adapter_package",
@@ -3321,6 +3340,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "priority_rank": 1,
         "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
+        "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
     }
     assert metadata[0]["evidence_bundle_primary_next_task_runbook"] == _pypi_primary_runbook()
     assert metadata[0]["candidate_package_validation_command"] == (

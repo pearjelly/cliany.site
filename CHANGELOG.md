@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Changed
+- Candidate promotion handoffs now expose `expected_adapter_package` across the cases CLI issue templates, evidence bundles, promotion plans, case validation summaries, next-iteration planner metadata, and generated issue bodies.
 - Release readiness and next-iteration planning now expose `daily_release_cap_blocked`, `daily_release_resume_date`, and `daily_release_resume_date_sha256` when the target tag would exceed the daily release cap, so maintainers can see the exact next eligible release date instead of inferring it from prose.
 - Release readiness and next-iteration text/Markdown reports now render the daily release cap status, resume date, and resume-date hash beside the existing JSON fields.
 - Candidate issue artifacts now carry the same daily release cap handoff through `artifact-manifest.json`, `artifact_bundle_summary`, `publication-handoff.json`, and artifact README summaries.

@@ -229,11 +229,13 @@ def test_cases_command_issue_template_json(tmp_home):
             "Generate pypi.org-<version>.cliany-adapter.tar.gz with cliany-site explore "
             "and market publish, then attach the package path or release asset name."
         ),
+        "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
     }
     assert "## Scope: promote candidate case `pypi-project-search`" in template
     assert "## Primary Evidence Task" in template
     assert "- Task: `adapter_package`" in template
     assert "- Status: `pending`" in template
+    assert "- Expected adapter package: `pypi.org-<version>.cliany-adapter.tar.gz`" in template
     assert "## Reproduction Context" in template
     assert "## Promotion Command Plan" in template
     assert "## LLM Preflight Gate" in template
@@ -280,6 +282,7 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in template
     assert "Attach or paste the JSON output in the issue once evidence changes." in template
     assert "Candidate package validation command" in template
+    assert "Expected adapter package: `pypi.org-<version>.cliany-adapter.tar.gz`" in template
     assert (
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict"
@@ -369,6 +372,7 @@ def test_cases_command_issue_template_checks_complete_tasks(tmp_home, monkeypatc
         "status": "pending",
         "evidence": "",
         "next_action": "Run read-only smoke.",
+        "expected_adapter_package": "example.test-<version>.cliany-adapter.tar.gz",
     }
     assert "## Primary Evidence Task" in result.output
     assert "- Task: `online_smoke`" in result.output
@@ -393,6 +397,10 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     payload = json.loads(result.output)
     bundle = payload["data"]["evidence_bundle"]
     assert bundle["case_id"] == "pypi-project-search"
+    assert bundle["expected_adapter_package"] == "pypi.org-<version>.cliany-adapter.tar.gz"
+    assert bundle["expected_adapter_package_sha256"] == (
+        "d8f01afdd80df4b44821838c4a0b555cbec833de8bc881baf85b1036bfff7bab"
+    )
     assert bundle["ready_to_promote"] is False
     assert bundle["status_counts"] == {"pending": 3, "blocked": 0, "complete": 0}
     assert bundle["pending_task_count"] == 3
@@ -407,6 +415,10 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["primary_blocked_task"] is None
     assert bundle["primary_incomplete_task"]["task"] == "adapter_package"
     assert bundle["primary_next_task"]["task"] == "adapter_package"
+    assert (
+        bundle["primary_next_task"]["expected_adapter_package"]
+        == "pypi.org-<version>.cliany-adapter.tar.gz"
+    )
     assert bundle["primary_next_task"] == bundle["primary_pending_task"]
     assert bundle["primary_next_task_command"] == (
         'cliany-site explore "https://pypi.org" '
@@ -482,6 +494,7 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         "command_source": "commands.explore",
         "command_missing": False,
         "acceptance_criteria": bundle["tasks"][0]["acceptance_criteria"],
+        "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
         "complete": False,
         "handoff": bundle["tasks"][0]["handoff"],
     }
@@ -536,6 +549,9 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         },
     ]
     assert bundle["tasks"][0]["task"] == "adapter_package"
+    assert bundle["tasks"][0]["expected_adapter_package"] == (
+        "pypi.org-<version>.cliany-adapter.tar.gz"
+    )
     assert bundle["tasks"][0]["complete"] is False
     assert bundle["tasks"][0]["command_source"] == "commands.explore"
     assert bundle["tasks"][0]["command_missing"] is False
@@ -743,10 +759,12 @@ def test_cases_command_promotion_plan_json(tmp_home):
         == plan["llm_live_preflight_blocker_note"]
     )
     assert plan["primary_next_item"] == plan["task_queue"][0]
+    assert plan["primary_expected_adapter_package"] == "pypi.org-<version>.cliany-adapter.tar.gz"
     assert plan["task_queue"][0] == {
         "case_id": "pypi-project-search",
         "task": "adapter_package",
         "status": "pending",
+        "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
         "command": (
             'cliany-site explore "https://pypi.org" '
             '"search Python packages for cliany-site and list project names" --json'
@@ -766,6 +784,9 @@ def test_cases_command_promotion_plan_json(tmp_home):
         "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
     }
     assert plan["candidates"][0]["case_id"] == "pypi-project-search"
+    assert plan["candidates"][0]["expected_adapter_package"] == (
+        "pypi.org-<version>.cliany-adapter.tar.gz"
+    )
     assert plan["candidates"][0]["primary_task"] == "adapter_package"
     assert plan["candidates"][0]["primary_status"] == "pending"
     assert plan["candidates"][0]["priority_rank"] == 1
