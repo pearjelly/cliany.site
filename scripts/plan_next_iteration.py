@@ -1866,7 +1866,9 @@ def _unique_strings(values: list[str]) -> list[str]:
 
 
 def _release_draft_required_actions(release_draft_issues: list[str]) -> list[str]:
-    return [f"Resolve release draft issue: {issue}" for issue in release_draft_issues]
+    return _unique_strings(
+        [f"Resolve release draft issue: {issue}" for issue in release_draft_issues]
+    )
 
 
 def _release_readiness_blockers(readiness: Any) -> list[str]:

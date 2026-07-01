@@ -1122,6 +1122,36 @@ def test_plan_deduplicates_publication_publish_commands(tmp_path):
     assert data["publication_primary_publish_command"] == expected_commands[0]
 
 
+def test_release_draft_handoff_deduplicates_required_actions(tmp_path):
+    _write_pyproject(tmp_path, version="0.16.1")
+    readiness = _readiness_report()
+    readiness.draft.issues = [
+        "release draft is missing",
+        "release draft is missing",
+        "release draft missing snippet: ## 发版前验证",
+    ]
+    expected_actions = [
+        "Resolve release draft issue: release draft is missing",
+        "Resolve release draft issue: release draft missing snippet: ## 发版前验证",
+    ]
+
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=readiness,
+        publication_report=_publication_report(),
+    )
+    handoff = plan_next_iteration._release_draft_handoff(plan)
+
+    assert handoff["release_draft_issue_count"] == 3
+    assert handoff["release_draft_issues"] == readiness.draft.issues
+    assert handoff["release_draft_required_actions"] == expected_actions
+    assert handoff["release_draft_required_action_count"] == len(expected_actions)
+    assert handoff["release_draft_required_actions_sha256"] == _stable_json_sha256(
+        expected_actions
+    )
+    assert handoff["primary_required_action"] == expected_actions[0]
+
+
 def test_issue_artifacts_surface_release_readiness_blocker_aliases(tmp_path):
     _write_pyproject(tmp_path, version="0.16.1")
     readiness = _readiness_report()
