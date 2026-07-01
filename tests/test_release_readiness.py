@@ -925,6 +925,77 @@ def test_release_readiness_respects_custom_daily_release_cap(tmp_path):
     assert "daily release tags 2/1 exceed the allowed maximum" in report.blockers
 
 
+def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=False)
+    _commit(repo, "notes/release-1.md", "release 1", "2026-06-10")
+    _git(repo, "tag", "v0.1.1")
+    _commit(repo, "notes/release-2.md", "release 2", "2026-06-10")
+    _git(repo, "tag", "v0.1.2")
+    (repo / "pyproject.toml").write_text(
+        '[project]\n'
+        'name = "demo"\n'
+        'version = "0.1.3"\n'
+        'description = "Demo package."\n'
+        'readme = "README.md"\n\n'
+        '[project.urls]\n'
+        'Homepage = "https://demo.example.com"\n'
+        'Repository = "https://github.com/example/demo"\n'
+        'Changelog = "https://github.com/example/demo/blob/main/CHANGELOG.md"\n',
+        encoding="utf-8",
+    )
+    (repo / "CHANGELOG.md").write_text(
+        "# Changelog\n\n"
+        "## [Unreleased]\n\n"
+        "## [0.1.3] - 2026-06-10\n\n"
+        "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.1.3...HEAD\n",
+        encoding="utf-8",
+    )
+    (repo / "docs" / "releases" / "v0.1.4-draft.md").write_text(
+        _release_draft("0.1.4", "0.1.3"),
+        encoding="utf-8",
+    )
+    _git(repo, "add", "pyproject.toml", "CHANGELOG.md", "docs/releases/v0.1.4-draft.md")
+    env = {
+        "GIT_AUTHOR_NAME": "Test",
+        "GIT_AUTHOR_EMAIL": "test@example.com",
+        "GIT_COMMITTER_NAME": "Test",
+        "GIT_COMMITTER_EMAIL": "test@example.com",
+        "GIT_AUTHOR_DATE": "2026-06-10T12:00:00+00:00",
+        "GIT_COMMITTER_DATE": "2026-06-10T12:00:00+00:00",
+    }
+    _git(repo, "commit", "-m", "prepare release 3", env=env)
+    _git(repo, "tag", "v0.1.3")
+
+    report = _build_report(
+        repo,
+        today=date(2026, 6, 10),
+        min_commit_days=1,
+        max_daily_releases=3,
+        target_version="0.1.4",
+    )
+
+    payload = report.to_dict()
+    assert report.cadence.release_tags_today == ["v0.1.1", "v0.1.2", "v0.1.3"]
+    assert report.cadence.daily_release_limit_ok is True
+    assert report.ok is False
+    assert (
+        "creating target tag v0.1.4 today would exceed the daily release cap 4/3"
+        in report.blockers
+    )
+    assert (
+        "Pause release tagging until the next day; creating `v0.1.4` today would make "
+        "release tags `4/3`."
+    ) in payload["next_actions"]
+    assert (
+        payload["publication_tag_publish_decision"]["target_tag_release_gate_status"]
+        == "blocked_by_readiness"
+    )
+    assert (
+        payload["publication_tag_publish_decision"]["target_tag_release_gate_primary_blocker"]
+        == "creating target tag v0.1.4 today would exceed the daily release cap 4/3"
+    )
+
+
 def test_release_readiness_cli_passes_remote_publication_check(monkeypatch, capsys):
     captured: dict[str, object] = {}
 

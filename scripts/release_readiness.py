@@ -617,6 +617,45 @@ def _cadence_blockers(report: CadenceReport) -> list[str]:
     return blockers
 
 
+def _target_daily_release_limit_context(
+    report: CadenceReport,
+    target_version: str | None,
+    *,
+    release_tag: str | None,
+) -> tuple[str, int] | None:
+    if release_tag:
+        return None
+    target_tag = _target_tag_name(target_version)
+    if (
+        target_tag is None
+        or target_tag == report.latest_tag
+        or target_tag in report.release_tags_today
+        or report.release_count_today < report.max_daily_releases
+    ):
+        return None
+    return target_tag, report.release_count_today + 1
+
+
+def _target_daily_release_limit_blocker(
+    report: CadenceReport,
+    target_version: str | None,
+    *,
+    release_tag: str | None,
+) -> str | None:
+    context = _target_daily_release_limit_context(
+        report,
+        target_version,
+        release_tag=release_tag,
+    )
+    if context is None:
+        return None
+    target_tag, projected_count = context
+    return (
+        f"creating target tag {target_tag} today would exceed the daily release cap "
+        f"{projected_count}/{report.max_daily_releases}"
+    )
+
+
 def _publication_blockers(report: PublicationReport) -> list[str]:
     blockers: list[str] = []
     if report.ok:
@@ -672,6 +711,13 @@ def build_report(
     )
 
     blockers = _cadence_blockers(cadence)
+    target_daily_blocker = _target_daily_release_limit_blocker(
+        cadence,
+        expected_target,
+        release_tag=release_tag,
+    )
+    if target_daily_blocker:
+        blockers.append(target_daily_blocker)
     if release_tag and current_version != expected_target:
         blockers.append(f"release tag {release_tag} != pyproject version {current_version}")
     if release_tag and draft_base_version is None:
@@ -1196,6 +1242,18 @@ def _next_action_lines(report: ReadinessReport) -> list[str]:
             "Pause release tagging until the next day; today's release tags are "
             f"`{report.cadence.release_count_today}/{report.cadence.max_daily_releases}`: "
             f"`{', '.join(report.cadence.release_tags_today)}`."
+        )
+    target_daily_context = _target_daily_release_limit_context(
+        report.cadence,
+        report.target_version,
+        release_tag=report.release_tag,
+    )
+    if target_daily_context is not None:
+        target_tag, projected_count = target_daily_context
+        lines.append(
+            "Pause release tagging until the next day; creating "
+            f"`{target_tag}` today would make release tags "
+            f"`{projected_count}/{report.cadence.max_daily_releases}`."
         )
     if report.cadence.dirty:
         lines.append("Commit or revert the working tree before tagging a release.")
