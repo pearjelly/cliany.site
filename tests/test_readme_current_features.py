@@ -40,6 +40,8 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "release_count_today" in text
         assert "max_daily_releases" in text
         assert "daily_release_limit_ok" in text
+        assert "daily_release_cap_blocked" in text
+        assert "daily_release_resume_date" in text
         assert "next_actions" in text
         assert "primary_next_action" in text
         assert "next_actions_sha256" in text

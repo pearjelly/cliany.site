@@ -586,6 +586,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "Artifact Bundle Summary",
         "SHA-256",
         "create-issues.sh",
+        "CLIANY_CREATE_ISSUES_ACK_REVIEW=1",
         "CLIANY_CREATE_ISSUES_DRY_RUN=1 ./create-issues.sh",
         "dry-run mode",
         "不创建 issue",

@@ -39,6 +39,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "release_count_today" in index
     assert "max_daily_releases" in index
     assert "daily_release_limit_ok" in index
+    assert "daily_release_cap_blocked" in index
+    assert "daily_release_resume_date" in index
     assert "1-3 releases/day loop" in index
     assert "Current baseline: v0.16.253" in index
     assert "website alias inspect" in index
@@ -59,6 +61,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "release_count_today" in script
     assert "max_daily_releases" in script
     assert "daily_release_limit_ok" in script
+    assert "daily_release_cap_blocked" in script
+    assert "daily_release_resume_date" in script
     assert "Current baseline: v0.16.253" in script
     assert "website alias inspect" in script
     assert "pypi_latest_version" in script
