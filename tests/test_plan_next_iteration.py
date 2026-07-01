@@ -841,6 +841,8 @@ def test_candidate_issue_gate_surfaces_release_readiness_blocker_after_publicati
         "creating target tag v0.16.2 today would exceed the daily release cap 4/3"
     ]
     readiness.next_actions = [pause_action]
+    readiness.daily_release_cap_blocked = True
+    readiness.daily_release_resume_date = "2026-06-11"
     readiness.draft = SimpleNamespace(
         ok=True,
         path="/tmp/project/docs/releases/v0.16.2-draft.md",
@@ -883,6 +885,8 @@ def test_issue_artifacts_surface_release_readiness_blocker_aliases(tmp_path):
     )
     readiness.blockers = [readiness_blocker]
     readiness.next_actions = [pause_action]
+    readiness.daily_release_cap_blocked = True
+    readiness.daily_release_resume_date = "2026-06-11"
     readiness.draft = SimpleNamespace(
         ok=True,
         path="/tmp/project/docs/releases/v0.16.2-draft.md",
@@ -898,6 +902,9 @@ def test_issue_artifacts_surface_release_readiness_blocker_aliases(tmp_path):
 
     plan_next_iteration._write_candidate_issue_files(plan, issues_dir)
 
+    artifact_manifest = json.loads(
+        (issues_dir / "artifact-manifest.json").read_text(encoding="utf-8")
+    )
     publication_handoff = json.loads(
         (issues_dir / "publication-handoff.json").read_text(encoding="utf-8")
     )
@@ -913,11 +920,29 @@ def test_issue_artifacts_surface_release_readiness_blocker_aliases(tmp_path):
     assert publication_handoff["release_readiness_blockers_sha256"] == _stable_json_sha256(
         [readiness_blocker]
     )
+    assert publication_handoff["daily_release_cap_blocked"] is True
+    assert publication_handoff["daily_release_resume_date"] == "2026-06-11"
+    assert publication_handoff["daily_release_resume_date_sha256"] == _stable_json_sha256(
+        "2026-06-11"
+    )
+    assert artifact_manifest["daily_release_cap_blocked"] is True
+    assert artifact_manifest["daily_release_resume_date"] == "2026-06-11"
+    assert artifact_manifest["artifact_bundle_summary"]["daily_release_cap_blocked"] is True
+    assert (
+        artifact_manifest["artifact_bundle_summary"]["daily_release_resume_date"]
+        == "2026-06-11"
+    )
     assert "- release_readiness_blocker_count: `1`" in quick_summary
     assert f"- release_readiness_primary_blocker: `{readiness_blocker}`" in quick_summary
     assert (
         f"- release_readiness_blockers_sha256: "
         f"`{_stable_json_sha256([readiness_blocker])}`"
+    ) in quick_summary
+    assert "- daily_release_cap_blocked: `true`" in quick_summary
+    assert "- daily_release_resume_date: `2026-06-11`" in quick_summary
+    assert (
+        f"- daily_release_resume_date_sha256: "
+        f"`{_stable_json_sha256('2026-06-11')}`"
     ) in quick_summary
 
 
@@ -2070,6 +2095,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     expected_publication_handoff = {
         "schema_version": 1,
         "publication_ok": False,
+        "daily_release_cap_blocked": False,
+        "daily_release_resume_date": None,
+        "daily_release_resume_date_sha256": None,
         "candidate_issue_gate": _blocked_candidate_issue_gate(),
         "candidate_issue_gate_primary_reason_code": "publication_not_published",
         "candidate_issue_gate_primary_reason_description": (
@@ -2463,6 +2491,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "artifact_manifest_payload_sha256": _stable_json_sha256(artifact_manifest_payload),
         "target_version": "0.16.2",
+        "daily_release_cap_blocked": False,
+        "daily_release_resume_date": None,
+        "daily_release_resume_date_sha256": None,
         "candidate_count": 2,
         "candidate_cases_first_case": "pypi-project-search",
         "candidate_cases_last_case": "npm-package-search",
@@ -3345,6 +3376,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "schema_version": plan_next_iteration.ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "target_version": "0.16.2",
         "artifact_bundle_summary": artifact_bundle_summary,
+        "daily_release_cap_blocked": False,
+        "daily_release_resume_date": None,
+        "daily_release_resume_date_sha256": None,
         "candidate_count": 2,
         "candidate_cases": ["pypi-project-search", "npm-package-search"],
         "case_promotion_evidence_summary": plan.case_promotion_evidence_summary,

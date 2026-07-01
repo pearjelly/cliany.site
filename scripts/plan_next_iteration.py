@@ -66,6 +66,9 @@ ARTIFACT_MANIFEST_KEYS = (
     "schema_version",
     "target_version",
     "artifact_bundle_summary",
+    "daily_release_cap_blocked",
+    "daily_release_resume_date",
+    "daily_release_resume_date_sha256",
     "candidate_count",
     "candidate_cases",
     "case_promotion_evidence_summary",
@@ -172,6 +175,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "artifact_manifest_payload_key_tail_sha256",
     "artifact_manifest_payload_sha256",
     "target_version",
+    "daily_release_cap_blocked",
+    "daily_release_resume_date",
+    "daily_release_resume_date_sha256",
     "candidate_count",
     "candidate_cases_first_case",
     "candidate_cases_last_case",
@@ -4117,6 +4123,10 @@ def _render_issue_artifacts_readme(
     gate_quick_summary = _issue_artifact_gate_quick_summary(plan)
     commit_cadence_summary = _issue_artifact_commit_cadence_markdown(plan)
     bundle_summary = _issue_artifact_bundle_summary_markdown(plan, summary=artifact_bundle_summary)
+    daily_release_handoff = _daily_release_handoff_aliases(plan)
+    daily_release_resume_date_sha256 = _format_context_value(
+        daily_release_handoff["daily_release_resume_date_sha256"]
+    )
     gate_reason_codes = _issue_artifact_gate_reason_codes(plan)
     gate_reason_descriptions = _issue_artifact_gate_reason_descriptions(plan)
     gate_latest_tag = _format_context_value(_candidate_issue_gate_evidence_value(plan, "publication_latest_tag"))
@@ -4272,6 +4282,9 @@ Generated for target version `{plan.target_version}`.
 
 - schema_version: `1`
 - publication_ok: `{str(plan.publication_ok).lower()}`
+- daily_release_cap_blocked: `{str(plan.daily_release_cap_blocked).lower()}`
+- daily_release_resume_date: `{_format_context_value(plan.daily_release_resume_date)}`
+- daily_release_resume_date_sha256: `{daily_release_resume_date_sha256}`
 - candidate_issue_gate: `{_format_context_value(plan.candidate_issue_gate.get("status"))}`
 - can_create_issues: `{str(bool(plan.candidate_issue_gate.get("can_create_issues", False))).lower()}`
 - gate_summary: {_format_context_value(plan.candidate_issue_gate.get("summary"))}
@@ -4431,6 +4444,10 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
     primary_reason_code = plan.candidate_issue_gate.get("primary_reason_code")
     primary_reason_description = plan.candidate_issue_gate.get("primary_reason_description")
     primary_required_action = plan.candidate_issue_gate.get("primary_required_action")
+    daily_release_handoff = _daily_release_handoff_aliases(plan)
+    daily_release_resume_date_sha256 = _format_context_value(
+        daily_release_handoff["daily_release_resume_date_sha256"]
+    )
     lines = [
         "## Candidate Issue Gate Quick Summary",
         "",
@@ -4442,6 +4459,11 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
         f"- publication_ok: `{str(plan.publication_ok).lower()}`",
         f"- release_draft_ok: `{str(not plan.release_draft_issues).lower()}`",
         f"- blocker_count: `{len(plan.blockers)}`",
+        f"- daily_release_cap_blocked: `{str(plan.daily_release_cap_blocked).lower()}`",
+        "- daily_release_resume_date: "
+        f"`{_format_context_value(plan.daily_release_resume_date)}`",
+        "- daily_release_resume_date_sha256: "
+        f"`{daily_release_resume_date_sha256}`",
     ]
     release_readiness_aliases = _release_readiness_handoff_aliases(plan)
     if release_readiness_aliases:
@@ -4582,6 +4604,18 @@ def _release_readiness_handoff_aliases(plan: IterationPlan) -> dict[str, object]
         )
     }
     return {key: value for key, value in aliases.items() if value is not None}
+
+
+def _daily_release_handoff_aliases(plan: IterationPlan) -> dict[str, object]:
+    return {
+        "daily_release_cap_blocked": plan.daily_release_cap_blocked,
+        "daily_release_resume_date": plan.daily_release_resume_date,
+        "daily_release_resume_date_sha256": (
+            _stable_json_sha256(plan.daily_release_resume_date)
+            if plan.daily_release_resume_date
+            else None
+        ),
+    }
 
 
 def _issue_artifact_gate_reason_codes(plan: IterationPlan) -> str:
@@ -4741,6 +4775,7 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
     handoff = {
         "schema_version": 1,
         "publication_ok": plan.publication_ok,
+        **_daily_release_handoff_aliases(plan),
         "candidate_issue_gate": plan.candidate_issue_gate,
         "candidate_issue_gate_primary_reason_code": plan.candidate_issue_gate.get(
             "primary_reason_code"
@@ -5078,6 +5113,7 @@ def _artifact_manifest_payload_without_summary(
     return {
         "schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "target_version": plan.target_version,
+        **_daily_release_handoff_aliases(plan),
         "candidate_count": len(candidate_cases),
         "candidate_cases": candidate_cases,
         "case_promotion_evidence_summary": plan.case_promotion_evidence_summary,
@@ -5550,6 +5586,7 @@ def _issue_artifact_bundle_summary(
         ),
         "artifact_manifest_payload_sha256": _stable_json_sha256(artifact_manifest_payload),
         "target_version": plan.target_version,
+        **_daily_release_handoff_aliases(plan),
         "candidate_count": len(candidate_cases),
         "candidate_cases_first_case": candidate_cases[0] if candidate_cases else None,
         "candidate_cases_last_case": candidate_cases[-1] if candidate_cases else None,
@@ -6414,6 +6451,11 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['artifact_manifest_payload_key_tail_sha256']}`",
             f"- artifact_manifest_payload_sha256: `{summary['artifact_manifest_payload_sha256']}`",
             f"- target_version: `{summary['target_version']}`",
+            f"- daily_release_cap_blocked: `{str(bool(summary['daily_release_cap_blocked'])).lower()}`",
+            "- daily_release_resume_date: "
+            f"`{_format_context_value(summary['daily_release_resume_date'])}`",
+            "- daily_release_resume_date_sha256: "
+            f"`{_format_context_value(summary['daily_release_resume_date_sha256'])}`",
             f"- candidate_count: `{summary['candidate_count']}`",
             f"- candidate_cases_first_case: `{summary['candidate_cases_first_case']}`",
             f"- candidate_cases_last_case: `{summary['candidate_cases_last_case']}`",

@@ -10,6 +10,7 @@
 ### Changed
 - Release readiness and next-iteration planning now expose `daily_release_cap_blocked`, `daily_release_resume_date`, and `daily_release_resume_date_sha256` when the target tag would exceed the daily release cap, so maintainers can see the exact next eligible release date instead of inferring it from prose.
 - Release readiness and next-iteration text/Markdown reports now render the daily release cap status, resume date, and resume-date hash beside the existing JSON fields.
+- Candidate issue artifacts now carry the same daily release cap handoff through `artifact-manifest.json`, `artifact_bundle_summary`, `publication-handoff.json`, and artifact README summaries.
 - README, README.zh, website maintainer copy, and weekly maintainer docs now surface the daily-cap resume fields and the `CLIANY_CREATE_ISSUES_ACK_REVIEW=1` issue creation acknowledgment handoff.
 - Added the `v0.16.254` release draft, documenting the 2026-07-02 daily-cap pause and the 2026-07-03 resume target without creating a new tag, GitHub Release, PyPI upload, or website deployment.
 
