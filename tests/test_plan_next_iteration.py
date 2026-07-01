@@ -1094,6 +1094,14 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "connection error, stop candidate promotion, attach the doctor JSON/error "
             "summary, and leave adapter_package pending or blocked."
         ),
+        "llm_live_preflight_evidence_fields": [
+            "summary.ready_for_explore",
+            "summary.capabilities.generate_adapters.ready",
+            "checks[llm_live].status",
+            "checks[llm_live].details.error_code",
+            "checks[llm_live].details.phase",
+            "checks[llm_live].details.message",
+        ],
         "evidence_bundle_command": (
             "cliany-site cases --case-id pypi-project-search --evidence-bundle"
         ),
@@ -1148,6 +1156,13 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "E_LLM_UNAVAILABLE or E_UNKNOWN connection error, stop candidate promotion, "
             "attach the doctor JSON/error summary, and leave adapter_package pending or "
             "blocked.\n\n"
+            "## LLM Preflight Evidence Fields\n"
+            "- `summary.ready_for_explore`\n"
+            "- `summary.capabilities.generate_adapters.ready`\n"
+            "- `checks[llm_live].status`\n"
+            "- `checks[llm_live].details.error_code`\n"
+            "- `checks[llm_live].details.phase`\n"
+            "- `checks[llm_live].details.message`\n\n"
             "## Acceptance Criteria\n"
             "- `adapter_package`: Attach the generated "
             "<domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name.\n"

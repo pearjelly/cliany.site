@@ -243,6 +243,13 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "E_LLM_UNAVAILABLE" in template
     assert "E_UNKNOWN connection error" in template
     assert "leave adapter_package pending or blocked" in template
+    assert "## LLM Preflight Evidence Fields" in template
+    assert "`summary.ready_for_explore`" in template
+    assert "`summary.capabilities.generate_adapters.ready`" in template
+    assert "`checks[llm_live].status`" in template
+    assert "`checks[llm_live].details.error_code`" in template
+    assert "`checks[llm_live].details.phase`" in template
+    assert "`checks[llm_live].details.message`" in template
     assert "## Acceptance Criteria" in template
     assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in template
     assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in template
@@ -480,6 +487,14 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert "llm_live reports warning/error" in bundle["llm_live_preflight_blocker_note"]
     assert "E_LLM_UNAVAILABLE" in bundle["llm_live_preflight_blocker_note"]
     assert "E_UNKNOWN connection error" in bundle["llm_live_preflight_blocker_note"]
+    assert bundle["llm_live_preflight_evidence_fields"] == [
+        "summary.ready_for_explore",
+        "summary.capabilities.generate_adapters.ready",
+        "checks[llm_live].status",
+        "checks[llm_live].details.error_code",
+        "checks[llm_live].details.phase",
+        "checks[llm_live].details.message",
+    ]
     assert bundle["promotion_command_plan_count"] == 4
     assert bundle["promotion_command_plan_missing_tasks"] == []
     assert bundle["promotion_command_plan"] == [
@@ -655,6 +670,8 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "Primary incomplete task: `adapter_package`" in result.output
     assert "## Candidate package validation" in result.output
     assert "## LLM live preflight" in result.output
+    assert "Evidence fields: `summary.ready_for_explore`, " in result.output
+    assert "`checks[llm_live].details.error_code`" in result.output
     assert "Blocker handling: Run the live LLM preflight before explore." in result.output
     assert "E_LLM_UNAVAILABLE" in result.output
     assert "## Promotion command plan" in result.output

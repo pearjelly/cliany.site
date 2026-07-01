@@ -35,6 +35,14 @@ LLM_LIVE_PREFLIGHT_BLOCKER_NOTE = (
     "connection error, stop candidate promotion, attach the doctor JSON/error "
     "summary, and leave adapter_package pending or blocked."
 )
+LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = (
+    "summary.ready_for_explore",
+    "summary.capabilities.generate_adapters.ready",
+    "checks[llm_live].status",
+    "checks[llm_live].details.error_code",
+    "checks[llm_live].details.phase",
+    "checks[llm_live].details.message",
+)
 WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
 CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
@@ -572,6 +580,7 @@ class CandidatePromotion:
     promotion_command_plan: list[dict[str, Any]]
     llm_live_preflight_command: str
     llm_live_preflight_blocker_note: str
+    llm_live_preflight_evidence_fields: list[str]
     evidence_bundle_command: str
     evidence_bundle_json_command: str
     issue_body: str
@@ -599,6 +608,7 @@ class CandidatePromotion:
             "promotion_command_plan": self.promotion_command_plan,
             "llm_live_preflight_command": self.llm_live_preflight_command,
             "llm_live_preflight_blocker_note": self.llm_live_preflight_blocker_note,
+            "llm_live_preflight_evidence_fields": self.llm_live_preflight_evidence_fields,
             "evidence_bundle_command": self.evidence_bundle_command,
             "evidence_bundle_json_command": self.evidence_bundle_json_command,
             "issue_body": self.issue_body,
@@ -2221,6 +2231,9 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 promotion_command_plan=promotion_command_plan,
                 llm_live_preflight_command=LLM_LIVE_PREFLIGHT_COMMAND,
                 llm_live_preflight_blocker_note=LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
+                llm_live_preflight_evidence_fields=list(
+                    LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
+                ),
                 evidence_bundle_command=_candidate_evidence_bundle_command(str(case.id)),
                 evidence_bundle_json_command=_candidate_evidence_bundle_json_command(str(case.id)),
                 issue_body=_candidate_issue_body(
@@ -2523,6 +2536,9 @@ def _candidate_issue_body(
             "## LLM Preflight Gate",
             f"- Command: `{LLM_LIVE_PREFLIGHT_COMMAND}`",
             f"- Blocker handling: {LLM_LIVE_PREFLIGHT_BLOCKER_NOTE}",
+            "",
+            "## LLM Preflight Evidence Fields",
+            *(f"- `{field}`" for field in LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS),
             "",
             "## Acceptance Criteria",
             *acceptance_lines,

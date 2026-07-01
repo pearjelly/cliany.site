@@ -31,6 +31,14 @@ LLM_LIVE_PREFLIGHT_BLOCKER_NOTE = (
     "connection error, stop candidate promotion, attach the doctor JSON/error "
     "summary, and leave adapter_package pending or blocked."
 )
+LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = (
+    "summary.ready_for_explore",
+    "summary.capabilities.generate_adapters.ready",
+    "checks[llm_live].status",
+    "checks[llm_live].details.error_code",
+    "checks[llm_live].details.phase",
+    "checks[llm_live].details.message",
+)
 PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -210,8 +218,11 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
             "## LLM Preflight Gate",
             f"- Command: `{LLM_LIVE_PREFLIGHT_COMMAND}`",
             f"- Blocker handling: {LLM_LIVE_PREFLIGHT_BLOCKER_NOTE}",
+            "",
+            "## LLM Preflight Evidence Fields",
         ]
     )
+    lines.extend(f"- `{field}`" for field in LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS)
 
     lines.extend(["", "## Acceptance Criteria"])
     for task in PROMOTION_TASKS:
@@ -436,6 +447,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "offline_commands": _offline_commands(case),
         "llm_live_preflight_command": LLM_LIVE_PREFLIGHT_COMMAND,
         "llm_live_preflight_blocker_note": LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
+        "llm_live_preflight_evidence_fields": list(LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS),
         "candidate_package_validation_command": CANDIDATE_PACKAGE_VALIDATION_COMMAND
         if adapter_domain
         else "",
@@ -558,6 +570,10 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
                 f"- `{bundle['llm_live_preflight_command']}`",
             ]
         )
+        evidence_fields = bundle.get("llm_live_preflight_evidence_fields")
+        if isinstance(evidence_fields, list) and evidence_fields:
+            joined_fields = ", ".join(f"`{field}`" for field in evidence_fields)
+            lines.append(f"- Evidence fields: {joined_fields}")
         if bundle.get("llm_live_preflight_blocker_note"):
             lines.append(f"- Blocker handling: {bundle['llm_live_preflight_blocker_note']}")
     if bundle.get("candidate_package_validation_command"):
