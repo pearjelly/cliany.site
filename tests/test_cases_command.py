@@ -53,6 +53,11 @@ CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
     "--include-candidate-packages --strict"
 )
+PYPI_PROMOTION_COMMAND_PLAN_SUMMARY = {
+    "command_count": 4,
+    "missing_command_count": 0,
+    "all_declared": True,
+}
 
 
 def _command_sha256(command: str) -> str:
@@ -187,6 +192,10 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
     assert all("promotion" in case for case in data["cases"])
     assert all("promotion_evidence" in case for case in data["cases"])
     assert all("promotion_command_plan" in case for case in data["cases"])
+    assert all("promotion_command_plan_summary" in case for case in data["cases"])
+    assert data["cases"][0]["promotion_command_plan_summary"] == (
+        PYPI_PROMOTION_COMMAND_PLAN_SUMMARY
+    )
     explore_command = (
         'cliany-site explore "https://pypi.org" '
         '"search Python packages for cliany-site and list project names" --json'
@@ -331,6 +340,9 @@ def test_cases_command_issue_template_json(tmp_home):
     payload = json.loads(result.output)
     template = payload["data"]["issue_template"]
     primary_task = payload["data"]["issue_template_primary_task"]
+    assert payload["data"]["issue_template_promotion_command_plan_summary"] == (
+        PYPI_PROMOTION_COMMAND_PLAN_SUMMARY
+    )
     assert primary_task["task"] == "adapter_package"
     assert primary_task["status"] == "pending"
     assert primary_task["evidence"] == ""

@@ -26,6 +26,9 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Primary Runbook" in index
     assert "Command SHA-256" in index
     assert "Promotion Command Plan Summary" in index
+    assert "promotion_command_plan_summary" in index
+    assert "issue_template_promotion_command_plan_summary" in index
+    assert "candidate_promotions[*].promotion_command_plan_summary" in index
     assert "Promotion Command Plan</code> <code>command_sha256</code>" in index
     assert "<code>source</code> / <code>missing</code>" in index
     assert "Doctor Preflight Evidence Fields" in index
@@ -118,6 +121,9 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Primary Runbook" in script
     assert "Command SHA-256" in script
     assert "Promotion Command Plan Summary" in script
+    assert "promotion_command_plan_summary" in script
+    assert "issue_template_promotion_command_plan_summary" in script
+    assert "candidate_promotions[*].promotion_command_plan_summary" in script
     assert "Promotion Command Plan</code> <code>command_sha256</code>" in script
     assert "<code>source</code> / <code>missing</code>" in script
     assert "Doctor Preflight Evidence Fields" in script

@@ -679,6 +679,7 @@ class CandidatePromotion:
     evidence_bundle_primary_next_task_runbook: list[dict[str, Any]]
     candidate_package_validation_command: str
     promotion_command_plan: list[dict[str, Any]]
+    promotion_command_plan_summary: dict[str, Any]
     llm_live_preflight_command: str
     llm_live_preflight_blocker_note: str
     llm_live_preflight_blocker_comment: str
@@ -714,6 +715,7 @@ class CandidatePromotion:
             ),
             "candidate_package_validation_command": self.candidate_package_validation_command,
             "promotion_command_plan": self.promotion_command_plan,
+            "promotion_command_plan_summary": self.promotion_command_plan_summary,
             "llm_live_preflight_command": self.llm_live_preflight_command,
             "llm_live_preflight_blocker_note": self.llm_live_preflight_blocker_note,
             "llm_live_preflight_blocker_comment": (
@@ -2572,6 +2574,9 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
             commands=commands,
             candidate_package_validation_command=candidate_package_validation_command,
         )
+        promotion_command_plan_summary = _promotion_command_plan_summary(
+            promotion_command_plan
+        )
         promotion_evidence = _case_dict_value(case, "promotion_evidence")
         evidence_bundle_primary_next_task = _candidate_promotion_primary_task(promotion_evidence)
         priority_reason = _case_promotion_priority_reason(case, priority_rank)
@@ -2611,6 +2616,7 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 ),
                 candidate_package_validation_command=candidate_package_validation_command,
                 promotion_command_plan=promotion_command_plan,
+                promotion_command_plan_summary=promotion_command_plan_summary,
                 llm_live_preflight_command=LLM_LIVE_PREFLIGHT_COMMAND,
                 llm_live_preflight_blocker_note=LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
                 llm_live_preflight_blocker_comment=LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT,
@@ -2728,6 +2734,19 @@ def _candidate_promotion_command_plan(
         item["command_sha256"] = _sha256_text(command) if command else ""
         item["missing"] = not bool(command)
     return plan
+
+
+def _promotion_command_plan_summary(
+    promotion_command_plan: list[dict[str, Any]],
+) -> dict[str, Any]:
+    missing_command_count = sum(
+        1 for item in promotion_command_plan if item.get("missing")
+    )
+    return {
+        "command_count": len(promotion_command_plan),
+        "missing_command_count": missing_command_count,
+        "all_declared": bool(promotion_command_plan) and missing_command_count == 0,
+    }
 
 
 def _candidate_primary_task_runbook(
@@ -2903,13 +2922,13 @@ def _candidate_issue_body(
 ) -> str:
     command_lines = [f"  - `{command}`" for command in commands] or ["  - Not declared."]
     offline_command_lines = [f"  - `{command}`" for command in offline_commands] or ["  - Not declared."]
-    missing_command_count = sum(
-        1 for item in promotion_command_plan if item.get("missing")
+    promotion_command_plan_summary = _promotion_command_plan_summary(
+        promotion_command_plan
     )
     promotion_command_summary_lines = [
-        f"- command_count: `{len(promotion_command_plan)}`",
-        f"- missing_command_count: `{missing_command_count}`",
-        f"- all_declared: `{str(bool(promotion_command_plan) and missing_command_count == 0).lower()}`",
+        f"- command_count: `{promotion_command_plan_summary['command_count']}`",
+        f"- missing_command_count: `{promotion_command_plan_summary['missing_command_count']}`",
+        f"- all_declared: `{str(bool(promotion_command_plan_summary['all_declared'])).lower()}`",
     ]
     promotion_command_lines: list[str] = []
     for item in promotion_command_plan:
@@ -4342,6 +4361,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 ),
                 "candidate_package_validation_command": promotion.candidate_package_validation_command,
                 "promotion_command_plan": promotion.promotion_command_plan,
+                "promotion_command_plan_summary": promotion.promotion_command_plan_summary,
                 "llm_live_preflight_command": promotion.llm_live_preflight_command,
                 "llm_live_preflight_blocker_note": promotion.llm_live_preflight_blocker_note,
                 "llm_live_preflight_evidence_fields": list(
@@ -5392,6 +5412,7 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
             ],
             "candidate_package_validation_command": item["candidate_package_validation_command"],
             "promotion_command_plan": item["promotion_command_plan"],
+            "promotion_command_plan_summary": item["promotion_command_plan_summary"],
             "llm_live_preflight_command": item["llm_live_preflight_command"],
             "llm_live_preflight_blocker_note": item["llm_live_preflight_blocker_note"],
             "llm_live_preflight_evidence_fields": item[
@@ -5458,6 +5479,7 @@ def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[di
             ),
             "candidate_package_validation_command": promotion.candidate_package_validation_command,
             "promotion_command_plan": promotion.promotion_command_plan,
+            "promotion_command_plan_summary": promotion.promotion_command_plan_summary,
             "llm_live_preflight_command": promotion.llm_live_preflight_command,
             "llm_live_preflight_blocker_note": promotion.llm_live_preflight_blocker_note,
             "llm_live_preflight_evidence_fields": list(

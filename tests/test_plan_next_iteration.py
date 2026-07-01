@@ -285,6 +285,16 @@ def _pypi_promotion_command_plan(*, explore_query: str = "search Python packages
     ]
 
 
+def _pypi_promotion_command_plan_summary() -> dict[str, object]:
+    plan = _pypi_promotion_command_plan()
+    missing_command_count = sum(1 for item in plan if item["missing"])
+    return {
+        "command_count": len(plan),
+        "missing_command_count": missing_command_count,
+        "all_declared": bool(plan) and missing_command_count == 0,
+    }
+
+
 def _pypi_primary_runbook(*, explore_query: str = "search Python packages") -> list[dict[str, object]]:
     return [
         {
@@ -1458,6 +1468,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "--include-candidate-packages --strict"
         ),
         "promotion_command_plan": _pypi_promotion_command_plan(),
+        "promotion_command_plan_summary": _pypi_promotion_command_plan_summary(),
         "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
         "llm_live_preflight_blocker_note": (
             "Run the live LLM preflight before explore. If generate_adapters.ready=false "
@@ -2304,6 +2315,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             ],
             "candidate_package_validation_command": item["candidate_package_validation_command"],
             "promotion_command_plan": item["promotion_command_plan"],
+            "promotion_command_plan_summary": item["promotion_command_plan_summary"],
             "llm_live_preflight_command": item["llm_live_preflight_command"],
             "llm_live_preflight_blocker_note": item["llm_live_preflight_blocker_note"],
             "llm_live_preflight_evidence_fields": item[
@@ -3768,6 +3780,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "--include-candidate-packages --strict"
     )
     assert metadata[0]["promotion_command_plan"] == _pypi_promotion_command_plan()
+    assert metadata[0]["promotion_command_plan_summary"] == (
+        _pypi_promotion_command_plan_summary()
+    )
     assert metadata[0]["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
     assert "E_LLM_UNAVAILABLE" in metadata[0]["llm_live_preflight_blocker_note"]
     assert "provider connection failure" in metadata[0]["llm_live_preflight_blocker_note"]

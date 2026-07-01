@@ -153,6 +153,19 @@ def _candidate_promotion_command_plan(case: dict[str, Any]) -> list[dict[str, An
     return plan
 
 
+def _promotion_command_plan_summary(
+    promotion_command_plan: list[dict[str, Any]],
+) -> dict[str, Any]:
+    missing_command_count = sum(
+        1 for item in promotion_command_plan if item.get("missing")
+    )
+    return {
+        "command_count": len(promotion_command_plan),
+        "missing_command_count": missing_command_count,
+        "all_declared": bool(promotion_command_plan) and missing_command_count == 0,
+    }
+
+
 def _compact_case(case: dict[str, Any], *, detail: bool) -> dict[str, Any]:
     item: dict[str, Any] = {
         "id": case.get("id"),
@@ -171,7 +184,11 @@ def _compact_case(case: dict[str, Any], *, detail: bool) -> dict[str, Any]:
             if key in case:
                 item[key] = case.get(key)
         if case.get("status") == "candidate":
-            item["promotion_command_plan"] = _candidate_promotion_command_plan(case)
+            promotion_command_plan = _candidate_promotion_command_plan(case)
+            item["promotion_command_plan"] = promotion_command_plan
+            item["promotion_command_plan_summary"] = _promotion_command_plan_summary(
+                promotion_command_plan
+            )
     return item
 
 
@@ -389,16 +406,16 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
     lines.append("- Offline validation commands:")
     lines.extend(f"  - `{command}`" for command in offline_commands)
     promotion_command_plan = _candidate_promotion_command_plan(case)
-    missing_command_count = sum(
-        1 for item in promotion_command_plan if item.get("missing")
+    promotion_command_plan_summary = _promotion_command_plan_summary(
+        promotion_command_plan
     )
     lines.extend(
         [
             "",
             "## Promotion Command Plan Summary",
-            f"- command_count: `{len(promotion_command_plan)}`",
-            f"- missing_command_count: `{missing_command_count}`",
-            f"- all_declared: `{str(bool(promotion_command_plan) and missing_command_count == 0).lower()}`",
+            f"- command_count: `{promotion_command_plan_summary['command_count']}`",
+            f"- missing_command_count: `{promotion_command_plan_summary['missing_command_count']}`",
+            f"- all_declared: `{str(bool(promotion_command_plan_summary['all_declared'])).lower()}`",
             "",
             "## Promotion Command Plan",
         ]
@@ -595,6 +612,9 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
     evidence: dict[str, Any] = raw_evidence if isinstance(raw_evidence, dict) else {}
     expected_adapter_package = _expected_adapter_package(adapter_domain)
     promotion_command_plan = _candidate_promotion_command_plan(case)
+    promotion_command_plan_summary = _promotion_command_plan_summary(
+        promotion_command_plan
+    )
     command_plan_by_task = {
         str(item.get("task") or ""): item for item in promotion_command_plan if isinstance(item, dict)
     }
@@ -718,6 +738,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "promotion_command_plan_missing_tasks": [
             item["task"] for item in promotion_command_plan if item["missing"]
         ],
+        "promotion_command_plan_summary": promotion_command_plan_summary,
         "acceptance_criteria": {
             task: PROMOTION_ACCEPTANCE_CRITERIA[task] for task in PROMOTION_TASKS
         },
@@ -1563,6 +1584,7 @@ def cases_cmd(
     include_detail = detail or bool(case_id)
     rendered_issue_template = ""
     rendered_issue_template_primary_task: dict[str, Any] = {}
+    rendered_issue_template_promotion_command_plan_summary: dict[str, Any] = {}
     rendered_evidence_bundle: dict[str, Any] = {}
     rendered_promotion_plan: dict[str, Any] = {}
     if issue_template or evidence_bundle:
@@ -1584,11 +1606,15 @@ def cases_cmd(
             print_response(result, effective_json_mode)
             return
         if issue_template:
+            issue_template_bundle = _candidate_evidence_bundle(selected_case)
             rendered_issue_template = _candidate_issue_template(selected_case)
             rendered_issue_template_primary_task = (
                 _candidate_issue_primary_task_from_bundle(
-                    _candidate_evidence_bundle(selected_case)
+                    issue_template_bundle
                 )
+            )
+            rendered_issue_template_promotion_command_plan_summary = dict(
+                issue_template_bundle.get("promotion_command_plan_summary") or {}
             )
         if evidence_bundle:
             rendered_evidence_bundle = _candidate_evidence_bundle(selected_case)
@@ -1606,6 +1632,9 @@ def cases_cmd(
     if rendered_issue_template:
         data["issue_template"] = rendered_issue_template
         data["issue_template_primary_task"] = rendered_issue_template_primary_task
+        data["issue_template_promotion_command_plan_summary"] = (
+            rendered_issue_template_promotion_command_plan_summary
+        )
     if rendered_evidence_bundle:
         data["evidence_bundle"] = rendered_evidence_bundle
     if rendered_promotion_plan:

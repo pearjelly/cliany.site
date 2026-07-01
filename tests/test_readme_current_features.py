@@ -59,6 +59,9 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "Primary Runbook" in text
         assert "Command SHA-256" in text
         assert "Promotion Command Plan Summary" in text
+        assert "promotion_command_plan_summary" in text
+        assert "issue_template_promotion_command_plan_summary" in text
+        assert "candidate_promotions[*].promotion_command_plan_summary" in text
         assert expected_issue_hash_terms[filename] in text
         assert expected_issue_source_terms[filename] in text
         assert "Doctor Preflight Evidence Fields" in text
