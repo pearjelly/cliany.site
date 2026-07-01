@@ -12,6 +12,7 @@
 - Candidate promotion plan output now includes stable `priority_rank` and `priority_reason` fields in JSON and human markdown, making the candidate queue ordering auditable for maintainers and issue handoffs.
 - Case validation and next-iteration planning evidence summaries now carry the same `priority_rank` and `priority_reason` on candidate promotion tasks, so release artifacts explain candidate ordering without requiring the cases CLI.
 - Candidate promotion issue artifacts now carry `priority_rank` and `priority_reason` through issue metadata, primary evidence tasks, and generated issue bodies, so candidate handoffs preserve the same ordering explanation as the planner summary.
+- Candidate issue artifact README summaries now show promotion priority rank and reason beside each candidate, so maintainers can review ordering without opening JSON metadata.
 
 ### Fixed
 - Release readiness now projects whether creating the target tag today would exceed the daily release cap, so planning `v0.16.251` after `v0.16.248`、`v0.16.249` 和 `v0.16.250` 已发布时会明确暂停 tag，而不是继续给出第四个同日 release 命令。

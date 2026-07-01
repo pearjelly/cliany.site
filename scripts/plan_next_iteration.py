@@ -5736,11 +5736,11 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
         "",
         (
             "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands | "
-            "Primary Evidence Task | Primary Evidence Status | Primary Acceptance Criteria | "
-            "Evidence Bundle Primary Next Task | Candidate Package Validation | Evidence Bundle | "
-            "Evidence Bundle JSON |"
+            "Priority Rank | Priority Reason | Primary Evidence Task | Primary Evidence Status | "
+            "Primary Acceptance Criteria | Evidence Bundle Primary Next Task | "
+            "Candidate Package Validation | Evidence Bundle | Evidence Bundle JSON |"
         ),
-        "|------|------------|------------|--------------------|-----------------------------|-----------------------|-------------------------|-----------------------------|-----------------------------------|------------------------------|-----------------|----------------------|",
+        "|------|------------|------------|--------------------|-----------------------------|---------------|-----------------|-----------------------|-------------------------|-----------------------------|-----------------------------------|------------------------------|-----------------|----------------------|",
     ]
     for promotion in promotions:
         primary_task = promotion.promotion_evidence_primary_task.get("task") or "Not declared."
@@ -5753,6 +5753,7 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
         lines.append(
             f"| `{promotion.case_id}` | `{promotion.case_id}.md` | {promotion.target_url or 'Not declared.'} | "
             f"{len(promotion.commands)} | {len(promotion.offline_commands)} | "
+            f"`{promotion.priority_rank}` | {promotion.priority_reason or 'Not declared.'} | "
             f"`{primary_task}` | `{primary_status}` | {primary_acceptance} | "
             f"`{evidence_bundle_primary_task}` | "
             f"`{promotion.candidate_package_validation_command}` | "
