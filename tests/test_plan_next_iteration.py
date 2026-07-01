@@ -1093,6 +1093,35 @@ def test_plan_deduplicates_publication_next_actions(tmp_path):
     assert data["publication_primary_next_action"] == expected_actions[0]
 
 
+def test_plan_deduplicates_publication_publish_commands(tmp_path):
+    _write_pyproject(tmp_path, version="0.16.1")
+    publication = _tag_mismatch_publication_report()
+    publication.publish_commands = [
+        "git push origin master",
+        "git push origin master",
+        "python scripts/check_release_publication.py --remote --json",
+    ]
+    expected_commands = [
+        "git push origin master",
+        "python scripts/check_release_publication.py --remote --json",
+    ]
+
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=_readiness_report(),
+        publication_report=publication,
+    )
+    data = plan.to_dict()
+
+    assert plan.publication_publish_commands == expected_commands
+    assert data["publication_publish_commands"] == expected_commands
+    assert data["publication_publish_command_count"] == len(expected_commands)
+    assert data["publication_publish_commands_sha256"] == _stable_json_sha256(
+        expected_commands
+    )
+    assert data["publication_primary_publish_command"] == expected_commands[0]
+
+
 def test_issue_artifacts_surface_release_readiness_blocker_aliases(tmp_path):
     _write_pyproject(tmp_path, version="0.16.1")
     readiness = _readiness_report()

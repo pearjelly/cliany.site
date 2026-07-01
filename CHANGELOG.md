@@ -27,6 +27,7 @@
 - Candidate issue body inventory now carries `promotion_command_plan_summary` in JSON and README output, so maintainers can verify each body file hash alongside the command-plan completeness signal.
 - Candidate issue gates now de-duplicate `required_actions` while preserving order, so overlapping publication and release-readiness blockers do not repeat the same maintainer action.
 - Planner publication handoffs now de-duplicate `publication_next_actions` while preserving order, so repeated publication audit actions do not inflate action counts or drift hashes.
+- Planner publication handoffs now de-duplicate `publication_publish_commands` while preserving order, so repeated publish commands do not inflate command counts or drift hashes.
 - Planner candidate preflight aliases now use the same raw command SHA-256 as cases CLI and generated issue bodies, so `llm_live_preflight_command_sha256` fields no longer drift from the displayed preflight command hash.
 - Cases promotion plan output now includes issue template handoff commands (`issue_template_command`, `issue_template_json_command`, and primary aliases), so maintainers can jump from the candidate queue directly to a copyable promotion issue body.
 - Cases issue template output now reuses the evidence-bundle primary task, so `cliany-site cases --case-id <id> --issue-template` renders a `Primary Runbook`, standard LLM/doctor blocker comments, and `Doctor Preflight Evidence Fields`; `--json` exposes the same acceptance, runbook, and preflight fields on `issue_template_primary_task`.

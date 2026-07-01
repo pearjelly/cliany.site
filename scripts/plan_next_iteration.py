@@ -1007,12 +1007,12 @@ def _next_patch_version(version: str) -> str:
 def _publication_publish_commands(publication: Any) -> list[str]:
     commands = getattr(publication, "publish_commands", None)
     if commands is not None:
-        return [str(command) for command in commands]
+        return _unique_strings([str(command) for command in commands])
     to_dict = getattr(publication, "to_dict", None)
     if not callable(to_dict):
         return []
     payload = to_dict()
-    return [str(command) for command in payload.get("publish_commands", [])]
+    return _unique_strings([str(command) for command in payload.get("publish_commands", [])])
 
 
 def _publication_tag_publish_decision(
