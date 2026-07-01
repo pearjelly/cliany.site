@@ -132,6 +132,45 @@ def _build_capabilities(checks: list[dict[str, Any]]) -> dict[str, dict[str, Any
     return capabilities
 
 
+def _llm_live_preflight_summary(checks: list[dict[str, Any]]) -> dict[str, Any]:
+    for check in checks:
+        if check.get("name") != "llm_live":
+            continue
+        status = str(check.get("status") or "unknown")
+        summary: dict[str, Any] = {
+            "checked": True,
+            "ready": status == "ok",
+            "status": status,
+            "blocks_explore": status != "ok",
+            "action": check.get("action") or _action_for_check(check),
+        }
+        details = check.get("details")
+        if isinstance(details, dict):
+            for key in (
+                "provider",
+                "error_code",
+                "message",
+                "retryable",
+                "status_code",
+                "phase",
+                "skipped",
+                "reason",
+            ):
+                if key in details:
+                    summary[key] = details[key]
+        return summary
+    return {
+        "checked": False,
+        "ready": None,
+        "status": "not_run",
+        "blocks_explore": False,
+        "action": (
+            "Run `cliany-site doctor --llm-live --json` before long explore "
+            "or candidate adapter promotion."
+        ),
+    }
+
+
 def _demo_adapter_quickstart() -> dict[str, Any]:
     return {
         "label": "先跑一个真实只读 demo adapter",
@@ -165,6 +204,7 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
         item["name"] in {"llm", "llm_live"} for item in summary["should_fix"]
     )
     summary["capabilities"] = _build_capabilities(checks)
+    summary["llm_live_preflight"] = _llm_live_preflight_summary(checks)
     summary["demo_adapter_quickstart"] = _demo_adapter_quickstart()
     if summary["must_fix"]:
         summary["recommended_next_step"] = "先处理必须修复项，然后重新运行 cliany-site doctor。"

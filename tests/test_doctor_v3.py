@@ -249,7 +249,18 @@ def test_doctor_does_not_call_llm_live_by_default(tmp_home, no_llm, monkeypatch)
     data = json.loads(result.output)
     checks = data["data"]["checks"]
     assert "llm_live" not in {check["name"] for check in checks}
-    assert data["data"]["summary"]["ready_for_explore"] is True
+    summary = data["data"]["summary"]
+    assert summary["ready_for_explore"] is True
+    assert summary["llm_live_preflight"] == {
+        "checked": False,
+        "ready": None,
+        "status": "not_run",
+        "blocks_explore": False,
+        "action": (
+            "Run `cliany-site doctor --llm-live --json` before long explore "
+            "or candidate adapter promotion."
+        ),
+    }
 
 
 def test_doctor_llm_live_success_keeps_explore_ready(tmp_home, no_llm, monkeypatch):
@@ -268,6 +279,7 @@ def test_doctor_llm_live_success_keeps_explore_ready(tmp_home, no_llm, monkeypat
         return object()
 
     monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "anthropic")
     monkeypatch.setenv("CLIANY_ANTHROPIC_API_KEY", "test")
     monkeypatch.setattr("cliany_site.explorer.engine._get_llm", lambda: FakeLLM())
     monkeypatch.setattr("cliany_site.explorer.engine._invoke_llm_with_retry", fake_invoke)
@@ -281,8 +293,19 @@ def test_doctor_llm_live_success_keeps_explore_ready(tmp_home, no_llm, monkeypat
     live_check = next(check for check in checks if check["name"] == "llm_live")
     assert live_check["status"] == "ok"
     assert live_check["details"]["phase"] == "llm_preflight"
-    assert data["data"]["summary"]["ready_for_explore"] is True
-    assert data["data"]["summary"]["capabilities"]["generate_adapters"]["ready"] is True
+    summary = data["data"]["summary"]
+    assert summary["ready_for_explore"] is True
+    assert summary["capabilities"]["generate_adapters"]["ready"] is True
+    assert summary["llm_live_preflight"] == {
+        "checked": True,
+        "ready": True,
+        "status": "ok",
+        "blocks_explore": False,
+        "action": "LLM provider live preflight 通过，可以发起 explore。",
+        "provider": "anthropic",
+        "retryable": False,
+        "phase": "llm_preflight",
+    }
 
 
 def test_doctor_llm_live_unavailable_blocks_explore_ready(tmp_home, no_llm, monkeypatch):
@@ -332,6 +355,19 @@ def test_doctor_llm_live_unavailable_blocks_explore_ready(tmp_home, no_llm, monk
     assert any(item["name"] == "llm_live" for item in summary["should_fix"])
     assert summary["capabilities"]["generate_adapters"]["ready"] is False
     assert summary["capabilities"]["generate_adapters"]["blockers"] == ["llm_live"]
+    assert summary["llm_live_preflight"] == {
+        "checked": True,
+        "ready": False,
+        "status": "warning",
+        "blocks_explore": True,
+        "action": "LLM 上游暂不可用；请稍后重试，或切换 CLIANY_LLM_PROVIDER / CLIANY_OPENAI_BASE_URL。",
+        "provider": "openai",
+        "error_code": "E_LLM_UNAVAILABLE",
+        "message": "LLM upstream returned 502 Bad Gateway",
+        "retryable": True,
+        "status_code": 502,
+        "phase": "llm_preflight",
+    }
 
 
 def test_doctor_llm_live_connection_error_is_llm_unavailable(tmp_home, no_llm, monkeypatch):
@@ -374,6 +410,19 @@ def test_doctor_llm_live_connection_error_is_llm_unavailable(tmp_home, no_llm, m
     summary = data["data"]["summary"]
     assert summary["ready_for_explore"] is False
     assert summary["capabilities"]["generate_adapters"]["blockers"] == ["llm_live"]
+    assert summary["llm_live_preflight"] == {
+        "checked": True,
+        "ready": False,
+        "status": "warning",
+        "blocks_explore": True,
+        "action": "LLM 上游暂不可用；请稍后重试，或切换 CLIANY_LLM_PROVIDER / CLIANY_OPENAI_BASE_URL。",
+        "provider": "openai",
+        "error_code": "E_LLM_UNAVAILABLE",
+        "message": "LLM upstream unavailable: Connection error.",
+        "retryable": True,
+        "status_code": None,
+        "phase": "llm_preflight",
+    }
 
 
 def test_legacy_adapter_count(tmp_home, no_llm, monkeypatch):

@@ -33,6 +33,7 @@ LLM_LIVE_PREFLIGHT_BLOCKER_NOTE = (
 )
 LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = (
     "summary.ready_for_explore",
+    "summary.llm_live_preflight",
     "summary.capabilities.generate_adapters.ready",
     "checks[llm_live].status",
     "checks[llm_live].details.error_code",

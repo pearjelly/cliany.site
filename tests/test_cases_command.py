@@ -245,6 +245,7 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "leave adapter_package pending or blocked" in template
     assert "## LLM Preflight Evidence Fields" in template
     assert "`summary.ready_for_explore`" in template
+    assert "`summary.llm_live_preflight`" in template
     assert "`summary.capabilities.generate_adapters.ready`" in template
     assert "`checks[llm_live].status`" in template
     assert "`checks[llm_live].details.error_code`" in template
@@ -491,6 +492,7 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert "provider connection failure" in bundle["llm_live_preflight_blocker_note"]
     assert bundle["llm_live_preflight_evidence_fields"] == [
         "summary.ready_for_explore",
+        "summary.llm_live_preflight",
         "summary.capabilities.generate_adapters.ready",
         "checks[llm_live].status",
         "checks[llm_live].details.error_code",
@@ -675,6 +677,7 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "## Candidate package validation" in result.output
     assert "## LLM live preflight" in result.output
     assert "Evidence fields: `summary.ready_for_explore`, " in result.output
+    assert "`summary.llm_live_preflight`" in result.output
     assert "`checks[llm_live].details.error_code`" in result.output
     assert "`checks[llm_live].details.retryable`" in result.output
     assert "`checks[llm_live].details.status_code`" in result.output

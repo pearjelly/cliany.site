@@ -1099,6 +1099,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         ),
         "llm_live_preflight_evidence_fields": [
             "summary.ready_for_explore",
+            "summary.llm_live_preflight",
             "summary.capabilities.generate_adapters.ready",
             "checks[llm_live].status",
             "checks[llm_live].details.error_code",
@@ -1164,6 +1165,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "pending or blocked.\n\n"
             "## LLM Preflight Evidence Fields\n"
             "- `summary.ready_for_explore`\n"
+            "- `summary.llm_live_preflight`\n"
             "- `summary.capabilities.generate_adapters.ready`\n"
             "- `checks[llm_live].status`\n"
             "- `checks[llm_live].details.error_code`\n"
@@ -3174,6 +3176,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "provider connection failure" in metadata[0]["llm_live_preflight_blocker_note"]
     assert metadata[0]["llm_live_preflight_evidence_fields"] == [
         "summary.ready_for_explore",
+        "summary.llm_live_preflight",
         "summary.capabilities.generate_adapters.ready",
         "checks[llm_live].status",
         "checks[llm_live].details.error_code",
@@ -3630,7 +3633,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
         "package path or GitHub Release asset name. | `adapter_package` | "
         "`llm_live_preflight -> adapter_package -> acceptance` | "
-        "`summary.ready_for_explore`, `summary.capabilities.generate_adapters.ready`, "
+        "`summary.ready_for_explore`, `summary.llm_live_preflight`, "
+        "`summary.capabilities.generate_adapters.ready`, "
         "`checks[llm_live].status`, `checks[llm_live].details.error_code`, "
         "`checks[llm_live].details.retryable`, `checks[llm_live].details.status_code`, "
         "`checks[llm_live].details.phase`, `checks[llm_live].details.message` | "

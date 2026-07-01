@@ -50,7 +50,7 @@
 
 | 子任务 | 适合贡献者 | 完成证据 |
 |--------|------------|----------|
-| `llm_live_preflight` | 负责启动 candidate 晋级的维护者 | 运行 `cliany-site doctor --llm-live --json`，确认 `llm_live` 没有阻塞 `ready_for_explore`，再进入真实 `explore` |
+| `llm_live_preflight` | 负责启动 candidate 晋级的维护者 | 运行 `cliany-site doctor --llm-live --json`，确认 `summary.llm_live_preflight.ready=true` 且 `llm_live` 没有阻塞 `ready_for_explore`，再进入真实 `explore` |
 | `adapter_package` | 熟悉 `explore` / `market publish` 的维护者 | 生成 `<domain>-<version>.cliany-adapter.tar.gz`，并把包资产放到 release candidate 或本地 `~/.cliany-site/packages` |
 | `metadata_validation` | 首次贡献者或文档/测试贡献者 | 运行 `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`，确认目标 candidate 包通过 schema v3、manifest hash 和 domain 校验 |
 | `online_smoke` | 能手动访问第三方公开站点的维护者 | 运行 candidate 声明的只读命令，保存 JSON envelope 摘要，并确认 `data.quality.ok=true` 和 `row_count>0` |
