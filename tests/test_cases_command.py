@@ -248,6 +248,8 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "`summary.capabilities.generate_adapters.ready`" in template
     assert "`checks[llm_live].status`" in template
     assert "`checks[llm_live].details.error_code`" in template
+    assert "`checks[llm_live].details.retryable`" in template
+    assert "`checks[llm_live].details.status_code`" in template
     assert "`checks[llm_live].details.phase`" in template
     assert "`checks[llm_live].details.message`" in template
     assert "## Acceptance Criteria" in template
@@ -492,6 +494,8 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         "summary.capabilities.generate_adapters.ready",
         "checks[llm_live].status",
         "checks[llm_live].details.error_code",
+        "checks[llm_live].details.retryable",
+        "checks[llm_live].details.status_code",
         "checks[llm_live].details.phase",
         "checks[llm_live].details.message",
     ]
@@ -672,6 +676,8 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "## LLM live preflight" in result.output
     assert "Evidence fields: `summary.ready_for_explore`, " in result.output
     assert "`checks[llm_live].details.error_code`" in result.output
+    assert "`checks[llm_live].details.retryable`" in result.output
+    assert "`checks[llm_live].details.status_code`" in result.output
     assert "Blocker handling: Run the live LLM preflight before explore." in result.output
     assert "E_LLM_UNAVAILABLE" in result.output
     assert "## Promotion command plan" in result.output

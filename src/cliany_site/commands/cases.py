@@ -36,6 +36,8 @@ LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = (
     "summary.capabilities.generate_adapters.ready",
     "checks[llm_live].status",
     "checks[llm_live].details.error_code",
+    "checks[llm_live].details.retryable",
+    "checks[llm_live].details.status_code",
     "checks[llm_live].details.phase",
     "checks[llm_live].details.message",
 )

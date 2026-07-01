@@ -1099,6 +1099,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "summary.capabilities.generate_adapters.ready",
             "checks[llm_live].status",
             "checks[llm_live].details.error_code",
+            "checks[llm_live].details.retryable",
+            "checks[llm_live].details.status_code",
             "checks[llm_live].details.phase",
             "checks[llm_live].details.message",
         ],
@@ -1162,6 +1164,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- `summary.capabilities.generate_adapters.ready`\n"
             "- `checks[llm_live].status`\n"
             "- `checks[llm_live].details.error_code`\n"
+            "- `checks[llm_live].details.retryable`\n"
+            "- `checks[llm_live].details.status_code`\n"
             "- `checks[llm_live].details.phase`\n"
             "- `checks[llm_live].details.message`\n\n"
             "## Acceptance Criteria\n"
@@ -3147,6 +3151,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "summary.capabilities.generate_adapters.ready",
         "checks[llm_live].status",
         "checks[llm_live].details.error_code",
+        "checks[llm_live].details.retryable",
+        "checks[llm_live].details.status_code",
         "checks[llm_live].details.phase",
         "checks[llm_live].details.message",
     ]
@@ -3595,6 +3601,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "`llm_live_preflight -> adapter_package -> acceptance` | "
         "`summary.ready_for_explore`, `summary.capabilities.generate_adapters.ready`, "
         "`checks[llm_live].status`, `checks[llm_live].details.error_code`, "
+        "`checks[llm_live].details.retryable`, `checks[llm_live].details.status_code`, "
         "`checks[llm_live].details.phase`, `checks[llm_live].details.message` | "
         "`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict` | "
