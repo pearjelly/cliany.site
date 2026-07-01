@@ -597,6 +597,10 @@ def test_plan_prefers_standard_release_flow_primary_action(tmp_path):
     assert data["standard_release_flow_commands_sha256"] == (
         readiness.standard_release_flow["commands_sha256"]
     )
+    assert data["standard_release_flow_step_count"] == 0
+    assert data["standard_release_flow_step_names"] == []
+    assert data["standard_release_flow_step_names_sha256"] == _stable_json_sha256([])
+    assert data["standard_release_flow_steps_sha256"] == _stable_json_sha256([])
 
 
 def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path):
@@ -1284,6 +1288,19 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
             ),
         },
     ]
+    standard_release_flow_step_names = [
+        step["name"] for step in data["standard_release_flow"]["steps"]
+    ]
+    assert data["standard_release_flow_step_count"] == len(
+        data["standard_release_flow"]["steps"]
+    )
+    assert data["standard_release_flow_step_names"] == standard_release_flow_step_names
+    assert data["standard_release_flow_step_names_sha256"] == _stable_json_sha256(
+        standard_release_flow_step_names
+    )
+    assert data["standard_release_flow_steps_sha256"] == _stable_json_sha256(
+        data["standard_release_flow"]["steps"]
+    )
     assert data["standard_release_flow_has_website_deploy"] is True
     assert data["standard_release_flow_website_deploy_command"] == WEBSITE_DEPLOY_COMMAND
     assert data["standard_release_flow_website_deploy_command_sha256"] == (
@@ -1368,6 +1385,25 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert (
         "| case_promotion_evidence_primary_runbook_steps_sha256 | "
         f"`{_stable_json_sha256(['llm_live_preflight', 'adapter_package', 'acceptance'])}` |"
+        in text
+    )
+    standard_release_flow_step_names = [
+        step["name"] for step in plan.standard_release_flow["steps"]
+    ]
+    assert "| standard_release_flow_step_count | `8` |" in text
+    assert (
+        "| standard_release_flow_step_names | "
+        f"`{json.dumps(standard_release_flow_step_names, ensure_ascii=False)}` |"
+        in text
+    )
+    assert (
+        "| standard_release_flow_step_names_sha256 | "
+        f"`{_stable_json_sha256(standard_release_flow_step_names)}` |"
+        in text
+    )
+    assert (
+        "| standard_release_flow_steps_sha256 | "
+        f"`{_stable_json_sha256(plan.standard_release_flow['steps'])}` |"
         in text
     )
     assert (
@@ -1775,6 +1811,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "latest local release is not published",
         "latest local release tag is not published",
     ]
+    standard_release_flow_steps = plan.standard_release_flow["steps"]
+    standard_release_flow_step_names = [
+        step["name"] for step in standard_release_flow_steps
+    ]
     expected_publication_handoff = {
         "schema_version": 1,
         "publication_ok": False,
@@ -1811,6 +1851,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_commands_sha256": plan.standard_release_flow[
             "commands_sha256"
         ],
+        "standard_release_flow_step_count": len(standard_release_flow_steps),
+        "standard_release_flow_step_names": standard_release_flow_step_names,
+        "standard_release_flow_step_names_sha256": _stable_json_sha256(
+            standard_release_flow_step_names
+        ),
+        "standard_release_flow_steps_sha256": _stable_json_sha256(
+            standard_release_flow_steps
+        ),
         "standard_release_flow_has_website_deploy": True,
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
         "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
@@ -2224,6 +2272,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_commands_sha256": plan.standard_release_flow[
             "commands_sha256"
         ],
+        "standard_release_flow_step_count": len(standard_release_flow_steps),
+        "standard_release_flow_step_names": standard_release_flow_step_names,
+        "standard_release_flow_step_names_sha256": _stable_json_sha256(
+            standard_release_flow_step_names
+        ),
+        "standard_release_flow_steps_sha256": _stable_json_sha256(
+            standard_release_flow_steps
+        ),
         "standard_release_flow_has_website_deploy": True,
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
         "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
@@ -2943,6 +2999,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_commands_sha256": plan.standard_release_flow[
             "commands_sha256"
         ],
+        "standard_release_flow_step_count": len(standard_release_flow_steps),
+        "standard_release_flow_step_names": standard_release_flow_step_names,
+        "standard_release_flow_step_names_sha256": _stable_json_sha256(
+            standard_release_flow_step_names
+        ),
+        "standard_release_flow_steps_sha256": _stable_json_sha256(
+            standard_release_flow_steps
+        ),
         "standard_release_flow_has_website_deploy": True,
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
         "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
@@ -3572,6 +3636,19 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "standard_release_flow_commands_sha256: "
         f"`{plan.standard_release_flow['commands_sha256']}`"
+    ) in readme
+    assert "standard_release_flow_step_count: `8`" in readme
+    assert (
+        "standard_release_flow_step_names: "
+        f"`{json.dumps(standard_release_flow_step_names, ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "standard_release_flow_step_names_sha256: "
+        f"`{_stable_json_sha256(standard_release_flow_step_names)}`"
+    ) in readme
+    assert (
+        "standard_release_flow_steps_sha256: "
+        f"`{_stable_json_sha256(standard_release_flow_steps)}`"
     ) in readme
     assert "standard_release_flow_has_website_deploy: `true`" in readme
     assert (
@@ -4681,6 +4758,19 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "standard_release_flow_command_count: "
         f"`{plan.standard_release_flow['command_count']}`"
+    ) in readme
+    assert "standard_release_flow_step_count: `8`" in readme
+    assert (
+        "standard_release_flow_step_names: "
+        f"`{json.dumps(standard_release_flow_step_names, ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "standard_release_flow_step_names_sha256: "
+        f"`{_stable_json_sha256(standard_release_flow_step_names)}`"
+    ) in readme
+    assert (
+        "standard_release_flow_steps_sha256: "
+        f"`{_stable_json_sha256(standard_release_flow_steps)}`"
     ) in readme
     assert "standard_release_flow_has_website_deploy: `true`" in readme
     assert (

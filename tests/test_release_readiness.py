@@ -751,6 +751,19 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert payload["standard_release_flow_commands_sha256"] == (
         release_readiness._stable_json_sha256(standard_release_flow["commands"])
     )
+    standard_release_flow_step_names = [
+        step["name"] for step in standard_release_flow["steps"]
+    ]
+    assert payload["standard_release_flow_step_count"] == len(
+        standard_release_flow["steps"]
+    )
+    assert payload["standard_release_flow_step_names"] == standard_release_flow_step_names
+    assert payload["standard_release_flow_step_names_sha256"] == (
+        release_readiness._stable_json_sha256(standard_release_flow_step_names)
+    )
+    assert payload["standard_release_flow_steps_sha256"] == (
+        release_readiness._stable_json_sha256(standard_release_flow["steps"])
+    )
     assert payload["standard_release_flow_sha256"] == release_readiness._stable_json_sha256(
         standard_release_flow
     )
@@ -904,6 +917,10 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- standard_release_flow_primary_next_action: `" in text
     assert "- standard_release_flow_command_count: `" in text
     assert "- standard_release_flow_commands_sha256: `" in text
+    assert "- standard_release_flow_step_count: `" in text
+    assert "- standard_release_flow_step_names: `" in text
+    assert "- standard_release_flow_step_names_sha256: `" in text
+    assert "- standard_release_flow_steps_sha256: `" in text
     assert "- standard_release_flow_has_website_deploy: `true`" in text
     assert f"- standard_release_flow_website_deploy_command: `{WEBSITE_DEPLOY_COMMAND}`" in text
     assert "- standard_release_flow_website_deploy_command_sha256: `" in text
@@ -1264,6 +1281,10 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     assert "standard_release_flow_sha256:" in output
     assert "standard_release_flow_primary_next_action:" in output
     assert "standard_release_flow_commands_sha256:" in output
+    assert "standard_release_flow_step_count:" in output
+    assert "standard_release_flow_step_names:" in output
+    assert "standard_release_flow_step_names_sha256:" in output
+    assert "standard_release_flow_steps_sha256:" in output
     assert "package_gate_summary: checked=false, failed=0, missing=0, invalid=0, repair_actions=0" in output
     assert "package_gate_primary_repair_action:" not in output
     assert "next_actions:" in output.splitlines()

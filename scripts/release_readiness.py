@@ -155,6 +155,10 @@ class ReadinessReport:
             publication_payload=publication_payload,
             next_actions=next_actions,
         )
+        standard_release_flow_steps = _standard_release_flow_steps(standard_release_flow)
+        standard_release_flow_step_names = _standard_release_flow_step_names(
+            standard_release_flow
+        )
         standard_release_flow_website_deploy_command = (
             _standard_release_flow_website_deploy_command(standard_release_flow)
         )
@@ -215,6 +219,14 @@ class ReadinessReport:
             "standard_release_flow_commands_sha256": standard_release_flow[
                 "commands_sha256"
             ],
+            "standard_release_flow_step_count": len(standard_release_flow_steps),
+            "standard_release_flow_step_names": standard_release_flow_step_names,
+            "standard_release_flow_step_names_sha256": _stable_json_sha256(
+                standard_release_flow_step_names
+            ),
+            "standard_release_flow_steps_sha256": _stable_json_sha256(
+                standard_release_flow_steps
+            ),
             "standard_release_flow_has_website_deploy": (
                 standard_release_flow_website_deploy_command is not None
             ),
@@ -973,6 +985,21 @@ def _print_text(report: ReadinessReport) -> None:
         "standard_release_flow_commands_sha256: "
         f"{standard_release_flow['commands_sha256']}"
     )
+    standard_release_flow_steps = _standard_release_flow_steps(standard_release_flow)
+    standard_release_flow_step_names = _standard_release_flow_step_names(standard_release_flow)
+    print(f"standard_release_flow_step_count: {len(standard_release_flow_steps)}")
+    print(
+        "standard_release_flow_step_names: "
+        f"{', '.join(standard_release_flow_step_names)}"
+    )
+    print(
+        "standard_release_flow_step_names_sha256: "
+        f"{_stable_json_sha256(standard_release_flow_step_names)}"
+    )
+    print(
+        "standard_release_flow_steps_sha256: "
+        f"{_stable_json_sha256(standard_release_flow_steps)}"
+    )
     print(f"package_gate: {report.package_gate.ok}")
     print(
         "package_gate_summary: "
@@ -1325,6 +1352,18 @@ def _standard_release_flow_website_deploy_command(flow: dict[str, Any]) -> str |
         if command and str(command) in commands:
             return str(command)
     return None
+
+
+def _standard_release_flow_steps(flow: dict[str, Any]) -> list[dict[str, Any]]:
+    return [step for step in flow.get("steps") or [] if isinstance(step, dict)]
+
+
+def _standard_release_flow_step_names(flow: dict[str, Any]) -> list[str]:
+    return [
+        str(step["name"])
+        for step in _standard_release_flow_steps(flow)
+        if step.get("name")
+    ]
 
 
 def _stable_json_sha256(value: Any) -> str:
@@ -1680,6 +1719,8 @@ def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
     website_deploy_command_sha256 = (
         _stable_json_sha256(website_deploy_command) if website_deploy_command else None
     )
+    flow_steps = _standard_release_flow_steps(flow)
+    flow_step_names = _standard_release_flow_step_names(flow)
     lines = [
         "",
         "## Standard Release Flow",
@@ -1695,6 +1736,16 @@ def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
         ),
         f"- standard_release_flow_command_count: `{flow['command_count']}`",
         f"- standard_release_flow_commands_sha256: `{flow['commands_sha256']}`",
+        f"- standard_release_flow_step_count: `{len(flow_steps)}`",
+        (
+            "- standard_release_flow_step_names: "
+            f"`{_markdown_cell(json.dumps(flow_step_names, ensure_ascii=False))}`"
+        ),
+        (
+            "- standard_release_flow_step_names_sha256: "
+            f"`{_stable_json_sha256(flow_step_names)}`"
+        ),
+        f"- standard_release_flow_steps_sha256: `{_stable_json_sha256(flow_steps)}`",
         (
             "- standard_release_flow_has_website_deploy: "
             f"`{str(website_deploy_command is not None).lower()}`"
