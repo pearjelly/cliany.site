@@ -1028,6 +1028,46 @@ def test_release_readiness_cli_passes_remote_publication_check(monkeypatch, caps
     assert json.loads(capsys.readouterr().out) == {"ok": True}
 
 
+def test_standard_release_flow_preserves_remote_name():
+    report = SimpleNamespace(
+        current_version="0.1.0",
+        target_version="0.1.1",
+        blockers=[],
+        publication=SimpleNamespace(ok=True),
+        remote_check=True,
+        remote_name="upstream",
+    )
+    publication_payload = {
+        "tag_publish_decision": {
+            "target_tag": "v0.1.1",
+            "target_tag_status": "create_target_tag_at_head",
+            "target_tag_commands": [],
+        },
+        "worktree_clean": True,
+        "publish_commands": [],
+    }
+
+    flow = release_readiness._standard_release_flow(
+        report,
+        publication_payload=publication_payload,
+        next_actions=[],
+    )
+
+    assert "python scripts/release_readiness.py --strict --target-version 0.1.1 --remote --remote-name upstream" in (
+        flow["commands"]
+    )
+    assert "python scripts/check_release_publication.py --remote --remote-name upstream --json" in (
+        flow["commands"]
+    )
+    assert flow["steps"][0]["command"] == (
+        "python scripts/release_readiness.py --strict --target-version 0.1.1 "
+        "--remote --remote-name upstream"
+    )
+    assert flow["steps"][-1]["command"] == (
+        "python scripts/check_release_publication.py --remote --remote-name upstream --json"
+    )
+
+
 def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     metadata_validation = "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"

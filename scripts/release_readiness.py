@@ -136,6 +136,8 @@ class ReadinessReport:
     project_metadata: ProjectMetadataReport
     package_gate: PackageGateReport
     publication: PublicationReport
+    remote_check: bool = False
+    remote_name: str = "origin"
 
     def to_dict(self) -> dict[str, Any]:
         publication_payload = _publication_payload(self)
@@ -786,6 +788,8 @@ def build_report(
         project_metadata=project_metadata,
         package_gate=package_gate,
         publication=publication,
+        remote_check=remote_check,
+        remote_name=remote_name,
     )
 
 
@@ -1094,6 +1098,34 @@ def _target_tag_name(target_version: str | None) -> str | None:
     return version if version.startswith("v") else f"v{version}"
 
 
+def _remote_audit_args(*, remote_check: bool, remote_name: str) -> str:
+    args: list[str] = []
+    if remote_check:
+        args.append("--remote")
+    if remote_name != "origin":
+        args.extend(["--remote-name", shlex.quote(remote_name)])
+    return f" {' '.join(args)}" if args else ""
+
+
+def _release_readiness_strict_command(report: ReadinessReport) -> str:
+    remote_args = _remote_audit_args(
+        remote_check=bool(getattr(report, "remote_check", False)),
+        remote_name=str(getattr(report, "remote_name", "origin") or "origin"),
+    )
+    return (
+        "python scripts/release_readiness.py --strict "
+        f"--target-version {shlex.quote(report.target_version)}{remote_args}"
+    )
+
+
+def _remote_publication_audit_command(report: ReadinessReport) -> str:
+    remote_args = _remote_audit_args(
+        remote_check=True,
+        remote_name=str(getattr(report, "remote_name", "origin") or "origin"),
+    )
+    return f"python scripts/check_release_publication.py{remote_args} --json"
+
+
 def _publication_ref_context(publication_payload: dict[str, Any]) -> dict[str, Any]:
     return {
         "repo_root": publication_payload["repo_root"],
@@ -1158,10 +1190,7 @@ def _standard_release_flow(
 ) -> dict[str, Any]:
     tag_publish_decision = publication_payload["tag_publish_decision"]
     target_tag = tag_publish_decision.get("target_tag") or _target_tag_name(report.target_version)
-    strict_command = (
-        "python scripts/release_readiness.py --strict "
-        f"--target-version {shlex.quote(report.target_version)}"
-    )
+    strict_command = _release_readiness_strict_command(report)
     validation_command = "CLIANY_QA_OFFLINE=1 pytest tests/ -q"
     case_validation_command = "python scripts/validate_cases.py --strict"
     release_notes_action = (
@@ -1172,7 +1201,7 @@ def _standard_release_flow(
     target_tag_commands = [
         str(command) for command in tag_publish_decision.get("target_tag_commands") or []
     ]
-    remote_audit_command = "python scripts/check_release_publication.py --remote --json"
+    remote_audit_command = _remote_publication_audit_command(report)
 
     commands = [
         strict_command,

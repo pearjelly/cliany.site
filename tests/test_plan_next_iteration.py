@@ -1195,6 +1195,19 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
         "python scripts/check_release_publication.py --remote --remote-name upstream --json"
         in data["validation_commands"]
     )
+    assert data["publication_publish_script_command"] == (
+        "python scripts/check_release_publication.py --remote --remote-name upstream "
+        "--json --publish-script /tmp/cliany-publish-release.sh"
+    )
+    assert (
+        "python scripts/release_readiness.py --strict --target-version 0.16.2 "
+        "--remote --remote-name upstream"
+        in data["standard_release_flow"]["commands"]
+    )
+    assert (
+        "python scripts/check_release_publication.py --remote --remote-name upstream --json"
+        in data["standard_release_flow"]["commands"]
+    )
     assert (
         "python scripts/check_release_publication.py --remote --remote-name upstream --json"
         in plan_next_iteration._issue_artifact_validation_commands(plan)

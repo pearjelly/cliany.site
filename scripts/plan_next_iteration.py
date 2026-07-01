@@ -1027,6 +1027,8 @@ def _standard_release_flow(
     next_actions: list[str],
     publication_publish_commands: list[str],
     publication_tag_publish_decision: dict[str, Any],
+    remote_check: bool,
+    remote_name: str,
 ) -> dict[str, Any]:
     existing = _readiness_standard_release_flow(readiness)
     if existing:
@@ -1036,10 +1038,12 @@ def _standard_release_flow(
     target_tag = publication_tag_publish_decision.get("target_tag") or _target_tag_name(
         target_version
     )
-    strict_command = (
-        "python scripts/release_readiness.py --strict "
-        f"--target-version {shlex.quote(target_version)}"
+    strict_command = _release_readiness_strict_command(
+        target_version,
+        remote_check=remote_check,
+        remote_name=remote_name,
     )
+    remote_audit_command = _remote_publication_audit_command(remote_name)
     validation_commands = [
         strict_command,
         "CLIANY_QA_OFFLINE=1 pytest tests/ -q",
@@ -1049,7 +1053,7 @@ def _standard_release_flow(
             str(command)
             for command in publication_tag_publish_decision.get("target_tag_commands") or []
         ],
-        "python scripts/check_release_publication.py --remote --json",
+        remote_audit_command,
     ]
     commands = list(dict.fromkeys(command for command in validation_commands if command))
     blockers = [
@@ -1122,9 +1126,35 @@ def _remote_audit_args(*, remote_check: bool, remote_name: str) -> str:
     return f" {' '.join(args)}" if args else ""
 
 
+def _release_readiness_strict_command(
+    target_version: str,
+    *,
+    remote_check: bool,
+    remote_name: str,
+) -> str:
+    remote_args = _remote_audit_args(remote_check=remote_check, remote_name=remote_name)
+    return (
+        "python scripts/release_readiness.py --strict "
+        f"--target-version {shlex.quote(target_version)}{remote_args}"
+    )
+
+
+def _remote_publication_audit_command(remote_name: str) -> str:
+    remote_args = _remote_audit_args(remote_check=True, remote_name=remote_name)
+    return f"python scripts/check_release_publication.py{remote_args} --json"
+
+
 def _publication_audit_validation_command(*, remote_check: bool, remote_name: str) -> str:
     remote_args = _remote_audit_args(remote_check=remote_check, remote_name=remote_name)
     return f"python scripts/check_release_publication.py{remote_args} --json"
+
+
+def _publication_publish_script_command(*, remote_check: bool, remote_name: str) -> str:
+    remote_args = _remote_audit_args(remote_check=remote_check, remote_name=remote_name)
+    return (
+        f"python scripts/check_release_publication.py{remote_args} --json "
+        f"--publish-script {PUBLICATION_PUBLISH_SCRIPT_PATH}"
+    )
 
 
 def _candidate_package_validation_command(packages_dir: Path | None) -> str | None:
@@ -2219,6 +2249,8 @@ def build_plan(
         next_actions=next_actions,
         publication_publish_commands=publication_publish_commands,
         publication_tag_publish_decision=publication_tag_publish_decision,
+        remote_check=remote_check,
+        remote_name=remote_name,
     )
     commit_cadence = _commit_cadence(readiness)
     candidate_cases = [
@@ -2251,9 +2283,9 @@ def build_plan(
         f"python scripts/plan_next_iteration.py --target-version {readiness.target_version}"
         f"{package_args}{remote_args} --issues-dir /tmp/cliany-candidate-issues"
     )
-    publication_publish_script_command = (
-        "python scripts/check_release_publication.py --json "
-        f"--publish-script {PUBLICATION_PUBLISH_SCRIPT_PATH}"
+    publication_publish_script_command = _publication_publish_script_command(
+        remote_check=remote_check,
+        remote_name=remote_name,
     )
     return IterationPlan(
         current_version=current_version,
