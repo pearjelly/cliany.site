@@ -68,6 +68,9 @@ ARTIFACT_MANIFEST_KEYS = (
     "candidate_count",
     "candidate_cases",
     "case_promotion_evidence_summary",
+    "case_promotion_llm_live_preflight_evidence_fields",
+    "case_promotion_llm_live_preflight_evidence_field_count",
+    "case_promotion_llm_live_preflight_evidence_fields_sha256",
     "case_promotion_command_plan_summary",
     "standard_release_flow",
     "standard_release_flow_status",
@@ -207,6 +210,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "case_promotion_evidence_primary_runbook_first_command",
     "case_promotion_evidence_primary_runbook_first_command_sha256",
     "case_promotion_evidence_primary_runbook_sha256",
+    "case_promotion_llm_live_preflight_evidence_field_count",
+    "case_promotion_llm_live_preflight_evidence_fields",
+    "case_promotion_llm_live_preflight_evidence_fields_sha256",
     "case_promotion_command_plan_summary_sha256",
     "case_promotion_command_plan_candidate_count",
     "case_promotion_command_plan_command_count",
@@ -670,6 +676,11 @@ class IterationPlan:
         primary_runbook = _primary_runbook_from_summary(self.case_promotion_evidence_summary)
         primary_runbook_steps = _runbook_steps(primary_runbook)
         primary_runbook_first_command = _runbook_first_command(primary_runbook)
+        llm_live_preflight_evidence_fields = (
+            _llm_live_preflight_evidence_fields_from_summary(
+                self.case_promotion_evidence_summary
+            )
+        )
         standard_release_flow_steps = _standard_release_flow_steps(self.standard_release_flow)
         standard_release_flow_step_names = _standard_release_flow_step_names(
             self.standard_release_flow
@@ -787,6 +798,15 @@ class IterationPlan:
                 _stable_json_sha256(primary_runbook_first_command)
                 if primary_runbook_first_command
                 else None
+            ),
+            "case_promotion_llm_live_preflight_evidence_fields": (
+                llm_live_preflight_evidence_fields
+            ),
+            "case_promotion_llm_live_preflight_evidence_field_count": len(
+                llm_live_preflight_evidence_fields
+            ),
+            "case_promotion_llm_live_preflight_evidence_fields_sha256": (
+                _stable_json_sha256(llm_live_preflight_evidence_fields)
             ),
             "blockers": self.blockers,
             "next_action_count": len(self.next_actions),
@@ -2001,6 +2021,24 @@ def _case_dict_value(case: Any, field_name: str) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def _llm_live_preflight_evidence_fields_from_summary(summary: dict[str, Any]) -> list[str]:
+    fields = summary.get("llm_live_preflight_evidence_fields")
+    if not isinstance(fields, list) or not fields:
+        return list(LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS)
+    return [str(field_name) for field_name in fields if field_name]
+
+
+def _summary_with_llm_live_preflight_evidence_fields(
+    summary: dict[str, Any],
+) -> dict[str, Any]:
+    normalized = dict(summary)
+    fields = _llm_live_preflight_evidence_fields_from_summary(normalized)
+    normalized["llm_live_preflight_evidence_fields"] = fields
+    normalized["llm_live_preflight_evidence_field_count"] = len(fields)
+    normalized["llm_live_preflight_evidence_fields_sha256"] = _stable_json_sha256(fields)
+    return normalized
+
+
 def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
     summary = getattr(cases_report, "promotion_evidence_summary", None)
     if isinstance(summary, dict):
@@ -2012,7 +2050,7 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
                 primary_task = normalized.get("primary_task")
                 if isinstance(primary_task, dict):
                     normalized["primary_next_task"] = primary_task
-        return normalized
+        return _summary_with_llm_live_preflight_evidence_fields(normalized)
 
     cases = getattr(cases_report, "cases", [])
     status_counts = {status: 0 for status in ("blocked", "complete", "pending")}
@@ -2078,7 +2116,7 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
         else []
     )
     primary_runbook = _candidate_primary_task_runbook(primary, primary_command_plan)
-    return {
+    return _summary_with_llm_live_preflight_evidence_fields({
         "candidate_count": len(candidate_cases),
         "task_count": sum(status_counts.values()),
         "status_counts": status_counts,
@@ -2094,7 +2132,7 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
         "primary_next_task": primary,
         "primary_next_task_runbook": primary_runbook,
         "primary_next_action": primary["next_action"] if primary else "",
-    }
+    })
 
 
 def _case_promotion_priority_reason(case: Any, rank: int) -> str:
@@ -3033,6 +3071,16 @@ def _render_markdown(plan: IterationPlan) -> str:
     primary_runbook_first_command_sha256_text = _format_context_value(
         primary_runbook_first_command_sha256
     )
+    llm_live_preflight_evidence_fields = _llm_live_preflight_evidence_fields_from_summary(
+        plan.case_promotion_evidence_summary
+    )
+    llm_live_preflight_evidence_fields_text = json.dumps(
+        llm_live_preflight_evidence_fields,
+        ensure_ascii=False,
+    )
+    llm_live_preflight_evidence_fields_sha256 = _stable_json_sha256(
+        llm_live_preflight_evidence_fields
+    )
     primary_publication_action = _format_context_value(
         plan.publication_next_actions[0] if plan.publication_next_actions else None
     )
@@ -3204,6 +3252,9 @@ def _render_markdown(plan: IterationPlan) -> str:
 | case_promotion_evidence_primary_runbook_first_step | `{primary_runbook_first_step}` |
 | case_promotion_evidence_primary_runbook_first_command | `{primary_runbook_first_command_text}` |
 | case_promotion_evidence_primary_runbook_first_command_sha256 | `{primary_runbook_first_command_sha256_text}` |
+| case_promotion_llm_live_preflight_evidence_field_count | `{len(llm_live_preflight_evidence_fields)}` |
+| case_promotion_llm_live_preflight_evidence_fields | `{llm_live_preflight_evidence_fields_text}` |
+| case_promotion_llm_live_preflight_evidence_fields_sha256 | `{llm_live_preflight_evidence_fields_sha256}` |
 | case_promotion_command_plan_all_declared | `{command_plan_all_declared}` |
 | case_promotion_command_plan_missing_command_count | `{command_plan_missing_count}` |
 | plan_report_command | `{plan.plan_report_command}` |
@@ -4839,12 +4890,24 @@ def _artifact_manifest_payload_without_summary(
     standard_release_flow_step_status_counts = _standard_release_flow_step_status_counts(
         plan.standard_release_flow
     )
+    llm_live_preflight_evidence_fields = _llm_live_preflight_evidence_fields_from_summary(
+        plan.case_promotion_evidence_summary
+    )
     return {
         "schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "target_version": plan.target_version,
         "candidate_count": len(candidate_cases),
         "candidate_cases": candidate_cases,
         "case_promotion_evidence_summary": plan.case_promotion_evidence_summary,
+        "case_promotion_llm_live_preflight_evidence_fields": (
+            llm_live_preflight_evidence_fields
+        ),
+        "case_promotion_llm_live_preflight_evidence_field_count": len(
+            llm_live_preflight_evidence_fields
+        ),
+        "case_promotion_llm_live_preflight_evidence_fields_sha256": (
+            _stable_json_sha256(llm_live_preflight_evidence_fields)
+        ),
         "case_promotion_command_plan_summary": plan.case_promotion_command_plan_summary,
         "standard_release_flow": plan.standard_release_flow,
         "standard_release_flow_status": plan.standard_release_flow.get("status"),
@@ -5164,6 +5227,9 @@ def _issue_artifact_bundle_summary(
     case_promotion_evidence_primary_runbook_first_command = _runbook_first_command(
         case_promotion_evidence_primary_runbook
     )
+    llm_live_preflight_evidence_fields = _llm_live_preflight_evidence_fields_from_summary(
+        plan.case_promotion_evidence_summary
+    )
     command_plan_summary = plan.case_promotion_command_plan_summary
     blocker_boundary = {
         "first_item": plan.blockers[0] if plan.blockers else None,
@@ -5400,6 +5466,15 @@ def _issue_artifact_bundle_summary(
         ),
         "case_promotion_evidence_primary_runbook_sha256": _stable_json_sha256(
             case_promotion_evidence_primary_runbook
+        ),
+        "case_promotion_llm_live_preflight_evidence_field_count": len(
+            llm_live_preflight_evidence_fields
+        ),
+        "case_promotion_llm_live_preflight_evidence_fields": list(
+            llm_live_preflight_evidence_fields
+        ),
+        "case_promotion_llm_live_preflight_evidence_fields_sha256": _stable_json_sha256(
+            llm_live_preflight_evidence_fields
         ),
         "case_promotion_command_plan_summary_sha256": _stable_json_sha256(
             command_plan_summary
@@ -6215,6 +6290,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['case_promotion_evidence_primary_runbook_first_command_sha256']}`",
             "- case_promotion_evidence_primary_runbook_sha256: "
             f"`{summary['case_promotion_evidence_primary_runbook_sha256']}`",
+            "- case_promotion_llm_live_preflight_evidence_field_count: "
+            f"`{summary['case_promotion_llm_live_preflight_evidence_field_count']}`",
+            "- case_promotion_llm_live_preflight_evidence_fields: "
+            f"`{json.dumps(summary['case_promotion_llm_live_preflight_evidence_fields'], ensure_ascii=False)}`",
+            "- case_promotion_llm_live_preflight_evidence_fields_sha256: "
+            f"`{summary['case_promotion_llm_live_preflight_evidence_fields_sha256']}`",
             "- case_promotion_command_plan_summary_sha256: "
             f"`{summary['case_promotion_command_plan_summary_sha256']}`",
             "- case_promotion_command_plan_candidate_count: "

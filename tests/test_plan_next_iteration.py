@@ -1038,6 +1038,17 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     assert data["case_promotion_evidence_primary_runbook_first_command_sha256"] == (
         _stable_json_sha256("cliany-site doctor --llm-live --json")
     )
+    llm_preflight_fields = data["case_promotion_evidence_summary"][
+        "llm_live_preflight_evidence_fields"
+    ]
+    assert llm_preflight_fields == list(plan_next_iteration.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS)
+    assert data["case_promotion_llm_live_preflight_evidence_fields"] == llm_preflight_fields
+    assert data["case_promotion_llm_live_preflight_evidence_field_count"] == len(
+        llm_preflight_fields
+    )
+    assert data["case_promotion_llm_live_preflight_evidence_fields_sha256"] == (
+        _stable_json_sha256(llm_preflight_fields)
+    )
     assert data["candidate_promotions"][0] == {
         "case_id": "pypi-project-search",
         "issue_title": "Promote candidate case `pypi-project-search` toward active",
@@ -1497,6 +1508,13 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
         f"`{_stable_json_sha256(['llm_live_preflight', 'adapter_package', 'acceptance'])}` |"
         in text
     )
+    assert "| case_promotion_llm_live_preflight_evidence_field_count | `9` |" in text
+    assert (
+        "| case_promotion_llm_live_preflight_evidence_fields_sha256 | "
+        f"`{_stable_json_sha256(list(plan_next_iteration.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS))}` |"
+        in text
+    )
+    assert "summary.llm_live_preflight" in text
     standard_release_flow_step_names = [
         step["name"] for step in plan.standard_release_flow["steps"]
     ]
@@ -1793,6 +1811,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     release_draft_handoff = json.loads((issues_dir / "release-draft-handoff.json").read_text(encoding="utf-8"))
     script = (issues_dir / "create-issues.sh").read_text(encoding="utf-8")
     readme = (issues_dir / "README.md").read_text(encoding="utf-8")
+    llm_preflight_fields = list(plan_next_iteration.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS)
     issue_body_inventory = []
     for body_name in ("pypi-project-search.md", "npm-package-search.md"):
         body_bytes = (issues_dir / body_name).read_bytes()
@@ -2439,6 +2458,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "case_promotion_evidence_primary_runbook_sha256": _stable_json_sha256(
             plan.case_promotion_evidence_summary["primary_next_task_runbook"]
+        ),
+        "case_promotion_llm_live_preflight_evidence_field_count": len(
+            llm_preflight_fields
+        ),
+        "case_promotion_llm_live_preflight_evidence_fields": llm_preflight_fields,
+        "case_promotion_llm_live_preflight_evidence_fields_sha256": _stable_json_sha256(
+            llm_preflight_fields
         ),
         "case_promotion_command_plan_summary_sha256": _stable_json_sha256(
             command_plan_summary
@@ -3210,6 +3236,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "candidate_count": 2,
         "candidate_cases": ["pypi-project-search", "npm-package-search"],
         "case_promotion_evidence_summary": plan.case_promotion_evidence_summary,
+        "case_promotion_llm_live_preflight_evidence_fields": llm_preflight_fields,
+        "case_promotion_llm_live_preflight_evidence_field_count": len(
+            llm_preflight_fields
+        ),
+        "case_promotion_llm_live_preflight_evidence_fields_sha256": _stable_json_sha256(
+            llm_preflight_fields
+        ),
         "case_promotion_command_plan_summary": plan.case_promotion_command_plan_summary,
         "standard_release_flow": plan.standard_release_flow,
         "standard_release_flow_status": plan.standard_release_flow["status"],
@@ -3806,8 +3839,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"`{artifact_bundle_summary['case_promotion_evidence_summary_keys_sha256']}`"
     ) in readme
     assert "case_promotion_evidence_summary_first_key: `candidate_count`" in readme
-    assert "case_promotion_evidence_summary_last_key: `primary_next_action`" in readme
+    assert (
+        "case_promotion_evidence_summary_last_key: "
+        "`llm_live_preflight_evidence_fields_sha256`"
+    ) in readme
     assert "primary_task_detail" in readme
+    assert "llm_live_preflight_evidence_fields_sha256" in readme
     assert (
         "case_promotion_evidence_summary_key_boundary_sha256: "
         f"`{artifact_bundle_summary['case_promotion_evidence_summary_key_boundary_sha256']}`"
@@ -3873,6 +3910,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "case_promotion_evidence_primary_runbook_sha256: "
         f"`{artifact_bundle_summary['case_promotion_evidence_primary_runbook_sha256']}`"
+    ) in readme
+    assert "case_promotion_llm_live_preflight_evidence_field_count: `9`" in readme
+    assert (
+        "case_promotion_llm_live_preflight_evidence_fields: "
+        "`[\"summary.ready_for_explore\", \"summary.llm_live_preflight\""
+    ) in readme
+    assert (
+        "case_promotion_llm_live_preflight_evidence_fields_sha256: "
+        f"`{artifact_bundle_summary['case_promotion_llm_live_preflight_evidence_fields_sha256']}`"
     ) in readme
     assert (
         "case_promotion_command_plan_summary_sha256: "
