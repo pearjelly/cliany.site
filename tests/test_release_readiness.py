@@ -946,6 +946,8 @@ def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path):
     (repo / "CHANGELOG.md").write_text(
         "# Changelog\n\n"
         "## [Unreleased]\n\n"
+        "### Fixed\n"
+        "- Pending next release guardrail.\n\n"
         "## [0.1.3] - 2026-06-10\n\n"
         "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.1.3...HEAD\n",
         encoding="utf-8",
@@ -965,6 +967,11 @@ def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path):
     }
     _git(repo, "commit", "-m", "prepare release 3", env=env)
     _git(repo, "tag", "v0.1.3")
+    _commit(repo, "notes/next-release.md", "next release prep", "2026-06-10")
+    remote = tmp_path / "remote.git"
+    _git(tmp_path, "init", "--bare", str(remote))
+    _git(repo, "remote", "add", "origin", str(remote))
+    _git(repo, "push", "-u", "origin", "master")
 
     report = _build_report(
         repo,
@@ -986,6 +993,9 @@ def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path):
         "Pause release tagging until the next day; creating `v0.1.4` today would make "
         "release tags `4/3`."
     ) in payload["next_actions"]
+    assert not any(
+        "create a new release tag at HEAD" in action for action in payload["next_actions"]
+    )
     assert not any("git tag v0.1.4" in action for action in payload["next_actions"])
     assert payload["publication_tag_publish_decision"]["target_tag_command_count"] == 0
     assert payload["publication_tag_publish_decision"]["target_tag_primary_command"] is None

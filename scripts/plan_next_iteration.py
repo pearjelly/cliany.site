@@ -844,6 +844,10 @@ def _has_target_daily_release_limit_blocker(blockers: list[str]) -> bool:
     )
 
 
+def _mentions_create_new_release_tag(action: str) -> bool:
+    return "create a new release tag at HEAD" in action
+
+
 def _with_target_tag_guidance(
     decision: dict[str, Any],
     publication: Any,
@@ -1525,15 +1529,24 @@ def _commit_cadence(readiness: Any) -> dict[str, Any]:
 
 def _next_action_lines(readiness: Any, publication: Any) -> list[str]:
     actions: list[str] = []
+    readiness_blockers = list(getattr(readiness, "blockers", []))
+    daily_cap_blocked = _has_target_daily_release_limit_blocker(readiness_blockers)
+    readiness_actions = _readiness_next_actions(readiness)
+    if daily_cap_blocked:
+        actions.extend(
+            action for action in readiness_actions if action.startswith("Pause release tagging")
+        )
     if not publication.ok:
         standard_primary_action = _standard_release_flow_primary_next_action(readiness)
-        if standard_primary_action:
+        if standard_primary_action and not (
+            daily_cap_blocked and _mentions_create_new_release_tag(standard_primary_action)
+        ):
             actions.append(standard_primary_action)
             target_tag_action = _target_tag_next_action(
                 _publication_tag_publish_decision(
                     publication,
                     str(getattr(readiness, "target_version", "") or ""),
-                    readiness_blockers=list(getattr(readiness, "blockers", [])),
+                    readiness_blockers=readiness_blockers,
                 )
             )
             if target_tag_action:
@@ -1541,15 +1554,28 @@ def _next_action_lines(readiness: Any, publication: Any) -> list[str]:
         publication_actions = _publication_plan_next_actions(
             publication,
             str(getattr(readiness, "target_version", "") or ""),
-            readiness_blockers=list(getattr(readiness, "blockers", [])),
+            readiness_blockers=readiness_blockers,
         )
+        if daily_cap_blocked:
+            publication_actions = [
+                action
+                for action in publication_actions
+                if not _mentions_create_new_release_tag(action)
+            ]
         if publication_actions:
             actions.extend(publication_actions)
         elif publication.ahead_count and publication.ahead_count > 0:
             actions.append(f"Push `{publication.branch or 'HEAD'}` after maintainer approval.")
         elif publication.latest_tag and publication.tag_published is False:
             actions.append(f"Publish tag `{publication.latest_tag}` after the branch is visible upstream.")
-    actions.extend(_readiness_next_actions(readiness))
+    if daily_cap_blocked:
+        actions.extend(
+            action
+            for action in readiness_actions
+            if not action.startswith("Pause release tagging")
+        )
+    else:
+        actions.extend(readiness_actions)
     if readiness.blockers:
         actions.append("Clear release readiness blockers before tagging the target version.")
     if readiness.cadence.commit_day_count < readiness.cadence.min_commit_days:

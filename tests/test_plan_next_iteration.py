@@ -594,12 +594,14 @@ def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path):
     )
     data = plan.to_dict()
 
+    assert plan.next_actions[0] == pause_action
     assert pause_action in plan.next_actions
     assert pause_action in data["next_actions"]
     assert cadence_action in plan.next_actions
     assert "Ship verified slices on `1` more unique commit days this week." not in plan.next_actions
     assert plan.publication_tag_publish_decision["target_tag_commands"] == []
     assert plan.publication_tag_publish_decision["target_tag_command_count"] == 0
+    assert not any("create a new release tag at HEAD" in action for action in plan.next_actions)
     assert not any("git tag v0.16.2" in action for action in plan.next_actions)
 
 
