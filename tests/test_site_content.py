@@ -51,6 +51,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "case_promotion_evidence_primary_llm_live_preflight_blocker_comment" in index
     assert "case_promotion_evidence_primary_doctor_preflight_blocker_comment" in index
     assert "doctor_preflight_evidence_fields" in index
+    assert "candidate_promotions[*].issue_template_command" in index
+    assert "issue-metadata.json" in index
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert "1-3 releases/day loop" in index
     assert "Current baseline: v0.16.253" in index
@@ -82,6 +84,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "case_promotion_evidence_primary_llm_live_preflight_blocker_comment" in script
     assert "case_promotion_evidence_primary_doctor_preflight_blocker_comment" in script
     assert "doctor_preflight_evidence_fields" in script
+    assert "candidate_promotions[*].issue_template_command" in script
+    assert "issue-metadata.json" in script
     assert "Current baseline: v0.16.253" in script
     assert "website alias inspect" in script
     assert "pypi_latest_version" in script

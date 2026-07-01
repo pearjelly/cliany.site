@@ -652,6 +652,8 @@ class CandidatePromotion:
     doctor_preflight_blocker_comment: str
     doctor_preflight_evidence_fields: list[str]
     llm_live_preflight_evidence_fields: list[str]
+    issue_template_command: str
+    issue_template_json_command: str
     evidence_bundle_command: str
     evidence_bundle_json_command: str
     issue_body: str
@@ -688,6 +690,8 @@ class CandidatePromotion:
             ),
             "doctor_preflight_evidence_fields": self.doctor_preflight_evidence_fields,
             "llm_live_preflight_evidence_fields": self.llm_live_preflight_evidence_fields,
+            "issue_template_command": self.issue_template_command,
+            "issue_template_json_command": self.issue_template_json_command,
             "evidence_bundle_command": self.evidence_bundle_command,
             "evidence_bundle_json_command": self.evidence_bundle_json_command,
             "issue_body": self.issue_body,
@@ -2514,6 +2518,8 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 llm_live_preflight_evidence_fields=list(
                     LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
                 ),
+                issue_template_command=_candidate_issue_template_command(str(case.id)),
+                issue_template_json_command=_candidate_issue_template_json_command(str(case.id)),
                 evidence_bundle_command=_candidate_evidence_bundle_command(str(case.id)),
                 evidence_bundle_json_command=_candidate_evidence_bundle_json_command(str(case.id)),
                 issue_body=_candidate_issue_body(
@@ -2568,6 +2574,14 @@ def _candidate_evidence_bundle_command(case_id: str) -> str:
 
 def _candidate_evidence_bundle_json_command(case_id: str) -> str:
     return f"{_candidate_evidence_bundle_command(case_id)} --json"
+
+
+def _candidate_issue_template_command(case_id: str) -> str:
+    return f"cliany-site cases --case-id {case_id} --issue-template"
+
+
+def _candidate_issue_template_json_command(case_id: str) -> str:
+    return f"{_candidate_issue_template_command(case_id)} --json"
 
 
 def _candidate_issue_title(case_id: str) -> str:
@@ -4159,6 +4173,8 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "doctor_preflight_evidence_fields": list(
                     promotion.doctor_preflight_evidence_fields
                 ),
+                "issue_template_command": promotion.issue_template_command,
+                "issue_template_json_command": promotion.issue_template_json_command,
                 "evidence_bundle_command": promotion.evidence_bundle_command,
                 "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
                 "issue_body_name": body_path.name,
@@ -5201,6 +5217,8 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
             "doctor_preflight_evidence_fields": item[
                 "doctor_preflight_evidence_fields"
             ],
+            "issue_template_command": item["issue_template_command"],
+            "issue_template_json_command": item["issue_template_json_command"],
             "evidence_bundle_command": item["evidence_bundle_command"],
             "evidence_bundle_json_command": item["evidence_bundle_json_command"],
             "issue_body_name": item["issue_body_name"],
@@ -5256,6 +5274,8 @@ def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[di
             "doctor_preflight_evidence_fields": list(
                 promotion.doctor_preflight_evidence_fields
             ),
+            "issue_template_command": promotion.issue_template_command,
+            "issue_template_json_command": promotion.issue_template_json_command,
             "evidence_bundle_command": promotion.evidence_bundle_command,
             "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
             "issue_body_name": f"{promotion.case_id}.md",
@@ -7328,9 +7348,10 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
             "Primary Acceptance Criteria | Evidence Bundle Primary Next Task | "
             "Evidence Bundle Primary Runbook | LLM Preflight Evidence Fields | "
             "Doctor Preflight Evidence Fields | "
-            "Candidate Package Validation | Evidence Bundle | Evidence Bundle JSON |"
+            "Candidate Package Validation | Issue Template | Issue Template JSON | "
+            "Evidence Bundle | Evidence Bundle JSON |"
         ),
-        "|------|------------|------------|--------------------|-----------------------------|---------------|-----------------|-----------------------|-------------------------|-----------------------------|-----------------------------------|---------------------------------|-------------------------------|----------------------------------|------------------------------|-----------------|----------------------|",
+        "|------|------------|------------|--------------------|-----------------------------|---------------|-----------------|-----------------------|-------------------------|-----------------------------|-----------------------------------|---------------------------------|-------------------------------|----------------------------------|------------------------------|----------------|---------------------|-----------------|----------------------|",
     ]
     for promotion in promotions:
         primary_task = promotion.promotion_evidence_primary_task.get("task") or "Not declared."
@@ -7359,6 +7380,8 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
             f"{evidence_fields or 'Not declared.'} | "
             f"{doctor_evidence_fields or 'Not declared.'} | "
             f"`{promotion.candidate_package_validation_command}` | "
+            f"`{promotion.issue_template_command}` | "
+            f"`{promotion.issue_template_json_command}` | "
             f"`{promotion.evidence_bundle_command}` | `{promotion.evidence_bundle_json_command}` |"
         )
     return "\n".join(lines)

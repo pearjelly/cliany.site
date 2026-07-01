@@ -11142,3 +11142,20 @@ def test_v016227_release_draft_tracks_local_release_publication_handoff():
     ]
     for snippet in required:
         assert snippet in text
+
+
+def test_v016254_release_draft_tracks_planner_issue_template_handoff():
+    text = (ROOT / "docs" / "releases" / "v0.16.254-draft.md").read_text(
+        encoding="utf-8"
+    )
+
+    required = [
+        "candidate_promotions[].issue_template_command",
+        "candidate_promotions[].issue_template_json_command",
+        "issue-metadata.json",
+        "Issue Template",
+        "Issue Template JSON",
+        "cliany-site cases --case-id <id> --issue-template",
+    ]
+    for snippet in required:
+        assert snippet in text

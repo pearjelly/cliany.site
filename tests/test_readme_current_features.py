@@ -25,6 +25,8 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "promotion_evidence_summary.primary_next_task" in text
         assert "promotion_evidence_summary.primary_next_task_acceptance_criteria" in text
         assert "python scripts/plan_next_iteration.py --issues-dir" in text
+        assert "candidate_promotions[*].issue_template_command" in text
+        assert "issue-metadata.json" in text
         assert "Primary Evidence Status" in text
         assert "Primary Acceptance Criteria" in text
         assert "promotion_evidence_summary.primary_task_detail" not in text

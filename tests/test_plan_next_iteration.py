@@ -627,6 +627,12 @@ def test_plan_defaults_to_next_patch_version(tmp_path):
         == "pypi.org-<version>.cliany-adapter.tar.gz"
     )
     assert plan.candidate_promotions[0].case_id == "pypi-project-search"
+    assert plan.candidate_promotions[0].issue_template_command == (
+        "cliany-site cases --case-id pypi-project-search --issue-template"
+    )
+    assert plan.candidate_promotions[0].issue_template_json_command == (
+        "cliany-site cases --case-id pypi-project-search --issue-template --json"
+    )
     assert (
         plan.candidate_promotions[0].expected_adapter_package
         == "pypi.org-<version>.cliany-adapter.tar.gz"
@@ -1359,6 +1365,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         ),
         "evidence_bundle_json_command": (
             "cliany-site cases --case-id pypi-project-search --evidence-bundle --json"
+        ),
+        "issue_template_command": (
+            "cliany-site cases --case-id pypi-project-search --issue-template"
+        ),
+        "issue_template_json_command": (
+            "cliany-site cases --case-id pypi-project-search --issue-template --json"
         ),
         "issue_body": (
             "## Scope: promote candidate case `pypi-project-search`\n\n"
@@ -2142,6 +2154,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "doctor_preflight_evidence_fields": item[
                 "doctor_preflight_evidence_fields"
             ],
+            "issue_template_command": item["issue_template_command"],
+            "issue_template_json_command": item["issue_template_json_command"],
             "evidence_bundle_command": item["evidence_bundle_command"],
             "evidence_bundle_json_command": item["evidence_bundle_json_command"],
             "issue_body_name": item["issue_body_name"],
@@ -3552,6 +3566,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     ]
     assert metadata[0]["doctor_preflight_evidence_fields"] == DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
     assert (
+        metadata[0]["issue_template_command"]
+        == "cliany-site cases --case-id pypi-project-search --issue-template"
+    )
+    assert (
+        metadata[0]["issue_template_json_command"]
+        == "cliany-site cases --case-id pypi-project-search --issue-template --json"
+    )
+    assert (
         metadata[0]["evidence_bundle_command"]
         == "cliany-site cases --case-id pypi-project-search --evidence-bundle"
     )
@@ -4032,7 +4054,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "Primary Acceptance Criteria | Evidence Bundle Primary Next Task | "
         "Evidence Bundle Primary Runbook | LLM Preflight Evidence Fields | "
         "Doctor Preflight Evidence Fields | "
-        "Candidate Package Validation | Evidence Bundle | Evidence Bundle JSON |"
+        "Candidate Package Validation | Issue Template | Issue Template JSON | "
+        "Evidence Bundle | Evidence Bundle JSON |"
     ) in readme
     assert (
         "| `pypi-project-search` | `pypi-project-search.md` | "
@@ -4054,6 +4077,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "`checks[llm_live].details.phase`, `checks[llm_live].details.message` | "
         "`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict` | "
+        "`cliany-site cases --case-id pypi-project-search --issue-template` | "
+        "`cliany-site cases --case-id pypi-project-search --issue-template --json` | "
         "`cliany-site cases --case-id pypi-project-search --evidence-bundle` | "
         "`cliany-site cases --case-id pypi-project-search --evidence-bundle --json` |"
     ) in readme
