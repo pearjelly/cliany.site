@@ -1880,6 +1880,10 @@ def _stable_json_sha256(value: object) -> str:
     return hashlib.sha256(digest_source).hexdigest()
 
 
+def _sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
 def _candidate_issue_gate_reason_codes(release_draft_issues: list[str], publication: Any) -> list[str]:
     codes: list[str] = []
     if not _latest_release_visible(publication):
@@ -2982,6 +2986,7 @@ def _candidate_issue_body(
             "",
             "## LLM Preflight Gate",
             f"- Command: `{LLM_LIVE_PREFLIGHT_COMMAND}`",
+            f"- Command SHA-256: `{_sha256_text(LLM_LIVE_PREFLIGHT_COMMAND)}`",
             f"- Blocker handling: {LLM_LIVE_PREFLIGHT_BLOCKER_NOTE}",
             "",
             "## LLM Preflight Blocker Comment",

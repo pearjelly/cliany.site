@@ -295,6 +295,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "Candidate Issue Metadata",
         "Candidate Issue Body Templates",
         "Reproduction Context",
+        "Command SHA-256",
         "promotion_evidence",
         "当前 evidence 状态",
         "下一步动作",

@@ -371,6 +371,7 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "## Promotion Command Plan" in template
     assert "## LLM Preflight Gate" in template
     assert "- Command: `cliany-site doctor --llm-live --json`" in template
+    assert f"- Command SHA-256: `{LLM_LIVE_PREFLIGHT_COMMAND_SHA256}`" in template
     assert "generate_adapters.ready=false" in template
     assert "llm_live reports warning/error" in template
     assert "E_LLM_UNAVAILABLE" in template
@@ -448,6 +449,7 @@ def test_cases_command_issue_template_human_outputs_markdown(tmp_home):
     assert "## Evidence Bundle" in result.output
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in result.output
     assert "## LLM Preflight Gate" in result.output
+    assert f"- Command SHA-256: `{LLM_LIVE_PREFLIGHT_COMMAND_SHA256}`" in result.output
     assert "## Primary Runbook" in result.output
     assert "## Doctor Preflight Blocker Comment" in result.output
     assert "## Doctor Preflight Evidence Fields" in result.output

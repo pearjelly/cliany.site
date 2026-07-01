@@ -49,6 +49,7 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "cliany-site cases --case-id pypi-project-search --issue-template" in text
         assert "issue_template_primary_task" in text
         assert "Primary Runbook" in text
+        assert "Command SHA-256" in text
         assert "Doctor Preflight Evidence Fields" in text
         assert "Doctor Preflight Evidence Template" in text
         assert "doctor_preflight_evidence_template" in text

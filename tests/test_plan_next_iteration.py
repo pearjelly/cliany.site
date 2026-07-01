@@ -345,6 +345,11 @@ def test_candidate_issue_body_checks_complete_tasks():
     assert "- `online_smoke`: `cliany-site example.test search --json`" in issue_body
     assert "## LLM Preflight Gate" in issue_body
     assert "- Command: `cliany-site doctor --llm-live --json`" in issue_body
+    assert (
+        "- Command SHA-256: `"
+        f"{hashlib.sha256(b'cliany-site doctor --llm-live --json').hexdigest()}`"
+        in issue_body
+    )
     assert "generate_adapters.ready=false" in issue_body
     assert "E_LLM_UNAVAILABLE" in issue_body
     assert "## LLM Preflight Blocker Comment" in issue_body
@@ -1518,6 +1523,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "--limit 5 --json`\n\n"
             "## LLM Preflight Gate\n"
             "- Command: `cliany-site doctor --llm-live --json`\n"
+            "- Command SHA-256: `0ca644df288169289dd4dbc17aeacdc58b9898f05c0d4c5d304c17e33bdbcb96`\n"
             "- Blocker handling: Run the live LLM preflight before explore. "
             "If generate_adapters.ready=false or llm_live reports warning/error such as "
             "E_LLM_UNAVAILABLE (including provider connection failure), stop candidate "

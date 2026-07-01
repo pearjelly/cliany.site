@@ -396,6 +396,7 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
             "",
             "## LLM Preflight Gate",
             f"- Command: `{LLM_LIVE_PREFLIGHT_COMMAND}`",
+            f"- Command SHA-256: `{_llm_live_preflight_command_sha256(LLM_LIVE_PREFLIGHT_COMMAND)}`",
             f"- Blocker handling: {LLM_LIVE_PREFLIGHT_BLOCKER_NOTE}",
             "",
             "## LLM Preflight Blocker Comment",
