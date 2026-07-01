@@ -731,6 +731,56 @@ def test_candidate_issue_gate_surfaces_release_readiness_blocker_after_publicati
     assert plan.candidate_issue_gate["evidence"]["release_readiness_blocker_count"] == 1
 
 
+def test_issue_artifacts_surface_release_readiness_blocker_aliases(tmp_path):
+    _write_pyproject(tmp_path, version="0.16.1")
+    readiness = _readiness_report()
+    readiness_blocker = (
+        "creating target tag v0.16.2 today would exceed the daily release cap 4/3"
+    )
+    pause_action = (
+        "Pause release tagging until the next day; creating `v0.16.2` today would make "
+        "release tags `4/3`."
+    )
+    readiness.blockers = [readiness_blocker]
+    readiness.next_actions = [pause_action]
+    readiness.draft = SimpleNamespace(
+        ok=True,
+        path="/tmp/project/docs/releases/v0.16.2-draft.md",
+        target_version="0.16.2",
+        issues=[],
+    )
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=readiness,
+        publication_report=_published_release_with_unreleased_head_report(),
+    )
+    issues_dir = tmp_path / "issue-artifacts"
+
+    plan_next_iteration._write_candidate_issue_files(plan, issues_dir)
+
+    publication_handoff = json.loads(
+        (issues_dir / "publication-handoff.json").read_text(encoding="utf-8")
+    )
+    readme = (issues_dir / "README.md").read_text(encoding="utf-8")
+    quick_summary = readme[
+        readme.index("## Candidate Issue Gate Quick Summary") : readme.index(
+            "## Commit Cadence"
+        )
+    ]
+
+    assert publication_handoff["release_readiness_blocker_count"] == 1
+    assert publication_handoff["release_readiness_primary_blocker"] == readiness_blocker
+    assert publication_handoff["release_readiness_blockers_sha256"] == _stable_json_sha256(
+        [readiness_blocker]
+    )
+    assert "- release_readiness_blocker_count: `1`" in quick_summary
+    assert f"- release_readiness_primary_blocker: `{readiness_blocker}`" in quick_summary
+    assert (
+        f"- release_readiness_blockers_sha256: "
+        f"`{_stable_json_sha256([readiness_blocker])}`"
+    ) in quick_summary
+
+
 def test_summary_inline_code_uses_wider_fence_for_backticks():
     assert plan_next_iteration._summary_inline_code("Push `master` to `origin`") == (
         "`` Push `master` to `origin` ``"

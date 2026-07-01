@@ -3331,18 +3331,32 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
     primary_reason_code = plan.candidate_issue_gate.get("primary_reason_code")
     primary_reason_description = plan.candidate_issue_gate.get("primary_reason_description")
     primary_required_action = plan.candidate_issue_gate.get("primary_required_action")
-    return "\n".join(
+    lines = [
+        "## Candidate Issue Gate Quick Summary",
+        "",
+        f"- status: `{_format_context_value(plan.candidate_issue_gate.get('status'))}`",
+        "- can_create_issues: "
+        f"`{str(bool(plan.candidate_issue_gate.get('can_create_issues', False))).lower()}`",
+        "- requires_maintainer_review: "
+        f"`{str(bool(plan.candidate_issue_gate.get('requires_maintainer_review', False))).lower()}`",
+        f"- publication_ok: `{str(plan.publication_ok).lower()}`",
+        f"- release_draft_ok: `{str(not plan.release_draft_issues).lower()}`",
+        f"- blocker_count: `{len(plan.blockers)}`",
+    ]
+    release_readiness_aliases = _release_readiness_handoff_aliases(plan)
+    if release_readiness_aliases:
+        lines.extend(
+            [
+                "- release_readiness_blocker_count: "
+                f"`{_format_context_value(release_readiness_aliases.get('release_readiness_blocker_count'))}`",
+                "- release_readiness_primary_blocker: "
+                f"{_summary_inline_code(release_readiness_aliases.get('release_readiness_primary_blocker'))}",
+                "- release_readiness_blockers_sha256: "
+                f"`{_format_context_value(release_readiness_aliases.get('release_readiness_blockers_sha256'))}`",
+            ]
+        )
+    lines.extend(
         [
-            "## Candidate Issue Gate Quick Summary",
-            "",
-            f"- status: `{_format_context_value(plan.candidate_issue_gate.get('status'))}`",
-            "- can_create_issues: "
-            f"`{str(bool(plan.candidate_issue_gate.get('can_create_issues', False))).lower()}`",
-            "- requires_maintainer_review: "
-            f"`{str(bool(plan.candidate_issue_gate.get('requires_maintainer_review', False))).lower()}`",
-            f"- publication_ok: `{str(plan.publication_ok).lower()}`",
-            f"- release_draft_ok: `{str(not plan.release_draft_issues).lower()}`",
-            f"- blocker_count: `{len(plan.blockers)}`",
             f"- next_action_count: `{len(plan.next_actions)}`",
             f"- publication_next_action_count: `{plan.publication_next_action_count}`",
             f"- publication_blocker_count: `{len(plan.publication_blockers)}`",
@@ -3408,6 +3422,7 @@ def _issue_artifact_gate_quick_summary(plan: IterationPlan) -> str:
             f"- visibility_summary: {_summary_inline_code(plan.publication_visibility.get('summary'))}",
         ]
     )
+    return "\n".join(lines)
 
 
 def _issue_artifact_commit_cadence_markdown(plan: IterationPlan) -> str:
@@ -3455,6 +3470,18 @@ def _candidate_issue_gate_evidence_value(plan: IterationPlan, key: str) -> objec
     if not isinstance(evidence, dict):
         return None
     return evidence.get(key)
+
+
+def _release_readiness_handoff_aliases(plan: IterationPlan) -> dict[str, object]:
+    aliases = {
+        key: _candidate_issue_gate_evidence_value(plan, key)
+        for key in (
+            "release_readiness_blocker_count",
+            "release_readiness_primary_blocker",
+            "release_readiness_blockers_sha256",
+        )
+    }
+    return {key: value for key, value in aliases.items() if value is not None}
 
 
 def _issue_artifact_gate_reason_codes(plan: IterationPlan) -> str:
@@ -3577,7 +3604,7 @@ def _issue_artifact_files(issue_body_names: list[str]) -> dict[str, Any]:
 
 
 def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
-    return {
+    handoff = {
         "schema_version": 1,
         "publication_ok": plan.publication_ok,
         "candidate_issue_gate": plan.candidate_issue_gate,
@@ -3630,6 +3657,8 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "publish_script_command": plan.publication_publish_script_command,
         "publish_script_command_sha256": plan.publication_publish_script_command_sha256,
     }
+    handoff.update(_release_readiness_handoff_aliases(plan))
+    return handoff
 
 
 def _commit_cadence_primary_next_action(plan: IterationPlan) -> str | None:
