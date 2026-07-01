@@ -119,6 +119,32 @@ def _pypi_promotion_command_plan(*, explore_query: str = "search Python packages
     ]
 
 
+def _pypi_primary_runbook(*, explore_query: str = "search Python packages") -> list[dict[str, object]]:
+    return [
+        {
+            "step": "llm_live_preflight",
+            "command": "cliany-site doctor --llm-live --json",
+            "required": True,
+            "handoff": plan_next_iteration.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
+        },
+        {
+            "step": "adapter_package",
+            "command": f'cliany-site explore "https://pypi.org" "{explore_query}" --json',
+            "required": True,
+            "handoff": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
+        },
+        {
+            "step": "acceptance",
+            "command": "",
+            "required": True,
+            "handoff": (
+                "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
+                "package path or GitHub Release asset name."
+            ),
+        },
+    ]
+
+
 def test_candidate_issue_body_checks_complete_tasks():
     issue_body = plan_next_iteration._candidate_issue_body(
         case_id="mixed-candidate",
@@ -993,6 +1019,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "priority_rank": 1,
             "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
         },
+        "evidence_bundle_primary_next_task_runbook": _pypi_primary_runbook(),
         "candidate_package_validation_command": (
             "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
             "--include-candidate-packages --strict"
@@ -1022,6 +1049,20 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- Current evidence: Not attached yet.\n"
             "- Next action: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n"
             "- Acceptance criteria: Attach the generated "
+            "<domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name.\n\n"
+            "## Primary Runbook\n"
+            "- `llm_live_preflight`: `cliany-site doctor --llm-live --json`\n"
+            "  - required: `true`\n"
+            "  - handoff: Run the live LLM preflight before explore. "
+            "If generate_adapters.ready=false or llm_live reports warning/error such as "
+            "E_LLM_UNAVAILABLE or E_UNKNOWN connection error, stop candidate promotion, "
+            "attach the doctor JSON/error summary, and leave adapter_package pending or blocked.\n"
+            '- `adapter_package`: `cliany-site explore "https://pypi.org" "search Python packages" --json`\n'
+            "  - required: `true`\n"
+            "  - handoff: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n"
+            "- `acceptance`: `No command.`\n"
+            "  - required: `true`\n"
+            "  - handoff: Attach the generated "
             "<domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name.\n\n"
             "## Reproduction Context\n"
             "- Target URL: https://pypi.org/search/?q=cliany-site\n"
@@ -1558,6 +1599,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "promotion_evidence": item["promotion_evidence"],
             "promotion_evidence_primary_task": item["promotion_evidence_primary_task"],
             "evidence_bundle_primary_next_task": item["evidence_bundle_primary_next_task"],
+            "evidence_bundle_primary_next_task_runbook": item[
+                "evidence_bundle_primary_next_task_runbook"
+            ],
             "candidate_package_validation_command": item["candidate_package_validation_command"],
             "promotion_command_plan": item["promotion_command_plan"],
             "llm_live_preflight_command": item["llm_live_preflight_command"],
@@ -2772,6 +2816,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "priority_rank": 1,
         "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
     }
+    assert metadata[0]["evidence_bundle_primary_next_task_runbook"] == _pypi_primary_runbook()
     assert metadata[0]["candidate_package_validation_command"] == (
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict"
@@ -3175,7 +3220,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands | "
         "Priority Rank | Priority Reason | Primary Evidence Task | Primary Evidence Status | "
         "Primary Acceptance Criteria | Evidence Bundle Primary Next Task | "
-        "Candidate Package Validation | Evidence Bundle | Evidence Bundle JSON |"
+        "Evidence Bundle Primary Runbook | Candidate Package Validation | Evidence Bundle | "
+        "Evidence Bundle JSON |"
     ) in readme
     assert (
         "| `pypi-project-search` | `pypi-project-search.md` | "
@@ -3184,6 +3230,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "`adapter_package` | `pending` | "
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
         "package path or GitHub Release asset name. | `adapter_package` | "
+        "`llm_live_preflight -> adapter_package -> acceptance` | "
         "`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict` | "
         "`cliany-site cases --case-id pypi-project-search --evidence-bundle` | "

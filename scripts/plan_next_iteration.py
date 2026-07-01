@@ -531,6 +531,7 @@ class CandidatePromotion:
     promotion_evidence: dict[str, Any]
     promotion_evidence_primary_task: dict[str, Any]
     evidence_bundle_primary_next_task: dict[str, Any]
+    evidence_bundle_primary_next_task_runbook: list[dict[str, Any]]
     candidate_package_validation_command: str
     promotion_command_plan: list[dict[str, Any]]
     llm_live_preflight_command: str
@@ -555,6 +556,9 @@ class CandidatePromotion:
             "promotion_evidence": self.promotion_evidence,
             "promotion_evidence_primary_task": self.promotion_evidence_primary_task,
             "evidence_bundle_primary_next_task": self.evidence_bundle_primary_next_task,
+            "evidence_bundle_primary_next_task_runbook": (
+                self.evidence_bundle_primary_next_task_runbook
+            ),
             "candidate_package_validation_command": self.candidate_package_validation_command,
             "promotion_command_plan": self.promotion_command_plan,
             "llm_live_preflight_command": self.llm_live_preflight_command,
@@ -1944,6 +1948,13 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
         promotion = getattr(case, "promotion", None)
         if promotion is None:
             continue
+        commands = _case_string_list(case, "commands")
+        offline_commands = _case_string_list(case, "offline_commands")
+        candidate_package_validation_command = _default_candidate_package_validation_command()
+        promotion_command_plan = _candidate_promotion_command_plan(
+            commands=commands,
+            candidate_package_validation_command=candidate_package_validation_command,
+        )
         promotion_evidence = _case_dict_value(case, "promotion_evidence")
         evidence_bundle_primary_next_task = _candidate_promotion_primary_task(promotion_evidence)
         priority_reason = _case_promotion_priority_reason(case, priority_rank)
@@ -1953,12 +1964,9 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 "priority_rank": priority_rank,
                 "priority_reason": priority_reason,
             }
-        commands = _case_string_list(case, "commands")
-        offline_commands = _case_string_list(case, "offline_commands")
-        candidate_package_validation_command = _default_candidate_package_validation_command()
-        promotion_command_plan = _candidate_promotion_command_plan(
-            commands=commands,
-            candidate_package_validation_command=candidate_package_validation_command,
+        evidence_bundle_primary_next_task_runbook = _candidate_primary_task_runbook(
+            evidence_bundle_primary_next_task,
+            promotion_command_plan,
         )
         promotions.append(
             CandidatePromotion(
@@ -1976,6 +1984,9 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 promotion_evidence=promotion_evidence,
                 promotion_evidence_primary_task=evidence_bundle_primary_next_task,
                 evidence_bundle_primary_next_task=evidence_bundle_primary_next_task,
+                evidence_bundle_primary_next_task_runbook=(
+                    evidence_bundle_primary_next_task_runbook
+                ),
                 candidate_package_validation_command=candidate_package_validation_command,
                 promotion_command_plan=promotion_command_plan,
                 llm_live_preflight_command=LLM_LIVE_PREFLIGHT_COMMAND,
@@ -1993,6 +2004,7 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                     online_smoke=_promotion_value(promotion, "online_smoke"),
                     promotion_evidence=promotion_evidence,
                     primary_task=evidence_bundle_primary_next_task,
+                    primary_runbook=evidence_bundle_primary_next_task_runbook,
                 ),
             )
         )
@@ -2075,6 +2087,83 @@ def _candidate_promotion_command_plan(
     return plan
 
 
+def _candidate_primary_task_runbook(
+    primary_task: dict[str, Any] | None,
+    promotion_command_plan: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    primary_task = primary_task if isinstance(primary_task, dict) else {}
+    task_name = str(primary_task.get("task") or "")
+    if not task_name:
+        return []
+    command_plan_item = next(
+        (
+            item
+            for item in promotion_command_plan
+            if isinstance(item, dict) and item.get("task") == task_name
+        ),
+        {},
+    )
+    command = str(command_plan_item.get("command") or "")
+    command_missing = bool(command_plan_item.get("missing", not command))
+    handoff = str(primary_task.get("next_action") or "")
+    acceptance = CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA.get(task_name, "")
+    runbook: list[dict[str, Any]] = []
+    if task_name == "adapter_package":
+        runbook.append(
+            {
+                "step": "llm_live_preflight",
+                "command": LLM_LIVE_PREFLIGHT_COMMAND,
+                "required": True,
+                "handoff": LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
+            }
+        )
+    runbook.append(
+        {
+            "step": task_name,
+            "command": command,
+            "required": not command_missing,
+            "handoff": handoff,
+        }
+    )
+    runbook.append(
+        {
+            "step": "acceptance",
+            "command": "",
+            "required": True,
+            "handoff": acceptance,
+        }
+    )
+    return runbook
+
+
+def _candidate_primary_runbook_markdown(runbook: list[dict[str, Any]]) -> list[str]:
+    if not runbook:
+        return []
+    lines = ["## Primary Runbook"]
+    for step in runbook:
+        if not isinstance(step, dict):
+            continue
+        command = step.get("command") or "No command."
+        lines.extend(
+            [
+                f"- `{step.get('step')}`: `{command}`",
+                f"  - required: `{str(bool(step.get('required'))).lower()}`",
+            ]
+        )
+        if step.get("handoff"):
+            lines.append(f"  - handoff: {step['handoff']}")
+    return lines
+
+
+def _candidate_primary_runbook_summary(runbook: list[dict[str, Any]]) -> str:
+    steps = [
+        str(step.get("step") or "")
+        for step in runbook
+        if isinstance(step, dict) and step.get("step")
+    ]
+    return " -> ".join(steps) if steps else "Not declared."
+
+
 def _candidate_issue_body(
     *,
     case_id: str,
@@ -2087,6 +2176,7 @@ def _candidate_issue_body(
     online_smoke: str,
     promotion_evidence: dict[str, Any],
     primary_task: dict[str, Any] | None = None,
+    primary_runbook: list[dict[str, Any]] | None = None,
 ) -> str:
     command_lines = [f"  - `{command}`" for command in commands] or ["  - Not declared."]
     offline_command_lines = [f"  - `{command}`" for command in offline_commands] or ["  - Not declared."]
@@ -2123,6 +2213,10 @@ def _candidate_issue_body(
         ]
     else:
         primary_task_lines = ["- All promotion tasks already have complete evidence."]
+    primary_runbook_lines = _candidate_primary_runbook_markdown(
+        list(primary_runbook or _candidate_primary_task_runbook(primary_task, promotion_command_plan))
+    )
+    primary_runbook_section = [*primary_runbook_lines, ""] if primary_runbook_lines else []
 
     task_lines: list[str] = []
     for task_name in CANDIDATE_PROMOTION_FIELDS:
@@ -2155,6 +2249,7 @@ def _candidate_issue_body(
             "## Primary Evidence Task",
             *primary_task_lines,
             "",
+            *primary_runbook_section,
             "## Reproduction Context",
             f"- Target URL: {target_url or 'Not declared.'}",
             "- Candidate commands:",
@@ -3098,6 +3193,9 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "promotion_evidence": promotion.promotion_evidence,
                 "promotion_evidence_primary_task": promotion.promotion_evidence_primary_task,
                 "evidence_bundle_primary_next_task": promotion.evidence_bundle_primary_next_task,
+                "evidence_bundle_primary_next_task_runbook": (
+                    promotion.evidence_bundle_primary_next_task_runbook
+                ),
                 "candidate_package_validation_command": promotion.candidate_package_validation_command,
                 "promotion_command_plan": promotion.promotion_command_plan,
                 "llm_live_preflight_command": promotion.llm_live_preflight_command,
@@ -3939,6 +4037,9 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
             "promotion_evidence": item["promotion_evidence"],
             "promotion_evidence_primary_task": item["promotion_evidence_primary_task"],
             "evidence_bundle_primary_next_task": item["evidence_bundle_primary_next_task"],
+            "evidence_bundle_primary_next_task_runbook": item[
+                "evidence_bundle_primary_next_task_runbook"
+            ],
             "candidate_package_validation_command": item["candidate_package_validation_command"],
             "promotion_command_plan": item["promotion_command_plan"],
             "llm_live_preflight_command": item["llm_live_preflight_command"],
@@ -3985,6 +4086,9 @@ def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[di
             "promotion_evidence": promotion.promotion_evidence,
             "promotion_evidence_primary_task": promotion.promotion_evidence_primary_task,
             "evidence_bundle_primary_next_task": promotion.evidence_bundle_primary_next_task,
+            "evidence_bundle_primary_next_task_runbook": (
+                promotion.evidence_bundle_primary_next_task_runbook
+            ),
             "candidate_package_validation_command": promotion.candidate_package_validation_command,
             "promotion_command_plan": promotion.promotion_command_plan,
             "llm_live_preflight_command": promotion.llm_live_preflight_command,
@@ -5782,9 +5886,10 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
             "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands | "
             "Priority Rank | Priority Reason | Primary Evidence Task | Primary Evidence Status | "
             "Primary Acceptance Criteria | Evidence Bundle Primary Next Task | "
-            "Candidate Package Validation | Evidence Bundle | Evidence Bundle JSON |"
+            "Evidence Bundle Primary Runbook | Candidate Package Validation | Evidence Bundle | "
+            "Evidence Bundle JSON |"
         ),
-        "|------|------------|------------|--------------------|-----------------------------|---------------|-----------------|-----------------------|-------------------------|-----------------------------|-----------------------------------|------------------------------|-----------------|----------------------|",
+        "|------|------------|------------|--------------------|-----------------------------|---------------|-----------------|-----------------------|-------------------------|-----------------------------|-----------------------------------|---------------------------------|------------------------------|-----------------|----------------------|",
     ]
     for promotion in promotions:
         primary_task = promotion.promotion_evidence_primary_task.get("task") or "Not declared."
@@ -5794,12 +5899,16 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
             or "Not declared."
         )
         evidence_bundle_primary_task = promotion.evidence_bundle_primary_next_task.get("task") or "Not declared."
+        primary_runbook = _candidate_primary_runbook_summary(
+            promotion.evidence_bundle_primary_next_task_runbook
+        )
         lines.append(
             f"| `{promotion.case_id}` | `{promotion.case_id}.md` | {promotion.target_url or 'Not declared.'} | "
             f"{len(promotion.commands)} | {len(promotion.offline_commands)} | "
             f"`{promotion.priority_rank}` | {promotion.priority_reason or 'Not declared.'} | "
             f"`{primary_task}` | `{primary_status}` | {primary_acceptance} | "
             f"`{evidence_bundle_primary_task}` | "
+            f"`{primary_runbook}` | "
             f"`{promotion.candidate_package_validation_command}` | "
             f"`{promotion.evidence_bundle_command}` | `{promotion.evidence_bundle_json_command}` |"
         )
