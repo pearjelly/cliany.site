@@ -306,6 +306,43 @@ def _candidate_task_handoff(
     return f"Run `{command}` and attach the evidence before promotion."
 
 
+def _candidate_task_runbook(
+    *,
+    task: str,
+    command: str,
+    command_missing: bool,
+    handoff: str,
+    acceptance_criteria: str,
+) -> list[dict[str, Any]]:
+    steps: list[dict[str, Any]] = []
+    if task == "adapter_package":
+        steps.append(
+            {
+                "step": "llm_live_preflight",
+                "command": LLM_LIVE_PREFLIGHT_COMMAND,
+                "required": True,
+                "handoff": LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
+            }
+        )
+    steps.append(
+        {
+            "step": task,
+            "command": command,
+            "required": not command_missing,
+            "handoff": handoff,
+        }
+    )
+    steps.append(
+        {
+            "step": "acceptance",
+            "command": "",
+            "required": True,
+            "handoff": acceptance_criteria,
+        }
+    )
+    return steps
+
+
 def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
     case_id = str(case.get("id") or "")
     adapter_domain = case.get("adapter_domain")
@@ -336,6 +373,13 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
             command_missing=command_missing,
             next_action=next_action,
         )
+        runbook = _candidate_task_runbook(
+            task=task,
+            command=command,
+            command_missing=command_missing,
+            handoff=handoff,
+            acceptance_criteria=acceptance_criteria,
+        )
         tasks.append(
             {
                 "task": task,
@@ -348,6 +392,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                 "command_source": command_source,
                 "command_missing": command_missing,
                 "handoff": handoff,
+                "runbook": runbook,
                 "complete": status == "complete" and bool(evidence_value),
             }
         )
@@ -403,6 +448,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "primary_next_task_command_source": primary_next_action_task.get("command_source", ""),
         "primary_next_task_command_missing": bool(primary_next_action_task.get("command_missing", False)),
         "primary_next_task_handoff": primary_next_action_task.get("handoff", ""),
+        "primary_next_task_runbook": primary_next_action_task.get("runbook", []),
         "primary_next_task_acceptance_criteria": primary_next_action_task.get(
             "acceptance_criteria", ""
         ),
@@ -454,6 +500,16 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
             lines.append(
                 f"- Primary next acceptance: {primary_next_task['acceptance_criteria']}"
             )
+    primary_runbook = bundle.get("primary_next_task_runbook")
+    if isinstance(primary_runbook, list) and primary_runbook:
+        lines.extend(["", "## Primary next runbook"])
+        for step in primary_runbook:
+            if not isinstance(step, dict):
+                continue
+            command = step.get("command") or "No command."
+            lines.append(f"- `{step.get('step')}`: `{command}`")
+            if step.get("handoff"):
+                lines.append(f"  - handoff: {step['handoff']}")
     primary_incomplete_task = bundle.get("primary_incomplete_task")
     if isinstance(primary_incomplete_task, dict) and primary_incomplete_task.get("task"):
         lines.append(f"- Primary incomplete task: `{primary_incomplete_task['task']}`")
@@ -558,6 +614,7 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
             "primary_command": bundle.get("primary_next_task_command", ""),
             "primary_command_missing": bundle.get("primary_next_task_command_missing", False),
             "primary_handoff": bundle.get("primary_next_task_handoff", ""),
+            "primary_runbook": bundle.get("primary_next_task_runbook", []),
             "primary_acceptance_criteria": bundle.get(
                 "primary_next_task_acceptance_criteria", ""
             ),
@@ -586,6 +643,7 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
                     "command_missing": task.get("command_missing", False),
                     "handoff": task.get("handoff", ""),
                     "acceptance_criteria": task.get("acceptance_criteria", ""),
+                    "runbook": task.get("runbook", []),
                     "evidence_bundle_command": evidence_bundle_command,
                     "evidence_bundle_json_command": evidence_bundle_json_command,
                     "llm_live_preflight_command": llm_live_preflight_command,
@@ -609,6 +667,7 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         "primary_command": primary_next_item.get("command", ""),
         "primary_handoff": primary_next_item.get("handoff", ""),
         "primary_acceptance_criteria": primary_next_item.get("acceptance_criteria", ""),
+        "primary_runbook": primary_next_item.get("runbook", []),
         "primary_llm_live_preflight_command": primary_next_item.get(
             "llm_live_preflight_command", ""
         ),
@@ -692,6 +751,16 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                 ),
             ]
         )
+        runbook = primary_next_item.get("runbook")
+        if isinstance(runbook, list) and runbook:
+            lines.extend(["", "## Primary runbook"])
+            for step in runbook:
+                if not isinstance(step, dict):
+                    continue
+                command = step.get("command") or "No command."
+                lines.append(f"- `{step.get('step')}`: `{command}`")
+                if step.get("handoff"):
+                    lines.append(f"  - handoff: {step['handoff']}")
     elif not plan.get("candidate_count"):
         lines.extend(["", "No candidate cases matched the current filters."])
     else:
