@@ -241,7 +241,7 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "generate_adapters.ready=false" in template
     assert "llm_live reports warning/error" in template
     assert "E_LLM_UNAVAILABLE" in template
-    assert "E_UNKNOWN connection error" in template
+    assert "provider connection failure" in template
     assert "leave adapter_package pending or blocked" in template
     assert "## LLM Preflight Evidence Fields" in template
     assert "`summary.ready_for_explore`" in template
@@ -299,7 +299,7 @@ def test_cases_command_issue_template_human_outputs_markdown(tmp_home):
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in result.output
     assert "## LLM Preflight Gate" in result.output
     assert "E_LLM_UNAVAILABLE" in result.output
-    assert "E_UNKNOWN connection error" in result.output
+    assert "provider connection failure" in result.output
     assert "Candidate package validation command" in result.output
     assert (
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
@@ -486,7 +486,7 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert "generate_adapters.ready=false" in bundle["llm_live_preflight_blocker_note"]
     assert "llm_live reports warning/error" in bundle["llm_live_preflight_blocker_note"]
     assert "E_LLM_UNAVAILABLE" in bundle["llm_live_preflight_blocker_note"]
-    assert "E_UNKNOWN connection error" in bundle["llm_live_preflight_blocker_note"]
+    assert "provider connection failure" in bundle["llm_live_preflight_blocker_note"]
     assert bundle["llm_live_preflight_evidence_fields"] == [
         "summary.ready_for_explore",
         "summary.capabilities.generate_adapters.ready",
@@ -728,7 +728,7 @@ def test_cases_command_promotion_plan_json(tmp_home):
     assert plan["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
     assert plan["primary_llm_live_preflight_command"] == plan["llm_live_preflight_command"]
     assert "E_LLM_UNAVAILABLE" in plan["llm_live_preflight_blocker_note"]
-    assert "E_UNKNOWN connection error" in plan["llm_live_preflight_blocker_note"]
+    assert "provider connection failure" in plan["llm_live_preflight_blocker_note"]
     assert (
         plan["primary_llm_live_preflight_blocker_note"]
         == plan["llm_live_preflight_blocker_note"]
@@ -785,7 +785,7 @@ def test_cases_command_promotion_plan_human_outputs_queue(tmp_home):
     assert "- LLM live preflight: `cliany-site doctor --llm-live --json`" in result.output
     assert "LLM blocker handling: Run the live LLM preflight before explore" in result.output
     assert "E_LLM_UNAVAILABLE" in result.output
-    assert "E_UNKNOWN connection error" in result.output
+    assert "provider connection failure" in result.output
     assert "## Primary runbook" in result.output
     assert "`llm_live_preflight`: `cliany-site doctor --llm-live --json`" in result.output
     assert "## Primary next item" in result.output

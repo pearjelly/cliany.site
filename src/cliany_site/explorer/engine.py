@@ -350,6 +350,7 @@ def _looks_like_llm_gateway_error(message: str) -> bool:
             "too many requests",
             "connection reset",
             "connection refused",
+            "connection error",
             "timed out",
             "<html",
         )

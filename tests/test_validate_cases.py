@@ -992,7 +992,7 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "generate_adapters.ready=false" in text
     assert "llm_live reports warning/error" in text
     assert "E_LLM_UNAVAILABLE" in text
-    assert "E_UNKNOWN connection error" in text
+    assert "provider connection failure" in text
     assert "## Acceptance Criteria" in text
     assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in text
     assert "  - Current status: `pending`" in text

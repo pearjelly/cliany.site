@@ -28,7 +28,7 @@ cliany-site is built on browser-use and Large Language Models (LLMs), enabling f
 - **Zero-Intrusion Exploration** — Chrome CDP captures page AXTree without script injection.
 - **LLM-Driven Code Generation** — Claude / GPT-4o understands page semantics and generates Python CLI commands automatically.
 - **LLM Call Retry Mechanism** — Automatic retries during network fluctuations to improve exploration success rates.
-- **Retryable LLM Outage Signal** — `explore --json` reports gateway, rate-limit, or service outages as `E_LLM_UNAVAILABLE` with sanitized retry details instead of raw upstream HTML.
+- **Retryable LLM Outage Signal** — `explore --json` reports gateway, rate-limit, provider connection, or service outages as `E_LLM_UNAVAILABLE` with sanitized retry details instead of raw upstream HTML.
 - **Unified JSON Envelope** — All commands support `--json`, outputting a machine-readable `{ok, data, error, meta}` envelope (v1).
 - **Persistent Sessions** — Maintains Cookie / LocalStorage login states across commands.
 - **Dynamic Adapter Loading** — Automatically registers CLI subcommands by domain, allowing for easy expansion.
@@ -165,7 +165,7 @@ export CLIANY_OPENAI_API_KEY="sk-..."
 
 Also supports `.env` file configuration. Search order: `~/.config/cliany-site/.env` → `~/.cliany-site/.env` → project directory `.env` → environment variables.
 
-If `explore --json` returns `E_LLM_UNAVAILABLE`, the LLM provider returned a retryable upstream outage such as `502 Bad Gateway`, rate limiting, or service unavailable. The JSON envelope includes `details.retryable`, `details.status_code`, and `details.phase`; retry later or switch `CLIANY_LLM_PROVIDER` / `CLIANY_OPENAI_BASE_URL`. This does not mean the generated adapter or AXTree selector map is broken.
+If `explore --json` returns `E_LLM_UNAVAILABLE`, the LLM provider returned a retryable upstream outage such as `502 Bad Gateway`, rate limiting, provider connection failure, or service unavailable. The JSON envelope includes `details.retryable`, `details.status_code`, and `details.phase`; retry later or switch `CLIANY_LLM_PROVIDER` / `CLIANY_OPENAI_BASE_URL`. This does not mean the generated adapter or AXTree selector map is broken.
 
 ### Experimental: Obscura Browser Provider
 
@@ -197,7 +197,7 @@ cliany-site doctor --json
 cliany-site doctor --llm-live --json
 ```
 
-By default, `doctor` checks local configuration, CDP, directories, and keys without calling the LLM provider. Add `--llm-live` when you want a real provider preflight before a longer `explore`; retryable gateway, rate-limit, or service outages appear as a `llm_live` warning with `details.error_code=E_LLM_UNAVAILABLE`.
+By default, `doctor` checks local configuration, CDP, directories, and keys without calling the LLM provider. Add `--llm-live` when you want a real provider preflight before a longer `explore`; retryable gateway, rate-limit, provider connection, or service outages appear as a `llm_live` warning with `details.error_code=E_LLM_UNAVAILABLE`.
 
 ## Usage Examples
 
@@ -263,7 +263,7 @@ async with ClanySite() as cs:
 The following adapters are available as downloadable assets on [GitHub Release v0.14.1](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.1).
 The maintained case index lives in [cases/README.md](cases/README.md) and [cases/manifest.json](cases/manifest.json).
 Use `cliany-site cases --json` to inspect active demos, candidate workflows, offline validation commands, and candidate promotion next actions from the CLI; `promotion_evidence_summary.primary_next_task` points automation at the first candidate task to advance, while `promotion_evidence_summary.primary_next_task_acceptance_criteria` states the proof required for that task. Add `--promotion-plan` to print the candidate promotion queue across all matched candidates; combine it with `--json` to read `promotion_plan.primary_next_item`, `promotion_plan.primary_runbook`, per-candidate primary tasks, and the incomplete `task_queue`. Use `cliany-site cases --case-id pypi-project-search --json` to open one case with validation and promotion details; omit `--json` for a copy-friendly human handoff with Promotion Tasks. Add `--issue-template` to print a GitHub issue body for a candidate promotion task, including Acceptance Criteria for each evidence task; combine it with `--json` to also read `issue_template_primary_task` without parsing Markdown. Add `--evidence-bundle` to print a structured local evidence checklist; combine it with `--json` for a machine-readable evidence bundle, including a `promotion_command_plan` that starts with `llm_live_preflight` before adapter package, metadata validation, and online smoke commands, `primary_next_task_runbook` and `primary_next_task_runbook_first_command` for the current ordered checklist, plus `acceptance_criteria` for the proof each evidence task must attach. Use `python scripts/plan_next_iteration.py --issues-dir /tmp/cliany-candidate-issues` to generate reviewable candidate issue artifacts; the artifacts README shows `Primary Evidence Status`, `Primary Acceptance Criteria`, `primary_next_task_acceptance_criteria`, compact `case_promotion_evidence_primary_runbook_steps` / hash fields, and `case_promotion_evidence_primary_runbook_first_command` before maintainers create issues or compare artifact drift.
-Candidate promotion treats `generate_adapters.ready=false` or any `llm_live` warning/error such as `E_LLM_UNAVAILABLE` or `E_UNKNOWN` connection error as blocker evidence; keep `adapter_package` pending or blocked instead of fabricating adapter package proof.
+Candidate promotion treats `generate_adapters.ready=false` or any `llm_live` warning/error such as `E_LLM_UNAVAILABLE` provider connection failures as blocker evidence; keep `adapter_package` pending or blocked instead of fabricating adapter package proof.
 
 ### SuiteCRM Demo (Enterprise CRM)
 ```bash

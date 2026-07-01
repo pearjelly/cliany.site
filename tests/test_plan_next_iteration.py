@@ -1090,9 +1090,9 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
         "llm_live_preflight_blocker_note": (
             "Run the live LLM preflight before explore. If generate_adapters.ready=false "
-            "or llm_live reports warning/error such as E_LLM_UNAVAILABLE or E_UNKNOWN "
-            "connection error, stop candidate promotion, attach the doctor JSON/error "
-            "summary, and leave adapter_package pending or blocked."
+            "or llm_live reports warning/error such as E_LLM_UNAVAILABLE "
+            "(including provider connection failure), stop candidate promotion, attach "
+            "the doctor JSON/error summary, and leave adapter_package pending or blocked."
         ),
         "llm_live_preflight_evidence_fields": [
             "summary.ready_for_explore",
@@ -1125,8 +1125,9 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "  - required: `true`\n"
             "  - handoff: Run the live LLM preflight before explore. "
             "If generate_adapters.ready=false or llm_live reports warning/error such as "
-            "E_LLM_UNAVAILABLE or E_UNKNOWN connection error, stop candidate promotion, "
-            "attach the doctor JSON/error summary, and leave adapter_package pending or blocked.\n"
+            "E_LLM_UNAVAILABLE (including provider connection failure), stop candidate "
+            "promotion, attach the doctor JSON/error summary, and leave adapter_package "
+            "pending or blocked.\n"
             '- `adapter_package`: `cliany-site explore "https://pypi.org" "search Python packages" --json`\n'
             "  - required: `true`\n"
             "  - handoff: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n"
@@ -1153,9 +1154,9 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- Command: `cliany-site doctor --llm-live --json`\n"
             "- Blocker handling: Run the live LLM preflight before explore. "
             "If generate_adapters.ready=false or llm_live reports warning/error such as "
-            "E_LLM_UNAVAILABLE or E_UNKNOWN connection error, stop candidate promotion, "
-            "attach the doctor JSON/error summary, and leave adapter_package pending or "
-            "blocked.\n\n"
+            "E_LLM_UNAVAILABLE (including provider connection failure), stop candidate "
+            "promotion, attach the doctor JSON/error summary, and leave adapter_package "
+            "pending or blocked.\n\n"
             "## LLM Preflight Evidence Fields\n"
             "- `summary.ready_for_explore`\n"
             "- `summary.capabilities.generate_adapters.ready`\n"
@@ -3140,7 +3141,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert metadata[0]["promotion_command_plan"] == _pypi_promotion_command_plan()
     assert metadata[0]["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
     assert "E_LLM_UNAVAILABLE" in metadata[0]["llm_live_preflight_blocker_note"]
-    assert "E_UNKNOWN connection error" in metadata[0]["llm_live_preflight_blocker_note"]
+    assert "provider connection failure" in metadata[0]["llm_live_preflight_blocker_note"]
     assert metadata[0]["llm_live_preflight_evidence_fields"] == [
         "summary.ready_for_explore",
         "summary.capabilities.generate_adapters.ready",

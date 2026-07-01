@@ -334,6 +334,48 @@ def test_doctor_llm_live_unavailable_blocks_explore_ready(tmp_home, no_llm, monk
     assert summary["capabilities"]["generate_adapters"]["blockers"] == ["llm_live"]
 
 
+def test_doctor_llm_live_connection_error_is_llm_unavailable(tmp_home, no_llm, monkeypatch):
+    """doctor --llm-live 将 provider 连接错误归类为 LLM 上游不可用。"""
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    class APIConnectionError(Exception):
+        pass
+
+    class FailingLLM:
+        async def ainvoke(self, _prompt):
+            raise APIConnectionError("Connection error.")
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("CLIANY_OPENAI_API_KEY", "test")
+    monkeypatch.setenv("CLIANY_OPENAI_BASE_URL", "https://example.com/v1")
+    monkeypatch.setattr("cliany_site.explorer.engine._get_llm", lambda: FailingLLM())
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["--json", "doctor", "--llm-live"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    live_check = next(check for check in data["data"]["checks"] if check["name"] == "llm_live")
+    assert live_check["status"] == "warning"
+    assert live_check["severity"] == "should_fix"
+    assert live_check["details"]["provider"] == "openai"
+    assert live_check["details"]["error_code"] == "E_LLM_UNAVAILABLE"
+    assert live_check["details"]["retryable"] is True
+    assert live_check["details"]["status_code"] is None
+    assert live_check["details"]["phase"] == "llm_preflight"
+    assert live_check["details"]["message"] == "LLM upstream unavailable: Connection error."
+
+    summary = data["data"]["summary"]
+    assert summary["ready_for_explore"] is False
+    assert summary["capabilities"]["generate_adapters"]["blockers"] == ["llm_live"]
+
+
 def test_legacy_adapter_count(tmp_home, no_llm, monkeypatch):
     """Test that legacy_adapter_count counts adapters with schema_version != 3"""
     class MockCDP:
