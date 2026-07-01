@@ -486,6 +486,62 @@ def test_cases_report_rejects_invalid_candidate_promotion_evidence(tmp_path):
     assert "candidate promotion_evidence.online_smoke.next_action is required when status is pending" in issues
 
 
+def test_cases_report_prioritizes_candidate_with_more_complete_evidence(tmp_path):
+    empty = _case("empty-candidate", domain="empty.example")
+    empty["status"] = "candidate"
+    empty["source_release"] = None
+    empty["commands"] = [
+        'cliany-site explore "https://empty.example" "search empty" --json',
+        "cliany-site empty.example list-items --json",
+    ]
+    empty["promotion"] = {
+        "adapter_package": "publish empty.example-<version>.cliany-adapter.tar.gz",
+        "metadata_validation": "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict",
+        "online_smoke": "cliany-site empty.example list-items --json",
+    }
+    empty["promotion_evidence"] = _promotion_evidence()
+
+    nearly_ready = _case("nearly-ready-candidate", domain="ready.example")
+    nearly_ready["status"] = "candidate"
+    nearly_ready["source_release"] = None
+    nearly_ready["commands"] = [
+        'cliany-site explore "https://ready.example" "search ready" --json',
+        "cliany-site ready.example list-items --json",
+    ]
+    nearly_ready["promotion"] = {
+        "adapter_package": "publish ready.example-<version>.cliany-adapter.tar.gz",
+        "metadata_validation": "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict",
+        "online_smoke": "cliany-site ready.example list-items --json",
+    }
+    nearly_ready["promotion_evidence"] = _promotion_evidence()
+    nearly_ready["promotion_evidence"]["adapter_package"] = {
+        "status": "complete",
+        "evidence": "ready.example-0.16.251.cliany-adapter.tar.gz",
+        "next_action": "",
+    }
+
+    _write_cases(tmp_path, [empty, nearly_ready])
+
+    report = validate_cases.build_report(tmp_path)
+    summary = report.to_dict()["promotion_evidence_summary"]
+
+    assert report.ok is True
+    assert summary["primary_task"] == {
+        "case_id": "nearly-ready-candidate",
+        "task": "metadata_validation",
+        "status": "pending",
+        "evidence": "",
+        "next_action": "Run validate_cases with --packages-dir.",
+        "acceptance_criteria": (
+            "Paste `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+            "--include-candidate-packages --strict` output showing the candidate package "
+            "passed schema v3, manifest hash, and adapter_domain validation."
+        ),
+    }
+    assert summary["pending_tasks"][0]["case_id"] == "nearly-ready-candidate"
+    assert summary["pending_tasks"][0]["task"] == "metadata_validation"
+
+
 def test_cases_report_rejects_candidate_legacy_package_hint(tmp_path):
     metadata_validation = "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
     case = _case("candidate-case")

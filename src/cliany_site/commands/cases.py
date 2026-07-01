@@ -521,10 +521,17 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         for case in cases
         if case.get("status") == "candidate"
     ]
+    ranked_bundles = [
+        bundle
+        for _, bundle in sorted(
+            enumerate(candidate_bundles),
+            key=lambda item: _candidate_bundle_priority_key(item[1], item[0]),
+        )
+    ]
     candidates: list[dict[str, Any]] = []
     task_queue: list[dict[str, Any]] = []
 
-    for bundle in candidate_bundles:
+    for bundle in ranked_bundles:
         primary_next_task = bundle.get("primary_next_task")
         primary_next_task = primary_next_task if isinstance(primary_next_task, dict) else {}
         case_id = str(bundle.get("case_id") or "")
@@ -608,6 +615,24 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         "candidates": candidates,
         "task_queue": task_queue,
     }
+
+
+def _candidate_bundle_priority_key(bundle: dict[str, Any], index: int) -> tuple[int, int, int, int, int, int, int]:
+    pending_count = int(bundle.get("pending_task_count") or 0)
+    blocked_count = int(bundle.get("blocked_task_count") or 0)
+    complete_count = int(bundle.get("complete_task_count") or 0)
+    missing_command_count = len(bundle.get("promotion_command_plan_missing_tasks") or [])
+    ready_to_promote = bool(bundle.get("ready_to_promote"))
+    has_pending_work = pending_count > 0
+    return (
+        0 if ready_to_promote else 1,
+        0 if has_pending_work else 1,
+        -complete_count,
+        blocked_count,
+        missing_command_count,
+        pending_count,
+        index,
+    )
 
 
 def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
@@ -703,17 +728,29 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
     task_status_counts: dict[str, Counter[str]] = {task: Counter() for task in PROMOTION_TASKS}
     pending_tasks: list[dict[str, str]] = []
     task_count = 0
+    candidate_bundles = [
+        _candidate_evidence_bundle(case)
+        for case in cases
+        if case.get("status") == "candidate"
+    ]
+    ranked_bundles = [
+        bundle
+        for _, bundle in sorted(
+            enumerate(candidate_bundles),
+            key=lambda item: _candidate_bundle_priority_key(item[1], item[0]),
+        )
+    ]
 
-    for case in cases:
-        if case.get("status") != "candidate":
-            continue
-        evidence = case.get("promotion_evidence")
-        if not isinstance(evidence, dict):
-            continue
-        case_id = str(case.get("id") or "")
+    for bundle in ranked_bundles:
+        evidence_by_task = {
+            str(task.get("task") or ""): task
+            for task in bundle.get("tasks", [])
+            if isinstance(task, dict)
+        }
+        case_id = str(bundle.get("case_id") or "")
         for task in PROMOTION_TASKS:
-            task_evidence = evidence.get(task)
-            if not isinstance(task_evidence, dict):
+            task_evidence = evidence_by_task.get(task)
+            if not task_evidence:
                 continue
             status = str(task_evidence.get("status") or "pending")
             evidence_value = str(task_evidence.get("evidence") or "")

@@ -652,6 +652,13 @@ def _check_case(
 
 def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]:
     candidate_checks = [check for check in checks if check.status == "candidate"]
+    ranked_candidate_checks = [
+        check
+        for _, check in sorted(
+            enumerate(candidate_checks),
+            key=lambda item: _case_promotion_priority_key(item[1], item[0]),
+        )
+    ]
     status_counts = {status: 0 for status in sorted(PROMOTION_EVIDENCE_STATUSES)}
     task_status_counts = {
         field_name: {status: 0 for status in sorted(PROMOTION_EVIDENCE_STATUSES)}
@@ -661,7 +668,7 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
     blocked_tasks: list[dict[str, str]] = []
     complete_tasks: list[dict[str, str]] = []
 
-    for check in candidate_checks:
+    for check in ranked_candidate_checks:
         evidence = check.promotion_evidence or {}
         for field_name in PROMOTION_FIELDS:
             task = evidence.get(field_name)
@@ -706,6 +713,36 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
             primary["acceptance_criteria"] if primary else ""
         ),
     }
+
+
+def _case_promotion_priority_key(check: CaseCheck, index: int) -> tuple[int, int, int, int, int, int, int]:
+    evidence = check.promotion_evidence or {}
+    complete_count = 0
+    pending_count = 0
+    blocked_count = 0
+    for field_name in PROMOTION_FIELDS:
+        task = evidence.get(field_name)
+        if not isinstance(task, dict):
+            continue
+        status = str(task.get("status") or "pending")
+        if status == "complete" and task.get("evidence"):
+            complete_count += 1
+        elif status == "blocked":
+            blocked_count += 1
+        else:
+            pending_count += 1
+    missing_command_count = sum(1 for item in check.promotion_command_plan if item.get("missing"))
+    ready_to_promote = complete_count == len(PROMOTION_FIELDS)
+    has_pending_work = pending_count > 0
+    return (
+        0 if ready_to_promote else 1,
+        0 if has_pending_work else 1,
+        -complete_count,
+        blocked_count,
+        missing_command_count,
+        pending_count,
+        index,
+    )
 
 
 def _build_promotion_command_plan_summary(checks: list[CaseCheck]) -> dict[str, Any]:

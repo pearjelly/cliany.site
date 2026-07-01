@@ -711,6 +711,99 @@ def test_cases_command_promotion_plan_human_outputs_queue(tmp_home):
     assert "acceptance: Attach the generated" in result.output
 
 
+def test_cases_command_promotion_plan_prioritizes_closest_candidate(tmp_home, monkeypatch):
+    import cliany_site.commands.cases as cases_module
+
+    cases = [
+        {
+            "id": "empty-candidate",
+            "title": "Empty candidate",
+            "status": "candidate",
+            "target_url": "https://empty.example/search",
+            "adapter_domain": "empty.example",
+            "commands": [
+                'cliany-site explore "https://empty.example" "search empty" --json',
+                "cliany-site empty.example search --json",
+            ],
+            "validation": {"offline_commands": ["python scripts/validate_cases.py --strict"]},
+            "promotion": {
+                "adapter_package": "Build empty.example-<version>.cliany-adapter.tar.gz.",
+                "metadata_validation": "Validate the package.",
+                "online_smoke": "Run the smoke command.",
+            },
+            "promotion_evidence": {
+                "adapter_package": {
+                    "status": "pending",
+                    "evidence": None,
+                    "next_action": "Build the empty package.",
+                },
+                "metadata_validation": {
+                    "status": "pending",
+                    "evidence": None,
+                    "next_action": "Validate the empty package.",
+                },
+                "online_smoke": {
+                    "status": "pending",
+                    "evidence": None,
+                    "next_action": "Smoke the empty package.",
+                },
+            },
+        },
+        {
+            "id": "nearly-ready-candidate",
+            "title": "Nearly ready candidate",
+            "status": "candidate",
+            "target_url": "https://ready.example/search",
+            "adapter_domain": "ready.example",
+            "commands": [
+                'cliany-site explore "https://ready.example" "search ready" --json',
+                "cliany-site ready.example search --json",
+            ],
+            "validation": {"offline_commands": ["python scripts/validate_cases.py --strict"]},
+            "promotion": {
+                "adapter_package": "Build ready.example-<version>.cliany-adapter.tar.gz.",
+                "metadata_validation": "Validate the package.",
+                "online_smoke": "Run the smoke command.",
+            },
+            "promotion_evidence": {
+                "adapter_package": {
+                    "status": "complete",
+                    "evidence": "ready.example-0.16.251.cliany-adapter.tar.gz",
+                    "next_action": "",
+                },
+                "metadata_validation": {
+                    "status": "pending",
+                    "evidence": None,
+                    "next_action": "Validate the ready package.",
+                },
+                "online_smoke": {
+                    "status": "pending",
+                    "evidence": None,
+                    "next_action": "Smoke the ready package.",
+                },
+            },
+        },
+    ]
+    source = tmp_home / "cases" / "manifest.json"
+    monkeypatch.setattr(cases_module, "_load_cases_manifest", lambda: (cases, source, [source]))
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["--json", "cases", "--status", "candidate", "--promotion-plan"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    plan = json.loads(result.output)["data"]["promotion_plan"]
+    assert plan["primary_case_id"] == "nearly-ready-candidate"
+    assert plan["primary_task"] == "metadata_validation"
+    assert plan["primary_next_item"]["case_id"] == "nearly-ready-candidate"
+    assert plan["candidates"][0]["case_id"] == "nearly-ready-candidate"
+    assert plan["task_queue"][0]["case_id"] == "nearly-ready-candidate"
+    assert plan["task_queue"][0]["task"] == "metadata_validation"
+
+
 def test_cases_command_issue_template_requires_case_id(tmp_home):
     runner = CliRunner()
     result = runner.invoke(cli, ["--json", "cases", "--issue-template"], catch_exceptions=True)

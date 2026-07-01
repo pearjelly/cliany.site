@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Changed
+- Candidate promotion plan and release planning evidence now prioritize candidate cases with more completed promotion evidence and fewer blockers before falling back to manifest order, so maintainers can keep pushing the closest case toward `active`.
+
 ### Fixed
 - Release readiness now projects whether creating the target tag today would exceed the daily release cap, so planning `v0.16.251` after `v0.16.248`、`v0.16.249` 和 `v0.16.250` 已发布时会明确暂停 tag，而不是继续给出第四个同日 release 命令。
 - Next-iteration planning now carries release readiness next actions such as the daily release cap pause into top-level `next_actions`, while avoiding a duplicate shorter weekly cadence action when readiness already provides the richer guidance.
