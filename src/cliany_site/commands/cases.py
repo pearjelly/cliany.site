@@ -271,6 +271,10 @@ def _primary_doctor_preflight_evidence_template_aliases(
     }
 
 
+def _llm_live_preflight_command_sha256(command: str) -> str:
+    return _sha256_text(command) if command else ""
+
+
 def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
     primary = bundle.get("primary_next_task")
     if not isinstance(primary, dict) or not primary.get("task"):
@@ -295,6 +299,9 @@ def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[st
         ),
         "llm_live_preflight_command": str(
             primary.get("llm_live_preflight_command") or ""
+        ),
+        "llm_live_preflight_command_sha256": _llm_live_preflight_command_sha256(
+            str(primary.get("llm_live_preflight_command") or "")
         ),
         "llm_live_preflight_blocker_note": str(
             primary.get("llm_live_preflight_blocker_note") or ""
@@ -596,6 +603,9 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
             acceptance_criteria=acceptance_criteria,
         )
         llm_live_preflight_required = task == "adapter_package"
+        llm_live_preflight_command = (
+            LLM_LIVE_PREFLIGHT_COMMAND if llm_live_preflight_required else ""
+        )
         doctor_preflight_evidence_template = (
             _doctor_preflight_evidence_template() if llm_live_preflight_required else {}
         )
@@ -614,8 +624,9 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                 "acceptance_criteria": acceptance_criteria,
                 "expected_adapter_package": expected_adapter_package,
                 "llm_live_preflight_required": llm_live_preflight_required,
-                "llm_live_preflight_command": (
-                    LLM_LIVE_PREFLIGHT_COMMAND if llm_live_preflight_required else ""
+                "llm_live_preflight_command": llm_live_preflight_command,
+                "llm_live_preflight_command_sha256": (
+                    _llm_live_preflight_command_sha256(llm_live_preflight_command)
                 ),
                 "llm_live_preflight_blocker_note": (
                     LLM_LIVE_PREFLIGHT_BLOCKER_NOTE if llm_live_preflight_required else ""
@@ -669,6 +680,9 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "commands": case.get("commands") if isinstance(case.get("commands"), list) else [],
         "offline_commands": _offline_commands(case),
         "llm_live_preflight_command": LLM_LIVE_PREFLIGHT_COMMAND,
+        "llm_live_preflight_command_sha256": _llm_live_preflight_command_sha256(
+            LLM_LIVE_PREFLIGHT_COMMAND
+        ),
         "llm_live_preflight_blocker_note": LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
         "llm_live_preflight_evidence_fields": list(LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS),
         "doctor_preflight_evidence_fields": list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS),
@@ -867,6 +881,9 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         evidence_bundle_command = f"cliany-site cases --case-id {case_id} --evidence-bundle"
         evidence_bundle_json_command = f"{evidence_bundle_command} --json"
         llm_live_preflight_command = str(bundle.get("llm_live_preflight_command") or "")
+        llm_live_preflight_command_sha256 = _llm_live_preflight_command_sha256(
+            llm_live_preflight_command
+        )
         llm_live_preflight_blocker_note = str(
             bundle.get("llm_live_preflight_blocker_note") or ""
         )
@@ -905,6 +922,7 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
             "evidence_bundle_command": evidence_bundle_command,
             "evidence_bundle_json_command": evidence_bundle_json_command,
             "llm_live_preflight_command": llm_live_preflight_command,
+            "llm_live_preflight_command_sha256": llm_live_preflight_command_sha256,
             "llm_live_preflight_blocker_note": llm_live_preflight_blocker_note,
             "priority_rank": priority_rank,
             "priority_reason": priority_reason,
@@ -934,6 +952,9 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
                     "evidence_bundle_command": evidence_bundle_command,
                     "evidence_bundle_json_command": evidence_bundle_json_command,
                     "llm_live_preflight_command": llm_live_preflight_command,
+                    "llm_live_preflight_command_sha256": (
+                        llm_live_preflight_command_sha256
+                    ),
                     "llm_live_preflight_blocker_note": llm_live_preflight_blocker_note,
                     **doctor_preflight_aliases,
                     "priority_rank": priority_rank,
@@ -971,11 +992,17 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         "primary_llm_live_preflight_command": primary_next_item.get(
             "llm_live_preflight_command", ""
         ),
+        "primary_llm_live_preflight_command_sha256": primary_next_item.get(
+            "llm_live_preflight_command_sha256", ""
+        ),
         "primary_llm_live_preflight_blocker_note": primary_next_item.get(
             "llm_live_preflight_blocker_note", ""
         ),
         **primary_doctor_preflight_aliases,
         "llm_live_preflight_command": LLM_LIVE_PREFLIGHT_COMMAND,
+        "llm_live_preflight_command_sha256": _llm_live_preflight_command_sha256(
+            LLM_LIVE_PREFLIGHT_COMMAND
+        ),
         "llm_live_preflight_blocker_note": LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
         "candidates": candidates,
         "task_queue": task_queue,
@@ -1190,6 +1217,14 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
                         ),
                         "llm_live_preflight_command": str(
                             task_evidence.get("llm_live_preflight_command") or ""
+                        ),
+                        "llm_live_preflight_command_sha256": (
+                            _llm_live_preflight_command_sha256(
+                                str(
+                                    task_evidence.get("llm_live_preflight_command")
+                                    or ""
+                                )
+                            )
                         ),
                         "llm_live_preflight_blocker_note": str(
                             task_evidence.get("llm_live_preflight_blocker_note") or ""

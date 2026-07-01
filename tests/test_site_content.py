@@ -35,8 +35,10 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site cases --status candidate --promotion-plan" in index
     assert "primary_issue_template_command" in index
     assert "promotion_plan.primary_doctor_preflight_evidence_template_sha256" in index
+    assert "promotion_plan.primary_llm_live_preflight_command_sha256" in index
     assert "primary_doctor_preflight_evidence_template_sha256" in index
     assert "task_queue[*].doctor_preflight_evidence_template_sha256" in index
+    assert "task_queue[*].llm_live_preflight_command_sha256" in index
     assert (
         "promotion_evidence_summary.primary_next_task."
         "doctor_preflight_evidence_template_sha256"
@@ -45,6 +47,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "scripts/validate_cases.py --report" in index
     assert "scripts/validate_cases.py --strict" in index
     assert "promotion_evidence_primary_doctor_preflight_evidence_template_sha256" in index
+    assert "promotion_evidence_primary_llm_live_preflight_command_sha256" in index
     assert "issue_template_json_command" in index
     assert "primary_next_task_acceptance_criteria" in index
     assert "preflight_required" in index
@@ -63,6 +66,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "daily_release_cap_blocked" in index
     assert "daily_release_resume_date" in index
     assert "case_promotion_evidence_primary_llm_live_preflight_required" in index
+    assert "case_promotion_evidence_primary_llm_live_preflight_command_sha256" in index
     assert "case_promotion_evidence_primary_llm_live_preflight_blocker_comment" in index
     assert "case_promotion_evidence_primary_doctor_preflight_blocker_comment" in index
     assert (
@@ -85,8 +89,10 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site cases --status candidate --promotion-plan" in script
     assert "primary_issue_template_command" in script
     assert "promotion_plan.primary_doctor_preflight_evidence_template_sha256" in script
+    assert "promotion_plan.primary_llm_live_preflight_command_sha256" in script
     assert "primary_doctor_preflight_evidence_template_sha256" in script
     assert "task_queue[*].doctor_preflight_evidence_template_sha256" in script
+    assert "task_queue[*].llm_live_preflight_command_sha256" in script
     assert (
         "promotion_evidence_summary.primary_next_task."
         "doctor_preflight_evidence_template_sha256"
@@ -95,6 +101,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "scripts/validate_cases.py --report" in script
     assert "scripts/validate_cases.py --strict" in script
     assert "promotion_evidence_primary_doctor_preflight_evidence_template_sha256" in script
+    assert "promotion_evidence_primary_llm_live_preflight_command_sha256" in script
     assert "issue_template_json_command" in script
     assert "python scripts/plan_next_iteration.py --issues-dir" in script
     assert "Primary Acceptance Criteria" in script
@@ -116,6 +123,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "daily_release_limit_ok" in script
     assert "daily_release_cap_blocked" in script
     assert "daily_release_resume_date" in script
+    assert "case_promotion_evidence_primary_llm_live_preflight_command_sha256" in script
     assert "case_promotion_evidence_primary_llm_live_preflight_blocker_comment" in script
     assert "case_promotion_evidence_primary_doctor_preflight_blocker_comment" in script
     assert (

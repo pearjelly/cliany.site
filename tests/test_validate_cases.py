@@ -30,6 +30,9 @@ DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256 = hashlib.sha256(
         separators=(",", ":"),
     ).encode()
 ).hexdigest()
+LLM_LIVE_PREFLIGHT_COMMAND_SHA256 = hashlib.sha256(
+    validate_cases.LLM_LIVE_PREFLIGHT_COMMAND.encode("utf-8")
+).hexdigest()
 EMPTY_TEMPLATE_SHA256 = hashlib.sha256(
     json.dumps({}, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
 ).hexdigest()
@@ -363,6 +366,7 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         "expected_adapter_package": "demo.example.com-<version>.cliany-adapter.tar.gz",
         "llm_live_preflight_required": True,
         "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
+        "llm_live_preflight_command_sha256": LLM_LIVE_PREFLIGHT_COMMAND_SHA256,
         "llm_live_preflight_blocker_note": validate_cases.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
         "llm_live_preflight_evidence_fields": list(
             validate_cases.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
@@ -393,7 +397,12 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         summary["pending_tasks"][0]["doctor_preflight_evidence_template_sha256"]
         == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
     )
+    assert (
+        summary["pending_tasks"][0]["llm_live_preflight_command_sha256"]
+        == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
+    )
     assert summary["pending_tasks"][1]["doctor_preflight_evidence_template"] == {}
+    assert summary["pending_tasks"][1]["llm_live_preflight_command_sha256"] == ""
     assert summary["pending_tasks"][1]["doctor_preflight_evidence_template_field_count"] == 0
     assert (
         summary["pending_tasks"][1]["doctor_preflight_evidence_template_sha256"]
@@ -646,6 +655,7 @@ def test_cases_report_prioritizes_candidate_with_more_complete_evidence(tmp_path
         "expected_adapter_package": "ready.example-<version>.cliany-adapter.tar.gz",
         "llm_live_preflight_required": False,
         "llm_live_preflight_command": "",
+        "llm_live_preflight_command_sha256": "",
         "llm_live_preflight_blocker_note": "",
         "llm_live_preflight_evidence_fields": [],
         "doctor_preflight_evidence_fields": [],
@@ -1128,6 +1138,10 @@ def test_cases_report_prints_candidate_promotion_checklist(tmp_path, capsys):
     assert (
         "promotion_evidence_primary_doctor_preflight_evidence_template_sha256: "
         f"{DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256}"
+    ) in text
+    assert (
+        "promotion_evidence_primary_llm_live_preflight_command_sha256: "
+        f"{LLM_LIVE_PREFLIGHT_COMMAND_SHA256}"
     ) in text
     assert "promotion_evidence_primary_runbook: llm_live_preflight -> adapter_package -> acceptance" in text
     assert "promotion:" in text

@@ -239,6 +239,10 @@ def _doctor_preflight_evidence_template_aliases(template: dict[str, Any]) -> dic
     }
 
 
+def _llm_live_preflight_command_sha256(command: str) -> str:
+    return _sha256_bytes(command.encode("utf-8")) if command else ""
+
+
 def _safe_member_names(tar: tarfile.TarFile) -> tuple[list[str], list[str]]:
     names = [member.name for member in tar.getmembers()]
     unsafe = [name for name in names if name.startswith("/") or ".." in Path(name).parts]
@@ -817,6 +821,9 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
                 status_counts[status] += 1
                 task_status_counts[field_name][status] += 1
             llm_live_preflight_required = field_name == "adapter_package"
+            llm_live_preflight_command = (
+                LLM_LIVE_PREFLIGHT_COMMAND if llm_live_preflight_required else ""
+            )
             doctor_preflight_evidence_template = (
                 _doctor_preflight_evidence_template() if llm_live_preflight_required else {}
             )
@@ -834,8 +841,9 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
                     else ""
                 ),
                 "llm_live_preflight_required": llm_live_preflight_required,
-                "llm_live_preflight_command": (
-                    LLM_LIVE_PREFLIGHT_COMMAND if llm_live_preflight_required else ""
+                "llm_live_preflight_command": llm_live_preflight_command,
+                "llm_live_preflight_command_sha256": (
+                    _llm_live_preflight_command_sha256(llm_live_preflight_command)
                 ),
                 "llm_live_preflight_blocker_note": (
                     LLM_LIVE_PREFLIGHT_BLOCKER_NOTE if llm_live_preflight_required else ""
@@ -1067,6 +1075,10 @@ def _print_text(report: CasesReport) -> None:
         print(
             "promotion_evidence_primary_doctor_preflight_evidence_template_sha256: "
             f"{primary_task.get('doctor_preflight_evidence_template_sha256', '-')}"
+        )
+        print(
+            "promotion_evidence_primary_llm_live_preflight_command_sha256: "
+            f"{primary_task.get('llm_live_preflight_command_sha256', '-')}"
         )
         primary_runbook = report.promotion_evidence_summary.get("primary_next_task_runbook")
         if isinstance(primary_runbook, list) and primary_runbook:

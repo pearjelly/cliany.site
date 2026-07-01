@@ -45,6 +45,10 @@ DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256 = hashlib.sha256(
         separators=(",", ":"),
     ).encode()
 ).hexdigest()
+LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
+LLM_LIVE_PREFLIGHT_COMMAND_SHA256 = hashlib.sha256(
+    LLM_LIVE_PREFLIGHT_COMMAND.encode("utf-8")
+).hexdigest()
 
 
 def test_cases_command_returns_catalog_summary(tmp_home):
@@ -139,6 +143,7 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
         "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
         "llm_live_preflight_required": True,
         "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
+        "llm_live_preflight_command_sha256": LLM_LIVE_PREFLIGHT_COMMAND_SHA256,
         "llm_live_preflight_blocker_note": (
             "Run the live LLM preflight before explore. If generate_adapters.ready=false "
             "or llm_live reports warning/error such as E_LLM_UNAVAILABLE "
@@ -650,6 +655,7 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         "handoff": bundle["tasks"][0]["handoff"],
     }
     assert bundle["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
+    assert bundle["llm_live_preflight_command_sha256"] == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
     assert "generate_adapters.ready=false" in bundle["llm_live_preflight_blocker_note"]
     assert "llm_live reports warning/error" in bundle["llm_live_preflight_blocker_note"]
     assert "E_LLM_UNAVAILABLE" in bundle["llm_live_preflight_blocker_note"]
@@ -717,6 +723,10 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert (
         bundle["tasks"][0]["llm_live_preflight_command"]
         == "cliany-site doctor --llm-live --json"
+    )
+    assert (
+        bundle["tasks"][0]["llm_live_preflight_command_sha256"]
+        == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
     )
     assert (
         bundle["tasks"][0]["llm_live_preflight_blocker_note"]
@@ -971,7 +981,12 @@ def test_cases_command_promotion_plan_json(tmp_home):
         "cliany-site cases --case-id pypi-project-search --issue-template --json"
     )
     assert plan["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
+    assert plan["llm_live_preflight_command_sha256"] == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
     assert plan["primary_llm_live_preflight_command"] == plan["llm_live_preflight_command"]
+    assert (
+        plan["primary_llm_live_preflight_command_sha256"]
+        == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
+    )
     assert "E_LLM_UNAVAILABLE" in plan["llm_live_preflight_blocker_note"]
     assert "provider connection failure" in plan["llm_live_preflight_blocker_note"]
     assert (
@@ -1005,6 +1020,7 @@ def test_cases_command_promotion_plan_json(tmp_home):
             "cliany-site cases --case-id pypi-project-search --evidence-bundle --json"
         ),
         "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
+        "llm_live_preflight_command_sha256": LLM_LIVE_PREFLIGHT_COMMAND_SHA256,
         "llm_live_preflight_blocker_note": plan["llm_live_preflight_blocker_note"],
         "doctor_preflight_evidence_template_field_count": (
             DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
@@ -1034,6 +1050,10 @@ def test_cases_command_promotion_plan_json(tmp_home):
     assert (
         plan["candidates"][0]["llm_live_preflight_blocker_note"]
         == plan["llm_live_preflight_blocker_note"]
+    )
+    assert (
+        plan["candidates"][0]["llm_live_preflight_command_sha256"]
+        == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
     )
     assert (
         plan["candidates"][0][

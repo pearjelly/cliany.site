@@ -258,6 +258,7 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "case_promotion_evidence_primary_runbook_sha256",
     "case_promotion_evidence_primary_llm_live_preflight_required",
     "case_promotion_evidence_primary_llm_live_preflight_command",
+    "case_promotion_evidence_primary_llm_live_preflight_command_sha256",
     "case_promotion_evidence_primary_llm_live_preflight_blocker_note",
     "case_promotion_evidence_primary_llm_live_preflight_blocker_comment",
     "case_promotion_evidence_primary_doctor_preflight_blocker_comment",
@@ -2206,12 +2207,18 @@ def _expected_adapter_package(adapter_domain: str) -> str:
 
 def _llm_live_preflight_task_fields(task_name: str) -> dict[str, Any]:
     required = task_name == "adapter_package"
+    llm_live_preflight_command = LLM_LIVE_PREFLIGHT_COMMAND if required else ""
     doctor_preflight_evidence_template = (
         _doctor_preflight_evidence_template() if required else {}
     )
     return {
         "llm_live_preflight_required": required,
-        "llm_live_preflight_command": LLM_LIVE_PREFLIGHT_COMMAND if required else "",
+        "llm_live_preflight_command": llm_live_preflight_command,
+        "llm_live_preflight_command_sha256": (
+            _stable_json_sha256(llm_live_preflight_command)
+            if llm_live_preflight_command
+            else ""
+        ),
         "llm_live_preflight_blocker_note": (
             LLM_LIVE_PREFLIGHT_BLOCKER_NOTE if required else ""
         ),
@@ -2248,6 +2255,14 @@ def _task_with_doctor_preflight_evidence_fields(task: Any) -> Any:
     normalized = dict(task)
     required = normalized.get("llm_live_preflight_required")
     if required is True:
+        command_text = str(
+            normalized.get("llm_live_preflight_command")
+            or LLM_LIVE_PREFLIGHT_COMMAND
+        )
+        normalized["llm_live_preflight_command"] = command_text
+        normalized["llm_live_preflight_command_sha256"] = _stable_json_sha256(
+            command_text
+        )
         normalized["doctor_preflight_evidence_fields"] = list(
             DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         )
@@ -2260,7 +2275,12 @@ def _task_with_doctor_preflight_evidence_fields(task: Any) -> Any:
                 doctor_preflight_evidence_template
             )
         )
-    elif "doctor_preflight_evidence_fields" not in normalized:
+    else:
+        command_text = str(normalized.get("llm_live_preflight_command") or "")
+        normalized["llm_live_preflight_command_sha256"] = (
+            _stable_json_sha256(command_text) if command_text else ""
+        )
+    if required is not True and "doctor_preflight_evidence_fields" not in normalized:
         normalized["doctor_preflight_evidence_fields"] = []
         doctor_preflight_evidence_template = dict(
             normalized.setdefault("doctor_preflight_evidence_template", {})
@@ -2789,6 +2809,7 @@ def _primary_llm_live_preflight_aliases(primary_task: dict[str, Any] | None) -> 
     task = primary_task if isinstance(primary_task, dict) else {}
     required = task.get("llm_live_preflight_required")
     command = task.get("llm_live_preflight_command")
+    command_text = str(command) if command else None
     blocker_note = task.get("llm_live_preflight_blocker_note")
     blocker_comment = LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT if required is True else None
     return {
@@ -2796,7 +2817,10 @@ def _primary_llm_live_preflight_aliases(primary_task: dict[str, Any] | None) -> 
             required if isinstance(required, bool) else None
         ),
         "case_promotion_evidence_primary_llm_live_preflight_command": (
-            str(command) if command else None
+            command_text
+        ),
+        "case_promotion_evidence_primary_llm_live_preflight_command_sha256": (
+            _stable_json_sha256(command_text) if command_text else None
         ),
         "case_promotion_evidence_primary_llm_live_preflight_blocker_note": (
             str(blocker_note) if blocker_note else None
@@ -3462,6 +3486,11 @@ def _render_markdown(plan: IterationPlan) -> str:
             "case_promotion_evidence_primary_llm_live_preflight_command"
         ]
     )
+    primary_preflight_command_sha256_text = _format_context_value(
+        primary_preflight_aliases[
+            "case_promotion_evidence_primary_llm_live_preflight_command_sha256"
+        ]
+    )
     primary_preflight_blocker_note_text = _format_context_value(
         primary_preflight_aliases[
             "case_promotion_evidence_primary_llm_live_preflight_blocker_note"
@@ -3715,6 +3744,7 @@ def _render_markdown(plan: IterationPlan) -> str:
 | case_promotion_evidence_primary_runbook_first_command_sha256 | `{primary_runbook_first_command_sha256_text}` |
 | case_promotion_evidence_primary_llm_live_preflight_required | `{primary_preflight_required_text}` |
 | case_promotion_evidence_primary_llm_live_preflight_command | `{primary_preflight_command_text}` |
+| case_promotion_evidence_primary_llm_live_preflight_command_sha256 | `{primary_preflight_command_sha256_text}` |
 | case_promotion_evidence_primary_llm_live_preflight_blocker_note | `{primary_preflight_blocker_note_text}` |
 | case_promotion_evidence_primary_llm_live_preflight_blocker_comment | {primary_preflight_blocker_comment_text} |
 | case_promotion_evidence_primary_doctor_preflight_blocker_comment | {primary_doctor_preflight_blocker_comment_text} |
@@ -6930,6 +6960,8 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{str(summary['case_promotion_evidence_primary_llm_live_preflight_required']).lower()}`",
             "- case_promotion_evidence_primary_llm_live_preflight_command: "
             f"{_summary_inline_code(summary['case_promotion_evidence_primary_llm_live_preflight_command'])}",
+            "- case_promotion_evidence_primary_llm_live_preflight_command_sha256: "
+            f"`{summary['case_promotion_evidence_primary_llm_live_preflight_command_sha256']}`",
             "- case_promotion_evidence_primary_llm_live_preflight_blocker_note: "
             f"{_summary_inline_code(summary['case_promotion_evidence_primary_llm_live_preflight_blocker_note'])}",
             "- case_promotion_evidence_primary_llm_live_preflight_blocker_comment: "

@@ -22,8 +22,10 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "promotion_plan.primary_next_item" in text
         assert "promotion_plan.primary_issue_template_command" in text
         assert "promotion_plan.primary_doctor_preflight_evidence_template_sha256" in text
+        assert "promotion_plan.primary_llm_live_preflight_command_sha256" in text
         assert "primary_doctor_preflight_evidence_template_sha256" in text
         assert "task_queue[*].doctor_preflight_evidence_template_sha256" in text
+        assert "task_queue[*].llm_live_preflight_command_sha256" in text
         assert (
             "promotion_evidence_summary.primary_next_task."
             "doctor_preflight_evidence_template_sha256"
@@ -34,6 +36,7 @@ def test_readmes_document_current_extract_quality_and_readiness():
             "promotion_evidence_primary_doctor_preflight_evidence_template_sha256"
             in text
         )
+        assert "promotion_evidence_primary_llm_live_preflight_command_sha256" in text
         assert "issue_template_json_command" in text
         assert "promotion_evidence_summary.primary_next_task" in text
         assert "promotion_evidence_summary.primary_next_task_acceptance_criteria" in text
@@ -71,6 +74,10 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "daily_release_cap_blocked" in text
         assert "daily_release_resume_date" in text
         assert "case_promotion_evidence_primary_llm_live_preflight_required" in text
+        assert (
+            "case_promotion_evidence_primary_llm_live_preflight_command_sha256"
+            in text
+        )
         assert "case_promotion_evidence_primary_llm_live_preflight_blocker_comment" in text
         assert "case_promotion_evidence_primary_doctor_preflight_blocker_comment" in text
         assert (
