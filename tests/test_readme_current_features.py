@@ -47,6 +47,7 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "daily_release_cap_blocked" in text
         assert "daily_release_resume_date" in text
         assert "case_promotion_evidence_primary_llm_live_preflight_required" in text
+        assert "case_promotion_evidence_primary_llm_live_preflight_blocker_comment" in text
         assert "next_actions" in text
         assert "primary_next_action" in text
         assert "next_actions_sha256" in text

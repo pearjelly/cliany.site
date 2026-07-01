@@ -24,6 +24,16 @@ WEBSITE_INSPECT_COMMAND = "cd site && vercel inspect www.cliany.site --wait --ti
 DISTRIBUTION_AUDIT_COMMAND = (
     "python scripts/check_release_publication.py --remote --distribution --json"
 )
+LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT = (
+    "LLM live preflight is blocking candidate promotion. Paste the doctor JSON fields "
+    "`summary.ready_for_explore`, `summary.llm_live_preflight`, "
+    "`summary.capabilities.generate_adapters.ready`, `checks[llm_live].status`, "
+    "`checks[llm_live].details.error_code`, `checks[llm_live].details.retryable`, "
+    "`checks[llm_live].details.status_code`, `checks[llm_live].details.phase`, "
+    "and `checks[llm_live].details.message`; keep `adapter_package` pending or blocked "
+    "until `summary.llm_live_preflight.ready=true` and "
+    "`summary.capabilities.generate_adapters.ready=true`."
+)
 
 
 def _stable_json_sha256(value: object) -> str:
@@ -259,6 +269,8 @@ def test_candidate_issue_body_checks_complete_tasks():
     assert "- Command: `cliany-site doctor --llm-live --json`" in issue_body
     assert "generate_adapters.ready=false" in issue_body
     assert "E_LLM_UNAVAILABLE" in issue_body
+    assert "## LLM Preflight Blocker Comment" in issue_body
+    assert LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT in issue_body
     assert "## Acceptance Criteria" in issue_body
     assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in issue_body
     assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in issue_body
@@ -1154,6 +1166,15 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         data["case_promotion_evidence_primary_llm_live_preflight_blocker_note"]
         == plan_next_iteration.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE
     )
+    assert (
+        data["case_promotion_evidence_primary_llm_live_preflight_blocker_comment"]
+        == LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT
+    )
+    markdown = plan_next_iteration._render_markdown(plan)
+    assert (
+        "| case_promotion_evidence_primary_llm_live_preflight_blocker_comment | "
+        f"{plan_next_iteration._summary_inline_code(LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT)} |"
+    ) in markdown
     llm_preflight_fields = data["case_promotion_evidence_summary"][
         "llm_live_preflight_evidence_fields"
     ]
@@ -1243,6 +1264,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "(including provider connection failure), stop candidate promotion, attach "
             "the doctor JSON/error summary, and leave adapter_package pending or blocked."
         ),
+        "llm_live_preflight_blocker_comment": LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT,
         "llm_live_preflight_evidence_fields": [
             "summary.ready_for_explore",
             "summary.llm_live_preflight",
@@ -1310,6 +1332,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "E_LLM_UNAVAILABLE (including provider connection failure), stop candidate "
             "promotion, attach the doctor JSON/error summary, and leave adapter_package "
             "pending or blocked.\n\n"
+            "## LLM Preflight Blocker Comment\n"
+            f"{LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT}\n\n"
             "## LLM Preflight Evidence Fields\n"
             "- `summary.ready_for_explore`\n"
             "- `summary.llm_live_preflight`\n"
@@ -2643,6 +2667,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "case_promotion_evidence_primary_llm_live_preflight_blocker_note": (
             plan_next_iteration.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE
+        ),
+        "case_promotion_evidence_primary_llm_live_preflight_blocker_comment": (
+            LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT
         ),
         "case_promotion_llm_live_preflight_evidence_field_count": len(
             llm_preflight_fields
@@ -4161,6 +4188,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "case_promotion_evidence_primary_llm_live_preflight_blocker_note: "
         f"`{plan_next_iteration.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE}`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_primary_llm_live_preflight_blocker_comment: "
+        f"{plan_next_iteration._summary_inline_code(LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT)}"
     ) in readme
     assert "case_promotion_llm_live_preflight_evidence_field_count: `9`" in readme
     assert (

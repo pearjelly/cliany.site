@@ -470,6 +470,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "case_promotion_evidence_primary_next_task_sha256",
         "case_promotion_evidence_primary_next_task",
         "case_promotion_evidence_primary_next_action",
+        "case_promotion_evidence_primary_llm_live_preflight_blocker_comment",
         "promotion_command_plan",
         "promotion_command_plan_summary",
         "case_promotion_command_plan_summary",
