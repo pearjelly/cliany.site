@@ -29,6 +29,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "python scripts/validate_cases.py --strict" in index
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in index
     assert "cliany-site cases --status candidate --promotion-plan" in index
+    assert "primary_issue_template_command" in index
+    assert "issue_template_json_command" in index
     assert "primary_next_task_acceptance_criteria" in index
     assert "preflight_required" in index
     assert "preflight_blocker" in index
@@ -59,6 +61,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "primary_next_task_acceptance_criteria" in script
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in script
     assert "cliany-site cases --status candidate --promotion-plan" in script
+    assert "primary_issue_template_command" in script
+    assert "issue_template_json_command" in script
     assert "python scripts/plan_next_iteration.py --issues-dir" in script
     assert "Primary Acceptance Criteria" in script
     assert "Generate Your Own" in script

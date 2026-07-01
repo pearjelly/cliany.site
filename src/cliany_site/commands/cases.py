@@ -776,6 +776,8 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         primary_next_task = bundle.get("primary_next_task")
         primary_next_task = primary_next_task if isinstance(primary_next_task, dict) else {}
         case_id = str(bundle.get("case_id") or "")
+        issue_template_command = f"cliany-site cases --case-id {case_id} --issue-template"
+        issue_template_json_command = f"{issue_template_command} --json"
         evidence_bundle_command = f"cliany-site cases --case-id {case_id} --evidence-bundle"
         evidence_bundle_json_command = f"{evidence_bundle_command} --json"
         llm_live_preflight_command = str(bundle.get("llm_live_preflight_command") or "")
@@ -808,6 +810,8 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
             "promotion_command_plan_missing_tasks": bundle.get(
                 "promotion_command_plan_missing_tasks", []
             ),
+            "issue_template_command": issue_template_command,
+            "issue_template_json_command": issue_template_json_command,
             "evidence_bundle_command": evidence_bundle_command,
             "evidence_bundle_json_command": evidence_bundle_json_command,
             "llm_live_preflight_command": llm_live_preflight_command,
@@ -832,6 +836,8 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
                     "handoff": task.get("handoff", ""),
                     "acceptance_criteria": task.get("acceptance_criteria", ""),
                     "runbook": task.get("runbook", []),
+                    "issue_template_command": issue_template_command,
+                    "issue_template_json_command": issue_template_json_command,
                     "evidence_bundle_command": evidence_bundle_command,
                     "evidence_bundle_json_command": evidence_bundle_json_command,
                     "llm_live_preflight_command": llm_live_preflight_command,
@@ -859,6 +865,12 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
             "expected_adapter_package", ""
         ),
         "primary_runbook": primary_next_item.get("runbook", []),
+        "primary_issue_template_command": primary_next_item.get(
+            "issue_template_command", ""
+        ),
+        "primary_issue_template_json_command": primary_next_item.get(
+            "issue_template_json_command", ""
+        ),
         "primary_llm_live_preflight_command": primary_next_item.get(
             "llm_live_preflight_command", ""
         ),
@@ -937,6 +949,14 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                     f"{primary_next_item.get('acceptance_criteria') or 'Not declared.'}"
                 ),
                 (
+                    "- Issue template: "
+                    f"`{primary_next_item['issue_template_command']}`"
+                ),
+                (
+                    "- Issue template JSON: "
+                    f"`{primary_next_item['issue_template_json_command']}`"
+                ),
+                (
                     "- Evidence bundle JSON: "
                     f"`{primary_next_item['evidence_bundle_json_command']}`"
                 ),
@@ -982,6 +1002,8 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                     "  - acceptance: "
                     f"{candidate.get('primary_acceptance_criteria') or 'Not declared.'}"
                 ),
+                f"  - issue_template: `{candidate['issue_template_command']}`",
+                f"  - issue_template_json: `{candidate['issue_template_json_command']}`",
                 (
                     "  - llm_blocker: "
                     f"{candidate.get('llm_live_preflight_blocker_note') or 'Not declared.'}"
@@ -1003,6 +1025,8 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                 f"  - command_missing: `{str(item.get('command_missing', False)).lower()}`",
                 f"  - handoff: {item.get('handoff') or 'No handoff declared.'}",
                 f"  - acceptance: {item.get('acceptance_criteria') or 'Not declared.'}",
+                f"  - issue_template: `{item['issue_template_command']}`",
+                f"  - issue_template_json: `{item['issue_template_json_command']}`",
                 (
                     "  - llm_blocker: "
                     f"{item.get('llm_live_preflight_blocker_note') or 'Not declared.'}"

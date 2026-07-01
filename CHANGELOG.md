@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Changed
+- Cases promotion plan output now includes issue template handoff commands (`issue_template_command`, `issue_template_json_command`, and primary aliases), so maintainers can jump from the candidate queue directly to a copyable promotion issue body.
 - Cases issue template output now reuses the evidence-bundle primary task, so `cliany-site cases --case-id <id> --issue-template` renders a `Primary Runbook`, standard LLM/doctor blocker comments, and `Doctor Preflight Evidence Fields`; `--json` exposes the same acceptance, runbook, and preflight fields on `issue_template_primary_task`.
 - Cases evidence bundle JSON now exposes `doctor_preflight_evidence_fields` at the bundle level and on the `adapter_package` task, so direct `cliany-site cases --case-id <id> --evidence-bundle --json` handoffs can capture CDP and LLM blocker fields without going through planner artifacts.
 - Next-iteration planner JSON, Markdown reports, and candidate issue artifact README summaries now expose `case_promotion_evidence_primary_llm_live_preflight_required`, `case_promotion_evidence_primary_llm_live_preflight_command`, `case_promotion_evidence_primary_llm_live_preflight_blocker_note`, `case_promotion_evidence_primary_llm_live_preflight_blocker_comment`, `case_promotion_evidence_primary_doctor_preflight_blocker_comment`, and candidate-level `doctor_preflight_evidence_fields`, so summary-only tools can detect the primary candidate live preflight gate and copy a standard CDP/LLM blocker comment without expanding the task object.

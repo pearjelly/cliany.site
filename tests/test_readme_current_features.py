@@ -20,6 +20,8 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "cliany-site cases --case-id pypi-project-search --json" in text
         assert "cliany-site cases --status candidate --promotion-plan" in text
         assert "promotion_plan.primary_next_item" in text
+        assert "promotion_plan.primary_issue_template_command" in text
+        assert "issue_template_json_command" in text
         assert "promotion_evidence_summary.primary_next_task" in text
         assert "promotion_evidence_summary.primary_next_task_acceptance_criteria" in text
         assert "python scripts/plan_next_iteration.py --issues-dir" in text

@@ -869,6 +869,12 @@ def test_cases_command_promotion_plan_json(tmp_home):
     assert plan["primary_runbook"] == plan["primary_next_item"]["runbook"]
     assert plan["primary_runbook"][0]["step"] == "llm_live_preflight"
     assert plan["primary_runbook"][1]["step"] == "adapter_package"
+    assert plan["primary_issue_template_command"] == (
+        "cliany-site cases --case-id pypi-project-search --issue-template"
+    )
+    assert plan["primary_issue_template_json_command"] == (
+        "cliany-site cases --case-id pypi-project-search --issue-template --json"
+    )
     assert plan["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
     assert plan["primary_llm_live_preflight_command"] == plan["llm_live_preflight_command"]
     assert "E_LLM_UNAVAILABLE" in plan["llm_live_preflight_blocker_note"]
@@ -893,6 +899,12 @@ def test_cases_command_promotion_plan_json(tmp_home):
         "handoff": plan["primary_handoff"],
         "acceptance_criteria": plan["primary_acceptance_criteria"],
         "runbook": plan["primary_runbook"],
+        "issue_template_command": (
+            "cliany-site cases --case-id pypi-project-search --issue-template"
+        ),
+        "issue_template_json_command": (
+            "cliany-site cases --case-id pypi-project-search --issue-template --json"
+        ),
         "evidence_bundle_command": "cliany-site cases --case-id pypi-project-search --evidence-bundle",
         "evidence_bundle_json_command": (
             "cliany-site cases --case-id pypi-project-search --evidence-bundle --json"
@@ -908,6 +920,12 @@ def test_cases_command_promotion_plan_json(tmp_home):
     )
     assert plan["candidates"][0]["primary_task"] == "adapter_package"
     assert plan["candidates"][0]["primary_status"] == "pending"
+    assert plan["candidates"][0]["issue_template_command"] == (
+        "cliany-site cases --case-id pypi-project-search --issue-template"
+    )
+    assert plan["candidates"][0]["issue_template_json_command"] == (
+        "cliany-site cases --case-id pypi-project-search --issue-template --json"
+    )
     assert plan["candidates"][0]["priority_rank"] == 1
     assert plan["candidates"][0]["priority_reason"] == (
         "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0"
@@ -945,14 +963,31 @@ def test_cases_command_promotion_plan_human_outputs_queue(tmp_home):
         "`cliany-site cases --case-id pypi-project-search --evidence-bundle --json`"
         in result.output
     )
+    assert (
+        "Issue template: "
+        "`cliany-site cases --case-id pypi-project-search --issue-template`"
+        in result.output
+    )
+    assert (
+        "Issue template JSON: "
+        "`cliany-site cases --case-id pypi-project-search --issue-template --json`"
+        in result.output
+    )
     assert "## Candidate queue" in result.output
     assert "priority: `1`" in result.output
     assert "priority_reason: rank 1: complete 0/3, pending 3, blocked 0, missing commands 0" in result.output
     assert "ready_to_promote: `false`" in result.output
+    assert "issue_template: `cliany-site cases --case-id pypi-project-search --issue-template`" in result.output
+    assert (
+        "issue_template_json: "
+        "`cliany-site cases --case-id pypi-project-search --issue-template --json`"
+        in result.output
+    )
     assert "## Incomplete task queue" in result.output
     assert "`pypi-project-search/adapter_package` (pending)" in result.output
     assert "priority_reason: rank 1: complete 0/3, pending 3, blocked 0, missing commands 0" in result.output
     assert "acceptance: Attach the generated" in result.output
+    assert "issue_template: `cliany-site cases --case-id pypi-project-search --issue-template`" in result.output
 
 
 def test_cases_command_promotion_plan_prioritizes_closest_candidate(tmp_home, monkeypatch):
