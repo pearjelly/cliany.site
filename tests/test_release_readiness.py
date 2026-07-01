@@ -30,6 +30,31 @@ RELEASE_PREFLIGHT_COMMAND = (
 WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
 
 
+def _standard_release_flow_step_status_counts(
+    steps: list[dict[str, object]],
+) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for step in steps:
+        status = step.get("status")
+        if status is None:
+            continue
+        status_key = str(status)
+        counts[status_key] = counts.get(status_key, 0) + 1
+    return counts
+
+
+def _standard_release_flow_primary_step_name_with_status_prefix(
+    steps: list[dict[str, object]],
+    prefix: str,
+) -> str | None:
+    for step in steps:
+        status = step.get("status")
+        name = step.get("name")
+        if status is not None and name is not None and str(status).startswith(prefix):
+            return str(name)
+    return None
+
+
 def _git(repo: Path, *args: str, env: dict[str, str] | None = None) -> None:
     subprocess.check_call(["git", *args], cwd=repo, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -758,6 +783,9 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
         "first_step_name": standard_release_flow_step_names[0],
         "last_step_name": standard_release_flow_step_names[-1],
     }
+    standard_release_flow_step_status_counts = (
+        _standard_release_flow_step_status_counts(standard_release_flow["steps"])
+    )
     assert payload["standard_release_flow_step_count"] == len(
         standard_release_flow["steps"]
     )
@@ -772,6 +800,22 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert payload["standard_release_flow_last_step_name"] == "remote_publication_audit"
     assert payload["standard_release_flow_step_boundary_sha256"] == (
         release_readiness._stable_json_sha256(standard_release_flow_step_boundary)
+    )
+    assert payload["standard_release_flow_step_status_counts"] == (
+        standard_release_flow_step_status_counts
+    )
+    assert payload["standard_release_flow_step_status_counts_sha256"] == (
+        release_readiness._stable_json_sha256(standard_release_flow_step_status_counts)
+    )
+    assert payload["standard_release_flow_primary_blocked_step_name"] == (
+        _standard_release_flow_primary_step_name_with_status_prefix(
+            standard_release_flow["steps"], "blocked"
+        )
+    )
+    assert payload["standard_release_flow_primary_pending_step_name"] == (
+        _standard_release_flow_primary_step_name_with_status_prefix(
+            standard_release_flow["steps"], "pending"
+        )
     )
     assert payload["standard_release_flow_sha256"] == release_readiness._stable_json_sha256(
         standard_release_flow
@@ -933,6 +977,10 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- standard_release_flow_first_step_name: `strict_release_readiness`" in text
     assert "- standard_release_flow_last_step_name: `remote_publication_audit`" in text
     assert "- standard_release_flow_step_boundary_sha256: `" in text
+    assert "- standard_release_flow_step_status_counts: `" in text
+    assert "- standard_release_flow_step_status_counts_sha256: `" in text
+    assert "- standard_release_flow_primary_blocked_step_name: `" in text
+    assert "- standard_release_flow_primary_pending_step_name: `" in text
     assert "- standard_release_flow_has_website_deploy: `true`" in text
     assert f"- standard_release_flow_website_deploy_command: `{WEBSITE_DEPLOY_COMMAND}`" in text
     assert "- standard_release_flow_website_deploy_command_sha256: `" in text
@@ -1300,6 +1348,10 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     assert "standard_release_flow_first_step_name: strict_release_readiness" in output
     assert "standard_release_flow_last_step_name: remote_publication_audit" in output
     assert "standard_release_flow_step_boundary_sha256:" in output
+    assert "standard_release_flow_step_status_counts:" in output
+    assert "standard_release_flow_step_status_counts_sha256:" in output
+    assert "standard_release_flow_primary_blocked_step_name:" in output
+    assert "standard_release_flow_primary_pending_step_name:" in output
     assert "package_gate_summary: checked=false, failed=0, missing=0, invalid=0, repair_actions=0" in output
     assert "package_gate_primary_repair_action:" not in output
     assert "next_actions:" in output.splitlines()

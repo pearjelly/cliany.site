@@ -27,6 +27,31 @@ def _stable_json_sha256(value: object) -> str:
     return hashlib.sha256(digest_source).hexdigest()
 
 
+def _standard_release_flow_step_status_counts(
+    steps: list[dict[str, object]],
+) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for step in steps:
+        status = step.get("status")
+        if status is None:
+            continue
+        status_key = str(status)
+        counts[status_key] = counts.get(status_key, 0) + 1
+    return counts
+
+
+def _standard_release_flow_primary_step_name_with_status_prefix(
+    steps: list[dict[str, object]],
+    prefix: str,
+) -> str | None:
+    for step in steps:
+        status = step.get("status")
+        name = step.get("name")
+        if status is not None and name is not None and str(status).startswith(prefix):
+            return str(name)
+    return None
+
+
 def _target_tag_release_gate_fields(
     blockers: list[str] | None = None,
     *,
@@ -606,6 +631,12 @@ def test_plan_prefers_standard_release_flow_primary_action(tmp_path):
     assert data["standard_release_flow_step_boundary_sha256"] == _stable_json_sha256(
         {"first_step_name": None, "last_step_name": None}
     )
+    assert data["standard_release_flow_step_status_counts"] == {}
+    assert data["standard_release_flow_step_status_counts_sha256"] == _stable_json_sha256(
+        {}
+    )
+    assert data["standard_release_flow_primary_blocked_step_name"] is None
+    assert data["standard_release_flow_primary_pending_step_name"] is None
 
 
 def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path):
@@ -1315,6 +1346,25 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
     assert data["standard_release_flow_step_boundary_sha256"] == _stable_json_sha256(
         standard_release_flow_step_boundary
     )
+    standard_release_flow_step_status_counts = (
+        _standard_release_flow_step_status_counts(data["standard_release_flow"]["steps"])
+    )
+    assert data["standard_release_flow_step_status_counts"] == (
+        standard_release_flow_step_status_counts
+    )
+    assert data["standard_release_flow_step_status_counts_sha256"] == _stable_json_sha256(
+        standard_release_flow_step_status_counts
+    )
+    assert data["standard_release_flow_primary_blocked_step_name"] == (
+        _standard_release_flow_primary_step_name_with_status_prefix(
+            data["standard_release_flow"]["steps"], "blocked"
+        )
+    )
+    assert data["standard_release_flow_primary_pending_step_name"] == (
+        _standard_release_flow_primary_step_name_with_status_prefix(
+            data["standard_release_flow"]["steps"], "pending"
+        )
+    )
     assert data["standard_release_flow_has_website_deploy"] is True
     assert data["standard_release_flow_website_deploy_command"] == WEBSITE_DEPLOY_COMMAND
     assert data["standard_release_flow_website_deploy_command_sha256"] == (
@@ -1431,6 +1481,30 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
         f"`{_stable_json_sha256(standard_release_flow_step_boundary)}` |"
         in text
     )
+    standard_release_flow_step_status_counts = (
+        _standard_release_flow_step_status_counts(plan.standard_release_flow["steps"])
+    )
+    assert (
+        "| standard_release_flow_step_status_counts | "
+        f"`{json.dumps(standard_release_flow_step_status_counts, ensure_ascii=False)}` |"
+        in text
+    )
+    assert (
+        "| standard_release_flow_step_status_counts_sha256 | "
+        f"`{_stable_json_sha256(standard_release_flow_step_status_counts)}` |"
+        in text
+    )
+    standard_release_flow_primary_blocked_step_name = (
+        _standard_release_flow_primary_step_name_with_status_prefix(
+            plan.standard_release_flow["steps"], "blocked"
+        )
+    )
+    assert (
+        "| standard_release_flow_primary_blocked_step_name | `"
+        f"{standard_release_flow_primary_blocked_step_name}` |"
+        in text
+    )
+    assert "| standard_release_flow_primary_pending_step_name | `release_notes` |" in text
     assert (
         "| plan_report_command | "
         "`python scripts/plan_next_iteration.py --target-version 0.16.2 "
@@ -1844,6 +1918,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "first_step_name": standard_release_flow_step_names[0],
         "last_step_name": standard_release_flow_step_names[-1],
     }
+    standard_release_flow_step_status_counts = (
+        _standard_release_flow_step_status_counts(standard_release_flow_steps)
+    )
     expected_publication_handoff = {
         "schema_version": 1,
         "publication_ok": False,
@@ -1892,6 +1969,20 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_last_step_name": "remote_publication_audit",
         "standard_release_flow_step_boundary_sha256": _stable_json_sha256(
             standard_release_flow_step_boundary
+        ),
+        "standard_release_flow_step_status_counts": standard_release_flow_step_status_counts,
+        "standard_release_flow_step_status_counts_sha256": _stable_json_sha256(
+            standard_release_flow_step_status_counts
+        ),
+        "standard_release_flow_primary_blocked_step_name": (
+            _standard_release_flow_primary_step_name_with_status_prefix(
+                standard_release_flow_steps, "blocked"
+            )
+        ),
+        "standard_release_flow_primary_pending_step_name": (
+            _standard_release_flow_primary_step_name_with_status_prefix(
+                standard_release_flow_steps, "pending"
+            )
         ),
         "standard_release_flow_has_website_deploy": True,
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
@@ -2318,6 +2409,20 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_last_step_name": "remote_publication_audit",
         "standard_release_flow_step_boundary_sha256": _stable_json_sha256(
             standard_release_flow_step_boundary
+        ),
+        "standard_release_flow_step_status_counts": standard_release_flow_step_status_counts,
+        "standard_release_flow_step_status_counts_sha256": _stable_json_sha256(
+            standard_release_flow_step_status_counts
+        ),
+        "standard_release_flow_primary_blocked_step_name": (
+            _standard_release_flow_primary_step_name_with_status_prefix(
+                standard_release_flow_steps, "blocked"
+            )
+        ),
+        "standard_release_flow_primary_pending_step_name": (
+            _standard_release_flow_primary_step_name_with_status_prefix(
+                standard_release_flow_steps, "pending"
+            )
         ),
         "standard_release_flow_has_website_deploy": True,
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
@@ -3051,6 +3156,20 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_step_boundary_sha256": _stable_json_sha256(
             standard_release_flow_step_boundary
         ),
+        "standard_release_flow_step_status_counts": standard_release_flow_step_status_counts,
+        "standard_release_flow_step_status_counts_sha256": _stable_json_sha256(
+            standard_release_flow_step_status_counts
+        ),
+        "standard_release_flow_primary_blocked_step_name": (
+            _standard_release_flow_primary_step_name_with_status_prefix(
+                standard_release_flow_steps, "blocked"
+            )
+        ),
+        "standard_release_flow_primary_pending_step_name": (
+            _standard_release_flow_primary_step_name_with_status_prefix(
+                standard_release_flow_steps, "pending"
+            )
+        ),
         "standard_release_flow_has_website_deploy": True,
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
         "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
@@ -3700,6 +3819,19 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_step_boundary_sha256: "
         f"`{_stable_json_sha256(standard_release_flow_step_boundary)}`"
     ) in readme
+    assert (
+        "standard_release_flow_step_status_counts: "
+        f"`{json.dumps(standard_release_flow_step_status_counts, ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "standard_release_flow_step_status_counts_sha256: "
+        f"`{_stable_json_sha256(standard_release_flow_step_status_counts)}`"
+    ) in readme
+    assert (
+        "standard_release_flow_primary_blocked_step_name: "
+        f"`{_standard_release_flow_primary_step_name_with_status_prefix(standard_release_flow_steps, 'blocked')}`"
+    ) in readme
+    assert "standard_release_flow_primary_pending_step_name: `release_notes`" in readme
     assert "standard_release_flow_has_website_deploy: `true`" in readme
     assert (
         f"standard_release_flow_website_deploy_command: `{WEBSITE_DEPLOY_COMMAND}`"
@@ -4828,6 +4960,19 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_step_boundary_sha256: "
         f"`{_stable_json_sha256(standard_release_flow_step_boundary)}`"
     ) in readme
+    assert (
+        "standard_release_flow_step_status_counts: "
+        f"`{json.dumps(standard_release_flow_step_status_counts, ensure_ascii=False)}`"
+    ) in readme
+    assert (
+        "standard_release_flow_step_status_counts_sha256: "
+        f"`{_stable_json_sha256(standard_release_flow_step_status_counts)}`"
+    ) in readme
+    assert (
+        "standard_release_flow_primary_blocked_step_name: "
+        f"`{_standard_release_flow_primary_step_name_with_status_prefix(standard_release_flow_steps, 'blocked')}`"
+    ) in readme
+    assert "standard_release_flow_primary_pending_step_name: `release_notes`" in readme
     assert "standard_release_flow_has_website_deploy: `true`" in readme
     assert (
         f"standard_release_flow_website_deploy_command: `{WEBSITE_DEPLOY_COMMAND}`"

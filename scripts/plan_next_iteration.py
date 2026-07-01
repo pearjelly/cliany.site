@@ -70,6 +70,10 @@ ARTIFACT_MANIFEST_KEYS = (
     "standard_release_flow_first_step_name",
     "standard_release_flow_last_step_name",
     "standard_release_flow_step_boundary_sha256",
+    "standard_release_flow_step_status_counts",
+    "standard_release_flow_step_status_counts_sha256",
+    "standard_release_flow_primary_blocked_step_name",
+    "standard_release_flow_primary_pending_step_name",
     "standard_release_flow_has_website_deploy",
     "standard_release_flow_website_deploy_command",
     "standard_release_flow_website_deploy_command_sha256",
@@ -203,6 +207,10 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "standard_release_flow_first_step_name",
     "standard_release_flow_last_step_name",
     "standard_release_flow_step_boundary_sha256",
+    "standard_release_flow_step_status_counts",
+    "standard_release_flow_step_status_counts_sha256",
+    "standard_release_flow_primary_blocked_step_name",
+    "standard_release_flow_primary_pending_step_name",
     "standard_release_flow_has_website_deploy",
     "standard_release_flow_website_deploy_command",
     "standard_release_flow_website_deploy_command_sha256",
@@ -646,6 +654,9 @@ class IterationPlan:
         standard_release_flow_step_boundary = _standard_release_flow_step_boundary(
             self.standard_release_flow
         )
+        standard_release_flow_step_status_counts = (
+            _standard_release_flow_step_status_counts(self.standard_release_flow)
+        )
         website_deploy_command = _standard_release_flow_website_deploy_command(
             self.standard_release_flow
         )
@@ -696,6 +707,22 @@ class IterationPlan:
             ),
             "standard_release_flow_step_boundary_sha256": _stable_json_sha256(
                 standard_release_flow_step_boundary
+            ),
+            "standard_release_flow_step_status_counts": (
+                standard_release_flow_step_status_counts
+            ),
+            "standard_release_flow_step_status_counts_sha256": _stable_json_sha256(
+                standard_release_flow_step_status_counts
+            ),
+            "standard_release_flow_primary_blocked_step_name": (
+                _standard_release_flow_primary_step_name_with_status_prefix(
+                    self.standard_release_flow, "blocked"
+                )
+            ),
+            "standard_release_flow_primary_pending_step_name": (
+                _standard_release_flow_primary_step_name_with_status_prefix(
+                    self.standard_release_flow, "pending"
+                )
             ),
             "standard_release_flow_has_website_deploy": website_deploy_command is not None,
             "standard_release_flow_website_deploy_command": website_deploy_command,
@@ -1110,6 +1137,29 @@ def _standard_release_flow_step_boundary(flow: dict[str, Any]) -> dict[str, str 
         "first_step_name": step_names[0] if step_names else None,
         "last_step_name": step_names[-1] if step_names else None,
     }
+
+
+def _standard_release_flow_step_status_counts(flow: dict[str, Any]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for step in _standard_release_flow_steps(flow):
+        status = step.get("status")
+        if status is None:
+            continue
+        status_key = str(status)
+        counts[status_key] = counts.get(status_key, 0) + 1
+    return counts
+
+
+def _standard_release_flow_primary_step_name_with_status_prefix(
+    flow: dict[str, Any],
+    prefix: str,
+) -> str | None:
+    for step in _standard_release_flow_steps(flow):
+        status = step.get("status")
+        name = step.get("name")
+        if status is not None and name is not None and str(status).startswith(prefix):
+            return str(name)
+    return None
 
 
 def _readiness_next_actions(readiness: Any) -> list[str]:
@@ -2611,6 +2661,9 @@ def _print_text(plan: IterationPlan) -> None:
     standard_release_flow_step_boundary = _standard_release_flow_step_boundary(
         plan.standard_release_flow
     )
+    standard_release_flow_step_status_counts = _standard_release_flow_step_status_counts(
+        plan.standard_release_flow
+    )
     website_deploy_command = _standard_release_flow_website_deploy_command(
         plan.standard_release_flow
     )
@@ -2688,6 +2741,22 @@ def _print_text(plan: IterationPlan) -> None:
     print(
         "standard_release_flow_step_boundary_sha256: "
         f"{_stable_json_sha256(standard_release_flow_step_boundary)}"
+    )
+    print(
+        "standard_release_flow_step_status_counts: "
+        f"{json.dumps(standard_release_flow_step_status_counts, ensure_ascii=False)}"
+    )
+    print(
+        "standard_release_flow_step_status_counts_sha256: "
+        f"{_stable_json_sha256(standard_release_flow_step_status_counts)}"
+    )
+    print(
+        "standard_release_flow_primary_blocked_step_name: "
+        f"{_standard_release_flow_primary_step_name_with_status_prefix(plan.standard_release_flow, 'blocked')}"
+    )
+    print(
+        "standard_release_flow_primary_pending_step_name: "
+        f"{_standard_release_flow_primary_step_name_with_status_prefix(plan.standard_release_flow, 'pending')}"
     )
     print(f"standard_release_flow_has_website_deploy: {website_deploy_command is not None}")
     print(f"standard_release_flow_website_deploy_command: {website_deploy_command}")
@@ -2846,11 +2915,28 @@ def _render_markdown(plan: IterationPlan) -> str:
     standard_release_flow_step_boundary = _standard_release_flow_step_boundary(
         plan.standard_release_flow
     )
+    standard_release_flow_step_status_counts = _standard_release_flow_step_status_counts(
+        plan.standard_release_flow
+    )
+    standard_release_flow_step_status_counts_json = json.dumps(
+        standard_release_flow_step_status_counts,
+        ensure_ascii=False,
+    )
     standard_release_flow_first_step_name = _format_context_value(
         standard_release_flow_step_boundary["first_step_name"]
     )
     standard_release_flow_last_step_name = _format_context_value(
         standard_release_flow_step_boundary["last_step_name"]
+    )
+    standard_release_flow_primary_blocked_step_name = _format_context_value(
+        _standard_release_flow_primary_step_name_with_status_prefix(
+            plan.standard_release_flow, "blocked"
+        )
+    )
+    standard_release_flow_primary_pending_step_name = _format_context_value(
+        _standard_release_flow_primary_step_name_with_status_prefix(
+            plan.standard_release_flow, "pending"
+        )
     )
     standard_release_flow_website_deploy_command = (
         _standard_release_flow_website_deploy_command(plan.standard_release_flow)
@@ -2930,6 +3016,10 @@ def _render_markdown(plan: IterationPlan) -> str:
 | standard_release_flow_first_step_name | `{standard_release_flow_first_step_name}` |
 | standard_release_flow_last_step_name | `{standard_release_flow_last_step_name}` |
 | standard_release_flow_step_boundary_sha256 | `{_stable_json_sha256(standard_release_flow_step_boundary)}` |
+| standard_release_flow_step_status_counts | `{standard_release_flow_step_status_counts_json}` |
+| standard_release_flow_step_status_counts_sha256 | `{_stable_json_sha256(standard_release_flow_step_status_counts)}` |
+| standard_release_flow_primary_blocked_step_name | `{standard_release_flow_primary_blocked_step_name}` |
+| standard_release_flow_primary_pending_step_name | `{standard_release_flow_primary_pending_step_name}` |
 | standard_release_flow_has_website_deploy | `{str(standard_release_flow_website_deploy_command is not None).lower()}` |
 | standard_release_flow_website_deploy_command | `{standard_release_flow_website_deploy_command_text}` |
 | standard_release_flow_website_deploy_command_sha256 | `{standard_release_flow_website_deploy_command_sha256_text}` |
@@ -3268,6 +3358,13 @@ def _standard_release_flow_markdown(flow: dict[str, Any]) -> str:
     flow_steps = _standard_release_flow_steps(flow)
     flow_step_names = _standard_release_flow_step_names(flow)
     flow_step_boundary = _standard_release_flow_step_boundary(flow)
+    flow_step_status_counts = _standard_release_flow_step_status_counts(flow)
+    primary_blocked_step_name = _format_context_value(
+        _standard_release_flow_primary_step_name_with_status_prefix(flow, "blocked")
+    )
+    primary_pending_step_name = _format_context_value(
+        _standard_release_flow_primary_step_name_with_status_prefix(flow, "pending")
+    )
     website_deploy_command = _standard_release_flow_website_deploy_command(flow)
     website_deploy_command_sha256 = (
         _stable_json_sha256(website_deploy_command) if website_deploy_command else None
@@ -3301,6 +3398,10 @@ def _standard_release_flow_markdown(flow: dict[str, Any]) -> str:
 - standard_release_flow_first_step_name: `{_format_context_value(flow_step_boundary["first_step_name"])}`
 - standard_release_flow_last_step_name: `{_format_context_value(flow_step_boundary["last_step_name"])}`
 - standard_release_flow_step_boundary_sha256: `{_stable_json_sha256(flow_step_boundary)}`
+- standard_release_flow_step_status_counts: `{json.dumps(flow_step_status_counts, ensure_ascii=False)}`
+- standard_release_flow_step_status_counts_sha256: `{_stable_json_sha256(flow_step_status_counts)}`
+- standard_release_flow_primary_blocked_step_name: `{primary_blocked_step_name}`
+- standard_release_flow_primary_pending_step_name: `{primary_pending_step_name}`
 - standard_release_flow_has_website_deploy: `{str(website_deploy_command is not None).lower()}`
 - standard_release_flow_website_deploy_command: `{_format_context_value(website_deploy_command)}`
 - standard_release_flow_website_deploy_command_sha256: `{_format_context_value(website_deploy_command_sha256)}`
@@ -4215,6 +4316,9 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
     standard_release_flow_step_boundary = _standard_release_flow_step_boundary(
         plan.standard_release_flow
     )
+    standard_release_flow_step_status_counts = _standard_release_flow_step_status_counts(
+        plan.standard_release_flow
+    )
     handoff = {
         "schema_version": 1,
         "publication_ok": plan.publication_ok,
@@ -4266,6 +4370,20 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         ),
         "standard_release_flow_step_boundary_sha256": _stable_json_sha256(
             standard_release_flow_step_boundary
+        ),
+        "standard_release_flow_step_status_counts": standard_release_flow_step_status_counts,
+        "standard_release_flow_step_status_counts_sha256": _stable_json_sha256(
+            standard_release_flow_step_status_counts
+        ),
+        "standard_release_flow_primary_blocked_step_name": (
+            _standard_release_flow_primary_step_name_with_status_prefix(
+                plan.standard_release_flow, "blocked"
+            )
+        ),
+        "standard_release_flow_primary_pending_step_name": (
+            _standard_release_flow_primary_step_name_with_status_prefix(
+                plan.standard_release_flow, "pending"
+            )
         ),
         "standard_release_flow_has_website_deploy": website_deploy_command is not None,
         "standard_release_flow_website_deploy_command": website_deploy_command,
@@ -4504,6 +4622,9 @@ def _artifact_manifest_payload_without_summary(
     standard_release_flow_step_boundary = _standard_release_flow_step_boundary(
         plan.standard_release_flow
     )
+    standard_release_flow_step_status_counts = _standard_release_flow_step_status_counts(
+        plan.standard_release_flow
+    )
     return {
         "schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "target_version": plan.target_version,
@@ -4538,6 +4659,20 @@ def _artifact_manifest_payload_without_summary(
         ),
         "standard_release_flow_step_boundary_sha256": _stable_json_sha256(
             standard_release_flow_step_boundary
+        ),
+        "standard_release_flow_step_status_counts": standard_release_flow_step_status_counts,
+        "standard_release_flow_step_status_counts_sha256": _stable_json_sha256(
+            standard_release_flow_step_status_counts
+        ),
+        "standard_release_flow_primary_blocked_step_name": (
+            _standard_release_flow_primary_step_name_with_status_prefix(
+                plan.standard_release_flow, "blocked"
+            )
+        ),
+        "standard_release_flow_primary_pending_step_name": (
+            _standard_release_flow_primary_step_name_with_status_prefix(
+                plan.standard_release_flow, "pending"
+            )
         ),
         "standard_release_flow_has_website_deploy": website_deploy_command is not None,
         "standard_release_flow_website_deploy_command": website_deploy_command,
@@ -4859,6 +4994,9 @@ def _issue_artifact_bundle_summary(
     standard_release_flow_step_boundary = _standard_release_flow_step_boundary(
         plan.standard_release_flow
     )
+    standard_release_flow_step_status_counts = _standard_release_flow_step_status_counts(
+        plan.standard_release_flow
+    )
     return {
         "artifact_bundle_summary_key_count": len(ARTIFACT_BUNDLE_SUMMARY_KEYS),
         "artifact_bundle_summary_keys_sha256": _stable_json_sha256(ARTIFACT_BUNDLE_SUMMARY_KEYS),
@@ -5061,6 +5199,20 @@ def _issue_artifact_bundle_summary(
         ),
         "standard_release_flow_step_boundary_sha256": _stable_json_sha256(
             standard_release_flow_step_boundary
+        ),
+        "standard_release_flow_step_status_counts": standard_release_flow_step_status_counts,
+        "standard_release_flow_step_status_counts_sha256": _stable_json_sha256(
+            standard_release_flow_step_status_counts
+        ),
+        "standard_release_flow_primary_blocked_step_name": (
+            _standard_release_flow_primary_step_name_with_status_prefix(
+                plan.standard_release_flow, "blocked"
+            )
+        ),
+        "standard_release_flow_primary_pending_step_name": (
+            _standard_release_flow_primary_step_name_with_status_prefix(
+                plan.standard_release_flow, "pending"
+            )
         ),
         "standard_release_flow_has_website_deploy": website_deploy_command is not None,
         "standard_release_flow_website_deploy_command": website_deploy_command,
@@ -5842,6 +5994,14 @@ def _issue_artifact_bundle_summary_markdown(
             f"{_summary_inline_code(summary['standard_release_flow_last_step_name'])}",
             "- standard_release_flow_step_boundary_sha256: "
             f"`{summary['standard_release_flow_step_boundary_sha256']}`",
+            "- standard_release_flow_step_status_counts: "
+            f"`{json.dumps(summary['standard_release_flow_step_status_counts'], ensure_ascii=False)}`",
+            "- standard_release_flow_step_status_counts_sha256: "
+            f"`{summary['standard_release_flow_step_status_counts_sha256']}`",
+            "- standard_release_flow_primary_blocked_step_name: "
+            f"{_summary_inline_code(summary['standard_release_flow_primary_blocked_step_name'])}",
+            "- standard_release_flow_primary_pending_step_name: "
+            f"{_summary_inline_code(summary['standard_release_flow_primary_pending_step_name'])}",
             "- standard_release_flow_has_website_deploy: "
             f"`{str(bool(summary['standard_release_flow_has_website_deploy'])).lower()}`",
             "- standard_release_flow_website_deploy_command: "

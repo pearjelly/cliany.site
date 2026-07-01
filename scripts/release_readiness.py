@@ -162,6 +162,9 @@ class ReadinessReport:
         standard_release_flow_step_boundary = _standard_release_flow_step_boundary(
             standard_release_flow
         )
+        standard_release_flow_step_status_counts = (
+            _standard_release_flow_step_status_counts(standard_release_flow)
+        )
         standard_release_flow_website_deploy_command = (
             _standard_release_flow_website_deploy_command(standard_release_flow)
         )
@@ -238,6 +241,22 @@ class ReadinessReport:
             ),
             "standard_release_flow_step_boundary_sha256": _stable_json_sha256(
                 standard_release_flow_step_boundary
+            ),
+            "standard_release_flow_step_status_counts": (
+                standard_release_flow_step_status_counts
+            ),
+            "standard_release_flow_step_status_counts_sha256": _stable_json_sha256(
+                standard_release_flow_step_status_counts
+            ),
+            "standard_release_flow_primary_blocked_step_name": (
+                _standard_release_flow_primary_step_name_with_status_prefix(
+                    standard_release_flow, "blocked"
+                )
+            ),
+            "standard_release_flow_primary_pending_step_name": (
+                _standard_release_flow_primary_step_name_with_status_prefix(
+                    standard_release_flow, "pending"
+                )
             ),
             "standard_release_flow_has_website_deploy": (
                 standard_release_flow_website_deploy_command is not None
@@ -1002,6 +1021,9 @@ def _print_text(report: ReadinessReport) -> None:
     standard_release_flow_step_boundary = _standard_release_flow_step_boundary(
         standard_release_flow
     )
+    standard_release_flow_step_status_counts = _standard_release_flow_step_status_counts(
+        standard_release_flow
+    )
     print(f"standard_release_flow_step_count: {len(standard_release_flow_steps)}")
     print(
         "standard_release_flow_step_names: "
@@ -1026,6 +1048,22 @@ def _print_text(report: ReadinessReport) -> None:
     print(
         "standard_release_flow_step_boundary_sha256: "
         f"{_stable_json_sha256(standard_release_flow_step_boundary)}"
+    )
+    print(
+        "standard_release_flow_step_status_counts: "
+        f"{json.dumps(standard_release_flow_step_status_counts, ensure_ascii=False)}"
+    )
+    print(
+        "standard_release_flow_step_status_counts_sha256: "
+        f"{_stable_json_sha256(standard_release_flow_step_status_counts)}"
+    )
+    print(
+        "standard_release_flow_primary_blocked_step_name: "
+        f"{_standard_release_flow_primary_step_name_with_status_prefix(standard_release_flow, 'blocked')}"
+    )
+    print(
+        "standard_release_flow_primary_pending_step_name: "
+        f"{_standard_release_flow_primary_step_name_with_status_prefix(standard_release_flow, 'pending')}"
     )
     print(f"package_gate: {report.package_gate.ok}")
     print(
@@ -1401,6 +1439,29 @@ def _standard_release_flow_step_boundary(flow: dict[str, Any]) -> dict[str, str 
     }
 
 
+def _standard_release_flow_step_status_counts(flow: dict[str, Any]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for step in _standard_release_flow_steps(flow):
+        status = step.get("status")
+        if status is None:
+            continue
+        status_key = str(status)
+        counts[status_key] = counts.get(status_key, 0) + 1
+    return counts
+
+
+def _standard_release_flow_primary_step_name_with_status_prefix(
+    flow: dict[str, Any],
+    prefix: str,
+) -> str | None:
+    for step in _standard_release_flow_steps(flow):
+        status = step.get("status")
+        name = step.get("name")
+        if status is not None and name is not None and str(status).startswith(prefix):
+            return str(name)
+    return None
+
+
 def _stable_json_sha256(value: Any) -> str:
     payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
@@ -1757,6 +1818,7 @@ def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
     flow_steps = _standard_release_flow_steps(flow)
     flow_step_names = _standard_release_flow_step_names(flow)
     flow_step_boundary = _standard_release_flow_step_boundary(flow)
+    flow_step_status_counts = _standard_release_flow_step_status_counts(flow)
     lines = [
         "",
         "## Standard Release Flow",
@@ -1793,6 +1855,22 @@ def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
         (
             "- standard_release_flow_step_boundary_sha256: "
             f"`{_stable_json_sha256(flow_step_boundary)}`"
+        ),
+        (
+            "- standard_release_flow_step_status_counts: "
+            f"`{_markdown_cell(json.dumps(flow_step_status_counts, ensure_ascii=False))}`"
+        ),
+        (
+            "- standard_release_flow_step_status_counts_sha256: "
+            f"`{_stable_json_sha256(flow_step_status_counts)}`"
+        ),
+        (
+            "- standard_release_flow_primary_blocked_step_name: "
+            f"`{_markdown_cell(_standard_release_flow_primary_step_name_with_status_prefix(flow, 'blocked'))}`"
+        ),
+        (
+            "- standard_release_flow_primary_pending_step_name: "
+            f"`{_markdown_cell(_standard_release_flow_primary_step_name_with_status_prefix(flow, 'pending'))}`"
         ),
         (
             "- standard_release_flow_has_website_deploy: "
