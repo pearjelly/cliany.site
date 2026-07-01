@@ -27,6 +27,7 @@
 - Next-iteration candidate issue artifacts now carry the primary candidate runbook through planner JSON, issue metadata, generated issue bodies, and artifact README summaries.
 - Case validation and release readiness Markdown reports now render the same primary candidate runbook, so maintainers see the live LLM preflight, current evidence command, and acceptance step without opening the cases CLI.
 - Release readiness and next-iteration planner JSON now expose compact primary runbook aliases, step counts, step lists, and SHA-256 hashes, and issue artifact bundle summaries render the same fields for tools that only read summary surfaces.
+- Case validation, cases CLI, release readiness, next-iteration planning, and candidate issue artifact summaries now expose the primary runbook first step, first command, and first-command hash, so bots can run the live LLM preflight without expanding the full runbook.
 - README / README.zh now document the compact candidate runbook aliases that appear in planner and issue artifact summaries, and release readiness now gates the PyPI long-description entrypoints on those aliases.
 - Contributor starter and good-first-issue docs now explain how to use `primary_next_task_runbook` and compact runbook aliases when creating candidate promotion issues, and release readiness gates those contributor entrypoints.
 - Website quickstart and docs now surface the same candidate runbook handoff fields, and release readiness gates the static site on those public entrypoint snippets.

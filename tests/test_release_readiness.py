@@ -1256,6 +1256,15 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
     assert payload["case_promotion_evidence_primary_runbook_steps_sha256"] == (
         release_readiness._stable_json_sha256(primary_runbook_steps)
     )
+    assert payload["case_promotion_evidence_primary_runbook_first_step"] == (
+        "llm_live_preflight"
+    )
+    assert payload["case_promotion_evidence_primary_runbook_first_command"] == (
+        "cliany-site doctor --llm-live --json"
+    )
+    assert payload["case_promotion_evidence_primary_runbook_first_command_sha256"] == (
+        release_readiness._stable_json_sha256("cliany-site doctor --llm-live --json")
+    )
     assert "## Candidate Primary Next Task" in text
     assert (
         "| `candidate-case` | `adapter_package` | `pending` | Not attached yet. | "

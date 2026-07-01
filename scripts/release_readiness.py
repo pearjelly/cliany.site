@@ -149,6 +149,7 @@ class ReadinessReport:
         publication_summary = _publication_summary(publication_payload)
         primary_runbook = _case_promotion_primary_runbook(self.cases)
         primary_runbook_steps = _runbook_steps(primary_runbook)
+        primary_runbook_first_command = _runbook_first_command(primary_runbook)
         next_actions = _next_action_lines(self)
         standard_release_flow = _standard_release_flow(
             self,
@@ -183,6 +184,17 @@ class ReadinessReport:
             "case_promotion_evidence_primary_runbook_steps": primary_runbook_steps,
             "case_promotion_evidence_primary_runbook_steps_sha256": _stable_json_sha256(
                 primary_runbook_steps
+            ),
+            "case_promotion_evidence_primary_runbook_first_step": (
+                _runbook_first_step_name(primary_runbook)
+            ),
+            "case_promotion_evidence_primary_runbook_first_command": (
+                primary_runbook_first_command
+            ),
+            "case_promotion_evidence_primary_runbook_first_command_sha256": (
+                _stable_json_sha256(primary_runbook_first_command)
+                if primary_runbook_first_command
+                else None
             ),
             "draft": self.draft.to_dict(),
             "ci": self.ci.to_dict(),
@@ -1606,6 +1618,25 @@ def _case_promotion_primary_runbook(cases_report: Any) -> list[dict[str, Any]]:
 
 def _runbook_steps(runbook: list[dict[str, Any]]) -> list[str]:
     return [str(step.get("step") or "") for step in runbook if step.get("step")]
+
+
+def _runbook_first_step(runbook: list[dict[str, Any]]) -> dict[str, Any]:
+    for step in runbook:
+        if isinstance(step, dict):
+            return step
+    return {}
+
+
+def _runbook_first_step_name(runbook: list[dict[str, Any]]) -> str | None:
+    first_step = _runbook_first_step(runbook)
+    step_name = first_step.get("step")
+    return str(step_name) if step_name else None
+
+
+def _runbook_first_command(runbook: list[dict[str, Any]]) -> str | None:
+    first_step = _runbook_first_step(runbook)
+    command = first_step.get("command")
+    return str(command) if command else None
 
 
 def _candidate_primary_runbook_rows(report: ReadinessReport) -> list[str]:

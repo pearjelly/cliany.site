@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from collections import Counter
 from pathlib import Path
@@ -343,6 +344,19 @@ def _candidate_task_runbook(
     return steps
 
 
+def _runbook_first_step(runbook: Any) -> dict[str, Any]:
+    if not isinstance(runbook, list):
+        return {}
+    for step in runbook:
+        if isinstance(step, dict):
+            return step
+    return {}
+
+
+def _sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
 def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
     case_id = str(case.get("id") or "")
     adapter_domain = case.get("adapter_domain")
@@ -407,6 +421,9 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
     primary_incomplete_task = incomplete_tasks[0] if incomplete_tasks else None
     primary_next_action_task = primary_pending_task or primary_blocked_task or primary_incomplete_task or {}
     primary_next_task = dict(primary_next_action_task) if primary_next_action_task else None
+    primary_runbook = primary_next_action_task.get("runbook", [])
+    primary_runbook_first_step = _runbook_first_step(primary_runbook)
+    primary_runbook_first_command = str(primary_runbook_first_step.get("command") or "")
     return {
         "case_id": case_id,
         "title": case.get("title"),
@@ -448,7 +465,14 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "primary_next_task_command_source": primary_next_action_task.get("command_source", ""),
         "primary_next_task_command_missing": bool(primary_next_action_task.get("command_missing", False)),
         "primary_next_task_handoff": primary_next_action_task.get("handoff", ""),
-        "primary_next_task_runbook": primary_next_action_task.get("runbook", []),
+        "primary_next_task_runbook": primary_runbook,
+        "primary_next_task_runbook_first_step": str(
+            primary_runbook_first_step.get("step") or ""
+        ),
+        "primary_next_task_runbook_first_command": primary_runbook_first_command,
+        "primary_next_task_runbook_first_command_sha256": _sha256_text(
+            primary_runbook_first_command
+        ),
         "primary_next_task_acceptance_criteria": primary_next_action_task.get(
             "acceptance_criteria", ""
         ),
@@ -502,6 +526,9 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
             )
     primary_runbook = bundle.get("primary_next_task_runbook")
     if isinstance(primary_runbook, list) and primary_runbook:
+        first_step = bundle.get("primary_next_task_runbook_first_step") or "-"
+        first_command = bundle.get("primary_next_task_runbook_first_command") or "No command."
+        lines.append(f"- Primary runbook first command: `{first_step}` -> `{first_command}`")
         lines.extend(["", "## Primary next runbook"])
         for step in primary_runbook:
             if not isinstance(step, dict):
@@ -864,6 +891,22 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
                 )
 
     primary = pending_tasks[0] if pending_tasks else {}
+    primary_runbook: list[dict[str, Any]] = []
+    primary_case_id = primary.get("case_id", "")
+    primary_task = primary.get("task", "")
+    if primary_case_id and primary_task:
+        for bundle in ranked_bundles:
+            if bundle.get("case_id") != primary_case_id:
+                continue
+            task = bundle.get("primary_next_task")
+            if not isinstance(task, dict) or task.get("task") != primary_task:
+                continue
+            runbook = bundle.get("primary_next_task_runbook")
+            if isinstance(runbook, list):
+                primary_runbook = [step for step in runbook if isinstance(step, dict)]
+            break
+    primary_runbook_first_step = _runbook_first_step(primary_runbook)
+    primary_runbook_first_command = str(primary_runbook_first_step.get("command") or "")
     return {
         "candidate_count": sum(1 for case in cases if case.get("status") == "candidate"),
         "task_count": task_count,
@@ -888,6 +931,13 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
         "primary_case_id": primary.get("case_id", ""),
         "primary_task": primary.get("task", ""),
         "primary_next_action": primary.get("next_action", ""),
+        "primary_next_task_runbook_first_step": str(
+            primary_runbook_first_step.get("step") or ""
+        ),
+        "primary_next_task_runbook_first_command": primary_runbook_first_command,
+        "primary_next_task_runbook_first_command_sha256": _sha256_text(
+            primary_runbook_first_command
+        ),
         "primary_next_task_acceptance_criteria": primary.get("acceptance_criteria", ""),
     }
 
@@ -1018,6 +1068,10 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
         console.print(f"  evidence: {primary_evidence}")
         if primary_acceptance:
             console.print(f"  acceptance: {primary_acceptance}")
+        first_runbook_command = promotion.get("primary_next_task_runbook_first_command")
+        if first_runbook_command:
+            first_runbook_step = promotion.get("primary_next_task_runbook_first_step")
+            console.print(f"  runbook_first: {first_runbook_step} -> {first_runbook_command}")
 
     if detail:
         console.print("\n[bold]离线验证命令[/bold]")

@@ -787,6 +787,8 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
 
     primary = pending_tasks[0] if pending_tasks else (blocked_tasks[0] if blocked_tasks else None)
     primary_runbook = _primary_task_runbook(primary, ranked_candidate_checks)
+    primary_runbook_first_step = _runbook_first_step(primary_runbook)
+    primary_runbook_first_command = str(primary_runbook_first_step.get("command") or "")
     return {
         "candidate_count": len(candidate_checks),
         "task_count": sum(status_counts.values()),
@@ -802,6 +804,13 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
         "primary_task_detail": primary,
         "primary_next_task": primary,
         "primary_next_task_runbook": primary_runbook,
+        "primary_next_task_runbook_first_step": (
+            str(primary_runbook_first_step.get("step") or "")
+        ),
+        "primary_next_task_runbook_first_command": primary_runbook_first_command,
+        "primary_next_task_runbook_first_command_sha256": _sha256_bytes(
+            primary_runbook_first_command.encode("utf-8")
+        ),
         "primary_next_action": primary["next_action"] if primary else "",
         "primary_next_task_acceptance_criteria": (
             primary["acceptance_criteria"] if primary else ""
@@ -852,6 +861,13 @@ def _case_promotion_task_counts(check: CaseCheck) -> tuple[int, int, int]:
         else:
             pending_count += 1
     return complete_count, pending_count, blocked_count
+
+
+def _runbook_first_step(runbook: list[dict[str, Any]]) -> dict[str, Any]:
+    for step in runbook:
+        if isinstance(step, dict):
+            return step
+    return {}
 
 
 def _build_promotion_command_plan_summary(checks: list[CaseCheck]) -> dict[str, Any]:
@@ -963,6 +979,18 @@ def _print_text(report: CasesReport) -> None:
         primary_runbook = report.promotion_evidence_summary.get("primary_next_task_runbook")
         if isinstance(primary_runbook, list) and primary_runbook:
             print(f"promotion_evidence_primary_runbook: {_runbook_step_summary(primary_runbook)}")
+            print(
+                "promotion_evidence_primary_runbook_first_step: "
+                f"{report.promotion_evidence_summary['primary_next_task_runbook_first_step']}"
+            )
+            print(
+                "promotion_evidence_primary_runbook_first_command: "
+                f"{report.promotion_evidence_summary['primary_next_task_runbook_first_command']}"
+            )
+            print(
+                "promotion_evidence_primary_runbook_first_command_sha256: "
+                f"{report.promotion_evidence_summary['primary_next_task_runbook_first_command_sha256']}"
+            )
         print(
             "promotion_evidence_acceptance: "
             f"{report.promotion_evidence_summary['primary_next_task_acceptance_criteria']}"
@@ -1095,6 +1123,12 @@ def _candidate_promotion_evidence_summary_lines(summary: dict[str, Any]) -> list
         f"| primary_next_action | {_markdown_cell(summary.get('primary_next_action') or '-')} |",
         "| primary_next_task_acceptance_criteria | "
         f"{_markdown_cell(summary.get('primary_next_task_acceptance_criteria') or '-')} |",
+        "| primary_next_task_runbook_first_step | "
+        f"`{_markdown_cell(summary.get('primary_next_task_runbook_first_step') or '-')}` |",
+        "| primary_next_task_runbook_first_command | "
+        f"{_markdown_cell(summary.get('primary_next_task_runbook_first_command') or '-')} |",
+        "| primary_next_task_runbook_first_command_sha256 | "
+        f"`{_markdown_cell(summary.get('primary_next_task_runbook_first_command_sha256') or '-')}` |",
         f"| primary_task_detail | `{json.dumps(summary.get('primary_task_detail') or {}, ensure_ascii=False)}` |",
         f"| primary_next_task | `{json.dumps(summary.get('primary_next_task') or {}, ensure_ascii=False)}` |",
         "",

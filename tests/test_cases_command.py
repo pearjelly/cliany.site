@@ -33,6 +33,18 @@ def test_cases_command_returns_catalog_summary(tmp_home):
         "primary_next_task_acceptance_criteria"
     ].startswith("Attach the generated")
     assert (
+        data["promotion_evidence_summary"]["primary_next_task_runbook_first_step"]
+        == "llm_live_preflight"
+    )
+    assert (
+        data["promotion_evidence_summary"]["primary_next_task_runbook_first_command"]
+        == "cliany-site doctor --llm-live --json"
+    )
+    assert (
+        data["promotion_evidence_summary"]["primary_next_task_runbook_first_command_sha256"]
+        == "0ca644df288169289dd4dbc17aeacdc58b9898f05c0d4c5d304c17e33bdbcb96"
+    )
+    assert (
         data["promotion_evidence_summary"]["primary_next_task"]
         == data["promotion_evidence_summary"]["primary_task_detail"]
     )
@@ -421,6 +433,15 @@ def test_cases_command_evidence_bundle_json(tmp_home):
             ),
         },
     ]
+    assert bundle["primary_next_task_runbook_first_step"] == "llm_live_preflight"
+    assert (
+        bundle["primary_next_task_runbook_first_command"]
+        == "cliany-site doctor --llm-live --json"
+    )
+    assert (
+        bundle["primary_next_task_runbook_first_command_sha256"]
+        == "0ca644df288169289dd4dbc17aeacdc58b9898f05c0d4c5d304c17e33bdbcb96"
+    )
     assert bundle["primary_next_task_acceptance_criteria"] == (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
         "or GitHub Release asset name."

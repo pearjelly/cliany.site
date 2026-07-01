@@ -1027,6 +1027,14 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     assert data["case_promotion_evidence_primary_runbook_steps_sha256"] == _stable_json_sha256(
         primary_runbook_steps
     )
+    assert data["case_promotion_evidence_primary_runbook_first_step"] == "llm_live_preflight"
+    assert (
+        data["case_promotion_evidence_primary_runbook_first_command"]
+        == "cliany-site doctor --llm-live --json"
+    )
+    assert data["case_promotion_evidence_primary_runbook_first_command_sha256"] == (
+        _stable_json_sha256("cliany-site doctor --llm-live --json")
+    )
     assert data["candidate_promotions"][0] == {
         "case_id": "pypi-project-search",
         "issue_title": "Promote candidate case `pypi-project-search` toward active",
@@ -2375,6 +2383,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ],
         "case_promotion_evidence_primary_runbook_steps_sha256": _stable_json_sha256(
             ["llm_live_preflight", "adapter_package", "acceptance"]
+        ),
+        "case_promotion_evidence_primary_runbook_first_step": "llm_live_preflight",
+        "case_promotion_evidence_primary_runbook_first_command": (
+            "cliany-site doctor --llm-live --json"
+        ),
+        "case_promotion_evidence_primary_runbook_first_command_sha256": _stable_json_sha256(
+            "cliany-site doctor --llm-live --json"
         ),
         "case_promotion_evidence_primary_runbook_sha256": _stable_json_sha256(
             plan.case_promotion_evidence_summary["primary_next_task_runbook"]
@@ -3773,6 +3788,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "case_promotion_evidence_primary_runbook_steps_sha256: "
         f"`{artifact_bundle_summary['case_promotion_evidence_primary_runbook_steps_sha256']}`"
+    ) in readme
+    assert "case_promotion_evidence_primary_runbook_first_step: `llm_live_preflight`" in readme
+    assert (
+        "case_promotion_evidence_primary_runbook_first_command: "
+        "`cliany-site doctor --llm-live --json`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_primary_runbook_first_command_sha256: "
+        f"`{artifact_bundle_summary['case_promotion_evidence_primary_runbook_first_command_sha256']}`"
     ) in readme
     assert (
         "case_promotion_evidence_primary_runbook_sha256: "

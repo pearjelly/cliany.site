@@ -374,6 +374,14 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
             ),
         },
     ]
+    assert summary["primary_next_task_runbook_first_step"] == "llm_live_preflight"
+    assert (
+        summary["primary_next_task_runbook_first_command"]
+        == "cliany-site doctor --llm-live --json"
+    )
+    assert summary["primary_next_task_runbook_first_command_sha256"] == hashlib.sha256(
+        b"cliany-site doctor --llm-live --json"
+    ).hexdigest()
     assert summary["primary_next_task_acceptance_criteria"].startswith("Attach the generated")
     assert summary["primary_next_action"] == "Generate the adapter package."
     assert report.cases[0].to_dict()["offline_commands"] == ["python scripts/validate_cases.py --strict"]
