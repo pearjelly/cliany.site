@@ -29,6 +29,7 @@ RELEASE_PREFLIGHT_COMMAND = (
     '--release-tag "${{ github.ref_name }}" '
     "--report release-readiness-report.md"
 )
+WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
 NODE24_ACTIONS_ENV_SNIPPET = 'FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"'
 PROMOTION_FIELDS = ("adapter_package", "metadata_validation", "online_smoke")
 
@@ -154,6 +155,9 @@ class ReadinessReport:
             publication_payload=publication_payload,
             next_actions=next_actions,
         )
+        standard_release_flow_website_deploy_command = (
+            _standard_release_flow_website_deploy_command(standard_release_flow)
+        )
         return {
             "ok": self.ok,
             "current_version": self.current_version,
@@ -211,6 +215,17 @@ class ReadinessReport:
             "standard_release_flow_commands_sha256": standard_release_flow[
                 "commands_sha256"
             ],
+            "standard_release_flow_has_website_deploy": (
+                standard_release_flow_website_deploy_command is not None
+            ),
+            "standard_release_flow_website_deploy_command": (
+                standard_release_flow_website_deploy_command
+            ),
+            "standard_release_flow_website_deploy_command_sha256": (
+                _stable_json_sha256(standard_release_flow_website_deploy_command)
+                if standard_release_flow_website_deploy_command
+                else None
+            ),
             "standard_release_flow_sha256": _stable_json_sha256(standard_release_flow),
             "next_action_count": len(next_actions),
             "next_actions_sha256": _stable_json_sha256(next_actions),
@@ -1225,7 +1240,6 @@ def _standard_release_flow(
     target_tag_commands = [
         str(command) for command in tag_publish_decision.get("target_tag_commands") or []
     ]
-    website_deploy_command = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
     remote_audit_command = _remote_publication_audit_command(report)
 
     commands = [
@@ -1234,7 +1248,7 @@ def _standard_release_flow(
         case_validation_command,
         *[str(command) for command in publication_payload["publish_commands"]],
         *target_tag_commands,
-        website_deploy_command,
+        WEBSITE_DEPLOY_COMMAND,
         remote_audit_command,
     ]
     commands = list(dict.fromkeys(command for command in commands if command))
@@ -1291,7 +1305,7 @@ def _standard_release_flow(
             {
                 "name": "website_deploy",
                 "status": "pending",
-                "command": website_deploy_command,
+                "command": WEBSITE_DEPLOY_COMMAND,
             },
             {
                 "name": "remote_publication_audit",
@@ -1300,6 +1314,17 @@ def _standard_release_flow(
             },
         ],
     }
+
+
+def _standard_release_flow_website_deploy_command(flow: dict[str, Any]) -> str | None:
+    commands = set(str(command) for command in flow.get("commands") or [])
+    for step in flow.get("steps") or []:
+        if step.get("name") != "website_deploy":
+            continue
+        command = step.get("command")
+        if command and str(command) in commands:
+            return str(command)
+    return None
 
 
 def _stable_json_sha256(value: Any) -> str:
@@ -1651,6 +1676,10 @@ def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
         publication_payload=publication_payload,
         next_actions=next_actions,
     )
+    website_deploy_command = _standard_release_flow_website_deploy_command(flow)
+    website_deploy_command_sha256 = (
+        _stable_json_sha256(website_deploy_command) if website_deploy_command else None
+    )
     lines = [
         "",
         "## Standard Release Flow",
@@ -1666,6 +1695,18 @@ def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
         ),
         f"- standard_release_flow_command_count: `{flow['command_count']}`",
         f"- standard_release_flow_commands_sha256: `{flow['commands_sha256']}`",
+        (
+            "- standard_release_flow_has_website_deploy: "
+            f"`{str(website_deploy_command is not None).lower()}`"
+        ),
+        (
+            "- standard_release_flow_website_deploy_command: "
+            f"`{_markdown_cell(website_deploy_command)}`"
+        ),
+        (
+            "- standard_release_flow_website_deploy_command_sha256: "
+            f"`{_markdown_cell(website_deploy_command_sha256)}`"
+        ),
         f"- standard_release_flow_sha256: `{_stable_json_sha256(flow)}`",
         "",
         "### Standard Release Commands",

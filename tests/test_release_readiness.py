@@ -27,6 +27,7 @@ RELEASE_PREFLIGHT_COMMAND = (
     '--release-tag "${{ github.ref_name }}" '
     "--report release-readiness-report.md"
 )
+WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
 
 
 def _git(repo: Path, *args: str, env: dict[str, str] | None = None) -> None:
@@ -730,8 +731,14 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert "python scripts/validate_cases.py --strict" in standard_release_flow["commands"]
     assert "git tag v0.1.1" in standard_release_flow["commands"]
     assert "git push origin v0.1.1" in standard_release_flow["commands"]
+    assert WEBSITE_DEPLOY_COMMAND in standard_release_flow["commands"]
     assert "python scripts/check_release_publication.py --remote --json" in (
         standard_release_flow["commands"]
+    )
+    assert payload["standard_release_flow_has_website_deploy"] is True
+    assert payload["standard_release_flow_website_deploy_command"] == WEBSITE_DEPLOY_COMMAND
+    assert payload["standard_release_flow_website_deploy_command_sha256"] == (
+        release_readiness._stable_json_sha256(WEBSITE_DEPLOY_COMMAND)
     )
     assert payload["standard_release_flow_status"] == standard_release_flow["status"]
     assert (
@@ -897,6 +904,9 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- standard_release_flow_primary_next_action: `" in text
     assert "- standard_release_flow_command_count: `" in text
     assert "- standard_release_flow_commands_sha256: `" in text
+    assert "- standard_release_flow_has_website_deploy: `true`" in text
+    assert f"- standard_release_flow_website_deploy_command: `{WEBSITE_DEPLOY_COMMAND}`" in text
+    assert "- standard_release_flow_website_deploy_command_sha256: `" in text
     assert "- standard_release_flow_sha256: `" in text
     assert "### Standard Release Commands" in text
     assert "`python scripts/release_readiness.py --strict --target-version 0.1.1`" in text
