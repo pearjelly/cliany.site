@@ -62,7 +62,7 @@ _CHECK_ACTIONS: dict[str, dict[str, str]] = {
         "ok": "未发现 legacy adapter。",
     },
     "agent_md": {
-        "warning": "运行一次 explore 让 cliany-site 生成/更新 AGENTS.md，或手动补齐 sentinel。",
+        "warning": "运行一次 explore 让 cliany-site 生成/更新 AGENT.md，或手动补齐 sentinel。",
         "ok": "Agent 契约文档可识别。",
     },
     "healed_pending": {
@@ -444,33 +444,54 @@ async def _run_checks(cdp_conn: Any = None, *, llm_live: bool = False) -> Envelo
         "details": {"count": legacy_count}
     })
 
+    cwd = Path.cwd()
+    managed_agent_md_path = cwd / "AGENT.md"
+    plural_agent_md_path = cwd / "AGENTS.md"
     agent_md_path: Path | None = None
-    for candidate in ("AGENT.md", "AGENTS.md"):
-        path = Path.cwd() / candidate
-        if path.exists():
-            agent_md_path = path
-            break
+    agent_md_details: dict[str, Any]
 
-    if agent_md_path is None:
-        agent_md_status = "missing"
-        agent_md_message = "未找到 AGENT.md / AGENTS.md，建议运行 cliany-site explore"
-    else:
+    if managed_agent_md_path.exists():
+        agent_md_path = managed_agent_md_path
         content = agent_md_path.read_text(encoding="utf-8")
         if _SENTINEL_RE.search(content):
             agent_md_status = "ok"
             agent_md_message = None
         else:
             agent_md_status = "no_sentinel"
-            agent_md_message = "文件存在但缺少 sentinel，建议运行 cliany-site explore"
-    checks.append({
-        "name": "agent_md",
-        "status": "warning" if agent_md_status != "ok" else "ok",
-        "duration_ms": 0,
-        "details": {
+            agent_md_message = "AGENT.md 存在但缺少 sentinel，建议运行 cliany-site explore"
+        agent_md_details = {
             "status": agent_md_status,
-            "path": agent_md_path.name if agent_md_path is not None else "AGENT.md",
+            "path": agent_md_path.name,
             "message": agent_md_message,
         }
+    elif plural_agent_md_path.exists():
+        agent_md_path = plural_agent_md_path
+        content = agent_md_path.read_text(encoding="utf-8")
+        if _SENTINEL_RE.search(content):
+            agent_md_status = "ok"
+            agent_md_message = None
+        else:
+            agent_md_status = "manual"
+            agent_md_message = "发现人工 AGENTS.md；explore 成功后会生成/更新 AGENT.md"
+        agent_md_details = {
+            "status": agent_md_status,
+            "path": agent_md_path.name,
+            "managed_path": managed_agent_md_path.name,
+            "message": agent_md_message,
+        }
+    else:
+        agent_md_status = "missing"
+        agent_md_message = "未找到 AGENT.md / AGENTS.md，建议运行 cliany-site explore"
+        agent_md_details = {
+            "status": agent_md_status,
+            "path": managed_agent_md_path.name,
+            "message": agent_md_message,
+        }
+    checks.append({
+        "name": "agent_md",
+        "status": "warning" if agent_md_status in {"missing", "no_sentinel"} else "ok",
+        "duration_ms": 0,
+        "details": agent_md_details,
     })
 
     healed_count = 0
