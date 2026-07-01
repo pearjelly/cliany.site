@@ -9,6 +9,7 @@
 
 ### Changed
 - Next-iteration planner JSON and candidate issue artifacts now include issue template handoff commands (`candidate_promotions[*].issue_template_command`, `candidate_promotions[*].issue_template_json_command`, matching `issue-metadata.json` fields, and artifacts README Issue Template columns), so maintainers can regenerate candidate promotion issue bodies without deriving commands from case ids.
+- Candidate issue bodies now include a `Doctor Preflight Evidence Template` with paste-ready `cliany-site doctor --llm-live --json` placeholders for every doctor preflight field, so LLM/CDP blockers can be attached consistently.
 - Cases promotion plan output now includes issue template handoff commands (`issue_template_command`, `issue_template_json_command`, and primary aliases), so maintainers can jump from the candidate queue directly to a copyable promotion issue body.
 - Cases issue template output now reuses the evidence-bundle primary task, so `cliany-site cases --case-id <id> --issue-template` renders a `Primary Runbook`, standard LLM/doctor blocker comments, and `Doctor Preflight Evidence Fields`; `--json` exposes the same acceptance, runbook, and preflight fields on `issue_template_primary_task`.
 - Cases evidence bundle JSON now exposes `doctor_preflight_evidence_fields` at the bundle level and on the `adapter_package` task, so direct `cliany-site cases --case-id <id> --evidence-bundle --json` handoffs can capture CDP and LLM blocker fields without going through planner artifacts.

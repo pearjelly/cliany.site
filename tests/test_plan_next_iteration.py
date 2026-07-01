@@ -330,6 +330,13 @@ def test_candidate_issue_body_checks_complete_tasks():
     assert "## Doctor Preflight Evidence Fields" in issue_body
     assert "- `summary.capabilities.run_browser_workflows.ready`" in issue_body
     assert "- `checks[cdp].action`" in issue_body
+    assert "## Doctor Preflight Evidence Template" in issue_body
+    assert "- `summary.ready_for_explore`: `<paste from doctor --llm-live --json>`" in issue_body
+    assert (
+        "- `checks[llm_live].details.error_code`: "
+        "`<paste from doctor --llm-live --json>`"
+        in issue_body
+    )
     assert "## Acceptance Criteria" in issue_body
     assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in issue_body
     assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in issue_body
@@ -1437,6 +1444,21 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- `checks[llm_live].details.retryable`\n"
             "- `checks[llm_live].details.phase`\n"
             "- `checks[llm_live].details.message`\n\n"
+            "## Doctor Preflight Evidence Template\n"
+            "- `summary.ready_for_explore`: `<paste from doctor --llm-live --json>`\n"
+            "- `summary.capabilities.run_browser_workflows.ready`: "
+            "`<paste from doctor --llm-live --json>`\n"
+            "- `summary.capabilities.generate_adapters.ready`: "
+            "`<paste from doctor --llm-live --json>`\n"
+            "- `checks[cdp].status`: `<paste from doctor --llm-live --json>`\n"
+            "- `checks[cdp].action`: `<paste from doctor --llm-live --json>`\n"
+            "- `checks[llm_live].status`: `<paste from doctor --llm-live --json>`\n"
+            "- `checks[llm_live].details.error_code`: "
+            "`<paste from doctor --llm-live --json>`\n"
+            "- `checks[llm_live].details.retryable`: "
+            "`<paste from doctor --llm-live --json>`\n"
+            "- `checks[llm_live].details.phase`: `<paste from doctor --llm-live --json>`\n"
+            "- `checks[llm_live].details.message`: `<paste from doctor --llm-live --json>`\n\n"
             "## LLM Preflight Evidence Fields\n"
             "- `summary.ready_for_explore`\n"
             "- `summary.llm_live_preflight`\n"

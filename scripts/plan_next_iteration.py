@@ -626,6 +626,11 @@ from check_release_publication import build_report as build_publication_report  
 from release_readiness import build_report as build_readiness_report  # noqa: E402
 
 
+def _doctor_preflight_evidence_template_lines() -> list[str]:
+    placeholder = "`<paste from doctor --llm-live --json>`"
+    return [f"- `{field}`: {placeholder}" for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS]
+
+
 @dataclass(frozen=True)
 class CandidatePromotion:
     case_id: str
@@ -2876,6 +2881,9 @@ def _candidate_issue_body(
             "",
             "## Doctor Preflight Evidence Fields",
             *(f"- `{field}`" for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS),
+            "",
+            "## Doctor Preflight Evidence Template",
+            *_doctor_preflight_evidence_template_lines(),
             "",
             "## LLM Preflight Evidence Fields",
             *(f"- `{field}`" for field in LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS),

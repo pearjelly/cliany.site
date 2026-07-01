@@ -25,6 +25,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Acceptance Criteria" in index
     assert "Primary Runbook" in index
     assert "Doctor Preflight Evidence Fields" in index
+    assert "Doctor Preflight Evidence Template" in index
     assert "cases/manifest.json" in index
     assert "python scripts/validate_cases.py --strict" in index
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in index
@@ -73,6 +74,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Acceptance Criteria" in script
     assert "Primary Runbook" in script
     assert "Doctor Preflight Evidence Fields" in script
+    assert "Doctor Preflight Evidence Template" in script
     assert "First-time contributors" in script
     assert "Maintainer Loop" in script
     assert "weekly_commit_cadence_ok" in script

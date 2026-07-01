@@ -341,6 +341,13 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "## Doctor Preflight Evidence Fields" in template
     assert "`summary.capabilities.run_browser_workflows.ready`" in template
     assert "`checks[cdp].action`" in template
+    assert "## Doctor Preflight Evidence Template" in template
+    assert "- `summary.ready_for_explore`: `<paste from doctor --llm-live --json>`" in template
+    assert (
+        "- `checks[llm_live].details.error_code`: "
+        "`<paste from doctor --llm-live --json>`"
+        in template
+    )
     assert "## Acceptance Criteria" in template
     assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in template
     assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in template
@@ -393,6 +400,7 @@ def test_cases_command_issue_template_human_outputs_markdown(tmp_home):
     assert "## Primary Runbook" in result.output
     assert "## Doctor Preflight Blocker Comment" in result.output
     assert "## Doctor Preflight Evidence Fields" in result.output
+    assert "## Doctor Preflight Evidence Template" in result.output
     assert "E_LLM_UNAVAILABLE" in result.output
     assert "provider connection failure" in result.output
     assert "checks[cdp].status" in result.output

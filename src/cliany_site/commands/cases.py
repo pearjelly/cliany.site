@@ -206,6 +206,11 @@ def _doctor_preflight_blocker_comment() -> str:
     )
 
 
+def _doctor_preflight_evidence_template_lines() -> list[str]:
+    placeholder = "`<paste from doctor --llm-live --json>`"
+    return [f"- `{field}`: {placeholder}" for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS]
+
+
 def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
     primary = bundle.get("primary_next_task")
     if not isinstance(primary, dict) or not primary.get("task"):
@@ -329,6 +334,8 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
     lines.extend(["", "## Doctor Preflight Blocker Comment", _doctor_preflight_blocker_comment()])
     lines.extend(["", "## Doctor Preflight Evidence Fields"])
     lines.extend(f"- `{field}`" for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS)
+    lines.extend(["", "## Doctor Preflight Evidence Template"])
+    lines.extend(_doctor_preflight_evidence_template_lines())
 
     lines.extend(["", "## Acceptance Criteria"])
     for task in PROMOTION_TASKS:
