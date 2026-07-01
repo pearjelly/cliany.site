@@ -3672,6 +3672,9 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "promotion_command_plan": promotion.promotion_command_plan,
                 "llm_live_preflight_command": promotion.llm_live_preflight_command,
                 "llm_live_preflight_blocker_note": promotion.llm_live_preflight_blocker_note,
+                "llm_live_preflight_evidence_fields": list(
+                    promotion.llm_live_preflight_evidence_fields
+                ),
                 "evidence_bundle_command": promotion.evidence_bundle_command,
                 "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
                 "issue_body_name": body_path.name,
@@ -4597,6 +4600,9 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
             "promotion_command_plan": item["promotion_command_plan"],
             "llm_live_preflight_command": item["llm_live_preflight_command"],
             "llm_live_preflight_blocker_note": item["llm_live_preflight_blocker_note"],
+            "llm_live_preflight_evidence_fields": item[
+                "llm_live_preflight_evidence_fields"
+            ],
             "evidence_bundle_command": item["evidence_bundle_command"],
             "evidence_bundle_json_command": item["evidence_bundle_json_command"],
             "issue_body_name": item["issue_body_name"],
@@ -4646,6 +4652,9 @@ def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[di
             "promotion_command_plan": promotion.promotion_command_plan,
             "llm_live_preflight_command": promotion.llm_live_preflight_command,
             "llm_live_preflight_blocker_note": promotion.llm_live_preflight_blocker_note,
+            "llm_live_preflight_evidence_fields": list(
+                promotion.llm_live_preflight_evidence_fields
+            ),
             "evidence_bundle_command": promotion.evidence_bundle_command,
             "evidence_bundle_json_command": promotion.evidence_bundle_json_command,
             "issue_body_name": f"{promotion.case_id}.md",
@@ -6611,10 +6620,10 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
             "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands | "
             "Priority Rank | Priority Reason | Primary Evidence Task | Primary Evidence Status | "
             "Primary Acceptance Criteria | Evidence Bundle Primary Next Task | "
-            "Evidence Bundle Primary Runbook | Candidate Package Validation | Evidence Bundle | "
-            "Evidence Bundle JSON |"
+            "Evidence Bundle Primary Runbook | LLM Preflight Evidence Fields | "
+            "Candidate Package Validation | Evidence Bundle | Evidence Bundle JSON |"
         ),
-        "|------|------------|------------|--------------------|-----------------------------|---------------|-----------------|-----------------------|-------------------------|-----------------------------|-----------------------------------|---------------------------------|------------------------------|-----------------|----------------------|",
+        "|------|------------|------------|--------------------|-----------------------------|---------------|-----------------|-----------------------|-------------------------|-----------------------------|-----------------------------------|---------------------------------|-------------------------------|------------------------------|-----------------|----------------------|",
     ]
     for promotion in promotions:
         primary_task = promotion.promotion_evidence_primary_task.get("task") or "Not declared."
@@ -6627,6 +6636,9 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
         primary_runbook = _candidate_primary_runbook_summary(
             promotion.evidence_bundle_primary_next_task_runbook
         )
+        evidence_fields = ", ".join(
+            f"`{field}`" for field in promotion.llm_live_preflight_evidence_fields
+        )
         lines.append(
             f"| `{promotion.case_id}` | `{promotion.case_id}.md` | {promotion.target_url or 'Not declared.'} | "
             f"{len(promotion.commands)} | {len(promotion.offline_commands)} | "
@@ -6634,6 +6646,7 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
             f"`{primary_task}` | `{primary_status}` | {primary_acceptance} | "
             f"`{evidence_bundle_primary_task}` | "
             f"`{primary_runbook}` | "
+            f"{evidence_fields or 'Not declared.'} | "
             f"`{promotion.candidate_package_validation_command}` | "
             f"`{promotion.evidence_bundle_command}` | `{promotion.evidence_bundle_json_command}` |"
         )

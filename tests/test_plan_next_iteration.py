@@ -1825,6 +1825,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "promotion_command_plan": item["promotion_command_plan"],
             "llm_live_preflight_command": item["llm_live_preflight_command"],
             "llm_live_preflight_blocker_note": item["llm_live_preflight_blocker_note"],
+            "llm_live_preflight_evidence_fields": item[
+                "llm_live_preflight_evidence_fields"
+            ],
             "evidence_bundle_command": item["evidence_bundle_command"],
             "evidence_bundle_json_command": item["evidence_bundle_json_command"],
             "issue_body_name": item["issue_body_name"],
@@ -3138,6 +3141,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert metadata[0]["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
     assert "E_LLM_UNAVAILABLE" in metadata[0]["llm_live_preflight_blocker_note"]
     assert "E_UNKNOWN connection error" in metadata[0]["llm_live_preflight_blocker_note"]
+    assert metadata[0]["llm_live_preflight_evidence_fields"] == [
+        "summary.ready_for_explore",
+        "summary.capabilities.generate_adapters.ready",
+        "checks[llm_live].status",
+        "checks[llm_live].details.error_code",
+        "checks[llm_live].details.phase",
+        "checks[llm_live].details.message",
+    ]
     assert (
         metadata[0]["evidence_bundle_command"]
         == "cliany-site cases --case-id pypi-project-search --evidence-bundle"
@@ -3570,8 +3581,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands | "
         "Priority Rank | Priority Reason | Primary Evidence Task | Primary Evidence Status | "
         "Primary Acceptance Criteria | Evidence Bundle Primary Next Task | "
-        "Evidence Bundle Primary Runbook | Candidate Package Validation | Evidence Bundle | "
-        "Evidence Bundle JSON |"
+        "Evidence Bundle Primary Runbook | LLM Preflight Evidence Fields | "
+        "Candidate Package Validation | Evidence Bundle | Evidence Bundle JSON |"
     ) in readme
     assert (
         "| `pypi-project-search` | `pypi-project-search.md` | "
@@ -3581,6 +3592,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
         "package path or GitHub Release asset name. | `adapter_package` | "
         "`llm_live_preflight -> adapter_package -> acceptance` | "
+        "`summary.ready_for_explore`, `summary.capabilities.generate_adapters.ready`, "
+        "`checks[llm_live].status`, `checks[llm_live].details.error_code`, "
+        "`checks[llm_live].details.phase`, `checks[llm_live].details.message` | "
         "`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict` | "
         "`cliany-site cases --case-id pypi-project-search --evidence-bundle` | "
