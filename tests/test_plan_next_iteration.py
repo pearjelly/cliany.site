@@ -20,6 +20,9 @@ sys.modules[SPEC.name] = plan_next_iteration
 SPEC.loader.exec_module(plan_next_iteration)
 
 WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
+DISTRIBUTION_AUDIT_COMMAND = (
+    "python scripts/check_release_publication.py --remote --distribution --json"
+)
 
 
 def _stable_json_sha256(value: object) -> str:
@@ -1399,6 +1402,18 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
     assert data["standard_release_flow_website_deploy_command_sha256"] == (
         _stable_json_sha256(WEBSITE_DEPLOY_COMMAND)
     )
+    distribution_audit_command = (
+        "python scripts/check_release_publication.py --remote --remote-name upstream "
+        "--distribution --json"
+    )
+    assert data["standard_release_flow_has_distribution_audit"] is True
+    assert (
+        data["standard_release_flow_distribution_audit_command"]
+        == distribution_audit_command
+    )
+    assert data["standard_release_flow_distribution_audit_command_sha256"] == (
+        _stable_json_sha256(distribution_audit_command)
+    )
     assert (
         "python scripts/check_release_publication.py --remote --remote-name upstream --json"
         in plan_next_iteration._issue_artifact_validation_commands(plan)
@@ -2021,6 +2036,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
             WEBSITE_DEPLOY_COMMAND
         ),
+        "standard_release_flow_has_distribution_audit": True,
+        "standard_release_flow_distribution_audit_command": DISTRIBUTION_AUDIT_COMMAND,
+        "standard_release_flow_distribution_audit_command_sha256": _stable_json_sha256(
+            DISTRIBUTION_AUDIT_COMMAND
+        ),
         "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "publication_next_actions": [
             "Commit, stash, or discard local worktree changes before publishing release refs.",
@@ -2467,6 +2487,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
         "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
             WEBSITE_DEPLOY_COMMAND
+        ),
+        "standard_release_flow_has_distribution_audit": True,
+        "standard_release_flow_distribution_audit_command": DISTRIBUTION_AUDIT_COMMAND,
+        "standard_release_flow_distribution_audit_command_sha256": _stable_json_sha256(
+            DISTRIBUTION_AUDIT_COMMAND
         ),
         "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "body_count": 2,
@@ -3224,6 +3249,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
             WEBSITE_DEPLOY_COMMAND
         ),
+        "standard_release_flow_has_distribution_audit": True,
+        "standard_release_flow_distribution_audit_command": DISTRIBUTION_AUDIT_COMMAND,
+        "standard_release_flow_distribution_audit_command_sha256": _stable_json_sha256(
+            DISTRIBUTION_AUDIT_COMMAND
+        ),
         "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "blockers": ["release draft validation failed", "latest local release is not published"],
         "next_actions": plan.next_actions,
@@ -3902,6 +3932,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "standard_release_flow_website_deploy_command_sha256: "
         f"`{_stable_json_sha256(WEBSITE_DEPLOY_COMMAND)}`"
+    ) in readme
+    assert "standard_release_flow_has_distribution_audit: `true`" in readme
+    assert (
+        "standard_release_flow_distribution_audit_command: "
+        f"`{DISTRIBUTION_AUDIT_COMMAND}`"
+    ) in readme
+    assert (
+        "standard_release_flow_distribution_audit_command_sha256: "
+        f"`{_stable_json_sha256(DISTRIBUTION_AUDIT_COMMAND)}`"
     ) in readme
     assert (
         "standard_release_flow_sha256: "
@@ -5040,6 +5079,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"standard_release_flow_website_deploy_command: `{WEBSITE_DEPLOY_COMMAND}`"
         in readme
     )
+    assert "standard_release_flow_has_distribution_audit: `true`" in readme
+    assert (
+        "standard_release_flow_distribution_audit_command: "
+        f"`{DISTRIBUTION_AUDIT_COMMAND}`"
+    ) in readme
+    assert (
+        "standard_release_flow_distribution_audit_command_sha256: "
+        f"`{_stable_json_sha256(DISTRIBUTION_AUDIT_COMMAND)}`"
+    ) in readme
     assert "publish_script_path: `/tmp/cliany-publish-release.sh`" in readme
     assert (
         f"publish_script_path_sha256: "

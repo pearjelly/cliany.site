@@ -169,6 +169,9 @@ class ReadinessReport:
         standard_release_flow_website_deploy_command = (
             _standard_release_flow_website_deploy_command(standard_release_flow)
         )
+        standard_release_flow_distribution_audit_command = (
+            _standard_release_flow_distribution_audit_command(standard_release_flow)
+        )
         return {
             "ok": self.ok,
             "current_version": self.current_version,
@@ -279,6 +282,17 @@ class ReadinessReport:
             "standard_release_flow_website_deploy_command_sha256": (
                 _stable_json_sha256(standard_release_flow_website_deploy_command)
                 if standard_release_flow_website_deploy_command
+                else None
+            ),
+            "standard_release_flow_has_distribution_audit": (
+                standard_release_flow_distribution_audit_command is not None
+            ),
+            "standard_release_flow_distribution_audit_command": (
+                standard_release_flow_distribution_audit_command
+            ),
+            "standard_release_flow_distribution_audit_command_sha256": (
+                _stable_json_sha256(standard_release_flow_distribution_audit_command)
+                if standard_release_flow_distribution_audit_command
                 else None
             ),
             "standard_release_flow_sha256": _stable_json_sha256(standard_release_flow),
@@ -1431,6 +1445,24 @@ def _standard_release_flow_website_deploy_command(flow: dict[str, Any]) -> str |
     return None
 
 
+def _standard_release_flow_distribution_audit_command(flow: dict[str, Any]) -> str | None:
+    commands = set(str(command) for command in flow.get("commands") or [])
+    for step in flow.get("steps") or []:
+        if step.get("name") != "remote_publication_audit":
+            continue
+        command = step.get("command")
+        if not command:
+            continue
+        command_text = str(command)
+        try:
+            command_parts = shlex.split(command_text)
+        except ValueError:
+            command_parts = command_text.split()
+        if "--distribution" in command_parts and command_text in commands:
+            return command_text
+    return None
+
+
 def _standard_release_flow_steps(flow: dict[str, Any]) -> list[dict[str, Any]]:
     return [step for step in flow.get("steps") or [] if isinstance(step, dict)]
 
@@ -1846,6 +1878,12 @@ def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
     website_deploy_command_sha256 = (
         _stable_json_sha256(website_deploy_command) if website_deploy_command else None
     )
+    distribution_audit_command = _standard_release_flow_distribution_audit_command(flow)
+    distribution_audit_command_sha256 = (
+        _stable_json_sha256(distribution_audit_command)
+        if distribution_audit_command
+        else None
+    )
     flow_steps = _standard_release_flow_steps(flow)
     flow_step_names = _standard_release_flow_step_names(flow)
     flow_step_boundary = _standard_release_flow_step_boundary(flow)
@@ -1914,6 +1952,18 @@ def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
         (
             "- standard_release_flow_website_deploy_command_sha256: "
             f"`{_markdown_cell(website_deploy_command_sha256)}`"
+        ),
+        (
+            "- standard_release_flow_has_distribution_audit: "
+            f"`{str(distribution_audit_command is not None).lower()}`"
+        ),
+        (
+            "- standard_release_flow_distribution_audit_command: "
+            f"`{_markdown_cell(distribution_audit_command)}`"
+        ),
+        (
+            "- standard_release_flow_distribution_audit_command_sha256: "
+            f"`{_markdown_cell(distribution_audit_command_sha256)}`"
         ),
         f"- standard_release_flow_sha256: `{_stable_json_sha256(flow)}`",
         "",

@@ -765,6 +765,17 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert payload["standard_release_flow_website_deploy_command_sha256"] == (
         release_readiness._stable_json_sha256(WEBSITE_DEPLOY_COMMAND)
     )
+    distribution_audit_command = (
+        "python scripts/check_release_publication.py --remote --distribution --json"
+    )
+    assert payload["standard_release_flow_has_distribution_audit"] is True
+    assert (
+        payload["standard_release_flow_distribution_audit_command"]
+        == distribution_audit_command
+    )
+    assert payload["standard_release_flow_distribution_audit_command_sha256"] == (
+        release_readiness._stable_json_sha256(distribution_audit_command)
+    )
     assert payload["standard_release_flow_status"] == standard_release_flow["status"]
     assert (
         payload["standard_release_flow_primary_next_action"]
@@ -984,6 +995,12 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- standard_release_flow_has_website_deploy: `true`" in text
     assert f"- standard_release_flow_website_deploy_command: `{WEBSITE_DEPLOY_COMMAND}`" in text
     assert "- standard_release_flow_website_deploy_command_sha256: `" in text
+    assert "- standard_release_flow_has_distribution_audit: `true`" in text
+    assert (
+        "- standard_release_flow_distribution_audit_command: "
+        "`python scripts/check_release_publication.py --remote --distribution --json`"
+    ) in text
+    assert "- standard_release_flow_distribution_audit_command_sha256: `" in text
     assert "- standard_release_flow_sha256: `" in text
     assert "### Standard Release Commands" in text
     assert "`python scripts/release_readiness.py --strict --target-version 0.1.1`" in text
