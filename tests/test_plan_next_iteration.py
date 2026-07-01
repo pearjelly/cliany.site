@@ -601,6 +601,11 @@ def test_plan_prefers_standard_release_flow_primary_action(tmp_path):
     assert data["standard_release_flow_step_names"] == []
     assert data["standard_release_flow_step_names_sha256"] == _stable_json_sha256([])
     assert data["standard_release_flow_steps_sha256"] == _stable_json_sha256([])
+    assert data["standard_release_flow_first_step_name"] is None
+    assert data["standard_release_flow_last_step_name"] is None
+    assert data["standard_release_flow_step_boundary_sha256"] == _stable_json_sha256(
+        {"first_step_name": None, "last_step_name": None}
+    )
 
 
 def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path):
@@ -1301,6 +1306,15 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
     assert data["standard_release_flow_steps_sha256"] == _stable_json_sha256(
         data["standard_release_flow"]["steps"]
     )
+    standard_release_flow_step_boundary = {
+        "first_step_name": standard_release_flow_step_names[0],
+        "last_step_name": standard_release_flow_step_names[-1],
+    }
+    assert data["standard_release_flow_first_step_name"] == "strict_release_readiness"
+    assert data["standard_release_flow_last_step_name"] == "remote_publication_audit"
+    assert data["standard_release_flow_step_boundary_sha256"] == _stable_json_sha256(
+        standard_release_flow_step_boundary
+    )
     assert data["standard_release_flow_has_website_deploy"] is True
     assert data["standard_release_flow_website_deploy_command"] == WEBSITE_DEPLOY_COMMAND
     assert data["standard_release_flow_website_deploy_command_sha256"] == (
@@ -1390,6 +1404,10 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     standard_release_flow_step_names = [
         step["name"] for step in plan.standard_release_flow["steps"]
     ]
+    standard_release_flow_step_boundary = {
+        "first_step_name": standard_release_flow_step_names[0],
+        "last_step_name": standard_release_flow_step_names[-1],
+    }
     assert "| standard_release_flow_step_count | `8` |" in text
     assert (
         "| standard_release_flow_step_names | "
@@ -1404,6 +1422,13 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
     assert (
         "| standard_release_flow_steps_sha256 | "
         f"`{_stable_json_sha256(plan.standard_release_flow['steps'])}` |"
+        in text
+    )
+    assert "| standard_release_flow_first_step_name | `strict_release_readiness` |" in text
+    assert "| standard_release_flow_last_step_name | `remote_publication_audit` |" in text
+    assert (
+        "| standard_release_flow_step_boundary_sha256 | "
+        f"`{_stable_json_sha256(standard_release_flow_step_boundary)}` |"
         in text
     )
     assert (
@@ -1815,6 +1840,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     standard_release_flow_step_names = [
         step["name"] for step in standard_release_flow_steps
     ]
+    standard_release_flow_step_boundary = {
+        "first_step_name": standard_release_flow_step_names[0],
+        "last_step_name": standard_release_flow_step_names[-1],
+    }
     expected_publication_handoff = {
         "schema_version": 1,
         "publication_ok": False,
@@ -1858,6 +1887,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "standard_release_flow_steps_sha256": _stable_json_sha256(
             standard_release_flow_steps
+        ),
+        "standard_release_flow_first_step_name": "strict_release_readiness",
+        "standard_release_flow_last_step_name": "remote_publication_audit",
+        "standard_release_flow_step_boundary_sha256": _stable_json_sha256(
+            standard_release_flow_step_boundary
         ),
         "standard_release_flow_has_website_deploy": True,
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
@@ -2279,6 +2313,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "standard_release_flow_steps_sha256": _stable_json_sha256(
             standard_release_flow_steps
+        ),
+        "standard_release_flow_first_step_name": "strict_release_readiness",
+        "standard_release_flow_last_step_name": "remote_publication_audit",
+        "standard_release_flow_step_boundary_sha256": _stable_json_sha256(
+            standard_release_flow_step_boundary
         ),
         "standard_release_flow_has_website_deploy": True,
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
@@ -3007,6 +3046,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_steps_sha256": _stable_json_sha256(
             standard_release_flow_steps
         ),
+        "standard_release_flow_first_step_name": "strict_release_readiness",
+        "standard_release_flow_last_step_name": "remote_publication_audit",
+        "standard_release_flow_step_boundary_sha256": _stable_json_sha256(
+            standard_release_flow_step_boundary
+        ),
         "standard_release_flow_has_website_deploy": True,
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
         "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
@@ -3649,6 +3693,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "standard_release_flow_steps_sha256: "
         f"`{_stable_json_sha256(standard_release_flow_steps)}`"
+    ) in readme
+    assert "standard_release_flow_first_step_name: `strict_release_readiness`" in readme
+    assert "standard_release_flow_last_step_name: `remote_publication_audit`" in readme
+    assert (
+        "standard_release_flow_step_boundary_sha256: "
+        f"`{_stable_json_sha256(standard_release_flow_step_boundary)}`"
     ) in readme
     assert "standard_release_flow_has_website_deploy: `true`" in readme
     assert (
@@ -4771,6 +4821,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "standard_release_flow_steps_sha256: "
         f"`{_stable_json_sha256(standard_release_flow_steps)}`"
+    ) in readme
+    assert "standard_release_flow_first_step_name: `strict_release_readiness`" in readme
+    assert "standard_release_flow_last_step_name: `remote_publication_audit`" in readme
+    assert (
+        "standard_release_flow_step_boundary_sha256: "
+        f"`{_stable_json_sha256(standard_release_flow_step_boundary)}`"
     ) in readme
     assert "standard_release_flow_has_website_deploy: `true`" in readme
     assert (

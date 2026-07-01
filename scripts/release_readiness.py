@@ -159,6 +159,9 @@ class ReadinessReport:
         standard_release_flow_step_names = _standard_release_flow_step_names(
             standard_release_flow
         )
+        standard_release_flow_step_boundary = _standard_release_flow_step_boundary(
+            standard_release_flow
+        )
         standard_release_flow_website_deploy_command = (
             _standard_release_flow_website_deploy_command(standard_release_flow)
         )
@@ -226,6 +229,15 @@ class ReadinessReport:
             ),
             "standard_release_flow_steps_sha256": _stable_json_sha256(
                 standard_release_flow_steps
+            ),
+            "standard_release_flow_first_step_name": (
+                standard_release_flow_step_boundary["first_step_name"]
+            ),
+            "standard_release_flow_last_step_name": (
+                standard_release_flow_step_boundary["last_step_name"]
+            ),
+            "standard_release_flow_step_boundary_sha256": _stable_json_sha256(
+                standard_release_flow_step_boundary
             ),
             "standard_release_flow_has_website_deploy": (
                 standard_release_flow_website_deploy_command is not None
@@ -987,6 +999,9 @@ def _print_text(report: ReadinessReport) -> None:
     )
     standard_release_flow_steps = _standard_release_flow_steps(standard_release_flow)
     standard_release_flow_step_names = _standard_release_flow_step_names(standard_release_flow)
+    standard_release_flow_step_boundary = _standard_release_flow_step_boundary(
+        standard_release_flow
+    )
     print(f"standard_release_flow_step_count: {len(standard_release_flow_steps)}")
     print(
         "standard_release_flow_step_names: "
@@ -999,6 +1014,18 @@ def _print_text(report: ReadinessReport) -> None:
     print(
         "standard_release_flow_steps_sha256: "
         f"{_stable_json_sha256(standard_release_flow_steps)}"
+    )
+    print(
+        "standard_release_flow_first_step_name: "
+        f"{standard_release_flow_step_boundary['first_step_name']}"
+    )
+    print(
+        "standard_release_flow_last_step_name: "
+        f"{standard_release_flow_step_boundary['last_step_name']}"
+    )
+    print(
+        "standard_release_flow_step_boundary_sha256: "
+        f"{_stable_json_sha256(standard_release_flow_step_boundary)}"
     )
     print(f"package_gate: {report.package_gate.ok}")
     print(
@@ -1366,6 +1393,14 @@ def _standard_release_flow_step_names(flow: dict[str, Any]) -> list[str]:
     ]
 
 
+def _standard_release_flow_step_boundary(flow: dict[str, Any]) -> dict[str, str | None]:
+    step_names = _standard_release_flow_step_names(flow)
+    return {
+        "first_step_name": step_names[0] if step_names else None,
+        "last_step_name": step_names[-1] if step_names else None,
+    }
+
+
 def _stable_json_sha256(value: Any) -> str:
     payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
@@ -1721,6 +1756,7 @@ def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
     )
     flow_steps = _standard_release_flow_steps(flow)
     flow_step_names = _standard_release_flow_step_names(flow)
+    flow_step_boundary = _standard_release_flow_step_boundary(flow)
     lines = [
         "",
         "## Standard Release Flow",
@@ -1746,6 +1782,18 @@ def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
             f"`{_stable_json_sha256(flow_step_names)}`"
         ),
         f"- standard_release_flow_steps_sha256: `{_stable_json_sha256(flow_steps)}`",
+        (
+            "- standard_release_flow_first_step_name: "
+            f"`{_markdown_cell(flow_step_boundary['first_step_name'])}`"
+        ),
+        (
+            "- standard_release_flow_last_step_name: "
+            f"`{_markdown_cell(flow_step_boundary['last_step_name'])}`"
+        ),
+        (
+            "- standard_release_flow_step_boundary_sha256: "
+            f"`{_stable_json_sha256(flow_step_boundary)}`"
+        ),
         (
             "- standard_release_flow_has_website_deploy: "
             f"`{str(website_deploy_command is not None).lower()}`"
