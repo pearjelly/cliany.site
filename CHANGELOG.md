@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.251] - 2026-07-02
+
 ### Changed
 - Candidate promotion plan and release planning evidence now prioritize candidate cases with more completed promotion evidence and fewer blockers before falling back to manifest order, so maintainers can keep pushing the closest case toward `active`.
 - Candidate promotion plan output now includes stable `priority_rank` and `priority_reason` fields in JSON and human markdown, making the candidate queue ordering auditable for maintainers and issue handoffs.
@@ -2354,7 +2356,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.250...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.251...HEAD
+[0.16.251]: https://github.com/pearjelly/cliany.site/compare/v0.16.250...v0.16.251
 [0.16.250]: https://github.com/pearjelly/cliany.site/compare/v0.16.249...v0.16.250
 [0.16.249]: https://github.com/pearjelly/cliany.site/compare/v0.16.248...v0.16.249
 [0.16.248]: https://github.com/pearjelly/cliany.site/compare/v0.16.247...v0.16.248
