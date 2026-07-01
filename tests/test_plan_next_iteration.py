@@ -1264,6 +1264,26 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
         in data["standard_release_flow"]["commands"]
     )
     assert WEBSITE_DEPLOY_COMMAND in data["standard_release_flow"]["commands"]
+    assert data["standard_release_flow"]["steps"][-3:] == [
+        {
+            "name": "target_tag",
+            "status": "create_target_tag_at_head",
+            "commands": ["git tag v0.16.2", "git push origin v0.16.2"],
+        },
+        {
+            "name": "website_deploy",
+            "status": "pending",
+            "command": WEBSITE_DEPLOY_COMMAND,
+        },
+        {
+            "name": "remote_publication_audit",
+            "status": "pending",
+            "command": (
+                "python scripts/check_release_publication.py --remote "
+                "--remote-name upstream --json"
+            ),
+        },
+    ]
     assert data["standard_release_flow_has_website_deploy"] is True
     assert data["standard_release_flow_website_deploy_command"] == WEBSITE_DEPLOY_COMMAND
     assert data["standard_release_flow_website_deploy_command_sha256"] == (
@@ -2901,6 +2921,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "gh issue create" in metadata[0]["create_command"]
     assert "--label case-proposal" in metadata[0]["create_command"]
     assert "--label 'good first issue'" in metadata[0]["create_command"]
+    assert artifact_manifest["standard_release_flow"]["steps"][-2] == {
+        "name": "website_deploy",
+        "status": "pending",
+        "command": WEBSITE_DEPLOY_COMMAND,
+    }
     assert artifact_manifest == {
         "schema_version": plan_next_iteration.ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "target_version": "0.16.2",

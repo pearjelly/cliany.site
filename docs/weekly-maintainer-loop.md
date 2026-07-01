@@ -70,6 +70,8 @@ Candidate issue artifacts 的 review checklist 会要求维护者核对 `issue-m
 
 使用 `--issues-dir` 生成候选任务交接包时，`artifact-manifest.json`、`publication-handoff.json`、artifacts `README.md` 的 `Publication Handoff` 和 `artifact_bundle_summary` 也会展示 standard release flow 摘要，包括 `standard_release_flow_status`、`standard_release_flow_primary_next_action`、`standard_release_flow_command_count`、`standard_release_flow_has_website_deploy`、`standard_release_flow_website_deploy_command`、`standard_release_flow_website_deploy_command_sha256`、`standard_release_flow_commands_sha256` 和 `standard_release_flow_sha256`。只读 artifacts 的维护工具可以不展开 release readiness report，也能先判断标准发版 gate 是否仍是 `blocked`，并确认官网部署命令已纳入候选任务交接包。
 
+如果需要审计执行顺序，展开 `standard_release_flow.steps`。Planner 在无法复用 release readiness 完整 flow 时也会自行生成步骤列表，保持 `target_tag` → `website_deploy` → `remote_publication_audit` 的顺序可见。
+
 `release_readiness.py --report` 会在 JSON 和 Markdown report 中输出 `release_mode` / `release_tag`；只有显式 `--release-tag` 的 tagged preflight 通过后，`Weekly Review` 才会把下一步显示为发布已验证 tag。普通 `--target-version` readiness 即使版本和 tag 已匹配，也仍提示准备打 tag，避免目标版本自检和 tag 发布前自检互相混淆。
 
 发布 workflow 完成后，用 `python scripts/check_release_publication.py --remote --distribution --json` 做最终公开渠道审计。`--remote` 证明 branch/tag refs 已经公开，`--distribution` 额外读取 GitHub Release latest tag 和 PyPI latest version；自动化优先看 `distribution_ok`、`distribution.github_release_tag`、`distribution.pypi_version` 和 `distribution.next_actions_sha256`，确保标准发版流程不只停在 git tag 可见，而是真的完成 GitHub Release 与 PyPI 发布。

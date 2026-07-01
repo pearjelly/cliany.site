@@ -1087,15 +1087,23 @@ def _standard_release_flow(
         remote_name=remote_name,
     )
     remote_audit_command = _remote_publication_audit_command(remote_name)
+    validation_command = "CLIANY_QA_OFFLINE=1 pytest tests/ -q"
+    case_validation_command = "python scripts/validate_cases.py --strict"
+    target_tag_commands = [
+        str(command)
+        for command in publication_tag_publish_decision.get("target_tag_commands") or []
+    ]
+    release_notes_action = (
+        f"Move CHANGELOG.md Unreleased entries into `## [{target_version}] - <date>`."
+    )
+    current_version = str(getattr(readiness, "current_version", "") or "")
+    version_action = f"Update pyproject.toml project.version to `{target_version}`."
     validation_commands = [
         strict_command,
-        "CLIANY_QA_OFFLINE=1 pytest tests/ -q",
-        "python scripts/validate_cases.py --strict",
+        validation_command,
+        case_validation_command,
         *publication_publish_commands,
-        *[
-            str(command)
-            for command in publication_tag_publish_decision.get("target_tag_commands") or []
-        ],
+        *target_tag_commands,
         WEBSITE_DEPLOY_COMMAND,
         remote_audit_command,
     ]
@@ -1120,6 +1128,48 @@ def _standard_release_flow(
         "command_count": len(commands),
         "commands_sha256": _stable_json_sha256(commands),
         "commands": commands,
+        "steps": [
+            {
+                "name": "strict_release_readiness",
+                "status": "blocked" if getattr(readiness, "blockers", []) else "ready",
+                "command": strict_command,
+            },
+            {
+                "name": "release_notes",
+                "status": "pending",
+                "action": release_notes_action,
+            },
+            {
+                "name": "version_bump",
+                "status": "pending" if current_version != target_version else "ready",
+                "action": version_action,
+            },
+            {
+                "name": "offline_validation",
+                "status": "pending",
+                "commands": [validation_command, case_validation_command],
+            },
+            {
+                "name": "publish_branch",
+                "status": "blocked" if not _publication_worktree_clean(publication) else "pending",
+                "commands": list(publication_publish_commands),
+            },
+            {
+                "name": "target_tag",
+                "status": publication_tag_publish_decision.get("target_tag_status"),
+                "commands": target_tag_commands,
+            },
+            {
+                "name": "website_deploy",
+                "status": "pending",
+                "command": WEBSITE_DEPLOY_COMMAND,
+            },
+            {
+                "name": "remote_publication_audit",
+                "status": "pending",
+                "command": remote_audit_command,
+            },
+        ],
     }
 
 
