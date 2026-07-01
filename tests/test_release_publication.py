@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -64,6 +65,49 @@ def test_release_publication_passes_when_branch_and_tag_are_pushed(tmp_path):
         "tag_points_at_head": True,
         "tag_published": True,
         "required_action": None,
+    }
+
+
+def test_release_publication_checks_github_release_and_pypi_visibility(tmp_path, monkeypatch):
+    repo = _init_repo_with_origin(tmp_path)
+
+    def fake_fetch_json(url: str):
+        if url == "https://api.github.com/repos/pearjelly/cliany.site/releases/latest":
+            return {"tag_name": "v0.1.0", "draft": False, "prerelease": False}
+        if url == "https://pypi.org/pypi/cliany-site/json":
+            return {"info": {"version": "0.1.0"}}
+        raise AssertionError(f"unexpected URL: {url}")
+
+    monkeypatch.setattr(release_publication, "_fetch_json", fake_fetch_json)
+
+    report = release_publication.build_report(
+        repo,
+        remote_check=True,
+        distribution_check=True,
+        github_repo="pearjelly/cliany.site",
+        pypi_project="cliany-site",
+    )
+
+    payload = report.to_dict()
+    assert report.ok is True
+    assert payload["distribution_checked"] is True
+    assert payload["distribution_ok"] is True
+    assert payload["distribution"] == {
+        "checked": True,
+        "ok": True,
+        "expected_tag": "v0.1.0",
+        "expected_version": "0.1.0",
+        "github_repo": "pearjelly/cliany.site",
+        "github_release_tag": "v0.1.0",
+        "github_release_published": True,
+        "pypi_project": "cliany-site",
+        "pypi_version": "0.1.0",
+        "pypi_published": True,
+        "issues": [],
+        "next_action_count": 0,
+        "next_actions_sha256": release_publication._stable_json_sha256([]),
+        "primary_next_action": None,
+        "next_actions": [],
     }
 
 
@@ -293,6 +337,19 @@ def test_release_publication_writes_reviewable_publish_script(tmp_path):
     assert oct(script_path.stat().st_mode & 0o777) == "0o755"
 
 
+def test_release_publication_publish_script_preserves_remote_audit(tmp_path):
+    repo = _init_repo_with_origin(tmp_path)
+    _commit(repo, "CHANGELOG.md", "released\n", "release")
+    _git(repo, "tag", "v0.1.1")
+    report = release_publication.build_report(repo, remote_check=True)
+    script_path = tmp_path / "reports" / "publish-release.sh"
+
+    release_publication._write_publish_script(report, script_path)
+
+    text = script_path.read_text(encoding="utf-8")
+    assert 'CURRENT_PUBLICATION_JSON="$("$PYTHON_BIN" scripts/check_release_publication.py --remote --json)"' in text
+
+
 def test_release_publication_publish_script_warns_when_tag_is_not_head(tmp_path):
     repo = _init_repo_with_origin(tmp_path)
     _commit(repo, "CHANGELOG.md", "released\n", "release")
@@ -444,3 +501,37 @@ def test_release_publication_main_writes_report_with_json(tmp_path, monkeypatch,
     assert "| ok | `true` |" in report_path.read_text(encoding="utf-8")
     assert script_path.exists()
     assert "python scripts/check_release_publication.py --remote --json" in script_path.read_text(encoding="utf-8")
+
+
+def test_release_publication_cli_accepts_distribution_check(tmp_path, monkeypatch, capsys):
+    repo = _init_repo_with_origin(tmp_path)
+    monkeypatch.setattr(release_publication, "ROOT", repo)
+
+    def fake_fetch_json(url: str):
+        if url == "https://api.github.com/repos/pearjelly/cliany.site/releases/latest":
+            return {"tag_name": "v0.1.0", "draft": False, "prerelease": False}
+        if url == "https://pypi.org/pypi/cliany-site/json":
+            return {"info": {"version": "0.1.0"}}
+        raise AssertionError(f"unexpected URL: {url}")
+
+    monkeypatch.setattr(release_publication, "_fetch_json", fake_fetch_json)
+
+    exit_code = release_publication.main(
+        [
+            "--json",
+            "--remote",
+            "--distribution",
+            "--github-repo",
+            "pearjelly/cliany.site",
+            "--pypi-project",
+            "cliany-site",
+        ]
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["ok"] is True
+    assert payload["distribution_checked"] is True
+    assert payload["distribution_ok"] is True
+    assert payload["distribution"]["github_release_tag"] == "v0.1.0"
+    assert payload["distribution"]["pypi_version"] == "0.1.0"

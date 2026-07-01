@@ -167,8 +167,8 @@ const I18N = {
     en: 'Start from <code>docs/weekly-maintainer-loop.md</code> when choosing the next release slice.'
   },
   'qs.maintainer.actions': {
-    zh: '读取 <code>python scripts/release_readiness.py --json</code> 或 <code>python scripts/check_release_cadence.py --json</code> 输出的 <code>next_actions</code>、<code>release_count_today</code>、<code>max_daily_releases</code> 和 <code>daily_release_limit_ok</code>。',
-    en: 'Read <code>next_actions</code>, <code>release_count_today</code>, <code>max_daily_releases</code>, and <code>daily_release_limit_ok</code> from <code>python scripts/release_readiness.py --json</code> or <code>python scripts/check_release_cadence.py --json</code>.'
+    zh: '读取 <code>python scripts/release_readiness.py --json</code> 或 <code>python scripts/check_release_cadence.py --json</code> 输出的 <code>next_actions</code>、<code>release_count_today</code>、<code>max_daily_releases</code> 和 <code>daily_release_limit_ok</code>；发布后用 <code>python scripts/check_release_publication.py --remote --distribution --json</code> 核对 GitHub Release 与 PyPI。',
+    en: 'Read <code>next_actions</code>, <code>release_count_today</code>, <code>max_daily_releases</code>, and <code>daily_release_limit_ok</code> from <code>python scripts/release_readiness.py --json</code> or <code>python scripts/check_release_cadence.py --json</code>; after release, confirm GitHub Release and PyPI with <code>python scripts/check_release_publication.py --remote --distribution --json</code>.'
   },
 
   'obscura.title': { zh: '实验性功能：Obscura Browser Provider', en: 'Experimental: Obscura Browser Provider' },

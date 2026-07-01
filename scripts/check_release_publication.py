@@ -9,11 +9,49 @@ import json
 import shlex
 import subprocess
 import sys
+import tomllib
+import urllib.parse
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+@dataclass(frozen=True)
+class DistributionReport:
+    checked: bool
+    ok: bool
+    expected_tag: str | None
+    expected_version: str | None
+    github_repo: str | None
+    github_release_tag: str | None
+    github_release_published: bool | None
+    pypi_project: str | None
+    pypi_version: str | None
+    pypi_published: bool | None
+    issues: list[str]
+
+    def to_dict(self) -> dict[str, Any]:
+        next_actions = _distribution_next_actions(self)
+        return {
+            "checked": self.checked,
+            "ok": self.ok,
+            "expected_tag": self.expected_tag,
+            "expected_version": self.expected_version,
+            "github_repo": self.github_repo,
+            "github_release_tag": self.github_release_tag,
+            "github_release_published": self.github_release_published,
+            "pypi_project": self.pypi_project,
+            "pypi_version": self.pypi_version,
+            "pypi_published": self.pypi_published,
+            "issues": self.issues,
+            "next_action_count": len(next_actions),
+            "next_actions_sha256": _stable_json_sha256(next_actions),
+            "primary_next_action": next_actions[0] if next_actions else None,
+            "next_actions": next_actions,
+        }
 
 
 @dataclass(frozen=True)
@@ -38,11 +76,13 @@ class PublicationReport:
     remote_tag_commit: str | None
     branch_published: bool | None
     tag_published: bool | None
+    distribution: DistributionReport
 
     def to_dict(self) -> dict[str, Any]:
         next_actions = _next_action_lines(self)
         publish_commands = _publish_command_lines(self)
         tag_publish_decision = _tag_publish_decision(self)
+        distribution_payload = self.distribution.to_dict()
         return {
             "ok": self.ok,
             "repo_root": self.repo_root,
@@ -64,6 +104,9 @@ class PublicationReport:
             "remote_tag_commit": self.remote_tag_commit,
             "branch_published": self.branch_published,
             "tag_published": self.tag_published,
+            "distribution_checked": self.distribution.checked,
+            "distribution_ok": self.distribution.ok,
+            "distribution": distribution_payload,
             "tag_publish_decision": tag_publish_decision,
             "next_action_count": len(next_actions),
             "next_actions_sha256": _stable_json_sha256(next_actions),
@@ -136,7 +179,148 @@ def _worktree_status(root: Path) -> list[str]:
     return status.splitlines() if status else []
 
 
-def build_report(root: Path = ROOT, *, remote_check: bool = False, remote: str = "origin") -> PublicationReport:
+def _fetch_json(url: str) -> Any:
+    request = urllib.request.Request(
+        url,
+        headers={
+            "Accept": "application/json",
+            "User-Agent": "cliany-site-release-audit",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=10) as response:
+        return json.loads(response.read().decode("utf-8"))
+
+
+def _project_metadata(root: Path) -> dict[str, Any]:
+    path = root / "pyproject.toml"
+    if not path.exists():
+        return {}
+    return tomllib.loads(path.read_text(encoding="utf-8")).get("project") or {}
+
+
+def _infer_pypi_project(root: Path) -> str | None:
+    project = _project_metadata(root)
+    name = project.get("name")
+    return str(name) if name else None
+
+
+def _github_repo_from_url(url: str) -> str | None:
+    cleaned = url.rstrip("/")
+    if cleaned.endswith(".git"):
+        cleaned = cleaned[:-4]
+    if cleaned.startswith("git@github.com:"):
+        return cleaned.split(":", 1)[1]
+    parsed = urllib.parse.urlparse(cleaned)
+    if parsed.netloc.lower() != "github.com":
+        return None
+    parts = [part for part in parsed.path.split("/") if part]
+    if len(parts) < 2:
+        return None
+    return "/".join(parts[:2])
+
+
+def _infer_github_repo(root: Path) -> str | None:
+    project = _project_metadata(root)
+    urls = project.get("urls") or {}
+    repository = urls.get("Repository")
+    if repository:
+        repo = _github_repo_from_url(str(repository))
+        if repo:
+            return repo
+    remote_url = _optional_git(["remote", "get-url", "origin"], root)
+    return _github_repo_from_url(remote_url) if remote_url else None
+
+
+def _build_distribution_report(
+    root: Path,
+    *,
+    checked: bool,
+    latest_tag: str | None,
+    github_repo: str | None = None,
+    pypi_project: str | None = None,
+) -> DistributionReport:
+    expected_version = latest_tag[1:] if latest_tag and latest_tag.startswith("v") else latest_tag
+    if not checked:
+        return DistributionReport(
+            checked=False,
+            ok=True,
+            expected_tag=latest_tag,
+            expected_version=expected_version,
+            github_repo=github_repo,
+            github_release_tag=None,
+            github_release_published=None,
+            pypi_project=pypi_project,
+            pypi_version=None,
+            pypi_published=None,
+            issues=[],
+        )
+
+    resolved_github_repo = github_repo or _infer_github_repo(root)
+    resolved_pypi_project = pypi_project or _infer_pypi_project(root)
+    issues: list[str] = []
+    github_release_tag = None
+    github_release_published = None
+    pypi_version = None
+    pypi_published = None
+
+    if not latest_tag:
+        issues.append("release tag is missing; cannot check public distribution artifacts")
+
+    if not resolved_github_repo:
+        issues.append("GitHub repository could not be inferred; pass --github-repo")
+    elif latest_tag:
+        try:
+            github_payload = _fetch_json(f"https://api.github.com/repos/{resolved_github_repo}/releases/latest")
+            github_release_tag = str(github_payload.get("tag_name") or "")
+            github_release_published = (
+                github_release_tag == latest_tag
+                and github_payload.get("draft") is False
+                and github_payload.get("prerelease") is False
+            )
+            if not github_release_published:
+                issues.append(
+                    f"GitHub Release latest tag {github_release_tag or '(missing)'} != {latest_tag}"
+                )
+        except Exception as exc:  # noqa: BLE001 - report network/API failures as audit evidence.
+            issues.append(f"GitHub Release check failed: {exc}")
+
+    if not resolved_pypi_project:
+        issues.append("PyPI project could not be inferred; pass --pypi-project")
+    elif expected_version:
+        try:
+            pypi_payload = _fetch_json(f"https://pypi.org/pypi/{resolved_pypi_project}/json")
+            info = pypi_payload.get("info") or {}
+            pypi_version = str(info.get("version") or "")
+            pypi_published = pypi_version == expected_version
+            if not pypi_published:
+                issues.append(f"PyPI latest version {pypi_version or '(missing)'} != {expected_version}")
+        except Exception as exc:  # noqa: BLE001 - report network/API failures as audit evidence.
+            issues.append(f"PyPI check failed: {exc}")
+
+    return DistributionReport(
+        checked=True,
+        ok=not issues,
+        expected_tag=latest_tag,
+        expected_version=expected_version,
+        github_repo=resolved_github_repo,
+        github_release_tag=github_release_tag,
+        github_release_published=github_release_published,
+        pypi_project=resolved_pypi_project,
+        pypi_version=pypi_version,
+        pypi_published=pypi_published,
+        issues=issues,
+    )
+
+
+def build_report(
+    root: Path = ROOT,
+    *,
+    remote_check: bool = False,
+    remote: str = "origin",
+    distribution_check: bool = False,
+    github_repo: str | None = None,
+    pypi_project: str | None = None,
+) -> PublicationReport:
     branch = _branch_name(root)
     upstream = _upstream_name(root)
     remote_name = _remote_from_upstream(upstream, remote)
@@ -164,13 +348,22 @@ def build_report(root: Path = ROOT, *, remote_check: bool = False, remote: str =
         branch_published = bool(local_head and remote_branch_head == local_head)
         tag_published = bool(tag_commit and remote_tag_commit == tag_commit)
 
-    ok = bool(
+    distribution = _build_distribution_report(
+        root,
+        checked=distribution_check,
+        latest_tag=latest_tag,
+        github_repo=github_repo,
+        pypi_project=pypi_project,
+    )
+
+    refs_ok = bool(
         branch_published is True
         and tag_published is True
         and tag_points_at_head
         and worktree_clean
         and latest_tag
     )
+    ok = refs_ok and distribution.ok
 
     return PublicationReport(
         ok=ok,
@@ -193,6 +386,7 @@ def build_report(root: Path = ROOT, *, remote_check: bool = False, remote: str =
         remote_tag_commit=remote_tag_commit,
         branch_published=branch_published,
         tag_published=tag_published,
+        distribution=distribution,
     )
 
 
@@ -229,6 +423,30 @@ def _next_action_lines(report: PublicationReport) -> list[str]:
             )
     if not report.remote_checked:
         actions.append("Rerun with `--remote` when network access is available to verify live remote refs.")
+    actions.extend(report.distribution.to_dict()["next_actions"])
+    return actions
+
+
+def _distribution_next_actions(report: DistributionReport) -> list[str]:
+    if not report.checked or report.ok:
+        return []
+
+    actions: list[str] = []
+    for issue in report.issues:
+        if issue.startswith("GitHub Release latest tag"):
+            actions.append(
+                f"Wait for or repair GitHub Release `{report.expected_tag}` before considering the release complete."
+            )
+        elif issue.startswith("PyPI latest version"):
+            actions.append(
+                f"Wait for or repair PyPI version `{report.expected_version}` before considering the release complete."
+            )
+        elif issue.startswith("GitHub Release check failed") or issue.startswith("PyPI check failed"):
+            action = "Rerun with `--distribution` after network/API access is available."
+            if action not in actions:
+                actions.append(action)
+        else:
+            actions.append(issue)
     return actions
 
 
@@ -336,6 +554,8 @@ def _print_text(report: PublicationReport) -> None:
     print(f"tag_points_at_head: {report.tag_points_at_head}")
     print(f"branch_published: {report.branch_published}")
     print(f"tag_published: {report.tag_published}")
+    print(f"distribution_checked: {report.distribution.checked}")
+    print(f"distribution_ok: {report.distribution.ok}")
     print(f"tag_publish_decision: {tag_publish_decision['status']}")
     print(f"remote_checked: {report.remote_checked}")
     print(f"next_action_count: {len(next_actions)}")
@@ -348,6 +568,18 @@ def _print_text(report: PublicationReport) -> None:
         print("worktree_status:")
         for line in report.worktree_status:
             print(f"- {line}")
+    if report.distribution.checked:
+        print("distribution:")
+        print(f"- github_repo: {report.distribution.github_repo or '(none)'}")
+        print(f"- github_release_tag: {report.distribution.github_release_tag or '(none)'}")
+        print(f"- github_release_published: {report.distribution.github_release_published}")
+        print(f"- pypi_project: {report.distribution.pypi_project or '(none)'}")
+        print(f"- pypi_version: {report.distribution.pypi_version or '(none)'}")
+        print(f"- pypi_published: {report.distribution.pypi_published}")
+        if report.distribution.issues:
+            print("- issues:")
+            for issue in report.distribution.issues:
+                print(f"  - {issue}")
     if next_actions:
         print("next_actions:")
         for action in next_actions:
@@ -391,6 +623,8 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
         f"| tag_points_at_head | `{_format_bool(report.tag_points_at_head)}` |",
         f"| branch_published | `{_format_bool(report.branch_published)}` |",
         f"| tag_published | `{_format_bool(report.tag_published)}` |",
+        f"| distribution_checked | `{_format_bool(report.distribution.checked)}` |",
+        f"| distribution_ok | `{_format_bool(report.distribution.ok)}` |",
         f"| tag_publish_decision | `{tag_publish_decision['status']}` |",
         f"| tag_can_push | `{_format_bool(tag_publish_decision['can_push_tag'])}` |",
         f"| remote_checked | `{_format_bool(report.remote_checked)}` |",
@@ -430,6 +664,24 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
         lines.extend(["", "## Worktree Status", "", "```text", *report.worktree_status, "```"])
     else:
         lines.extend(["", "## Worktree Status", "", "- Worktree is clean."])
+    if report.distribution.checked:
+        lines.extend(
+            [
+                "",
+                "## Distribution Visibility",
+                "",
+                f"- expected_tag: `{_format_value(report.distribution.expected_tag)}`",
+                f"- expected_version: `{_format_value(report.distribution.expected_version)}`",
+                f"- github_repo: `{_format_value(report.distribution.github_repo)}`",
+                f"- github_release_tag: `{_format_value(report.distribution.github_release_tag)}`",
+                f"- github_release_published: `{_format_bool(report.distribution.github_release_published)}`",
+                f"- pypi_project: `{_format_value(report.distribution.pypi_project)}`",
+                f"- pypi_version: `{_format_value(report.distribution.pypi_version)}`",
+                f"- pypi_published: `{_format_bool(report.distribution.pypi_published)}`",
+            ]
+        )
+        if report.distribution.issues:
+            lines.extend(["", "### Distribution Issues", "", *(f"- {issue}" for issue in report.distribution.issues)])
     if publish_commands:
         lines.extend(["", "## Publish Commands", "", "```bash", *publish_commands, "```"])
     else:
@@ -528,7 +780,7 @@ def _write_publish_script(report: PublicationReport, path: Path) -> None:
         "extract_publication_field() {",
         "  \"$PYTHON_BIN\" -c 'import json, sys; print(json.load(sys.stdin)[sys.argv[1]])' \"$1\"",
         "}",
-        'CURRENT_PUBLICATION_JSON="$("$PYTHON_BIN" scripts/check_release_publication.py --json)"',
+        f'CURRENT_PUBLICATION_JSON="$("$PYTHON_BIN" {_publish_script_audit_command(report)})"',
         'CURRENT_NEXT_ACTIONS_SHA256="$(printf "%s\\n" "$CURRENT_PUBLICATION_JSON" '
         '| extract_publication_field next_actions_sha256)"',
         'CURRENT_PUBLISH_COMMANDS_SHA256="$(printf "%s\\n" "$CURRENT_PUBLICATION_JSON" '
@@ -569,6 +821,20 @@ def _publish_script_review_notes(report: PublicationReport) -> list[str]:
     return []
 
 
+def _publish_script_audit_command(report: PublicationReport) -> str:
+    parts = ["scripts/check_release_publication.py"]
+    if report.remote_checked:
+        parts.append("--remote")
+    if report.distribution.checked:
+        parts.append("--distribution")
+        if report.distribution.github_repo:
+            parts.extend(["--github-repo", report.distribution.github_repo])
+        if report.distribution.pypi_project:
+            parts.extend(["--pypi-project", report.distribution.pypi_project])
+    parts.append("--json")
+    return " ".join(shlex.quote(part) for part in parts)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Check whether the latest local release has been published.")
     parser.add_argument("--json", action="store_true", help="Output machine-readable JSON.")
@@ -583,11 +849,25 @@ def main(argv: list[str] | None = None) -> int:
         help="Check live remote branch and tag refs with git ls-remote.",
     )
     parser.add_argument("--remote-name", default="origin", help="Fallback remote name when no upstream is configured.")
+    parser.add_argument(
+        "--distribution",
+        action="store_true",
+        help="Check public GitHub Release and PyPI visibility for the latest local tag.",
+    )
+    parser.add_argument("--github-repo", help="GitHub repository slug, e.g. pearjelly/cliany.site.")
+    parser.add_argument("--pypi-project", help="PyPI project name, e.g. cliany-site.")
     parser.add_argument("--report", type=Path, help="Write a Markdown publication report to this path.")
     parser.add_argument("--publish-script", type=Path, help="Write a reviewable shell script with publish commands.")
     args = parser.parse_args(argv)
 
-    report = build_report(ROOT, remote_check=args.remote, remote=args.remote_name)
+    report = build_report(
+        ROOT,
+        remote_check=args.remote,
+        remote=args.remote_name,
+        distribution_check=args.distribution,
+        github_repo=args.github_repo,
+        pypi_project=args.pypi_project,
+    )
     if args.report:
         _write_markdown_report(report, args.report)
     if args.publish_script:

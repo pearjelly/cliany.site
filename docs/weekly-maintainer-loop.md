@@ -68,6 +68,8 @@ Candidate issue artifacts 的 review checklist 会要求维护者核对 `issue-m
 
 `release_readiness.py --report` 会在 JSON 和 Markdown report 中输出 `release_mode` / `release_tag`；只有显式 `--release-tag` 的 tagged preflight 通过后，`Weekly Review` 才会把下一步显示为发布已验证 tag。普通 `--target-version` readiness 即使版本和 tag 已匹配，也仍提示准备打 tag，避免目标版本自检和 tag 发布前自检互相混淆。
 
+发布 workflow 完成后，用 `python scripts/check_release_publication.py --remote --distribution --json` 做最终公开渠道审计。`--remote` 证明 branch/tag refs 已经公开，`--distribution` 额外读取 GitHub Release latest tag 和 PyPI latest version；自动化优先看 `distribution_ok`、`distribution.github_release_tag`、`distribution.pypi_version` 和 `distribution.next_actions_sha256`，确保标准发版流程不只停在 git tag 可见，而是真的完成 GitHub Release 与 PyPI 发布。
+
 `artifact_bundle_summary` 会带上 `artifact_bundle_summary_key_count` 和 `artifact_bundle_summary_keys_sha256`，让工具只读整包摘要就能判断 summary 自身字段规模和字段清单是否漂移。
 
 `artifact_bundle_summary` 也会带上 `artifact_bundle_summary_key_preview_count`、`artifact_bundle_summary_key_preview` 和 `artifact_bundle_summary_key_preview_sha256`，让工具只读整包摘要就能先检查 summary 前几个关键字段的顺序与内容，再决定是否展开完整字段清单。

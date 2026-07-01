@@ -9,6 +9,7 @@
 
 ### Added
 - 新增 `v0.16.248` 发布草案，将下一版继续聚焦 `pypi-project-search` candidate 晋级证据、live LLM preflight 门禁和 release cadence 累积。
+- `scripts/check_release_publication.py` 新增显式 `--distribution` 发布后审计，可核对最新本地 tag 对应的 GitHub Release 与 PyPI 版本是否已经公开可见。
 
 ## [0.16.247] - 2026-06-28
 
