@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.250] - 2026-07-01
+
 ### Added
 - 新增 `v0.16.250` 发布草案，记录 live LLM preflight 返回 `E_UNKNOWN` connection error 时的 candidate 晋级阻塞边界。
 
@@ -2303,7 +2305,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.249...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.250...HEAD
+[0.16.250]: https://github.com/pearjelly/cliany.site/compare/v0.16.249...v0.16.250
 [0.16.249]: https://github.com/pearjelly/cliany.site/compare/v0.16.248...v0.16.249
 [0.16.248]: https://github.com/pearjelly/cliany.site/compare/v0.16.247...v0.16.248
 [0.16.247]: https://github.com/pearjelly/cliany.site/compare/v0.16.246...v0.16.247

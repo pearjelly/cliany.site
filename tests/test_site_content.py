@@ -39,7 +39,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "max_daily_releases" in index
     assert "daily_release_limit_ok" in index
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.248" in index
+    assert "Current baseline: v0.16.250" in index
     assert "10-Minute Success Path" in script
     assert "Run a real demo adapter first" in script
     assert "primary_next_task_acceptance_criteria" in script
@@ -56,4 +56,4 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "release_count_today" in script
     assert "max_daily_releases" in script
     assert "daily_release_limit_ok" in script
-    assert "Current baseline: v0.16.248" in script
+    assert "Current baseline: v0.16.250" in script
