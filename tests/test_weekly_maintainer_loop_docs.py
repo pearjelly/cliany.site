@@ -283,6 +283,7 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "case_promotion_evidence_summary",
         "promotion_evidence_summary.primary_next_task.doctor_preflight_evidence_template_sha256",
         "primary_doctor_preflight_evidence_template_sha256",
+        "promotion_evidence_primary_doctor_preflight_evidence_template_sha256",
         "candidate_count",
         "task_count",
         "pending_count",

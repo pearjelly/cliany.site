@@ -1060,6 +1060,14 @@ def _print_text(report: CasesReport) -> None:
         print(f"promotion_evidence_primary: {primary_case_id}/{primary_task_name} ({primary_status})")
         print(f"promotion_evidence_evidence: {primary_evidence}")
         print(f"promotion_evidence_next: {report.promotion_evidence_summary['primary_next_action']}")
+        print(
+            "promotion_evidence_primary_doctor_preflight_evidence_template_field_count: "
+            f"{primary_task.get('doctor_preflight_evidence_template_field_count', 0)}"
+        )
+        print(
+            "promotion_evidence_primary_doctor_preflight_evidence_template_sha256: "
+            f"{primary_task.get('doctor_preflight_evidence_template_sha256', '-')}"
+        )
         primary_runbook = report.promotion_evidence_summary.get("primary_next_task_runbook")
         if isinstance(primary_runbook, list) and primary_runbook:
             print(f"promotion_evidence_primary_runbook: {_runbook_step_summary(primary_runbook)}")

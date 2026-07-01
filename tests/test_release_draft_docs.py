@@ -11164,6 +11164,8 @@ def test_v016254_release_draft_tracks_planner_issue_template_handoff():
         "task_queue[*].doctor_preflight_evidence_template_sha256",
         "promotion_evidence_summary.primary_next_task.doctor_preflight_evidence_template_sha256",
         "scripts/validate_cases.py --report",
+        "scripts/validate_cases.py --strict",
+        "promotion_evidence_primary_doctor_preflight_evidence_template_sha256",
         "case_promotion_evidence_primary_doctor_preflight_evidence_template_sha256",
         "case_promotion_doctor_preflight_evidence_template_sha256",
         "cliany-site cases --case-id <id> --issue-template",

@@ -29,6 +29,11 @@ def test_readmes_document_current_extract_quality_and_readiness():
             "doctor_preflight_evidence_template_sha256"
         ) in text
         assert "scripts/validate_cases.py --report" in text
+        assert "scripts/validate_cases.py --strict" in text
+        assert (
+            "promotion_evidence_primary_doctor_preflight_evidence_template_sha256"
+            in text
+        )
         assert "issue_template_json_command" in text
         assert "promotion_evidence_summary.primary_next_task" in text
         assert "promotion_evidence_summary.primary_next_task_acceptance_criteria" in text

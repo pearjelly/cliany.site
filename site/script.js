@@ -158,8 +158,8 @@ const I18N = {
     en: 'Queue-only automation can compare doctor evidence drift from <code>promotion_plan.primary_doctor_preflight_evidence_template_sha256</code>, candidate <code>primary_doctor_preflight_evidence_template_sha256</code>, and <code>task_queue[*].doctor_preflight_evidence_template_sha256</code> without opening a full evidence bundle.'
   },
   'qs.contribute.validation': {
-    zh: '只读取 validation 的自动化可以从 <code>scripts/validate_cases.py --json</code> 的 <code>promotion_evidence_summary.primary_next_task.doctor_preflight_evidence_template_sha256</code>，或 <code>scripts/validate_cases.py --report</code> 的 <code>primary_doctor_preflight_evidence_template_sha256</code> 读取同源模板漂移信号。',
-    en: 'Validation-only automation can read <code>promotion_evidence_summary.primary_next_task.doctor_preflight_evidence_template_sha256</code> from <code>scripts/validate_cases.py --json</code> or <code>primary_doctor_preflight_evidence_template_sha256</code> from <code>scripts/validate_cases.py --report</code>.'
+    zh: '只读取 validation 的自动化可以从 <code>scripts/validate_cases.py --json</code> 的 <code>promotion_evidence_summary.primary_next_task.doctor_preflight_evidence_template_sha256</code>、<code>scripts/validate_cases.py --report</code> 的 <code>primary_doctor_preflight_evidence_template_sha256</code>，或纯文本 <code>scripts/validate_cases.py --strict</code> stdout 的 <code>promotion_evidence_primary_doctor_preflight_evidence_template_sha256</code> 读取同源模板漂移信号。',
+    en: 'Validation-only automation can read <code>promotion_evidence_summary.primary_next_task.doctor_preflight_evidence_template_sha256</code> from <code>scripts/validate_cases.py --json</code>, <code>primary_doctor_preflight_evidence_template_sha256</code> from <code>scripts/validate_cases.py --report</code>, or <code>promotion_evidence_primary_doctor_preflight_evidence_template_sha256</code> from plain <code>scripts/validate_cases.py --strict</code> stdout.'
   },
   'qs.contribute.goodfirst': {
     zh: '首次贡献者可以从 <code>docs/good-first-issues.md</code> 开始，选择默认离线、可本地验证的任务。',

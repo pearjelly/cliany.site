@@ -43,6 +43,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
         in index
     )
     assert "scripts/validate_cases.py --report" in index
+    assert "scripts/validate_cases.py --strict" in index
+    assert "promotion_evidence_primary_doctor_preflight_evidence_template_sha256" in index
     assert "issue_template_json_command" in index
     assert "primary_next_task_acceptance_criteria" in index
     assert "preflight_required" in index
@@ -91,6 +93,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
         in script
     )
     assert "scripts/validate_cases.py --report" in script
+    assert "scripts/validate_cases.py --strict" in script
+    assert "promotion_evidence_primary_doctor_preflight_evidence_template_sha256" in script
     assert "issue_template_json_command" in script
     assert "python scripts/plan_next_iteration.py --issues-dir" in script
     assert "Primary Acceptance Criteria" in script
