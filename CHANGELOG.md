@@ -24,6 +24,7 @@
 - Contributor starter and good-first-issue docs now explain how to use `primary_next_task_runbook` and compact runbook aliases when creating candidate promotion issues, and release readiness gates those contributor entrypoints.
 - Website quickstart and docs now surface the same candidate runbook handoff fields, and release readiness gates the static site on those public entrypoint snippets.
 - The Real Demo Case Proposal issue template now prompts candidate promotion authors to include `primary_next_task_runbook` and compact runbook drift checks, with release readiness guarding that GitHub-native entrypoint.
+- The pull request template now asks candidate promotion PRs to attach the same runbook and compact alias drift evidence, and release readiness gates that review checklist.
 
 ### Fixed
 - Release readiness now projects whether creating the target tag today would exceed the daily release cap, so planning `v0.16.251` after `v0.16.248`、`v0.16.249` 和 `v0.16.250` 已发布时会明确暂停 tag，而不是继续给出第四个同日 release 命令。

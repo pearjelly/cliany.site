@@ -526,6 +526,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         ".github/PULL_REQUEST_TEMPLATE.md": [
             "python scripts/validate_cases.py --strict",
             "python scripts/release_readiness.py --json",
+            "primary_next_task_runbook",
+            "case_promotion_evidence_primary_runbook_steps",
             "CLIANY_QA_OFFLINE=1",
             "~/.cliany-site/",
         ],

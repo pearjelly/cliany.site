@@ -321,6 +321,8 @@ def _template_content(filename: str) -> str:
         ".github/PULL_REQUEST_TEMPLATE.md": (
             "python scripts/validate_cases.py --strict\n"
             "python scripts/release_readiness.py --json\n"
+            "primary_next_task_runbook\n"
+            "case_promotion_evidence_primary_runbook_steps\n"
             "CLIANY_QA_OFFLINE=1\n"
             "~/.cliany-site/\n"
         ),
@@ -1441,6 +1443,25 @@ def test_release_readiness_blocks_incomplete_open_source_template(tmp_path):
     assert (
         "open source metadata file missing snippet: .github/PULL_REQUEST_TEMPLATE.md: "
         "python scripts/release_readiness.py --json"
+    ) in report.project_metadata.issues
+
+
+def test_release_readiness_blocks_stale_pr_template_candidate_runbook_alias(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    template_path = repo / ".github" / "PULL_REQUEST_TEMPLATE.md"
+    text = template_path.read_text(encoding="utf-8")
+    template_path.write_text(
+        text.replace("case_promotion_evidence_primary_runbook_steps\n", ""),
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file missing snippet: .github/PULL_REQUEST_TEMPLATE.md: "
+        "case_promotion_evidence_primary_runbook_steps"
     ) in report.project_metadata.issues
 
 
