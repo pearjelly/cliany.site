@@ -627,8 +627,15 @@ from release_readiness import build_report as build_readiness_report  # noqa: E4
 
 
 def _doctor_preflight_evidence_template_lines() -> list[str]:
-    placeholder = "`<paste from doctor --llm-live --json>`"
-    return [f"- `{field}`: {placeholder}" for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS]
+    return [
+        f"- `{field}`: `{value}`"
+        for field, value in _doctor_preflight_evidence_template().items()
+    ]
+
+
+def _doctor_preflight_evidence_template() -> dict[str, str]:
+    placeholder = "<paste from doctor --llm-live --json>"
+    return {field: placeholder for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS}
 
 
 @dataclass(frozen=True)
@@ -656,6 +663,7 @@ class CandidatePromotion:
     llm_live_preflight_blocker_comment: str
     doctor_preflight_blocker_comment: str
     doctor_preflight_evidence_fields: list[str]
+    doctor_preflight_evidence_template: dict[str, str]
     llm_live_preflight_evidence_fields: list[str]
     issue_template_command: str
     issue_template_json_command: str
@@ -694,6 +702,9 @@ class CandidatePromotion:
                 self.doctor_preflight_blocker_comment
             ),
             "doctor_preflight_evidence_fields": self.doctor_preflight_evidence_fields,
+            "doctor_preflight_evidence_template": (
+                self.doctor_preflight_evidence_template
+            ),
             "llm_live_preflight_evidence_fields": self.llm_live_preflight_evidence_fields,
             "issue_template_command": self.issue_template_command,
             "issue_template_json_command": self.issue_template_json_command,
@@ -2178,6 +2189,9 @@ def _llm_live_preflight_task_fields(task_name: str) -> dict[str, Any]:
         "doctor_preflight_evidence_fields": (
             list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS) if required else []
         ),
+        "doctor_preflight_evidence_template": (
+            _doctor_preflight_evidence_template() if required else {}
+        ),
     }
 
 
@@ -2204,8 +2218,12 @@ def _task_with_doctor_preflight_evidence_fields(task: Any) -> Any:
         normalized["doctor_preflight_evidence_fields"] = list(
             DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         )
+        normalized["doctor_preflight_evidence_template"] = (
+            _doctor_preflight_evidence_template()
+        )
     elif "doctor_preflight_evidence_fields" not in normalized:
         normalized["doctor_preflight_evidence_fields"] = []
+        normalized.setdefault("doctor_preflight_evidence_template", {})
     return normalized
 
 
@@ -2520,6 +2538,7 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 llm_live_preflight_blocker_comment=LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT,
                 doctor_preflight_blocker_comment=DOCTOR_PREFLIGHT_BLOCKER_COMMENT,
                 doctor_preflight_evidence_fields=list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS),
+                doctor_preflight_evidence_template=_doctor_preflight_evidence_template(),
                 llm_live_preflight_evidence_fields=list(
                     LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
                 ),
@@ -4181,6 +4200,9 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "doctor_preflight_evidence_fields": list(
                     promotion.doctor_preflight_evidence_fields
                 ),
+                "doctor_preflight_evidence_template": dict(
+                    promotion.doctor_preflight_evidence_template
+                ),
                 "issue_template_command": promotion.issue_template_command,
                 "issue_template_json_command": promotion.issue_template_json_command,
                 "evidence_bundle_command": promotion.evidence_bundle_command,
@@ -5225,6 +5247,9 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
             "doctor_preflight_evidence_fields": item[
                 "doctor_preflight_evidence_fields"
             ],
+            "doctor_preflight_evidence_template": item[
+                "doctor_preflight_evidence_template"
+            ],
             "issue_template_command": item["issue_template_command"],
             "issue_template_json_command": item["issue_template_json_command"],
             "evidence_bundle_command": item["evidence_bundle_command"],
@@ -5281,6 +5306,9 @@ def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[di
             ),
             "doctor_preflight_evidence_fields": list(
                 promotion.doctor_preflight_evidence_fields
+            ),
+            "doctor_preflight_evidence_template": dict(
+                promotion.doctor_preflight_evidence_template
             ),
             "issue_template_command": promotion.issue_template_command,
             "issue_template_json_command": promotion.issue_template_json_command,

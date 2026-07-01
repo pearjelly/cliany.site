@@ -207,8 +207,15 @@ def _doctor_preflight_blocker_comment() -> str:
 
 
 def _doctor_preflight_evidence_template_lines() -> list[str]:
-    placeholder = "`<paste from doctor --llm-live --json>`"
-    return [f"- `{field}`: {placeholder}" for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS]
+    return [
+        f"- `{field}`: `{value}`"
+        for field, value in _doctor_preflight_evidence_template().items()
+    ]
+
+
+def _doctor_preflight_evidence_template() -> dict[str, str]:
+    placeholder = "<paste from doctor --llm-live --json>"
+    return {field: placeholder for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS}
 
 
 def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
@@ -241,6 +248,9 @@ def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[st
         ),
         "doctor_preflight_evidence_fields": list(
             primary.get("doctor_preflight_evidence_fields") or []
+        ),
+        "doctor_preflight_evidence_template": dict(
+            primary.get("doctor_preflight_evidence_template") or {}
         ),
         "command": str(primary.get("command") or ""),
         "command_source": str(primary.get("command_source") or ""),
@@ -529,6 +539,9 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
             acceptance_criteria=acceptance_criteria,
         )
         llm_live_preflight_required = task == "adapter_package"
+        doctor_preflight_evidence_template = (
+            _doctor_preflight_evidence_template() if llm_live_preflight_required else {}
+        )
         tasks.append(
             {
                 "task": task,
@@ -555,6 +568,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                     if llm_live_preflight_required
                     else []
                 ),
+                "doctor_preflight_evidence_template": doctor_preflight_evidence_template,
                 "command": command,
                 "command_source": command_source,
                 "command_missing": command_missing,
@@ -595,6 +609,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "llm_live_preflight_blocker_note": LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
         "llm_live_preflight_evidence_fields": list(LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS),
         "doctor_preflight_evidence_fields": list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS),
+        "doctor_preflight_evidence_template": _doctor_preflight_evidence_template(),
         "candidate_package_validation_command": CANDIDATE_PACKAGE_VALIDATION_COMMAND
         if adapter_domain
         else "",
@@ -1106,6 +1121,9 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
                         ),
                         "doctor_preflight_evidence_fields": list(
                             task_evidence.get("doctor_preflight_evidence_fields") or []
+                        ),
+                        "doctor_preflight_evidence_template": dict(
+                            task_evidence.get("doctor_preflight_evidence_template") or {}
                         ),
                     }
                 )

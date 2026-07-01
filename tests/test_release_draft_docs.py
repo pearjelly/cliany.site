@@ -11156,6 +11156,7 @@ def test_v016254_release_draft_tracks_planner_issue_template_handoff():
         "Issue Template",
         "Issue Template JSON",
         "Doctor Preflight Evidence Template",
+        "doctor_preflight_evidence_template",
         "cliany-site cases --case-id <id> --issue-template",
     ]
     for snippet in required:

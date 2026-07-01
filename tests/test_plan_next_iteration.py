@@ -57,6 +57,10 @@ DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = [
     "checks[llm_live].details.phase",
     "checks[llm_live].details.message",
 ]
+DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE = {
+    field: "<paste from doctor --llm-live --json>"
+    for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+}
 
 
 def _stable_json_sha256(value: object) -> str:
@@ -174,11 +178,20 @@ def test_existing_case_promotion_summary_gets_doctor_preflight_fields() -> None:
     assert summary["primary_task"]["doctor_preflight_evidence_fields"] == (
         DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
     )
+    assert summary["primary_task"]["doctor_preflight_evidence_template"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
+    )
     assert summary["primary_next_task"]["doctor_preflight_evidence_fields"] == (
         DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
     )
+    assert summary["primary_next_task"]["doctor_preflight_evidence_template"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
+    )
     assert summary["pending_tasks"][0]["doctor_preflight_evidence_fields"] == (
         DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+    )
+    assert summary["pending_tasks"][0]["doctor_preflight_evidence_template"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
     )
 
 
@@ -1195,6 +1208,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "doctor_preflight_evidence_fields": list(
             plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         ),
+        "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
     }
     assert (
         data["case_promotion_evidence_summary"]["primary_task_detail"]
@@ -1315,6 +1329,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "doctor_preflight_evidence_fields": list(
                 plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
             ),
+            "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
         },
         "evidence_bundle_primary_next_task": {
             "task": "adapter_package",
@@ -1339,6 +1354,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "doctor_preflight_evidence_fields": list(
                 plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
             ),
+            "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
         },
         "evidence_bundle_primary_next_task_runbook": _pypi_primary_runbook(),
         "candidate_package_validation_command": (
@@ -1356,6 +1372,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "llm_live_preflight_blocker_comment": LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT,
         "doctor_preflight_blocker_comment": DOCTOR_PREFLIGHT_BLOCKER_COMMENT,
         "doctor_preflight_evidence_fields": DOCTOR_PREFLIGHT_EVIDENCE_FIELDS,
+        "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
         "llm_live_preflight_evidence_fields": [
             "summary.ready_for_explore",
             "summary.llm_live_preflight",
@@ -2175,6 +2192,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             ],
             "doctor_preflight_evidence_fields": item[
                 "doctor_preflight_evidence_fields"
+            ],
+            "doctor_preflight_evidence_template": item[
+                "doctor_preflight_evidence_template"
             ],
             "issue_template_command": item["issue_template_command"],
             "issue_template_json_command": item["issue_template_json_command"],
@@ -3541,6 +3561,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "doctor_preflight_evidence_fields": list(
             plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         ),
+        "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
     }
     assert metadata[0]["evidence_bundle_primary_next_task"] == {
         "task": "adapter_package",
@@ -3565,6 +3586,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "doctor_preflight_evidence_fields": list(
             plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         ),
+        "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
     }
     assert metadata[0]["evidence_bundle_primary_next_task_runbook"] == _pypi_primary_runbook()
     assert metadata[0]["candidate_package_validation_command"] == (
@@ -3587,6 +3609,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "checks[llm_live].details.message",
     ]
     assert metadata[0]["doctor_preflight_evidence_fields"] == DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+    assert metadata[0]["doctor_preflight_evidence_template"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
+    )
     assert (
         metadata[0]["issue_template_command"]
         == "cliany-site cases --case-id pypi-project-search --issue-template"
