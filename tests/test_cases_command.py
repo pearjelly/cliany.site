@@ -29,6 +29,18 @@ def test_cases_command_returns_catalog_summary(tmp_home):
     assert data["promotion_evidence_summary"]["primary_task_detail"][
         "acceptance_criteria"
     ].startswith("Attach the generated")
+    assert (
+        data["promotion_evidence_summary"]["primary_task_detail"][
+            "llm_live_preflight_required"
+        ]
+        is True
+    )
+    assert (
+        data["promotion_evidence_summary"]["primary_task_detail"][
+            "llm_live_preflight_command"
+        ]
+        == "cliany-site doctor --llm-live --json"
+    )
     assert data["promotion_evidence_summary"][
         "primary_next_task_acceptance_criteria"
     ].startswith("Attach the generated")
@@ -71,6 +83,26 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
         "next_action": data["promotion_evidence_summary"]["primary_next_action"],
         "acceptance_criteria": data["promotion_evidence_summary"][
             "primary_next_task_acceptance_criteria"
+        ],
+        "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
+        "llm_live_preflight_required": True,
+        "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
+        "llm_live_preflight_blocker_note": (
+            "Run the live LLM preflight before explore. If generate_adapters.ready=false "
+            "or llm_live reports warning/error such as E_LLM_UNAVAILABLE "
+            "(including provider connection failure), stop candidate promotion, attach "
+            "the doctor JSON/error summary, and leave adapter_package pending or blocked."
+        ),
+        "llm_live_preflight_evidence_fields": [
+            "summary.ready_for_explore",
+            "summary.llm_live_preflight",
+            "summary.capabilities.generate_adapters.ready",
+            "checks[llm_live].status",
+            "checks[llm_live].details.error_code",
+            "checks[llm_live].details.retryable",
+            "checks[llm_live].details.status_code",
+            "checks[llm_live].details.phase",
+            "checks[llm_live].details.message",
         ],
     }
     assert (
@@ -551,6 +583,19 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["tasks"][0]["task"] == "adapter_package"
     assert bundle["tasks"][0]["expected_adapter_package"] == (
         "pypi.org-<version>.cliany-adapter.tar.gz"
+    )
+    assert bundle["tasks"][0]["llm_live_preflight_required"] is True
+    assert (
+        bundle["tasks"][0]["llm_live_preflight_command"]
+        == "cliany-site doctor --llm-live --json"
+    )
+    assert (
+        bundle["tasks"][0]["llm_live_preflight_blocker_note"]
+        == bundle["llm_live_preflight_blocker_note"]
+    )
+    assert (
+        bundle["tasks"][0]["llm_live_preflight_evidence_fields"]
+        == bundle["llm_live_preflight_evidence_fields"]
     )
     assert bundle["tasks"][0]["complete"] is False
     assert bundle["tasks"][0]["command_source"] == "commands.explore"

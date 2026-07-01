@@ -792,6 +792,7 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
             if status in status_counts:
                 status_counts[status] += 1
                 task_status_counts[field_name][status] += 1
+            llm_live_preflight_required = field_name == "adapter_package"
             entry = {
                 "case_id": check.id,
                 "task": field_name,
@@ -804,6 +805,18 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
                     _market_package_name_hint(check.adapter_domain)
                     if check.adapter_domain
                     else ""
+                ),
+                "llm_live_preflight_required": llm_live_preflight_required,
+                "llm_live_preflight_command": (
+                    LLM_LIVE_PREFLIGHT_COMMAND if llm_live_preflight_required else ""
+                ),
+                "llm_live_preflight_blocker_note": (
+                    LLM_LIVE_PREFLIGHT_BLOCKER_NOTE if llm_live_preflight_required else ""
+                ),
+                "llm_live_preflight_evidence_fields": (
+                    list(LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS)
+                    if llm_live_preflight_required
+                    else []
                 ),
                 "acceptance_criteria": PROMOTION_ACCEPTANCE_CRITERIA[field_name],
             }

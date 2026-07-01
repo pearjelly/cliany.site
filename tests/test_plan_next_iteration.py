@@ -1100,6 +1100,14 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "priority_rank": 1,
         "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
         "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
+        "llm_live_preflight_required": True,
+        "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
+        "llm_live_preflight_blocker_note": (
+            plan_next_iteration.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE
+        ),
+        "llm_live_preflight_evidence_fields": list(
+            plan_next_iteration.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
+        ),
     }
     assert (
         data["case_promotion_evidence_summary"]["primary_task_detail"]
@@ -1183,6 +1191,14 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "priority_rank": 1,
             "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
             "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
+            "llm_live_preflight_required": True,
+            "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
+            "llm_live_preflight_blocker_note": (
+                plan_next_iteration.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE
+            ),
+            "llm_live_preflight_evidence_fields": list(
+                plan_next_iteration.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
+            ),
         },
         "evidence_bundle_primary_next_task": {
             "task": "adapter_package",
@@ -1196,6 +1212,14 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "priority_rank": 1,
             "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
             "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
+            "llm_live_preflight_required": True,
+            "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
+            "llm_live_preflight_blocker_note": (
+                plan_next_iteration.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE
+            ),
+            "llm_live_preflight_evidence_fields": list(
+                plan_next_iteration.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
+            ),
         },
         "evidence_bundle_primary_next_task_runbook": _pypi_primary_runbook(),
         "candidate_package_validation_command": (
@@ -2325,8 +2349,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         (
             "Confirm issue-metadata.json has the expected target URL, candidate commands, "
             "offline validation commands, candidate_package_validation_command, "
-            "promotion_command_plan, llm_live_preflight_command, and "
-            "llm_live_preflight_blocker_note for each case."
+            "promotion_command_plan, llm_live_preflight_required, "
+            "llm_live_preflight_command, llm_live_preflight_blocker_note, and "
+            "llm_live_preflight_evidence_fields for each case."
         ),
         "Review each body file for scope, tasks, validation evidence, and non-goals.",
         (
@@ -3328,6 +3353,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "priority_rank": 1,
         "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
         "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
+        "llm_live_preflight_required": True,
+        "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
+        "llm_live_preflight_blocker_note": (
+            plan_next_iteration.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE
+        ),
+        "llm_live_preflight_evidence_fields": list(
+            plan_next_iteration.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
+        ),
     }
     assert metadata[0]["evidence_bundle_primary_next_task"] == {
         "task": "adapter_package",
@@ -3341,6 +3374,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "priority_rank": 1,
         "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
         "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
+        "llm_live_preflight_required": True,
+        "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
+        "llm_live_preflight_blocker_note": (
+            plan_next_iteration.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE
+        ),
+        "llm_live_preflight_evidence_fields": list(
+            plan_next_iteration.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
+        ),
     }
     assert metadata[0]["evidence_bundle_primary_next_task_runbook"] == _pypi_primary_runbook()
     assert metadata[0]["candidate_package_validation_command"] == (
@@ -3545,8 +3586,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             (
                 "Confirm issue-metadata.json has the expected target URL, candidate commands, "
                 "offline validation commands, candidate_package_validation_command, "
-                "promotion_command_plan, llm_live_preflight_command, and "
-                "llm_live_preflight_blocker_note for each case."
+                "promotion_command_plan, llm_live_preflight_required, "
+                "llm_live_preflight_command, llm_live_preflight_blocker_note, and "
+                "llm_live_preflight_evidence_fields for each case."
             ),
             "Review each body file for scope, tasks, validation evidence, and non-goals.",
             (
@@ -5427,8 +5469,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "expected target URL, candidate commands" in readme
     assert (
         "offline validation commands, candidate_package_validation_command, "
-        "promotion_command_plan, llm_live_preflight_command, and "
-        "llm_live_preflight_blocker_note for each case"
+        "promotion_command_plan, llm_live_preflight_required, "
+        "llm_live_preflight_command, llm_live_preflight_blocker_note, and "
+        "llm_live_preflight_evidence_fields for each case"
         in readme
     )
     assert "candidate issue gate preflight" in readme

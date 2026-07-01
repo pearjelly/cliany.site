@@ -2105,6 +2105,20 @@ def _expected_adapter_package(adapter_domain: str) -> str:
     return f"{safe_domain}-<version>{PACKAGE_EXTENSION}"
 
 
+def _llm_live_preflight_task_fields(task_name: str) -> dict[str, Any]:
+    required = task_name == "adapter_package"
+    return {
+        "llm_live_preflight_required": required,
+        "llm_live_preflight_command": LLM_LIVE_PREFLIGHT_COMMAND if required else "",
+        "llm_live_preflight_blocker_note": (
+            LLM_LIVE_PREFLIGHT_BLOCKER_NOTE if required else ""
+        ),
+        "llm_live_preflight_evidence_fields": (
+            list(LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS) if required else []
+        ),
+    }
+
+
 def _case_dict_value(case: Any, field_name: str) -> dict[str, Any]:
     value = getattr(case, field_name, None)
     if value is None and isinstance(case, dict):
@@ -2186,6 +2200,7 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
                 "priority_rank": priority_rank,
                 "priority_reason": priority_reason,
                 "expected_adapter_package": expected_adapter_package,
+                **_llm_live_preflight_task_fields(field_name),
             }
             if status == "pending":
                 pending_tasks.append(entry)
@@ -2451,6 +2466,7 @@ def _candidate_promotion_primary_task(evidence: dict[str, Any]) -> dict[str, Any
                 "evidence": evidence_value,
                 "next_action": str(task.get("next_action") or ""),
                 "acceptance_criteria": CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA[field_name],
+                **_llm_live_preflight_task_fields(field_name),
             }
         )
 
@@ -4685,8 +4701,9 @@ def _issue_artifact_review_checklist() -> list[str]:
         (
             "Confirm issue-metadata.json has the expected target URL, candidate commands, "
             "offline validation commands, candidate_package_validation_command, "
-            "promotion_command_plan, llm_live_preflight_command, and "
-            "llm_live_preflight_blocker_note for each case."
+            "promotion_command_plan, llm_live_preflight_required, "
+            "llm_live_preflight_command, llm_live_preflight_blocker_note, and "
+            "llm_live_preflight_evidence_fields for each case."
         ),
         "Review each body file for scope, tasks, validation evidence, and non-goals.",
         (

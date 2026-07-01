@@ -423,6 +423,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
             handoff=handoff,
             acceptance_criteria=acceptance_criteria,
         )
+        llm_live_preflight_required = task == "adapter_package"
         tasks.append(
             {
                 "task": task,
@@ -432,6 +433,18 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                 "next_action": next_action,
                 "acceptance_criteria": acceptance_criteria,
                 "expected_adapter_package": expected_adapter_package,
+                "llm_live_preflight_required": llm_live_preflight_required,
+                "llm_live_preflight_command": (
+                    LLM_LIVE_PREFLIGHT_COMMAND if llm_live_preflight_required else ""
+                ),
+                "llm_live_preflight_blocker_note": (
+                    LLM_LIVE_PREFLIGHT_BLOCKER_NOTE if llm_live_preflight_required else ""
+                ),
+                "llm_live_preflight_evidence_fields": (
+                    list(LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS)
+                    if llm_live_preflight_required
+                    else []
+                ),
                 "command": command,
                 "command_source": command_source,
                 "command_missing": command_missing,
@@ -940,6 +953,22 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
                         "evidence": evidence_value,
                         "next_action": next_action,
                         "acceptance_criteria": acceptance_criteria,
+                        "expected_adapter_package": str(
+                            task_evidence.get("expected_adapter_package") or ""
+                        ),
+                        "llm_live_preflight_required": bool(
+                            task_evidence.get("llm_live_preflight_required")
+                        ),
+                        "llm_live_preflight_command": str(
+                            task_evidence.get("llm_live_preflight_command") or ""
+                        ),
+                        "llm_live_preflight_blocker_note": str(
+                            task_evidence.get("llm_live_preflight_blocker_note") or ""
+                        ),
+                        "llm_live_preflight_evidence_fields": list(
+                            task_evidence.get("llm_live_preflight_evidence_fields")
+                            or []
+                        ),
                     }
                 )
 
