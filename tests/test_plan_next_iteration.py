@@ -61,6 +61,17 @@ DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE = {
     field: "<paste from doctor --llm-live --json>"
     for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
 }
+DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT = len(
+    DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
+)
+DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256 = hashlib.sha256(
+    json.dumps(
+        DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+).hexdigest()
 
 
 def _stable_json_sha256(value: object) -> str:
@@ -1209,6 +1220,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         ),
         "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+        "doctor_preflight_evidence_template_field_count": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+        ),
+        "doctor_preflight_evidence_template_sha256": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+        ),
     }
     assert (
         data["case_promotion_evidence_summary"]["primary_task_detail"]
@@ -1263,6 +1280,16 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         data["case_promotion_evidence_primary_doctor_preflight_blocker_comment"]
         == DOCTOR_PREFLIGHT_BLOCKER_COMMENT
     )
+    assert (
+        data[
+            "case_promotion_evidence_primary_doctor_preflight_evidence_template_field_count"
+        ]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+    )
+    assert (
+        data["case_promotion_evidence_primary_doctor_preflight_evidence_template_sha256"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+    )
     markdown = plan_next_iteration._render_markdown(plan)
     assert (
         "| case_promotion_evidence_primary_llm_live_preflight_blocker_comment | "
@@ -1271,6 +1298,14 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     assert (
         "| case_promotion_evidence_primary_doctor_preflight_blocker_comment | "
         f"{plan_next_iteration._summary_inline_code(DOCTOR_PREFLIGHT_BLOCKER_COMMENT)} |"
+    ) in markdown
+    assert (
+        "| case_promotion_evidence_primary_doctor_preflight_evidence_template_field_count | "
+        f"`{DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT}` |"
+    ) in markdown
+    assert (
+        "| case_promotion_evidence_primary_doctor_preflight_evidence_template_sha256 | "
+        f"`{DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256}` |"
     ) in markdown
     llm_preflight_fields = data["case_promotion_evidence_summary"][
         "llm_live_preflight_evidence_fields"
@@ -1282,6 +1317,14 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     )
     assert data["case_promotion_llm_live_preflight_evidence_fields_sha256"] == (
         _stable_json_sha256(llm_preflight_fields)
+    )
+    assert (
+        data["case_promotion_doctor_preflight_evidence_template_field_count"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+    )
+    assert (
+        data["case_promotion_doctor_preflight_evidence_template_sha256"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
     )
     assert data["candidate_promotions"][0] == {
         "case_id": "pypi-project-search",
@@ -1330,6 +1373,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
                 plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
             ),
             "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+            "doctor_preflight_evidence_template_field_count": (
+                DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+            ),
+            "doctor_preflight_evidence_template_sha256": (
+                DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+            ),
         },
         "evidence_bundle_primary_next_task": {
             "task": "adapter_package",
@@ -1355,6 +1404,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
                 plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
             ),
             "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+            "doctor_preflight_evidence_template_field_count": (
+                DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+            ),
+            "doctor_preflight_evidence_template_sha256": (
+                DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+            ),
         },
         "evidence_bundle_primary_next_task_runbook": _pypi_primary_runbook(),
         "candidate_package_validation_command": (
@@ -1373,6 +1428,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "doctor_preflight_blocker_comment": DOCTOR_PREFLIGHT_BLOCKER_COMMENT,
         "doctor_preflight_evidence_fields": DOCTOR_PREFLIGHT_EVIDENCE_FIELDS,
         "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+        "doctor_preflight_evidence_template_field_count": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+        ),
+        "doctor_preflight_evidence_template_sha256": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+        ),
         "llm_live_preflight_evidence_fields": [
             "summary.ready_for_explore",
             "summary.llm_live_preflight",
@@ -2196,6 +2257,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "doctor_preflight_evidence_template": item[
                 "doctor_preflight_evidence_template"
             ],
+            "doctor_preflight_evidence_template_field_count": item[
+                "doctor_preflight_evidence_template_field_count"
+            ],
+            "doctor_preflight_evidence_template_sha256": item[
+                "doctor_preflight_evidence_template_sha256"
+            ],
             "issue_template_command": item["issue_template_command"],
             "issue_template_json_command": item["issue_template_json_command"],
             "evidence_bundle_command": item["evidence_bundle_command"],
@@ -2825,12 +2892,24 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "case_promotion_evidence_primary_doctor_preflight_blocker_comment": (
             DOCTOR_PREFLIGHT_BLOCKER_COMMENT
         ),
+        "case_promotion_evidence_primary_doctor_preflight_evidence_template_field_count": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+        ),
+        "case_promotion_evidence_primary_doctor_preflight_evidence_template_sha256": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+        ),
         "case_promotion_llm_live_preflight_evidence_field_count": len(
             llm_preflight_fields
         ),
         "case_promotion_llm_live_preflight_evidence_fields": llm_preflight_fields,
         "case_promotion_llm_live_preflight_evidence_fields_sha256": _stable_json_sha256(
             llm_preflight_fields
+        ),
+        "case_promotion_doctor_preflight_evidence_template_field_count": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+        ),
+        "case_promotion_doctor_preflight_evidence_template_sha256": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
         ),
         "case_promotion_command_plan_summary_sha256": _stable_json_sha256(
             command_plan_summary
@@ -3562,6 +3641,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         ),
         "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+        "doctor_preflight_evidence_template_field_count": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+        ),
+        "doctor_preflight_evidence_template_sha256": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+        ),
     }
     assert metadata[0]["evidence_bundle_primary_next_task"] == {
         "task": "adapter_package",
@@ -3587,6 +3672,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         ),
         "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+        "doctor_preflight_evidence_template_field_count": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+        ),
+        "doctor_preflight_evidence_template_sha256": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+        ),
     }
     assert metadata[0]["evidence_bundle_primary_next_task_runbook"] == _pypi_primary_runbook()
     assert metadata[0]["candidate_package_validation_command"] == (
@@ -3611,6 +3702,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert metadata[0]["doctor_preflight_evidence_fields"] == DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
     assert metadata[0]["doctor_preflight_evidence_template"] == (
         DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
+    )
+    assert (
+        metadata[0]["doctor_preflight_evidence_template_field_count"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+    )
+    assert (
+        metadata[0]["doctor_preflight_evidence_template_sha256"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
     )
     assert (
         metadata[0]["issue_template_command"]
@@ -3666,6 +3765,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "case_promotion_llm_live_preflight_evidence_fields_sha256": _stable_json_sha256(
             llm_preflight_fields
+        ),
+        "case_promotion_doctor_preflight_evidence_template_field_count": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+        ),
+        "case_promotion_doctor_preflight_evidence_template_sha256": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
         ),
         "case_promotion_command_plan_summary": plan.case_promotion_command_plan_summary,
         "standard_release_flow": plan.standard_release_flow,

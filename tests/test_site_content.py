@@ -27,6 +27,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Doctor Preflight Evidence Fields" in index
     assert "Doctor Preflight Evidence Template" in index
     assert "doctor_preflight_evidence_template" in index
+    assert "doctor_preflight_evidence_template_field_count" in index
+    assert "doctor_preflight_evidence_template_sha256" in index
     assert "cases/manifest.json" in index
     assert "python scripts/validate_cases.py --strict" in index
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in index
@@ -52,6 +54,11 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "case_promotion_evidence_primary_llm_live_preflight_required" in index
     assert "case_promotion_evidence_primary_llm_live_preflight_blocker_comment" in index
     assert "case_promotion_evidence_primary_doctor_preflight_blocker_comment" in index
+    assert (
+        "case_promotion_evidence_primary_doctor_preflight_evidence_template_sha256"
+        in index
+    )
+    assert "case_promotion_doctor_preflight_evidence_template_sha256" in index
     assert "doctor_preflight_evidence_fields" in index
     assert "candidate_promotions[*].issue_template_command" in index
     assert "issue-metadata.json" in index
@@ -77,6 +84,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Doctor Preflight Evidence Fields" in script
     assert "Doctor Preflight Evidence Template" in script
     assert "doctor_preflight_evidence_template" in script
+    assert "doctor_preflight_evidence_template_field_count" in script
+    assert "doctor_preflight_evidence_template_sha256" in script
     assert "First-time contributors" in script
     assert "Maintainer Loop" in script
     assert "weekly_commit_cadence_ok" in script
@@ -87,6 +96,11 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "daily_release_resume_date" in script
     assert "case_promotion_evidence_primary_llm_live_preflight_blocker_comment" in script
     assert "case_promotion_evidence_primary_doctor_preflight_blocker_comment" in script
+    assert (
+        "case_promotion_evidence_primary_doctor_preflight_evidence_template_sha256"
+        in script
+    )
+    assert "case_promotion_doctor_preflight_evidence_template_sha256" in script
     assert "doctor_preflight_evidence_fields" in script
     assert "candidate_promotions[*].issue_template_command" in script
     assert "issue-metadata.json" in script

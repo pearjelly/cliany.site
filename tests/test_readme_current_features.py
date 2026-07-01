@@ -36,6 +36,8 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "Doctor Preflight Evidence Fields" in text
         assert "Doctor Preflight Evidence Template" in text
         assert "doctor_preflight_evidence_template" in text
+        assert "doctor_preflight_evidence_template_field_count" in text
+        assert "doctor_preflight_evidence_template_sha256" in text
         assert "expected_adapter_package" in text
         assert "llm_live_preflight_required" in text
         assert "preflight_required" in text
@@ -58,6 +60,11 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "case_promotion_evidence_primary_llm_live_preflight_required" in text
         assert "case_promotion_evidence_primary_llm_live_preflight_blocker_comment" in text
         assert "case_promotion_evidence_primary_doctor_preflight_blocker_comment" in text
+        assert (
+            "case_promotion_evidence_primary_doctor_preflight_evidence_template_sha256"
+            in text
+        )
+        assert "case_promotion_doctor_preflight_evidence_template_sha256" in text
         assert "next_actions" in text
         assert "primary_next_action" in text
         assert "next_actions_sha256" in text

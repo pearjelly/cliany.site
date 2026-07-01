@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 
@@ -33,6 +34,17 @@ DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE = {
     field: "<paste from doctor --llm-live --json>"
     for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
 }
+DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT = len(
+    DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
+)
+DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256 = hashlib.sha256(
+    json.dumps(
+        DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+).hexdigest()
 
 
 def test_cases_command_returns_catalog_summary(tmp_home):
@@ -88,6 +100,18 @@ def test_cases_command_returns_catalog_summary(tmp_home):
         data["promotion_evidence_summary"]["primary_next_task"]
         == data["promotion_evidence_summary"]["primary_task_detail"]
     )
+    assert (
+        data["promotion_evidence_summary"]["primary_task_detail"][
+            "doctor_preflight_evidence_template_field_count"
+        ]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+    )
+    assert (
+        data["promotion_evidence_summary"]["primary_task_detail"][
+            "doctor_preflight_evidence_template_sha256"
+        ]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+    )
     assert any(case["id"] == "suitecrm-accounts" for case in data["cases"])
     assert any("offline_commands" in case for case in data["cases"])
 
@@ -134,6 +158,12 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
         ],
         "doctor_preflight_evidence_fields": DOCTOR_PREFLIGHT_EVIDENCE_FIELDS,
         "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+        "doctor_preflight_evidence_template_field_count": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+        ),
+        "doctor_preflight_evidence_template_sha256": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+        ),
     }
     assert (
         data["promotion_evidence_summary"]["primary_next_task"]
@@ -307,6 +337,14 @@ def test_cases_command_issue_template_json(tmp_home):
     )
     assert primary_task["doctor_preflight_evidence_template"] == (
         DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
+    )
+    assert (
+        primary_task["doctor_preflight_evidence_template_field_count"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+    )
+    assert (
+        primary_task["doctor_preflight_evidence_template_sha256"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
     )
     assert primary_task["runbook"][0]["step"] == "llm_live_preflight"
     assert primary_task["runbook"][0]["command"] == "cliany-site doctor --llm-live --json"
@@ -629,6 +667,14 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     ]
     assert bundle["doctor_preflight_evidence_fields"] == DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
     assert bundle["doctor_preflight_evidence_template"] == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
+    assert (
+        bundle["doctor_preflight_evidence_template_field_count"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+    )
+    assert (
+        bundle["doctor_preflight_evidence_template_sha256"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+    )
     assert bundle["promotion_command_plan_count"] == 4
     assert bundle["promotion_command_plan_missing_tasks"] == []
     assert bundle["promotion_command_plan"] == [
@@ -689,12 +735,28 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         == bundle["doctor_preflight_evidence_template"]
     )
     assert (
+        bundle["tasks"][0]["doctor_preflight_evidence_template_field_count"]
+        == bundle["doctor_preflight_evidence_template_field_count"]
+    )
+    assert (
+        bundle["tasks"][0]["doctor_preflight_evidence_template_sha256"]
+        == bundle["doctor_preflight_evidence_template_sha256"]
+    )
+    assert (
         bundle["primary_next_task"]["doctor_preflight_evidence_fields"]
         == bundle["doctor_preflight_evidence_fields"]
     )
     assert (
         bundle["primary_next_task"]["doctor_preflight_evidence_template"]
         == bundle["doctor_preflight_evidence_template"]
+    )
+    assert (
+        bundle["primary_next_task"]["doctor_preflight_evidence_template_field_count"]
+        == bundle["doctor_preflight_evidence_template_field_count"]
+    )
+    assert (
+        bundle["primary_next_task"]["doctor_preflight_evidence_template_sha256"]
+        == bundle["doctor_preflight_evidence_template_sha256"]
     )
     assert bundle["tasks"][0]["complete"] is False
     assert bundle["tasks"][0]["command_source"] == "commands.explore"

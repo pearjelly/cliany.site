@@ -218,11 +218,38 @@ def _doctor_preflight_evidence_template() -> dict[str, str]:
     return {field: placeholder for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS}
 
 
+def _stable_json_sha256(value: object) -> str:
+    digest_source = json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(digest_source).hexdigest()
+
+
+def _doctor_preflight_evidence_template_aliases(
+    template: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    evidence_template = (
+        dict(template) if template is not None else _doctor_preflight_evidence_template()
+    )
+    return {
+        "doctor_preflight_evidence_template_field_count": len(evidence_template),
+        "doctor_preflight_evidence_template_sha256": _stable_json_sha256(
+            evidence_template
+        ),
+    }
+
+
 def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
     primary = bundle.get("primary_next_task")
     if not isinstance(primary, dict) or not primary.get("task"):
         return {}
     runbook = primary.get("runbook")
+    doctor_preflight_evidence_template = dict(
+        primary.get("doctor_preflight_evidence_template") or {}
+    )
     return {
         "task": str(primary.get("task") or ""),
         "status": str(primary.get("status") or "pending"),
@@ -249,8 +276,9 @@ def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[st
         "doctor_preflight_evidence_fields": list(
             primary.get("doctor_preflight_evidence_fields") or []
         ),
-        "doctor_preflight_evidence_template": dict(
-            primary.get("doctor_preflight_evidence_template") or {}
+        "doctor_preflight_evidence_template": doctor_preflight_evidence_template,
+        **_doctor_preflight_evidence_template_aliases(
+            doctor_preflight_evidence_template
         ),
         "command": str(primary.get("command") or ""),
         "command_source": str(primary.get("command_source") or ""),
@@ -542,6 +570,11 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         doctor_preflight_evidence_template = (
             _doctor_preflight_evidence_template() if llm_live_preflight_required else {}
         )
+        doctor_preflight_evidence_template_aliases = (
+            _doctor_preflight_evidence_template_aliases(
+                doctor_preflight_evidence_template
+            )
+        )
         tasks.append(
             {
                 "task": task,
@@ -569,6 +602,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                     else []
                 ),
                 "doctor_preflight_evidence_template": doctor_preflight_evidence_template,
+                **doctor_preflight_evidence_template_aliases,
                 "command": command,
                 "command_source": command_source,
                 "command_missing": command_missing,
@@ -610,6 +644,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "llm_live_preflight_evidence_fields": list(LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS),
         "doctor_preflight_evidence_fields": list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS),
         "doctor_preflight_evidence_template": _doctor_preflight_evidence_template(),
+        **_doctor_preflight_evidence_template_aliases(),
         "candidate_package_validation_command": CANDIDATE_PACKAGE_VALIDATION_COMMAND
         if adapter_domain
         else "",
@@ -1095,6 +1130,9 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
             task_status_counts[task][status] += 1
             task_count += 1
             if status in {"pending", "blocked"}:
+                doctor_preflight_evidence_template = dict(
+                    task_evidence.get("doctor_preflight_evidence_template") or {}
+                )
                 pending_tasks.append(
                     {
                         "case_id": case_id,
@@ -1122,8 +1160,11 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
                         "doctor_preflight_evidence_fields": list(
                             task_evidence.get("doctor_preflight_evidence_fields") or []
                         ),
-                        "doctor_preflight_evidence_template": dict(
-                            task_evidence.get("doctor_preflight_evidence_template") or {}
+                        "doctor_preflight_evidence_template": (
+                            doctor_preflight_evidence_template
+                        ),
+                        **_doctor_preflight_evidence_template_aliases(
+                            doctor_preflight_evidence_template
                         ),
                     }
                 )

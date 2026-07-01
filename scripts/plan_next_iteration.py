@@ -109,6 +109,8 @@ ARTIFACT_MANIFEST_KEYS = (
     "case_promotion_llm_live_preflight_evidence_fields",
     "case_promotion_llm_live_preflight_evidence_field_count",
     "case_promotion_llm_live_preflight_evidence_fields_sha256",
+    "case_promotion_doctor_preflight_evidence_template_field_count",
+    "case_promotion_doctor_preflight_evidence_template_sha256",
     "case_promotion_command_plan_summary",
     "standard_release_flow",
     "standard_release_flow_status",
@@ -259,9 +261,13 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "case_promotion_evidence_primary_llm_live_preflight_blocker_note",
     "case_promotion_evidence_primary_llm_live_preflight_blocker_comment",
     "case_promotion_evidence_primary_doctor_preflight_blocker_comment",
+    "case_promotion_evidence_primary_doctor_preflight_evidence_template_field_count",
+    "case_promotion_evidence_primary_doctor_preflight_evidence_template_sha256",
     "case_promotion_llm_live_preflight_evidence_field_count",
     "case_promotion_llm_live_preflight_evidence_fields",
     "case_promotion_llm_live_preflight_evidence_fields_sha256",
+    "case_promotion_doctor_preflight_evidence_template_field_count",
+    "case_promotion_doctor_preflight_evidence_template_sha256",
     "case_promotion_command_plan_summary_sha256",
     "case_promotion_command_plan_candidate_count",
     "case_promotion_command_plan_command_count",
@@ -638,6 +644,20 @@ def _doctor_preflight_evidence_template() -> dict[str, str]:
     return {field: placeholder for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS}
 
 
+def _doctor_preflight_evidence_template_aliases(
+    template: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    evidence_template = (
+        dict(template) if template is not None else _doctor_preflight_evidence_template()
+    )
+    return {
+        "doctor_preflight_evidence_template_field_count": len(evidence_template),
+        "doctor_preflight_evidence_template_sha256": _stable_json_sha256(
+            evidence_template
+        ),
+    }
+
+
 @dataclass(frozen=True)
 class CandidatePromotion:
     case_id: str
@@ -703,6 +723,9 @@ class CandidatePromotion:
             ),
             "doctor_preflight_evidence_fields": self.doctor_preflight_evidence_fields,
             "doctor_preflight_evidence_template": (
+                self.doctor_preflight_evidence_template
+            ),
+            **_doctor_preflight_evidence_template_aliases(
                 self.doctor_preflight_evidence_template
             ),
             "llm_live_preflight_evidence_fields": self.llm_live_preflight_evidence_fields,
@@ -912,6 +935,12 @@ class IterationPlan:
             ),
             "case_promotion_llm_live_preflight_evidence_fields_sha256": (
                 _stable_json_sha256(llm_live_preflight_evidence_fields)
+            ),
+            "case_promotion_doctor_preflight_evidence_template_field_count": (
+                len(_doctor_preflight_evidence_template())
+            ),
+            "case_promotion_doctor_preflight_evidence_template_sha256": (
+                _stable_json_sha256(_doctor_preflight_evidence_template())
             ),
             "blockers": self.blockers,
             "next_action_count": len(self.next_actions),
@@ -2177,6 +2206,9 @@ def _expected_adapter_package(adapter_domain: str) -> str:
 
 def _llm_live_preflight_task_fields(task_name: str) -> dict[str, Any]:
     required = task_name == "adapter_package"
+    doctor_preflight_evidence_template = (
+        _doctor_preflight_evidence_template() if required else {}
+    )
     return {
         "llm_live_preflight_required": required,
         "llm_live_preflight_command": LLM_LIVE_PREFLIGHT_COMMAND if required else "",
@@ -2189,8 +2221,9 @@ def _llm_live_preflight_task_fields(task_name: str) -> dict[str, Any]:
         "doctor_preflight_evidence_fields": (
             list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS) if required else []
         ),
-        "doctor_preflight_evidence_template": (
-            _doctor_preflight_evidence_template() if required else {}
+        "doctor_preflight_evidence_template": doctor_preflight_evidence_template,
+        **_doctor_preflight_evidence_template_aliases(
+            doctor_preflight_evidence_template
         ),
     }
 
@@ -2218,12 +2251,25 @@ def _task_with_doctor_preflight_evidence_fields(task: Any) -> Any:
         normalized["doctor_preflight_evidence_fields"] = list(
             DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         )
+        doctor_preflight_evidence_template = _doctor_preflight_evidence_template()
         normalized["doctor_preflight_evidence_template"] = (
-            _doctor_preflight_evidence_template()
+            doctor_preflight_evidence_template
+        )
+        normalized.update(
+            _doctor_preflight_evidence_template_aliases(
+                doctor_preflight_evidence_template
+            )
         )
     elif "doctor_preflight_evidence_fields" not in normalized:
         normalized["doctor_preflight_evidence_fields"] = []
-        normalized.setdefault("doctor_preflight_evidence_template", {})
+        doctor_preflight_evidence_template = dict(
+            normalized.setdefault("doctor_preflight_evidence_template", {})
+        )
+        normalized.update(
+            _doctor_preflight_evidence_template_aliases(
+                doctor_preflight_evidence_template
+            )
+        )
     return normalized
 
 
@@ -2248,6 +2294,16 @@ def _summary_with_llm_live_preflight_evidence_fields(
                 normalized[key]
             )
     fields = _llm_live_preflight_evidence_fields_from_summary(normalized)
+    doctor_template_aliases = _doctor_preflight_evidence_template_aliases()
+    if "complete_count" in normalized:
+        reordered: dict[str, Any] = {}
+        for key, value in normalized.items():
+            reordered[key] = value
+            if key == "complete_count":
+                reordered.update(doctor_template_aliases)
+        normalized = reordered
+    else:
+        normalized.update(doctor_template_aliases)
     normalized["llm_live_preflight_evidence_fields"] = fields
     normalized["llm_live_preflight_evidence_field_count"] = len(fields)
     normalized["llm_live_preflight_evidence_fields_sha256"] = _stable_json_sha256(fields)
@@ -2755,9 +2811,21 @@ def _primary_doctor_preflight_aliases(primary_task: dict[str, Any] | None) -> di
     task = primary_task if isinstance(primary_task, dict) else {}
     required = task.get("llm_live_preflight_required")
     blocker_comment = DOCTOR_PREFLIGHT_BLOCKER_COMMENT if required is True else None
+    doctor_preflight_evidence_template = dict(
+        task.get("doctor_preflight_evidence_template") or {}
+    )
+    template_aliases = _doctor_preflight_evidence_template_aliases(
+        doctor_preflight_evidence_template
+    )
     return {
         "case_promotion_evidence_primary_doctor_preflight_blocker_comment": (
             blocker_comment
+        ),
+        "case_promotion_evidence_primary_doctor_preflight_evidence_template_field_count": (
+            template_aliases["doctor_preflight_evidence_template_field_count"]
+        ),
+        "case_promotion_evidence_primary_doctor_preflight_evidence_template_sha256": (
+            template_aliases["doctor_preflight_evidence_template_sha256"]
         ),
     }
 
@@ -3412,6 +3480,12 @@ def _render_markdown(plan: IterationPlan) -> str:
             "case_promotion_evidence_primary_doctor_preflight_blocker_comment"
         ]
     )
+    primary_doctor_preflight_template_field_count = primary_doctor_preflight_aliases[
+        "case_promotion_evidence_primary_doctor_preflight_evidence_template_field_count"
+    ]
+    primary_doctor_preflight_template_sha256 = primary_doctor_preflight_aliases[
+        "case_promotion_evidence_primary_doctor_preflight_evidence_template_sha256"
+    ]
     llm_live_preflight_evidence_fields = _llm_live_preflight_evidence_fields_from_summary(
         plan.case_promotion_evidence_summary
     )
@@ -3547,6 +3621,23 @@ def _render_markdown(plan: IterationPlan) -> str:
         plan.publication_publish_script_path,
         plan.publication_publish_script_command,
     )
+    doctor_preflight_template = _doctor_preflight_evidence_template()
+    primary_doctor_preflight_template_field_count_row = (
+        "| case_promotion_evidence_primary_doctor_preflight_evidence_template_"
+        f"field_count | `{primary_doctor_preflight_template_field_count}` |"
+    )
+    primary_doctor_preflight_template_sha256_row = (
+        "| case_promotion_evidence_primary_doctor_preflight_evidence_template_"
+        f"sha256 | `{primary_doctor_preflight_template_sha256}` |"
+    )
+    doctor_preflight_template_field_count_row = (
+        "| case_promotion_doctor_preflight_evidence_template_field_count | "
+        f"`{len(doctor_preflight_template)}` |"
+    )
+    doctor_preflight_template_sha256_row = (
+        "| case_promotion_doctor_preflight_evidence_template_sha256 | "
+        f"`{_stable_json_sha256(doctor_preflight_template)}` |"
+    )
     standard_release_flow = _standard_release_flow_markdown(plan.standard_release_flow)
     case_promotion_evidence = _case_promotion_evidence_markdown(plan.case_promotion_evidence_summary)
     case_promotion_command_plan = _case_promotion_command_plan_markdown(
@@ -3627,9 +3718,13 @@ def _render_markdown(plan: IterationPlan) -> str:
 | case_promotion_evidence_primary_llm_live_preflight_blocker_note | `{primary_preflight_blocker_note_text}` |
 | case_promotion_evidence_primary_llm_live_preflight_blocker_comment | {primary_preflight_blocker_comment_text} |
 | case_promotion_evidence_primary_doctor_preflight_blocker_comment | {primary_doctor_preflight_blocker_comment_text} |
+{primary_doctor_preflight_template_field_count_row}
+{primary_doctor_preflight_template_sha256_row}
 | case_promotion_llm_live_preflight_evidence_field_count | `{len(llm_live_preflight_evidence_fields)}` |
 | case_promotion_llm_live_preflight_evidence_fields | `{llm_live_preflight_evidence_fields_text}` |
 | case_promotion_llm_live_preflight_evidence_fields_sha256 | `{llm_live_preflight_evidence_fields_sha256}` |
+{doctor_preflight_template_field_count_row}
+{doctor_preflight_template_sha256_row}
 | case_promotion_command_plan_all_declared | `{command_plan_all_declared}` |
 | case_promotion_command_plan_missing_command_count | `{command_plan_missing_count}` |
 | plan_report_command | `{plan.plan_report_command}` |
@@ -4201,6 +4296,9 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                     promotion.doctor_preflight_evidence_fields
                 ),
                 "doctor_preflight_evidence_template": dict(
+                    promotion.doctor_preflight_evidence_template
+                ),
+                **_doctor_preflight_evidence_template_aliases(
                     promotion.doctor_preflight_evidence_template
                 ),
                 "issue_template_command": promotion.issue_template_command,
@@ -5250,6 +5348,12 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
             "doctor_preflight_evidence_template": item[
                 "doctor_preflight_evidence_template"
             ],
+            "doctor_preflight_evidence_template_field_count": item[
+                "doctor_preflight_evidence_template_field_count"
+            ],
+            "doctor_preflight_evidence_template_sha256": item[
+                "doctor_preflight_evidence_template_sha256"
+            ],
             "issue_template_command": item["issue_template_command"],
             "issue_template_json_command": item["issue_template_json_command"],
             "evidence_bundle_command": item["evidence_bundle_command"],
@@ -5308,6 +5412,9 @@ def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[di
                 promotion.doctor_preflight_evidence_fields
             ),
             "doctor_preflight_evidence_template": dict(
+                promotion.doctor_preflight_evidence_template
+            ),
+            **_doctor_preflight_evidence_template_aliases(
                 promotion.doctor_preflight_evidence_template
             ),
             "issue_template_command": promotion.issue_template_command,
@@ -5399,6 +5506,12 @@ def _artifact_manifest_payload_without_summary(
         ),
         "case_promotion_llm_live_preflight_evidence_fields_sha256": (
             _stable_json_sha256(llm_live_preflight_evidence_fields)
+        ),
+        "case_promotion_doctor_preflight_evidence_template_field_count": (
+            len(_doctor_preflight_evidence_template())
+        ),
+        "case_promotion_doctor_preflight_evidence_template_sha256": (
+            _stable_json_sha256(_doctor_preflight_evidence_template())
         ),
         "case_promotion_command_plan_summary": plan.case_promotion_command_plan_summary,
         "standard_release_flow": plan.standard_release_flow,
@@ -5980,6 +6093,12 @@ def _issue_artifact_bundle_summary(
         ),
         "case_promotion_llm_live_preflight_evidence_fields_sha256": _stable_json_sha256(
             llm_live_preflight_evidence_fields
+        ),
+        "case_promotion_doctor_preflight_evidence_template_field_count": (
+            len(_doctor_preflight_evidence_template())
+        ),
+        "case_promotion_doctor_preflight_evidence_template_sha256": _stable_json_sha256(
+            _doctor_preflight_evidence_template()
         ),
         "case_promotion_command_plan_summary_sha256": _stable_json_sha256(
             command_plan_summary
@@ -6817,12 +6936,20 @@ def _issue_artifact_bundle_summary_markdown(
             f"{_summary_inline_code(summary['case_promotion_evidence_primary_llm_live_preflight_blocker_comment'])}",
             "- case_promotion_evidence_primary_doctor_preflight_blocker_comment: "
             f"{_summary_inline_code(summary['case_promotion_evidence_primary_doctor_preflight_blocker_comment'])}",
+            "- case_promotion_evidence_primary_doctor_preflight_evidence_template_field_count: "
+            f"`{summary['case_promotion_evidence_primary_doctor_preflight_evidence_template_field_count']}`",
+            "- case_promotion_evidence_primary_doctor_preflight_evidence_template_sha256: "
+            f"`{summary['case_promotion_evidence_primary_doctor_preflight_evidence_template_sha256']}`",
             "- case_promotion_llm_live_preflight_evidence_field_count: "
             f"`{summary['case_promotion_llm_live_preflight_evidence_field_count']}`",
             "- case_promotion_llm_live_preflight_evidence_fields: "
             f"`{json.dumps(summary['case_promotion_llm_live_preflight_evidence_fields'], ensure_ascii=False)}`",
             "- case_promotion_llm_live_preflight_evidence_fields_sha256: "
             f"`{summary['case_promotion_llm_live_preflight_evidence_fields_sha256']}`",
+            "- case_promotion_doctor_preflight_evidence_template_field_count: "
+            f"`{summary['case_promotion_doctor_preflight_evidence_template_field_count']}`",
+            "- case_promotion_doctor_preflight_evidence_template_sha256: "
+            f"`{summary['case_promotion_doctor_preflight_evidence_template_sha256']}`",
             "- case_promotion_command_plan_summary_sha256: "
             f"`{summary['case_promotion_command_plan_summary_sha256']}`",
             "- case_promotion_command_plan_candidate_count: "
