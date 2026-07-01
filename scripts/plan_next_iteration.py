@@ -1370,7 +1370,7 @@ def _release_readiness_strict_command(
 
 def _remote_publication_audit_command(remote_name: str) -> str:
     remote_args = _remote_audit_args(remote_check=True, remote_name=remote_name)
-    return f"python scripts/check_release_publication.py{remote_args} --json"
+    return f"python scripts/check_release_publication.py{remote_args} --distribution --json"
 
 
 def _publication_audit_validation_command(*, remote_check: bool, remote_name: str) -> str:

@@ -1328,7 +1328,8 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
         in data["standard_release_flow"]["commands"]
     )
     assert (
-        "python scripts/check_release_publication.py --remote --remote-name upstream --json"
+        "python scripts/check_release_publication.py --remote --remote-name upstream "
+        "--distribution --json"
         in data["standard_release_flow"]["commands"]
     )
     assert WEBSITE_DEPLOY_COMMAND in data["standard_release_flow"]["commands"]
@@ -1348,7 +1349,7 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
             "status": "pending",
             "command": (
                 "python scripts/check_release_publication.py --remote "
-                "--remote-name upstream --json"
+                "--remote-name upstream --distribution --json"
             ),
         },
     ]

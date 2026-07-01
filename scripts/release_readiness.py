@@ -1266,7 +1266,7 @@ def _remote_publication_audit_command(report: ReadinessReport) -> str:
         remote_check=True,
         remote_name=str(getattr(report, "remote_name", "origin") or "origin"),
     )
-    return f"python scripts/check_release_publication.py{remote_args} --json"
+    return f"python scripts/check_release_publication.py{remote_args} --distribution --json"
 
 
 def _publication_ref_context(publication_payload: dict[str, Any]) -> dict[str, Any]:

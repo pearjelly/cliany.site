@@ -757,7 +757,7 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert "git tag v0.1.1" in standard_release_flow["commands"]
     assert "git push origin v0.1.1" in standard_release_flow["commands"]
     assert WEBSITE_DEPLOY_COMMAND in standard_release_flow["commands"]
-    assert "python scripts/check_release_publication.py --remote --json" in (
+    assert "python scripts/check_release_publication.py --remote --distribution --json" in (
         standard_release_flow["commands"]
     )
     assert payload["standard_release_flow_has_website_deploy"] is True
@@ -1153,8 +1153,10 @@ def test_standard_release_flow_preserves_remote_name():
     assert "python scripts/release_readiness.py --strict --target-version 0.1.1 --remote --remote-name upstream" in (
         flow["commands"]
     )
-    assert "python scripts/check_release_publication.py --remote --remote-name upstream --json" in (
-        flow["commands"]
+    assert (
+        "python scripts/check_release_publication.py --remote --remote-name upstream "
+        "--distribution --json"
+        in flow["commands"]
     )
     assert "cd site && vercel link --yes --project cliany.site && vercel --prod --yes" in (
         flow["commands"]
@@ -1169,7 +1171,8 @@ def test_standard_release_flow_preserves_remote_name():
         "command": "cd site && vercel link --yes --project cliany.site && vercel --prod --yes",
     }
     assert flow["steps"][-1]["command"] == (
-        "python scripts/check_release_publication.py --remote --remote-name upstream --json"
+        "python scripts/check_release_publication.py --remote --remote-name upstream "
+        "--distribution --json"
     )
 
 
