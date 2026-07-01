@@ -4022,6 +4022,9 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
 
 
 def _candidate_issue_script_lines(issue_commands: list[str], *, preflight_command: str) -> list[str]:
+    preflight_shell_command = preflight_command
+    if preflight_shell_command.startswith("python "):
+        preflight_shell_command = '"$PYTHON_BIN" ' + preflight_shell_command.removeprefix("python ")
     lines = [
         "#!/usr/bin/env bash",
         "set -euo pipefail",
@@ -4031,6 +4034,7 @@ def _candidate_issue_script_lines(issue_commands: list[str], *, preflight_comman
         "# Stop early if the candidate issue gate no longer allows issue creation.",
         'REPO_ROOT="$(git rev-parse --show-toplevel)"',
         'cd "$REPO_ROOT"',
+        'PYTHON_BIN="${PYTHON_BIN:-python3}"',
         'if [[ "${CLIANY_CREATE_ISSUES_DRY_RUN:-0}" == "1" ]]; then',
         '  echo "Dry run: candidate issue gate preflight and gh issue create are not executed."',
         "  cat <<'CLIANY_ISSUE_COMMANDS'",
@@ -4042,13 +4046,13 @@ def _candidate_issue_script_lines(issue_commands: list[str], *, preflight_comman
             "  exit 0",
             "fi",
             'PREFLIGHT_JSON="/tmp/cliany-issue-gate-check.json"',
-            f'if ! {preflight_command} >"$PREFLIGHT_JSON"; then',
+            f'if ! {preflight_shell_command} >"$PREFLIGHT_JSON"; then',
             '  echo "Candidate issue gate preflight failed; review $PREFLIGHT_JSON '
             'before creating candidate issues." >&2',
             '  cat "$PREFLIGHT_JSON" >&2 || true',
             "  exit 1",
             "fi",
-            'if ! python - "$PREFLIGHT_JSON" <<\'PY\'',
+            'if ! "$PYTHON_BIN" - "$PREFLIGHT_JSON" <<\'PY\'',
             "import json",
             "import sys",
             "",

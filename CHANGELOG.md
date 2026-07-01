@@ -11,6 +11,9 @@
 - Release readiness and next-iteration planning now expose `daily_release_cap_blocked`, `daily_release_resume_date`, and `daily_release_resume_date_sha256` when the target tag would exceed the daily release cap, so maintainers can see the exact next eligible release date instead of inferring it from prose.
 - Added the `v0.16.254` release draft, documenting the 2026-07-02 daily-cap pause and the 2026-07-03 resume target without creating a new tag, GitHub Release, PyPI upload, or website deployment.
 
+### Fixed
+- Candidate issue creation scripts now default to `python3` through an overridable `PYTHON_BIN`, so generated issue handoff artifacts run on systems without a bare `python` executable.
+
 ## [0.16.253] - 2026-07-02
 
 ### Changed

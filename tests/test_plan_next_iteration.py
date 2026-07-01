@@ -118,6 +118,25 @@ def _promotion_evidence(package_next_action: str, smoke_next_action: str) -> dic
     }
 
 
+def test_candidate_issue_script_uses_python3_default_with_override() -> None:
+    script = "\n".join(
+        plan_next_iteration._candidate_issue_script_lines(
+            ["gh issue create --title 'Candidate'"],
+            preflight_command="python scripts/plan_next_iteration.py --target-version 0.16.2 --json",
+        )
+    )
+
+    assert 'PYTHON_BIN="${PYTHON_BIN:-python3}"' in script
+    assert (
+        'if ! "$PYTHON_BIN" scripts/plan_next_iteration.py --target-version 0.16.2 --json >"$PREFLIGHT_JSON"; then'
+    ) in script
+    assert 'if ! "$PYTHON_BIN" - "$PREFLIGHT_JSON" <<\'PY\'' in script
+    assert (
+        'if ! python scripts/plan_next_iteration.py --target-version 0.16.2 --json >"$PREFLIGHT_JSON"; then'
+    ) not in script
+    assert 'if ! python - "$PREFLIGHT_JSON" <<\'PY\'' not in script
+
+
 def _pypi_promotion_command_plan(*, explore_query: str = "search Python packages") -> list[dict[str, object]]:
     return [
         {
@@ -3673,10 +3692,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "Dry run: candidate issue gate preflight and gh issue create are not executed." in script
     assert "cat <<'CLIANY_ISSUE_COMMANDS'" in script
     assert "CLIANY_ISSUE_COMMANDS" in script
+    assert 'PYTHON_BIN="${PYTHON_BIN:-python3}"' in script
     assert 'PREFLIGHT_JSON="/tmp/cliany-issue-gate-check.json"' in script
     assert (
-        'if ! python scripts/plan_next_iteration.py --target-version 0.16.2 --json >"$PREFLIGHT_JSON"; then'
+        'if ! "$PYTHON_BIN" scripts/plan_next_iteration.py --target-version 0.16.2 --json >"$PREFLIGHT_JSON"; then'
     ) in script
+    assert 'if ! "$PYTHON_BIN" - "$PREFLIGHT_JSON" <<\'PY\'' in script
+    assert (
+        'if ! python scripts/plan_next_iteration.py --target-version 0.16.2 --json >"$PREFLIGHT_JSON"; then'
+    ) not in script
+    assert 'if ! python - "$PREFLIGHT_JSON" <<\'PY\'' not in script
     assert "Candidate issue gate preflight failed; review $PREFLIGHT_JSON" in script
     assert "candidate_issue_gate" in script
     assert "can_create_issues" in script
