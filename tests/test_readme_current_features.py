@@ -12,6 +12,10 @@ def test_readmes_document_current_extract_quality_and_readiness():
         "README.md": "`Promotion Command Plan` `command_sha256` sub-lines",
         "README.zh.md": "`Promotion Command Plan` 的 `command_sha256` 子行",
     }
+    expected_issue_source_terms = {
+        "README.md": "`source` / `missing` metadata",
+        "README.zh.md": "`source` / `missing` 元数据",
+    }
     for filename in ("README.md", "README.zh.md"):
         text = (ROOT / filename).read_text(encoding="utf-8")
 
@@ -55,6 +59,7 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "Primary Runbook" in text
         assert "Command SHA-256" in text
         assert expected_issue_hash_terms[filename] in text
+        assert expected_issue_source_terms[filename] in text
         assert "Doctor Preflight Evidence Fields" in text
         assert "Doctor Preflight Evidence Template" in text
         assert "doctor_preflight_evidence_template" in text

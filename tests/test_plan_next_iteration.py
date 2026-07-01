@@ -1537,14 +1537,22 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "## Promotion Command Plan\n"
             "- `llm_live_preflight`: `cliany-site doctor --llm-live --json`\n"
             f"  - command_sha256: `{_command_sha256(preflight_command)}`\n"
+            "  - source: `doctor.llm_live`\n"
+            "  - missing: `false`\n"
             '- `adapter_package`: `cliany-site explore "https://pypi.org" "search Python packages" --json`\n'
             f"  - command_sha256: `{_command_sha256(explore_command)}`\n"
+            "  - source: `commands.explore`\n"
+            "  - missing: `false`\n"
             "- `metadata_validation`: `python scripts/validate_cases.py "
             "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`\n"
             f"  - command_sha256: `{_command_sha256(metadata_command)}`\n"
+            "  - source: `candidate_package_validation_command`\n"
+            "  - missing: `false`\n"
             "- `online_smoke`: `cliany-site pypi.org search-projects --query cliany-site "
             "--limit 5 --json`\n"
-            f"  - command_sha256: `{_command_sha256(smoke_command)}`\n\n"
+            f"  - command_sha256: `{_command_sha256(smoke_command)}`\n"
+            "  - source: `commands.adapter`\n"
+            "  - missing: `false`\n\n"
             "## LLM Preflight Gate\n"
             "- Command: `cliany-site doctor --llm-live --json`\n"
             "- Command SHA-256: `0ca644df288169289dd4dbc17aeacdc58b9898f05c0d4c5d304c17e33bdbcb96`\n"
@@ -3627,11 +3635,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"  - command_sha256: `{_command_sha256('cliany-site doctor --llm-live --json')}`"
         in body
     )
+    assert "  - source: `doctor.llm_live`" in body
+    assert "  - missing: `false`" in body
     assert (
         "  - command_sha256: "
         f"`{_command_sha256('cliany-site pypi.org search-projects --query cliany-site --limit 5 --json')}`"
         in body
     )
+    assert "  - source: `commands.adapter`" in body
     assert (
         '`adapter_package`: `cliany-site explore "https://pypi.org" "search Python packages" --json`'
         in body

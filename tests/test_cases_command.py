@@ -384,11 +384,14 @@ def test_cases_command_issue_template_json(tmp_home):
         f"  - command_sha256: `{LLM_LIVE_PREFLIGHT_COMMAND_SHA256}`"
         in template
     )
+    assert "  - source: `doctor.llm_live`" in template
+    assert "  - missing: `false`" in template
     assert (
         "  - command_sha256: "
         f"`{_command_sha256('cliany-site pypi.org search-projects --query cliany-site --limit 5 --json')}`"
         in template
     )
+    assert "  - source: `commands.adapter`" in template
     assert "## LLM Preflight Gate" in template
     assert "- Command: `cliany-site doctor --llm-live --json`" in template
     assert f"- Command SHA-256: `{LLM_LIVE_PREFLIGHT_COMMAND_SHA256}`" in template

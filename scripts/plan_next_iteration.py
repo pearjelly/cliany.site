@@ -2910,6 +2910,8 @@ def _candidate_issue_body(
             [
                 f"- `{item['task']}`: `{command}`",
                 f"  - command_sha256: `{item.get('command_sha256') or '-'}`",
+                f"  - source: `{item.get('source') or '-'}`",
+                f"  - missing: `{str(bool(item.get('missing'))).lower()}`",
             ]
         )
     if not promotion_command_lines:
