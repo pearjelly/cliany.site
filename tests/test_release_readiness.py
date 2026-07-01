@@ -1473,6 +1473,55 @@ def test_release_readiness_blocks_stale_website_quickstart(tmp_path):
     )
 
 
+def test_release_readiness_blocks_stale_website_candidate_runbook_alias(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "site" / "docs").mkdir(parents=True)
+    (repo / "site" / "index.html").write_text(
+        "10-Minute Success Path\n"
+        "issues.apache.org.cliany-adapter-v0.14.0.tar.gz\n"
+        "cliany-site verify issues.apache.org --json\n"
+        "Real Demo Case Proposal\n"
+        "docs/weekly-maintainer-loop.md\n"
+        "next_actions\n",
+        encoding="utf-8",
+    )
+    (repo / "site" / "docs" / "index.html").write_text(
+        "10 分钟成功路径\n"
+        "不需要先配置 LLM key\n"
+        "issues.apache.org.cliany-adapter-v0.14.0.tar.gz\n"
+        "cliany-site verify issues.apache.org --json\n"
+        "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json\n",
+        encoding="utf-8",
+    )
+    _git(repo, "add", "site/index.html", "site/docs/index.html")
+    _git(
+        repo,
+        "commit",
+        "-m",
+        "add site fixture",
+        env={
+            "GIT_AUTHOR_NAME": "Test",
+            "GIT_AUTHOR_EMAIL": "test@example.com",
+            "GIT_COMMITTER_NAME": "Test",
+            "GIT_COMMITTER_EMAIL": "test@example.com",
+            "GIT_AUTHOR_DATE": "2026-06-10T12:00:00+00:00",
+            "GIT_COMMITTER_DATE": "2026-06-10T12:00:00+00:00",
+        },
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert "open source metadata file missing snippet: site/index.html: primary_next_task_runbook" in (
+        report.project_metadata.issues
+    )
+    assert (
+        "open source metadata file missing snippet: site/docs/index.html: "
+        "case_promotion_evidence_primary_runbook_steps"
+    ) in report.project_metadata.issues
+
+
 def test_release_readiness_blocks_stale_readme_marketplace_package_name(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     text = (repo / "README.md").read_text(encoding="utf-8")

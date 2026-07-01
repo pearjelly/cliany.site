@@ -22,6 +22,7 @@
 - Release readiness and next-iteration planner JSON now expose compact primary runbook aliases, step counts, step lists, and SHA-256 hashes, and issue artifact bundle summaries render the same fields for tools that only read summary surfaces.
 - README / README.zh now document the compact candidate runbook aliases that appear in planner and issue artifact summaries, and release readiness now gates the PyPI long-description entrypoints on those aliases.
 - Contributor starter and good-first-issue docs now explain how to use `primary_next_task_runbook` and compact runbook aliases when creating candidate promotion issues, and release readiness gates those contributor entrypoints.
+- Website quickstart and docs now surface the same candidate runbook handoff fields, and release readiness gates the static site on those public entrypoint snippets.
 
 ### Fixed
 - Release readiness now projects whether creating the target tag today would exceed the daily release cap, so planning `v0.16.251` after `v0.16.248`、`v0.16.249` 和 `v0.16.250` 已发布时会明确暂停 tag，而不是继续给出第四个同日 release 命令。

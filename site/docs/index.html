@@ -264,6 +264,9 @@ cliany-site workflow validate workflow.yaml --json</code></pre>
         <p>小幅页面变化由 AXTree 模糊匹配和自愈机制自动处理。大幅改版时，用 <code>--extend</code> 增量重新探索即可：</p>
         <pre><code>cliany-site explore "https://your-site.com" "原有任务" --extend your-site.com</code></pre>
 
+        <h3>如何创建 candidate promotion issue？</h3>
+        <p>先运行 <code>cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json</code>，在 issue 摘要中引用 <code>primary_next_task_runbook</code>，确保贡献者先做 live LLM preflight、再执行当前 evidence task。若使用 <code>python scripts/plan_next_iteration.py --issues-dir /tmp/cliany-candidate-issues</code> 生成 artifacts，先对比 <code>case_promotion_evidence_primary_runbook_steps</code> / hash 是否漂移，再创建 GitHub issue。</p>
+
         <h3>如何在服务器/Docker 中使用？</h3>
         <pre><code>cliany-site explore "https://github.com" "搜索仓库" \
   --headless \

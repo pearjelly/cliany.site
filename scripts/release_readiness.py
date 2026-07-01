@@ -511,6 +511,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "Real Demo Case Proposal",
             "docs/weekly-maintainer-loop.md",
             "next_actions",
+            "primary_next_task_runbook",
+            "case_promotion_evidence_primary_runbook_steps",
         ],
         "site/docs/index.html": [
             "10 分钟成功路径",
@@ -518,6 +520,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
             "cliany-site verify issues.apache.org --json",
             "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json",
+            "primary_next_task_runbook",
+            "case_promotion_evidence_primary_runbook_steps",
         ],
         ".github/PULL_REQUEST_TEMPLATE.md": [
             "python scripts/validate_cases.py --strict",
