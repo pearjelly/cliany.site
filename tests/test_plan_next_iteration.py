@@ -1803,8 +1803,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "dry_run_supported": True,
         "dry_run_env": "CLIANY_CREATE_ISSUES_DRY_RUN=1",
         "preflight_required": True,
-        "preflight_command": "python scripts/check_release_publication.py --strict --json",
-        "preflight_json": "/tmp/cliany-issue-publication-check.json",
+        "preflight_command": (
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 --json"
+        ),
+        "preflight_json": "/tmp/cliany-issue-gate-check.json",
     }
     create_issues_safety_contract_keys = list(expected_create_issues_safety_contract)
     review_order = [
@@ -1850,8 +1852,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "dry_run_env": "CLIANY_CREATE_ISSUES_DRY_RUN=1",
         "dry_run_command": f"CLIANY_CREATE_ISSUES_DRY_RUN=1 {issues_dir / 'create-issues.sh'}",
         "preflight_required": True,
-        "preflight_command": "python scripts/check_release_publication.py --strict --json",
-        "preflight_json": "/tmp/cliany-issue-publication-check.json",
+        "preflight_command": (
+            "python scripts/plan_next_iteration.py --target-version 0.16.2 --json"
+        ),
+        "preflight_json": "/tmp/cliany-issue-gate-check.json",
     }
     artifact_manifest_payload = plan_next_iteration._artifact_manifest_payload_without_summary(
         plan=plan,
@@ -3075,15 +3079,20 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert 'REPO_ROOT="$(git rev-parse --show-toplevel)"' in script
     assert 'cd "$REPO_ROOT"' in script
     assert "CLIANY_CREATE_ISSUES_DRY_RUN" in script
-    assert "Dry run: publication preflight and gh issue create are not executed." in script
+    assert "Dry run: candidate issue gate preflight and gh issue create are not executed." in script
     assert "cat <<'CLIANY_ISSUE_COMMANDS'" in script
     assert "CLIANY_ISSUE_COMMANDS" in script
-    assert 'PREFLIGHT_JSON="/tmp/cliany-issue-publication-check.json"' in script
+    assert 'PREFLIGHT_JSON="/tmp/cliany-issue-gate-check.json"' in script
     assert (
-        'if ! python scripts/check_release_publication.py --strict --json >"$PREFLIGHT_JSON"; then'
+        'if ! python scripts/plan_next_iteration.py --target-version 0.16.2 --json >"$PREFLIGHT_JSON"; then'
     ) in script
-    assert "Release publication preflight failed; review $PREFLIGHT_JSON" in script
-    assert 'cat "$PREFLIGHT_JSON" >&2' in script
+    assert "Candidate issue gate preflight failed; review $PREFLIGHT_JSON" in script
+    assert "candidate_issue_gate" in script
+    assert "can_create_issues" in script
+    assert "requires_maintainer_review" in script
+    assert "Candidate issue gate does not allow creating issues." in script
+    assert "Candidate issue gate requires maintainer review before creating issues." in script
+    assert 'cat "$PREFLIGHT_JSON" >&2 || true' in script
     assert "  exit 1" in script
     assert "--body-file" in script
     assert "pypi-project-search.md" in script
@@ -4536,17 +4545,20 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "llm_live_preflight_blocker_note for each case"
         in readme
     )
-    assert "release publication preflight" in readme
-    assert "python scripts/check_release_publication.py --strict --json" in readme
-    assert "/tmp/cliany-issue-publication-check.json" in readme
-    assert "prints that JSON before exiting" in readme
+    assert "candidate issue gate preflight" in readme
+    assert "python scripts/plan_next_iteration.py --target-version 0.16.2 --json" in readme
+    assert "/tmp/cliany-issue-gate-check.json" in readme
+    assert "prints the preflight JSON before exiting" in readme
     assert "### Create Issues Safety" in readme
     assert "dry_run_supported: `true`" in readme
     assert "dry_run_env: `CLIANY_CREATE_ISSUES_DRY_RUN=1`" in readme
     assert "dry_run_command: `CLIANY_CREATE_ISSUES_DRY_RUN=1 create-issues.sh`" in readme
     assert "preflight_required: `true`" in readme
-    assert "preflight_command: `python scripts/check_release_publication.py --strict --json`" in readme
-    assert "preflight_json: `/tmp/cliany-issue-publication-check.json`" in readme
+    assert (
+        "preflight_command: `python scripts/plan_next_iteration.py "
+        "--target-version 0.16.2 --json`"
+    ) in readme
+    assert "preflight_json: `/tmp/cliany-issue-gate-check.json`" in readme
     assert "`create-issues.sh` is generated for review. It is not executed" in readme
     assert (
         "python scripts/plan_next_iteration.py --target-version 0.16.2 "

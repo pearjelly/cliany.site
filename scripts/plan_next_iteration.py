@@ -2966,7 +2966,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     issue_body_names = [f"{promotion.case_id}.md" for promotion in plan.candidate_promotions]
     candidate_cases = [promotion.case_id for promotion in plan.candidate_promotions]
     script_path = directory / "create-issues.sh"
-    create_issues_safety = _issue_artifact_create_issues_safety(script_path)
+    create_issues_safety = _issue_artifact_create_issues_safety(script_path, plan)
     artifact_files = _issue_artifact_files(issue_body_names)
     review_order = [
         "README.md",
@@ -3029,7 +3029,13 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
         newline="\n",
     )
     script_path.write_text(
-        "\n".join(_candidate_issue_script_lines(issue_commands)) + "\n",
+        "\n".join(
+            _candidate_issue_script_lines(
+                issue_commands,
+                preflight_command=str(create_issues_safety["preflight_command"]),
+            )
+        )
+        + "\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -3041,18 +3047,18 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     )
 
 
-def _candidate_issue_script_lines(issue_commands: list[str]) -> list[str]:
+def _candidate_issue_script_lines(issue_commands: list[str], *, preflight_command: str) -> list[str]:
     lines = [
         "#!/usr/bin/env bash",
         "set -euo pipefail",
         "",
         "# Review these commands before running; they create GitHub issues in the current repository.",
         "# Set CLIANY_CREATE_ISSUES_DRY_RUN=1 to print commands without running the preflight or gh.",
-        "# Stop early if the latest local release is not publicly visible yet.",
+        "# Stop early if the candidate issue gate no longer allows issue creation.",
         'REPO_ROOT="$(git rev-parse --show-toplevel)"',
         'cd "$REPO_ROOT"',
         'if [[ "${CLIANY_CREATE_ISSUES_DRY_RUN:-0}" == "1" ]]; then',
-        '  echo "Dry run: publication preflight and gh issue create are not executed."',
+        '  echo "Dry run: candidate issue gate preflight and gh issue create are not executed."',
         "  cat <<'CLIANY_ISSUE_COMMANDS'",
     ]
     lines.extend(issue_commands)
@@ -3061,11 +3067,33 @@ def _candidate_issue_script_lines(issue_commands: list[str]) -> list[str]:
             "CLIANY_ISSUE_COMMANDS",
             "  exit 0",
             "fi",
-            'PREFLIGHT_JSON="/tmp/cliany-issue-publication-check.json"',
-            'if ! python scripts/check_release_publication.py --strict --json >"$PREFLIGHT_JSON"; then',
-            '  echo "Release publication preflight failed; review $PREFLIGHT_JSON '
+            'PREFLIGHT_JSON="/tmp/cliany-issue-gate-check.json"',
+            f'if ! {preflight_command} >"$PREFLIGHT_JSON"; then',
+            '  echo "Candidate issue gate preflight failed; review $PREFLIGHT_JSON '
             'before creating candidate issues." >&2',
-            '  cat "$PREFLIGHT_JSON" >&2',
+            '  cat "$PREFLIGHT_JSON" >&2 || true',
+            "  exit 1",
+            "fi",
+            'if ! python - "$PREFLIGHT_JSON" <<\'PY\'',
+            "import json",
+            "import sys",
+            "",
+            "path = sys.argv[1]",
+            'with open(path, encoding="utf-8") as handle:',
+            "    payload = json.load(handle)",
+            'gate = payload.get("candidate_issue_gate") or {}',
+            'if not gate.get("can_create_issues", False):',
+            '    print("Candidate issue gate does not allow creating issues.", file=sys.stderr)',
+            "    print(json.dumps(gate, ensure_ascii=False, indent=2), file=sys.stderr)",
+            "    sys.exit(1)",
+            'if gate.get("requires_maintainer_review", False):',
+            '    print("Candidate issue gate requires maintainer review before creating issues.", file=sys.stderr)',
+            '    primary_action = gate.get("primary_required_action")',
+            "    if primary_action:",
+            '        print(f"Primary required action: {primary_action}", file=sys.stderr)',
+            "PY",
+            "then",
+            '  cat "$PREFLIGHT_JSON" >&2 || true',
             "  exit 1",
             "fi",
         ]
@@ -3138,7 +3166,7 @@ def _render_issue_artifacts_readme(
     )
     gate_draft_ok = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_ok"))
     gate_draft_issues = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_issue_count"))
-    create_issues_safety = _issue_artifact_create_issues_safety(Path("create-issues.sh"))
+    create_issues_safety = _issue_artifact_create_issues_safety(Path("create-issues.sh"), plan)
     release_draft_required_actions = _release_draft_required_actions(plan.release_draft_issues)
     standard_flow_status = _format_context_value(plan.standard_release_flow.get("status"))
     standard_flow_target_tag = _format_context_value(plan.standard_release_flow.get("target_tag"))
@@ -3170,7 +3198,7 @@ Generated for target version `{plan.target_version}`.
   release draft required action count, release draft required actions hash, release draft required actions,
   release draft issues hash, and release draft issues
   to review before tagging the target version.
-- `create-issues.sh`: reviewable shell script with a release publication preflight and
+- `create-issues.sh`: reviewable shell script with a candidate issue gate preflight and
   one `gh issue create` command per candidate. Set `CLIANY_CREATE_ISSUES_DRY_RUN=1`
   to print the commands without running the preflight or creating issues.
 {body_files}
@@ -3306,9 +3334,12 @@ Generated for target version `{plan.target_version}`.
 
 `create-issues.sh` is generated for review. It is not executed by `plan_next_iteration.py`.
 Run it only after checking `issue-metadata.json` and the body files. The script runs
-`python scripts/check_release_publication.py --strict --json` before creating issues and
-writes the preflight JSON to `/tmp/cliany-issue-publication-check.json`. If the preflight
-fails, it prints that JSON before exiting.
+`{create_issues_safety["preflight_command"]}` before creating issues and checks
+`candidate_issue_gate.can_create_issues`. It writes the preflight JSON to
+`{create_issues_safety["preflight_json"]}`. If the planner preflight fails or the gate
+rejects issue creation, it prints the preflight JSON before exiting. If the gate requires
+maintainer review while still allowing issue creation, it prints the primary required action
+before continuing.
 
 ### Create Issues Safety
 
@@ -3319,7 +3350,7 @@ fails, it prints that JSON before exiting.
 - preflight_command: `{create_issues_safety["preflight_command"]}`
 - preflight_json: `{create_issues_safety["preflight_json"]}`
 
-Preview the issue commands without running the publication preflight or creating issues:
+Preview the issue commands without running the candidate issue gate preflight or creating issues:
 
 ```bash
 CLIANY_CREATE_ISSUES_DRY_RUN=1 ./create-issues.sh
@@ -3570,15 +3601,23 @@ def _issue_artifact_validation_commands_text(plan: IterationPlan) -> str:
     return "\n".join(_issue_artifact_validation_commands(plan))
 
 
-def _issue_artifact_create_issues_safety(script_path: Path) -> dict[str, Any]:
+def _issue_artifact_candidate_gate_preflight_command(plan: IterationPlan) -> str:
+    if plan.validation_commands:
+        command = plan.validation_commands[0]
+        if command.startswith("python scripts/plan_next_iteration.py ") and command.endswith(" --json"):
+            return command
+    return f"python scripts/plan_next_iteration.py --target-version {plan.target_version} --json"
+
+
+def _issue_artifact_create_issues_safety(script_path: Path, plan: IterationPlan) -> dict[str, Any]:
     return {
         "script": str(script_path),
         "dry_run_supported": True,
         "dry_run_env": "CLIANY_CREATE_ISSUES_DRY_RUN=1",
         "dry_run_command": f"CLIANY_CREATE_ISSUES_DRY_RUN=1 {script_path}",
         "preflight_required": True,
-        "preflight_command": "python scripts/check_release_publication.py --strict --json",
-        "preflight_json": "/tmp/cliany-issue-publication-check.json",
+        "preflight_command": _issue_artifact_candidate_gate_preflight_command(plan),
+        "preflight_json": "/tmp/cliany-issue-gate-check.json",
     }
 
 
@@ -4948,7 +4987,7 @@ def _issue_artifact_bundle_summary_markdown(
             issue_body_inventory=issue_body_inventory,
             issue_body_summary=_issue_body_summary(issue_body_inventory),
             issue_metadata_summary=_issue_metadata_summary(_issue_metadata_for_summary(plan.candidate_promotions)),
-            create_issues_safety=_issue_artifact_create_issues_safety(Path("create-issues.sh")),
+            create_issues_safety=_issue_artifact_create_issues_safety(Path("create-issues.sh"), plan),
             artifact_files=_issue_artifact_files(issue_body_names),
         )
     return "\n".join(

@@ -14,6 +14,7 @@
 - Daily-cap pause guidance now takes precedence over generic "create a new release tag" wording in release readiness and next-iteration planner `next_actions`, keeping the first action aligned with the active blocker.
 - Candidate issue gate now surfaces non-draft release readiness blockers such as the daily release cap as `release_readiness_blockers`, so issue artifacts are marked review-required instead of silently ready while the target release cannot be tagged.
 - Candidate issue artifacts now promote release readiness blocker aliases into `publication-handoff.json` and the README quick summary, so maintainers can see why tagging is paused without expanding nested gate evidence.
+- Candidate issue creation scripts now preflight against `candidate_issue_gate.can_create_issues` instead of strict publication visibility alone, so issue artifacts remain runnable in the normal "latest release published, HEAD preparing next version" state.
 
 ## [0.16.250] - 2026-07-01
 
