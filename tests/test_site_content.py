@@ -25,6 +25,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Acceptance Criteria" in index
     assert "Primary Runbook" in index
     assert "Command SHA-256" in index
+    assert "Promotion Command Plan</code> <code>command_sha256</code>" in index
     assert "Doctor Preflight Evidence Fields" in index
     assert "Doctor Preflight Evidence Template" in index
     assert "doctor_preflight_evidence_template" in index
@@ -114,6 +115,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Acceptance Criteria" in script
     assert "Primary Runbook" in script
     assert "Command SHA-256" in script
+    assert "Promotion Command Plan</code> <code>command_sha256</code>" in script
     assert "Doctor Preflight Evidence Fields" in script
     assert "Doctor Preflight Evidence Template" in script
     assert "doctor_preflight_evidence_template" in script

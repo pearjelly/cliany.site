@@ -2903,10 +2903,17 @@ def _candidate_issue_body(
 ) -> str:
     command_lines = [f"  - `{command}`" for command in commands] or ["  - Not declared."]
     offline_command_lines = [f"  - `{command}`" for command in offline_commands] or ["  - Not declared."]
-    promotion_command_lines = [
-        f"- `{item['task']}`: `{item['command'] or 'Not declared.'}`"
-        for item in promotion_command_plan
-    ] or ["- No promotion command plan declared."]
+    promotion_command_lines: list[str] = []
+    for item in promotion_command_plan:
+        command = item.get("command") or "Not declared."
+        promotion_command_lines.extend(
+            [
+                f"- `{item['task']}`: `{command}`",
+                f"  - command_sha256: `{item.get('command_sha256') or '-'}`",
+            ]
+        )
+    if not promotion_command_lines:
+        promotion_command_lines = ["- No promotion command plan declared."]
     task_descriptions = {
         "adapter_package": adapter_package,
         "metadata_validation": metadata_validation,

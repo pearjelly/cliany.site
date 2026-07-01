@@ -11164,6 +11164,7 @@ def test_v016254_release_draft_tracks_planner_issue_template_handoff():
         "promotion_plan.primary_doctor_preflight_evidence_template_sha256",
         "promotion_plan.primary_llm_live_preflight_command_sha256",
         "promotion_command_plan[*].command_sha256",
+        "`command_sha256` 子行",
         "primary_doctor_preflight_evidence_template_sha256",
         "task_queue[*].doctor_preflight_evidence_template_sha256",
         "task_queue[*].llm_live_preflight_command_sha256",

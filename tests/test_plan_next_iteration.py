@@ -1102,6 +1102,13 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         publication_report=_publication_report(),
     )
     data = plan.to_dict()
+    preflight_command = "cliany-site doctor --llm-live --json"
+    explore_command = 'cliany-site explore "https://pypi.org" "search Python packages" --json'
+    metadata_command = (
+        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "--include-candidate-packages --strict"
+    )
+    smoke_command = "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json"
 
     assert data["release_draft_path"] == "docs/releases/v0.16.2-draft.md"
     assert data["release_draft_issues"] == [
@@ -1529,11 +1536,15 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "  - `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md`\n\n"
             "## Promotion Command Plan\n"
             "- `llm_live_preflight`: `cliany-site doctor --llm-live --json`\n"
+            f"  - command_sha256: `{_command_sha256(preflight_command)}`\n"
             '- `adapter_package`: `cliany-site explore "https://pypi.org" "search Python packages" --json`\n'
+            f"  - command_sha256: `{_command_sha256(explore_command)}`\n"
             "- `metadata_validation`: `python scripts/validate_cases.py "
             "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`\n"
+            f"  - command_sha256: `{_command_sha256(metadata_command)}`\n"
             "- `online_smoke`: `cliany-site pypi.org search-projects --query cliany-site "
-            "--limit 5 --json`\n\n"
+            "--limit 5 --json`\n"
+            f"  - command_sha256: `{_command_sha256(smoke_command)}`\n\n"
             "## LLM Preflight Gate\n"
             "- Command: `cliany-site doctor --llm-live --json`\n"
             "- Command SHA-256: `0ca644df288169289dd4dbc17aeacdc58b9898f05c0d4c5d304c17e33bdbcb96`\n"
@@ -3612,6 +3623,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert 'cliany-site explore "https://pypi.org" "search Python packages" --json' in body
     assert "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md" in body
     assert "## Promotion Command Plan" in body
+    assert (
+        f"  - command_sha256: `{_command_sha256('cliany-site doctor --llm-live --json')}`"
+        in body
+    )
+    assert (
+        "  - command_sha256: "
+        f"`{_command_sha256('cliany-site pypi.org search-projects --query cliany-site --limit 5 --json')}`"
+        in body
+    )
     assert (
         '`adapter_package`: `cliany-site explore "https://pypi.org" "search Python packages" --json`'
         in body

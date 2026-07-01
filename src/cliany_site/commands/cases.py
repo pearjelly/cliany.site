@@ -392,6 +392,7 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
     for item in _candidate_promotion_command_plan(case):
         command = item["command"] or "Not declared."
         lines.append(f"- `{item['task']}`: `{command}`")
+        lines.append(f"  - command_sha256: `{item.get('command_sha256') or '-'}`")
 
     lines.extend(
         [
