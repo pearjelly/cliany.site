@@ -20,6 +20,7 @@ def test_case_proposal_issue_template_collects_verifiable_case_details():
         "id: promotion",
         "Candidate Promotion Tasks",
         "Issue Body Template",
+        "doctor_preflight_evidence_fields",
         "adapter_package",
         "metadata_validation",
         "online_smoke",
@@ -44,6 +45,7 @@ def test_pull_request_template_routes_validation_by_change_type():
         "CHANGELOG 或 release draft",
         "~/.cliany-site/",
         "已按改动风险选择验证范围",
+        "doctor_preflight_evidence_fields",
     ]
     for snippet in required:
         assert snippet in text

@@ -34,6 +34,7 @@ def test_good_first_issues_doc_has_issue_drafting_checklist():
         "~/.cliany-site/",
         "cliany-site cases --case-id <id> --evidence-bundle --json",
         "primary_next_task",
+        "doctor_preflight_evidence_fields",
         "promotion_command_plan",
         "case/task/status",
         "adapter package",

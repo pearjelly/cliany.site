@@ -50,6 +50,18 @@ LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = (
     "checks[llm_live].details.phase",
     "checks[llm_live].details.message",
 )
+DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = (
+    "summary.ready_for_explore",
+    "summary.capabilities.run_browser_workflows.ready",
+    "summary.capabilities.generate_adapters.ready",
+    "checks[cdp].status",
+    "checks[cdp].action",
+    "checks[llm_live].status",
+    "checks[llm_live].details.error_code",
+    "checks[llm_live].details.retryable",
+    "checks[llm_live].details.phase",
+    "checks[llm_live].details.message",
+)
 PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -815,6 +827,11 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
                 ),
                 "llm_live_preflight_evidence_fields": (
                     list(LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS)
+                    if llm_live_preflight_required
+                    else []
+                ),
+                "doctor_preflight_evidence_fields": (
+                    list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS)
                     if llm_live_preflight_required
                     else []
                 ),

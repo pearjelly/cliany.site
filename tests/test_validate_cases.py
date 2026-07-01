@@ -348,6 +348,9 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         "llm_live_preflight_evidence_fields": list(
             validate_cases.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
         ),
+        "doctor_preflight_evidence_fields": list(
+            validate_cases.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+        ),
         "acceptance_criteria": (
             "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
             "package path or GitHub Release asset name."
@@ -606,6 +609,7 @@ def test_cases_report_prioritizes_candidate_with_more_complete_evidence(tmp_path
         "llm_live_preflight_command": "",
         "llm_live_preflight_blocker_note": "",
         "llm_live_preflight_evidence_fields": [],
+        "doctor_preflight_evidence_fields": [],
         "acceptance_criteria": (
             "Paste `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
             "--include-candidate-packages --strict` output showing the candidate package "

@@ -25,7 +25,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Acceptance Criteria" in index
     assert "cases/manifest.json" in index
     assert "python scripts/validate_cases.py --strict" in index
-    assert "cliany-site cases --json" in index
+    assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in index
     assert "cliany-site cases --status candidate --promotion-plan" in index
     assert "primary_next_task_acceptance_criteria" in index
     assert "preflight_required" in index
@@ -47,6 +47,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "case_promotion_evidence_primary_llm_live_preflight_blocker_comment" in index
     assert "case_promotion_evidence_primary_doctor_preflight_blocker_comment" in index
     assert "doctor_preflight_evidence_fields" in index
+    assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert "1-3 releases/day loop" in index
     assert "Current baseline: v0.16.253" in index
     assert "website alias inspect" in index
@@ -54,6 +55,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "10-Minute Success Path" in script
     assert "Run a real demo adapter first" in script
     assert "primary_next_task_acceptance_criteria" in script
+    assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in script
     assert "cliany-site cases --status candidate --promotion-plan" in script
     assert "python scripts/plan_next_iteration.py --issues-dir" in script
     assert "Primary Acceptance Criteria" in script

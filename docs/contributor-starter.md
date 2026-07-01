@@ -42,7 +42,7 @@ pytest tests/test_cases_manifest.py tests/test_release_cadence.py -q --no-cov
 
 这些任务适合第一次贡献，通常不需要 Chrome、真实 LLM key 或第三方站点在线。
 
-维护者创建 GitHub issue 时，可以直接从 [Good First Issues](good-first-issues.md) 候选池选择任务；每个任务都带推荐验证命令，candidate promotion 的 Issue Body Template 会保留 `Reproduction Context`、`Promotion Command Plan` 和 `Evidence Bundle`，机器可读证据包里的 `primary_next_task` 会标出首要 case/task/status/evidence，`primary_next_task_runbook` 会给出 live LLM preflight 优先的执行清单，`promotion_command_plan` 会标出 adapter package、metadata validation 和 online smoke 命令。若 issue artifacts 来自 `scripts/plan_next_iteration.py --issues-dir`，先检查 summary 中的 `case_promotion_evidence_primary_runbook_steps` / hash 是否和预期一致，再让首次贡献者按 PR 模板提交证据。
+维护者创建 GitHub issue 时，可以直接从 [Good First Issues](good-first-issues.md) 候选池选择任务；每个任务都带推荐验证命令，candidate promotion 的 Issue Body Template 会保留 `Reproduction Context`、`Promotion Command Plan` 和 `Evidence Bundle`，机器可读证据包里的 `primary_next_task` 会标出首要 case/task/status/evidence，`primary_next_task_runbook` 会给出 live LLM preflight 优先的执行清单，`doctor_preflight_evidence_fields` 会列出 CDP/LLM blocker 应贴回的 doctor JSON 字段，`promotion_command_plan` 会标出 adapter package、metadata validation 和 online smoke 命令。若 issue artifacts 来自 `scripts/plan_next_iteration.py --issues-dir`，先检查 summary 中的 `case_promotion_evidence_primary_runbook_steps` / hash 是否和预期一致，再让首次贡献者按 PR 模板提交证据。
 
 | 方向 | 可以做什么 | 主要文件 | 验证 |
 |------|------------|----------|------|

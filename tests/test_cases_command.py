@@ -6,6 +6,19 @@ from click.testing import CliRunner
 from cliany_site.cli import cli
 from cliany_site.commands.cases import _print_human_cases
 
+DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = [
+    "summary.ready_for_explore",
+    "summary.capabilities.run_browser_workflows.ready",
+    "summary.capabilities.generate_adapters.ready",
+    "checks[cdp].status",
+    "checks[cdp].action",
+    "checks[llm_live].status",
+    "checks[llm_live].details.error_code",
+    "checks[llm_live].details.retryable",
+    "checks[llm_live].details.phase",
+    "checks[llm_live].details.message",
+]
+
 
 def test_cases_command_returns_catalog_summary(tmp_home):
     runner = CliRunner()
@@ -104,6 +117,7 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
             "checks[llm_live].details.phase",
             "checks[llm_live].details.message",
         ],
+        "doctor_preflight_evidence_fields": DOCTOR_PREFLIGHT_EVIDENCE_FIELDS,
     }
     assert (
         data["promotion_evidence_summary"]["primary_next_task"]
@@ -548,6 +562,7 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         "checks[llm_live].details.phase",
         "checks[llm_live].details.message",
     ]
+    assert bundle["doctor_preflight_evidence_fields"] == DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
     assert bundle["promotion_command_plan_count"] == 4
     assert bundle["promotion_command_plan_missing_tasks"] == []
     assert bundle["promotion_command_plan"] == [
@@ -598,6 +613,14 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert (
         bundle["tasks"][0]["llm_live_preflight_evidence_fields"]
         == bundle["llm_live_preflight_evidence_fields"]
+    )
+    assert (
+        bundle["tasks"][0]["doctor_preflight_evidence_fields"]
+        == bundle["doctor_preflight_evidence_fields"]
+    )
+    assert (
+        bundle["primary_next_task"]["doctor_preflight_evidence_fields"]
+        == bundle["doctor_preflight_evidence_fields"]
     )
     assert bundle["tasks"][0]["complete"] is False
     assert bundle["tasks"][0]["command_source"] == "commands.explore"

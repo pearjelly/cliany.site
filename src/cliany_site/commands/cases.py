@@ -43,6 +43,18 @@ LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = (
     "checks[llm_live].details.phase",
     "checks[llm_live].details.message",
 )
+DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = (
+    "summary.ready_for_explore",
+    "summary.capabilities.run_browser_workflows.ready",
+    "summary.capabilities.generate_adapters.ready",
+    "checks[cdp].status",
+    "checks[cdp].action",
+    "checks[llm_live].status",
+    "checks[llm_live].details.error_code",
+    "checks[llm_live].details.retryable",
+    "checks[llm_live].details.phase",
+    "checks[llm_live].details.message",
+)
 PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -445,6 +457,11 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                     if llm_live_preflight_required
                     else []
                 ),
+                "doctor_preflight_evidence_fields": (
+                    list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS)
+                    if llm_live_preflight_required
+                    else []
+                ),
                 "command": command,
                 "command_source": command_source,
                 "command_missing": command_missing,
@@ -484,6 +501,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "llm_live_preflight_command": LLM_LIVE_PREFLIGHT_COMMAND,
         "llm_live_preflight_blocker_note": LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
         "llm_live_preflight_evidence_fields": list(LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS),
+        "doctor_preflight_evidence_fields": list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS),
         "candidate_package_validation_command": CANDIDATE_PACKAGE_VALIDATION_COMMAND
         if adapter_domain
         else "",
@@ -968,6 +986,9 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
                         "llm_live_preflight_evidence_fields": list(
                             task_evidence.get("llm_live_preflight_evidence_fields")
                             or []
+                        ),
+                        "doctor_preflight_evidence_fields": list(
+                            task_evidence.get("doctor_preflight_evidence_fields") or []
                         ),
                     }
                 )
