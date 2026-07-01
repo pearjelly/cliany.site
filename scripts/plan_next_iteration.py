@@ -4257,11 +4257,13 @@ def _candidate_promotion_markdown(promotions: list[CandidatePromotion]) -> str:
         "",
         (
             "| Case | Issue Title | Labels | Priority Rank | Priority Reason | "
-            "Evidence Bundle Primary Next Task | LLM Live Preflight | LLM Blocker Handling |"
+            "Promotion Command Plan Summary | Evidence Bundle Primary Next Task | "
+            "LLM Live Preflight | LLM Blocker Handling |"
         ),
         (
             "|------|-------------|--------|---------------|-----------------|"
-            "-----------------------------------|--------------------|----------------------|"
+            "--------------------------------|-----------------------------------|"
+            "--------------------|----------------------|"
         ),
     ]
     for promotion in promotions:
@@ -4275,7 +4277,9 @@ def _candidate_promotion_markdown(promotions: list[CandidatePromotion]) -> str:
         primary_task = promotion.evidence_bundle_primary_next_task.get("task") or "Not declared."
         lines.append(
             f"| `{promotion.case_id}` | {promotion.issue_title} | {labels} | {priority_rank} | "
-            f"{priority_reason} | `{primary_task}` | `{promotion.llm_live_preflight_command}` | "
+            f"{priority_reason} | "
+            f"{_promotion_command_plan_summary_inline(promotion.promotion_command_plan_summary)} | "
+            f"`{primary_task}` | `{promotion.llm_live_preflight_command}` | "
             f"{promotion.llm_live_preflight_blocker_note} |"
         )
 
