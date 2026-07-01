@@ -1145,6 +1145,15 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     assert data["case_promotion_evidence_primary_runbook_first_command_sha256"] == (
         _stable_json_sha256("cliany-site doctor --llm-live --json")
     )
+    assert data["case_promotion_evidence_primary_llm_live_preflight_required"] is True
+    assert (
+        data["case_promotion_evidence_primary_llm_live_preflight_command"]
+        == "cliany-site doctor --llm-live --json"
+    )
+    assert (
+        data["case_promotion_evidence_primary_llm_live_preflight_blocker_note"]
+        == plan_next_iteration.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE
+    )
     llm_preflight_fields = data["case_promotion_evidence_summary"][
         "llm_live_preflight_evidence_fields"
     ]
@@ -2627,6 +2636,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "case_promotion_evidence_primary_runbook_sha256": _stable_json_sha256(
             plan.case_promotion_evidence_summary["primary_next_task_runbook"]
+        ),
+        "case_promotion_evidence_primary_llm_live_preflight_required": True,
+        "case_promotion_evidence_primary_llm_live_preflight_command": (
+            "cliany-site doctor --llm-live --json"
+        ),
+        "case_promotion_evidence_primary_llm_live_preflight_blocker_note": (
+            plan_next_iteration.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE
         ),
         "case_promotion_llm_live_preflight_evidence_field_count": len(
             llm_preflight_fields
@@ -4136,6 +4152,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "case_promotion_evidence_primary_runbook_sha256: "
         f"`{artifact_bundle_summary['case_promotion_evidence_primary_runbook_sha256']}`"
+    ) in readme
+    assert "case_promotion_evidence_primary_llm_live_preflight_required: `true`" in readme
+    assert (
+        "case_promotion_evidence_primary_llm_live_preflight_command: "
+        "`cliany-site doctor --llm-live --json`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_primary_llm_live_preflight_blocker_note: "
+        f"`{plan_next_iteration.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE}`"
     ) in readme
     assert "case_promotion_llm_live_preflight_evidence_field_count: `9`" in readme
     assert (

@@ -8,6 +8,7 @@
 ## [Unreleased]
 
 ### Changed
+- Next-iteration planner JSON, Markdown reports, and candidate issue artifact README summaries now expose `case_promotion_evidence_primary_llm_live_preflight_required`, `case_promotion_evidence_primary_llm_live_preflight_command`, and `case_promotion_evidence_primary_llm_live_preflight_blocker_note`, so summary-only tools can detect the primary candidate live preflight gate without expanding the task object.
 - Candidate human handoffs now render `preflight_required`, `preflight_blocker`, and `runbook_first` in the `Candidate 下一步` section, so non-JSON users see the live LLM gate before starting a real `explore`.
 - Candidate promotion task objects now expose `llm_live_preflight_required`, `llm_live_preflight_command`, `llm_live_preflight_blocker_note`, and `llm_live_preflight_evidence_fields`, so summary-only tools can record live LLM blockers without expanding runbooks.
 - Candidate promotion handoffs now expose `expected_adapter_package` across the cases CLI issue templates, evidence bundles, promotion plans, case validation summaries, next-iteration planner metadata, and generated issue bodies.

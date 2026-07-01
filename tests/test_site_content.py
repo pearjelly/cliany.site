@@ -43,6 +43,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "daily_release_limit_ok" in index
     assert "daily_release_cap_blocked" in index
     assert "daily_release_resume_date" in index
+    assert "case_promotion_evidence_primary_llm_live_preflight_required" in index
     assert "1-3 releases/day loop" in index
     assert "Current baseline: v0.16.253" in index
     assert "website alias inspect" in index
