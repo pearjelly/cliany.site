@@ -452,6 +452,10 @@ def test_plan_defaults_to_next_patch_version(tmp_path):
     assert plan.candidate_cases == ["pypi-project-search", "npm-package-search"]
     assert plan.case_promotion_evidence_summary["candidate_count"] == 2
     assert plan.case_promotion_evidence_summary["pending_count"] == 6
+    assert plan.case_promotion_evidence_summary["primary_next_task"]["priority_rank"] == 1
+    assert plan.case_promotion_evidence_summary["primary_next_task"]["priority_reason"] == (
+        "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0"
+    )
     assert plan.candidate_promotions[0].case_id == "pypi-project-search"
 
 
@@ -920,6 +924,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "status": "pending",
         "evidence": "",
         "next_action": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
+        "priority_rank": 1,
+        "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
     }
     assert (
         data["case_promotion_evidence_summary"]["primary_task_detail"]

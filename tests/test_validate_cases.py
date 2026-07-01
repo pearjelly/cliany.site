@@ -339,6 +339,8 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         "status": "pending",
         "evidence": "",
         "next_action": "Generate the adapter package.",
+        "priority_rank": 1,
+        "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 1",
         "acceptance_criteria": (
             "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
             "package path or GitHub Release asset name."
@@ -532,6 +534,8 @@ def test_cases_report_prioritizes_candidate_with_more_complete_evidence(tmp_path
         "status": "pending",
         "evidence": "",
         "next_action": "Run validate_cases with --packages-dir.",
+        "priority_rank": 1,
+        "priority_reason": "rank 1: complete 1/3, pending 2, blocked 0, missing commands 0",
         "acceptance_criteria": (
             "Paste `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
             "--include-candidate-packages --strict` output showing the candidate package "
@@ -540,6 +544,15 @@ def test_cases_report_prioritizes_candidate_with_more_complete_evidence(tmp_path
     }
     assert summary["pending_tasks"][0]["case_id"] == "nearly-ready-candidate"
     assert summary["pending_tasks"][0]["task"] == "metadata_validation"
+    assert summary["pending_tasks"][0]["priority_rank"] == 1
+    assert summary["pending_tasks"][0]["priority_reason"] == (
+        "rank 1: complete 1/3, pending 2, blocked 0, missing commands 0"
+    )
+    assert summary["pending_tasks"][2]["case_id"] == "empty-candidate"
+    assert summary["pending_tasks"][2]["priority_rank"] == 2
+    assert summary["pending_tasks"][2]["priority_reason"] == (
+        "rank 2: complete 0/3, pending 3, blocked 0, missing commands 0"
+    )
 
 
 def test_cases_report_rejects_candidate_legacy_package_hint(tmp_path):

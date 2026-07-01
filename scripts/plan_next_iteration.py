@@ -1713,16 +1713,23 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
         field_name: {status: 0 for status in ("blocked", "complete", "pending")}
         for field_name in CANDIDATE_PROMOTION_FIELDS
     }
-    pending_tasks: list[dict[str, str]] = []
-    blocked_tasks: list[dict[str, str]] = []
-    complete_tasks: list[dict[str, str]] = []
-    candidate_count = 0
+    pending_tasks: list[dict[str, Any]] = []
+    blocked_tasks: list[dict[str, Any]] = []
+    complete_tasks: list[dict[str, Any]] = []
+    candidate_cases = [
+        case for case in cases if _case_string_value(case, "status") == "candidate"
+    ]
+    ranked_candidate_cases = [
+        case
+        for _, case in sorted(
+            enumerate(candidate_cases),
+            key=lambda item: _case_promotion_priority_key(item[1], item[0]),
+        )
+    ]
 
-    for case in cases:
-        if getattr(case, "status", None) != "candidate":
-            continue
-        candidate_count += 1
+    for priority_rank, case in enumerate(ranked_candidate_cases, start=1):
         evidence = _case_dict_value(case, "promotion_evidence")
+        priority_reason = _case_promotion_priority_reason(case, priority_rank)
         for field_name in CANDIDATE_PROMOTION_FIELDS:
             task = evidence.get(field_name)
             if not isinstance(task, dict):
@@ -1737,6 +1744,8 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
                 "status": status,
                 "evidence": str(task.get("evidence") or ""),
                 "next_action": str(task.get("next_action") or ""),
+                "priority_rank": priority_rank,
+                "priority_reason": priority_reason,
             }
             if status == "pending":
                 pending_tasks.append(entry)
@@ -1747,7 +1756,7 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
 
     primary = pending_tasks[0] if pending_tasks else (blocked_tasks[0] if blocked_tasks else None)
     return {
-        "candidate_count": candidate_count,
+        "candidate_count": len(candidate_cases),
         "task_count": sum(status_counts.values()),
         "status_counts": status_counts,
         "task_status_counts": task_status_counts,
@@ -1762,6 +1771,63 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
         "primary_next_task": primary,
         "primary_next_action": primary["next_action"] if primary else "",
     }
+
+
+def _case_promotion_priority_reason(case: Any, rank: int) -> str:
+    complete_count, pending_count, blocked_count = _case_promotion_task_counts(case)
+    missing_command_count = _case_promotion_missing_command_count(case)
+    return (
+        f"rank {rank}: complete {complete_count}/{len(CANDIDATE_PROMOTION_FIELDS)}, "
+        f"pending {pending_count}, blocked {blocked_count}, "
+        f"missing commands {missing_command_count}"
+    )
+
+
+def _case_promotion_priority_key(case: Any, index: int) -> tuple[int, int, int, int, int, int, int]:
+    complete_count, pending_count, blocked_count = _case_promotion_task_counts(case)
+    missing_command_count = _case_promotion_missing_command_count(case)
+    ready_to_promote = complete_count == len(CANDIDATE_PROMOTION_FIELDS)
+    has_pending_work = pending_count > 0
+    return (
+        0 if ready_to_promote else 1,
+        0 if has_pending_work else 1,
+        -complete_count,
+        blocked_count,
+        missing_command_count,
+        pending_count,
+        index,
+    )
+
+
+def _case_promotion_task_counts(case: Any) -> tuple[int, int, int]:
+    evidence = _case_dict_value(case, "promotion_evidence")
+    complete_count = 0
+    pending_count = 0
+    blocked_count = 0
+    for field_name in CANDIDATE_PROMOTION_FIELDS:
+        task = evidence.get(field_name)
+        if not isinstance(task, dict):
+            continue
+        status = str(task.get("status") or "pending")
+        if status == "complete" and task.get("evidence"):
+            complete_count += 1
+        elif status == "blocked":
+            blocked_count += 1
+        else:
+            pending_count += 1
+    return complete_count, pending_count, blocked_count
+
+
+def _case_promotion_missing_command_count(case: Any) -> int:
+    value = getattr(case, "promotion_command_plan", None)
+    if value is None and isinstance(case, dict):
+        value = case.get("promotion_command_plan")
+    command_plan = value if isinstance(value, list) else []
+    return sum(
+        1
+        for item in command_plan
+        if isinstance(item, dict) and item.get("missing")
+    )
 
 
 def _case_promotion_command_plan_summary(cases_report: Any) -> dict[str, Any]:

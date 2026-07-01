@@ -664,12 +664,13 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
         field_name: {status: 0 for status in sorted(PROMOTION_EVIDENCE_STATUSES)}
         for field_name in PROMOTION_FIELDS
     }
-    pending_tasks: list[dict[str, str]] = []
-    blocked_tasks: list[dict[str, str]] = []
-    complete_tasks: list[dict[str, str]] = []
+    pending_tasks: list[dict[str, Any]] = []
+    blocked_tasks: list[dict[str, Any]] = []
+    complete_tasks: list[dict[str, Any]] = []
 
-    for check in ranked_candidate_checks:
+    for priority_rank, check in enumerate(ranked_candidate_checks, start=1):
         evidence = check.promotion_evidence or {}
+        priority_reason = _case_promotion_priority_reason(check, priority_rank)
         for field_name in PROMOTION_FIELDS:
             task = evidence.get(field_name)
             if not isinstance(task, dict):
@@ -684,6 +685,8 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
                 "status": status,
                 "evidence": str(task.get("evidence") or ""),
                 "next_action": str(task.get("next_action") or ""),
+                "priority_rank": priority_rank,
+                "priority_reason": priority_reason,
                 "acceptance_criteria": PROMOTION_ACCEPTANCE_CRITERIA[field_name],
             }
             if status == "pending":
@@ -715,7 +718,33 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
     }
 
 
+def _case_promotion_priority_reason(check: CaseCheck, rank: int) -> str:
+    complete_count, pending_count, blocked_count = _case_promotion_task_counts(check)
+    missing_command_count = sum(1 for item in check.promotion_command_plan if item.get("missing"))
+    return (
+        f"rank {rank}: complete {complete_count}/{len(PROMOTION_FIELDS)}, "
+        f"pending {pending_count}, blocked {blocked_count}, "
+        f"missing commands {missing_command_count}"
+    )
+
+
 def _case_promotion_priority_key(check: CaseCheck, index: int) -> tuple[int, int, int, int, int, int, int]:
+    complete_count, pending_count, blocked_count = _case_promotion_task_counts(check)
+    missing_command_count = sum(1 for item in check.promotion_command_plan if item.get("missing"))
+    ready_to_promote = complete_count == len(PROMOTION_FIELDS)
+    has_pending_work = pending_count > 0
+    return (
+        0 if ready_to_promote else 1,
+        0 if has_pending_work else 1,
+        -complete_count,
+        blocked_count,
+        missing_command_count,
+        pending_count,
+        index,
+    )
+
+
+def _case_promotion_task_counts(check: CaseCheck) -> tuple[int, int, int]:
     evidence = check.promotion_evidence or {}
     complete_count = 0
     pending_count = 0
@@ -731,18 +760,7 @@ def _case_promotion_priority_key(check: CaseCheck, index: int) -> tuple[int, int
             blocked_count += 1
         else:
             pending_count += 1
-    missing_command_count = sum(1 for item in check.promotion_command_plan if item.get("missing"))
-    ready_to_promote = complete_count == len(PROMOTION_FIELDS)
-    has_pending_work = pending_count > 0
-    return (
-        0 if ready_to_promote else 1,
-        0 if has_pending_work else 1,
-        -complete_count,
-        blocked_count,
-        missing_command_count,
-        pending_count,
-        index,
-    )
+    return complete_count, pending_count, blocked_count
 
 
 def _build_promotion_command_plan_summary(checks: list[CaseCheck]) -> dict[str, Any]:
