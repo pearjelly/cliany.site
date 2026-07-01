@@ -444,6 +444,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "Real Demo Case Proposal",
             "Candidate Promotion Tasks",
             "Issue Body Template",
+            "primary_next_task_runbook",
+            "case_promotion_evidence_primary_runbook_steps",
             "AXTree snapshot",
         ],
         "docs/module-ownership.md": [
@@ -466,6 +468,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "promotion",
             "Candidate Promotion Tasks",
             "Issue Body Template",
+            "primary_next_task_runbook",
+            "case_promotion_evidence_primary_runbook_steps",
             "Issue 拆分清单",
             "推荐验证命令",
             "~/.cliany-site/",

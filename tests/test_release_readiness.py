@@ -440,6 +440,8 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "promotion\n"
         "Candidate Promotion Tasks\n"
         "Issue Body Template\n"
+        "primary_next_task_runbook\n"
+        "case_promotion_evidence_primary_runbook_steps\n"
         "Issue 拆分清单\n"
         "推荐验证命令\n"
         "~/.cliany-site/\n",
@@ -453,6 +455,8 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "Real Demo Case Proposal\n"
         "Candidate Promotion Tasks\n"
         "Issue Body Template\n"
+        "primary_next_task_runbook\n"
+        "case_promotion_evidence_primary_runbook_steps\n"
         "AXTree snapshot\n",
         encoding="utf-8",
     )
@@ -1502,6 +1506,42 @@ def test_release_readiness_blocks_stale_readme_candidate_runbook_alias(tmp_path)
     assert (
         "open source metadata file missing snippet: README.md: "
         "case_promotion_evidence_primary_runbook_steps"
+    ) in report.project_metadata.issues
+
+
+def test_release_readiness_blocks_stale_good_first_issue_candidate_runbook_alias(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    text = (repo / "docs" / "good-first-issues.md").read_text(encoding="utf-8")
+    (repo / "docs" / "good-first-issues.md").write_text(
+        text.replace("case_promotion_evidence_primary_runbook_steps\n", ""),
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file missing snippet: docs/good-first-issues.md: "
+        "case_promotion_evidence_primary_runbook_steps"
+    ) in report.project_metadata.issues
+
+
+def test_release_readiness_blocks_stale_contributor_starter_candidate_runbook_alias(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    text = (repo / "docs" / "contributor-starter.md").read_text(encoding="utf-8")
+    (repo / "docs" / "contributor-starter.md").write_text(
+        text.replace("primary_next_task_runbook\n", ""),
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file missing snippet: docs/contributor-starter.md: "
+        "primary_next_task_runbook"
     ) in report.project_metadata.issues
 
 
