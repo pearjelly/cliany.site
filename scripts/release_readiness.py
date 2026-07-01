@@ -146,6 +146,8 @@ class ReadinessReport:
         publication_next_actions = publication_payload["next_actions"]
         publication_publish_commands = publication_payload["publish_commands"]
         publication_summary = _publication_summary(publication_payload)
+        primary_runbook = _case_promotion_primary_runbook(self.cases)
+        primary_runbook_steps = _runbook_steps(primary_runbook)
         next_actions = _next_action_lines(self)
         standard_release_flow = _standard_release_flow(
             self,
@@ -162,6 +164,12 @@ class ReadinessReport:
             "min_case_assets": self.min_case_assets,
             "cadence": self.cadence.to_dict(),
             "cases": self.cases.to_dict(),
+            "case_promotion_evidence_primary_runbook": primary_runbook,
+            "case_promotion_evidence_primary_runbook_step_count": len(primary_runbook_steps),
+            "case_promotion_evidence_primary_runbook_steps": primary_runbook_steps,
+            "case_promotion_evidence_primary_runbook_steps_sha256": _stable_json_sha256(
+                primary_runbook_steps
+            ),
             "draft": self.draft.to_dict(),
             "ci": self.ci.to_dict(),
             "release_workflow": self.release_workflow.to_dict(),
@@ -1403,9 +1411,23 @@ def _candidate_primary_next_task_rows(report: ReadinessReport) -> list[str]:
     ]
 
 
+def _case_promotion_primary_runbook(cases_report: Any) -> list[dict[str, Any]]:
+    summary = getattr(cases_report, "promotion_evidence_summary", {})
+    if not isinstance(summary, dict):
+        return []
+    runbook = summary.get("primary_next_task_runbook")
+    if not isinstance(runbook, list):
+        return []
+    return [dict(step) for step in runbook if isinstance(step, dict)]
+
+
+def _runbook_steps(runbook: list[dict[str, Any]]) -> list[str]:
+    return [str(step.get("step") or "") for step in runbook if step.get("step")]
+
+
 def _candidate_primary_runbook_rows(report: ReadinessReport) -> list[str]:
-    runbook = report.cases.promotion_evidence_summary.get("primary_next_task_runbook")
-    if not isinstance(runbook, list) or not runbook:
+    runbook = _case_promotion_primary_runbook(report.cases)
+    if not runbook:
         return []
 
     rows: list[str] = []

@@ -973,6 +973,18 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         data["case_promotion_evidence_primary_next_action"]
         == data["case_promotion_evidence_summary"]["primary_next_action"]
     )
+    primary_runbook = data["case_promotion_evidence_summary"]["primary_next_task_runbook"]
+    primary_runbook_steps = [step["step"] for step in primary_runbook]
+    assert data["case_promotion_evidence_primary_runbook"] == primary_runbook
+    assert data["case_promotion_evidence_primary_runbook_step_count"] == 3
+    assert data["case_promotion_evidence_primary_runbook_steps"] == [
+        "llm_live_preflight",
+        "adapter_package",
+        "acceptance",
+    ]
+    assert data["case_promotion_evidence_primary_runbook_steps_sha256"] == _stable_json_sha256(
+        primary_runbook_steps
+    )
     assert data["candidate_promotions"][0] == {
         "case_id": "pypi-project-search",
         "issue_title": "Promote candidate case `pypi-project-search` toward active",
@@ -1319,6 +1331,17 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
         "`Generate pypi.org-<version>.cliany-adapter.tar.gz.` |"
         in text
     )
+    assert "| case_promotion_evidence_primary_runbook_step_count | `3` |" in text
+    assert (
+        "| case_promotion_evidence_primary_runbook_steps | "
+        "`[\"llm_live_preflight\", \"adapter_package\", \"acceptance\"]` |"
+        in text
+    )
+    assert (
+        "| case_promotion_evidence_primary_runbook_steps_sha256 | "
+        f"`{_stable_json_sha256(['llm_live_preflight', 'adapter_package', 'acceptance'])}` |"
+        in text
+    )
     assert (
         "| plan_report_command | "
         "`python scripts/plan_next_iteration.py --target-version 0.16.2 "
@@ -1470,6 +1493,16 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
     assert (
         "case_promotion_evidence_primary_next_action: "
         "Generate pypi.org-<version>.cliany-adapter.tar.gz."
+        in text
+    )
+    assert (
+        "case_promotion_evidence_primary_runbook_steps: "
+        "llm_live_preflight -> adapter_package -> acceptance"
+        in text
+    )
+    assert (
+        "case_promotion_evidence_primary_runbook_steps_sha256: "
+        f"{_stable_json_sha256(['llm_live_preflight', 'adapter_package', 'acceptance'])}"
         in text
     )
     assert (
@@ -2127,6 +2160,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "case_promotion_evidence_primary_next_task_sha256": _stable_json_sha256(
             plan.case_promotion_evidence_summary["primary_next_task"]
+        ),
+        "case_promotion_evidence_primary_runbook_step_count": 3,
+        "case_promotion_evidence_primary_runbook_steps": [
+            "llm_live_preflight",
+            "adapter_package",
+            "acceptance",
+        ],
+        "case_promotion_evidence_primary_runbook_steps_sha256": _stable_json_sha256(
+            ["llm_live_preflight", "adapter_package", "acceptance"]
+        ),
+        "case_promotion_evidence_primary_runbook_sha256": _stable_json_sha256(
+            plan.case_promotion_evidence_summary["primary_next_task_runbook"]
         ),
         "case_promotion_command_plan_summary_sha256": _stable_json_sha256(
             command_plan_summary
@@ -3444,6 +3489,19 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "case_promotion_evidence_primary_next_task_sha256: "
         f"`{artifact_bundle_summary['case_promotion_evidence_primary_next_task_sha256']}`"
+    ) in readme
+    assert "case_promotion_evidence_primary_runbook_step_count: `3`" in readme
+    assert (
+        "case_promotion_evidence_primary_runbook_steps: "
+        "`[\"llm_live_preflight\", \"adapter_package\", \"acceptance\"]`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_primary_runbook_steps_sha256: "
+        f"`{artifact_bundle_summary['case_promotion_evidence_primary_runbook_steps_sha256']}`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_primary_runbook_sha256: "
+        f"`{artifact_bundle_summary['case_promotion_evidence_primary_runbook_sha256']}`"
     ) in readme
     assert (
         "case_promotion_command_plan_summary_sha256: "

@@ -171,6 +171,10 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "case_promotion_evidence_primary_evidence_sha256",
     "case_promotion_evidence_primary_detail_sha256",
     "case_promotion_evidence_primary_next_task_sha256",
+    "case_promotion_evidence_primary_runbook_step_count",
+    "case_promotion_evidence_primary_runbook_steps",
+    "case_promotion_evidence_primary_runbook_steps_sha256",
+    "case_promotion_evidence_primary_runbook_sha256",
     "case_promotion_command_plan_summary_sha256",
     "case_promotion_command_plan_candidate_count",
     "case_promotion_command_plan_command_count",
@@ -612,6 +616,8 @@ class IterationPlan:
         primary_next_task = self.case_promotion_evidence_summary.get("primary_next_task")
         if not isinstance(primary_next_task, dict):
             primary_next_task = None
+        primary_runbook = _primary_runbook_from_summary(self.case_promotion_evidence_summary)
+        primary_runbook_steps = _runbook_steps(primary_runbook)
         return {
             "current_version": self.current_version,
             "target_version": self.target_version,
@@ -647,6 +653,12 @@ class IterationPlan:
             "case_promotion_evidence_primary_next_task": primary_next_task,
             "case_promotion_evidence_primary_next_action": (
                 self.case_promotion_evidence_summary.get("primary_next_action")
+            ),
+            "case_promotion_evidence_primary_runbook": primary_runbook,
+            "case_promotion_evidence_primary_runbook_step_count": len(primary_runbook_steps),
+            "case_promotion_evidence_primary_runbook_steps": primary_runbook_steps,
+            "case_promotion_evidence_primary_runbook_steps_sha256": _stable_json_sha256(
+                primary_runbook_steps
             ),
             "blockers": self.blockers,
             "next_action_count": len(self.next_actions),
@@ -1798,6 +1810,22 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
                 complete_tasks.append(entry)
 
     primary = pending_tasks[0] if pending_tasks else (blocked_tasks[0] if blocked_tasks else None)
+    primary_case = None
+    if primary:
+        primary_case_id = str(primary.get("case_id") or "")
+        primary_case = next(
+            (case for case in ranked_candidate_cases if _case_string_value(case, "id") == primary_case_id),
+            None,
+        )
+    primary_command_plan = (
+        _candidate_promotion_command_plan(
+            commands=_case_string_list(primary_case, "commands"),
+            candidate_package_validation_command=CANDIDATE_PACKAGE_VALIDATION_COMMAND,
+        )
+        if primary_case is not None
+        else []
+    )
+    primary_runbook = _candidate_primary_task_runbook(primary, primary_command_plan)
     return {
         "candidate_count": len(candidate_cases),
         "task_count": sum(status_counts.values()),
@@ -1812,6 +1840,7 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
         "primary_task": primary,
         "primary_task_detail": primary,
         "primary_next_task": primary,
+        "primary_next_task_runbook": primary_runbook,
         "primary_next_action": primary["next_action"] if primary else "",
     }
 
@@ -2134,6 +2163,17 @@ def _candidate_primary_task_runbook(
         }
     )
     return runbook
+
+
+def _primary_runbook_from_summary(summary: dict[str, Any]) -> list[dict[str, Any]]:
+    runbook = summary.get("primary_next_task_runbook")
+    if not isinstance(runbook, list):
+        return []
+    return [dict(step) for step in runbook if isinstance(step, dict)]
+
+
+def _runbook_steps(runbook: list[dict[str, Any]]) -> list[str]:
+    return [str(step.get("step") or "") for step in runbook if step.get("step")]
 
 
 def _candidate_primary_runbook_markdown(runbook: list[dict[str, Any]]) -> list[str]:
@@ -2486,6 +2526,17 @@ def _print_text(plan: IterationPlan) -> None:
     primary_next_action = plan.case_promotion_evidence_summary.get("primary_next_action")
     if primary_next_action:
         print(f"case_promotion_evidence_primary_next_action: {primary_next_action}")
+    primary_runbook = _primary_runbook_from_summary(plan.case_promotion_evidence_summary)
+    primary_runbook_steps = _runbook_steps(primary_runbook)
+    if primary_runbook_steps:
+        print(
+            "case_promotion_evidence_primary_runbook_steps: "
+            f"{' -> '.join(primary_runbook_steps)}"
+        )
+        print(
+            "case_promotion_evidence_primary_runbook_steps_sha256: "
+            f"{_stable_json_sha256(primary_runbook_steps)}"
+        )
     if plan.candidate_promotions:
         print("candidate_promotions:")
         for promotion in plan.candidate_promotions:
@@ -2597,6 +2648,8 @@ def _render_markdown(plan: IterationPlan) -> str:
     primary_candidate_action = _format_context_value(
         plan.case_promotion_evidence_summary.get("primary_next_action")
     )
+    primary_runbook = _primary_runbook_from_summary(plan.case_promotion_evidence_summary)
+    primary_runbook_steps = _runbook_steps(primary_runbook)
     primary_publication_action = _format_context_value(
         plan.publication_next_actions[0] if plan.publication_next_actions else None
     )
@@ -2680,6 +2733,9 @@ def _render_markdown(plan: IterationPlan) -> str:
 | case_promotion_command_plan_summary_sha256 | `{_stable_json_sha256(plan.case_promotion_command_plan_summary)}` |
 | case_promotion_evidence_primary_next_task | `{primary_candidate_task_value}` |
 | case_promotion_evidence_primary_next_action | `{primary_candidate_action}` |
+| case_promotion_evidence_primary_runbook_step_count | `{len(primary_runbook_steps)}` |
+| case_promotion_evidence_primary_runbook_steps | `{json.dumps(primary_runbook_steps, ensure_ascii=False)}` |
+| case_promotion_evidence_primary_runbook_steps_sha256 | `{_stable_json_sha256(primary_runbook_steps)}` |
 | case_promotion_command_plan_all_declared | `{command_plan_all_declared}` |
 | case_promotion_command_plan_missing_command_count | `{command_plan_missing_count}` |
 | plan_report_command | `{plan.plan_report_command}` |
@@ -4414,6 +4470,12 @@ def _issue_artifact_bundle_summary(
     )
     if not isinstance(case_promotion_evidence_primary_next_task, dict):
         case_promotion_evidence_primary_next_task = {}
+    case_promotion_evidence_primary_runbook = _primary_runbook_from_summary(
+        plan.case_promotion_evidence_summary
+    )
+    case_promotion_evidence_primary_runbook_steps = _runbook_steps(
+        case_promotion_evidence_primary_runbook
+    )
     command_plan_summary = plan.case_promotion_command_plan_summary
     blocker_boundary = {
         "first_item": plan.blockers[0] if plan.blockers else None,
@@ -4611,6 +4673,18 @@ def _issue_artifact_bundle_summary(
         ),
         "case_promotion_evidence_primary_next_task_sha256": _stable_json_sha256(
             case_promotion_evidence_primary_next_task
+        ),
+        "case_promotion_evidence_primary_runbook_step_count": len(
+            case_promotion_evidence_primary_runbook_steps
+        ),
+        "case_promotion_evidence_primary_runbook_steps": list(
+            case_promotion_evidence_primary_runbook_steps
+        ),
+        "case_promotion_evidence_primary_runbook_steps_sha256": _stable_json_sha256(
+            case_promotion_evidence_primary_runbook_steps
+        ),
+        "case_promotion_evidence_primary_runbook_sha256": _stable_json_sha256(
+            case_promotion_evidence_primary_runbook
         ),
         "case_promotion_command_plan_summary_sha256": _stable_json_sha256(
             command_plan_summary
@@ -5367,6 +5441,14 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['case_promotion_evidence_primary_detail_sha256']}`",
             "- case_promotion_evidence_primary_next_task_sha256: "
             f"`{summary['case_promotion_evidence_primary_next_task_sha256']}`",
+            "- case_promotion_evidence_primary_runbook_step_count: "
+            f"`{summary['case_promotion_evidence_primary_runbook_step_count']}`",
+            "- case_promotion_evidence_primary_runbook_steps: "
+            f"`{json.dumps(summary['case_promotion_evidence_primary_runbook_steps'], ensure_ascii=False)}`",
+            "- case_promotion_evidence_primary_runbook_steps_sha256: "
+            f"`{summary['case_promotion_evidence_primary_runbook_steps_sha256']}`",
+            "- case_promotion_evidence_primary_runbook_sha256: "
+            f"`{summary['case_promotion_evidence_primary_runbook_sha256']}`",
             "- case_promotion_command_plan_summary_sha256: "
             f"`{summary['case_promotion_command_plan_summary_sha256']}`",
             "- case_promotion_command_plan_candidate_count: "

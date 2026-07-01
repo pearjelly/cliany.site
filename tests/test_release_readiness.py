@@ -1137,7 +1137,20 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
 
     release_readiness._write_markdown_report(report, report_path)
 
+    payload = report.to_dict()
+    primary_runbook = payload["cases"]["promotion_evidence_summary"]["primary_next_task_runbook"]
+    primary_runbook_steps = [step["step"] for step in primary_runbook]
     text = report_path.read_text(encoding="utf-8")
+    assert payload["case_promotion_evidence_primary_runbook"] == primary_runbook
+    assert payload["case_promotion_evidence_primary_runbook_step_count"] == 3
+    assert payload["case_promotion_evidence_primary_runbook_steps"] == [
+        "llm_live_preflight",
+        "adapter_package",
+        "acceptance",
+    ]
+    assert payload["case_promotion_evidence_primary_runbook_steps_sha256"] == (
+        release_readiness._stable_json_sha256(primary_runbook_steps)
+    )
     assert "## Candidate Primary Next Task" in text
     assert (
         "| `candidate-case` | `adapter_package` | `pending` | Not attached yet. | "
