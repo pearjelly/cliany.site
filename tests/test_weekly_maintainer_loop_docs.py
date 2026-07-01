@@ -281,6 +281,8 @@ def test_weekly_maintainer_loop_doc_has_required_sections():
         "Candidate Issue Gate Evidence",
         "Candidate Promotion Evidence Summary",
         "case_promotion_evidence_summary",
+        "promotion_evidence_summary.primary_next_task.doctor_preflight_evidence_template_sha256",
+        "primary_doctor_preflight_evidence_template_sha256",
         "candidate_count",
         "task_count",
         "pending_count",

@@ -37,6 +37,12 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "promotion_plan.primary_doctor_preflight_evidence_template_sha256" in index
     assert "primary_doctor_preflight_evidence_template_sha256" in index
     assert "task_queue[*].doctor_preflight_evidence_template_sha256" in index
+    assert (
+        "promotion_evidence_summary.primary_next_task."
+        "doctor_preflight_evidence_template_sha256"
+        in index
+    )
+    assert "scripts/validate_cases.py --report" in index
     assert "issue_template_json_command" in index
     assert "primary_next_task_acceptance_criteria" in index
     assert "preflight_required" in index
@@ -79,6 +85,12 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "promotion_plan.primary_doctor_preflight_evidence_template_sha256" in script
     assert "primary_doctor_preflight_evidence_template_sha256" in script
     assert "task_queue[*].doctor_preflight_evidence_template_sha256" in script
+    assert (
+        "promotion_evidence_summary.primary_next_task."
+        "doctor_preflight_evidence_template_sha256"
+        in script
+    )
+    assert "scripts/validate_cases.py --report" in script
     assert "issue_template_json_command" in script
     assert "python scripts/plan_next_iteration.py --issues-dir" in script
     assert "Primary Acceptance Criteria" in script

@@ -157,6 +157,10 @@ const I18N = {
     zh: '只读取队列的自动化可以通过 <code>promotion_plan.primary_doctor_preflight_evidence_template_sha256</code>、candidate <code>primary_doctor_preflight_evidence_template_sha256</code> 和 <code>task_queue[*].doctor_preflight_evidence_template_sha256</code> 比对 doctor 证据模板漂移，不必展开完整 evidence bundle。',
     en: 'Queue-only automation can compare doctor evidence drift from <code>promotion_plan.primary_doctor_preflight_evidence_template_sha256</code>, candidate <code>primary_doctor_preflight_evidence_template_sha256</code>, and <code>task_queue[*].doctor_preflight_evidence_template_sha256</code> without opening a full evidence bundle.'
   },
+  'qs.contribute.validation': {
+    zh: '只读取 validation 的自动化可以从 <code>scripts/validate_cases.py --json</code> 的 <code>promotion_evidence_summary.primary_next_task.doctor_preflight_evidence_template_sha256</code>，或 <code>scripts/validate_cases.py --report</code> 的 <code>primary_doctor_preflight_evidence_template_sha256</code> 读取同源模板漂移信号。',
+    en: 'Validation-only automation can read <code>promotion_evidence_summary.primary_next_task.doctor_preflight_evidence_template_sha256</code> from <code>scripts/validate_cases.py --json</code> or <code>primary_doctor_preflight_evidence_template_sha256</code> from <code>scripts/validate_cases.py --report</code>.'
+  },
   'qs.contribute.goodfirst': {
     zh: '首次贡献者可以从 <code>docs/good-first-issues.md</code> 开始，选择默认离线、可本地验证的任务。',
     en: 'First-time contributors can start from <code>docs/good-first-issues.md</code> for offline, locally verifiable tasks.'

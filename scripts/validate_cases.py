@@ -227,6 +227,18 @@ def _stable_json_sha256(value: Any) -> str:
     return _sha256_bytes(payload.encode("utf-8"))
 
 
+def _doctor_preflight_evidence_template() -> dict[str, str]:
+    placeholder = "<paste from doctor --llm-live --json>"
+    return {field: placeholder for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS}
+
+
+def _doctor_preflight_evidence_template_aliases(template: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "doctor_preflight_evidence_template_field_count": len(template),
+        "doctor_preflight_evidence_template_sha256": _stable_json_sha256(template),
+    }
+
+
 def _safe_member_names(tar: tarfile.TarFile) -> tuple[list[str], list[str]]:
     names = [member.name for member in tar.getmembers()]
     unsafe = [name for name in names if name.startswith("/") or ".." in Path(name).parts]
@@ -805,6 +817,9 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
                 status_counts[status] += 1
                 task_status_counts[field_name][status] += 1
             llm_live_preflight_required = field_name == "adapter_package"
+            doctor_preflight_evidence_template = (
+                _doctor_preflight_evidence_template() if llm_live_preflight_required else {}
+            )
             entry = {
                 "case_id": check.id,
                 "task": field_name,
@@ -834,6 +849,10 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
                     list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS)
                     if llm_live_preflight_required
                     else []
+                ),
+                "doctor_preflight_evidence_template": doctor_preflight_evidence_template,
+                **_doctor_preflight_evidence_template_aliases(
+                    doctor_preflight_evidence_template
                 ),
                 "acceptance_criteria": PROMOTION_ACCEPTANCE_CRITERIA[field_name],
             }
@@ -1174,6 +1193,8 @@ def _package_summary(package: dict[str, Any] | None) -> str:
 
 
 def _candidate_promotion_evidence_summary_lines(summary: dict[str, Any]) -> list[str]:
+    primary_task = summary.get("primary_task_detail")
+    primary_task = primary_task if isinstance(primary_task, dict) else {}
     lines = [
         "",
         "## Candidate Promotion Evidence Summary",
@@ -1198,6 +1219,10 @@ def _candidate_promotion_evidence_summary_lines(summary: dict[str, Any]) -> list
         f"`{_markdown_cell(summary.get('llm_live_preflight_evidence_field_count') or 0)}` |",
         "| llm_live_preflight_evidence_fields_sha256 | "
         f"`{_markdown_cell(summary.get('llm_live_preflight_evidence_fields_sha256') or '-')}` |",
+        "| primary_doctor_preflight_evidence_template_field_count | "
+        f"`{_markdown_cell(primary_task.get('doctor_preflight_evidence_template_field_count') or 0)}` |",
+        "| primary_doctor_preflight_evidence_template_sha256 | "
+        f"`{_markdown_cell(primary_task.get('doctor_preflight_evidence_template_sha256') or '-')}` |",
         f"| primary_task_detail | `{json.dumps(summary.get('primary_task_detail') or {}, ensure_ascii=False)}` |",
         f"| primary_next_task | `{json.dumps(summary.get('primary_next_task') or {}, ensure_ascii=False)}` |",
         "",

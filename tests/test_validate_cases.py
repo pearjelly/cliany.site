@@ -15,6 +15,25 @@ assert SPEC.loader is not None
 sys.modules[SPEC.name] = validate_cases
 SPEC.loader.exec_module(validate_cases)
 
+DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE = {
+    field: "<paste from doctor --llm-live --json>"
+    for field in validate_cases.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+}
+DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT = len(
+    DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
+)
+DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256 = hashlib.sha256(
+    json.dumps(
+        DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+).hexdigest()
+EMPTY_TEMPLATE_SHA256 = hashlib.sha256(
+    json.dumps({}, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+).hexdigest()
+
 
 def _write_cases(root: Path, cases: list[dict]) -> None:
     cases_dir = root / "cases"
@@ -351,6 +370,13 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         "doctor_preflight_evidence_fields": list(
             validate_cases.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         ),
+        "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+        "doctor_preflight_evidence_template_field_count": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+        ),
+        "doctor_preflight_evidence_template_sha256": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+        ),
         "acceptance_criteria": (
             "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
             "package path or GitHub Release asset name."
@@ -359,6 +385,19 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     assert (
         summary["pending_tasks"][0]["expected_adapter_package"]
         == "demo.example.com-<version>.cliany-adapter.tar.gz"
+    )
+    assert summary["pending_tasks"][0]["doctor_preflight_evidence_template"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
+    )
+    assert (
+        summary["pending_tasks"][0]["doctor_preflight_evidence_template_sha256"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+    )
+    assert summary["pending_tasks"][1]["doctor_preflight_evidence_template"] == {}
+    assert summary["pending_tasks"][1]["doctor_preflight_evidence_template_field_count"] == 0
+    assert (
+        summary["pending_tasks"][1]["doctor_preflight_evidence_template_sha256"]
+        == EMPTY_TEMPLATE_SHA256
     )
     assert summary["primary_task_detail"] == summary["primary_task"]
     assert summary["primary_next_task"] == summary["primary_task_detail"]
@@ -610,6 +649,9 @@ def test_cases_report_prioritizes_candidate_with_more_complete_evidence(tmp_path
         "llm_live_preflight_blocker_note": "",
         "llm_live_preflight_evidence_fields": [],
         "doctor_preflight_evidence_fields": [],
+        "doctor_preflight_evidence_template": {},
+        "doctor_preflight_evidence_template_field_count": 0,
+        "doctor_preflight_evidence_template_sha256": EMPTY_TEMPLATE_SHA256,
         "acceptance_criteria": (
             "Paste `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
             "--include-candidate-packages --strict` output showing the candidate package "
@@ -980,6 +1022,11 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "| pending_count | `3` |" in text
     assert "| primary_next_action | Generate the adapter package. |" in text
     assert "| primary_next_task_acceptance_criteria | Attach the generated" in text
+    assert "| primary_doctor_preflight_evidence_template_field_count | `10` |" in text
+    assert (
+        "| primary_doctor_preflight_evidence_template_sha256 | "
+        f"`{DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256}` |"
+    ) in text
     assert "primary_task_detail" in text
     assert "primary_next_task" in text
     assert "llm_live_preflight_evidence_field_count" in text
