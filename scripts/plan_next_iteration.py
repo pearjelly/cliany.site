@@ -46,6 +46,17 @@ LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT = (
     "until `summary.llm_live_preflight.ready=true` and "
     "`summary.capabilities.generate_adapters.ready=true`."
 )
+DOCTOR_PREFLIGHT_BLOCKER_COMMENT = (
+    "Doctor preflight is blocking candidate promotion. Paste the doctor JSON fields "
+    "`summary.ready_for_explore`, `summary.capabilities.run_browser_workflows.ready`, "
+    "`summary.capabilities.generate_adapters.ready`, `checks[cdp].status`, "
+    "`checks[cdp].action`, `checks[llm_live].status`, "
+    "`checks[llm_live].details.error_code`, `checks[llm_live].details.retryable`, "
+    "`checks[llm_live].details.phase`, and `checks[llm_live].details.message`; "
+    "keep `adapter_package` pending or blocked until "
+    "`summary.ready_for_explore=true` and "
+    "`summary.capabilities.generate_adapters.ready=true`."
+)
 LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = (
     "summary.ready_for_explore",
     "summary.llm_live_preflight",
@@ -235,6 +246,7 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "case_promotion_evidence_primary_llm_live_preflight_command",
     "case_promotion_evidence_primary_llm_live_preflight_blocker_note",
     "case_promotion_evidence_primary_llm_live_preflight_blocker_comment",
+    "case_promotion_evidence_primary_doctor_preflight_blocker_comment",
     "case_promotion_llm_live_preflight_evidence_field_count",
     "case_promotion_llm_live_preflight_evidence_fields",
     "case_promotion_llm_live_preflight_evidence_fields_sha256",
@@ -625,6 +637,7 @@ class CandidatePromotion:
     llm_live_preflight_command: str
     llm_live_preflight_blocker_note: str
     llm_live_preflight_blocker_comment: str
+    doctor_preflight_blocker_comment: str
     llm_live_preflight_evidence_fields: list[str]
     evidence_bundle_command: str
     evidence_bundle_json_command: str
@@ -656,6 +669,9 @@ class CandidatePromotion:
             "llm_live_preflight_blocker_note": self.llm_live_preflight_blocker_note,
             "llm_live_preflight_blocker_comment": (
                 self.llm_live_preflight_blocker_comment
+            ),
+            "doctor_preflight_blocker_comment": (
+                self.doctor_preflight_blocker_comment
             ),
             "llm_live_preflight_evidence_fields": self.llm_live_preflight_evidence_fields,
             "evidence_bundle_command": self.evidence_bundle_command,
@@ -853,6 +869,7 @@ class IterationPlan:
                 else None
             ),
             **_primary_llm_live_preflight_aliases(primary_next_task),
+            **_primary_doctor_preflight_aliases(primary_next_task),
             "case_promotion_llm_live_preflight_evidence_fields": (
                 llm_live_preflight_evidence_fields
             ),
@@ -2445,6 +2462,7 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 llm_live_preflight_command=LLM_LIVE_PREFLIGHT_COMMAND,
                 llm_live_preflight_blocker_note=LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
                 llm_live_preflight_blocker_comment=LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT,
+                doctor_preflight_blocker_comment=DOCTOR_PREFLIGHT_BLOCKER_COMMENT,
                 llm_live_preflight_evidence_fields=list(
                     LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
                 ),
@@ -2647,6 +2665,17 @@ def _primary_llm_live_preflight_aliases(primary_task: dict[str, Any] | None) -> 
     }
 
 
+def _primary_doctor_preflight_aliases(primary_task: dict[str, Any] | None) -> dict[str, Any]:
+    task = primary_task if isinstance(primary_task, dict) else {}
+    required = task.get("llm_live_preflight_required")
+    blocker_comment = DOCTOR_PREFLIGHT_BLOCKER_COMMENT if required is True else None
+    return {
+        "case_promotion_evidence_primary_doctor_preflight_blocker_comment": (
+            blocker_comment
+        ),
+    }
+
+
 def _candidate_primary_runbook_markdown(runbook: list[dict[str, Any]]) -> list[str]:
     if not runbook:
         return []
@@ -2779,6 +2808,9 @@ def _candidate_issue_body(
             "",
             "## LLM Preflight Blocker Comment",
             LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT,
+            "",
+            "## Doctor Preflight Blocker Comment",
+            DOCTOR_PREFLIGHT_BLOCKER_COMMENT,
             "",
             "## LLM Preflight Evidence Fields",
             *(f"- `{field}`" for field in LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS),
@@ -3280,6 +3312,14 @@ def _render_markdown(plan: IterationPlan) -> str:
             "case_promotion_evidence_primary_llm_live_preflight_blocker_comment"
         ]
     )
+    primary_doctor_preflight_aliases = _primary_doctor_preflight_aliases(
+        primary_candidate_task if isinstance(primary_candidate_task, dict) else None
+    )
+    primary_doctor_preflight_blocker_comment_text = _summary_inline_code(
+        primary_doctor_preflight_aliases[
+            "case_promotion_evidence_primary_doctor_preflight_blocker_comment"
+        ]
+    )
     llm_live_preflight_evidence_fields = _llm_live_preflight_evidence_fields_from_summary(
         plan.case_promotion_evidence_summary
     )
@@ -3494,6 +3534,7 @@ def _render_markdown(plan: IterationPlan) -> str:
 | case_promotion_evidence_primary_llm_live_preflight_command | `{primary_preflight_command_text}` |
 | case_promotion_evidence_primary_llm_live_preflight_blocker_note | `{primary_preflight_blocker_note_text}` |
 | case_promotion_evidence_primary_llm_live_preflight_blocker_comment | {primary_preflight_blocker_comment_text} |
+| case_promotion_evidence_primary_doctor_preflight_blocker_comment | {primary_doctor_preflight_blocker_comment_text} |
 | case_promotion_llm_live_preflight_evidence_field_count | `{len(llm_live_preflight_evidence_fields)}` |
 | case_promotion_llm_live_preflight_evidence_fields | `{llm_live_preflight_evidence_fields_text}` |
 | case_promotion_llm_live_preflight_evidence_fields_sha256 | `{llm_live_preflight_evidence_fields_sha256}` |
@@ -5813,6 +5854,7 @@ def _issue_artifact_bundle_summary(
             case_promotion_evidence_primary_runbook
         ),
         **_primary_llm_live_preflight_aliases(case_promotion_evidence_primary_next_task),
+        **_primary_doctor_preflight_aliases(case_promotion_evidence_primary_next_task),
         "case_promotion_llm_live_preflight_evidence_field_count": len(
             llm_live_preflight_evidence_fields
         ),
@@ -6656,6 +6698,8 @@ def _issue_artifact_bundle_summary_markdown(
             f"{_summary_inline_code(summary['case_promotion_evidence_primary_llm_live_preflight_blocker_note'])}",
             "- case_promotion_evidence_primary_llm_live_preflight_blocker_comment: "
             f"{_summary_inline_code(summary['case_promotion_evidence_primary_llm_live_preflight_blocker_comment'])}",
+            "- case_promotion_evidence_primary_doctor_preflight_blocker_comment: "
+            f"{_summary_inline_code(summary['case_promotion_evidence_primary_doctor_preflight_blocker_comment'])}",
             "- case_promotion_llm_live_preflight_evidence_field_count: "
             f"`{summary['case_promotion_llm_live_preflight_evidence_field_count']}`",
             "- case_promotion_llm_live_preflight_evidence_fields: "
