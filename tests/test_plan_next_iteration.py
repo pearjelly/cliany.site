@@ -690,6 +690,47 @@ def test_plan_treats_published_release_with_unreleased_head_as_visible(tmp_path)
     )
 
 
+def test_candidate_issue_gate_surfaces_release_readiness_blocker_after_publication(tmp_path):
+    _write_pyproject(tmp_path, version="0.16.1")
+    readiness = _readiness_report()
+    pause_action = (
+        "Pause release tagging until the next day; creating `v0.16.2` today would make "
+        "release tags `4/3`."
+    )
+    readiness.blockers = [
+        "creating target tag v0.16.2 today would exceed the daily release cap 4/3"
+    ]
+    readiness.next_actions = [pause_action]
+    readiness.draft = SimpleNamespace(
+        ok=True,
+        path="/tmp/project/docs/releases/v0.16.2-draft.md",
+        target_version="0.16.2",
+        issues=[],
+    )
+
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=readiness,
+        publication_report=_published_release_with_unreleased_head_report(),
+    )
+
+    assert plan.candidate_issue_gate["status"] == "review_required"
+    assert plan.candidate_issue_gate["can_create_issues"] is True
+    assert plan.candidate_issue_gate["requires_maintainer_review"] is True
+    assert plan.candidate_issue_gate["reason_codes"] == ["release_readiness_blockers"]
+    assert (
+        plan.candidate_issue_gate["reason_descriptions"]["release_readiness_blockers"]
+        == "The target release is still blocked by release readiness."
+    )
+    assert plan.candidate_issue_gate["required_actions"] == [pause_action]
+    assert plan.candidate_issue_gate["primary_required_action"] == pause_action
+    assert (
+        plan.candidate_issue_gate["evidence"]["release_readiness_primary_blocker"]
+        == "creating target tag v0.16.2 today would exceed the daily release cap 4/3"
+    )
+    assert plan.candidate_issue_gate["evidence"]["release_readiness_blocker_count"] == 1
+
+
 def test_summary_inline_code_uses_wider_fence_for_backticks():
     assert plan_next_iteration._summary_inline_code("Push `master` to `origin`") == (
         "`` Push `master` to `origin` ``"

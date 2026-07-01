@@ -1246,16 +1246,23 @@ def _publication_visibility(publication: Any) -> dict[str, str]:
 
 def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
     release_draft_issues = _release_draft_issues(readiness)
+    release_readiness_blockers = _release_readiness_blockers(readiness)
     target_version = str(getattr(readiness, "target_version", "") or "") or None
     evidence = _candidate_issue_gate_evidence(readiness, publication, target_version)
     reason_codes = _candidate_issue_gate_reason_codes(release_draft_issues, publication)
+    if release_readiness_blockers:
+        reason_codes.append("release_readiness_blockers")
     reason_descriptions = _candidate_issue_gate_reason_descriptions(reason_codes)
     release_draft_actions = _release_draft_required_actions(release_draft_issues)
+    release_readiness_actions = _release_readiness_required_actions(
+        readiness,
+        release_readiness_blockers,
+    )
     if not _latest_release_visible(publication):
         publication_actions = _publication_next_actions(publication) or [
             "Run python scripts/check_release_publication.py --json and resolve publication blockers."
         ]
-        actions = [*publication_actions, *release_draft_actions]
+        actions = [*publication_actions, *release_draft_actions, *release_readiness_actions]
         return {
             "status": "blocked_by_publication",
             "can_create_issues": False,
@@ -1270,7 +1277,7 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
             "evidence": evidence,
         }
     if release_draft_issues:
-        actions = release_draft_actions
+        actions = [*release_draft_actions, *release_readiness_actions]
         return {
             "status": "review_required",
             "can_create_issues": True,
@@ -1282,6 +1289,20 @@ def _candidate_issue_gate(readiness: Any, publication: Any) -> dict[str, Any]:
                 reason_codes, reason_descriptions
             ),
             **_candidate_issue_gate_action_fields(actions),
+            "evidence": evidence,
+        }
+    if release_readiness_blockers:
+        return {
+            "status": "review_required",
+            "can_create_issues": True,
+            "requires_maintainer_review": True,
+            "summary": "Release readiness blockers must be resolved or intentionally deferred before tagging.",
+            **_candidate_issue_gate_reason_fields(reason_codes),
+            "reason_descriptions": reason_descriptions,
+            "primary_reason_description": _candidate_issue_gate_primary_reason_description(
+                reason_codes, reason_descriptions
+            ),
+            **_candidate_issue_gate_action_fields(release_readiness_actions),
             "evidence": evidence,
         }
     actions: list[str] = []
@@ -1320,6 +1341,20 @@ def _candidate_issue_gate_action_fields(actions: list[str]) -> dict[str, Any]:
 
 def _release_draft_required_actions(release_draft_issues: list[str]) -> list[str]:
     return [f"Resolve release draft issue: {issue}" for issue in release_draft_issues]
+
+
+def _release_readiness_blockers(readiness: Any) -> list[str]:
+    blockers = [str(blocker) for blocker in getattr(readiness, "blockers", [])]
+    return [blocker for blocker in blockers if blocker != "release draft validation failed"]
+
+
+def _release_readiness_required_actions(readiness: Any, blockers: list[str]) -> list[str]:
+    if not blockers:
+        return []
+    actions = _readiness_next_actions(readiness)
+    if actions:
+        return actions
+    return [f"Resolve release readiness blocker: {blocker}" for blocker in blockers]
 
 
 def _candidate_issue_gate_primary_reason_description(
@@ -1361,6 +1396,7 @@ def _candidate_issue_gate_reason_descriptions(reason_codes: list[str]) -> dict[s
         "tag_not_visible": "The latest local release tag is not visible on the configured remote.",
         "needs_remote_check": "Live remote refs have not been checked yet.",
         "release_draft_issues": "The target release draft still has validation issues.",
+        "release_readiness_blockers": "The target release is still blocked by release readiness.",
     }
     return {code: descriptions[code] for code in reason_codes if code in descriptions}
 
@@ -1369,6 +1405,7 @@ def _candidate_issue_gate_evidence(
     readiness: Any, publication: Any, target_version: str | None = None
 ) -> dict[str, Any]:
     release_draft_issues = _release_draft_issues(readiness)
+    release_readiness_blockers = _release_readiness_blockers(readiness)
     publication_visibility = _publication_visibility(publication)
     tag_decision = _publication_tag_publish_decision(
         publication,
@@ -1376,7 +1413,7 @@ def _candidate_issue_gate_evidence(
         readiness_blockers=list(getattr(readiness, "blockers", []) or []),
     )
     draft = getattr(readiness, "draft", None)
-    return {
+    evidence = {
         "publication_ok": bool(getattr(publication, "ok", False)),
         "publication_visibility_status": publication_visibility.get("status") or "(unknown)",
         "publication_worktree_clean": _publication_worktree_clean(publication),
@@ -1417,6 +1454,17 @@ def _candidate_issue_gate_evidence(
         "release_draft_path": _release_draft_evidence_path(readiness),
         "release_draft_issue_count": len(release_draft_issues),
     }
+    if release_readiness_blockers:
+        evidence.update(
+            {
+                "release_readiness_blocker_count": len(release_readiness_blockers),
+                "release_readiness_primary_blocker": release_readiness_blockers[0],
+                "release_readiness_blockers_sha256": _stable_json_sha256(
+                    release_readiness_blockers
+                ),
+            }
+        )
+    return evidence
 
 
 def _release_draft_evidence_path(readiness: Any) -> str:
