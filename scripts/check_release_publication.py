@@ -72,6 +72,8 @@ class PublicationReport:
     tag_points_at_head: bool
     tag_commit_in_upstream: bool | None
     remote_checked: bool
+    remote_check_ok: bool | None
+    remote_check_issues: list[str]
     remote_branch_head: str | None
     remote_tag_commit: str | None
     branch_published: bool | None
@@ -100,6 +102,8 @@ class PublicationReport:
             "tag_points_at_head": self.tag_points_at_head,
             "tag_commit_in_upstream": self.tag_commit_in_upstream,
             "remote_checked": self.remote_checked,
+            "remote_check_ok": self.remote_check_ok,
+            "remote_check_issues": self.remote_check_issues,
             "remote_branch_head": self.remote_branch_head,
             "remote_tag_commit": self.remote_tag_commit,
             "branch_published": self.branch_published,
@@ -163,15 +167,18 @@ def _remote_from_upstream(upstream: str | None, fallback: str) -> str:
     return fallback
 
 
-def _ls_remote_ref(root: Path, remote: str, ref: str) -> str | None:
-    output = _optional_git(["ls-remote", remote, ref], root)
+def _ls_remote_ref(root: Path, remote: str, ref: str) -> tuple[str | None, str | None]:
+    try:
+        output = _run_git(["ls-remote", remote, ref], root)
+    except subprocess.CalledProcessError:
+        return None, f"Remote ref check failed for `{ref}` on `{remote}`."
     if not output:
-        return None
+        return None, None
     for line in output.splitlines():
         parts = line.split()
         if len(parts) == 2 and parts[1] == ref:
-            return parts[0]
-    return None
+            return parts[0], None
+    return None, None
 
 
 def _worktree_status(root: Path) -> list[str]:
@@ -339,14 +346,29 @@ def build_report(
 
     remote_branch_head = None
     remote_tag_commit = None
+    remote_check_ok = None
+    remote_check_issues: list[str] = []
     branch_published = ahead_count == 0 if ahead_count is not None else None
     tag_published = tag_commit_in_upstream
 
     if remote_check:
-        remote_branch_head = _ls_remote_ref(root, remote_name, f"refs/heads/{branch}") if branch else None
-        remote_tag_commit = _ls_remote_ref(root, remote_name, f"refs/tags/{latest_tag}") if latest_tag else None
-        branch_published = bool(local_head and remote_branch_head == local_head)
-        tag_published = bool(tag_commit and remote_tag_commit == tag_commit)
+        remote_check_ok = True
+        if branch:
+            remote_branch_head, branch_issue = _ls_remote_ref(
+                root, remote_name, f"refs/heads/{branch}"
+            )
+            if branch_issue:
+                remote_check_issues.append(branch_issue)
+        if latest_tag:
+            remote_tag_commit, tag_issue = _ls_remote_ref(
+                root, remote_name, f"refs/tags/{latest_tag}"
+            )
+            if tag_issue:
+                remote_check_issues.append(tag_issue)
+        remote_check_ok = not remote_check_issues
+        if remote_check_ok:
+            branch_published = bool(local_head and remote_branch_head == local_head)
+            tag_published = bool(tag_commit and remote_tag_commit == tag_commit)
 
     distribution = _build_distribution_report(
         root,
@@ -362,6 +384,7 @@ def build_report(
         and tag_points_at_head
         and worktree_clean
         and latest_tag
+        and remote_check_ok is not False
     )
     ok = refs_ok and distribution.ok
 
@@ -382,6 +405,8 @@ def build_report(
         tag_points_at_head=tag_points_at_head,
         tag_commit_in_upstream=tag_commit_in_upstream,
         remote_checked=remote_check,
+        remote_check_ok=remote_check_ok,
+        remote_check_issues=remote_check_issues,
         remote_branch_head=remote_branch_head,
         remote_tag_commit=remote_tag_commit,
         branch_published=branch_published,
@@ -423,6 +448,8 @@ def _next_action_lines(report: PublicationReport) -> list[str]:
             )
     if not report.remote_checked:
         actions.append("Rerun with `--remote` when network access is available to verify live remote refs.")
+    elif report.remote_check_ok is False:
+        actions.append("Remote ref check failed; rerun with `--remote` after network access is available.")
     actions.extend(report.distribution.to_dict()["next_actions"])
     return actions
 
@@ -453,6 +480,8 @@ def _distribution_next_actions(report: DistributionReport) -> list[str]:
 def _publish_command_lines(report: PublicationReport) -> list[str]:
     if not report.worktree_clean:
         return ["python scripts/check_release_publication.py --json"]
+    if report.remote_check_ok is False:
+        return ["python scripts/check_release_publication.py --remote --json"]
 
     commands: list[str] = []
     branch = report.branch
@@ -499,6 +528,15 @@ def _tag_publish_decision(report: PublicationReport) -> dict[str, Any]:
                 "Move to the latest tag commit or create a new release tag at HEAD "
                 "before publishing a tag."
             ),
+        }
+    if report.remote_check_ok is False:
+        return {
+            "status": "needs_remote_check",
+            "can_push_tag": False,
+            "latest_tag": report.latest_tag,
+            "tag_points_at_head": True,
+            "tag_published": report.tag_published,
+            "required_action": "Rerun with `--remote` to verify the live remote tag.",
         }
     if report.tag_published is True:
         return {
@@ -558,6 +596,7 @@ def _print_text(report: PublicationReport) -> None:
     print(f"distribution_ok: {report.distribution.ok}")
     print(f"tag_publish_decision: {tag_publish_decision['status']}")
     print(f"remote_checked: {report.remote_checked}")
+    print(f"remote_check_ok: {report.remote_check_ok}")
     print(f"next_action_count: {len(next_actions)}")
     print(f"next_actions_sha256: {_stable_json_sha256(next_actions)}")
     print(f"primary_next_action: {next_actions[0] if next_actions else '(none)'}")
@@ -568,6 +607,10 @@ def _print_text(report: PublicationReport) -> None:
         print("worktree_status:")
         for line in report.worktree_status:
             print(f"- {line}")
+    if report.remote_check_issues:
+        print("remote_check_issues:")
+        for issue in report.remote_check_issues:
+            print(f"- {issue}")
     if report.distribution.checked:
         print("distribution:")
         print(f"- github_repo: {report.distribution.github_repo or '(none)'}")
@@ -628,6 +671,7 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
         f"| tag_publish_decision | `{tag_publish_decision['status']}` |",
         f"| tag_can_push | `{_format_bool(tag_publish_decision['can_push_tag'])}` |",
         f"| remote_checked | `{_format_bool(report.remote_checked)}` |",
+        f"| remote_check_ok | `{_format_bool(report.remote_check_ok)}` |",
         f"| next_action_count | `{len(next_actions)}` |",
         f"| next_actions_sha256 | `{_stable_json_sha256(next_actions)}` |",
         f"| primary_next_action | `{_format_value(next_actions[0] if next_actions else None)}` |",
@@ -664,6 +708,15 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
         lines.extend(["", "## Worktree Status", "", "```text", *report.worktree_status, "```"])
     else:
         lines.extend(["", "## Worktree Status", "", "- Worktree is clean."])
+    if report.remote_check_issues:
+        lines.extend(
+            [
+                "",
+                "## Remote Check Issues",
+                "",
+                *(f"- {issue}" for issue in report.remote_check_issues),
+            ]
+        )
     if report.distribution.checked:
         lines.extend(
             [

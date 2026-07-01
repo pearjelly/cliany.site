@@ -208,6 +208,48 @@ def test_release_publication_remote_check_reports_missing_remote_tag(tmp_path):
     ]
 
 
+def test_release_publication_remote_check_failure_is_not_missing_refs(tmp_path, monkeypatch):
+    repo = _init_repo_with_origin(tmp_path)
+    original_run_git = release_publication._run_git
+
+    def flaky_run_git(args: list[str], cwd: Path) -> str:
+        if args and args[0] == "ls-remote":
+            raise subprocess.CalledProcessError(
+                128,
+                ["git", *args],
+                stderr="fatal: unable to access remote\n",
+            )
+        return original_run_git(args, cwd)
+
+    monkeypatch.setattr(release_publication, "_run_git", flaky_run_git)
+
+    report = release_publication.build_report(repo, remote_check=True)
+    payload = report.to_dict()
+
+    assert report.ok is False
+    assert report.branch_published is True
+    assert report.tag_published is True
+    assert report.remote_check_ok is False
+    assert report.remote_check_issues == [
+        "Remote ref check failed for `refs/heads/master` on `origin`.",
+        "Remote ref check failed for `refs/tags/v0.1.0` on `origin`.",
+    ]
+    assert report.remote_branch_head is None
+    assert report.remote_tag_commit is None
+    assert payload["tag_publish_decision"] == {
+        "status": "needs_remote_check",
+        "can_push_tag": False,
+        "latest_tag": "v0.1.0",
+        "tag_points_at_head": True,
+        "tag_published": True,
+        "required_action": "Rerun with `--remote` to verify the live remote tag.",
+    }
+    assert payload["next_actions"] == [
+        "Remote ref check failed; rerun with `--remote` after network access is available."
+    ]
+    assert payload["publish_commands"] == ["python scripts/check_release_publication.py --remote --json"]
+
+
 def test_release_publication_text_output_includes_next_actions(tmp_path, capsys):
     repo = _init_repo_with_origin(tmp_path)
     _commit(repo, "CHANGELOG.md", "released\n", "release")

@@ -15,6 +15,7 @@
 - Candidate issue gate now surfaces non-draft release readiness blockers such as the daily release cap as `release_readiness_blockers`, so issue artifacts are marked review-required instead of silently ready while the target release cannot be tagged.
 - Candidate issue artifacts now promote release readiness blocker aliases into `publication-handoff.json` and the README quick summary, so maintainers can see why tagging is paused without expanding nested gate evidence.
 - Candidate issue creation scripts now preflight against `candidate_issue_gate.can_create_issues` instead of strict publication visibility alone, so issue artifacts remain runnable in the normal "latest release published, HEAD preparing next version" state.
+- Release publication audits now distinguish `git ls-remote` network failures from genuinely missing remote refs, keeping branch/tag publish decisions on the safe rerun path instead of suggesting unnecessary pushes.
 
 ## [0.16.250] - 2026-07-01
 
