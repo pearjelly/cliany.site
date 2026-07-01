@@ -9,6 +9,7 @@
 
 ### Fixed
 - Release readiness now projects whether creating the target tag today would exceed the daily release cap, so planning `v0.16.251` after `v0.16.248`、`v0.16.249` 和 `v0.16.250` 已发布时会明确暂停 tag，而不是继续给出第四个同日 release 命令。
+- Next-iteration planning now carries release readiness next actions such as the daily release cap pause into top-level `next_actions`, while avoiding a duplicate shorter weekly cadence action when readiness already provides the richer guidance.
 
 ## [0.16.250] - 2026-07-01
 

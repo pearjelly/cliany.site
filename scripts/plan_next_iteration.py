@@ -977,6 +977,15 @@ def _standard_release_flow_primary_next_action(readiness: Any) -> str | None:
     return str(action) if action else None
 
 
+def _readiness_next_actions(readiness: Any) -> list[str]:
+    actions = getattr(readiness, "next_actions", None)
+    if actions is None:
+        actions = _readiness_payload(readiness).get("next_actions", [])
+    if not isinstance(actions, list):
+        return []
+    return [str(action).removeprefix("- ") for action in actions]
+
+
 def _standard_release_flow(
     readiness: Any,
     publication: Any,
@@ -1510,11 +1519,14 @@ def _next_action_lines(readiness: Any, publication: Any) -> list[str]:
             actions.append(f"Push `{publication.branch or 'HEAD'}` after maintainer approval.")
         elif publication.latest_tag and publication.tag_published is False:
             actions.append(f"Publish tag `{publication.latest_tag}` after the branch is visible upstream.")
+    actions.extend(_readiness_next_actions(readiness))
     if readiness.blockers:
         actions.append("Clear release readiness blockers before tagging the target version.")
     if readiness.cadence.commit_day_count < readiness.cadence.min_commit_days:
         missing = readiness.cadence.min_commit_days - readiness.cadence.commit_day_count
-        actions.append(f"Ship verified slices on `{missing}` more unique commit days this week.")
+        cadence_action_exists = any("more unique commit days" in action for action in actions)
+        if not cadence_action_exists:
+            actions.append(f"Ship verified slices on `{missing}` more unique commit days this week.")
     if readiness.cases.candidate:
         actions.append("Promote one candidate case by collecting adapter package, metadata, and online smoke evidence.")
     if _release_draft_issues(readiness):

@@ -563,6 +563,35 @@ def test_plan_prefers_standard_release_flow_primary_action(tmp_path):
     )
 
 
+def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path):
+    _write_pyproject(tmp_path, version="0.16.1")
+    readiness = _readiness_report()
+    pause_action = (
+        "Pause release tagging until the next day; creating `v0.16.2` today would make "
+        "release tags `4/3`."
+    )
+    cadence_action = (
+        "Ship verified slices on `1` more unique commit days this week; current commit days "
+        "are `2/3`. Use `docs/weekly-maintainer-loop.md` to pick the next slice."
+    )
+    readiness.blockers = [
+        "creating target tag v0.16.2 today would exceed the daily release cap 4/3"
+    ]
+    readiness.next_actions = [cadence_action, pause_action]
+
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=readiness,
+        publication_report=_tag_mismatch_publication_report(),
+    )
+    data = plan.to_dict()
+
+    assert pause_action in plan.next_actions
+    assert pause_action in data["next_actions"]
+    assert cadence_action in plan.next_actions
+    assert "Ship verified slices on `1` more unique commit days this week." not in plan.next_actions
+
+
 def test_candidate_issue_gate_allows_creation_after_publication_with_release_draft_review(tmp_path):
     _write_pyproject(tmp_path, version="0.16.1")
     reason_codes = ["release_draft_issues"]
