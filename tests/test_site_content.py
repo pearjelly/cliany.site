@@ -32,6 +32,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "python scripts/release_readiness.py --json" in index
     assert "python scripts/check_release_cadence.py --json" in index
     assert "next_actions" in index
+    assert "weekly_commit_cadence_ok" in index
     assert "release_count_today" in index
     assert "max_daily_releases" in index
     assert "daily_release_limit_ok" in index
@@ -48,6 +49,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Acceptance Criteria" in script
     assert "First-time contributors" in script
     assert "Maintainer Loop" in script
+    assert "weekly_commit_cadence_ok" in script
     assert "release_count_today" in script
     assert "max_daily_releases" in script
     assert "daily_release_limit_ok" in script

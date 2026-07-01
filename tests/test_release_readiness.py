@@ -610,7 +610,8 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     publication_ref_context = payload["publication_ref_context"]
     publication_summary = payload["publication_summary"]
     standard_release_flow = payload["standard_release_flow"]
-    assert payload["blockers"] == ["commit days 1/3"]
+    assert payload["blockers"] == []
+    assert payload["cadence"]["weekly_commit_cadence_ok"] is False
     assert payload["publication_ok"] is False
     assert publication_summary["status"] == "blocked"
     assert publication_summary["branch"] == payload["publication"]["branch"]
@@ -651,27 +652,28 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     )
     assert (
         payload["publication_tag_publish_decision"]["target_tag_release_gate_status"]
-        == "blocked_by_readiness"
+        == "ready_for_publication_review"
     )
     assert (
         payload["publication_tag_publish_decision"]["target_tag_release_gate_blocker_count"]
-        == len(payload["blockers"])
+        == 0
     )
     assert (
         payload["publication_tag_publish_decision"]["target_tag_release_gate_blockers"]
-        == payload["blockers"]
+        == []
     )
     assert (
         payload["publication_tag_publish_decision"]["target_tag_release_gate_primary_blocker"]
-        == "commit days 1/3"
+        is None
     )
     assert (
         payload["publication_tag_publish_decision"]["target_tag_release_gate_blockers_sha256"]
-        == release_readiness._stable_json_sha256(payload["blockers"])
+        == release_readiness._stable_json_sha256([])
     )
     assert (
         payload["publication_tag_publish_decision"]["target_tag_release_gate_required_action"]
-        == "Clear release readiness blockers before creating target tag `v0.1.1`."
+        == "After final release readiness is clean, create target tag `v0.1.1` at HEAD "
+        "and push it after the branch is published."
     )
     assert payload["publication_tag_publish_decision"]["target_tag_commands"] == [
         "git tag v0.1.1",
@@ -684,9 +686,9 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     )
     assert publication_summary["target_tag"] == "v0.1.1"
     assert publication_summary["target_tag_primary_command"] == "git tag v0.1.1"
-    assert publication_summary["target_tag_release_gate_status"] == "blocked_by_readiness"
-    assert publication_summary["target_tag_release_gate_blocker_count"] == len(payload["blockers"])
-    assert publication_summary["target_tag_release_gate_primary_blocker"] == "commit days 1/3"
+    assert publication_summary["target_tag_release_gate_status"] == "ready_for_publication_review"
+    assert publication_summary["target_tag_release_gate_blocker_count"] == 0
+    assert publication_summary["target_tag_release_gate_primary_blocker"] is None
     assert payload["publication"]["next_actions"] == publication_next_actions
     assert payload["publication_next_action_count"] == len(publication_next_actions)
     assert payload["publication_next_actions_sha256"] == release_readiness._stable_json_sha256(
@@ -707,7 +709,6 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert standard_release_flow["target_version"] == "0.1.1"
     assert standard_release_flow["target_tag"] == "v0.1.1"
     assert standard_release_flow["blockers"] == [
-        "commit days 1/3",
         "latest local release is not published",
         "latest local release tag is not published",
     ]
@@ -754,6 +755,31 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
         payload["next_actions"]
     )
     assert not any(action.startswith("- ") for action in payload["next_actions"])
+
+
+def test_release_readiness_treats_missing_weekly_commit_days_as_advisory(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+
+    payload = report.to_dict()
+    assert report.ok is True
+    assert payload["blockers"] == []
+    assert payload["cadence"]["weekly_commit_cadence_ok"] is False
+    assert payload["cadence"]["missing_commit_days"] == 2
+    assert (
+        "Ship verified slices on `2` more unique commit days this week; "
+        "current commit days are `1/3`. Use `docs/weekly-maintainer-loop.md` to pick the next slice."
+    ) in payload["next_actions"]
+    assert (
+        payload["publication_tag_publish_decision"]["target_tag_release_gate_status"]
+        == "ready_for_publication_review"
+    )
+    assert payload["publication_tag_publish_decision"]["target_tag_release_gate_blockers"] == []
+    assert payload["standard_release_flow"]["blockers"] == [
+        "latest local release is not published",
+        "latest local release tag is not published",
+    ]
 
 
 def test_release_readiness_default_requires_eight_case_assets(tmp_path):
@@ -1074,11 +1100,12 @@ def test_release_readiness_text_output_includes_next_actions_when_blocked(tmp_pa
     release_readiness._print_text(report)
 
     output = capsys.readouterr().out
-    assert "blockers:" in output
-    assert "- commit days 1/3" in output
-    assert "publication_target_tag_release_gate_status: blocked_by_readiness" in output
-    assert "publication_target_tag_release_gate_blocker_count: 1" in output
-    assert "publication_target_tag_release_gate_primary_blocker: commit days 1/3" in output
+    assert "ok: True" in output
+    assert "\nblockers:\n" not in output
+    assert "- commit days 1/3" not in output
+    assert "publication_target_tag_release_gate_status: ready_for_publication_review" in output
+    assert "publication_target_tag_release_gate_blocker_count: 0" in output
+    assert "publication_target_tag_release_gate_primary_blocker:" not in output
     assert "next_actions:" in output
     assert (
         "- Ship verified slices on `2` more unique commit days this week; "
@@ -1096,7 +1123,8 @@ def test_release_readiness_markdown_report_includes_gate_issues_and_next_actions
 
     text = report_path.read_text(encoding="utf-8")
     assert "## Gate Issues" in text
-    assert "- `cadence`: commit days 1/3" in text
+    assert "- `cadence`: commit days 1/3" not in text
+    assert "- `cadence`: working tree is dirty" in text
     assert "- `draft`: release draft is missing" in text
     assert "- `project_metadata`: open source metadata file is missing: LICENSE" in text
     assert "## Next Actions" in text

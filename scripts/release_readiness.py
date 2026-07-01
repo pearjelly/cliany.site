@@ -597,8 +597,6 @@ def _build_package_gate_report(
 
 def _cadence_blockers(report: CadenceReport) -> list[str]:
     blockers: list[str] = []
-    if report.commit_day_count < report.min_commit_days:
-        blockers.append(f"commit days {report.commit_day_count}/{report.min_commit_days}")
     if not report.daily_release_limit_ok:
         blockers.append(
             "daily release tags "

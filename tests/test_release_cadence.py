@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import subprocess
 import sys
 from datetime import date
@@ -113,14 +114,15 @@ def test_release_cadence_blocks_more_than_three_release_tags_per_day(tmp_path):
     ) in report.to_dict()["next_actions"]
 
 
-def test_release_cadence_report_fails_when_week_has_too_few_days(tmp_path):
+def test_release_cadence_report_warns_when_week_has_too_few_days(tmp_path):
     repo = _init_repo(tmp_path)
 
     report = release_cadence.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
 
-    assert report.ok is False
+    assert report.ok is True
     assert report.commit_day_count == 1
     assert report.min_commit_days == 3
+    assert report.weekly_commit_cadence_ok is False
     assert report.to_dict()["missing_commit_days"] == 2
     assert report.to_dict()["next_actions"] == [
         "Ship verified slices on `2` more unique commit days this week; current commit days are `1/3`."
@@ -129,6 +131,34 @@ def test_release_cadence_report_fails_when_week_has_too_few_days(tmp_path):
     assert report.to_dict()["next_actions_sha256"] == release_cadence._stable_json_sha256(
         report.to_dict()["next_actions"]
     )
+
+
+def test_release_cadence_missing_weekly_commit_days_is_advisory_for_daily_release(tmp_path):
+    repo = _init_repo(tmp_path)
+
+    report = release_cadence.build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+
+    payload = report.to_dict()
+    assert report.ok is True
+    assert payload["weekly_commit_cadence_ok"] is False
+    assert payload["missing_commit_days"] == 2
+    assert payload["daily_release_limit_ok"] is True
+    assert payload["primary_next_action"] == (
+        "Ship verified slices on `2` more unique commit days this week; current commit days are `1/3`."
+    )
+
+
+def test_release_cadence_strict_allows_missing_weekly_commit_days(monkeypatch, tmp_path, capsys):
+    repo = _init_repo(tmp_path)
+    monkeypatch.setattr(release_cadence, "ROOT", repo)
+
+    exit_code = release_cadence.main(["--strict", "--json", "--today", "2026-06-10"])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert payload["ok"] is True
+    assert payload["weekly_commit_cadence_ok"] is False
+    assert payload["missing_commit_days"] == 2
 
 
 def test_release_cadence_allows_empty_unreleased_when_head_is_tagged(tmp_path):

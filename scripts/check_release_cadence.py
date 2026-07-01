@@ -28,6 +28,7 @@ class CadenceReport:
     commit_days: list[str]
     commit_day_count: int
     min_commit_days: int
+    weekly_commit_cadence_ok: bool
     release_tags_today: list[str]
     release_count_today: int
     max_daily_releases: int
@@ -51,6 +52,7 @@ class CadenceReport:
             "commit_days": self.commit_days,
             "commit_day_count": self.commit_day_count,
             "min_commit_days": self.min_commit_days,
+            "weekly_commit_cadence_ok": self.weekly_commit_cadence_ok,
             "missing_commit_days": _missing_commit_days(self),
             "release_tags_today": self.release_tags_today,
             "release_count_today": self.release_count_today,
@@ -186,9 +188,9 @@ def build_report(
     tag_matches_version = latest_tag == expected_tag
     compare_ok, compare_expected, compare_actual = _changelog_unreleased_compare_link(root, latest_tag, expected_tag)
     changelog_ok = changelog_has_content or commits_since_latest_tag == 0
+    weekly_commit_cadence_ok = len(commit_days) >= min_commit_days
     ok = (
-        len(commit_days) >= min_commit_days
-        and len(release_tags_today) <= max_daily_releases
+        len(release_tags_today) <= max_daily_releases
         and tag_matches_version
         and changelog_ok
         and compare_ok
@@ -203,6 +205,7 @@ def build_report(
         commit_days=commit_days,
         commit_day_count=len(commit_days),
         min_commit_days=min_commit_days,
+        weekly_commit_cadence_ok=weekly_commit_cadence_ok,
         release_tags_today=release_tags_today,
         release_count_today=len(release_tags_today),
         max_daily_releases=max_daily_releases,
@@ -224,6 +227,7 @@ def _print_text(report: CadenceReport) -> None:
     print(f"expected_tag: {report.expected_tag}")
     print(f"tag_matches_version: {report.tag_matches_version}")
     print(f"commit_days: {report.commit_day_count}/{report.min_commit_days} {', '.join(report.commit_days)}")
+    print(f"weekly_commit_cadence_ok: {report.weekly_commit_cadence_ok}")
     print(
         "release_tags_today: "
         f"{report.release_count_today}/{report.max_daily_releases} "

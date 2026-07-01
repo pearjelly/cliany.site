@@ -484,7 +484,7 @@ cliany-site explore "https://github.com" "search repos" --json</code></pre>
             <p class="obscura-desc" data-i18n="qs.maintainer.desc">Use the 1-3 releases/day loop, weekly maintainer loop, and release readiness next_actions to turn the roadmap into small verified releases.</p>
             <ul class="obscura-list">
                 <li data-i18n="qs.maintainer.loop">Start from <code>docs/weekly-maintainer-loop.md</code> when choosing the next release slice.</li>
-                <li data-i18n="qs.maintainer.actions">Read <code>next_actions</code>, <code>release_count_today</code>, <code>max_daily_releases</code>, and <code>daily_release_limit_ok</code> from <code>python scripts/release_readiness.py --json</code> or <code>python scripts/check_release_cadence.py --json</code>; after release, confirm GitHub Release and PyPI with <code>python scripts/check_release_publication.py --remote --distribution --json</code>.</li>
+                <li data-i18n="qs.maintainer.actions">Read <code>next_actions</code>, <code>weekly_commit_cadence_ok</code>, <code>release_count_today</code>, <code>max_daily_releases</code>, and <code>daily_release_limit_ok</code> from <code>python scripts/release_readiness.py --json</code> or <code>python scripts/check_release_cadence.py --json</code>; after release, confirm GitHub Release and PyPI with <code>python scripts/check_release_publication.py --remote --distribution --json</code>.</li>
             </ul>
         </div>
         

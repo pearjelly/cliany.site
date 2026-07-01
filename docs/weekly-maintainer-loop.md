@@ -48,7 +48,7 @@ Candidate issue artifacts 的 review checklist 会要求维护者核对 `issue-m
 
 `plan_next_iteration.py` 还会输出 `plan_report_command`，默认给出 `python scripts/plan_next_iteration.py --target-version <version> --report /tmp/cliany-next-iteration.md`，让维护者和自动化能从 JSON 或默认文本直接复现同一份 Markdown 周计划报告。
 
-`plan_next_iteration.py` 也会把 publication audit 的 `tag_publish_decision` 透传为 `publication_tag_publish_decision`，并同步写入 JSON、默认文本输出、Markdown report、`artifact-manifest.json`、`publication-handoff.json` 和 artifacts `README.md`。维护工具可以直接读取 `status`、`can_push_tag`、`latest_tag`、`tag_points_at_head`、`tag_published`、`required_action` 和 `target_tag_release_gate_status`，无需重新解析 `publication_ref_context` 或自然语言 next action；当周计划仍有 readiness blocker 时，`target_tag_release_gate_status=blocked_by_readiness`，`target_tag_release_gate_blockers_sha256` 可用于检测 blocker 列表是否漂移。
+`plan_next_iteration.py` 也会把 publication audit 的 `tag_publish_decision` 透传为 `publication_tag_publish_decision`，并同步写入 JSON、默认文本输出、Markdown report、`artifact-manifest.json`、`publication-handoff.json` 和 artifacts `README.md`。维护工具可以直接读取 `status`、`can_push_tag`、`latest_tag`、`tag_points_at_head`、`tag_published`、`required_action` 和 `target_tag_release_gate_status`，无需重新解析 `publication_ref_context` 或自然语言 next action；当周计划仍有 readiness blocker 时，`target_tag_release_gate_status=blocked_by_readiness`，`target_tag_release_gate_blockers_sha256` 可用于检测 blocker 列表是否漂移。`commit days N/3` 只作为周节奏提醒保留在 cadence next actions，不再单独让目标 tag gate 进入 `blocked_by_readiness`。
 
 `plan_next_iteration.py` 还会输出结构化 `commit_cadence`，保留 `status`、`commit_days`、`commit_day_count`、`min_commit_days`、`missing_commit_days`、`next_actions` 和 `summary`。Markdown report 会在指标表展示 `commit_cadence_status`、`commit_cadence_missing_commit_days` 和 `commit_cadence_summary`；candidate issue artifacts 的 `artifact-manifest.json` 会保留完整 `commit_cadence`，`publication-handoff.json` 和 artifacts `README.md` 的 `Publication Handoff` 会展示 `commit_cadence_status`、`commit_cadence_missing_commit_days` 和 `commit_cadence_primary_next_action`，artifacts `README.md` 还会单独输出 `Commit Cadence` 小节和 `Commit Cadence Next Actions`，`artifact_bundle_summary` 会展示 `commit_cadence_commit_day_count`、`commit_cadence_min_commit_days`、`commit_cadence_missing_commit_days`、`commit_cadence_next_action_count`、`commit_cadence_primary_next_action`、`commit_cadence_commit_days_sha256` 和 `commit_cadence_next_actions_sha256`。只读计划摘要、handoff 或 README 的维护者可以直接判断本周还差几个独立提交日。
 
@@ -328,7 +328,7 @@ artifacts `README.md` 的 `Validation Commands` 会和 `artifact-manifest.json.v
 
 `candidate_issue_gate.evidence.release_draft_path` 使用 `docs/releases/v<version>-draft.md` 这样的仓库相对路径，避免候选 issue artifacts 泄漏维护者本机绝对路径。
 
-如果 readiness 只剩 `commit days N/3`，本周继续做小而可验证的增量；如果存在 gate issue，优先关闭具体 gate，再继续新功能。
+如果 readiness 的 cadence 只提示 `commit days N/3`，本周继续做小而可验证的增量，同时可以照常发布当天合格版本；如果存在真正 gate issue，优先关闭具体 gate，再继续新功能。
 
 ## 2. 周中：实现一个可验证切片
 
@@ -364,7 +364,7 @@ CLIANY_QA_OFFLINE=1 pytest tests/ -q --no-cov
 
 | readiness 状态 | 动作 |
 |----------------|------|
-| 只剩 `commit days N/3` | 不发版，继续保持本周三天提交记录 |
+| 只提示 `commit days N/3` | 可发布当天合格版本，同时继续补足本周三天提交记录 |
 | `cases` gate 失败 | 修案例 manifest、离线样例或文档锚点 |
 | `draft` gate 失败 | 补目标版本、用户价值、风险、验证和剩余阻塞 |
 | `ci` / `release_workflow` 失败 | 修默认零密钥门禁或 tag 发布 preflight |
