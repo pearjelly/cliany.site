@@ -1221,10 +1221,11 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
 
     text = report_path.read_text(encoding="utf-8")
     assert "## Candidate Issue Metadata" in text
-    assert "Evidence Bundle Primary Next Task" in text
+    assert "Priority Rank | Priority Reason | Evidence Bundle Primary Next Task" in text
     assert (
         "| `pypi-project-search` | Promote candidate case `pypi-project-search` toward active | "
-        "`case-proposal`, `good first issue` | `adapter_package` |"
+        "`case-proposal`, `good first issue` | `1` | "
+        "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0 | `adapter_package` |"
     ) in text
     assert "`case-proposal`, `good first issue`" in text
     assert "## Candidate Promotion Tasks" in text

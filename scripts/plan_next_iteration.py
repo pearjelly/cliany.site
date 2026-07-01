@@ -2961,17 +2961,27 @@ def _candidate_promotion_markdown(promotions: list[CandidatePromotion]) -> str:
         "## Candidate Issue Metadata",
         "",
         (
-            "| Case | Issue Title | Labels | Evidence Bundle Primary Next Task | "
-            "LLM Live Preflight | LLM Blocker Handling |"
+            "| Case | Issue Title | Labels | Priority Rank | Priority Reason | "
+            "Evidence Bundle Primary Next Task | LLM Live Preflight | LLM Blocker Handling |"
         ),
-        "|------|-------------|--------|-----------------------------------|--------------------|----------------------|",
+        (
+            "|------|-------------|--------|---------------|-----------------|"
+            "-----------------------------------|--------------------|----------------------|"
+        ),
     ]
     for promotion in promotions:
         labels = ", ".join(f"`{label}`" for label in promotion.issue_labels)
+        priority_rank = (
+            f"`{promotion.priority_rank}`"
+            if promotion.priority_rank is not None
+            else "Not declared."
+        )
+        priority_reason = promotion.priority_reason or "Not declared."
         primary_task = promotion.evidence_bundle_primary_next_task.get("task") or "Not declared."
         lines.append(
-            f"| `{promotion.case_id}` | {promotion.issue_title} | {labels} | `{primary_task}` | "
-            f"`{promotion.llm_live_preflight_command}` | {promotion.llm_live_preflight_blocker_note} |"
+            f"| `{promotion.case_id}` | {promotion.issue_title} | {labels} | {priority_rank} | "
+            f"{priority_reason} | `{primary_task}` | `{promotion.llm_live_preflight_command}` | "
+            f"{promotion.llm_live_preflight_blocker_note} |"
         )
 
     lines.extend(
