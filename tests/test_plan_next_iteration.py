@@ -2267,15 +2267,21 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     script = (issues_dir / "create-issues.sh").read_text(encoding="utf-8")
     readme = (issues_dir / "README.md").read_text(encoding="utf-8")
     llm_preflight_fields = list(plan_next_iteration.LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS)
+    promotion_summaries = {
+        promotion.case_id: promotion.promotion_command_plan_summary
+        for promotion in plan.candidate_promotions
+    }
     issue_body_inventory = []
     for body_name in ("pypi-project-search.md", "npm-package-search.md"):
         body_bytes = (issues_dir / body_name).read_bytes()
+        case_id = body_name.removesuffix(".md")
         issue_body_inventory.append(
             {
-                "case_id": body_name.removesuffix(".md"),
+                "case_id": case_id,
                 "issue_body_name": body_name,
                 "byte_count": len(body_bytes),
                 "sha256": hashlib.sha256(body_bytes).hexdigest(),
+                "promotion_command_plan_summary": promotion_summaries[case_id],
             }
         )
     summary_bytes = json.dumps(
@@ -4348,10 +4354,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "Generate pypi.org-<version>.cliany-adapter.tar.gz. | - |"
     ) in readme
     assert "## Issue Body Inventory" in readme
-    assert "| Case | Issue Body | Bytes | SHA-256 |" in readme
+    assert "| Case | Issue Body | Bytes | SHA-256 | Promotion Command Plan Summary |" in readme
     assert (
         f"| `pypi-project-search` | `pypi-project-search.md` | "
-        f"{issue_body_inventory[0]['byte_count']} | `{issue_body_inventory[0]['sha256']}` |"
+        f"{issue_body_inventory[0]['byte_count']} | `{issue_body_inventory[0]['sha256']}` | "
+        "`promotion_command_plan_summary: command_count=4, missing_command_count=0, all_declared=true` |"
     ) in readme
     assert "## Issue Body Summary" in readme
     assert f"body_count: `{issue_body_summary['body_count']}`" in readme

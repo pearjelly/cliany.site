@@ -5383,6 +5383,7 @@ def _issue_body_inventory(promotions: list[CandidatePromotion]) -> list[dict[str
                 "issue_body_name": body_name,
                 "byte_count": len(body_bytes),
                 "sha256": hashlib.sha256(body_bytes).hexdigest(),
+                "promotion_command_plan_summary": promotion.promotion_command_plan_summary,
             }
         )
     return inventory
@@ -5515,13 +5516,14 @@ def _issue_artifact_body_inventory_markdown(promotions: list[CandidatePromotion]
     lines = [
         "## Issue Body Inventory",
         "",
-        "| Case | Issue Body | Bytes | SHA-256 |",
-        "|------|------------|-------|---------|",
+        "| Case | Issue Body | Bytes | SHA-256 | Promotion Command Plan Summary |",
+        "|------|------------|-------|---------|--------------------------------|",
     ]
     for item in inventory:
         lines.append(
             f"| `{item['case_id']}` | `{item['issue_body_name']}` | "
-            f"{item['byte_count']} | `{item['sha256']}` |"
+            f"{item['byte_count']} | `{item['sha256']}` | "
+            f"{_promotion_command_plan_summary_inline(item['promotion_command_plan_summary'])} |"
         )
     return "\n".join(lines)
 
