@@ -4032,6 +4032,7 @@ def _candidate_issue_script_lines(issue_commands: list[str], *, preflight_comman
         "# Review these commands before running; they create GitHub issues in the current repository.",
         "# Set CLIANY_CREATE_ISSUES_DRY_RUN=1 to print commands without running the preflight or gh.",
         "# Stop early if the candidate issue gate no longer allows issue creation.",
+        "# If maintainer review is required, set CLIANY_CREATE_ISSUES_ACK_REVIEW=1 after review.",
         'REPO_ROOT="$(git rev-parse --show-toplevel)"',
         'cd "$REPO_ROOT"',
         'PYTHON_BIN="${PYTHON_BIN:-python3}"',
@@ -4054,6 +4055,7 @@ def _candidate_issue_script_lines(issue_commands: list[str], *, preflight_comman
             "fi",
             'if ! "$PYTHON_BIN" - "$PREFLIGHT_JSON" <<\'PY\'',
             "import json",
+            "import os",
             "import sys",
             "",
             "path = sys.argv[1]",
@@ -4069,6 +4071,12 @@ def _candidate_issue_script_lines(issue_commands: list[str], *, preflight_comman
             '    primary_action = gate.get("primary_required_action")',
             "    if primary_action:",
             '        print(f"Primary required action: {primary_action}", file=sys.stderr)',
+            '    if os.environ.get("CLIANY_CREATE_ISSUES_ACK_REVIEW") != "1":',
+            "        print(",
+            '            "Set CLIANY_CREATE_ISSUES_ACK_REVIEW=1 after maintainer review to continue.",',
+            "            file=sys.stderr,",
+            "        )",
+            "        sys.exit(1)",
             "PY",
             "then",
             '  cat "$PREFLIGHT_JSON" >&2 || true',
@@ -4382,8 +4390,8 @@ Run it only after checking `issue-metadata.json` and the body files. The script 
 `candidate_issue_gate.can_create_issues`. It writes the preflight JSON to
 `{create_issues_safety["preflight_json"]}`. If the planner preflight fails or the gate
 rejects issue creation, it prints the preflight JSON before exiting. If the gate requires
-maintainer review while still allowing issue creation, it prints the primary required action
-before continuing.
+maintainer review while still allowing issue creation, it exits until the artifacts have
+been reviewed and `{create_issues_safety["maintainer_review_ack_env"]}` is set.
 
 ### Create Issues Safety
 
@@ -4393,6 +4401,8 @@ before continuing.
 - preflight_required: `{str(create_issues_safety["preflight_required"]).lower()}`
 - preflight_command: `{create_issues_safety["preflight_command"]}`
 - preflight_json: `{create_issues_safety["preflight_json"]}`
+- maintainer_review_ack_env: `{create_issues_safety["maintainer_review_ack_env"]}`
+- maintainer_review_ack_required_when: `{create_issues_safety["maintainer_review_ack_required_when"]}`
 
 Preview the issue commands without running the candidate issue gate preflight or creating issues:
 
@@ -4607,6 +4617,10 @@ def _issue_artifact_review_checklist() -> list[str]:
         ),
         "Review each body file for scope, tasks, validation evidence, and non-goals.",
         (
+            "If candidate_issue_gate.requires_maintainer_review is true, set "
+            "CLIANY_CREATE_ISSUES_ACK_REVIEW=1 only after completing that review."
+        ),
+        (
             "Keep cases as candidate until adapter package, metadata validation, "
             "and online smoke evidence are complete."
         ),
@@ -4659,6 +4673,8 @@ def _issue_artifact_create_issues_safety(script_path: Path, plan: IterationPlan)
         "preflight_required": True,
         "preflight_command": _issue_artifact_candidate_gate_preflight_command(plan),
         "preflight_json": "/tmp/cliany-issue-gate-check.json",
+        "maintainer_review_ack_env": "CLIANY_CREATE_ISSUES_ACK_REVIEW=1",
+        "maintainer_review_ack_required_when": "candidate_issue_gate.requires_maintainer_review=true",
     }
 
 
@@ -4669,6 +4685,10 @@ def _issue_artifact_create_issues_safety_contract(create_issues_safety: dict[str
         "preflight_required": create_issues_safety["preflight_required"],
         "preflight_command": create_issues_safety["preflight_command"],
         "preflight_json": create_issues_safety["preflight_json"],
+        "maintainer_review_ack_env": create_issues_safety["maintainer_review_ack_env"],
+        "maintainer_review_ack_required_when": create_issues_safety[
+            "maintainer_review_ack_required_when"
+        ],
     }
 
 

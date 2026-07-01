@@ -13,6 +13,7 @@
 
 ### Fixed
 - Candidate issue creation scripts now default to `python3` through an overridable `PYTHON_BIN`, so generated issue handoff artifacts run on systems without a bare `python` executable.
+- Candidate issue creation scripts now require `CLIANY_CREATE_ISSUES_ACK_REVIEW=1` before creating public GitHub issues when the candidate issue gate reports `requires_maintainer_review=true`, and generated artifact READMEs/manifests expose that acknowledgment contract.
 
 ## [0.16.253] - 2026-07-02
 

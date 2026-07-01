@@ -137,6 +137,21 @@ def test_candidate_issue_script_uses_python3_default_with_override() -> None:
     assert 'if ! python - "$PREFLIGHT_JSON" <<\'PY\'' not in script
 
 
+def test_candidate_issue_script_requires_review_ack_when_gate_needs_review() -> None:
+    script = "\n".join(
+        plan_next_iteration._candidate_issue_script_lines(
+            ["gh issue create --title 'Candidate'"],
+            preflight_command="python scripts/plan_next_iteration.py --target-version 0.16.2 --json",
+        )
+    )
+
+    assert "CLIANY_CREATE_ISSUES_ACK_REVIEW" in script
+    assert 'os.environ.get("CLIANY_CREATE_ISSUES_ACK_REVIEW") != "1"' in script
+    assert '"Set CLIANY_CREATE_ISSUES_ACK_REVIEW=1 after maintainer review to continue."' in script
+    assert "file=sys.stderr" in script
+    assert "sys.exit(1)" in script
+
+
 def _pypi_promotion_command_plan(*, explore_query: str = "search Python packages") -> list[dict[str, object]]:
     return [
         {
@@ -2250,6 +2265,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "Review each body file for scope, tasks, validation evidence, and non-goals.",
         (
+            "If candidate_issue_gate.requires_maintainer_review is true, set "
+            "CLIANY_CREATE_ISSUES_ACK_REVIEW=1 only after completing that review."
+        ),
+        (
             "Keep cases as candidate until adapter package, metadata validation, "
             "and online smoke evidence are complete."
         ),
@@ -2263,6 +2282,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "python scripts/plan_next_iteration.py --target-version 0.16.2 --json"
         ),
         "preflight_json": "/tmp/cliany-issue-gate-check.json",
+        "maintainer_review_ack_env": "CLIANY_CREATE_ISSUES_ACK_REVIEW=1",
+        "maintainer_review_ack_required_when": (
+            "candidate_issue_gate.requires_maintainer_review=true"
+        ),
     }
     create_issues_safety_contract_keys = list(expected_create_issues_safety_contract)
     review_order = [
@@ -2312,6 +2335,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "python scripts/plan_next_iteration.py --target-version 0.16.2 --json"
         ),
         "preflight_json": "/tmp/cliany-issue-gate-check.json",
+        "maintainer_review_ack_env": "CLIANY_CREATE_ISSUES_ACK_REVIEW=1",
+        "maintainer_review_ack_required_when": (
+            "candidate_issue_gate.requires_maintainer_review=true"
+        ),
     }
     artifact_manifest_payload = plan_next_iteration._artifact_manifest_payload_without_summary(
         plan=plan,
@@ -3032,7 +3059,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "validation_command_tail_sha256": _stable_json_sha256(
             expected_validation_commands[-8:]
         ),
-        "review_checklist_count": 7,
+        "review_checklist_count": 8,
         "review_checklist_sha256": _stable_json_sha256(expected_review_checklist),
         "review_checklist_first_item": (
             "Confirm the latest local release has been published before creating new candidate work."
@@ -3058,16 +3085,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "review_checklist_tail_sha256": _stable_json_sha256(
             expected_review_checklist[-8:]
         ),
-        "create_issues_safety_contract_key_count": 5,
+        "create_issues_safety_contract_key_count": 7,
         "create_issues_safety_contract_sha256": _stable_json_sha256(
             expected_create_issues_safety_contract
         ),
         "create_issues_safety_contract_first_key": "dry_run_supported",
-        "create_issues_safety_contract_last_key": "preflight_json",
+        "create_issues_safety_contract_last_key": "maintainer_review_ack_required_when",
         "create_issues_safety_contract_key_boundary_sha256": _stable_json_sha256(
             {
                 "first_key": "dry_run_supported",
-                "last_key": "preflight_json",
+                "last_key": "maintainer_review_ack_required_when",
             }
         ),
         "create_issues_safety_contract_key_preview_count": len(
@@ -3442,13 +3469,17 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "Confirm the latest local release has been published before creating new candidate work.",
             "Confirm release draft issues are resolved or intentionally deferred before tagging the target version.",
             "Confirm Publication Next Actions are resolved or intentionally deferred before running create-issues.sh.",
-                (
-                    "Confirm issue-metadata.json has the expected target URL, candidate commands, "
-                    "offline validation commands, candidate_package_validation_command, "
-                    "promotion_command_plan, llm_live_preflight_command, and "
-                    "llm_live_preflight_blocker_note for each case."
-                ),
+            (
+                "Confirm issue-metadata.json has the expected target URL, candidate commands, "
+                "offline validation commands, candidate_package_validation_command, "
+                "promotion_command_plan, llm_live_preflight_command, and "
+                "llm_live_preflight_blocker_note for each case."
+            ),
             "Review each body file for scope, tasks, validation evidence, and non-goals.",
+            (
+                "If candidate_issue_gate.requires_maintainer_review is true, set "
+                "CLIANY_CREATE_ISSUES_ACK_REVIEW=1 only after completing that review."
+            ),
             (
                 "Keep cases as candidate until adapter package, metadata validation, "
                 "and online smoke evidence are complete."
@@ -3708,6 +3739,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "requires_maintainer_review" in script
     assert "Candidate issue gate does not allow creating issues." in script
     assert "Candidate issue gate requires maintainer review before creating issues." in script
+    assert "CLIANY_CREATE_ISSUES_ACK_REVIEW" in script
+    assert 'os.environ.get("CLIANY_CREATE_ISSUES_ACK_REVIEW") != "1"' in script
+    assert "Set CLIANY_CREATE_ISSUES_ACK_REVIEW=1 after maintainer review" in script
     assert 'cat "$PREFLIGHT_JSON" >&2 || true' in script
     assert "  exit 1" in script
     assert "--body-file" in script
@@ -4830,7 +4864,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "validation_command_tail_sha256: "
         f"`{artifact_bundle_summary['validation_command_tail_sha256']}`"
     ) in readme
-    assert "review_checklist_count: `7`" in readme
+    assert "review_checklist_count: `8`" in readme
     assert (
         "review_checklist_sha256: "
         f"`{artifact_bundle_summary['review_checklist_sha256']}`"
@@ -4871,13 +4905,16 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "review_checklist_tail_sha256: "
         f"`{artifact_bundle_summary['review_checklist_tail_sha256']}`"
     ) in readme
-    assert "create_issues_safety_contract_key_count: `5`" in readme
+    assert "create_issues_safety_contract_key_count: `7`" in readme
     assert (
         "create_issues_safety_contract_sha256: "
         f"`{artifact_bundle_summary['create_issues_safety_contract_sha256']}`"
     ) in readme
     assert "create_issues_safety_contract_first_key: `dry_run_supported`" in readme
-    assert "create_issues_safety_contract_last_key: `preflight_json`" in readme
+    assert (
+        "create_issues_safety_contract_last_key: "
+        "`maintainer_review_ack_required_when`"
+    ) in readme
     assert (
         "create_issues_safety_contract_key_boundary_sha256: "
         f"`{artifact_bundle_summary['create_issues_safety_contract_key_boundary_sha256']}`"
@@ -5313,6 +5350,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "Confirm release draft issues are resolved or intentionally deferred" in readme
     assert "Confirm Publication Next Actions are resolved or intentionally deferred" in readme
     assert "before running create-issues.sh" in readme
+    assert "CLIANY_CREATE_ISSUES_ACK_REVIEW=1 only after completing that review" in readme
     assert "expected target URL, candidate commands" in readme
     assert (
         "offline validation commands, candidate_package_validation_command, "
@@ -5334,6 +5372,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "--target-version 0.16.2 --json`"
     ) in readme
     assert "preflight_json: `/tmp/cliany-issue-gate-check.json`" in readme
+    assert "maintainer_review_ack_env: `CLIANY_CREATE_ISSUES_ACK_REVIEW=1`" in readme
+    assert (
+        "maintainer_review_ack_required_when: "
+        "`candidate_issue_gate.requires_maintainer_review=true`"
+    ) in readme
     assert "`create-issues.sh` is generated for review. It is not executed" in readme
     assert (
         "python scripts/plan_next_iteration.py --target-version 0.16.2 "
