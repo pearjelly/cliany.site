@@ -242,6 +242,35 @@ def _doctor_preflight_evidence_template_aliases(
     }
 
 
+def _doctor_preflight_evidence_template_aliases_from_task(
+    task: dict[str, Any],
+) -> dict[str, Any]:
+    field_count = task.get("doctor_preflight_evidence_template_field_count")
+    sha256 = task.get("doctor_preflight_evidence_template_sha256")
+    if field_count is not None and sha256:
+        return {
+            "doctor_preflight_evidence_template_field_count": field_count,
+            "doctor_preflight_evidence_template_sha256": sha256,
+        }
+    return _doctor_preflight_evidence_template_aliases(
+        dict(task.get("doctor_preflight_evidence_template") or {})
+    )
+
+
+def _primary_doctor_preflight_evidence_template_aliases(
+    task: dict[str, Any],
+) -> dict[str, Any]:
+    aliases = _doctor_preflight_evidence_template_aliases_from_task(task)
+    return {
+        "primary_doctor_preflight_evidence_template_field_count": aliases[
+            "doctor_preflight_evidence_template_field_count"
+        ],
+        "primary_doctor_preflight_evidence_template_sha256": aliases[
+            "doctor_preflight_evidence_template_sha256"
+        ],
+    }
+
+
 def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
     primary = bundle.get("primary_next_task")
     if not isinstance(primary, dict) or not primary.get("task"):
@@ -843,6 +872,9 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         )
         expected_adapter_package = str(bundle.get("expected_adapter_package") or "")
         priority_reason = _candidate_bundle_priority_reason(bundle, priority_rank)
+        primary_doctor_preflight_aliases = (
+            _primary_doctor_preflight_evidence_template_aliases(primary_next_task)
+        )
         candidate_item = {
             "case_id": case_id,
             "title": bundle.get("title"),
@@ -864,6 +896,7 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
             "primary_acceptance_criteria": bundle.get(
                 "primary_next_task_acceptance_criteria", ""
             ),
+            **primary_doctor_preflight_aliases,
             "promotion_command_plan_missing_tasks": bundle.get(
                 "promotion_command_plan_missing_tasks", []
             ),
@@ -881,6 +914,9 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         for task in bundle.get("tasks", []):
             if task.get("complete"):
                 continue
+            doctor_preflight_aliases = (
+                _doctor_preflight_evidence_template_aliases_from_task(task)
+            )
             task_queue.append(
                 {
                     "case_id": case_id,
@@ -899,12 +935,16 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
                     "evidence_bundle_json_command": evidence_bundle_json_command,
                     "llm_live_preflight_command": llm_live_preflight_command,
                     "llm_live_preflight_blocker_note": llm_live_preflight_blocker_note,
+                    **doctor_preflight_aliases,
                     "priority_rank": priority_rank,
                     "priority_reason": priority_reason,
                 }
             )
 
     primary_next_item = task_queue[0] if task_queue else {}
+    primary_doctor_preflight_aliases = (
+        _primary_doctor_preflight_evidence_template_aliases(primary_next_item)
+    )
     return {
         "candidate_count": len(candidates),
         "ready_to_promote_count": sum(1 for item in candidates if item["ready_to_promote"]),
@@ -934,6 +974,7 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         "primary_llm_live_preflight_blocker_note": primary_next_item.get(
             "llm_live_preflight_blocker_note", ""
         ),
+        **primary_doctor_preflight_aliases,
         "llm_live_preflight_command": LLM_LIVE_PREFLIGHT_COMMAND,
         "llm_live_preflight_blocker_note": LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
         "candidates": candidates,

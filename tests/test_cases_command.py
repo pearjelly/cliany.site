@@ -956,6 +956,14 @@ def test_cases_command_promotion_plan_json(tmp_home):
     assert plan["primary_runbook"] == plan["primary_next_item"]["runbook"]
     assert plan["primary_runbook"][0]["step"] == "llm_live_preflight"
     assert plan["primary_runbook"][1]["step"] == "adapter_package"
+    assert (
+        plan["primary_doctor_preflight_evidence_template_field_count"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+    )
+    assert (
+        plan["primary_doctor_preflight_evidence_template_sha256"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+    )
     assert plan["primary_issue_template_command"] == (
         "cliany-site cases --case-id pypi-project-search --issue-template"
     )
@@ -998,6 +1006,12 @@ def test_cases_command_promotion_plan_json(tmp_home):
         ),
         "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
         "llm_live_preflight_blocker_note": plan["llm_live_preflight_blocker_note"],
+        "doctor_preflight_evidence_template_field_count": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+        ),
+        "doctor_preflight_evidence_template_sha256": (
+            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+        ),
         "priority_rank": 1,
         "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
     }
@@ -1020,6 +1034,16 @@ def test_cases_command_promotion_plan_json(tmp_home):
     assert (
         plan["candidates"][0]["llm_live_preflight_blocker_note"]
         == plan["llm_live_preflight_blocker_note"]
+    )
+    assert (
+        plan["candidates"][0][
+            "primary_doctor_preflight_evidence_template_field_count"
+        ]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+    )
+    assert (
+        plan["candidates"][0]["primary_doctor_preflight_evidence_template_sha256"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
     )
     assert plan["candidates"][0]["evidence_bundle_json_command"].endswith(
         "--evidence-bundle --json"
