@@ -922,7 +922,7 @@ class IterationPlan:
                 primary_runbook_first_command
             ),
             "case_promotion_evidence_primary_runbook_first_command_sha256": (
-                _stable_json_sha256(primary_runbook_first_command)
+                _sha256_text(primary_runbook_first_command)
                 if primary_runbook_first_command
                 else None
             ),
@@ -2219,7 +2219,7 @@ def _llm_live_preflight_task_fields(task_name: str) -> dict[str, Any]:
         "llm_live_preflight_required": required,
         "llm_live_preflight_command": llm_live_preflight_command,
         "llm_live_preflight_command_sha256": (
-            _stable_json_sha256(llm_live_preflight_command)
+            _sha256_text(llm_live_preflight_command)
             if llm_live_preflight_command
             else ""
         ),
@@ -2264,9 +2264,7 @@ def _task_with_doctor_preflight_evidence_fields(task: Any) -> Any:
             or LLM_LIVE_PREFLIGHT_COMMAND
         )
         normalized["llm_live_preflight_command"] = command_text
-        normalized["llm_live_preflight_command_sha256"] = _stable_json_sha256(
-            command_text
-        )
+        normalized["llm_live_preflight_command_sha256"] = _sha256_text(command_text)
         normalized["doctor_preflight_evidence_fields"] = list(
             DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         )
@@ -2282,7 +2280,7 @@ def _task_with_doctor_preflight_evidence_fields(task: Any) -> Any:
     else:
         command_text = str(normalized.get("llm_live_preflight_command") or "")
         normalized["llm_live_preflight_command_sha256"] = (
-            _stable_json_sha256(command_text) if command_text else ""
+            _sha256_text(command_text) if command_text else ""
         )
     if required is not True and "doctor_preflight_evidence_fields" not in normalized:
         normalized["doctor_preflight_evidence_fields"] = []
@@ -2826,7 +2824,7 @@ def _primary_llm_live_preflight_aliases(primary_task: dict[str, Any] | None) -> 
             command_text
         ),
         "case_promotion_evidence_primary_llm_live_preflight_command_sha256": (
-            _stable_json_sha256(command_text) if command_text else None
+            _sha256_text(command_text) if command_text else None
         ),
         "case_promotion_evidence_primary_llm_live_preflight_blocker_note": (
             str(blocker_note) if blocker_note else None
@@ -3335,7 +3333,7 @@ def _print_text(plan: IterationPlan) -> None:
         )
         primary_runbook_first_command = _runbook_first_command(primary_runbook)
         primary_runbook_first_command_sha256 = (
-            _stable_json_sha256(primary_runbook_first_command)
+            _sha256_text(primary_runbook_first_command)
             if primary_runbook_first_command
             else None
         )
@@ -3469,7 +3467,7 @@ def _render_markdown(plan: IterationPlan) -> str:
     )
     primary_runbook_first_command = _runbook_first_command(primary_runbook)
     primary_runbook_first_command_sha256 = (
-        _stable_json_sha256(primary_runbook_first_command)
+        _sha256_text(primary_runbook_first_command)
         if primary_runbook_first_command
         else None
     )
@@ -6113,7 +6111,7 @@ def _issue_artifact_bundle_summary(
             case_promotion_evidence_primary_runbook_first_command
         ),
         "case_promotion_evidence_primary_runbook_first_command_sha256": (
-            _stable_json_sha256(case_promotion_evidence_primary_runbook_first_command)
+            _sha256_text(case_promotion_evidence_primary_runbook_first_command)
             if case_promotion_evidence_primary_runbook_first_command
             else None
         ),

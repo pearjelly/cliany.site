@@ -79,6 +79,10 @@ def _stable_json_sha256(value: object) -> str:
     return hashlib.sha256(digest_source).hexdigest()
 
 
+def _command_sha256(command: str) -> str:
+    return hashlib.sha256(command.encode("utf-8")).hexdigest() if command else ""
+
+
 def _standard_release_flow_step_status_counts(
     steps: list[dict[str, object]],
 ) -> dict[str, int]:
@@ -1224,7 +1228,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
         "llm_live_preflight_required": True,
         "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
-        "llm_live_preflight_command_sha256": _stable_json_sha256(
+        "llm_live_preflight_command_sha256": _command_sha256(
             "cliany-site doctor --llm-live --json"
         ),
         "llm_live_preflight_blocker_note": (
@@ -1278,7 +1282,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         == "cliany-site doctor --llm-live --json"
     )
     assert data["case_promotion_evidence_primary_runbook_first_command_sha256"] == (
-        _stable_json_sha256("cliany-site doctor --llm-live --json")
+        _command_sha256("cliany-site doctor --llm-live --json")
     )
     assert data["case_promotion_evidence_primary_llm_live_preflight_required"] is True
     assert (
@@ -1287,7 +1291,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     )
     assert data[
         "case_promotion_evidence_primary_llm_live_preflight_command_sha256"
-    ] == _stable_json_sha256("cliany-site doctor --llm-live --json")
+    ] == _command_sha256("cliany-site doctor --llm-live --json")
     assert (
         data["case_promotion_evidence_primary_llm_live_preflight_blocker_note"]
         == plan_next_iteration.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE
@@ -1329,7 +1333,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     ) in markdown
     assert (
         "| case_promotion_evidence_primary_llm_live_preflight_command_sha256 | "
-        f"`{_stable_json_sha256('cliany-site doctor --llm-live --json')}` |"
+        f"`{_command_sha256('cliany-site doctor --llm-live --json')}` |"
     ) in markdown
     llm_preflight_fields = data["case_promotion_evidence_summary"][
         "llm_live_preflight_evidence_fields"
@@ -1387,7 +1391,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
             "llm_live_preflight_required": True,
             "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
-            "llm_live_preflight_command_sha256": _stable_json_sha256(
+            "llm_live_preflight_command_sha256": _command_sha256(
                 "cliany-site doctor --llm-live --json"
             ),
             "llm_live_preflight_blocker_note": (
@@ -1421,7 +1425,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
             "llm_live_preflight_required": True,
             "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
-            "llm_live_preflight_command_sha256": _stable_json_sha256(
+            "llm_live_preflight_command_sha256": _command_sha256(
                 "cliany-site doctor --llm-live --json"
             ),
             "llm_live_preflight_blocker_note": (
@@ -2904,7 +2908,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "case_promotion_evidence_primary_runbook_first_command": (
             "cliany-site doctor --llm-live --json"
         ),
-        "case_promotion_evidence_primary_runbook_first_command_sha256": _stable_json_sha256(
+        "case_promotion_evidence_primary_runbook_first_command_sha256": _command_sha256(
             "cliany-site doctor --llm-live --json"
         ),
         "case_promotion_evidence_primary_runbook_sha256": _stable_json_sha256(
@@ -2915,7 +2919,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "cliany-site doctor --llm-live --json"
         ),
         "case_promotion_evidence_primary_llm_live_preflight_command_sha256": (
-            _stable_json_sha256("cliany-site doctor --llm-live --json")
+            _command_sha256("cliany-site doctor --llm-live --json")
         ),
         "case_promotion_evidence_primary_llm_live_preflight_blocker_note": (
             plan_next_iteration.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE
@@ -3665,7 +3669,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
         "llm_live_preflight_required": True,
         "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
-        "llm_live_preflight_command_sha256": _stable_json_sha256(
+        "llm_live_preflight_command_sha256": _command_sha256(
             "cliany-site doctor --llm-live --json"
         ),
         "llm_live_preflight_blocker_note": (
@@ -3699,7 +3703,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
         "llm_live_preflight_required": True,
         "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
-        "llm_live_preflight_command_sha256": _stable_json_sha256(
+        "llm_live_preflight_command_sha256": _command_sha256(
             "cliany-site doctor --llm-live --json"
         ),
         "llm_live_preflight_blocker_note": (

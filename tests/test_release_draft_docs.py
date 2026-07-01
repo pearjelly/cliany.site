@@ -11156,6 +11156,7 @@ def test_v016254_release_draft_tracks_planner_issue_template_handoff():
         "Issue Template",
         "Issue Template JSON",
         "Command SHA-256",
+        "raw command SHA-256",
         "Doctor Preflight Evidence Template",
         "doctor_preflight_evidence_template",
         "doctor_preflight_evidence_template_field_count",
