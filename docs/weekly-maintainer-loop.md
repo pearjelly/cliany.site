@@ -326,6 +326,9 @@ artifacts `README.md` 的 `Validation Commands` 会和 `artifact-manifest.json.v
 
 `artifact-manifest.json` 的 `candidate_issue_gate` 会和 `publication-handoff.json` 同源，用 `can_create_issues` 把硬性 issue 创建门禁和 release draft 人工审阅区分开，并用 `evidence` 保留 gate 判定所用的 release/publication 证据。
 
+`create-issues.sh` 的硬性 publication preflight 现在由 `candidate_issue_gate.can_create_issues` 决定，避免只用 tag 是否指向 HEAD 来误挡正常的下一版准备态。
+如果 preflight 失败，脚本会打印 `/tmp/cliany-issue-publication-check.json` 或 gate preflight JSON；需要手动复核发布状态时，可先运行 `python scripts/check_release_publication.py --strict --json`。
+
 `plan_next_iteration.py` 的默认文本输出会把 `candidate_issue_gate.evidence` 展开成缩进列表，方便维护者在终端里直接审阅 publication visibility、latest tag、ahead count 和 release draft issue count。
 
 `candidate_issue_gate.evidence.release_draft_path` 使用 `docs/releases/v<version>-draft.md` 这样的仓库相对路径，避免候选 issue artifacts 泄漏维护者本机绝对路径。

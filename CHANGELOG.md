@@ -11,6 +11,7 @@
 - Candidate promotion plan and release planning evidence now prioritize candidate cases with more completed promotion evidence and fewer blockers before falling back to manifest order, so maintainers can keep pushing the closest case toward `active`.
 - Candidate promotion plan output now includes stable `priority_rank` and `priority_reason` fields in JSON and human markdown, making the candidate queue ordering auditable for maintainers and issue handoffs.
 - Case validation and next-iteration planning evidence summaries now carry the same `priority_rank` and `priority_reason` on candidate promotion tasks, so release artifacts explain candidate ordering without requiring the cases CLI.
+- Candidate promotion issue artifacts now carry `priority_rank` and `priority_reason` through issue metadata, primary evidence tasks, and generated issue bodies, so candidate handoffs preserve the same ordering explanation as the planner summary.
 
 ### Fixed
 - Release readiness now projects whether creating the target tag today would exceed the daily release cap, so planning `v0.16.251` after `v0.16.248`、`v0.16.249` 和 `v0.16.250` 已发布时会明确暂停 tag，而不是继续给出第四个同日 release 命令。
@@ -20,6 +21,7 @@
 - Candidate issue gate now surfaces non-draft release readiness blockers such as the daily release cap as `release_readiness_blockers`, so issue artifacts are marked review-required instead of silently ready while the target release cannot be tagged.
 - Candidate issue artifacts now promote release readiness blocker aliases into `publication-handoff.json` and the README quick summary, so maintainers can see why tagging is paused without expanding nested gate evidence.
 - Candidate issue creation scripts now preflight against `candidate_issue_gate.can_create_issues` instead of strict publication visibility alone, so issue artifacts remain runnable in the normal "latest release published, HEAD preparing next version" state.
+- Weekly maintainer loop docs now document the hard publication preflight command, temp JSON path, and failure handling used by candidate issue scripts.
 - Release publication audits now distinguish `git ls-remote` network failures from genuinely missing remote refs, keeping branch/tag publish decisions on the safe rerun path instead of suggesting unnecessary pushes.
 
 ## [0.16.250] - 2026-07-01

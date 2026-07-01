@@ -457,6 +457,10 @@ def test_plan_defaults_to_next_patch_version(tmp_path):
         "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0"
     )
     assert plan.candidate_promotions[0].case_id == "pypi-project-search"
+    assert plan.candidate_promotions[0].priority_rank == 1
+    assert plan.candidate_promotions[0].priority_reason == (
+        "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0"
+    )
 
 
 def test_plan_surfaces_tag_mismatch_before_publication(tmp_path):
@@ -959,6 +963,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "adapter_package": "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
         "metadata_validation": "Run validate_cases with --packages-dir.",
         "online_smoke": "Run read-only PyPI search smoke.",
+        "priority_rank": 1,
+        "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
         "promotion_evidence": _promotion_evidence(
             "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
             "Run read-only PyPI search smoke.",
@@ -972,6 +978,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
                 "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
                 "package path or GitHub Release asset name."
             ),
+            "priority_rank": 1,
+            "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
         },
         "evidence_bundle_primary_next_task": {
             "task": "adapter_package",
@@ -982,6 +990,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
                 "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
                 "package path or GitHub Release asset name."
             ),
+            "priority_rank": 1,
+            "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
         },
         "candidate_package_validation_command": (
             "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
@@ -1007,6 +1017,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "## Primary Evidence Task\n"
             "- Task: `adapter_package`\n"
             "- Status: `pending`\n"
+            "- Priority rank: `1`\n"
+            "- Priority reason: rank 1: complete 0/3, pending 3, blocked 0, missing commands 0\n"
             "- Current evidence: Not attached yet.\n"
             "- Next action: Generate pypi.org-<version>.cliany-adapter.tar.gz.\n"
             "- Acceptance criteria: Attach the generated "
@@ -1510,6 +1522,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "target_url": item["target_url"],
             "commands": item["commands"],
             "offline_commands": item["offline_commands"],
+            "priority_rank": item["priority_rank"],
+            "priority_reason": item["priority_reason"],
             "promotion_evidence": item["promotion_evidence"],
             "promotion_evidence_primary_task": item["promotion_evidence_primary_task"],
             "evidence_bundle_primary_next_task": item["evidence_bundle_primary_next_task"],
@@ -2695,6 +2709,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "python scripts/validate_cases.py --strict",
         "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md",
     ]
+    assert metadata[0]["priority_rank"] == 1
+    assert metadata[0]["priority_reason"] == (
+        "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0"
+    )
     assert metadata[0]["promotion_evidence"] == _promotion_evidence(
         "Generate pypi.org-<version>.cliany-adapter.tar.gz.",
         "Run read-only PyPI search smoke.",
@@ -2708,6 +2726,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
             "package path or GitHub Release asset name."
         ),
+        "priority_rank": 1,
+        "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
     }
     assert metadata[0]["evidence_bundle_primary_next_task"] == {
         "task": "adapter_package",
@@ -2718,6 +2738,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
             "package path or GitHub Release asset name."
         ),
+        "priority_rank": 1,
+        "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
     }
     assert metadata[0]["candidate_package_validation_command"] == (
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "

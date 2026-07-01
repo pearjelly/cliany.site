@@ -526,6 +526,8 @@ class CandidatePromotion:
     adapter_package: str
     metadata_validation: str
     online_smoke: str
+    priority_rank: int | None
+    priority_reason: str
     promotion_evidence: dict[str, Any]
     promotion_evidence_primary_task: dict[str, Any]
     evidence_bundle_primary_next_task: dict[str, Any]
@@ -548,6 +550,8 @@ class CandidatePromotion:
             "adapter_package": self.adapter_package,
             "metadata_validation": self.metadata_validation,
             "online_smoke": self.online_smoke,
+            "priority_rank": self.priority_rank,
+            "priority_reason": self.priority_reason,
             "promotion_evidence": self.promotion_evidence,
             "promotion_evidence_primary_task": self.promotion_evidence_primary_task,
             "evidence_bundle_primary_next_task": self.evidence_bundle_primary_next_task,
@@ -1889,14 +1893,31 @@ def _case_promotion_command_plan_summary(cases_report: Any) -> dict[str, Any]:
 
 def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
     promotions: list[CandidatePromotion] = []
-    for case in readiness.cases.cases:
-        if case.status != "candidate":
-            continue
+    candidate_cases = [
+        case
+        for case in readiness.cases.cases
+        if _case_string_value(case, "status") == "candidate"
+    ]
+    ranked_candidate_cases = [
+        case
+        for _, case in sorted(
+            enumerate(candidate_cases),
+            key=lambda item: _case_promotion_priority_key(item[1], item[0]),
+        )
+    ]
+    for priority_rank, case in enumerate(ranked_candidate_cases, start=1):
         promotion = getattr(case, "promotion", None)
         if promotion is None:
             continue
         promotion_evidence = _case_dict_value(case, "promotion_evidence")
         evidence_bundle_primary_next_task = _candidate_promotion_primary_task(promotion_evidence)
+        priority_reason = _case_promotion_priority_reason(case, priority_rank)
+        if evidence_bundle_primary_next_task:
+            evidence_bundle_primary_next_task = {
+                **evidence_bundle_primary_next_task,
+                "priority_rank": priority_rank,
+                "priority_reason": priority_reason,
+            }
         commands = _case_string_list(case, "commands")
         offline_commands = _case_string_list(case, "offline_commands")
         candidate_package_validation_command = _default_candidate_package_validation_command()
@@ -1915,6 +1936,8 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 adapter_package=_promotion_value(promotion, "adapter_package"),
                 metadata_validation=_promotion_value(promotion, "metadata_validation"),
                 online_smoke=_promotion_value(promotion, "online_smoke"),
+                priority_rank=priority_rank,
+                priority_reason=priority_reason,
                 promotion_evidence=promotion_evidence,
                 promotion_evidence_primary_task=evidence_bundle_primary_next_task,
                 evidence_bundle_primary_next_task=evidence_bundle_primary_next_task,
@@ -1934,6 +1957,7 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                     metadata_validation=_promotion_value(promotion, "metadata_validation"),
                     online_smoke=_promotion_value(promotion, "online_smoke"),
                     promotion_evidence=promotion_evidence,
+                    primary_task=evidence_bundle_primary_next_task,
                 ),
             )
         )
@@ -2027,6 +2051,7 @@ def _candidate_issue_body(
     metadata_validation: str,
     online_smoke: str,
     promotion_evidence: dict[str, Any],
+    primary_task: dict[str, Any] | None = None,
 ) -> str:
     command_lines = [f"  - `{command}`" for command in commands] or ["  - Not declared."]
     offline_command_lines = [f"  - `{command}`" for command in offline_commands] or ["  - Not declared."]
@@ -2039,16 +2064,24 @@ def _candidate_issue_body(
         "metadata_validation": metadata_validation,
         "online_smoke": online_smoke,
     }
-    primary_task = _candidate_promotion_primary_task(promotion_evidence)
+    primary_task = dict(primary_task or _candidate_promotion_primary_task(promotion_evidence))
     if primary_task:
         primary_evidence = primary_task.get("evidence") or "Not attached yet."
         primary_next_action = primary_task.get("next_action") or "Not declared."
         primary_acceptance = CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA.get(
             str(primary_task.get("task") or ""), ""
         )
+        primary_priority_lines: list[str] = []
+        if primary_task.get("priority_rank") is not None:
+            primary_priority_lines.append(f"- Priority rank: `{primary_task['priority_rank']}`")
+        if primary_task.get("priority_reason"):
+            primary_priority_lines.append(
+                f"- Priority reason: {primary_task['priority_reason']}"
+            )
         primary_task_lines = [
             f"- Task: `{primary_task['task']}`",
             f"- Status: `{primary_task['status']}`",
+            *primary_priority_lines,
             f"- Current evidence: {primary_evidence}",
             f"- Next action: {primary_next_action}",
             f"- Acceptance criteria: {primary_acceptance}",
@@ -3013,6 +3046,8 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "target_url": promotion.target_url,
                 "commands": promotion.commands,
                 "offline_commands": promotion.offline_commands,
+                "priority_rank": promotion.priority_rank,
+                "priority_reason": promotion.priority_reason,
                 "promotion_evidence": promotion.promotion_evidence,
                 "promotion_evidence_primary_task": promotion.promotion_evidence_primary_task,
                 "evidence_bundle_primary_next_task": promotion.evidence_bundle_primary_next_task,
@@ -3855,6 +3890,8 @@ def _issue_metadata_summary(metadata: list[dict[str, Any]]) -> dict[str, Any]:
             "target_url": item["target_url"],
             "commands": item["commands"],
             "offline_commands": item["offline_commands"],
+            "priority_rank": item["priority_rank"],
+            "priority_reason": item["priority_reason"],
             "promotion_evidence": item["promotion_evidence"],
             "promotion_evidence_primary_task": item["promotion_evidence_primary_task"],
             "evidence_bundle_primary_next_task": item["evidence_bundle_primary_next_task"],
@@ -3899,6 +3936,8 @@ def _issue_metadata_for_summary(promotions: list[CandidatePromotion]) -> list[di
             "target_url": promotion.target_url,
             "commands": promotion.commands,
             "offline_commands": promotion.offline_commands,
+            "priority_rank": promotion.priority_rank,
+            "priority_reason": promotion.priority_reason,
             "promotion_evidence": promotion.promotion_evidence,
             "promotion_evidence_primary_task": promotion.promotion_evidence_primary_task,
             "evidence_bundle_primary_next_task": promotion.evidence_bundle_primary_next_task,
