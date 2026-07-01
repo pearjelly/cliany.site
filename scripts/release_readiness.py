@@ -418,6 +418,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "docs/good-first-issues.md",
             "weekly-maintainer-loop.md",
             "next_actions",
+            "primary_next_task_runbook",
+            "case_promotion_evidence_primary_runbook_steps",
             "github.com-1.0.0.cliany-adapter.tar.gz",
         ],
         "README.zh.md": [
@@ -431,6 +433,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "docs/good-first-issues.md",
             "weekly-maintainer-loop.md",
             "next_actions",
+            "primary_next_task_runbook",
+            "case_promotion_evidence_primary_runbook_steps",
             "github.com-1.0.0.cliany-adapter.tar.gz",
         ],
         "docs/contributor-starter.md": [

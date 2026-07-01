@@ -372,6 +372,8 @@ def _readme_content() -> str:
         "docs/module-ownership.md\n"
         "weekly-maintainer-loop.md\n"
         "next_actions\n"
+        "primary_next_task_runbook\n"
+        "case_promotion_evidence_primary_runbook_steps\n"
         "github.com-1.0.0.cliany-adapter.tar.gz\n"
         "## demo\n"
     )
@@ -1482,6 +1484,24 @@ def test_release_readiness_blocks_stale_readme_marketplace_package_name(tmp_path
     assert (
         "open source metadata file missing snippet: README.md: "
         "github.com-1.0.0.cliany-adapter.tar.gz"
+    ) in report.project_metadata.issues
+
+
+def test_release_readiness_blocks_stale_readme_candidate_runbook_alias(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    text = (repo / "README.md").read_text(encoding="utf-8")
+    (repo / "README.md").write_text(
+        text.replace("case_promotion_evidence_primary_runbook_steps\n", ""),
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file missing snippet: README.md: "
+        "case_promotion_evidence_primary_runbook_steps"
     ) in report.project_metadata.issues
 
 
