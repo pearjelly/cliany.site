@@ -7586,14 +7586,15 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
         "",
         (
             "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands | "
-            "Priority Rank | Priority Reason | Primary Evidence Task | Primary Evidence Status | "
-            "Primary Acceptance Criteria | Evidence Bundle Primary Next Task | "
+            "Promotion Command Plan Summary | Priority Rank | Priority Reason | "
+            "Primary Evidence Task | Primary Evidence Status | Primary Acceptance Criteria | "
+            "Evidence Bundle Primary Next Task | "
             "Evidence Bundle Primary Runbook | LLM Preflight Evidence Fields | "
             "Doctor Preflight Evidence Fields | "
             "Candidate Package Validation | Issue Template | Issue Template JSON | "
             "Evidence Bundle | Evidence Bundle JSON |"
         ),
-        "|------|------------|------------|--------------------|-----------------------------|---------------|-----------------|-----------------------|-------------------------|-----------------------------|-----------------------------------|---------------------------------|-------------------------------|----------------------------------|------------------------------|----------------|---------------------|-----------------|----------------------|",
+        "|------|------------|------------|--------------------|-----------------------------|--------------------------------|---------------|-----------------|-----------------------|-------------------------|-----------------------------|-----------------------------------|---------------------------------|-------------------------------|----------------------------------|------------------------------|----------------|---------------------|-----------------|----------------------|",
     ]
     for promotion in promotions:
         primary_task = promotion.promotion_evidence_primary_task.get("task") or "Not declared."
@@ -7615,6 +7616,7 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
         lines.append(
             f"| `{promotion.case_id}` | `{promotion.case_id}.md` | {promotion.target_url or 'Not declared.'} | "
             f"{len(promotion.commands)} | {len(promotion.offline_commands)} | "
+            f"{_promotion_command_plan_summary_inline(promotion.promotion_command_plan_summary)} | "
             f"`{promotion.priority_rank}` | {promotion.priority_reason or 'Not declared.'} | "
             f"`{primary_task}` | `{primary_status}` | {primary_acceptance} | "
             f"`{evidence_bundle_primary_task}` | "
@@ -7627,6 +7629,18 @@ def _issue_artifact_candidate_summary(promotions: list[CandidatePromotion]) -> s
             f"`{promotion.evidence_bundle_command}` | `{promotion.evidence_bundle_json_command}` |"
         )
     return "\n".join(lines)
+
+
+def _promotion_command_plan_summary_inline(summary: dict[str, Any]) -> str:
+    command_count = summary.get("command_count", 0)
+    missing_command_count = summary.get("missing_command_count", 0)
+    all_declared = str(bool(summary.get("all_declared"))).lower()
+    return (
+        "`promotion_command_plan_summary: "
+        f"command_count={command_count}, "
+        f"missing_command_count={missing_command_count}, "
+        f"all_declared={all_declared}`"
+    )
 
 
 def _gh_issue_create_command(promotion: CandidatePromotion, body_path: Path) -> str:
