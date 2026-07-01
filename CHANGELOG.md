@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+### Added
+- 新增 `v0.16.250` 发布草案，记录 live LLM preflight 返回 `E_UNKNOWN` connection error 时的 candidate 晋级阻塞边界。
+
+### Changed
+- Candidate promotion 的 issue template、evidence bundle、promotion plan、planner artifacts、case report、README 和官网说明现在把 `llm_live` warning/error（包括 `E_LLM_UNAVAILABLE` 与 `E_UNKNOWN` connection error）统一视为停止真实 `explore` 的 blocker 证据。
+
 ## [0.16.249] - 2026-07-01
 
 ### Added

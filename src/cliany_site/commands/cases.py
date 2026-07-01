@@ -26,8 +26,9 @@ CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
 LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
 LLM_LIVE_PREFLIGHT_BLOCKER_NOTE = (
     "Run the live LLM preflight before explore. If generate_adapters.ready=false "
-    "or llm_live reports E_LLM_UNAVAILABLE, stop candidate promotion, attach the "
-    "doctor JSON/error summary, and leave adapter_package pending or blocked."
+    "or llm_live reports warning/error such as E_LLM_UNAVAILABLE or E_UNKNOWN "
+    "connection error, stop candidate promotion, attach the doctor JSON/error "
+    "summary, and leave adapter_package pending or blocked."
 )
 PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (

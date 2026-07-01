@@ -227,7 +227,9 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "## LLM Preflight Gate" in template
     assert "- Command: `cliany-site doctor --llm-live --json`" in template
     assert "generate_adapters.ready=false" in template
+    assert "llm_live reports warning/error" in template
     assert "E_LLM_UNAVAILABLE" in template
+    assert "E_UNKNOWN connection error" in template
     assert "leave adapter_package pending or blocked" in template
     assert "## Acceptance Criteria" in template
     assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in template
@@ -278,6 +280,7 @@ def test_cases_command_issue_template_human_outputs_markdown(tmp_home):
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in result.output
     assert "## LLM Preflight Gate" in result.output
     assert "E_LLM_UNAVAILABLE" in result.output
+    assert "E_UNKNOWN connection error" in result.output
     assert "Candidate package validation command" in result.output
     assert (
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
@@ -427,7 +430,9 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     }
     assert bundle["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
     assert "generate_adapters.ready=false" in bundle["llm_live_preflight_blocker_note"]
+    assert "llm_live reports warning/error" in bundle["llm_live_preflight_blocker_note"]
     assert "E_LLM_UNAVAILABLE" in bundle["llm_live_preflight_blocker_note"]
+    assert "E_UNKNOWN connection error" in bundle["llm_live_preflight_blocker_note"]
     assert bundle["promotion_command_plan_count"] == 4
     assert bundle["promotion_command_plan_missing_tasks"] == []
     assert bundle["promotion_command_plan"] == [
@@ -640,6 +645,7 @@ def test_cases_command_promotion_plan_json(tmp_home):
     assert plan["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
     assert plan["primary_llm_live_preflight_command"] == plan["llm_live_preflight_command"]
     assert "E_LLM_UNAVAILABLE" in plan["llm_live_preflight_blocker_note"]
+    assert "E_UNKNOWN connection error" in plan["llm_live_preflight_blocker_note"]
     assert (
         plan["primary_llm_live_preflight_blocker_note"]
         == plan["llm_live_preflight_blocker_note"]
@@ -689,6 +695,7 @@ def test_cases_command_promotion_plan_human_outputs_queue(tmp_home):
     assert "- LLM live preflight: `cliany-site doctor --llm-live --json`" in result.output
     assert "LLM blocker handling: Run the live LLM preflight before explore" in result.output
     assert "E_LLM_UNAVAILABLE" in result.output
+    assert "E_UNKNOWN connection error" in result.output
     assert "## Primary next item" in result.output
     assert "- Case: `pypi-project-search`" in result.output
     assert "- Task: `adapter_package`" in result.output

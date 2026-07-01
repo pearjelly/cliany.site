@@ -17,6 +17,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site verify issues.apache.org --json" in docs
     assert "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json" in docs
     assert "不需要先配置 LLM key" in docs
+    assert "E_UNKNOWN" in docs
+    assert "generate_adapters.ready=false" in docs
     assert "Real Demo Case Proposal" in index
     assert "cliany-site cases --case-id pypi-project-search --issue-template" in index
     assert "Acceptance Criteria" in index

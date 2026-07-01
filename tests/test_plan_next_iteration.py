@@ -852,8 +852,9 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
         "llm_live_preflight_blocker_note": (
             "Run the live LLM preflight before explore. If generate_adapters.ready=false "
-            "or llm_live reports E_LLM_UNAVAILABLE, stop candidate promotion, attach the "
-            "doctor JSON/error summary, and leave adapter_package pending or blocked."
+            "or llm_live reports warning/error such as E_LLM_UNAVAILABLE or E_UNKNOWN "
+            "connection error, stop candidate promotion, attach the doctor JSON/error "
+            "summary, and leave adapter_package pending or blocked."
         ),
         "evidence_bundle_command": (
             "cliany-site cases --case-id pypi-project-search --evidence-bundle"
@@ -889,9 +890,10 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "## LLM Preflight Gate\n"
             "- Command: `cliany-site doctor --llm-live --json`\n"
             "- Blocker handling: Run the live LLM preflight before explore. "
-            "If generate_adapters.ready=false or llm_live reports E_LLM_UNAVAILABLE, "
-            "stop candidate promotion, attach the doctor JSON/error summary, and leave "
-            "adapter_package pending or blocked.\n\n"
+            "If generate_adapters.ready=false or llm_live reports warning/error such as "
+            "E_LLM_UNAVAILABLE or E_UNKNOWN connection error, stop candidate promotion, "
+            "attach the doctor JSON/error summary, and leave adapter_package pending or "
+            "blocked.\n\n"
             "## Acceptance Criteria\n"
             "- `adapter_package`: Attach the generated "
             "<domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name.\n"
@@ -2581,6 +2583,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert metadata[0]["promotion_command_plan"] == _pypi_promotion_command_plan()
     assert metadata[0]["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
     assert "E_LLM_UNAVAILABLE" in metadata[0]["llm_live_preflight_blocker_note"]
+    assert "E_UNKNOWN connection error" in metadata[0]["llm_live_preflight_blocker_note"]
     assert (
         metadata[0]["evidence_bundle_command"]
         == "cliany-site cases --case-id pypi-project-search --evidence-bundle"
