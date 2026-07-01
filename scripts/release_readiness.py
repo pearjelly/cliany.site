@@ -150,6 +150,9 @@ class ReadinessReport:
         primary_runbook = _case_promotion_primary_runbook(self.cases)
         primary_runbook_steps = _runbook_steps(primary_runbook)
         primary_runbook_first_command = _runbook_first_command(primary_runbook)
+        llm_live_preflight_evidence_fields = (
+            _case_promotion_llm_live_preflight_evidence_fields(self.cases)
+        )
         next_actions = _next_action_lines(self)
         standard_release_flow = _standard_release_flow(
             self,
@@ -198,6 +201,15 @@ class ReadinessReport:
                 _stable_json_sha256(primary_runbook_first_command)
                 if primary_runbook_first_command
                 else None
+            ),
+            "case_promotion_llm_live_preflight_evidence_fields": (
+                llm_live_preflight_evidence_fields
+            ),
+            "case_promotion_llm_live_preflight_evidence_field_count": len(
+                llm_live_preflight_evidence_fields
+            ),
+            "case_promotion_llm_live_preflight_evidence_fields_sha256": (
+                _stable_json_sha256(llm_live_preflight_evidence_fields)
             ),
             "draft": self.draft.to_dict(),
             "ci": self.ci.to_dict(),
@@ -1648,6 +1660,16 @@ def _case_promotion_primary_runbook(cases_report: Any) -> list[dict[str, Any]]:
     return [dict(step) for step in runbook if isinstance(step, dict)]
 
 
+def _case_promotion_llm_live_preflight_evidence_fields(cases_report: Any) -> list[str]:
+    summary = getattr(cases_report, "promotion_evidence_summary", {})
+    if not isinstance(summary, dict):
+        return []
+    fields = summary.get("llm_live_preflight_evidence_fields")
+    if not isinstance(fields, list):
+        return []
+    return [str(field_name) for field_name in fields if field_name]
+
+
 def _runbook_steps(runbook: list[dict[str, Any]]) -> list[str]:
     return [str(step.get("step") or "") for step in runbook if step.get("step")]
 
@@ -1691,6 +1713,11 @@ def _candidate_primary_runbook_rows(report: ReadinessReport) -> list[str]:
             f"{_markdown_cell(step.get('handoff') or '-')} |"
         )
     return rows
+
+
+def _llm_live_preflight_evidence_field_rows(report: ReadinessReport) -> list[str]:
+    fields = _case_promotion_llm_live_preflight_evidence_fields(report.cases)
+    return [f"| `{_markdown_cell(field_name)}` |" for field_name in fields]
 
 
 def _candidate_command_plan_summary_lines(report: ReadinessReport) -> list[str]:
@@ -2160,6 +2187,18 @@ def _render_markdown_report(report: ReadinessReport) -> str:
                 "| Step | Command | Required | Handoff |",
                 "|------|---------|----------|---------|",
                 *primary_runbook_rows,
+            ]
+        )
+    llm_live_preflight_evidence_field_rows = _llm_live_preflight_evidence_field_rows(report)
+    if llm_live_preflight_evidence_field_rows:
+        lines.extend(
+            [
+                "",
+                "## LLM Live Preflight Evidence Fields",
+                "",
+                "| Field |",
+                "|-------|",
+                *llm_live_preflight_evidence_field_rows,
             ]
         )
     if report.cases.candidate:

@@ -382,6 +382,26 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     assert summary["primary_next_task_runbook_first_command_sha256"] == hashlib.sha256(
         b"cliany-site doctor --llm-live --json"
     ).hexdigest()
+    assert summary["llm_live_preflight_evidence_fields"] == [
+        "summary.ready_for_explore",
+        "summary.llm_live_preflight",
+        "summary.capabilities.generate_adapters.ready",
+        "checks[llm_live].status",
+        "checks[llm_live].details.error_code",
+        "checks[llm_live].details.retryable",
+        "checks[llm_live].details.status_code",
+        "checks[llm_live].details.phase",
+        "checks[llm_live].details.message",
+    ]
+    assert summary["llm_live_preflight_evidence_field_count"] == 9
+    assert summary["llm_live_preflight_evidence_fields_sha256"] == hashlib.sha256(
+        json.dumps(
+            summary["llm_live_preflight_evidence_fields"],
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+    ).hexdigest()
     assert summary["primary_next_task_acceptance_criteria"].startswith("Attach the generated")
     assert summary["primary_next_action"] == "Generate the adapter package."
     assert report.cases[0].to_dict()["offline_commands"] == ["python scripts/validate_cases.py --strict"]
@@ -942,6 +962,10 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "| primary_next_task_acceptance_criteria | Attach the generated" in text
     assert "primary_task_detail" in text
     assert "primary_next_task" in text
+    assert "llm_live_preflight_evidence_field_count" in text
+    assert "## LLM Live Preflight Evidence Fields" in text
+    assert "| `summary.llm_live_preflight` |" in text
+    assert "| `checks[llm_live].details.error_code` |" in text
     assert "## Candidate Primary Runbook" in text
     assert "| `llm_live_preflight` | `cliany-site doctor --llm-live --json` | `true` |" in text
     assert (

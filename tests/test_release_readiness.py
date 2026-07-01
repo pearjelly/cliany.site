@@ -1265,6 +1265,9 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
     payload = report.to_dict()
     primary_runbook = payload["cases"]["promotion_evidence_summary"]["primary_next_task_runbook"]
     primary_runbook_steps = [step["step"] for step in primary_runbook]
+    llm_preflight_fields = payload["cases"]["promotion_evidence_summary"][
+        "llm_live_preflight_evidence_fields"
+    ]
     text = report_path.read_text(encoding="utf-8")
     assert payload["case_promotion_evidence_primary_runbook"] == primary_runbook
     assert payload["case_promotion_evidence_primary_runbook_step_count"] == 3
@@ -1285,6 +1288,13 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
     assert payload["case_promotion_evidence_primary_runbook_first_command_sha256"] == (
         release_readiness._stable_json_sha256("cliany-site doctor --llm-live --json")
     )
+    assert payload["case_promotion_llm_live_preflight_evidence_fields"] == llm_preflight_fields
+    assert payload["case_promotion_llm_live_preflight_evidence_field_count"] == 9
+    assert payload["case_promotion_llm_live_preflight_evidence_fields_sha256"] == (
+        release_readiness._stable_json_sha256(llm_preflight_fields)
+    )
+    assert "summary.llm_live_preflight" in llm_preflight_fields
+    assert "checks[llm_live].details.error_code" in llm_preflight_fields
     assert "## Candidate Primary Next Task" in text
     assert (
         "| `candidate-case` | `adapter_package` | `pending` | Not attached yet. | "
@@ -1301,6 +1311,9 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
         "| `acceptance` | No command. | `true` | "
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz"
     ) in text
+    assert "## LLM Live Preflight Evidence Fields" in text
+    assert "| `summary.llm_live_preflight` |" in text
+    assert "| `checks[llm_live].details.error_code` |" in text
     assert "## Candidate Promotion Command Plan Summary" in text
     assert "| candidate_count | `1` |" in text
     assert "| command_count | `4` |" in text

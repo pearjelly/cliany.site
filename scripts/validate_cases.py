@@ -39,6 +39,17 @@ LLM_LIVE_PREFLIGHT_BLOCKER_NOTE = (
     "(including provider connection failure), stop candidate promotion, attach "
     "the doctor JSON/error summary, and leave adapter_package pending or blocked."
 )
+LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = (
+    "summary.ready_for_explore",
+    "summary.llm_live_preflight",
+    "summary.capabilities.generate_adapters.ready",
+    "checks[llm_live].status",
+    "checks[llm_live].details.error_code",
+    "checks[llm_live].details.retryable",
+    "checks[llm_live].details.status_code",
+    "checks[llm_live].details.phase",
+    "checks[llm_live].details.message",
+)
 PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -194,6 +205,11 @@ def _adapter_command_names(commands: list[Any]) -> set[str]:
 
 def _sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
+
+
+def _stable_json_sha256(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return _sha256_bytes(payload.encode("utf-8"))
 
 
 def _safe_member_names(tar: tarfile.TarFile) -> tuple[list[str], list[str]]:
@@ -789,6 +805,7 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
     primary_runbook = _primary_task_runbook(primary, ranked_candidate_checks)
     primary_runbook_first_step = _runbook_first_step(primary_runbook)
     primary_runbook_first_command = str(primary_runbook_first_step.get("command") or "")
+    llm_live_preflight_evidence_fields = list(LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS)
     return {
         "candidate_count": len(candidate_checks),
         "task_count": sum(status_counts.values()),
@@ -810,6 +827,11 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
         "primary_next_task_runbook_first_command": primary_runbook_first_command,
         "primary_next_task_runbook_first_command_sha256": _sha256_bytes(
             primary_runbook_first_command.encode("utf-8")
+        ),
+        "llm_live_preflight_evidence_fields": llm_live_preflight_evidence_fields,
+        "llm_live_preflight_evidence_field_count": len(llm_live_preflight_evidence_fields),
+        "llm_live_preflight_evidence_fields_sha256": _stable_json_sha256(
+            llm_live_preflight_evidence_fields
         ),
         "primary_next_action": primary["next_action"] if primary else "",
         "primary_next_task_acceptance_criteria": (
@@ -1129,6 +1151,10 @@ def _candidate_promotion_evidence_summary_lines(summary: dict[str, Any]) -> list
         f"{_markdown_cell(summary.get('primary_next_task_runbook_first_command') or '-')} |",
         "| primary_next_task_runbook_first_command_sha256 | "
         f"`{_markdown_cell(summary.get('primary_next_task_runbook_first_command_sha256') or '-')}` |",
+        "| llm_live_preflight_evidence_field_count | "
+        f"`{_markdown_cell(summary.get('llm_live_preflight_evidence_field_count') or 0)}` |",
+        "| llm_live_preflight_evidence_fields_sha256 | "
+        f"`{_markdown_cell(summary.get('llm_live_preflight_evidence_fields_sha256') or '-')}` |",
         f"| primary_task_detail | `{json.dumps(summary.get('primary_task_detail') or {}, ensure_ascii=False)}` |",
         f"| primary_next_task | `{json.dumps(summary.get('primary_next_task') or {}, ensure_ascii=False)}` |",
         "",
@@ -1153,6 +1179,23 @@ def _candidate_promotion_evidence_summary_lines(summary: dict[str, Any]) -> list
             f"{_markdown_cell(task.get('next_action') or '-')} | "
             f"{_markdown_cell(task.get('acceptance_criteria') or '-')} |"
         )
+    return lines
+
+
+def _llm_live_preflight_evidence_field_lines(summary: dict[str, Any]) -> list[str]:
+    fields = summary.get("llm_live_preflight_evidence_fields")
+    if not isinstance(fields, list) or not fields:
+        return []
+
+    lines = [
+        "",
+        "## LLM Live Preflight Evidence Fields",
+        "",
+        "| Field |",
+        "|-------|",
+    ]
+    for field_name in fields:
+        lines.append(f"| `{_markdown_cell(field_name)}` |")
     return lines
 
 
@@ -1441,6 +1484,7 @@ def _render_markdown_report(report: CasesReport) -> str:
     lines.extend(_candidate_handoff_lines(report))
     lines.extend(_candidate_evidence_bundle_command_lines(report))
     lines.extend(_candidate_promotion_evidence_summary_lines(report.promotion_evidence_summary))
+    lines.extend(_llm_live_preflight_evidence_field_lines(report.promotion_evidence_summary))
     lines.extend(_candidate_primary_runbook_lines(report.promotion_evidence_summary))
     lines.extend(_candidate_promotion_command_plan_summary_lines(report.promotion_command_plan_summary))
     lines.extend(_candidate_promotion_task_lines(report))
