@@ -30,6 +30,8 @@ class DistributionReport:
     github_release_published: bool | None
     pypi_project: str | None
     pypi_version: str | None
+    pypi_latest_version: str | None
+    pypi_release_version: str | None
     pypi_published: bool | None
     issues: list[str]
 
@@ -45,6 +47,8 @@ class DistributionReport:
             "github_release_published": self.github_release_published,
             "pypi_project": self.pypi_project,
             "pypi_version": self.pypi_version,
+            "pypi_latest_version": self.pypi_latest_version,
+            "pypi_release_version": self.pypi_release_version,
             "pypi_published": self.pypi_published,
             "issues": self.issues,
             "next_action_count": len(next_actions),
@@ -258,6 +262,8 @@ def _build_distribution_report(
             github_release_published=None,
             pypi_project=pypi_project,
             pypi_version=None,
+            pypi_latest_version=None,
+            pypi_release_version=None,
             pypi_published=None,
             issues=[],
         )
@@ -268,6 +274,8 @@ def _build_distribution_report(
     github_release_tag = None
     github_release_published = None
     pypi_version = None
+    pypi_latest_version = None
+    pypi_release_version = None
     pypi_published = None
 
     if not latest_tag:
@@ -295,12 +303,39 @@ def _build_distribution_report(
         issues.append("PyPI project could not be inferred; pass --pypi-project")
     elif expected_version:
         try:
-            pypi_payload = _fetch_json(f"https://pypi.org/pypi/{resolved_pypi_project}/json")
+            project_part = urllib.parse.quote(resolved_pypi_project, safe="")
+            version_part = urllib.parse.quote(expected_version, safe="")
+            pypi_payload = _fetch_json(f"https://pypi.org/pypi/{project_part}/json")
             info = pypi_payload.get("info") or {}
-            pypi_version = str(info.get("version") or "")
-            pypi_published = pypi_version == expected_version
-            if not pypi_published:
-                issues.append(f"PyPI latest version {pypi_version or '(missing)'} != {expected_version}")
+            pypi_latest_version = str(info.get("version") or "")
+            if pypi_latest_version == expected_version:
+                pypi_version = expected_version
+                pypi_release_version = expected_version
+                pypi_published = True
+            else:
+                try:
+                    release_payload = _fetch_json(
+                        f"https://pypi.org/pypi/{project_part}/{version_part}/json"
+                    )
+                    release_info = release_payload.get("info") or {}
+                    release_files = release_payload.get("urls") or []
+                    pypi_release_version = str(release_info.get("version") or "")
+                    pypi_published = pypi_release_version == expected_version and bool(release_files)
+                    pypi_version = pypi_release_version if pypi_published else pypi_latest_version
+                    if not pypi_published:
+                        issues.append(
+                            "PyPI latest version "
+                            f"{pypi_latest_version or '(missing)'} != {expected_version}; "
+                            "version URL did not expose published files"
+                        )
+                except Exception as exc:  # noqa: BLE001 - report network/API failures as audit evidence.
+                    pypi_version = pypi_latest_version
+                    pypi_published = False
+                    issues.append(
+                        "PyPI latest version "
+                        f"{pypi_latest_version or '(missing)'} != {expected_version}; "
+                        f"version URL check failed: {exc}"
+                    )
         except Exception as exc:  # noqa: BLE001 - report network/API failures as audit evidence.
             issues.append(f"PyPI check failed: {exc}")
 
@@ -314,6 +349,8 @@ def _build_distribution_report(
         github_release_published=github_release_published,
         pypi_project=resolved_pypi_project,
         pypi_version=pypi_version,
+        pypi_latest_version=pypi_latest_version,
+        pypi_release_version=pypi_release_version,
         pypi_published=pypi_published,
         issues=issues,
     )
@@ -618,6 +655,8 @@ def _print_text(report: PublicationReport) -> None:
         print(f"- github_release_published: {report.distribution.github_release_published}")
         print(f"- pypi_project: {report.distribution.pypi_project or '(none)'}")
         print(f"- pypi_version: {report.distribution.pypi_version or '(none)'}")
+        print(f"- pypi_latest_version: {report.distribution.pypi_latest_version or '(none)'}")
+        print(f"- pypi_release_version: {report.distribution.pypi_release_version or '(none)'}")
         print(f"- pypi_published: {report.distribution.pypi_published}")
         if report.distribution.issues:
             print("- issues:")
@@ -730,6 +769,8 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
                 f"- github_release_published: `{_format_bool(report.distribution.github_release_published)}`",
                 f"- pypi_project: `{_format_value(report.distribution.pypi_project)}`",
                 f"- pypi_version: `{_format_value(report.distribution.pypi_version)}`",
+                f"- pypi_latest_version: `{_format_value(report.distribution.pypi_latest_version)}`",
+                f"- pypi_release_version: `{_format_value(report.distribution.pypi_release_version)}`",
                 f"- pypi_published: `{_format_bool(report.distribution.pypi_published)}`",
             ]
         )

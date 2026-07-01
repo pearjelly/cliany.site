@@ -102,6 +102,8 @@ def test_release_publication_checks_github_release_and_pypi_visibility(tmp_path,
         "github_release_published": True,
         "pypi_project": "cliany-site",
         "pypi_version": "0.1.0",
+        "pypi_latest_version": "0.1.0",
+        "pypi_release_version": "0.1.0",
         "pypi_published": True,
         "issues": [],
         "next_action_count": 0,
@@ -109,6 +111,45 @@ def test_release_publication_checks_github_release_and_pypi_visibility(tmp_path,
         "primary_next_action": None,
         "next_actions": [],
     }
+
+
+def test_release_publication_accepts_pypi_version_url_when_latest_cache_lags(tmp_path, monkeypatch):
+    repo = _init_repo_with_origin(tmp_path)
+    _commit(repo, "CHANGELOG.md", "released\n", "release")
+    _git(repo, "tag", "v0.1.1")
+    _git(repo, "push", "origin", "master", "--tags")
+
+    fetched_urls: list[str] = []
+
+    def fake_fetch_json(url: str):
+        fetched_urls.append(url)
+        if url == "https://api.github.com/repos/pearjelly/cliany.site/releases/latest":
+            return {"tag_name": "v0.1.1", "draft": False, "prerelease": False}
+        if url == "https://pypi.org/pypi/cliany-site/json":
+            return {"info": {"version": "0.1.0"}}
+        if url == "https://pypi.org/pypi/cliany-site/0.1.1/json":
+            return {"info": {"version": "0.1.1"}, "urls": [{"filename": "cliany_site-0.1.1.tar.gz"}]}
+        raise AssertionError(f"unexpected URL: {url}")
+
+    monkeypatch.setattr(release_publication, "_fetch_json", fake_fetch_json)
+
+    report = release_publication.build_report(
+        repo,
+        remote_check=True,
+        distribution_check=True,
+        github_repo="pearjelly/cliany.site",
+        pypi_project="cliany-site",
+    )
+
+    payload = report.to_dict()
+    assert report.ok is True
+    assert payload["distribution_ok"] is True
+    assert payload["distribution"]["pypi_published"] is True
+    assert payload["distribution"]["pypi_version"] == "0.1.1"
+    assert payload["distribution"]["pypi_latest_version"] == "0.1.0"
+    assert payload["distribution"]["pypi_release_version"] == "0.1.1"
+    assert payload["distribution"]["issues"] == []
+    assert "https://pypi.org/pypi/cliany-site/0.1.1/json" in fetched_urls
 
 
 def test_release_publication_reports_unpushed_release_commit_and_tag(tmp_path):

@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.252] - 2026-07-02
+
+### Changed
+- Release publication audits now fall back to PyPI's version-specific JSON endpoint when the project-level latest-version cache still reports the previous release, so a freshly uploaded version can be verified without waiting for `info.version` cache expiry.
+- Distribution audit JSON, text, and Markdown reports now expose `pypi_latest_version` and `pypi_release_version` alongside the backward-compatible `pypi_version`, making PyPI cache-lag windows visible instead of ambiguous.
+- README、README.zh、release cadence docs、weekly maintainer docs、public roadmap 和官网维护者入口 now document the stronger post-release PyPI audit fields and update the maintained baseline to the v0.16.252 release train.
+
 ## [0.16.251] - 2026-07-02
 
 ### Changed
@@ -2356,7 +2363,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.251...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.252...HEAD
+[0.16.252]: https://github.com/pearjelly/cliany.site/compare/v0.16.251...v0.16.252
 [0.16.251]: https://github.com/pearjelly/cliany.site/compare/v0.16.250...v0.16.251
 [0.16.250]: https://github.com/pearjelly/cliany.site/compare/v0.16.249...v0.16.250
 [0.16.249]: https://github.com/pearjelly/cliany.site/compare/v0.16.248...v0.16.249
