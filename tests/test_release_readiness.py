@@ -28,6 +28,7 @@ RELEASE_PREFLIGHT_COMMAND = (
     "--report release-readiness-report.md"
 )
 WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
+WEBSITE_INSPECT_COMMAND = "cd site && vercel inspect www.cliany.site --wait --timeout 90s"
 
 
 def _standard_release_flow_step_status_counts(
@@ -757,6 +758,7 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert "git tag v0.1.1" in standard_release_flow["commands"]
     assert "git push origin v0.1.1" in standard_release_flow["commands"]
     assert WEBSITE_DEPLOY_COMMAND in standard_release_flow["commands"]
+    assert WEBSITE_INSPECT_COMMAND in standard_release_flow["commands"]
     assert "python scripts/check_release_publication.py --remote --distribution --json" in (
         standard_release_flow["commands"]
     )
@@ -764,6 +766,13 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert payload["standard_release_flow_website_deploy_command"] == WEBSITE_DEPLOY_COMMAND
     assert payload["standard_release_flow_website_deploy_command_sha256"] == (
         release_readiness._stable_json_sha256(WEBSITE_DEPLOY_COMMAND)
+    )
+    assert payload["standard_release_flow_has_website_inspect"] is True
+    assert payload["standard_release_flow_website_inspect_command"] == (
+        WEBSITE_INSPECT_COMMAND
+    )
+    assert payload["standard_release_flow_website_inspect_command_sha256"] == (
+        release_readiness._stable_json_sha256(WEBSITE_INSPECT_COMMAND)
     )
     distribution_audit_command = (
         "python scripts/check_release_publication.py --remote --distribution --json"
@@ -801,6 +810,12 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
         standard_release_flow["steps"]
     )
     assert payload["standard_release_flow_step_names"] == standard_release_flow_step_names
+    assert standard_release_flow_step_names.index("website_deploy") < (
+        standard_release_flow_step_names.index("website_inspect")
+    )
+    assert standard_release_flow_step_names.index("website_inspect") < (
+        standard_release_flow_step_names.index("remote_publication_audit")
+    )
     assert payload["standard_release_flow_step_names_sha256"] == (
         release_readiness._stable_json_sha256(standard_release_flow_step_names)
     )
@@ -995,6 +1010,12 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- standard_release_flow_has_website_deploy: `true`" in text
     assert f"- standard_release_flow_website_deploy_command: `{WEBSITE_DEPLOY_COMMAND}`" in text
     assert "- standard_release_flow_website_deploy_command_sha256: `" in text
+    assert "- standard_release_flow_has_website_inspect: `true`" in text
+    assert (
+        f"- standard_release_flow_website_inspect_command: `{WEBSITE_INSPECT_COMMAND}`"
+        in text
+    )
+    assert "- standard_release_flow_website_inspect_command_sha256: `" in text
     assert "- standard_release_flow_has_distribution_audit: `true`" in text
     assert (
         "- standard_release_flow_distribution_audit_command: "
@@ -1182,11 +1203,26 @@ def test_standard_release_flow_preserves_remote_name():
         "python scripts/release_readiness.py --strict --target-version 0.1.1 "
         "--remote --remote-name upstream"
     )
-    assert flow["steps"][-2] == {
-        "name": "website_deploy",
-        "status": "pending",
-        "command": "cd site && vercel link --yes --project cliany.site && vercel --prod --yes",
-    }
+    assert flow["steps"][-3:] == [
+        {
+            "name": "website_deploy",
+            "status": "pending",
+            "command": WEBSITE_DEPLOY_COMMAND,
+        },
+        {
+            "name": "website_inspect",
+            "status": "pending",
+            "command": WEBSITE_INSPECT_COMMAND,
+        },
+        {
+            "name": "remote_publication_audit",
+            "status": "pending",
+            "command": (
+                "python scripts/check_release_publication.py --remote "
+                "--remote-name upstream --distribution --json"
+            ),
+        },
+    ]
     assert flow["steps"][-1]["command"] == (
         "python scripts/check_release_publication.py --remote --remote-name upstream "
         "--distribution --json"
@@ -1394,6 +1430,12 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     assert "standard_release_flow_step_status_counts_sha256:" in output
     assert "standard_release_flow_primary_blocked_step_name:" in output
     assert "standard_release_flow_primary_pending_step_name:" in output
+    assert "standard_release_flow_has_website_inspect: true" in output
+    assert (
+        f"standard_release_flow_website_inspect_command: {WEBSITE_INSPECT_COMMAND}"
+        in output
+    )
+    assert "standard_release_flow_website_inspect_command_sha256:" in output
     assert "package_gate_summary: checked=false, failed=0, missing=0, invalid=0, repair_actions=0" in output
     assert "package_gate_primary_repair_action:" not in output
     assert "next_actions:" in output.splitlines()

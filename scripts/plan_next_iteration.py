@@ -47,6 +47,7 @@ LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = (
     "checks[llm_live].details.message",
 )
 WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
+WEBSITE_INSPECT_COMMAND = "cd site && vercel inspect www.cliany.site --wait --timeout 90s"
 CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -91,6 +92,9 @@ ARTIFACT_MANIFEST_KEYS = (
     "standard_release_flow_has_website_deploy",
     "standard_release_flow_website_deploy_command",
     "standard_release_flow_website_deploy_command_sha256",
+    "standard_release_flow_has_website_inspect",
+    "standard_release_flow_website_inspect_command",
+    "standard_release_flow_website_inspect_command_sha256",
     "standard_release_flow_has_distribution_audit",
     "standard_release_flow_distribution_audit_command",
     "standard_release_flow_distribution_audit_command_sha256",
@@ -237,6 +241,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "standard_release_flow_has_website_deploy",
     "standard_release_flow_website_deploy_command",
     "standard_release_flow_website_deploy_command_sha256",
+    "standard_release_flow_has_website_inspect",
+    "standard_release_flow_website_inspect_command",
+    "standard_release_flow_website_inspect_command_sha256",
     "standard_release_flow_has_distribution_audit",
     "standard_release_flow_distribution_audit_command",
     "standard_release_flow_distribution_audit_command_sha256",
@@ -694,6 +701,9 @@ class IterationPlan:
         website_deploy_command = _standard_release_flow_website_deploy_command(
             self.standard_release_flow
         )
+        website_inspect_command = _standard_release_flow_website_inspect_command(
+            self.standard_release_flow
+        )
         distribution_audit_command = _standard_release_flow_distribution_audit_command(
             self.standard_release_flow
         )
@@ -766,6 +776,13 @@ class IterationPlan:
             "standard_release_flow_website_deploy_command_sha256": (
                 _stable_json_sha256(website_deploy_command)
                 if website_deploy_command
+                else None
+            ),
+            "standard_release_flow_has_website_inspect": website_inspect_command is not None,
+            "standard_release_flow_website_inspect_command": website_inspect_command,
+            "standard_release_flow_website_inspect_command_sha256": (
+                _stable_json_sha256(website_inspect_command)
+                if website_inspect_command
                 else None
             ),
             "standard_release_flow_has_distribution_audit": (
@@ -1185,6 +1202,16 @@ def _standard_release_flow_website_deploy_command(flow: dict[str, Any]) -> str |
     return None
 
 
+def _standard_release_flow_website_inspect_command(flow: dict[str, Any]) -> str | None:
+    commands = flow.get("commands")
+    if not isinstance(commands, list):
+        return None
+    for command in commands:
+        if str(command) == WEBSITE_INSPECT_COMMAND:
+            return str(command)
+    return None
+
+
 def _standard_release_flow_distribution_audit_command(flow: dict[str, Any]) -> str | None:
     commands = flow.get("commands")
     if not isinstance(commands, list):
@@ -1299,6 +1326,7 @@ def _standard_release_flow(
         *publication_publish_commands,
         *target_tag_commands,
         WEBSITE_DEPLOY_COMMAND,
+        WEBSITE_INSPECT_COMMAND,
         remote_audit_command,
     ]
     commands = list(dict.fromkeys(command for command in validation_commands if command))
@@ -1357,6 +1385,11 @@ def _standard_release_flow(
                 "name": "website_deploy",
                 "status": "pending",
                 "command": WEBSITE_DEPLOY_COMMAND,
+            },
+            {
+                "name": "website_inspect",
+                "status": "pending",
+                "command": WEBSITE_INSPECT_COMMAND,
             },
             {
                 "name": "remote_publication_audit",
@@ -2796,6 +2829,9 @@ def _print_text(plan: IterationPlan) -> None:
     website_deploy_command = _standard_release_flow_website_deploy_command(
         plan.standard_release_flow
     )
+    website_inspect_command = _standard_release_flow_website_inspect_command(
+        plan.standard_release_flow
+    )
     distribution_audit_command = _standard_release_flow_distribution_audit_command(
         plan.standard_release_flow
     )
@@ -2895,6 +2931,12 @@ def _print_text(plan: IterationPlan) -> None:
     print(
         "standard_release_flow_website_deploy_command_sha256: "
         f"{_stable_json_sha256(website_deploy_command) if website_deploy_command else None}"
+    )
+    print(f"standard_release_flow_has_website_inspect: {website_inspect_command is not None}")
+    print(f"standard_release_flow_website_inspect_command: {website_inspect_command}")
+    print(
+        "standard_release_flow_website_inspect_command_sha256: "
+        f"{_stable_json_sha256(website_inspect_command) if website_inspect_command else None}"
     )
     print(
         "standard_release_flow_has_distribution_audit: "
@@ -3137,6 +3179,23 @@ def _render_markdown(plan: IterationPlan) -> str:
     standard_release_flow_website_deploy_command_sha256_text = _format_context_value(
         standard_release_flow_website_deploy_command_sha256
     )
+    standard_release_flow_website_inspect_command = (
+        _standard_release_flow_website_inspect_command(plan.standard_release_flow)
+    )
+    standard_release_flow_website_inspect_command_sha256 = (
+        _stable_json_sha256(standard_release_flow_website_inspect_command)
+        if standard_release_flow_website_inspect_command
+        else None
+    )
+    standard_release_flow_website_inspect_command_text = _format_context_value(
+        standard_release_flow_website_inspect_command
+    )
+    standard_release_flow_website_inspect_command_sha256_text = _format_context_value(
+        standard_release_flow_website_inspect_command_sha256
+    )
+    standard_release_flow_website_inspect_present = str(
+        standard_release_flow_website_inspect_command is not None
+    ).lower()
     standard_release_flow_distribution_audit_command = (
         _standard_release_flow_distribution_audit_command(plan.standard_release_flow)
     )
@@ -3229,6 +3288,9 @@ def _render_markdown(plan: IterationPlan) -> str:
 | standard_release_flow_has_website_deploy | `{str(standard_release_flow_website_deploy_command is not None).lower()}` |
 | standard_release_flow_website_deploy_command | `{standard_release_flow_website_deploy_command_text}` |
 | standard_release_flow_website_deploy_command_sha256 | `{standard_release_flow_website_deploy_command_sha256_text}` |
+| standard_release_flow_has_website_inspect | `{standard_release_flow_website_inspect_present}` |
+| standard_release_flow_website_inspect_command | `{standard_release_flow_website_inspect_command_text}` |
+| standard_release_flow_website_inspect_command_sha256 | `{standard_release_flow_website_inspect_command_sha256_text}` |
 | standard_release_flow_has_distribution_audit | `{distribution_audit_present_text}` |
 | standard_release_flow_distribution_audit_command | `{distribution_audit_command_text}` |
 | standard_release_flow_distribution_audit_command_sha256 | `{distribution_audit_sha256_text}` |
@@ -3584,6 +3646,10 @@ def _standard_release_flow_markdown(flow: dict[str, Any]) -> str:
     website_deploy_command_sha256 = (
         _stable_json_sha256(website_deploy_command) if website_deploy_command else None
     )
+    website_inspect_command = _standard_release_flow_website_inspect_command(flow)
+    website_inspect_command_sha256 = (
+        _stable_json_sha256(website_inspect_command) if website_inspect_command else None
+    )
     distribution_audit_command = _standard_release_flow_distribution_audit_command(flow)
     distribution_audit_command_sha256 = (
         _stable_json_sha256(distribution_audit_command)
@@ -3626,6 +3692,9 @@ def _standard_release_flow_markdown(flow: dict[str, Any]) -> str:
 - standard_release_flow_has_website_deploy: `{str(website_deploy_command is not None).lower()}`
 - standard_release_flow_website_deploy_command: `{_format_context_value(website_deploy_command)}`
 - standard_release_flow_website_deploy_command_sha256: `{_format_context_value(website_deploy_command_sha256)}`
+- standard_release_flow_has_website_inspect: `{str(website_inspect_command is not None).lower()}`
+- standard_release_flow_website_inspect_command: `{_format_context_value(website_inspect_command)}`
+- standard_release_flow_website_inspect_command_sha256: `{_format_context_value(website_inspect_command_sha256)}`
 - standard_release_flow_has_distribution_audit: `{str(distribution_audit_command is not None).lower()}`
 - standard_release_flow_distribution_audit_command: `{_format_context_value(distribution_audit_command)}`
 - standard_release_flow_distribution_audit_command_sha256: `{_format_context_value(distribution_audit_command_sha256)}`
@@ -4062,6 +4131,20 @@ def _render_issue_artifacts_readme(
     standard_flow_website_deploy_command_sha256_text = _format_context_value(
         standard_flow_website_deploy_command_sha256
     )
+    standard_flow_website_inspect_command = _standard_release_flow_website_inspect_command(
+        plan.standard_release_flow
+    )
+    standard_flow_website_inspect_command_sha256 = (
+        _stable_json_sha256(standard_flow_website_inspect_command)
+        if standard_flow_website_inspect_command
+        else None
+    )
+    standard_flow_website_inspect_command_text = _format_context_value(
+        standard_flow_website_inspect_command
+    )
+    standard_flow_website_inspect_command_sha256_text = _format_context_value(
+        standard_flow_website_inspect_command_sha256
+    )
     standard_flow_distribution_audit_command = (
         _standard_release_flow_distribution_audit_command(plan.standard_release_flow)
     )
@@ -4172,6 +4255,9 @@ Generated for target version `{plan.target_version}`.
 - standard_release_flow_has_website_deploy: `{str(standard_flow_website_deploy_command is not None).lower()}`
 - standard_release_flow_website_deploy_command: `{standard_flow_website_deploy_command_text}`
 - standard_release_flow_website_deploy_command_sha256: `{standard_flow_website_deploy_command_sha256_text}`
+- standard_release_flow_has_website_inspect: `{str(standard_flow_website_inspect_command is not None).lower()}`
+- standard_release_flow_website_inspect_command: `{standard_flow_website_inspect_command_text}`
+- standard_release_flow_website_inspect_command_sha256: `{standard_flow_website_inspect_command_sha256_text}`
 - standard_release_flow_has_distribution_audit: `{str(standard_flow_distribution_audit_command is not None).lower()}`
 - standard_release_flow_distribution_audit_command: `{standard_flow_distribution_audit_command_text}`
 - standard_release_flow_distribution_audit_command_sha256: `{standard_flow_distribution_audit_command_sha256_text}`
@@ -4553,6 +4639,9 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
     website_deploy_command = _standard_release_flow_website_deploy_command(
         plan.standard_release_flow
     )
+    website_inspect_command = _standard_release_flow_website_inspect_command(
+        plan.standard_release_flow
+    )
     distribution_audit_command = _standard_release_flow_distribution_audit_command(
         plan.standard_release_flow
     )
@@ -4636,6 +4725,13 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         "standard_release_flow_website_deploy_command": website_deploy_command,
         "standard_release_flow_website_deploy_command_sha256": (
             _stable_json_sha256(website_deploy_command) if website_deploy_command else None
+        ),
+        "standard_release_flow_has_website_inspect": website_inspect_command is not None,
+        "standard_release_flow_website_inspect_command": website_inspect_command,
+        "standard_release_flow_website_inspect_command_sha256": (
+            _stable_json_sha256(website_inspect_command)
+            if website_inspect_command
+            else None
         ),
         "standard_release_flow_has_distribution_audit": (
             distribution_audit_command is not None
@@ -4877,6 +4973,9 @@ def _artifact_manifest_payload_without_summary(
     website_deploy_command = _standard_release_flow_website_deploy_command(
         plan.standard_release_flow
     )
+    website_inspect_command = _standard_release_flow_website_inspect_command(
+        plan.standard_release_flow
+    )
     distribution_audit_command = _standard_release_flow_distribution_audit_command(
         plan.standard_release_flow
     )
@@ -4955,6 +5054,13 @@ def _artifact_manifest_payload_without_summary(
         "standard_release_flow_website_deploy_command": website_deploy_command,
         "standard_release_flow_website_deploy_command_sha256": (
             _stable_json_sha256(website_deploy_command) if website_deploy_command else None
+        ),
+        "standard_release_flow_has_website_inspect": website_inspect_command is not None,
+        "standard_release_flow_website_inspect_command": website_inspect_command,
+        "standard_release_flow_website_inspect_command_sha256": (
+            _stable_json_sha256(website_inspect_command)
+            if website_inspect_command
+            else None
         ),
         "standard_release_flow_has_distribution_audit": (
             distribution_audit_command is not None
@@ -5279,6 +5385,9 @@ def _issue_artifact_bundle_summary(
     website_deploy_command = _standard_release_flow_website_deploy_command(
         plan.standard_release_flow
     )
+    website_inspect_command = _standard_release_flow_website_inspect_command(
+        plan.standard_release_flow
+    )
     distribution_audit_command = _standard_release_flow_distribution_audit_command(
         plan.standard_release_flow
     )
@@ -5533,6 +5642,13 @@ def _issue_artifact_bundle_summary(
         "standard_release_flow_website_deploy_command": website_deploy_command,
         "standard_release_flow_website_deploy_command_sha256": (
             _stable_json_sha256(website_deploy_command) if website_deploy_command else None
+        ),
+        "standard_release_flow_has_website_inspect": website_inspect_command is not None,
+        "standard_release_flow_website_inspect_command": website_inspect_command,
+        "standard_release_flow_website_inspect_command_sha256": (
+            _stable_json_sha256(website_inspect_command)
+            if website_inspect_command
+            else None
         ),
         "standard_release_flow_has_distribution_audit": (
             distribution_audit_command is not None
@@ -6344,6 +6460,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"{_summary_inline_code(summary['standard_release_flow_website_deploy_command'])}",
             "- standard_release_flow_website_deploy_command_sha256: "
             f"`{summary['standard_release_flow_website_deploy_command_sha256']}`",
+            "- standard_release_flow_has_website_inspect: "
+            f"`{str(bool(summary['standard_release_flow_has_website_inspect'])).lower()}`",
+            "- standard_release_flow_website_inspect_command: "
+            f"{_summary_inline_code(summary['standard_release_flow_website_inspect_command'])}",
+            "- standard_release_flow_website_inspect_command_sha256: "
+            f"`{summary['standard_release_flow_website_inspect_command_sha256']}`",
             "- standard_release_flow_has_distribution_audit: "
             f"`{str(bool(summary['standard_release_flow_has_distribution_audit'])).lower()}`",
             "- standard_release_flow_distribution_audit_command: "

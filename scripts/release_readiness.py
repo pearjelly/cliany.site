@@ -30,6 +30,7 @@ RELEASE_PREFLIGHT_COMMAND = (
     "--report release-readiness-report.md"
 )
 WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
+WEBSITE_INSPECT_COMMAND = "cd site && vercel inspect www.cliany.site --wait --timeout 90s"
 NODE24_ACTIONS_ENV_SNIPPET = 'FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"'
 PROMOTION_FIELDS = ("adapter_package", "metadata_validation", "online_smoke")
 
@@ -172,6 +173,9 @@ class ReadinessReport:
         standard_release_flow_website_deploy_command = (
             _standard_release_flow_website_deploy_command(standard_release_flow)
         )
+        standard_release_flow_website_inspect_command = (
+            _standard_release_flow_website_inspect_command(standard_release_flow)
+        )
         standard_release_flow_distribution_audit_command = (
             _standard_release_flow_distribution_audit_command(standard_release_flow)
         )
@@ -294,6 +298,17 @@ class ReadinessReport:
             "standard_release_flow_website_deploy_command_sha256": (
                 _stable_json_sha256(standard_release_flow_website_deploy_command)
                 if standard_release_flow_website_deploy_command
+                else None
+            ),
+            "standard_release_flow_has_website_inspect": (
+                standard_release_flow_website_inspect_command is not None
+            ),
+            "standard_release_flow_website_inspect_command": (
+                standard_release_flow_website_inspect_command
+            ),
+            "standard_release_flow_website_inspect_command_sha256": (
+                _stable_json_sha256(standard_release_flow_website_inspect_command)
+                if standard_release_flow_website_inspect_command
                 else None
             ),
             "standard_release_flow_has_distribution_audit": (
@@ -1103,6 +1118,18 @@ def _print_text(report: ReadinessReport) -> None:
         "standard_release_flow_primary_pending_step_name: "
         f"{_standard_release_flow_primary_step_name_with_status_prefix(standard_release_flow, 'pending')}"
     )
+    website_inspect_command = _standard_release_flow_website_inspect_command(
+        standard_release_flow
+    )
+    print(
+        "standard_release_flow_has_website_inspect: "
+        f"{str(website_inspect_command is not None).lower()}"
+    )
+    print(f"standard_release_flow_website_inspect_command: {website_inspect_command}")
+    print(
+        "standard_release_flow_website_inspect_command_sha256: "
+        f"{_stable_json_sha256(website_inspect_command) if website_inspect_command else None}"
+    )
     print(f"package_gate: {report.package_gate.ok}")
     print(
         "package_gate_summary: "
@@ -1379,6 +1406,7 @@ def _standard_release_flow(
         *[str(command) for command in publication_payload["publish_commands"]],
         *target_tag_commands,
         WEBSITE_DEPLOY_COMMAND,
+        WEBSITE_INSPECT_COMMAND,
         remote_audit_command,
     ]
     commands = list(dict.fromkeys(command for command in commands if command))
@@ -1438,6 +1466,11 @@ def _standard_release_flow(
                 "command": WEBSITE_DEPLOY_COMMAND,
             },
             {
+                "name": "website_inspect",
+                "status": "pending",
+                "command": WEBSITE_INSPECT_COMMAND,
+            },
+            {
                 "name": "remote_publication_audit",
                 "status": "pending",
                 "command": remote_audit_command,
@@ -1450,6 +1483,17 @@ def _standard_release_flow_website_deploy_command(flow: dict[str, Any]) -> str |
     commands = set(str(command) for command in flow.get("commands") or [])
     for step in flow.get("steps") or []:
         if step.get("name") != "website_deploy":
+            continue
+        command = step.get("command")
+        if command and str(command) in commands:
+            return str(command)
+    return None
+
+
+def _standard_release_flow_website_inspect_command(flow: dict[str, Any]) -> str | None:
+    commands = set(str(command) for command in flow.get("commands") or [])
+    for step in flow.get("steps") or []:
+        if step.get("name") != "website_inspect":
             continue
         command = step.get("command")
         if command and str(command) in commands:
@@ -1905,6 +1949,10 @@ def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
     website_deploy_command_sha256 = (
         _stable_json_sha256(website_deploy_command) if website_deploy_command else None
     )
+    website_inspect_command = _standard_release_flow_website_inspect_command(flow)
+    website_inspect_command_sha256 = (
+        _stable_json_sha256(website_inspect_command) if website_inspect_command else None
+    )
     distribution_audit_command = _standard_release_flow_distribution_audit_command(flow)
     distribution_audit_command_sha256 = (
         _stable_json_sha256(distribution_audit_command)
@@ -1979,6 +2027,18 @@ def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
         (
             "- standard_release_flow_website_deploy_command_sha256: "
             f"`{_markdown_cell(website_deploy_command_sha256)}`"
+        ),
+        (
+            "- standard_release_flow_has_website_inspect: "
+            f"`{str(website_inspect_command is not None).lower()}`"
+        ),
+        (
+            "- standard_release_flow_website_inspect_command: "
+            f"`{_markdown_cell(website_inspect_command)}`"
+        ),
+        (
+            "- standard_release_flow_website_inspect_command_sha256: "
+            f"`{_markdown_cell(website_inspect_command_sha256)}`"
         ),
         (
             "- standard_release_flow_has_distribution_audit: "

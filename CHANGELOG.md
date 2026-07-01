@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.253] - 2026-07-02
+
+### Changed
+- Release readiness standard release flows now include a `website_inspect` step after production website deployment, using `cd site && vercel inspect www.cliany.site --wait --timeout 90s` to verify the public cliany.site alias target before the final distribution audit.
+- Release readiness and next-iteration planning now expose `standard_release_flow_has_website_inspect`, `standard_release_flow_website_inspect_command`, and `standard_release_flow_website_inspect_command_sha256` across JSON, text/Markdown reports, candidate issue manifests, publication handoff, bundle summaries, and artifact READMEs.
+- Weekly maintainer docs, public roadmaps, and the website maintainer entrypoint now document the website inspect checkpoint and update the maintained baseline to the v0.16.253 release train.
+
 ## [0.16.252] - 2026-07-02
 
 ### Changed
@@ -2363,7 +2370,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.252...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.253...HEAD
+[0.16.253]: https://github.com/pearjelly/cliany.site/compare/v0.16.252...v0.16.253
 [0.16.252]: https://github.com/pearjelly/cliany.site/compare/v0.16.251...v0.16.252
 [0.16.251]: https://github.com/pearjelly/cliany.site/compare/v0.16.250...v0.16.251
 [0.16.250]: https://github.com/pearjelly/cliany.site/compare/v0.16.249...v0.16.250

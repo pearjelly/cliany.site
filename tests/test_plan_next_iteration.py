@@ -20,6 +20,7 @@ sys.modules[SPEC.name] = plan_next_iteration
 SPEC.loader.exec_module(plan_next_iteration)
 
 WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
+WEBSITE_INSPECT_COMMAND = "cd site && vercel inspect www.cliany.site --wait --timeout 90s"
 DISTRIBUTION_AUDIT_COMMAND = (
     "python scripts/check_release_publication.py --remote --distribution --json"
 )
@@ -1349,7 +1350,8 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
         in data["standard_release_flow"]["commands"]
     )
     assert WEBSITE_DEPLOY_COMMAND in data["standard_release_flow"]["commands"]
-    assert data["standard_release_flow"]["steps"][-3:] == [
+    assert WEBSITE_INSPECT_COMMAND in data["standard_release_flow"]["commands"]
+    assert data["standard_release_flow"]["steps"][-4:] == [
         {
             "name": "target_tag",
             "status": "create_target_tag_at_head",
@@ -1359,6 +1361,11 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
             "name": "website_deploy",
             "status": "pending",
             "command": WEBSITE_DEPLOY_COMMAND,
+        },
+        {
+            "name": "website_inspect",
+            "status": "pending",
+            "command": WEBSITE_INSPECT_COMMAND,
         },
         {
             "name": "remote_publication_audit",
@@ -1376,6 +1383,12 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
         data["standard_release_flow"]["steps"]
     )
     assert data["standard_release_flow_step_names"] == standard_release_flow_step_names
+    assert standard_release_flow_step_names.index("website_deploy") < (
+        standard_release_flow_step_names.index("website_inspect")
+    )
+    assert standard_release_flow_step_names.index("website_inspect") < (
+        standard_release_flow_step_names.index("remote_publication_audit")
+    )
     assert data["standard_release_flow_step_names_sha256"] == _stable_json_sha256(
         standard_release_flow_step_names
     )
@@ -1414,6 +1427,11 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
     assert data["standard_release_flow_website_deploy_command"] == WEBSITE_DEPLOY_COMMAND
     assert data["standard_release_flow_website_deploy_command_sha256"] == (
         _stable_json_sha256(WEBSITE_DEPLOY_COMMAND)
+    )
+    assert data["standard_release_flow_has_website_inspect"] is True
+    assert data["standard_release_flow_website_inspect_command"] == WEBSITE_INSPECT_COMMAND
+    assert data["standard_release_flow_website_inspect_command_sha256"] == (
+        _stable_json_sha256(WEBSITE_INSPECT_COMMAND)
     )
     distribution_audit_command = (
         "python scripts/check_release_publication.py --remote --remote-name upstream "
@@ -1522,7 +1540,7 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
         "first_step_name": standard_release_flow_step_names[0],
         "last_step_name": standard_release_flow_step_names[-1],
     }
-    assert "| standard_release_flow_step_count | `8` |" in text
+    assert f"| standard_release_flow_step_count | `{len(plan.standard_release_flow['steps'])}` |" in text
     assert (
         "| standard_release_flow_step_names | "
         f"`{json.dumps(standard_release_flow_step_names, ensure_ascii=False)}` |"
@@ -2057,6 +2075,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
             WEBSITE_DEPLOY_COMMAND
         ),
+        "standard_release_flow_has_website_inspect": True,
+        "standard_release_flow_website_inspect_command": WEBSITE_INSPECT_COMMAND,
+        "standard_release_flow_website_inspect_command_sha256": _stable_json_sha256(
+            WEBSITE_INSPECT_COMMAND
+        ),
         "standard_release_flow_has_distribution_audit": True,
         "standard_release_flow_distribution_audit_command": DISTRIBUTION_AUDIT_COMMAND,
         "standard_release_flow_distribution_audit_command_sha256": _stable_json_sha256(
@@ -2515,6 +2538,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
         "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
             WEBSITE_DEPLOY_COMMAND
+        ),
+        "standard_release_flow_has_website_inspect": True,
+        "standard_release_flow_website_inspect_command": WEBSITE_INSPECT_COMMAND,
+        "standard_release_flow_website_inspect_command_sha256": _stable_json_sha256(
+            WEBSITE_INSPECT_COMMAND
         ),
         "standard_release_flow_has_distribution_audit": True,
         "standard_release_flow_distribution_audit_command": DISTRIBUTION_AUDIT_COMMAND,
@@ -3224,11 +3252,23 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "gh issue create" in metadata[0]["create_command"]
     assert "--label case-proposal" in metadata[0]["create_command"]
     assert "--label 'good first issue'" in metadata[0]["create_command"]
-    assert artifact_manifest["standard_release_flow"]["steps"][-2] == {
-        "name": "website_deploy",
-        "status": "pending",
-        "command": WEBSITE_DEPLOY_COMMAND,
-    }
+    assert artifact_manifest["standard_release_flow"]["steps"][-3:] == [
+        {
+            "name": "website_deploy",
+            "status": "pending",
+            "command": WEBSITE_DEPLOY_COMMAND,
+        },
+        {
+            "name": "website_inspect",
+            "status": "pending",
+            "command": WEBSITE_INSPECT_COMMAND,
+        },
+        {
+            "name": "remote_publication_audit",
+            "status": "pending",
+            "command": DISTRIBUTION_AUDIT_COMMAND,
+        },
+    ]
     assert artifact_manifest == {
         "schema_version": plan_next_iteration.ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "target_version": "0.16.2",
@@ -3284,6 +3324,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
         "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
             WEBSITE_DEPLOY_COMMAND
+        ),
+        "standard_release_flow_has_website_inspect": True,
+        "standard_release_flow_website_inspect_command": WEBSITE_INSPECT_COMMAND,
+        "standard_release_flow_website_inspect_command_sha256": _stable_json_sha256(
+            WEBSITE_INSPECT_COMMAND
         ),
         "standard_release_flow_has_distribution_audit": True,
         "standard_release_flow_distribution_audit_command": DISTRIBUTION_AUDIT_COMMAND,
@@ -3942,7 +3987,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_commands_sha256: "
         f"`{plan.standard_release_flow['commands_sha256']}`"
     ) in readme
-    assert "standard_release_flow_step_count: `8`" in readme
+    assert (
+        f"standard_release_flow_step_count: `{len(plan.standard_release_flow['steps'])}`"
+        in readme
+    )
     assert (
         "standard_release_flow_step_names: "
         f"`{json.dumps(standard_release_flow_step_names, ensure_ascii=False)}`"
@@ -3982,6 +4030,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "standard_release_flow_website_deploy_command_sha256: "
         f"`{_stable_json_sha256(WEBSITE_DEPLOY_COMMAND)}`"
+    ) in readme
+    assert "standard_release_flow_has_website_inspect: `true`" in readme
+    assert (
+        f"standard_release_flow_website_inspect_command: `{WEBSITE_INSPECT_COMMAND}`"
+        in readme
+    )
+    assert (
+        "standard_release_flow_website_inspect_command_sha256: "
+        f"`{_stable_json_sha256(WEBSITE_INSPECT_COMMAND)}`"
     ) in readme
     assert "standard_release_flow_has_distribution_audit: `true`" in readme
     assert (
@@ -5092,7 +5149,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_command_count: "
         f"`{plan.standard_release_flow['command_count']}`"
     ) in readme
-    assert "standard_release_flow_step_count: `8`" in readme
+    assert (
+        f"standard_release_flow_step_count: `{len(plan.standard_release_flow['steps'])}`"
+        in readme
+    )
     assert (
         "standard_release_flow_step_names: "
         f"`{json.dumps(standard_release_flow_step_names, ensure_ascii=False)}`"
@@ -5127,6 +5187,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "standard_release_flow_has_website_deploy: `true`" in readme
     assert (
         f"standard_release_flow_website_deploy_command: `{WEBSITE_DEPLOY_COMMAND}`"
+        in readme
+    )
+    assert "standard_release_flow_has_website_inspect: `true`" in readme
+    assert (
+        f"standard_release_flow_website_inspect_command: `{WEBSITE_INSPECT_COMMAND}`"
         in readme
     )
     assert "standard_release_flow_has_distribution_audit: `true`" in readme
