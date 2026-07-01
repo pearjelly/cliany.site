@@ -1021,6 +1021,48 @@ def test_candidate_issue_gate_surfaces_release_readiness_blocker_after_publicati
     assert plan.candidate_issue_gate["evidence"]["release_readiness_blocker_count"] == 1
 
 
+def test_candidate_issue_gate_deduplicates_required_actions(tmp_path):
+    _write_pyproject(tmp_path, version="0.16.1")
+    readiness = _readiness_report()
+    duplicate_action = (
+        "Commit, stash, or discard local worktree changes before publishing release refs."
+    )
+    daily_cap_action = (
+        "Pause release tagging until the next day; creating `v0.16.2` today would make "
+        "release tags `4/3`."
+    )
+    readiness.blockers = [
+        "working tree is dirty",
+        "creating target tag v0.16.2 today would exceed the daily release cap 4/3",
+    ]
+    readiness.next_actions = [duplicate_action, daily_cap_action]
+    readiness.draft = SimpleNamespace(
+        ok=True,
+        path="/tmp/project/docs/releases/v0.16.2-draft.md",
+        target_version="0.16.2",
+        issues=[],
+    )
+    expected_actions = [
+        duplicate_action,
+        "Push `master` to `origin`; local branch is ahead by `2` commits.",
+        "Push tag `v0.16.1` after the branch is published.",
+        daily_cap_action,
+    ]
+
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=readiness,
+        publication_report=_publication_report(),
+    )
+
+    assert plan.candidate_issue_gate["required_actions"] == expected_actions
+    assert plan.candidate_issue_gate["required_action_count"] == len(expected_actions)
+    assert plan.candidate_issue_gate["required_actions_sha256"] == _stable_json_sha256(
+        expected_actions
+    )
+    assert plan.candidate_issue_gate["primary_required_action"] == duplicate_action
+
+
 def test_issue_artifacts_surface_release_readiness_blocker_aliases(tmp_path):
     _write_pyproject(tmp_path, version="0.16.1")
     readiness = _readiness_report()

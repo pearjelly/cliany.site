@@ -1843,12 +1843,24 @@ def _candidate_issue_gate_reason_fields(reason_codes: list[str]) -> dict[str, An
 
 
 def _candidate_issue_gate_action_fields(actions: list[str]) -> dict[str, Any]:
+    actions = _unique_strings(actions)
     return {
         "required_action_count": len(actions),
         "required_actions_sha256": _stable_json_sha256(actions),
         "required_actions": actions,
         "primary_required_action": actions[0] if actions else None,
     }
+
+
+def _unique_strings(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    unique: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        unique.append(value)
+    return unique
 
 
 def _release_draft_required_actions(release_draft_issues: list[str]) -> list[str]:
