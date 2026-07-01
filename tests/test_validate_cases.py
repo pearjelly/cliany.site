@@ -33,9 +33,16 @@ DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256 = hashlib.sha256(
 LLM_LIVE_PREFLIGHT_COMMAND_SHA256 = hashlib.sha256(
     validate_cases.LLM_LIVE_PREFLIGHT_COMMAND.encode("utf-8")
 ).hexdigest()
+CANDIDATE_PACKAGE_VALIDATION_COMMAND_SHA256 = hashlib.sha256(
+    validate_cases.CANDIDATE_PACKAGE_VALIDATION_COMMAND.encode("utf-8")
+).hexdigest()
 EMPTY_TEMPLATE_SHA256 = hashlib.sha256(
     json.dumps({}, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
 ).hexdigest()
+
+
+def _command_sha256(command: str) -> str:
+    return hashlib.sha256(command.encode("utf-8")).hexdigest() if command else ""
 
 
 def _write_cases(root: Path, cases: list[dict]) -> None:
@@ -290,12 +297,14 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         {
             "task": "llm_live_preflight",
             "command": "cliany-site doctor --llm-live --json",
+            "command_sha256": LLM_LIVE_PREFLIGHT_COMMAND_SHA256,
             "source": "doctor.llm_live",
             "missing": False,
         },
         {
             "task": "adapter_package",
             "command": "",
+            "command_sha256": "",
             "source": "commands.explore",
             "missing": True,
         },
@@ -305,12 +314,16 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
                 "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
                 "--include-candidate-packages --strict"
             ),
+            "command_sha256": CANDIDATE_PACKAGE_VALIDATION_COMMAND_SHA256,
             "source": "candidate_package_validation_command",
             "missing": False,
         },
         {
             "task": "online_smoke",
             "command": "cliany-site demo.example.com list-items --json",
+            "command_sha256": _command_sha256(
+                "cliany-site demo.example.com list-items --json"
+            ),
             "source": "commands.adapter",
             "missing": False,
         },

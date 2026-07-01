@@ -49,6 +49,14 @@ LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
 LLM_LIVE_PREFLIGHT_COMMAND_SHA256 = hashlib.sha256(
     LLM_LIVE_PREFLIGHT_COMMAND.encode("utf-8")
 ).hexdigest()
+CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
+    "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+    "--include-candidate-packages --strict"
+)
+
+
+def _command_sha256(command: str) -> str:
+    return hashlib.sha256(command.encode("utf-8")).hexdigest() if command else ""
 
 
 def test_cases_command_returns_catalog_summary(tmp_home):
@@ -179,18 +187,21 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
     assert all("promotion" in case for case in data["cases"])
     assert all("promotion_evidence" in case for case in data["cases"])
     assert all("promotion_command_plan" in case for case in data["cases"])
+    explore_command = (
+        'cliany-site explore "https://pypi.org" '
+        '"search Python packages for cliany-site and list project names" --json'
+    )
     assert data["cases"][0]["promotion_command_plan"][0] == {
         "task": "llm_live_preflight",
         "command": "cliany-site doctor --llm-live --json",
+        "command_sha256": LLM_LIVE_PREFLIGHT_COMMAND_SHA256,
         "source": "doctor.llm_live",
         "missing": False,
     }
     assert data["cases"][0]["promotion_command_plan"][1] == {
         "task": "adapter_package",
-        "command": (
-            'cliany-site explore "https://pypi.org" '
-            '"search Python packages for cliany-site and list project names" --json'
-        ),
+        "command": explore_command,
+        "command_sha256": _command_sha256(explore_command),
         "source": "commands.explore",
         "missing": False,
     }
@@ -689,6 +700,7 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         {
             "task": "llm_live_preflight",
             "command": "cliany-site doctor --llm-live --json",
+            "command_sha256": LLM_LIVE_PREFLIGHT_COMMAND_SHA256,
             "source": "doctor.llm_live",
             "missing": False,
         },
@@ -698,21 +710,26 @@ def test_cases_command_evidence_bundle_json(tmp_home):
                 'cliany-site explore "https://pypi.org" '
                 '"search Python packages for cliany-site and list project names" --json'
             ),
+            "command_sha256": _command_sha256(
+                'cliany-site explore "https://pypi.org" '
+                '"search Python packages for cliany-site and list project names" --json'
+            ),
             "source": "commands.explore",
             "missing": False,
         },
         {
             "task": "metadata_validation",
-            "command": (
-                "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
-                "--include-candidate-packages --strict"
-            ),
+            "command": CANDIDATE_PACKAGE_VALIDATION_COMMAND,
+            "command_sha256": _command_sha256(CANDIDATE_PACKAGE_VALIDATION_COMMAND),
             "source": "candidate_package_validation_command",
             "missing": False,
         },
         {
             "task": "online_smoke",
             "command": "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json",
+            "command_sha256": _command_sha256(
+                "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json"
+            ),
             "source": "commands.adapter",
             "missing": False,
         },

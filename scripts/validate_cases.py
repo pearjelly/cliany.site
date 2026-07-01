@@ -1191,7 +1191,9 @@ def _candidate_promotion_command_plan(commands: list[str]) -> list[dict[str, Any
         },
     ]
     for item in plan:
-        item["missing"] = not bool(item["command"])
+        command = str(item.get("command") or "")
+        item["command_sha256"] = _sha256_bytes(command.encode("utf-8")) if command else ""
+        item["missing"] = not bool(command)
     return plan
 
 

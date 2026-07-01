@@ -2726,7 +2726,9 @@ def _candidate_promotion_command_plan(
         },
     ]
     for item in plan:
-        item["missing"] = not bool(item["command"])
+        command = str(item.get("command") or "")
+        item["command_sha256"] = _sha256_text(command) if command else ""
+        item["missing"] = not bool(command)
     return plan
 
 

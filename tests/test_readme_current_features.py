@@ -61,6 +61,7 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "preflight_blocker" in text
         assert "cliany-site cases --case-id pypi-project-search --evidence-bundle" in text
         assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in text
+        assert "promotion_command_plan[*].command_sha256" in text
         assert "doctor_preflight_evidence_fields" in text
         assert "acceptance_criteria" in text
         assert "Real Demo Case Proposal" in text

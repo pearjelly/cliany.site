@@ -33,6 +33,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cases/manifest.json" in index
     assert "python scripts/validate_cases.py --strict" in index
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in index
+    assert "promotion_command_plan[*].command_sha256" in index
     assert "cliany-site cases --status candidate --promotion-plan" in index
     assert "primary_issue_template_command" in index
     assert "promotion_plan.primary_doctor_preflight_evidence_template_sha256" in index
@@ -87,6 +88,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Run a real demo adapter first" in script
     assert "primary_next_task_acceptance_criteria" in script
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in script
+    assert "promotion_command_plan[*].command_sha256" in script
     assert "cliany-site cases --status candidate --promotion-plan" in script
     assert "primary_issue_template_command" in script
     assert "promotion_plan.primary_doctor_preflight_evidence_template_sha256" in script

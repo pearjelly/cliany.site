@@ -241,31 +241,40 @@ def test_candidate_issue_script_requires_review_ack_when_gate_needs_review() -> 
 
 
 def _pypi_promotion_command_plan(*, explore_query: str = "search Python packages") -> list[dict[str, object]]:
+    explore_command = f'cliany-site explore "https://pypi.org" "{explore_query}" --json'
+    metadata_command = (
+        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "--include-candidate-packages --strict"
+    )
+    smoke_command = "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json"
     return [
         {
             "task": "llm_live_preflight",
             "command": "cliany-site doctor --llm-live --json",
+            "command_sha256": hashlib.sha256(
+                b"cliany-site doctor --llm-live --json"
+            ).hexdigest(),
             "source": "doctor.llm_live",
             "missing": False,
         },
         {
             "task": "adapter_package",
-            "command": f'cliany-site explore "https://pypi.org" "{explore_query}" --json',
+            "command": explore_command,
+            "command_sha256": hashlib.sha256(explore_command.encode("utf-8")).hexdigest(),
             "source": "commands.explore",
             "missing": False,
         },
         {
             "task": "metadata_validation",
-            "command": (
-                "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
-                "--include-candidate-packages --strict"
-            ),
+            "command": metadata_command,
+            "command_sha256": hashlib.sha256(metadata_command.encode("utf-8")).hexdigest(),
             "source": "candidate_package_validation_command",
             "missing": False,
         },
         {
             "task": "online_smoke",
-            "command": "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json",
+            "command": smoke_command,
+            "command_sha256": hashlib.sha256(smoke_command.encode("utf-8")).hexdigest(),
             "source": "commands.adapter",
             "missing": False,
         },
