@@ -1063,6 +1063,36 @@ def test_candidate_issue_gate_deduplicates_required_actions(tmp_path):
     assert plan.candidate_issue_gate["primary_required_action"] == duplicate_action
 
 
+def test_plan_deduplicates_publication_next_actions(tmp_path):
+    _write_pyproject(tmp_path, version="0.16.1")
+    publication = _publication_report()
+    duplicate_action = (
+        "- Commit, stash, or discard local worktree changes before publishing release refs."
+    )
+    publication.next_actions = [
+        duplicate_action,
+        duplicate_action,
+        "- Push `master` to `origin`; local branch is ahead by `2` commits.",
+    ]
+    expected_actions = [
+        "Commit, stash, or discard local worktree changes before publishing release refs.",
+        "Push `master` to `origin`; local branch is ahead by `2` commits.",
+    ]
+
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=_readiness_report(),
+        publication_report=publication,
+    )
+    data = plan.to_dict()
+
+    assert plan.publication_next_actions == expected_actions
+    assert data["publication_next_actions"] == expected_actions
+    assert data["publication_next_action_count"] == len(expected_actions)
+    assert data["publication_next_actions_sha256"] == _stable_json_sha256(expected_actions)
+    assert data["publication_primary_next_action"] == expected_actions[0]
+
+
 def test_issue_artifacts_surface_release_readiness_blocker_aliases(tmp_path):
     _write_pyproject(tmp_path, version="0.16.1")
     readiness = _readiness_report()

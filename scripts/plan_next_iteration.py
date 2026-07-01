@@ -1223,12 +1223,14 @@ def _with_target_tag_guidance(
 def _publication_next_actions(publication: Any) -> list[str]:
     actions = getattr(publication, "next_actions", None)
     if actions is not None:
-        return [str(action).removeprefix("- ") for action in actions]
+        return _unique_strings([str(action).removeprefix("- ") for action in actions])
     to_dict = getattr(publication, "to_dict", None)
     if not callable(to_dict):
         return []
     payload = to_dict()
-    return [str(action).removeprefix("- ") for action in payload.get("next_actions", [])]
+    return _unique_strings(
+        [str(action).removeprefix("- ") for action in payload.get("next_actions", [])]
+    )
 
 
 def _publication_plan_next_actions(
