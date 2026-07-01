@@ -677,7 +677,7 @@ def test_plan_prefers_standard_release_flow_primary_action(tmp_path):
     assert data["standard_release_flow_primary_pending_step_name"] is None
 
 
-def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path):
+def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path, capsys):
     _write_pyproject(tmp_path, version="0.16.1")
     readiness = _readiness_report()
     pause_action = (
@@ -724,6 +724,25 @@ def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path):
     assert plan.publication_tag_publish_decision["target_tag_command_count"] == 0
     assert not any("create a new release tag at HEAD" in action for action in plan.next_actions)
     assert not any("git tag v0.16.2" in action for action in plan.next_actions)
+
+    plan_next_iteration._print_text(plan)
+    output = capsys.readouterr().out
+    assert "daily_release_cap_blocked: true" in output
+    assert "daily_release_resume_date: 2026-06-11" in output
+    assert (
+        "daily_release_resume_date_sha256: "
+        f"{_stable_json_sha256('2026-06-11')}"
+    ) in output
+
+    report_path = tmp_path / "reports" / "daily-cap-plan.md"
+    plan_next_iteration._write_markdown_report(plan, report_path)
+    text = report_path.read_text(encoding="utf-8")
+    assert "| daily_release_cap_blocked | `true` |" in text
+    assert "| daily_release_resume_date | `2026-06-11` |" in text
+    assert (
+        "| daily_release_resume_date_sha256 | "
+        f"`{_stable_json_sha256('2026-06-11')}` |"
+    ) in text
 
 
 def test_candidate_issue_gate_allows_creation_after_publication_with_release_draft_review(tmp_path):

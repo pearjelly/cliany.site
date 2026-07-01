@@ -2886,6 +2886,12 @@ def _print_text(plan: IterationPlan) -> None:
     print(f"recommended_slice: {plan.recommended_slice}")
     print(f"readiness_ok: {plan.readiness_ok}")
     print(f"publication_ok: {plan.publication_ok}")
+    print(f"daily_release_cap_blocked: {str(plan.daily_release_cap_blocked).lower()}")
+    print(f"daily_release_resume_date: {plan.daily_release_resume_date or '(none)'}")
+    print(
+        "daily_release_resume_date_sha256: "
+        f"{_stable_json_sha256(plan.daily_release_resume_date) if plan.daily_release_resume_date else None}"
+    )
     print(f"commit_days: {plan.commit_days}")
     print("commit_cadence:")
     for key, value in plan.commit_cadence.items():
@@ -3176,6 +3182,12 @@ def _render_markdown(plan: IterationPlan) -> str:
     primary_publication_command = _format_context_value(
         plan.publication_publish_commands[0] if plan.publication_publish_commands else None
     )
+    daily_release_resume_date = plan.daily_release_resume_date or "-"
+    daily_release_resume_date_sha256 = (
+        _stable_json_sha256(plan.daily_release_resume_date)
+        if plan.daily_release_resume_date
+        else "-"
+    )
     standard_release_flow_primary_action = _format_context_value(
         plan.standard_release_flow.get("primary_next_action")
     )
@@ -3302,6 +3314,9 @@ def _render_markdown(plan: IterationPlan) -> str:
 | recommended_theme | {plan.recommended_theme} |
 | readiness_ok | `{str(plan.readiness_ok).lower()}` |
 | publication_ok | `{str(plan.publication_ok).lower()}` |
+| daily_release_cap_blocked | `{str(plan.daily_release_cap_blocked).lower()}` |
+| daily_release_resume_date | `{daily_release_resume_date}` |
+| daily_release_resume_date_sha256 | `{daily_release_resume_date_sha256}` |
 | publication_blocker_count | `{len(plan.publication_blockers)}` |
 | publication_blockers_sha256 | `{_stable_json_sha256(plan.publication_blockers)}` |
 | publication_primary_blocker | `{primary_publication_blocker}` |

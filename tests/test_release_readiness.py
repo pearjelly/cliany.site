@@ -1060,7 +1060,7 @@ def test_release_readiness_respects_custom_daily_release_cap(tmp_path):
     assert "daily release tags 2/1 exceed the allowed maximum" in report.blockers
 
 
-def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path):
+def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path, capsys):
     repo = _init_repo(tmp_path, with_draft=False)
     _commit(repo, "notes/release-1.md", "release 1", "2026-06-10")
     _git(repo, "tag", "v0.1.1")
@@ -1148,6 +1148,25 @@ def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path):
         payload["publication_tag_publish_decision"]["target_tag_release_gate_primary_blocker"]
         == "creating target tag v0.1.4 today would exceed the daily release cap 4/3"
     )
+
+    release_readiness._print_text(report)
+    output = capsys.readouterr().out
+    assert "daily_release_cap_blocked: true" in output
+    assert "daily_release_resume_date: 2026-06-11" in output
+    assert (
+        "daily_release_resume_date_sha256: "
+        f"{release_readiness._stable_json_sha256('2026-06-11')}"
+    ) in output
+
+    report_path = tmp_path / "reports" / "daily-cap-readiness.md"
+    release_readiness._write_markdown_report(report, report_path)
+    text = report_path.read_text(encoding="utf-8")
+    assert "| daily_release_cap_blocked | `true` |" in text
+    assert "| daily_release_resume_date | `2026-06-11` |" in text
+    assert (
+        "| daily_release_resume_date_sha256 | "
+        f"`{release_readiness._stable_json_sha256('2026-06-11')}` |"
+    ) in text
 
 
 def test_release_readiness_cli_passes_remote_publication_check(monkeypatch, capsys):

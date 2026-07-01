@@ -971,6 +971,13 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"current_version: {report.current_version}")
     print(f"target_version: {report.target_version}")
     print(f"ok: {report.ok}")
+    daily_release_resume_date = _target_daily_release_resume_date(report)
+    print(f"daily_release_cap_blocked: {str(daily_release_resume_date is not None).lower()}")
+    print(f"daily_release_resume_date: {daily_release_resume_date or '(none)'}")
+    print(
+        "daily_release_resume_date_sha256: "
+        f"{_stable_json_sha256(daily_release_resume_date) if daily_release_resume_date else None}"
+    )
     if report.blockers:
         print("blockers:")
         for blocker in report.blockers:
@@ -2172,6 +2179,12 @@ def _weekly_review_rows(report: ReadinessReport) -> list[str]:
 def _render_markdown_report(report: ReadinessReport) -> str:
     blockers = "<br>".join(report.blockers) if report.blockers else "-"
     commit_days = ", ".join(report.cadence.commit_days) if report.cadence.commit_days else "-"
+    daily_release_resume_date = _target_daily_release_resume_date(report)
+    daily_release_resume_date_sha256 = (
+        _stable_json_sha256(daily_release_resume_date)
+        if daily_release_resume_date
+        else "-"
+    )
     lines = [
         "# cliany-site Release Readiness",
         "",
@@ -2182,6 +2195,9 @@ def _render_markdown_report(report: ReadinessReport) -> str:
         f"| target_version | `{report.target_version}` |",
         f"| release_mode | `{report.release_mode}` |",
         f"| release_tag | `{report.release_tag or '-'}` |",
+        f"| daily_release_cap_blocked | `{str(daily_release_resume_date is not None).lower()}` |",
+        f"| daily_release_resume_date | `{daily_release_resume_date or '-'}` |",
+        f"| daily_release_resume_date_sha256 | `{daily_release_resume_date_sha256}` |",
         f"| blockers | {blockers} |",
         "",
         "## Gates",
