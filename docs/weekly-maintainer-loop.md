@@ -68,7 +68,7 @@ Candidate issue artifacts 的 review checklist 会要求维护者核对 `issue-m
 
 `plan_next_iteration.py` 也会透传同一组 `standard_release_flow*` 字段到 JSON、默认文本输出和 Markdown report。当 release readiness 已经给出 `standard_release_flow.primary_next_action` 且 publication 仍未通过时，周计划的顶层 `next_actions[0]` 会先采用这条标准流程首要动作，再展示目标 release tag 动作；维护者可以把周初计划和提交后的 release readiness 报告放在一起核对，确认两边没有把目标 tag 命令提前到 release gate 之前。
 
-使用 `--issues-dir` 生成候选任务交接包时，`artifact-manifest.json`、`publication-handoff.json`、artifacts `README.md` 的 `Publication Handoff` 和 `artifact_bundle_summary` 也会展示 standard release flow 摘要，包括 `standard_release_flow_status`、`standard_release_flow_primary_next_action`、`standard_release_flow_command_count`、`standard_release_flow_commands_sha256` 和 `standard_release_flow_sha256`。只读 artifacts 的维护工具可以不展开 release readiness report，也能先判断标准发版 gate 是否仍是 `blocked`。
+使用 `--issues-dir` 生成候选任务交接包时，`artifact-manifest.json`、`publication-handoff.json`、artifacts `README.md` 的 `Publication Handoff` 和 `artifact_bundle_summary` 也会展示 standard release flow 摘要，包括 `standard_release_flow_status`、`standard_release_flow_primary_next_action`、`standard_release_flow_command_count`、`standard_release_flow_has_website_deploy`、`standard_release_flow_website_deploy_command`、`standard_release_flow_website_deploy_command_sha256`、`standard_release_flow_commands_sha256` 和 `standard_release_flow_sha256`。只读 artifacts 的维护工具可以不展开 release readiness report，也能先判断标准发版 gate 是否仍是 `blocked`，并确认官网部署命令已纳入候选任务交接包。
 
 `release_readiness.py --report` 会在 JSON 和 Markdown report 中输出 `release_mode` / `release_tag`；只有显式 `--release-tag` 的 tagged preflight 通过后，`Weekly Review` 才会把下一步显示为发布已验证 tag。普通 `--target-version` readiness 即使版本和 tag 已匹配，也仍提示准备打 tag，避免目标版本自检和 tag 发布前自检互相混淆。
 

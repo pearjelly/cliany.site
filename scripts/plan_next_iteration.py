@@ -35,6 +35,7 @@ LLM_LIVE_PREFLIGHT_BLOCKER_NOTE = (
     "connection error, stop candidate promotion, attach the doctor JSON/error "
     "summary, and leave adapter_package pending or blocked."
 )
+WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
 CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -62,6 +63,9 @@ ARTIFACT_MANIFEST_KEYS = (
     "standard_release_flow_primary_next_action",
     "standard_release_flow_command_count",
     "standard_release_flow_commands_sha256",
+    "standard_release_flow_has_website_deploy",
+    "standard_release_flow_website_deploy_command",
+    "standard_release_flow_website_deploy_command_sha256",
     "standard_release_flow_sha256",
     "blockers",
     "next_actions",
@@ -185,6 +189,9 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "standard_release_flow_primary_next_action",
     "standard_release_flow_command_count",
     "standard_release_flow_commands_sha256",
+    "standard_release_flow_has_website_deploy",
+    "standard_release_flow_website_deploy_command",
+    "standard_release_flow_website_deploy_command_sha256",
     "standard_release_flow_sha256",
     "body_count",
     "issue_body_inventory_preview_count",
@@ -618,6 +625,9 @@ class IterationPlan:
             primary_next_task = None
         primary_runbook = _primary_runbook_from_summary(self.case_promotion_evidence_summary)
         primary_runbook_steps = _runbook_steps(primary_runbook)
+        website_deploy_command = _standard_release_flow_website_deploy_command(
+            self.standard_release_flow
+        )
         return {
             "current_version": self.current_version,
             "target_version": self.target_version,
@@ -648,6 +658,13 @@ class IterationPlan:
             ),
             "standard_release_flow_commands_sha256": self.standard_release_flow.get(
                 "commands_sha256"
+            ),
+            "standard_release_flow_has_website_deploy": website_deploy_command is not None,
+            "standard_release_flow_website_deploy_command": website_deploy_command,
+            "standard_release_flow_website_deploy_command_sha256": (
+                _stable_json_sha256(website_deploy_command)
+                if website_deploy_command
+                else None
             ),
             "standard_release_flow": self.standard_release_flow,
             "case_promotion_evidence_primary_next_task": primary_next_task,
@@ -1027,6 +1044,16 @@ def _standard_release_flow_primary_next_action(readiness: Any) -> str | None:
     return str(action) if action else None
 
 
+def _standard_release_flow_website_deploy_command(flow: dict[str, Any]) -> str | None:
+    commands = flow.get("commands")
+    if not isinstance(commands, list):
+        return None
+    for command in commands:
+        if str(command) == WEBSITE_DEPLOY_COMMAND:
+            return str(command)
+    return None
+
+
 def _readiness_next_actions(readiness: Any) -> list[str]:
     actions = getattr(readiness, "next_actions", None)
     if actions is None:
@@ -1069,6 +1096,7 @@ def _standard_release_flow(
             str(command)
             for command in publication_tag_publish_decision.get("target_tag_commands") or []
         ],
+        WEBSITE_DEPLOY_COMMAND,
         remote_audit_command,
     ]
     commands = list(dict.fromkeys(command for command in validation_commands if command))
@@ -2468,6 +2496,9 @@ def build_plan(
 
 
 def _print_text(plan: IterationPlan) -> None:
+    website_deploy_command = _standard_release_flow_website_deploy_command(
+        plan.standard_release_flow
+    )
     print("=== cliany-site next iteration plan ===")
     print(f"current_version: {plan.current_version}")
     print(f"target_version: {plan.target_version}")
@@ -2517,6 +2548,12 @@ def _print_text(plan: IterationPlan) -> None:
     print(
         "standard_release_flow_commands_sha256: "
         f"{plan.standard_release_flow.get('commands_sha256')}"
+    )
+    print(f"standard_release_flow_has_website_deploy: {website_deploy_command is not None}")
+    print(f"standard_release_flow_website_deploy_command: {website_deploy_command}")
+    print(
+        "standard_release_flow_website_deploy_command_sha256: "
+        f"{_stable_json_sha256(website_deploy_command) if website_deploy_command else None}"
     )
     primary_next_task = plan.case_promotion_evidence_summary.get("primary_next_task")
     if isinstance(primary_next_task, dict) and primary_next_task:
@@ -2662,6 +2699,20 @@ def _render_markdown(plan: IterationPlan) -> str:
     standard_release_flow_primary_action = _format_context_value(
         plan.standard_release_flow.get("primary_next_action")
     )
+    standard_release_flow_website_deploy_command = (
+        _standard_release_flow_website_deploy_command(plan.standard_release_flow)
+    )
+    standard_release_flow_website_deploy_command_sha256 = (
+        _stable_json_sha256(standard_release_flow_website_deploy_command)
+        if standard_release_flow_website_deploy_command
+        else None
+    )
+    standard_release_flow_website_deploy_command_text = _format_context_value(
+        standard_release_flow_website_deploy_command
+    )
+    standard_release_flow_website_deploy_command_sha256_text = _format_context_value(
+        standard_release_flow_website_deploy_command_sha256
+    )
     command_plan_all_declared = str(
         bool(plan.case_promotion_command_plan_summary.get("all_declared"))
     ).lower()
@@ -2719,6 +2770,9 @@ def _render_markdown(plan: IterationPlan) -> str:
 | standard_release_flow_primary_next_action | `{standard_release_flow_primary_action}` |
 | standard_release_flow_command_count | `{plan.standard_release_flow.get("command_count")}` |
 | standard_release_flow_commands_sha256 | `{plan.standard_release_flow.get("commands_sha256")}` |
+| standard_release_flow_has_website_deploy | `{str(standard_release_flow_website_deploy_command is not None).lower()}` |
+| standard_release_flow_website_deploy_command | `{standard_release_flow_website_deploy_command_text}` |
+| standard_release_flow_website_deploy_command_sha256 | `{standard_release_flow_website_deploy_command_sha256_text}` |
 | standard_release_flow_sha256 | `{_stable_json_sha256(plan.standard_release_flow)}` |
 | next_action_count | `{len(plan.next_actions)}` |
 | next_actions_sha256 | `{_stable_json_sha256(plan.next_actions)}` |
@@ -3051,6 +3105,10 @@ def _publication_script_markdown(path: str, command: str) -> str:
 
 
 def _standard_release_flow_markdown(flow: dict[str, Any]) -> str:
+    website_deploy_command = _standard_release_flow_website_deploy_command(flow)
+    website_deploy_command_sha256 = (
+        _stable_json_sha256(website_deploy_command) if website_deploy_command else None
+    )
     commands = flow.get("commands")
     command_lines = (
         "\n".join(str(command) for command in commands)
@@ -3073,6 +3131,9 @@ def _standard_release_flow_markdown(flow: dict[str, Any]) -> str:
 - standard_release_flow_primary_next_action: `{_format_context_value(flow.get("primary_next_action"))}`
 - standard_release_flow_command_count: `{_format_context_value(flow.get("command_count"))}`
 - standard_release_flow_commands_sha256: `{_format_context_value(flow.get("commands_sha256"))}`
+- standard_release_flow_has_website_deploy: `{str(website_deploy_command is not None).lower()}`
+- standard_release_flow_website_deploy_command: `{_format_context_value(website_deploy_command)}`
+- standard_release_flow_website_deploy_command_sha256: `{_format_context_value(website_deploy_command_sha256)}`
 - standard_release_flow_sha256: `{_stable_json_sha256(flow)}`
 
 ### Standard Release Flow Blockers
@@ -3481,6 +3542,20 @@ def _render_issue_artifacts_readme(
     standard_flow_commands_sha256 = _format_context_value(
         plan.standard_release_flow.get("commands_sha256")
     )
+    standard_flow_website_deploy_command = _standard_release_flow_website_deploy_command(
+        plan.standard_release_flow
+    )
+    standard_flow_website_deploy_command_sha256 = (
+        _stable_json_sha256(standard_flow_website_deploy_command)
+        if standard_flow_website_deploy_command
+        else None
+    )
+    standard_flow_website_deploy_command_text = _format_context_value(
+        standard_flow_website_deploy_command
+    )
+    standard_flow_website_deploy_command_sha256_text = _format_context_value(
+        standard_flow_website_deploy_command_sha256
+    )
     return f"""# cliany-site Candidate Issue Artifacts
 
 Generated for target version `{plan.target_version}`.
@@ -3567,6 +3642,9 @@ Generated for target version `{plan.target_version}`.
 - standard_release_flow_primary_next_action: `{standard_flow_primary_action}`
 - standard_release_flow_command_count: `{standard_flow_command_count}`
 - standard_release_flow_commands_sha256: `{standard_flow_commands_sha256}`
+- standard_release_flow_has_website_deploy: `{str(standard_flow_website_deploy_command is not None).lower()}`
+- standard_release_flow_website_deploy_command: `{standard_flow_website_deploy_command_text}`
+- standard_release_flow_website_deploy_command_sha256: `{standard_flow_website_deploy_command_sha256_text}`
 - standard_release_flow_sha256: `{_stable_json_sha256(plan.standard_release_flow)}`
 - plan_report_command: `{plan.plan_report_command}`
 - plan_report_command_sha256: `{_stable_json_sha256(plan.plan_report_command)}`
@@ -3942,6 +4020,9 @@ def _issue_artifact_files(issue_body_names: list[str]) -> dict[str, Any]:
 
 
 def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
+    website_deploy_command = _standard_release_flow_website_deploy_command(
+        plan.standard_release_flow
+    )
     handoff = {
         "schema_version": 1,
         "publication_ok": plan.publication_ok,
@@ -3976,6 +4057,11 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
         ),
         "standard_release_flow_commands_sha256": plan.standard_release_flow.get(
             "commands_sha256"
+        ),
+        "standard_release_flow_has_website_deploy": website_deploy_command is not None,
+        "standard_release_flow_website_deploy_command": website_deploy_command,
+        "standard_release_flow_website_deploy_command_sha256": (
+            _stable_json_sha256(website_deploy_command) if website_deploy_command else None
         ),
         "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "publication_next_actions": plan.publication_next_actions,
@@ -4199,6 +4285,9 @@ def _artifact_manifest_payload_without_summary(
     create_issues_safety: dict[str, Any],
     artifact_files: dict[str, Any],
 ) -> dict[str, Any]:
+    website_deploy_command = _standard_release_flow_website_deploy_command(
+        plan.standard_release_flow
+    )
     return {
         "schema_version": ARTIFACT_MANIFEST_SCHEMA_VERSION,
         "target_version": plan.target_version,
@@ -4216,6 +4305,11 @@ def _artifact_manifest_payload_without_summary(
         ),
         "standard_release_flow_commands_sha256": plan.standard_release_flow.get(
             "commands_sha256"
+        ),
+        "standard_release_flow_has_website_deploy": website_deploy_command is not None,
+        "standard_release_flow_website_deploy_command": website_deploy_command,
+        "standard_release_flow_website_deploy_command_sha256": (
+            _stable_json_sha256(website_deploy_command) if website_deploy_command else None
         ),
         "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "blockers": plan.blockers,
@@ -4522,6 +4616,9 @@ def _issue_artifact_bundle_summary(
     }
     issue_body_summary_key_preview = issue_body_summary_keys[:8]
     issue_body_summary_key_tail = issue_body_summary_keys[-8:]
+    website_deploy_command = _standard_release_flow_website_deploy_command(
+        plan.standard_release_flow
+    )
     return {
         "artifact_bundle_summary_key_count": len(ARTIFACT_BUNDLE_SUMMARY_KEYS),
         "artifact_bundle_summary_keys_sha256": _stable_json_sha256(ARTIFACT_BUNDLE_SUMMARY_KEYS),
@@ -4707,6 +4804,11 @@ def _issue_artifact_bundle_summary(
         ),
         "standard_release_flow_commands_sha256": plan.standard_release_flow.get(
             "commands_sha256"
+        ),
+        "standard_release_flow_has_website_deploy": website_deploy_command is not None,
+        "standard_release_flow_website_deploy_command": website_deploy_command,
+        "standard_release_flow_website_deploy_command_sha256": (
+            _stable_json_sha256(website_deploy_command) if website_deploy_command else None
         ),
         "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "body_count": issue_body_summary["body_count"],
@@ -5469,6 +5571,12 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['standard_release_flow_command_count']}`",
             "- standard_release_flow_commands_sha256: "
             f"`{summary['standard_release_flow_commands_sha256']}`",
+            "- standard_release_flow_has_website_deploy: "
+            f"`{str(bool(summary['standard_release_flow_has_website_deploy'])).lower()}`",
+            "- standard_release_flow_website_deploy_command: "
+            f"{_summary_inline_code(summary['standard_release_flow_website_deploy_command'])}",
+            "- standard_release_flow_website_deploy_command_sha256: "
+            f"`{summary['standard_release_flow_website_deploy_command_sha256']}`",
             "- standard_release_flow_sha256: "
             f"`{summary['standard_release_flow_sha256']}`",
             f"- body_count: `{summary['body_count']}`",

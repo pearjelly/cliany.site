@@ -19,6 +19,8 @@ assert SPEC.loader is not None
 sys.modules[SPEC.name] = plan_next_iteration
 SPEC.loader.exec_module(plan_next_iteration)
 
+WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
+
 
 def _stable_json_sha256(value: object) -> str:
     digest_source = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
@@ -1261,6 +1263,12 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
         "python scripts/check_release_publication.py --remote --remote-name upstream --json"
         in data["standard_release_flow"]["commands"]
     )
+    assert WEBSITE_DEPLOY_COMMAND in data["standard_release_flow"]["commands"]
+    assert data["standard_release_flow_has_website_deploy"] is True
+    assert data["standard_release_flow_website_deploy_command"] == WEBSITE_DEPLOY_COMMAND
+    assert data["standard_release_flow_website_deploy_command_sha256"] == (
+        _stable_json_sha256(WEBSITE_DEPLOY_COMMAND)
+    )
     assert (
         "python scripts/check_release_publication.py --remote --remote-name upstream --json"
         in plan_next_iteration._issue_artifact_validation_commands(plan)
@@ -1783,6 +1791,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_commands_sha256": plan.standard_release_flow[
             "commands_sha256"
         ],
+        "standard_release_flow_has_website_deploy": True,
+        "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
+        "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
+            WEBSITE_DEPLOY_COMMAND
+        ),
         "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "publication_next_actions": [
             "Commit, stash, or discard local worktree changes before publishing release refs.",
@@ -2191,6 +2204,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_commands_sha256": plan.standard_release_flow[
             "commands_sha256"
         ],
+        "standard_release_flow_has_website_deploy": True,
+        "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
+        "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
+            WEBSITE_DEPLOY_COMMAND
+        ),
         "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "body_count": 2,
         "issue_body_inventory_preview_count": len(issue_body_inventory_preview),
@@ -2900,6 +2918,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_commands_sha256": plan.standard_release_flow[
             "commands_sha256"
         ],
+        "standard_release_flow_has_website_deploy": True,
+        "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
+        "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
+            WEBSITE_DEPLOY_COMMAND
+        ),
         "standard_release_flow_sha256": _stable_json_sha256(plan.standard_release_flow),
         "blockers": ["release draft validation failed", "latest local release is not published"],
         "next_actions": plan.next_actions,
@@ -3524,6 +3547,15 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "standard_release_flow_commands_sha256: "
         f"`{plan.standard_release_flow['commands_sha256']}`"
+    ) in readme
+    assert "standard_release_flow_has_website_deploy: `true`" in readme
+    assert (
+        f"standard_release_flow_website_deploy_command: `{WEBSITE_DEPLOY_COMMAND}`"
+        in readme
+    )
+    assert (
+        "standard_release_flow_website_deploy_command_sha256: "
+        f"`{_stable_json_sha256(WEBSITE_DEPLOY_COMMAND)}`"
     ) in readme
     assert (
         "standard_release_flow_sha256: "
@@ -4625,6 +4657,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_command_count: "
         f"`{plan.standard_release_flow['command_count']}`"
     ) in readme
+    assert "standard_release_flow_has_website_deploy: `true`" in readme
+    assert (
+        f"standard_release_flow_website_deploy_command: `{WEBSITE_DEPLOY_COMMAND}`"
+        in readme
+    )
     assert "publish_script_path: `/tmp/cliany-publish-release.sh`" in readme
     assert (
         f"publish_script_path_sha256: "
