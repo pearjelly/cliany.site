@@ -822,7 +822,15 @@ def test_plan_prefers_standard_release_flow_primary_action(tmp_path):
         {}
     )
     assert data["standard_release_flow_primary_blocked_step_name"] is None
+    assert data["standard_release_flow_primary_blocked_step_command"] is None
+    assert data["standard_release_flow_primary_blocked_step_command_sha256"] is None
+    assert data["standard_release_flow_primary_blocked_step_action"] is None
+    assert data["standard_release_flow_primary_blocked_step_action_sha256"] is None
     assert data["standard_release_flow_primary_pending_step_name"] is None
+    assert data["standard_release_flow_primary_pending_step_command"] is None
+    assert data["standard_release_flow_primary_pending_step_command_sha256"] is None
+    assert data["standard_release_flow_primary_pending_step_action"] is None
+    assert data["standard_release_flow_primary_pending_step_action_sha256"] is None
 
 
 def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path, capsys):
@@ -836,6 +844,8 @@ def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path, cap
         "Ship verified slices on `1` more unique commit days this week; current commit days "
         "are `2/3`. Use `docs/weekly-maintainer-loop.md` to pick the next slice."
     )
+    strict_command = "python scripts/release_readiness.py --strict --target-version 0.16.2"
+    release_notes_action = "Move CHANGELOG.md Unreleased entries into `## [0.16.2] - <date>`."
     readiness.blockers = [
         "creating target tag v0.16.2 today would exceed the daily release cap 4/3"
     ]
@@ -849,6 +859,18 @@ def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path, cap
         "primary_next_action": (
             "Move to the `v0.16.1` commit or create a new release tag at HEAD before publishing."
         ),
+        "steps": [
+            {
+                "name": "strict_release_readiness",
+                "status": "blocked",
+                "command": strict_command,
+            },
+            {
+                "name": "release_notes",
+                "status": "pending",
+                "action": release_notes_action,
+            },
+        ],
     }
 
     plan = plan_next_iteration.build_plan(
@@ -866,6 +888,22 @@ def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path, cap
     assert data["daily_release_cap_blocked"] is True
     assert data["daily_release_resume_date"] == "2026-06-11"
     assert data["daily_release_resume_date_sha256"] == _stable_json_sha256("2026-06-11")
+    assert data["standard_release_flow_primary_blocked_step_name"] == (
+        "strict_release_readiness"
+    )
+    assert data["standard_release_flow_primary_blocked_step_command"] == strict_command
+    assert data["standard_release_flow_primary_blocked_step_command_sha256"] == (
+        _stable_json_sha256(strict_command)
+    )
+    assert data["standard_release_flow_primary_blocked_step_action"] is None
+    assert data["standard_release_flow_primary_blocked_step_action_sha256"] is None
+    assert data["standard_release_flow_primary_pending_step_name"] == "release_notes"
+    assert data["standard_release_flow_primary_pending_step_command"] is None
+    assert data["standard_release_flow_primary_pending_step_command_sha256"] is None
+    assert data["standard_release_flow_primary_pending_step_action"] == release_notes_action
+    assert data["standard_release_flow_primary_pending_step_action_sha256"] == (
+        _stable_json_sha256(release_notes_action)
+    )
     assert cadence_action in plan.next_actions
     assert "Ship verified slices on `1` more unique commit days this week." not in plan.next_actions
     assert not any(
@@ -2001,10 +2039,36 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
             data["standard_release_flow"]["steps"], "blocked"
         )
     )
+    primary_blocked_step = next(
+        step
+        for step in data["standard_release_flow"]["steps"]
+        if str(step.get("status")).startswith("blocked")
+    )
+    assert data["standard_release_flow_primary_blocked_step_command"] == (
+        primary_blocked_step["command"]
+    )
+    assert data["standard_release_flow_primary_blocked_step_command_sha256"] == (
+        _stable_json_sha256(primary_blocked_step["command"])
+    )
+    assert data["standard_release_flow_primary_blocked_step_action"] is None
+    assert data["standard_release_flow_primary_blocked_step_action_sha256"] is None
     assert data["standard_release_flow_primary_pending_step_name"] == (
         _standard_release_flow_primary_step_name_with_status_prefix(
             data["standard_release_flow"]["steps"], "pending"
         )
+    )
+    primary_pending_step = next(
+        step
+        for step in data["standard_release_flow"]["steps"]
+        if str(step.get("status")).startswith("pending")
+    )
+    assert data["standard_release_flow_primary_pending_step_command"] is None
+    assert data["standard_release_flow_primary_pending_step_command_sha256"] is None
+    assert data["standard_release_flow_primary_pending_step_action"] == (
+        primary_pending_step["action"]
+    )
+    assert data["standard_release_flow_primary_pending_step_action_sha256"] == (
+        _stable_json_sha256(primary_pending_step["action"])
     )
     assert data["standard_release_flow_has_website_deploy"] is True
     assert data["standard_release_flow_website_deploy_command"] == WEBSITE_DEPLOY_COMMAND
@@ -2174,7 +2238,47 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
         f"{standard_release_flow_primary_blocked_step_name}` |"
         in text
     )
+    primary_blocked_step = next(
+        step
+        for step in plan.standard_release_flow["steps"]
+        if str(step.get("status")).startswith("blocked")
+    )
+    assert (
+        "| standard_release_flow_primary_blocked_step_command | `"
+        f"{primary_blocked_step['command']}` |"
+        in text
+    )
+    assert (
+        "| standard_release_flow_primary_blocked_step_command_sha256 | `"
+        f"{_stable_json_sha256(primary_blocked_step['command'])}` |"
+        in text
+    )
+    assert "| standard_release_flow_primary_blocked_step_action | `(none)` |" in text
+    assert (
+        "| standard_release_flow_primary_blocked_step_action_sha256 | `(none)` |"
+        in text
+    )
     assert "| standard_release_flow_primary_pending_step_name | `release_notes` |" in text
+    primary_pending_step = next(
+        step
+        for step in plan.standard_release_flow["steps"]
+        if str(step.get("status")).startswith("pending")
+    )
+    assert "| standard_release_flow_primary_pending_step_command | `(none)` |" in text
+    assert (
+        "| standard_release_flow_primary_pending_step_command_sha256 | `(none)` |"
+        in text
+    )
+    assert (
+        "| standard_release_flow_primary_pending_step_action | `"
+        f"{primary_pending_step['action']}` |"
+        in text
+    )
+    assert (
+        "| standard_release_flow_primary_pending_step_action_sha256 | `"
+        f"{_stable_json_sha256(primary_pending_step['action'])}` |"
+        in text
+    )
     assert (
         "| plan_report_command | "
         "`python scripts/plan_next_iteration.py --target-version 0.16.2 "
@@ -2616,6 +2720,52 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     standard_release_flow_step_status_counts = (
         _standard_release_flow_step_status_counts(standard_release_flow_steps)
     )
+    primary_blocked_step = next(
+        step
+        for step in standard_release_flow_steps
+        if str(step.get("status")).startswith("blocked")
+    )
+    primary_pending_step = next(
+        step
+        for step in standard_release_flow_steps
+        if str(step.get("status")).startswith("pending")
+    )
+    primary_blocked_command = primary_blocked_step.get("command")
+    primary_blocked_action = primary_blocked_step.get("action")
+    primary_pending_command = primary_pending_step.get("command")
+    primary_pending_action = primary_pending_step.get("action")
+    expected_standard_release_flow_primary_step_handoff_aliases = {
+        "standard_release_flow_primary_blocked_step_name": primary_blocked_step.get(
+            "name"
+        ),
+        "standard_release_flow_primary_blocked_step_command": primary_blocked_command,
+        "standard_release_flow_primary_blocked_step_command_sha256": (
+            _stable_json_sha256(primary_blocked_command)
+            if primary_blocked_command
+            else None
+        ),
+        "standard_release_flow_primary_blocked_step_action": primary_blocked_action,
+        "standard_release_flow_primary_blocked_step_action_sha256": (
+            _stable_json_sha256(primary_blocked_action)
+            if primary_blocked_action
+            else None
+        ),
+        "standard_release_flow_primary_pending_step_name": primary_pending_step.get(
+            "name"
+        ),
+        "standard_release_flow_primary_pending_step_command": primary_pending_command,
+        "standard_release_flow_primary_pending_step_command_sha256": (
+            _stable_json_sha256(primary_pending_command)
+            if primary_pending_command
+            else None
+        ),
+        "standard_release_flow_primary_pending_step_action": primary_pending_action,
+        "standard_release_flow_primary_pending_step_action_sha256": (
+            _stable_json_sha256(primary_pending_action)
+            if primary_pending_action
+            else None
+        ),
+    }
     expected_publication_handoff = {
         "schema_version": 1,
         "publication_ok": False,
@@ -2672,16 +2822,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_step_status_counts_sha256": _stable_json_sha256(
             standard_release_flow_step_status_counts
         ),
-        "standard_release_flow_primary_blocked_step_name": (
-            _standard_release_flow_primary_step_name_with_status_prefix(
-                standard_release_flow_steps, "blocked"
-            )
-        ),
-        "standard_release_flow_primary_pending_step_name": (
-            _standard_release_flow_primary_step_name_with_status_prefix(
-                standard_release_flow_steps, "pending"
-            )
-        ),
+        **expected_standard_release_flow_primary_step_handoff_aliases,
         "standard_release_flow_has_website_deploy": True,
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
         "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
@@ -3181,16 +3322,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_step_status_counts_sha256": _stable_json_sha256(
             standard_release_flow_step_status_counts
         ),
-        "standard_release_flow_primary_blocked_step_name": (
-            _standard_release_flow_primary_step_name_with_status_prefix(
-                standard_release_flow_steps, "blocked"
-            )
-        ),
-        "standard_release_flow_primary_pending_step_name": (
-            _standard_release_flow_primary_step_name_with_status_prefix(
-                standard_release_flow_steps, "pending"
-            )
-        ),
+        **expected_standard_release_flow_primary_step_handoff_aliases,
         "standard_release_flow_has_website_deploy": True,
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
         "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
@@ -4059,16 +4191,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_step_status_counts_sha256": _stable_json_sha256(
             standard_release_flow_step_status_counts
         ),
-        "standard_release_flow_primary_blocked_step_name": (
-            _standard_release_flow_primary_step_name_with_status_prefix(
-                standard_release_flow_steps, "blocked"
-            )
-        ),
-        "standard_release_flow_primary_pending_step_name": (
-            _standard_release_flow_primary_step_name_with_status_prefix(
-                standard_release_flow_steps, "pending"
-            )
-        ),
+        **expected_standard_release_flow_primary_step_handoff_aliases,
         "standard_release_flow_has_website_deploy": True,
         "standard_release_flow_website_deploy_command": WEBSITE_DEPLOY_COMMAND,
         "standard_release_flow_website_deploy_command_sha256": _stable_json_sha256(
@@ -4818,7 +4941,43 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_primary_blocked_step_name: "
         f"`{_standard_release_flow_primary_step_name_with_status_prefix(standard_release_flow_steps, 'blocked')}`"
     ) in readme
+    primary_blocked_step = next(
+        step
+        for step in standard_release_flow_steps
+        if str(step.get("status")).startswith("blocked")
+    )
+    assert (
+        "standard_release_flow_primary_blocked_step_command: "
+        f"`{primary_blocked_step['command']}`"
+    ) in readme
+    assert (
+        "standard_release_flow_primary_blocked_step_command_sha256: "
+        f"`{_stable_json_sha256(primary_blocked_step['command'])}`"
+    ) in readme
+    assert "standard_release_flow_primary_blocked_step_action: `(none)`" in readme
+    assert (
+        "standard_release_flow_primary_blocked_step_action_sha256: `(none)`"
+        in readme
+    )
     assert "standard_release_flow_primary_pending_step_name: `release_notes`" in readme
+    primary_pending_step = next(
+        step
+        for step in standard_release_flow_steps
+        if str(step.get("status")).startswith("pending")
+    )
+    assert "standard_release_flow_primary_pending_step_command: `(none)`" in readme
+    assert (
+        "standard_release_flow_primary_pending_step_command_sha256: `(none)`"
+        in readme
+    )
+    assert (
+        "standard_release_flow_primary_pending_step_action: "
+        f"{plan_next_iteration._summary_inline_code(primary_pending_step['action'])}"
+    ) in readme
+    assert (
+        "standard_release_flow_primary_pending_step_action_sha256: "
+        f"`{_stable_json_sha256(primary_pending_step['action'])}`"
+    ) in readme
     assert "standard_release_flow_has_website_deploy: `true`" in readme
     assert (
         f"standard_release_flow_website_deploy_command: `{WEBSITE_DEPLOY_COMMAND}`"
@@ -5983,7 +6142,43 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "standard_release_flow_primary_blocked_step_name: "
         f"`{_standard_release_flow_primary_step_name_with_status_prefix(standard_release_flow_steps, 'blocked')}`"
     ) in readme
+    primary_blocked_step = next(
+        step
+        for step in standard_release_flow_steps
+        if str(step.get("status")).startswith("blocked")
+    )
+    assert (
+        "standard_release_flow_primary_blocked_step_command: "
+        f"`{primary_blocked_step['command']}`"
+    ) in readme
+    assert (
+        "standard_release_flow_primary_blocked_step_command_sha256: "
+        f"`{_stable_json_sha256(primary_blocked_step['command'])}`"
+    ) in readme
+    assert "standard_release_flow_primary_blocked_step_action: `(none)`" in readme
+    assert (
+        "standard_release_flow_primary_blocked_step_action_sha256: `(none)`"
+        in readme
+    )
     assert "standard_release_flow_primary_pending_step_name: `release_notes`" in readme
+    primary_pending_step = next(
+        step
+        for step in standard_release_flow_steps
+        if str(step.get("status")).startswith("pending")
+    )
+    assert "standard_release_flow_primary_pending_step_command: `(none)`" in readme
+    assert (
+        "standard_release_flow_primary_pending_step_command_sha256: `(none)`"
+        in readme
+    )
+    assert (
+        "standard_release_flow_primary_pending_step_action: "
+        f"{plan_next_iteration._summary_inline_code(primary_pending_step['action'])}"
+    ) in readme
+    assert (
+        "standard_release_flow_primary_pending_step_action_sha256: "
+        f"`{_stable_json_sha256(primary_pending_step['action'])}`"
+    ) in readme
     assert "standard_release_flow_has_website_deploy: `true`" in readme
     assert (
         f"standard_release_flow_website_deploy_command: `{WEBSITE_DEPLOY_COMMAND}`"
