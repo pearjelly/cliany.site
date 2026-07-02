@@ -142,7 +142,7 @@ class ReadinessReport:
     remote_name: str = "origin"
 
     def to_dict(self) -> dict[str, Any]:
-        publication_payload = _publication_payload(self)
+        publication_payload = _publication_handoff_payload(self)
         publication_ref_context = _publication_ref_context(publication_payload)
         publication_blockers = _publication_blockers(self.publication)
         publication_next_actions = publication_payload["next_actions"]
@@ -954,7 +954,7 @@ def build_report(
 
 
 def _print_text(report: ReadinessReport) -> None:
-    publication_payload = _publication_payload(report)
+    publication_payload = _publication_handoff_payload(report)
     publication_summary = _publication_summary(publication_payload)
     publication_ref_context = _publication_ref_context(publication_payload)
     publication_blockers = _publication_blockers(report.publication)
@@ -1230,12 +1230,23 @@ def _case_package_next_action_lines(report: ReadinessReport) -> list[str]:
     return lines
 
 
+def _unique_strings(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    unique: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        unique.append(value)
+    return unique
+
+
 def _publication_publish_commands(report: ReadinessReport) -> list[str]:
-    return [str(command) for command in report.publication.to_dict()["publish_commands"]]
+    return [str(command) for command in _publication_handoff_payload(report)["publish_commands"]]
 
 
 def _publication_next_actions(report: ReadinessReport) -> list[str]:
-    return [str(action) for action in _publication_payload(report)["next_actions"]]
+    return [str(action) for action in _publication_handoff_payload(report)["next_actions"]]
 
 
 def _publication_payload(report: ReadinessReport) -> dict[str, Any]:
@@ -1247,6 +1258,27 @@ def _publication_payload(report: ReadinessReport) -> dict[str, Any]:
             report.target_version,
             readiness_blockers=report.blockers,
         ),
+    }
+
+
+def _publication_handoff_payload(report: ReadinessReport) -> dict[str, Any]:
+    payload = dict(_publication_payload(report))
+    next_actions = _unique_strings(
+        [str(action) for action in payload.get("next_actions") or []]
+    )
+    publish_commands = _unique_strings(
+        [str(command) for command in payload.get("publish_commands") or []]
+    )
+    return {
+        **payload,
+        "next_action_count": len(next_actions),
+        "next_actions_sha256": _stable_json_sha256(next_actions),
+        "primary_next_action": next_actions[0] if next_actions else None,
+        "next_actions": next_actions,
+        "publish_command_count": len(publish_commands),
+        "publish_commands_sha256": _stable_json_sha256(publish_commands),
+        "primary_publish_command": publish_commands[0] if publish_commands else None,
+        "publish_commands": publish_commands,
     }
 
 
@@ -1605,7 +1637,7 @@ def _next_action_lines(report: ReadinessReport) -> list[str]:
     if target_daily_action:
         lines.append(target_daily_action)
     if not report.publication.ok:
-        publication_payload = _publication_payload(report)
+        publication_payload = _publication_handoff_payload(report)
         publication_primary_next_action = _publication_summary(publication_payload)[
             "primary_next_action"
         ]
@@ -1825,7 +1857,7 @@ def _candidate_command_plan_summary_lines(report: ReadinessReport) -> list[str]:
 
 
 def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
-    publication_payload = _publication_payload(report)
+    publication_payload = _publication_handoff_payload(report)
     publication_summary = _publication_summary(publication_payload)
     publication_blockers = _publication_blockers(report.publication)
     ref_context = _publication_ref_context(publication_payload)
@@ -1970,7 +2002,7 @@ def _publication_publish_command_lines(report: ReadinessReport) -> list[str]:
 
 
 def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
-    publication_payload = _publication_payload(report)
+    publication_payload = _publication_handoff_payload(report)
     next_actions = _next_action_lines(report)
     flow = _standard_release_flow(
         report,

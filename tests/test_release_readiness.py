@@ -866,6 +866,60 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
     assert not any(action.startswith("- ") for action in payload["next_actions"])
 
 
+def test_release_readiness_deduplicates_publication_handoff_lists(tmp_path, monkeypatch):
+    repo = _init_repo(tmp_path, with_draft=True)
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=3)
+    original_payload = release_readiness._publication_payload(report)
+    duplicate_action = original_payload["next_actions"][0]
+    duplicate_command = original_payload["publish_commands"][0]
+
+    def fake_publication_payload(_report):
+        return {
+            **original_payload,
+            "next_actions": [
+                duplicate_action,
+                duplicate_action,
+                "Push `master` to `origin`; local branch is ahead by `2` commits.",
+            ],
+            "publish_commands": [
+                duplicate_command,
+                duplicate_command,
+                "python scripts/check_release_publication.py --remote --json",
+            ],
+        }
+
+    monkeypatch.setattr(release_readiness, "_publication_payload", fake_publication_payload)
+
+    payload = report.to_dict()
+    expected_actions = [
+        duplicate_action,
+        "Push `master` to `origin`; local branch is ahead by `2` commits.",
+    ]
+    expected_commands = [
+        duplicate_command,
+        "python scripts/check_release_publication.py --remote --json",
+    ]
+
+    assert payload["publication"]["next_actions"] == expected_actions
+    assert payload["publication_next_actions"] == expected_actions
+    assert payload["publication_next_action_count"] == len(expected_actions)
+    assert payload["publication_next_actions_sha256"] == release_readiness._stable_json_sha256(
+        expected_actions
+    )
+    assert payload["publication_primary_next_action"] == expected_actions[0]
+    assert payload["publication_summary"]["next_action_count"] == len(expected_actions)
+    assert payload["publication_summary"]["primary_next_action"] == expected_actions[0]
+    assert payload["publication"]["publish_commands"] == expected_commands
+    assert payload["publication_publish_commands"] == expected_commands
+    assert payload["publication_publish_command_count"] == len(expected_commands)
+    assert payload["publication_publish_commands_sha256"] == release_readiness._stable_json_sha256(
+        expected_commands
+    )
+    assert payload["publication_primary_publish_command"] == expected_commands[0]
+    assert payload["publication_summary"]["publish_command_count"] == len(expected_commands)
+    assert payload["publication_summary"]["primary_publish_command"] == expected_commands[0]
+
+
 def test_release_readiness_treats_missing_weekly_commit_days_as_advisory(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
 
