@@ -1253,10 +1253,17 @@ def _publication_plan_next_actions(
     readiness_blockers: list[str] | None = None,
 ) -> list[str]:
     actions = _publication_next_actions(publication)
+    blockers = list(readiness_blockers or [])
+    if _has_target_daily_release_limit_blocker(blockers):
+        actions = [
+            action
+            for action in actions
+            if not _mentions_create_new_release_tag(action)
+        ]
     decision = _publication_tag_publish_decision(
         publication,
         target_version,
-        readiness_blockers=readiness_blockers,
+        readiness_blockers=blockers,
     )
     if decision.get("status") != "manual_decision_required":
         return actions
@@ -3139,12 +3146,17 @@ def build_plan(
     case_promotion_evidence_summary = _case_promotion_evidence_summary(readiness.cases)
     case_promotion_command_plan_summary = _case_promotion_command_plan_summary(readiness.cases)
     publication_blockers = _publication_blockers(publication)
-    publication_next_actions = _publication_next_actions(publication)
+    readiness_blockers = list(getattr(readiness, "blockers", []) or [])
+    publication_next_actions = _publication_plan_next_actions(
+        publication,
+        str(readiness.target_version),
+        readiness_blockers=readiness_blockers,
+    )
     publication_publish_commands = _publication_publish_commands(publication)
     publication_tag_publish_decision = _publication_tag_publish_decision(
         publication,
         str(readiness.target_version),
-        readiness_blockers=list(getattr(readiness, "blockers", []) or []),
+        readiness_blockers=readiness_blockers,
     )
     daily_release_resume_date = _readiness_daily_release_resume_date(readiness)
     next_actions = _next_action_lines(readiness, publication)
