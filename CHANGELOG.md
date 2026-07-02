@@ -32,6 +32,7 @@
 - Release readiness now de-duplicates publication handoff `next_actions` and `publish_commands` before exporting JSON/text/Markdown aliases, so direct release automation sees the same stable counts and hashes as the planner.
 - Release readiness publication handoffs now suppress create-tag next actions while the target tag is blocked by the daily release cap, so direct publication automation receives the same pause signal as the top-level standard release flow.
 - Release readiness target-tag publication decisions now mark daily-cap pauses as `blocked_by_daily_release_cap` and reuse the pause required action, so nested decision readers no longer see a stale create-tag instruction.
+- Release readiness standard release flow summaries now expose primary blocked/pending step `command` / `action` aliases and SHA-256 digests, so automation can execute or display the first gate without traversing the full `steps` array.
 - Next-iteration planner target-tag publication decisions now mirror the same `blocked_by_daily_release_cap` pause state, keeping planner artifacts aligned with release readiness for daily-cap pauses.
 - Next-iteration planner `publication_next_actions` now uses the same target-aware daily-cap filtering as top-level `next_actions`, so planner artifacts no longer expose create-tag actions while the target tag is paused.
 - Planner candidate preflight aliases now use the same raw command SHA-256 as cases CLI and generated issue bodies, so `llm_live_preflight_command_sha256` fields no longer drift from the displayed preflight command hash.
