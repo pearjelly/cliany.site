@@ -1266,6 +1266,12 @@ def _publication_handoff_payload(report: ReadinessReport) -> dict[str, Any]:
     next_actions = _unique_strings(
         [str(action) for action in payload.get("next_actions") or []]
     )
+    if _has_target_daily_release_limit_blocker(report.blockers):
+        next_actions = [
+            action
+            for action in next_actions
+            if not _mentions_create_new_release_tag(action)
+        ]
     publish_commands = _unique_strings(
         [str(command) for command in payload.get("publish_commands") or []]
     )
