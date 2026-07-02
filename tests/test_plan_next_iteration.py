@@ -868,6 +868,18 @@ def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path, cap
     assert data["daily_release_resume_date_sha256"] == _stable_json_sha256("2026-06-11")
     assert cadence_action in plan.next_actions
     assert "Ship verified slices on `1` more unique commit days this week." not in plan.next_actions
+    assert plan.publication_tag_publish_decision["status"] == "blocked_by_daily_release_cap"
+    assert (
+        plan.publication_tag_publish_decision["required_action"]
+        == plan.publication_tag_publish_decision["target_tag_required_action"]
+    )
+    assert (
+        plan.publication_tag_publish_decision["target_tag_release_gate_required_action"]
+        == plan.publication_tag_publish_decision["target_tag_required_action"]
+    )
+    assert "create a new release tag at HEAD" not in (
+        plan.publication_tag_publish_decision["required_action"] or ""
+    )
     assert plan.publication_tag_publish_decision["target_tag_commands"] == []
     assert plan.publication_tag_publish_decision["target_tag_command_count"] == 0
     assert not any("create a new release tag at HEAD" in action for action in plan.next_actions)
