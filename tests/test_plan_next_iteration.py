@@ -2159,6 +2159,81 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
     assert data[
         "publication_handoff_candidate_issue_gate_primary_required_action"
     ] == publication_handoff["candidate_issue_gate_primary_required_action"]
+    release_draft_handoff = plan_next_iteration._release_draft_handoff(plan)
+    release_draft_handoff_keys = list(release_draft_handoff)
+    release_draft_handoff_key_boundary = {
+        "first_key": release_draft_handoff_keys[0],
+        "last_key": release_draft_handoff_keys[-1],
+    }
+    release_draft_handoff_key_preview = release_draft_handoff_keys[:8]
+    release_draft_handoff_key_tail = release_draft_handoff_keys[-8:]
+    release_draft_required_actions = plan_next_iteration._release_draft_required_actions(
+        plan.release_draft_issues
+    )
+    release_draft_required_action_boundary = {
+        "first_action": release_draft_required_actions[0],
+        "last_action": release_draft_required_actions[-1],
+    }
+    release_draft_issue_boundary = {
+        "first_issue": plan.release_draft_issues[0],
+        "last_issue": plan.release_draft_issues[-1],
+    }
+    assert data["release_draft_handoff_key_count"] == len(release_draft_handoff)
+    assert data["release_draft_handoff_schema_version"] == release_draft_handoff[
+        "schema_version"
+    ]
+    assert data["release_draft_handoff_primary_issue"] == release_draft_handoff[
+        "primary_issue"
+    ]
+    assert data["release_draft_handoff_primary_required_action"] == (
+        release_draft_handoff["primary_required_action"]
+    )
+    assert data["release_draft_handoff_first_key"] == release_draft_handoff_key_boundary[
+        "first_key"
+    ]
+    assert data["release_draft_handoff_last_key"] == release_draft_handoff_key_boundary[
+        "last_key"
+    ]
+    assert data["release_draft_handoff_key_boundary_sha256"] == _stable_json_sha256(
+        release_draft_handoff_key_boundary
+    )
+    assert data["release_draft_handoff_key_preview_count"] == len(
+        release_draft_handoff_key_preview
+    )
+    assert data["release_draft_handoff_key_preview"] == release_draft_handoff_key_preview
+    assert data["release_draft_handoff_key_preview_sha256"] == _stable_json_sha256(
+        release_draft_handoff_key_preview
+    )
+    assert data["release_draft_handoff_key_tail_count"] == len(
+        release_draft_handoff_key_tail
+    )
+    assert data["release_draft_handoff_key_tail"] == release_draft_handoff_key_tail
+    assert data["release_draft_handoff_key_tail_sha256"] == _stable_json_sha256(
+        release_draft_handoff_key_tail
+    )
+    assert data["release_draft_handoff_sha256"] == _stable_json_sha256(
+        release_draft_handoff
+    )
+    assert data["release_draft_required_action_count"] == len(
+        release_draft_required_actions
+    )
+    assert data["release_draft_required_actions_sha256"] == _stable_json_sha256(
+        release_draft_required_actions
+    )
+    assert data["release_draft_first_required_action"] == (
+        release_draft_required_action_boundary["first_action"]
+    )
+    assert data["release_draft_last_required_action"] == (
+        release_draft_required_action_boundary["last_action"]
+    )
+    assert data["release_draft_required_action_boundary_sha256"] == _stable_json_sha256(
+        release_draft_required_action_boundary
+    )
+    assert data["release_draft_issue_boundary_sha256"] == _stable_json_sha256(
+        release_draft_issue_boundary
+    )
+    assert data["release_draft_issue_preview"] == plan.release_draft_issues[:8]
+    assert data["release_draft_issue_tail"] == plan.release_draft_issues[-8:]
     assert (
         "python scripts/check_release_publication.py --remote --remote-name upstream --json"
         in plan_next_iteration._issue_artifact_validation_commands(plan)
@@ -2437,6 +2512,51 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
         f"`{_stable_json_sha256(publication_handoff)}` |"
         in text
     )
+    release_draft_handoff = plan_next_iteration._release_draft_handoff(plan)
+    release_draft_handoff_keys = list(release_draft_handoff)
+    release_draft_handoff_key_boundary = {
+        "first_key": release_draft_handoff_keys[0],
+        "last_key": release_draft_handoff_keys[-1],
+    }
+    release_draft_required_actions = plan_next_iteration._release_draft_required_actions(
+        plan.release_draft_issues
+    )
+    release_draft_required_action_boundary = {
+        "first_action": release_draft_required_actions[0],
+        "last_action": release_draft_required_actions[-1],
+    }
+    assert f"| release_draft_handoff_key_count | `{len(release_draft_handoff)}` |" in text
+    assert "| release_draft_handoff_schema_version | `1` |" in text
+    assert (
+        "| release_draft_handoff_first_key | "
+        f"`{release_draft_handoff_key_boundary['first_key']}` |"
+        in text
+    )
+    assert (
+        "| release_draft_handoff_last_key | "
+        f"`{release_draft_handoff_key_boundary['last_key']}` |"
+        in text
+    )
+    assert (
+        "| release_draft_handoff_key_boundary_sha256 | "
+        f"`{_stable_json_sha256(release_draft_handoff_key_boundary)}` |"
+        in text
+    )
+    assert (
+        "| release_draft_handoff_sha256 | "
+        f"`{_stable_json_sha256(release_draft_handoff)}` |"
+        in text
+    )
+    assert (
+        "| release_draft_required_action_count | "
+        f"`{len(release_draft_required_actions)}` |"
+        in text
+    )
+    assert (
+        "| release_draft_required_action_boundary_sha256 | "
+        f"`{_stable_json_sha256(release_draft_required_action_boundary)}` |"
+        in text
+    )
     assert f"| next_action_count | `{len(plan.next_actions)}` |" in text
     assert f"| next_actions_sha256 | `{_stable_json_sha256(plan.next_actions)}` |" in text
     assert (
@@ -2606,6 +2726,48 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
     assert (
         "publication_handoff_sha256: "
         f"{_stable_json_sha256(publication_handoff)}"
+        in text
+    )
+    release_draft_handoff = plan_next_iteration._release_draft_handoff(plan)
+    release_draft_handoff_keys = list(release_draft_handoff)
+    release_draft_handoff_key_boundary = {
+        "first_key": release_draft_handoff_keys[0],
+        "last_key": release_draft_handoff_keys[-1],
+    }
+    release_draft_required_actions = plan_next_iteration._release_draft_required_actions(
+        plan.release_draft_issues
+    )
+    release_draft_required_action_boundary = {
+        "first_action": release_draft_required_actions[0],
+        "last_action": release_draft_required_actions[-1],
+    }
+    assert f"release_draft_handoff_key_count: {len(release_draft_handoff)}" in text
+    assert "release_draft_handoff_schema_version: 1" in text
+    assert (
+        f"release_draft_handoff_first_key: {release_draft_handoff_key_boundary['first_key']}"
+        in text
+    )
+    assert (
+        f"release_draft_handoff_last_key: {release_draft_handoff_key_boundary['last_key']}"
+        in text
+    )
+    assert (
+        "release_draft_handoff_key_boundary_sha256: "
+        f"{_stable_json_sha256(release_draft_handoff_key_boundary)}"
+        in text
+    )
+    assert (
+        "release_draft_handoff_sha256: "
+        f"{_stable_json_sha256(release_draft_handoff)}"
+        in text
+    )
+    assert (
+        f"release_draft_required_action_count: {len(release_draft_required_actions)}"
+        in text
+    )
+    assert (
+        "release_draft_required_action_boundary_sha256: "
+        f"{_stable_json_sha256(release_draft_required_action_boundary)}"
         in text
     )
     assert f"next_action_count: {len(plan.next_actions)}" in text

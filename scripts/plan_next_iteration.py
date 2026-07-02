@@ -847,6 +847,7 @@ class IterationPlan:
             self.standard_release_flow
         )
         publication_handoff_aliases = _publication_handoff_summary_aliases(self)
+        release_draft_handoff_aliases = _release_draft_handoff_summary_aliases(self)
         return {
             "current_version": self.current_version,
             "target_version": self.target_version,
@@ -1054,7 +1055,9 @@ class IterationPlan:
             "plan_report_command": self.plan_report_command,
             "issue_artifacts_command": self.issue_artifacts_command,
             "release_draft_path": self.release_draft_path,
+            "release_draft_issue_count": len(self.release_draft_issues),
             "release_draft_issues": self.release_draft_issues,
+            **release_draft_handoff_aliases,
         }
 
 
@@ -3425,6 +3428,7 @@ def _print_text(plan: IterationPlan) -> None:
         plan.standard_release_flow
     )
     publication_handoff_aliases = _publication_handoff_summary_aliases(plan)
+    release_draft_handoff_aliases = _release_draft_handoff_summary_aliases(plan)
     print("=== cliany-site next iteration plan ===")
     print(f"current_version: {plan.current_version}")
     print(f"target_version: {plan.target_version}")
@@ -3448,6 +3452,9 @@ def _print_text(plan: IterationPlan) -> None:
         print("release_draft_issues:")
         for issue in plan.release_draft_issues:
             print(f"- {issue}")
+    print(f"release_draft_issue_count: {len(plan.release_draft_issues)}")
+    for key, value in release_draft_handoff_aliases.items():
+        print(f"{key}: {value}")
     if plan.candidate_cases:
         print("candidate_cases:")
         for case_id in plan.candidate_cases:
@@ -3970,6 +3977,181 @@ def _render_markdown(plan: IterationPlan) -> str:
         "| publication_handoff_candidate_issue_gate_primary_required_action | "
         f"`{publication_handoff_primary_required_action_text}` |"
     )
+    release_draft_handoff_aliases = _release_draft_handoff_summary_aliases(plan)
+    release_draft_handoff_key_preview_text = json.dumps(
+        release_draft_handoff_aliases["release_draft_handoff_key_preview"],
+        ensure_ascii=False,
+    )
+    release_draft_handoff_key_tail_text = json.dumps(
+        release_draft_handoff_aliases["release_draft_handoff_key_tail"],
+        ensure_ascii=False,
+    )
+    release_draft_required_action_preview_text = json.dumps(
+        release_draft_handoff_aliases["release_draft_required_action_preview"],
+        ensure_ascii=False,
+    )
+    release_draft_required_action_tail_text = json.dumps(
+        release_draft_handoff_aliases["release_draft_required_action_tail"],
+        ensure_ascii=False,
+    )
+    release_draft_issue_preview_text = json.dumps(
+        release_draft_handoff_aliases["release_draft_issue_preview"],
+        ensure_ascii=False,
+    )
+    release_draft_issue_tail_text = json.dumps(
+        release_draft_handoff_aliases["release_draft_issue_tail"],
+        ensure_ascii=False,
+    )
+    release_draft_primary_required_action_text = _format_context_value(
+        release_draft_handoff_aliases[
+            "release_draft_handoff_primary_required_action"
+        ]
+    )
+    release_draft_handoff_rows = "\n".join(
+        [
+            f"| release_draft_issue_count | `{len(plan.release_draft_issues)}` |",
+            (
+                "| release_draft_handoff_key_count | "
+                f"`{release_draft_handoff_aliases['release_draft_handoff_key_count']}` |"
+            ),
+            (
+                "| release_draft_handoff_schema_version | "
+                f"`{release_draft_handoff_aliases['release_draft_handoff_schema_version']}` |"
+            ),
+            (
+                "| release_draft_handoff_primary_issue | "
+                f"`{_format_context_value(release_draft_handoff_aliases['release_draft_handoff_primary_issue'])}` |"
+            ),
+            (
+                "| release_draft_handoff_primary_required_action | "
+                f"`{release_draft_primary_required_action_text}` |"
+            ),
+            (
+                "| release_draft_handoff_first_key | "
+                f"`{release_draft_handoff_aliases['release_draft_handoff_first_key']}` |"
+            ),
+            (
+                "| release_draft_handoff_last_key | "
+                f"`{release_draft_handoff_aliases['release_draft_handoff_last_key']}` |"
+            ),
+            (
+                "| release_draft_handoff_key_boundary_sha256 | "
+                f"`{release_draft_handoff_aliases['release_draft_handoff_key_boundary_sha256']}` |"
+            ),
+            (
+                "| release_draft_handoff_key_preview_count | "
+                f"`{release_draft_handoff_aliases['release_draft_handoff_key_preview_count']}` |"
+            ),
+            f"| release_draft_handoff_key_preview | `{release_draft_handoff_key_preview_text}` |",
+            (
+                "| release_draft_handoff_key_preview_sha256 | "
+                f"`{release_draft_handoff_aliases['release_draft_handoff_key_preview_sha256']}` |"
+            ),
+            (
+                "| release_draft_handoff_key_tail_count | "
+                f"`{release_draft_handoff_aliases['release_draft_handoff_key_tail_count']}` |"
+            ),
+            f"| release_draft_handoff_key_tail | `{release_draft_handoff_key_tail_text}` |",
+            (
+                "| release_draft_handoff_key_tail_sha256 | "
+                f"`{release_draft_handoff_aliases['release_draft_handoff_key_tail_sha256']}` |"
+            ),
+            (
+                "| release_draft_handoff_sha256 | "
+                f"`{release_draft_handoff_aliases['release_draft_handoff_sha256']}` |"
+            ),
+            (
+                "| release_draft_path_sha256 | "
+                f"`{release_draft_handoff_aliases['release_draft_path_sha256']}` |"
+            ),
+            (
+                "| release_draft_primary_issue | "
+                f"`{_format_context_value(release_draft_handoff_aliases['release_draft_primary_issue'])}` |"
+            ),
+            (
+                "| release_draft_required_action_count | "
+                f"`{release_draft_handoff_aliases['release_draft_required_action_count']}` |"
+            ),
+            (
+                "| release_draft_required_actions_sha256 | "
+                f"`{release_draft_handoff_aliases['release_draft_required_actions_sha256']}` |"
+            ),
+            (
+                "| release_draft_first_required_action | "
+                f"`{_format_context_value(release_draft_handoff_aliases['release_draft_first_required_action'])}` |"
+            ),
+            (
+                "| release_draft_last_required_action | "
+                f"`{_format_context_value(release_draft_handoff_aliases['release_draft_last_required_action'])}` |"
+            ),
+            (
+                "| release_draft_required_action_boundary_sha256 | "
+                f"`{release_draft_handoff_aliases['release_draft_required_action_boundary_sha256']}` |"
+            ),
+            (
+                "| release_draft_required_action_preview_count | "
+                f"`{release_draft_handoff_aliases['release_draft_required_action_preview_count']}` |"
+            ),
+            (
+                "| release_draft_required_action_preview | "
+                f"`{release_draft_required_action_preview_text}` |"
+            ),
+            (
+                "| release_draft_required_action_preview_sha256 | "
+                f"`{release_draft_handoff_aliases['release_draft_required_action_preview_sha256']}` |"
+            ),
+            (
+                "| release_draft_required_action_tail_count | "
+                f"`{release_draft_handoff_aliases['release_draft_required_action_tail_count']}` |"
+            ),
+            (
+                "| release_draft_required_action_tail | "
+                f"`{release_draft_required_action_tail_text}` |"
+            ),
+            (
+                "| release_draft_required_action_tail_sha256 | "
+                f"`{release_draft_handoff_aliases['release_draft_required_action_tail_sha256']}` |"
+            ),
+            (
+                "| release_draft_primary_required_action | "
+                f"`{_format_context_value(release_draft_handoff_aliases['release_draft_primary_required_action'])}` |"
+            ),
+            (
+                "| release_draft_issues_sha256 | "
+                f"`{release_draft_handoff_aliases['release_draft_issues_sha256']}` |"
+            ),
+            (
+                "| release_draft_first_issue | "
+                f"`{_format_context_value(release_draft_handoff_aliases['release_draft_first_issue'])}` |"
+            ),
+            (
+                "| release_draft_last_issue | "
+                f"`{_format_context_value(release_draft_handoff_aliases['release_draft_last_issue'])}` |"
+            ),
+            (
+                "| release_draft_issue_boundary_sha256 | "
+                f"`{release_draft_handoff_aliases['release_draft_issue_boundary_sha256']}` |"
+            ),
+            (
+                "| release_draft_issue_preview_count | "
+                f"`{release_draft_handoff_aliases['release_draft_issue_preview_count']}` |"
+            ),
+            f"| release_draft_issue_preview | `{release_draft_issue_preview_text}` |",
+            (
+                "| release_draft_issue_preview_sha256 | "
+                f"`{release_draft_handoff_aliases['release_draft_issue_preview_sha256']}` |"
+            ),
+            (
+                "| release_draft_issue_tail_count | "
+                f"`{release_draft_handoff_aliases['release_draft_issue_tail_count']}` |"
+            ),
+            f"| release_draft_issue_tail | `{release_draft_issue_tail_text}` |",
+            (
+                "| release_draft_issue_tail_sha256 | "
+                f"`{release_draft_handoff_aliases['release_draft_issue_tail_sha256']}` |"
+            ),
+        ]
+    )
     doctor_preflight_template = _doctor_preflight_evidence_template()
     primary_doctor_preflight_template_field_count_row = (
         "| case_promotion_evidence_primary_doctor_preflight_evidence_template_"
@@ -4033,6 +4215,7 @@ def _render_markdown(plan: IterationPlan) -> str:
 {publication_handoff_primary_reason_code_row}
 {publication_handoff_primary_reason_description_row}
 {publication_handoff_primary_required_action_row}
+{release_draft_handoff_rows}
 | standard_release_flow_status | `{plan.standard_release_flow.get("status")}` |
 | standard_release_flow_primary_next_action | `{standard_release_flow_primary_action}` |
 | standard_release_flow_command_count | `{plan.standard_release_flow.get("command_count")}` |
@@ -5716,6 +5899,137 @@ def _release_draft_handoff(plan: IterationPlan) -> dict[str, Any]:
     }
 
 
+def _release_draft_handoff_summary_aliases(plan: IterationPlan) -> dict[str, Any]:
+    release_draft_handoff = _release_draft_handoff(plan)
+    release_draft_handoff_keys = list(release_draft_handoff)
+    release_draft_handoff_key_boundary = {
+        "first_key": release_draft_handoff_keys[0]
+        if release_draft_handoff_keys
+        else None,
+        "last_key": release_draft_handoff_keys[-1]
+        if release_draft_handoff_keys
+        else None,
+    }
+    release_draft_handoff_key_preview = release_draft_handoff_keys[:8]
+    release_draft_handoff_key_tail = release_draft_handoff_keys[-8:]
+    release_draft_required_actions = _release_draft_required_actions(
+        plan.release_draft_issues
+    )
+    release_draft_required_action_boundary = {
+        "first_action": release_draft_required_actions[0]
+        if release_draft_required_actions
+        else None,
+        "last_action": release_draft_required_actions[-1]
+        if release_draft_required_actions
+        else None,
+    }
+    release_draft_required_action_preview = release_draft_required_actions[:8]
+    release_draft_required_action_tail = release_draft_required_actions[-8:]
+    release_draft_issue_boundary = {
+        "first_issue": plan.release_draft_issues[0]
+        if plan.release_draft_issues
+        else None,
+        "last_issue": plan.release_draft_issues[-1]
+        if plan.release_draft_issues
+        else None,
+    }
+    release_draft_issue_preview = plan.release_draft_issues[:8]
+    release_draft_issue_tail = plan.release_draft_issues[-8:]
+    return {
+        "release_draft_handoff_key_count": len(release_draft_handoff),
+        "release_draft_handoff_schema_version": release_draft_handoff.get(
+            "schema_version"
+        ),
+        "release_draft_handoff_primary_issue": release_draft_handoff.get(
+            "primary_issue"
+        ),
+        "release_draft_handoff_primary_required_action": release_draft_handoff.get(
+            "primary_required_action"
+        ),
+        "release_draft_handoff_first_key": release_draft_handoff_key_boundary[
+            "first_key"
+        ],
+        "release_draft_handoff_last_key": release_draft_handoff_key_boundary[
+            "last_key"
+        ],
+        "release_draft_handoff_key_boundary_sha256": _stable_json_sha256(
+            release_draft_handoff_key_boundary
+        ),
+        "release_draft_handoff_key_preview_count": len(
+            release_draft_handoff_key_preview
+        ),
+        "release_draft_handoff_key_preview": list(
+            release_draft_handoff_key_preview
+        ),
+        "release_draft_handoff_key_preview_sha256": _stable_json_sha256(
+            release_draft_handoff_key_preview
+        ),
+        "release_draft_handoff_key_tail_count": len(
+            release_draft_handoff_key_tail
+        ),
+        "release_draft_handoff_key_tail": list(release_draft_handoff_key_tail),
+        "release_draft_handoff_key_tail_sha256": _stable_json_sha256(
+            release_draft_handoff_key_tail
+        ),
+        "release_draft_handoff_sha256": _stable_json_sha256(release_draft_handoff),
+        "release_draft_path": plan.release_draft_path,
+        "release_draft_path_sha256": _stable_json_sha256(plan.release_draft_path),
+        "release_draft_primary_issue": _release_draft_primary_issue(plan),
+        "release_draft_required_action_count": len(release_draft_required_actions),
+        "release_draft_required_actions_sha256": _stable_json_sha256(
+            release_draft_required_actions
+        ),
+        "release_draft_first_required_action": release_draft_required_action_boundary[
+            "first_action"
+        ],
+        "release_draft_last_required_action": release_draft_required_action_boundary[
+            "last_action"
+        ],
+        "release_draft_required_action_boundary_sha256": _stable_json_sha256(
+            release_draft_required_action_boundary
+        ),
+        "release_draft_required_action_preview_count": len(
+            release_draft_required_action_preview
+        ),
+        "release_draft_required_action_preview": list(
+            release_draft_required_action_preview
+        ),
+        "release_draft_required_action_preview_sha256": _stable_json_sha256(
+            release_draft_required_action_preview
+        ),
+        "release_draft_required_action_tail_count": len(
+            release_draft_required_action_tail
+        ),
+        "release_draft_required_action_tail": list(
+            release_draft_required_action_tail
+        ),
+        "release_draft_required_action_tail_sha256": _stable_json_sha256(
+            release_draft_required_action_tail
+        ),
+        "release_draft_primary_required_action": (
+            release_draft_required_actions[0]
+            if release_draft_required_actions
+            else None
+        ),
+        "release_draft_issues_sha256": _stable_json_sha256(plan.release_draft_issues),
+        "release_draft_first_issue": release_draft_issue_boundary["first_issue"],
+        "release_draft_last_issue": release_draft_issue_boundary["last_issue"],
+        "release_draft_issue_boundary_sha256": _stable_json_sha256(
+            release_draft_issue_boundary
+        ),
+        "release_draft_issue_preview_count": len(release_draft_issue_preview),
+        "release_draft_issue_preview": list(release_draft_issue_preview),
+        "release_draft_issue_preview_sha256": _stable_json_sha256(
+            release_draft_issue_preview
+        ),
+        "release_draft_issue_tail_count": len(release_draft_issue_tail),
+        "release_draft_issue_tail": list(release_draft_issue_tail),
+        "release_draft_issue_tail_sha256": _stable_json_sha256(
+            release_draft_issue_tail
+        ),
+    }
+
+
 def _issue_body_inventory(promotions: list[CandidatePromotion]) -> list[dict[str, Any]]:
     inventory: list[dict[str, Any]] = []
     for promotion in promotions:
@@ -6062,7 +6376,7 @@ def _issue_artifact_bundle_summary(
     review_order_tail = review_order[-8:]
     create_issues_safety_contract = _issue_artifact_create_issues_safety_contract(create_issues_safety)
     publication_handoff_summary_aliases = _publication_handoff_summary_aliases(plan)
-    release_draft_handoff = _release_draft_handoff(plan)
+    release_draft_handoff_summary_aliases = _release_draft_handoff_summary_aliases(plan)
     candidate_issue_gate_evidence = plan.candidate_issue_gate.get("evidence")
     if not isinstance(candidate_issue_gate_evidence, dict):
         candidate_issue_gate_evidence = {}
@@ -6109,27 +6423,6 @@ def _issue_artifact_bundle_summary(
         if candidate_issue_gate_evidence_keys
         else None,
     }
-    release_draft_required_actions = _release_draft_required_actions(plan.release_draft_issues)
-    release_draft_required_action_boundary = {
-        "first_action": release_draft_required_actions[0]
-        if release_draft_required_actions
-        else None,
-        "last_action": release_draft_required_actions[-1]
-        if release_draft_required_actions
-        else None,
-    }
-    release_draft_required_action_preview = release_draft_required_actions[:8]
-    release_draft_required_action_tail = release_draft_required_actions[-8:]
-    release_draft_issue_boundary = {
-        "first_issue": plan.release_draft_issues[0]
-        if plan.release_draft_issues
-        else None,
-        "last_issue": plan.release_draft_issues[-1]
-        if plan.release_draft_issues
-        else None,
-    }
-    release_draft_issue_preview = plan.release_draft_issues[:8]
-    release_draft_issue_tail = plan.release_draft_issues[-8:]
     validation_commands = _issue_artifact_validation_commands(plan)
     validation_command_boundary = {
         "first_command": validation_commands[0] if validation_commands else None,
@@ -6182,17 +6475,6 @@ def _issue_artifact_bundle_summary(
         if plan.publication_worktree_status
         else None,
     }
-    release_draft_handoff_keys = list(release_draft_handoff)
-    release_draft_handoff_key_boundary = {
-        "first_key": release_draft_handoff_keys[0]
-        if release_draft_handoff_keys
-        else None,
-        "last_key": release_draft_handoff_keys[-1]
-        if release_draft_handoff_keys
-        else None,
-    }
-    release_draft_handoff_key_preview = release_draft_handoff_keys[:8]
-    release_draft_handoff_key_tail = release_draft_handoff_keys[-8:]
     artifact_file_keys = list(artifact_files)
     artifact_files_key_boundary = {
         "first_key": artifact_file_keys[0] if artifact_file_keys else None,
@@ -6908,89 +7190,7 @@ def _issue_artifact_bundle_summary(
         "publication_worktree_status_boundary_sha256": _stable_json_sha256(
             publication_worktree_status_boundary
         ),
-        "release_draft_handoff_key_count": len(release_draft_handoff),
-        "release_draft_handoff_schema_version": release_draft_handoff.get("schema_version"),
-        "release_draft_handoff_primary_issue": release_draft_handoff.get("primary_issue"),
-        "release_draft_handoff_primary_required_action": release_draft_handoff.get(
-            "primary_required_action"
-        ),
-        "release_draft_handoff_first_key": release_draft_handoff_key_boundary[
-            "first_key"
-        ],
-        "release_draft_handoff_last_key": release_draft_handoff_key_boundary[
-            "last_key"
-        ],
-        "release_draft_handoff_key_boundary_sha256": _stable_json_sha256(
-            release_draft_handoff_key_boundary
-        ),
-        "release_draft_handoff_key_preview_count": len(
-            release_draft_handoff_key_preview
-        ),
-        "release_draft_handoff_key_preview": list(
-            release_draft_handoff_key_preview
-        ),
-        "release_draft_handoff_key_preview_sha256": _stable_json_sha256(
-            release_draft_handoff_key_preview
-        ),
-        "release_draft_handoff_key_tail_count": len(
-            release_draft_handoff_key_tail
-        ),
-        "release_draft_handoff_key_tail": list(release_draft_handoff_key_tail),
-        "release_draft_handoff_key_tail_sha256": _stable_json_sha256(
-            release_draft_handoff_key_tail
-        ),
-        "release_draft_handoff_sha256": _stable_json_sha256(release_draft_handoff),
-        "release_draft_path": plan.release_draft_path,
-        "release_draft_path_sha256": _stable_json_sha256(plan.release_draft_path),
-        "release_draft_primary_issue": _release_draft_primary_issue(plan),
-        "release_draft_required_action_count": len(release_draft_required_actions),
-        "release_draft_required_actions_sha256": _stable_json_sha256(release_draft_required_actions),
-        "release_draft_first_required_action": release_draft_required_action_boundary[
-            "first_action"
-        ],
-        "release_draft_last_required_action": release_draft_required_action_boundary[
-            "last_action"
-        ],
-        "release_draft_required_action_boundary_sha256": _stable_json_sha256(
-            release_draft_required_action_boundary
-        ),
-        "release_draft_required_action_preview_count": len(
-            release_draft_required_action_preview
-        ),
-        "release_draft_required_action_preview": list(
-            release_draft_required_action_preview
-        ),
-        "release_draft_required_action_preview_sha256": _stable_json_sha256(
-            release_draft_required_action_preview
-        ),
-        "release_draft_required_action_tail_count": len(
-            release_draft_required_action_tail
-        ),
-        "release_draft_required_action_tail": list(
-            release_draft_required_action_tail
-        ),
-        "release_draft_required_action_tail_sha256": _stable_json_sha256(
-            release_draft_required_action_tail
-        ),
-        "release_draft_primary_required_action": (
-            release_draft_required_actions[0] if release_draft_required_actions else None
-        ),
-        "release_draft_issues_sha256": _stable_json_sha256(plan.release_draft_issues),
-        "release_draft_first_issue": release_draft_issue_boundary["first_issue"],
-        "release_draft_last_issue": release_draft_issue_boundary["last_issue"],
-        "release_draft_issue_boundary_sha256": _stable_json_sha256(
-            release_draft_issue_boundary
-        ),
-        "release_draft_issue_preview_count": len(release_draft_issue_preview),
-        "release_draft_issue_preview": list(release_draft_issue_preview),
-        "release_draft_issue_preview_sha256": _stable_json_sha256(
-            release_draft_issue_preview
-        ),
-        "release_draft_issue_tail_count": len(release_draft_issue_tail),
-        "release_draft_issue_tail": list(release_draft_issue_tail),
-        "release_draft_issue_tail_sha256": _stable_json_sha256(
-            release_draft_issue_tail
-        ),
+        **release_draft_handoff_summary_aliases,
         "validation_command_count": len(validation_commands),
         "validation_commands_sha256": _stable_json_sha256(validation_commands),
         "validation_first_command": validation_command_boundary["first_command"],
