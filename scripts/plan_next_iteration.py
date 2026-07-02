@@ -846,6 +846,7 @@ class IterationPlan:
         distribution_audit_command = _standard_release_flow_distribution_audit_command(
             self.standard_release_flow
         )
+        publication_handoff_aliases = _publication_handoff_summary_aliases(self)
         return {
             "current_version": self.current_version,
             "target_version": self.target_version,
@@ -1039,6 +1040,7 @@ class IterationPlan:
             "publication_primary_publish_command": (
                 self.publication_publish_commands[0] if self.publication_publish_commands else None
             ),
+            **publication_handoff_aliases,
             "publication_publish_commands": self.publication_publish_commands,
             "publication_ref_context": self.publication_ref_context,
             "publication_worktree_clean": self.publication_worktree_clean,
@@ -3422,6 +3424,7 @@ def _print_text(plan: IterationPlan) -> None:
     distribution_audit_command = _standard_release_flow_distribution_audit_command(
         plan.standard_release_flow
     )
+    publication_handoff_aliases = _publication_handoff_summary_aliases(plan)
     print("=== cliany-site next iteration plan ===")
     print(f"current_version: {plan.current_version}")
     print(f"target_version: {plan.target_version}")
@@ -3633,6 +3636,8 @@ def _print_text(plan: IterationPlan) -> None:
     print(f"publication_next_actions_sha256: {_stable_json_sha256(plan.publication_next_actions)}")
     if plan.publication_next_actions:
         print(f"publication_primary_next_action: {plan.publication_next_actions[0]}")
+    for key, value in publication_handoff_aliases.items():
+        print(f"{key}: {value}")
     if plan.publication_next_actions:
         print("publication_next_actions:")
         for action in plan.publication_next_actions:
@@ -3929,6 +3934,42 @@ def _render_markdown(plan: IterationPlan) -> str:
         plan.publication_publish_script_path,
         plan.publication_publish_script_command,
     )
+    publication_handoff_aliases = _publication_handoff_summary_aliases(plan)
+    publication_handoff_key_preview_text = json.dumps(
+        publication_handoff_aliases["publication_handoff_key_preview"],
+        ensure_ascii=False,
+    )
+    publication_handoff_key_tail_text = json.dumps(
+        publication_handoff_aliases["publication_handoff_key_tail"],
+        ensure_ascii=False,
+    )
+    publication_handoff_primary_reason_code_text = _format_context_value(
+        publication_handoff_aliases[
+            "publication_handoff_candidate_issue_gate_primary_reason_code"
+        ]
+    )
+    publication_handoff_primary_reason_description_text = _format_context_value(
+        publication_handoff_aliases[
+            "publication_handoff_candidate_issue_gate_primary_reason_description"
+        ]
+    )
+    publication_handoff_primary_required_action_text = _format_context_value(
+        publication_handoff_aliases[
+            "publication_handoff_candidate_issue_gate_primary_required_action"
+        ]
+    )
+    publication_handoff_primary_reason_code_row = (
+        "| publication_handoff_candidate_issue_gate_primary_reason_code | "
+        f"`{publication_handoff_primary_reason_code_text}` |"
+    )
+    publication_handoff_primary_reason_description_row = (
+        "| publication_handoff_candidate_issue_gate_primary_reason_description | "
+        f"`{publication_handoff_primary_reason_description_text}` |"
+    )
+    publication_handoff_primary_required_action_row = (
+        "| publication_handoff_candidate_issue_gate_primary_required_action | "
+        f"`{publication_handoff_primary_required_action_text}` |"
+    )
     doctor_preflight_template = _doctor_preflight_evidence_template()
     primary_doctor_preflight_template_field_count_row = (
         "| case_promotion_evidence_primary_doctor_preflight_evidence_template_"
@@ -3977,6 +4018,21 @@ def _render_markdown(plan: IterationPlan) -> str:
 | publication_publish_script_path | `{plan.publication_publish_script_path}` |
 | publication_publish_script_path_sha256 | `{plan.publication_publish_script_path_sha256}` |
 | publication_publish_script_command_sha256 | `{plan.publication_publish_script_command_sha256}` |
+| publication_handoff_key_count | `{publication_handoff_aliases["publication_handoff_key_count"]}` |
+| publication_handoff_schema_version | `{publication_handoff_aliases["publication_handoff_schema_version"]}` |
+| publication_handoff_first_key | `{publication_handoff_aliases["publication_handoff_first_key"]}` |
+| publication_handoff_last_key | `{publication_handoff_aliases["publication_handoff_last_key"]}` |
+| publication_handoff_key_boundary_sha256 | `{publication_handoff_aliases["publication_handoff_key_boundary_sha256"]}` |
+| publication_handoff_key_preview_count | `{publication_handoff_aliases["publication_handoff_key_preview_count"]}` |
+| publication_handoff_key_preview | `{publication_handoff_key_preview_text}` |
+| publication_handoff_key_preview_sha256 | `{publication_handoff_aliases["publication_handoff_key_preview_sha256"]}` |
+| publication_handoff_key_tail_count | `{publication_handoff_aliases["publication_handoff_key_tail_count"]}` |
+| publication_handoff_key_tail | `{publication_handoff_key_tail_text}` |
+| publication_handoff_key_tail_sha256 | `{publication_handoff_aliases["publication_handoff_key_tail_sha256"]}` |
+| publication_handoff_sha256 | `{publication_handoff_aliases["publication_handoff_sha256"]}` |
+{publication_handoff_primary_reason_code_row}
+{publication_handoff_primary_reason_description_row}
+{publication_handoff_primary_required_action_row}
 | standard_release_flow_status | `{plan.standard_release_flow.get("status")}` |
 | standard_release_flow_primary_next_action | `{standard_release_flow_primary_action}` |
 | standard_release_flow_command_count | `{plan.standard_release_flow.get("command_count")}` |
@@ -5565,6 +5621,46 @@ def _publication_handoff(plan: IterationPlan) -> dict[str, Any]:
     return handoff
 
 
+def _publication_handoff_summary_aliases(plan: IterationPlan) -> dict[str, Any]:
+    publication_handoff = _publication_handoff(plan)
+    publication_handoff_keys = list(publication_handoff)
+    publication_handoff_key_boundary = {
+        "first_key": publication_handoff_keys[0] if publication_handoff_keys else None,
+        "last_key": publication_handoff_keys[-1] if publication_handoff_keys else None,
+    }
+    publication_handoff_key_preview = publication_handoff_keys[:8]
+    publication_handoff_key_tail = publication_handoff_keys[-8:]
+    return {
+        "publication_handoff_key_count": len(publication_handoff),
+        "publication_handoff_schema_version": publication_handoff.get("schema_version"),
+        "publication_handoff_first_key": publication_handoff_key_boundary["first_key"],
+        "publication_handoff_last_key": publication_handoff_key_boundary["last_key"],
+        "publication_handoff_key_boundary_sha256": _stable_json_sha256(
+            publication_handoff_key_boundary
+        ),
+        "publication_handoff_key_preview_count": len(publication_handoff_key_preview),
+        "publication_handoff_key_preview": list(publication_handoff_key_preview),
+        "publication_handoff_key_preview_sha256": _stable_json_sha256(
+            publication_handoff_key_preview
+        ),
+        "publication_handoff_key_tail_count": len(publication_handoff_key_tail),
+        "publication_handoff_key_tail": list(publication_handoff_key_tail),
+        "publication_handoff_key_tail_sha256": _stable_json_sha256(
+            publication_handoff_key_tail
+        ),
+        "publication_handoff_sha256": _stable_json_sha256(publication_handoff),
+        "publication_handoff_candidate_issue_gate_primary_reason_code": (
+            publication_handoff.get("candidate_issue_gate_primary_reason_code")
+        ),
+        "publication_handoff_candidate_issue_gate_primary_reason_description": (
+            publication_handoff.get("candidate_issue_gate_primary_reason_description")
+        ),
+        "publication_handoff_candidate_issue_gate_primary_required_action": (
+            publication_handoff.get("candidate_issue_gate_primary_required_action")
+        ),
+    }
+
+
 def _commit_cadence_primary_next_action(plan: IterationPlan) -> str | None:
     actions = plan.commit_cadence.get("next_actions")
     if isinstance(actions, list) and actions:
@@ -5965,15 +6061,8 @@ def _issue_artifact_bundle_summary(
     review_order_preview = review_order[:8]
     review_order_tail = review_order[-8:]
     create_issues_safety_contract = _issue_artifact_create_issues_safety_contract(create_issues_safety)
-    publication_handoff = _publication_handoff(plan)
+    publication_handoff_summary_aliases = _publication_handoff_summary_aliases(plan)
     release_draft_handoff = _release_draft_handoff(plan)
-    publication_handoff_keys = list(publication_handoff)
-    publication_handoff_key_boundary = {
-        "first_key": publication_handoff_keys[0] if publication_handoff_keys else None,
-        "last_key": publication_handoff_keys[-1] if publication_handoff_keys else None,
-    }
-    publication_handoff_key_preview = publication_handoff_keys[:8]
-    publication_handoff_key_tail = publication_handoff_keys[-8:]
     candidate_issue_gate_evidence = plan.candidate_issue_gate.get("evidence")
     if not isinstance(candidate_issue_gate_evidence, dict):
         candidate_issue_gate_evidence = {}
@@ -6738,33 +6827,7 @@ def _issue_artifact_bundle_summary(
         "publication_primary_next_action": (
             plan.publication_next_actions[0] if plan.publication_next_actions else None
         ),
-        "publication_handoff_key_count": len(publication_handoff),
-        "publication_handoff_schema_version": publication_handoff.get("schema_version"),
-        "publication_handoff_first_key": publication_handoff_key_boundary["first_key"],
-        "publication_handoff_last_key": publication_handoff_key_boundary["last_key"],
-        "publication_handoff_key_boundary_sha256": _stable_json_sha256(
-            publication_handoff_key_boundary
-        ),
-        "publication_handoff_key_preview_count": len(publication_handoff_key_preview),
-        "publication_handoff_key_preview": list(publication_handoff_key_preview),
-        "publication_handoff_key_preview_sha256": _stable_json_sha256(
-            publication_handoff_key_preview
-        ),
-        "publication_handoff_key_tail_count": len(publication_handoff_key_tail),
-        "publication_handoff_key_tail": list(publication_handoff_key_tail),
-        "publication_handoff_key_tail_sha256": _stable_json_sha256(
-            publication_handoff_key_tail
-        ),
-        "publication_handoff_sha256": _stable_json_sha256(publication_handoff),
-        "publication_handoff_candidate_issue_gate_primary_reason_code": publication_handoff.get(
-            "candidate_issue_gate_primary_reason_code"
-        ),
-        "publication_handoff_candidate_issue_gate_primary_reason_description": publication_handoff.get(
-            "candidate_issue_gate_primary_reason_description"
-        ),
-        "publication_handoff_candidate_issue_gate_primary_required_action": publication_handoff.get(
-            "candidate_issue_gate_primary_required_action"
-        ),
+        **publication_handoff_summary_aliases,
         "commit_cadence_status": plan.commit_cadence.get("status"),
         "commit_cadence_commit_day_count": plan.commit_cadence.get("commit_day_count"),
         "commit_cadence_min_commit_days": plan.commit_cadence.get("min_commit_days"),

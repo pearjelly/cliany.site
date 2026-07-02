@@ -2116,6 +2116,49 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
     assert data["standard_release_flow_distribution_audit_command_sha256"] == (
         _stable_json_sha256(distribution_audit_command)
     )
+    publication_handoff = plan_next_iteration._publication_handoff(plan)
+    publication_handoff_keys = list(publication_handoff)
+    publication_handoff_key_boundary = {
+        "first_key": publication_handoff_keys[0],
+        "last_key": publication_handoff_keys[-1],
+    }
+    publication_handoff_key_preview = publication_handoff_keys[:8]
+    publication_handoff_key_tail = publication_handoff_keys[-8:]
+    assert data["publication_handoff_key_count"] == len(publication_handoff)
+    assert data["publication_handoff_schema_version"] == publication_handoff[
+        "schema_version"
+    ]
+    assert data["publication_handoff_first_key"] == publication_handoff_key_boundary[
+        "first_key"
+    ]
+    assert data["publication_handoff_last_key"] == publication_handoff_key_boundary[
+        "last_key"
+    ]
+    assert data["publication_handoff_key_boundary_sha256"] == _stable_json_sha256(
+        publication_handoff_key_boundary
+    )
+    assert data["publication_handoff_key_preview_count"] == len(
+        publication_handoff_key_preview
+    )
+    assert data["publication_handoff_key_preview"] == publication_handoff_key_preview
+    assert data["publication_handoff_key_preview_sha256"] == _stable_json_sha256(
+        publication_handoff_key_preview
+    )
+    assert data["publication_handoff_key_tail_count"] == len(publication_handoff_key_tail)
+    assert data["publication_handoff_key_tail"] == publication_handoff_key_tail
+    assert data["publication_handoff_key_tail_sha256"] == _stable_json_sha256(
+        publication_handoff_key_tail
+    )
+    assert data["publication_handoff_sha256"] == _stable_json_sha256(publication_handoff)
+    assert data["publication_handoff_candidate_issue_gate_primary_reason_code"] == (
+        publication_handoff["candidate_issue_gate_primary_reason_code"]
+    )
+    assert data[
+        "publication_handoff_candidate_issue_gate_primary_reason_description"
+    ] == publication_handoff["candidate_issue_gate_primary_reason_description"]
+    assert data[
+        "publication_handoff_candidate_issue_gate_primary_required_action"
+    ] == publication_handoff["candidate_issue_gate_primary_required_action"]
     assert (
         "python scripts/check_release_publication.py --remote --remote-name upstream --json"
         in plan_next_iteration._issue_artifact_validation_commands(plan)
@@ -2366,6 +2409,34 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
         "| publication_primary_publish_command | "
         "`python scripts/check_release_publication.py --json` |"
     ) in text
+    publication_handoff = plan_next_iteration._publication_handoff(plan)
+    publication_handoff_keys = list(publication_handoff)
+    publication_handoff_key_boundary = {
+        "first_key": publication_handoff_keys[0],
+        "last_key": publication_handoff_keys[-1],
+    }
+    assert f"| publication_handoff_key_count | `{len(publication_handoff)}` |" in text
+    assert "| publication_handoff_schema_version | `1` |" in text
+    assert (
+        "| publication_handoff_first_key | "
+        f"`{publication_handoff_key_boundary['first_key']}` |"
+        in text
+    )
+    assert (
+        "| publication_handoff_last_key | "
+        f"`{publication_handoff_key_boundary['last_key']}` |"
+        in text
+    )
+    assert (
+        "| publication_handoff_key_boundary_sha256 | "
+        f"`{_stable_json_sha256(publication_handoff_key_boundary)}` |"
+        in text
+    )
+    assert (
+        "| publication_handoff_sha256 | "
+        f"`{_stable_json_sha256(publication_handoff)}` |"
+        in text
+    )
     assert f"| next_action_count | `{len(plan.next_actions)}` |" in text
     assert f"| next_actions_sha256 | `{_stable_json_sha256(plan.next_actions)}` |" in text
     assert (
@@ -2509,6 +2580,32 @@ def test_plan_text_output_expands_candidate_issue_gate_evidence(tmp_path, capsys
     assert (
         "publication_primary_next_action: "
         "Commit, stash, or discard local worktree changes before publishing release refs."
+        in text
+    )
+    publication_handoff = plan_next_iteration._publication_handoff(plan)
+    publication_handoff_keys = list(publication_handoff)
+    publication_handoff_key_boundary = {
+        "first_key": publication_handoff_keys[0],
+        "last_key": publication_handoff_keys[-1],
+    }
+    assert f"publication_handoff_key_count: {len(publication_handoff)}" in text
+    assert "publication_handoff_schema_version: 1" in text
+    assert (
+        f"publication_handoff_first_key: {publication_handoff_key_boundary['first_key']}"
+        in text
+    )
+    assert (
+        f"publication_handoff_last_key: {publication_handoff_key_boundary['last_key']}"
+        in text
+    )
+    assert (
+        "publication_handoff_key_boundary_sha256: "
+        f"{_stable_json_sha256(publication_handoff_key_boundary)}"
+        in text
+    )
+    assert (
+        "publication_handoff_sha256: "
+        f"{_stable_json_sha256(publication_handoff)}"
         in text
     )
     assert f"next_action_count: {len(plan.next_actions)}" in text
