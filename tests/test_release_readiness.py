@@ -1199,6 +1199,19 @@ def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path, capsys):
         in action for action in payload["publication"]["next_actions"]
     )
     assert not any("git tag v0.1.4" in action for action in payload["next_actions"])
+    assert payload["publication_summary"]["tag_decision_status"] == "blocked_by_daily_release_cap"
+    assert payload["publication_tag_publish_decision"]["status"] == "blocked_by_daily_release_cap"
+    assert (
+        payload["publication_tag_publish_decision"]["required_action"]
+        == payload["publication_tag_publish_decision"]["target_tag_required_action"]
+    )
+    assert (
+        payload["publication_tag_publish_decision"]["target_tag_release_gate_required_action"]
+        == payload["publication_tag_publish_decision"]["target_tag_required_action"]
+    )
+    assert "create a new release tag at HEAD" not in (
+        payload["publication_tag_publish_decision"]["required_action"] or ""
+    )
     assert payload["publication_tag_publish_decision"]["target_tag_command_count"] == 0
     assert payload["publication_tag_publish_decision"]["target_tag_primary_command"] is None
     assert payload["publication_tag_publish_decision"]["target_tag_commands"] == []

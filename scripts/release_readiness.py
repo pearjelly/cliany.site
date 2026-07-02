@@ -1306,11 +1306,17 @@ def _publication_tag_publish_decision(
     remote = str(publication_payload.get("remote") or "origin")
     create_command = f"git tag {shlex.quote(target_tag)}"
     push_command = f"git push {shlex.quote(remote)} {shlex.quote(target_tag)}"
+    decision_status = decision.get("status")
+    decision_can_push_tag = decision.get("can_push_tag")
+    decision_required_action = decision.get("required_action")
 
     if _has_target_daily_release_limit_blocker(blockers):
         target_status = "blocked_by_daily_release_cap"
         required_action = f"Pause release tagging until the next day before creating target tag `{target_tag}`."
         commands = []
+        decision_status = target_status
+        decision_can_push_tag = False
+        decision_required_action = required_action
     elif target_tag_matches_latest and tag_points_at_head:
         target_status = "current_tag_at_head"
         required_action = decision.get("required_action")
@@ -1332,6 +1338,9 @@ def _publication_tag_publish_decision(
 
     return {
         **decision,
+        "status": decision_status,
+        "can_push_tag": decision_can_push_tag,
+        "required_action": decision_required_action,
         "target_tag": target_tag,
         "target_tag_matches_latest": target_tag_matches_latest,
         "target_tag_status": target_status,
@@ -1347,9 +1356,13 @@ def _publication_tag_publish_decision(
         "target_tag_release_gate_blockers_sha256": _stable_json_sha256(blockers),
         "target_tag_release_gate_primary_blocker": blockers[0] if blockers else None,
         "target_tag_release_gate_required_action": (
-            f"Clear release readiness blockers before creating target tag `{target_tag}`."
-            if blockers
-            else required_action
+            required_action
+            if _has_target_daily_release_limit_blocker(blockers)
+            else (
+                f"Clear release readiness blockers before creating target tag `{target_tag}`."
+                if blockers
+                else required_action
+            )
         ),
         "target_tag_release_gate_blockers": blockers,
     }
