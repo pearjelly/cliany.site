@@ -822,11 +822,15 @@ def test_plan_prefers_standard_release_flow_primary_action(tmp_path):
         {}
     )
     assert data["standard_release_flow_primary_blocked_step_name"] is None
+    assert data["standard_release_flow_primary_blocked_step_status"] is None
+    assert data["standard_release_flow_primary_blocked_step_status_sha256"] is None
     assert data["standard_release_flow_primary_blocked_step_command"] is None
     assert data["standard_release_flow_primary_blocked_step_command_sha256"] is None
     assert data["standard_release_flow_primary_blocked_step_action"] is None
     assert data["standard_release_flow_primary_blocked_step_action_sha256"] is None
     assert data["standard_release_flow_primary_pending_step_name"] is None
+    assert data["standard_release_flow_primary_pending_step_status"] is None
+    assert data["standard_release_flow_primary_pending_step_status_sha256"] is None
     assert data["standard_release_flow_primary_pending_step_command"] is None
     assert data["standard_release_flow_primary_pending_step_command_sha256"] is None
     assert data["standard_release_flow_primary_pending_step_action"] is None
@@ -891,6 +895,10 @@ def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path, cap
     assert data["standard_release_flow_primary_blocked_step_name"] == (
         "strict_release_readiness"
     )
+    assert data["standard_release_flow_primary_blocked_step_status"] == "blocked"
+    assert data["standard_release_flow_primary_blocked_step_status_sha256"] == (
+        _stable_json_sha256("blocked")
+    )
     assert data["standard_release_flow_primary_blocked_step_command"] == strict_command
     assert data["standard_release_flow_primary_blocked_step_command_sha256"] == (
         _stable_json_sha256(strict_command)
@@ -898,6 +906,10 @@ def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path, cap
     assert data["standard_release_flow_primary_blocked_step_action"] is None
     assert data["standard_release_flow_primary_blocked_step_action_sha256"] is None
     assert data["standard_release_flow_primary_pending_step_name"] == "release_notes"
+    assert data["standard_release_flow_primary_pending_step_status"] == "pending"
+    assert data["standard_release_flow_primary_pending_step_status_sha256"] == (
+        _stable_json_sha256("pending")
+    )
     assert data["standard_release_flow_primary_pending_step_command"] is None
     assert data["standard_release_flow_primary_pending_step_command_sha256"] is None
     assert data["standard_release_flow_primary_pending_step_action"] == release_notes_action
@@ -2047,6 +2059,12 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
     assert data["standard_release_flow_primary_blocked_step_command"] == (
         primary_blocked_step["command"]
     )
+    assert data["standard_release_flow_primary_blocked_step_status"] == (
+        primary_blocked_step["status"]
+    )
+    assert data["standard_release_flow_primary_blocked_step_status_sha256"] == (
+        _stable_json_sha256(primary_blocked_step["status"])
+    )
     assert data["standard_release_flow_primary_blocked_step_command_sha256"] == (
         _stable_json_sha256(primary_blocked_step["command"])
     )
@@ -2061,6 +2079,12 @@ def test_plan_passes_remote_audit_args_to_readiness_and_publication(tmp_path, mo
         step
         for step in data["standard_release_flow"]["steps"]
         if str(step.get("status")).startswith("pending")
+    )
+    assert data["standard_release_flow_primary_pending_step_status"] == (
+        primary_pending_step["status"]
+    )
+    assert data["standard_release_flow_primary_pending_step_status_sha256"] == (
+        _stable_json_sha256(primary_pending_step["status"])
     )
     assert data["standard_release_flow_primary_pending_step_command"] is None
     assert data["standard_release_flow_primary_pending_step_command_sha256"] is None
@@ -2244,6 +2268,16 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
         if str(step.get("status")).startswith("blocked")
     )
     assert (
+        "| standard_release_flow_primary_blocked_step_status | `"
+        f"{primary_blocked_step['status']}` |"
+        in text
+    )
+    assert (
+        "| standard_release_flow_primary_blocked_step_status_sha256 | `"
+        f"{_stable_json_sha256(primary_blocked_step['status'])}` |"
+        in text
+    )
+    assert (
         "| standard_release_flow_primary_blocked_step_command | `"
         f"{primary_blocked_step['command']}` |"
         in text
@@ -2263,6 +2297,16 @@ def test_plan_markdown_report_includes_candidate_promotion_tasks(tmp_path):
         step
         for step in plan.standard_release_flow["steps"]
         if str(step.get("status")).startswith("pending")
+    )
+    assert (
+        "| standard_release_flow_primary_pending_step_status | `"
+        f"{primary_pending_step['status']}` |"
+        in text
+    )
+    assert (
+        "| standard_release_flow_primary_pending_step_status_sha256 | `"
+        f"{_stable_json_sha256(primary_pending_step['status'])}` |"
+        in text
     )
     assert "| standard_release_flow_primary_pending_step_command | `(none)` |" in text
     assert (
@@ -2731,12 +2775,20 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         if str(step.get("status")).startswith("pending")
     )
     primary_blocked_command = primary_blocked_step.get("command")
+    primary_blocked_status = primary_blocked_step.get("status")
     primary_blocked_action = primary_blocked_step.get("action")
     primary_pending_command = primary_pending_step.get("command")
+    primary_pending_status = primary_pending_step.get("status")
     primary_pending_action = primary_pending_step.get("action")
     expected_standard_release_flow_primary_step_handoff_aliases = {
         "standard_release_flow_primary_blocked_step_name": primary_blocked_step.get(
             "name"
+        ),
+        "standard_release_flow_primary_blocked_step_status": primary_blocked_status,
+        "standard_release_flow_primary_blocked_step_status_sha256": (
+            _stable_json_sha256(primary_blocked_status)
+            if primary_blocked_status
+            else None
         ),
         "standard_release_flow_primary_blocked_step_command": primary_blocked_command,
         "standard_release_flow_primary_blocked_step_command_sha256": (
@@ -2752,6 +2804,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "standard_release_flow_primary_pending_step_name": primary_pending_step.get(
             "name"
+        ),
+        "standard_release_flow_primary_pending_step_status": primary_pending_status,
+        "standard_release_flow_primary_pending_step_status_sha256": (
+            _stable_json_sha256(primary_pending_status)
+            if primary_pending_status
+            else None
         ),
         "standard_release_flow_primary_pending_step_command": primary_pending_command,
         "standard_release_flow_primary_pending_step_command_sha256": (
@@ -4951,6 +5009,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"`{primary_blocked_step['command']}`"
     ) in readme
     assert (
+        "standard_release_flow_primary_blocked_step_status: "
+        f"`{primary_blocked_step['status']}`"
+    ) in readme
+    assert (
+        "standard_release_flow_primary_blocked_step_status_sha256: "
+        f"`{_stable_json_sha256(primary_blocked_step['status'])}`"
+    ) in readme
+    assert (
         "standard_release_flow_primary_blocked_step_command_sha256: "
         f"`{_stable_json_sha256(primary_blocked_step['command'])}`"
     ) in readme
@@ -4973,6 +5039,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "standard_release_flow_primary_pending_step_action: "
         f"{plan_next_iteration._summary_inline_code(primary_pending_step['action'])}"
+    ) in readme
+    assert (
+        "standard_release_flow_primary_pending_step_status: "
+        f"`{primary_pending_step['status']}`"
+    ) in readme
+    assert (
+        "standard_release_flow_primary_pending_step_status_sha256: "
+        f"`{_stable_json_sha256(primary_pending_step['status'])}`"
     ) in readme
     assert (
         "standard_release_flow_primary_pending_step_action_sha256: "
@@ -6152,6 +6226,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"`{primary_blocked_step['command']}`"
     ) in readme
     assert (
+        "standard_release_flow_primary_blocked_step_status: "
+        f"`{primary_blocked_step['status']}`"
+    ) in readme
+    assert (
+        "standard_release_flow_primary_blocked_step_status_sha256: "
+        f"`{_stable_json_sha256(primary_blocked_step['status'])}`"
+    ) in readme
+    assert (
         "standard_release_flow_primary_blocked_step_command_sha256: "
         f"`{_stable_json_sha256(primary_blocked_step['command'])}`"
     ) in readme
@@ -6174,6 +6256,14 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "standard_release_flow_primary_pending_step_action: "
         f"{plan_next_iteration._summary_inline_code(primary_pending_step['action'])}"
+    ) in readme
+    assert (
+        "standard_release_flow_primary_pending_step_status: "
+        f"`{primary_pending_step['status']}`"
+    ) in readme
+    assert (
+        "standard_release_flow_primary_pending_step_status_sha256: "
+        f"`{_stable_json_sha256(primary_pending_step['status'])}`"
     ) in readme
     assert (
         "standard_release_flow_primary_pending_step_action_sha256: "

@@ -296,6 +296,12 @@ class ReadinessReport:
             "standard_release_flow_primary_blocked_step_name": (
                 standard_release_flow_primary_blocked_step_handoff["name"]
             ),
+            "standard_release_flow_primary_blocked_step_status": (
+                standard_release_flow_primary_blocked_step_handoff["status"]
+            ),
+            "standard_release_flow_primary_blocked_step_status_sha256": (
+                standard_release_flow_primary_blocked_step_handoff["status_sha256"]
+            ),
             "standard_release_flow_primary_blocked_step_command": (
                 standard_release_flow_primary_blocked_step_handoff["command"]
             ),
@@ -310,6 +316,12 @@ class ReadinessReport:
             ),
             "standard_release_flow_primary_pending_step_name": (
                 standard_release_flow_primary_pending_step_handoff["name"]
+            ),
+            "standard_release_flow_primary_pending_step_status": (
+                standard_release_flow_primary_pending_step_handoff["status"]
+            ),
+            "standard_release_flow_primary_pending_step_status_sha256": (
+                standard_release_flow_primary_pending_step_handoff["status_sha256"]
             ),
             "standard_release_flow_primary_pending_step_command": (
                 standard_release_flow_primary_pending_step_handoff["command"]
@@ -1179,6 +1191,14 @@ def _print_text(report: ReadinessReport) -> None:
     for status_prefix, handoff in primary_step_handoffs.items():
         print(f"standard_release_flow_primary_{status_prefix}_step_name: {handoff['name']}")
         print(
+            f"standard_release_flow_primary_{status_prefix}_step_status: "
+            f"{handoff['status']}"
+        )
+        print(
+            f"standard_release_flow_primary_{status_prefix}_step_status_sha256: "
+            f"{handoff['status_sha256']}"
+        )
+        print(
             f"standard_release_flow_primary_{status_prefix}_step_command: "
             f"{handoff['command']}"
         )
@@ -1724,10 +1744,14 @@ def _standard_release_flow_primary_step_handoff(
 ) -> dict[str, str | None]:
     step = _standard_release_flow_primary_step_with_status_prefix(flow, prefix)
     name = step.get("name") if step else None
+    status = step.get("status") if step else None
+    status_text = str(status) if status is not None else None
     command = _standard_release_flow_step_command(step)
     action = _standard_release_flow_step_action(step)
     return {
         "name": str(name) if name is not None else None,
+        "status": status_text,
+        "status_sha256": _stable_json_sha256(status_text) if status_text else None,
         "command": command,
         "command_sha256": _stable_json_sha256(command) if command else None,
         "action": action,
@@ -2144,6 +2168,14 @@ def _standard_release_flow_lines(report: ReadinessReport) -> list[str]:
                 (
                     f"- standard_release_flow_primary_{status_prefix}_step_name: "
                     f"`{_markdown_cell(handoff['name'])}`"
+                ),
+                (
+                    f"- standard_release_flow_primary_{status_prefix}_step_status: "
+                    f"`{_markdown_cell(handoff['status'])}`"
+                ),
+                (
+                    f"- standard_release_flow_primary_{status_prefix}_step_status_sha256: "
+                    f"`{_markdown_cell(handoff['status_sha256'])}`"
                 ),
                 (
                     f"- standard_release_flow_primary_{status_prefix}_step_command: "

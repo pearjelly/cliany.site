@@ -838,6 +838,8 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
             standard_release_flow["steps"], "blocked"
         )
     )
+    assert payload["standard_release_flow_primary_blocked_step_status"] is None
+    assert payload["standard_release_flow_primary_blocked_step_status_sha256"] is None
     assert payload["standard_release_flow_primary_blocked_step_command"] is None
     assert payload["standard_release_flow_primary_blocked_step_command_sha256"] is None
     assert payload["standard_release_flow_primary_blocked_step_action"] is None
@@ -851,6 +853,12 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
         step
         for step in standard_release_flow["steps"]
         if str(step.get("status")).startswith("pending")
+    )
+    assert payload["standard_release_flow_primary_pending_step_status"] == (
+        primary_pending_step["status"]
+    )
+    assert payload["standard_release_flow_primary_pending_step_status_sha256"] == (
+        release_readiness._stable_json_sha256(primary_pending_step["status"])
     )
     assert payload["standard_release_flow_primary_pending_step_command"] is None
     assert payload["standard_release_flow_primary_pending_step_command_sha256"] is None
@@ -1077,11 +1085,15 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- standard_release_flow_step_status_counts: `" in text
     assert "- standard_release_flow_step_status_counts_sha256: `" in text
     assert "- standard_release_flow_primary_blocked_step_name: `" in text
+    assert "- standard_release_flow_primary_blocked_step_status: `" in text
+    assert "- standard_release_flow_primary_blocked_step_status_sha256: `" in text
     assert "- standard_release_flow_primary_blocked_step_command: `" in text
     assert "- standard_release_flow_primary_blocked_step_command_sha256: `" in text
     assert "- standard_release_flow_primary_blocked_step_action: `" in text
     assert "- standard_release_flow_primary_blocked_step_action_sha256: `" in text
     assert "- standard_release_flow_primary_pending_step_name: `" in text
+    assert "- standard_release_flow_primary_pending_step_status: `" in text
+    assert "- standard_release_flow_primary_pending_step_status_sha256: `" in text
     assert "- standard_release_flow_primary_pending_step_command: `" in text
     assert "- standard_release_flow_primary_pending_step_command_sha256: `" in text
     assert "- standard_release_flow_primary_pending_step_action: `" in text
@@ -1243,6 +1255,10 @@ def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path, capsys):
     strict_command = "python scripts/release_readiness.py --strict --target-version 0.1.4"
     assert payload["standard_release_flow_primary_blocked_step_name"] == (
         "strict_release_readiness"
+    )
+    assert payload["standard_release_flow_primary_blocked_step_status"] == "blocked"
+    assert payload["standard_release_flow_primary_blocked_step_status_sha256"] == (
+        release_readiness._stable_json_sha256("blocked")
     )
     assert payload["standard_release_flow_primary_blocked_step_command"] == strict_command
     assert payload["standard_release_flow_primary_blocked_step_command_sha256"] == (
@@ -1563,11 +1579,15 @@ def test_release_readiness_text_output_omits_next_actions_when_ready(tmp_path, c
     assert "standard_release_flow_step_status_counts:" in output
     assert "standard_release_flow_step_status_counts_sha256:" in output
     assert "standard_release_flow_primary_blocked_step_name:" in output
+    assert "standard_release_flow_primary_blocked_step_status:" in output
+    assert "standard_release_flow_primary_blocked_step_status_sha256:" in output
     assert "standard_release_flow_primary_blocked_step_command:" in output
     assert "standard_release_flow_primary_blocked_step_command_sha256:" in output
     assert "standard_release_flow_primary_blocked_step_action:" in output
     assert "standard_release_flow_primary_blocked_step_action_sha256:" in output
     assert "standard_release_flow_primary_pending_step_name:" in output
+    assert "standard_release_flow_primary_pending_step_status:" in output
+    assert "standard_release_flow_primary_pending_step_status_sha256:" in output
     assert "standard_release_flow_primary_pending_step_command:" in output
     assert "standard_release_flow_primary_pending_step_command_sha256:" in output
     assert "standard_release_flow_primary_pending_step_action:" in output

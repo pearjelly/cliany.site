@@ -127,11 +127,15 @@ ARTIFACT_MANIFEST_KEYS = (
     "standard_release_flow_step_status_counts",
     "standard_release_flow_step_status_counts_sha256",
     "standard_release_flow_primary_blocked_step_name",
+    "standard_release_flow_primary_blocked_step_status",
+    "standard_release_flow_primary_blocked_step_status_sha256",
     "standard_release_flow_primary_blocked_step_command",
     "standard_release_flow_primary_blocked_step_command_sha256",
     "standard_release_flow_primary_blocked_step_action",
     "standard_release_flow_primary_blocked_step_action_sha256",
     "standard_release_flow_primary_pending_step_name",
+    "standard_release_flow_primary_pending_step_status",
+    "standard_release_flow_primary_pending_step_status_sha256",
     "standard_release_flow_primary_pending_step_command",
     "standard_release_flow_primary_pending_step_command_sha256",
     "standard_release_flow_primary_pending_step_action",
@@ -297,11 +301,15 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "standard_release_flow_step_status_counts",
     "standard_release_flow_step_status_counts_sha256",
     "standard_release_flow_primary_blocked_step_name",
+    "standard_release_flow_primary_blocked_step_status",
+    "standard_release_flow_primary_blocked_step_status_sha256",
     "standard_release_flow_primary_blocked_step_command",
     "standard_release_flow_primary_blocked_step_command_sha256",
     "standard_release_flow_primary_blocked_step_action",
     "standard_release_flow_primary_blocked_step_action_sha256",
     "standard_release_flow_primary_pending_step_name",
+    "standard_release_flow_primary_pending_step_status",
+    "standard_release_flow_primary_pending_step_status_sha256",
     "standard_release_flow_primary_pending_step_command",
     "standard_release_flow_primary_pending_step_command_sha256",
     "standard_release_flow_primary_pending_step_action",
@@ -902,6 +910,12 @@ class IterationPlan:
             "standard_release_flow_primary_blocked_step_name": (
                 standard_release_flow_primary_blocked_step_handoff["name"]
             ),
+            "standard_release_flow_primary_blocked_step_status": (
+                standard_release_flow_primary_blocked_step_handoff["status"]
+            ),
+            "standard_release_flow_primary_blocked_step_status_sha256": (
+                standard_release_flow_primary_blocked_step_handoff["status_sha256"]
+            ),
             "standard_release_flow_primary_blocked_step_command": (
                 standard_release_flow_primary_blocked_step_handoff["command"]
             ),
@@ -916,6 +930,12 @@ class IterationPlan:
             ),
             "standard_release_flow_primary_pending_step_name": (
                 standard_release_flow_primary_pending_step_handoff["name"]
+            ),
+            "standard_release_flow_primary_pending_step_status": (
+                standard_release_flow_primary_pending_step_handoff["status"]
+            ),
+            "standard_release_flow_primary_pending_step_status_sha256": (
+                standard_release_flow_primary_pending_step_handoff["status_sha256"]
             ),
             "standard_release_flow_primary_pending_step_command": (
                 standard_release_flow_primary_pending_step_handoff["command"]
@@ -1530,10 +1550,14 @@ def _standard_release_flow_primary_step_handoff(
 ) -> dict[str, str | None]:
     step = _standard_release_flow_primary_step_with_status_prefix(flow, prefix)
     name = step.get("name") if step else None
+    status = step.get("status") if step else None
+    status_text = str(status) if status is not None else None
     command = _standard_release_flow_step_command(step)
     action = _standard_release_flow_step_action(step)
     return {
         "name": str(name) if name is not None else None,
+        "status": status_text,
+        "status_sha256": _stable_json_sha256(status_text) if status_text else None,
         "command": command,
         "command_sha256": _stable_json_sha256(command) if command else None,
         "action": action,
@@ -1550,6 +1574,12 @@ def _standard_release_flow_primary_step_handoff_aliases(
         aliases.update(
             {
                 f"standard_release_flow_primary_{prefix}_step_name": handoff["name"],
+                f"standard_release_flow_primary_{prefix}_step_status": handoff[
+                    "status"
+                ],
+                f"standard_release_flow_primary_{prefix}_step_status_sha256": handoff[
+                    "status_sha256"
+                ],
                 f"standard_release_flow_primary_{prefix}_step_command": handoff[
                     "command"
                 ],
@@ -3482,7 +3512,15 @@ def _print_text(plan: IterationPlan) -> None:
         f"{_stable_json_sha256(standard_release_flow_step_status_counts)}"
     )
     for status_prefix in ("blocked", "pending"):
-        for field_name in ("name", "command", "command_sha256", "action", "action_sha256"):
+        for field_name in (
+            "name",
+            "status",
+            "status_sha256",
+            "command",
+            "command_sha256",
+            "action",
+            "action_sha256",
+        ):
             alias = f"standard_release_flow_primary_{status_prefix}_step_{field_name}"
             print(f"{alias}: {standard_release_flow_primary_step_handoff_aliases[alias]}")
     print(f"standard_release_flow_has_website_deploy: {website_deploy_command is not None}")
@@ -3775,6 +3813,12 @@ def _render_markdown(plan: IterationPlan) -> str:
     blocked_step_name = standard_release_flow_primary_step_handoff_text[
         "standard_release_flow_primary_blocked_step_name"
     ]
+    blocked_step_status = standard_release_flow_primary_step_handoff_text[
+        "standard_release_flow_primary_blocked_step_status"
+    ]
+    blocked_step_status_sha256 = standard_release_flow_primary_step_handoff_text[
+        "standard_release_flow_primary_blocked_step_status_sha256"
+    ]
     blocked_step_command = standard_release_flow_primary_step_handoff_text[
         "standard_release_flow_primary_blocked_step_command"
     ]
@@ -3789,6 +3833,12 @@ def _render_markdown(plan: IterationPlan) -> str:
     ]
     pending_step_name = standard_release_flow_primary_step_handoff_text[
         "standard_release_flow_primary_pending_step_name"
+    ]
+    pending_step_status = standard_release_flow_primary_step_handoff_text[
+        "standard_release_flow_primary_pending_step_status"
+    ]
+    pending_step_status_sha256 = standard_release_flow_primary_step_handoff_text[
+        "standard_release_flow_primary_pending_step_status_sha256"
     ]
     pending_step_command = standard_release_flow_primary_step_handoff_text[
         "standard_release_flow_primary_pending_step_command"
@@ -3941,11 +3991,15 @@ def _render_markdown(plan: IterationPlan) -> str:
 | standard_release_flow_step_status_counts | `{standard_release_flow_step_status_counts_json}` |
 | standard_release_flow_step_status_counts_sha256 | `{_stable_json_sha256(standard_release_flow_step_status_counts)}` |
 | standard_release_flow_primary_blocked_step_name | `{blocked_step_name}` |
+| standard_release_flow_primary_blocked_step_status | `{blocked_step_status}` |
+| standard_release_flow_primary_blocked_step_status_sha256 | `{blocked_step_status_sha256}` |
 | standard_release_flow_primary_blocked_step_command | `{blocked_step_command}` |
 | standard_release_flow_primary_blocked_step_command_sha256 | `{blocked_step_command_sha256}` |
 | standard_release_flow_primary_blocked_step_action | `{blocked_step_action}` |
 | standard_release_flow_primary_blocked_step_action_sha256 | `{blocked_step_action_sha256}` |
 | standard_release_flow_primary_pending_step_name | `{pending_step_name}` |
+| standard_release_flow_primary_pending_step_status | `{pending_step_status}` |
+| standard_release_flow_primary_pending_step_status_sha256 | `{pending_step_status_sha256}` |
 | standard_release_flow_primary_pending_step_command | `{pending_step_command}` |
 | standard_release_flow_primary_pending_step_command_sha256 | `{pending_step_command_sha256}` |
 | standard_release_flow_primary_pending_step_action | `{pending_step_action}` |
@@ -4314,7 +4368,15 @@ def _standard_release_flow_markdown(flow: dict[str, Any]) -> str:
     primary_step_handoff_lines: list[str] = []
     for status_prefix in ("blocked", "pending"):
         handoff = _standard_release_flow_primary_step_handoff(flow, status_prefix)
-        for field_name in ("name", "command", "command_sha256", "action", "action_sha256"):
+        for field_name in (
+            "name",
+            "status",
+            "status_sha256",
+            "command",
+            "command_sha256",
+            "action",
+            "action_sha256",
+        ):
             primary_step_handoff_lines.append(
                 f"- standard_release_flow_primary_{status_prefix}_step_{field_name}: "
                 f"`{_format_context_value(handoff[field_name])}`"
@@ -7243,6 +7305,10 @@ def _issue_artifact_bundle_summary_markdown(
             f"`{summary['standard_release_flow_step_status_counts_sha256']}`",
             "- standard_release_flow_primary_blocked_step_name: "
             f"{_summary_inline_code(summary['standard_release_flow_primary_blocked_step_name'])}",
+            "- standard_release_flow_primary_blocked_step_status: "
+            f"{_summary_inline_code(summary['standard_release_flow_primary_blocked_step_status'])}",
+            "- standard_release_flow_primary_blocked_step_status_sha256: "
+            f"{_summary_inline_code(summary['standard_release_flow_primary_blocked_step_status_sha256'])}",
             "- standard_release_flow_primary_blocked_step_command: "
             f"{_summary_inline_code(summary['standard_release_flow_primary_blocked_step_command'])}",
             "- standard_release_flow_primary_blocked_step_command_sha256: "
@@ -7253,6 +7319,10 @@ def _issue_artifact_bundle_summary_markdown(
             f"{_summary_inline_code(summary['standard_release_flow_primary_blocked_step_action_sha256'])}",
             "- standard_release_flow_primary_pending_step_name: "
             f"{_summary_inline_code(summary['standard_release_flow_primary_pending_step_name'])}",
+            "- standard_release_flow_primary_pending_step_status: "
+            f"{_summary_inline_code(summary['standard_release_flow_primary_pending_step_status'])}",
+            "- standard_release_flow_primary_pending_step_status_sha256: "
+            f"{_summary_inline_code(summary['standard_release_flow_primary_pending_step_status_sha256'])}",
             "- standard_release_flow_primary_pending_step_command: "
             f"{_summary_inline_code(summary['standard_release_flow_primary_pending_step_command'])}",
             "- standard_release_flow_primary_pending_step_command_sha256: "
