@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.254] - 2026-07-03
+
 ### Changed
 - Next-iteration planner JSON and candidate issue artifacts now include issue template handoff commands (`candidate_promotions[*].issue_template_command`, `candidate_promotions[*].issue_template_json_command`, matching `issue-metadata.json` fields, and artifacts README Issue Template columns), so maintainers can regenerate candidate promotion issue bodies without deriving commands from case ids.
 - Candidate issue bodies now include a `Doctor Preflight Evidence Template` with paste-ready `cliany-site doctor --llm-live --json` placeholders for every doctor preflight field, so LLM/CDP blockers can be attached consistently.
@@ -2420,7 +2422,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.253...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.254...HEAD
+[0.16.254]: https://github.com/pearjelly/cliany.site/compare/v0.16.253...v0.16.254
 [0.16.253]: https://github.com/pearjelly/cliany.site/compare/v0.16.252...v0.16.253
 [0.16.252]: https://github.com/pearjelly/cliany.site/compare/v0.16.251...v0.16.252
 [0.16.251]: https://github.com/pearjelly/cliany.site/compare/v0.16.250...v0.16.251
