@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.255] - 2026-07-03
+
 ### Changed
 - Next-iteration planner JSON, Markdown reports, plain text output, and candidate issue artifact summaries now expose primary candidate evidence aliases for `expected_adapter_package`, `acceptance_criteria`, `priority_rank`, and `priority_reason`, so release automation can act on the selected `adapter_package` task without expanding the nested primary task object.
 
@@ -2425,7 +2427,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.254...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.255...HEAD
+[0.16.255]: https://github.com/pearjelly/cliany.site/compare/v0.16.254...v0.16.255
 [0.16.254]: https://github.com/pearjelly/cliany.site/compare/v0.16.253...v0.16.254
 [0.16.253]: https://github.com/pearjelly/cliany.site/compare/v0.16.252...v0.16.253
 [0.16.252]: https://github.com/pearjelly/cliany.site/compare/v0.16.251...v0.16.252
