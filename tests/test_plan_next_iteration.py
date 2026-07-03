@@ -1056,6 +1056,18 @@ def test_handoff_payload_projects_primary_release_and_candidate_actions(tmp_path
     assert payload["primary_candidate"]["llm_live_preflight_command"] == (
         "cliany-site doctor --llm-live --json"
     )
+    assert payload["primary_candidate"]["doctor_preflight_evidence_fields"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+    )
+    assert payload["primary_candidate"]["doctor_preflight_evidence_selectors"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS
+    )
+    assert payload["primary_candidate"]["doctor_preflight_evidence_selector_count"] == (
+        len(DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)
+    )
+    assert payload["primary_candidate"]["doctor_preflight_evidence_selectors_sha256"] == (
+        _stable_json_sha256(DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)
+    )
     assert payload["primary_candidate"]["issue_template_command"] == (
         "cliany-site cases --case-id pypi-project-search --issue-template"
     )
@@ -1095,6 +1107,9 @@ def test_main_handoff_json_outputs_compact_payload(monkeypatch, tmp_path, capsys
     assert payload["target_version"] == "0.16.257"
     assert payload["primary_candidate"]["case_id"] == "pypi-project-search"
     assert payload["primary_candidate"]["task"] == "adapter_package"
+    assert payload["primary_candidate"]["doctor_preflight_evidence_selectors"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS
+    )
     assert "candidate_promotions" not in payload
     assert "case_promotion_evidence_summary" not in payload
     assert payload["handoff_sha256"] == _stable_json_sha256(

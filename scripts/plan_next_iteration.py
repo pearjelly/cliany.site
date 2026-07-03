@@ -1227,6 +1227,20 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
             "llm_live_preflight_command": primary_task.get(
                 "llm_live_preflight_command"
             ),
+            "doctor_preflight_evidence_fields": primary_task.get(
+                "doctor_preflight_evidence_fields"
+            )
+            or [],
+            "doctor_preflight_evidence_selectors": primary_task.get(
+                "doctor_preflight_evidence_selectors"
+            )
+            or {},
+            "doctor_preflight_evidence_selector_count": len(
+                primary_task.get("doctor_preflight_evidence_selectors") or {}
+            ),
+            "doctor_preflight_evidence_selectors_sha256": _stable_json_sha256(
+                primary_task.get("doctor_preflight_evidence_selectors") or {}
+            ),
             "issue_template_command": data[
                 "case_promotion_evidence_primary_issue_template_command"
             ],
