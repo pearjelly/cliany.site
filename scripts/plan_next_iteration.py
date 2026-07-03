@@ -1114,6 +1114,108 @@ class IterationPlan:
         }
 
 
+def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
+    data = plan.to_dict()
+    primary_task = data.get("case_promotion_evidence_primary_next_task")
+    if not isinstance(primary_task, dict):
+        primary_task = {}
+    publication_decision = data.get("publication_tag_publish_decision")
+    if not isinstance(publication_decision, dict):
+        publication_decision = {}
+    publication_visibility = data.get("publication_visibility")
+    if not isinstance(publication_visibility, dict):
+        publication_visibility = {}
+    publication_ref_context = data.get("publication_ref_context")
+    if not isinstance(publication_ref_context, dict):
+        publication_ref_context = {}
+
+    payload: dict[str, Any] = {
+        "schema_version": 1,
+        "current_version": data["current_version"],
+        "target_version": data["target_version"],
+        "recommended_theme": data["recommended_theme"],
+        "recommended_slice": data["recommended_slice"],
+        "readiness_ok": data["readiness_ok"],
+        "publication_ok": data["publication_ok"],
+        "daily_release_cap_blocked": data["daily_release_cap_blocked"],
+        "daily_release_resume_date": data["daily_release_resume_date"],
+        "blocker_count": len(data["blockers"]),
+        "blockers": data["blockers"],
+        "next_action_count": data["next_action_count"],
+        "primary_next_action": data["primary_next_action"],
+        "next_actions": data["next_actions"],
+        "standard_release_flow_status": data["standard_release_flow_status"],
+        "standard_release_flow_primary_next_action": (
+            data["standard_release_flow_primary_next_action"]
+        ),
+        "standard_release_flow_primary_blocked_step_name": (
+            data["standard_release_flow_primary_blocked_step_name"]
+        ),
+        "standard_release_flow_primary_blocked_step_command": (
+            data["standard_release_flow_primary_blocked_step_command"]
+        ),
+        "standard_release_flow_primary_pending_step_name": (
+            data["standard_release_flow_primary_pending_step_name"]
+        ),
+        "standard_release_flow_primary_pending_step_action": (
+            data["standard_release_flow_primary_pending_step_action"]
+        ),
+        "publication_summary": {
+            "status": publication_visibility.get("status"),
+            "summary": publication_visibility.get("summary"),
+            "latest_tag": publication_ref_context.get("latest_tag"),
+            "target_tag": publication_decision.get("target_tag"),
+            "tag_decision_status": publication_decision.get("target_tag_status"),
+            "tag_can_push": publication_decision.get("can_push_tag"),
+            "required_action": publication_decision.get("target_tag_required_action"),
+            "remote_checked": publication_ref_context.get("remote_checked"),
+            "branch_published": publication_ref_context.get("branch_published"),
+            "tag_published": publication_ref_context.get("tag_published"),
+        },
+        "primary_candidate": {
+            "case_id": primary_task.get("case_id"),
+            "task": primary_task.get("task"),
+            "status": primary_task.get("status"),
+            "priority_rank": primary_task.get("priority_rank"),
+            "priority_reason": primary_task.get("priority_reason"),
+            "next_action": primary_task.get("next_action"),
+            "acceptance_criteria": data[
+                "case_promotion_evidence_primary_acceptance_criteria"
+            ],
+            "expected_adapter_package": primary_task.get("expected_adapter_package"),
+            "llm_live_preflight_required": primary_task.get(
+                "llm_live_preflight_required"
+            ),
+            "llm_live_preflight_command": primary_task.get(
+                "llm_live_preflight_command"
+            ),
+            "issue_template_command": data[
+                "case_promotion_evidence_primary_issue_template_command"
+            ],
+            "issue_template_json_command": data[
+                "case_promotion_evidence_primary_issue_template_json_command"
+            ],
+            "evidence_bundle_command": data[
+                "case_promotion_evidence_primary_evidence_bundle_command"
+            ],
+            "evidence_bundle_json_command": data[
+                "case_promotion_evidence_primary_evidence_bundle_json_command"
+            ],
+            "runbook_steps": data["case_promotion_evidence_primary_runbook_steps"],
+            "runbook_first_command": data[
+                "case_promotion_evidence_primary_runbook_first_command"
+            ],
+        },
+        "candidate_issue_gate": data["candidate_issue_gate"],
+        "validation_commands": data["validation_commands"],
+        "plan_report_command": data["plan_report_command"],
+        "issue_artifacts_command": data["issue_artifacts_command"],
+        "release_draft_path": data["release_draft_path"],
+    }
+    payload["handoff_sha256"] = _stable_json_sha256(payload)
+    return payload
+
+
 def _primary_candidate_promotion(
     promotions: list[CandidatePromotion],
     primary_next_task: dict[str, Any] | None,
@@ -8435,6 +8537,11 @@ def _gh_issue_create_command(promotion: CandidatePromotion, body_path: Path) -> 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Plan the next verified cliany-site release slice.")
     parser.add_argument("--json", action="store_true", help="Output machine-readable JSON.")
+    parser.add_argument(
+        "--handoff-json",
+        action="store_true",
+        help="Output a compact machine-readable release handoff JSON.",
+    )
     parser.add_argument("--target-version", help="Target release version. Defaults to next patch version.")
     parser.add_argument("--min-days", type=int, default=3, help="Minimum unique commit days expected this week.")
     parser.add_argument("--max-daily-releases", type=int, default=3, help="Maximum release tags allowed per day.")
@@ -8477,7 +8584,9 @@ def main(argv: list[str] | None = None) -> int:
         _write_markdown_report(plan, args.report)
     if args.issues_dir:
         _write_candidate_issue_files(plan, args.issues_dir)
-    if args.json:
+    if args.handoff_json:
+        print(json.dumps(_handoff_payload(plan), ensure_ascii=False, indent=2))
+    elif args.json:
         print(json.dumps(plan.to_dict(), ensure_ascii=False, indent=2))
     else:
         _print_text(plan)

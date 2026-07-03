@@ -963,6 +963,114 @@ def test_plan_carries_readiness_pause_action_for_daily_release_cap(tmp_path, cap
     ) in text
 
 
+def test_handoff_payload_projects_primary_release_and_candidate_actions(tmp_path):
+    _write_pyproject(tmp_path, version="0.16.1")
+    readiness = _readiness_report()
+    readiness.blockers = [
+        "creating target tag v0.16.2 today would exceed the daily release cap 4/3"
+    ]
+    readiness.daily_release_cap_blocked = True
+    readiness.daily_release_resume_date = "2026-06-11"
+    readiness.standard_release_flow = {
+        "status": "blocked",
+        "target_version": "0.16.2",
+        "target_tag": "v0.16.2",
+        "primary_next_action": "Pause release tagging until tomorrow.",
+        "steps": [
+            {
+                "name": "strict_release_readiness",
+                "status": "blocked",
+                "command": "python scripts/release_readiness.py --strict --target-version 0.16.2",
+            },
+            {
+                "name": "release_notes",
+                "status": "pending",
+                "action": "Move CHANGELOG.md Unreleased entries into the target release.",
+            },
+        ],
+    }
+
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=readiness,
+        publication_report=_published_release_with_unreleased_head_report(),
+    )
+
+    payload = plan_next_iteration._handoff_payload(plan)
+
+    assert payload["schema_version"] == 1
+    assert payload["current_version"] == "0.16.1"
+    assert payload["target_version"] == "0.16.2"
+    assert payload["daily_release_cap_blocked"] is True
+    assert payload["daily_release_resume_date"] == "2026-06-11"
+    assert payload["primary_next_action"] == plan.next_actions[0]
+    assert payload["next_action_count"] == len(plan.next_actions)
+    assert payload["blocker_count"] == len(plan.blockers)
+    assert payload["standard_release_flow_status"] == "blocked"
+    assert payload["standard_release_flow_primary_blocked_step_name"] == (
+        "strict_release_readiness"
+    )
+    assert payload["standard_release_flow_primary_pending_step_name"] == "release_notes"
+    assert payload["publication_summary"]["status"] == "published_with_unreleased_head"
+    assert payload["publication_summary"]["latest_tag"] == "v0.16.1"
+    assert payload["publication_summary"]["target_tag"] == "v0.16.2"
+    assert payload["publication_summary"]["tag_decision_status"] == (
+        "blocked_by_daily_release_cap"
+    )
+    assert payload["primary_candidate"]["case_id"] == "pypi-project-search"
+    assert payload["primary_candidate"]["task"] == "adapter_package"
+    assert payload["primary_candidate"]["expected_adapter_package"] == (
+        "pypi.org-<version>.cliany-adapter.tar.gz"
+    )
+    assert payload["primary_candidate"]["llm_live_preflight_command"] == (
+        "cliany-site doctor --llm-live --json"
+    )
+    assert payload["primary_candidate"]["issue_template_command"] == (
+        "cliany-site cases --case-id pypi-project-search --issue-template"
+    )
+    assert payload["primary_candidate"]["evidence_bundle_json_command"] == (
+        "cliany-site cases --case-id pypi-project-search --evidence-bundle --json"
+    )
+    assert payload["validation_commands"] == plan.validation_commands
+    assert payload["handoff_sha256"] == _stable_json_sha256(
+        {key: value for key, value in payload.items() if key != "handoff_sha256"}
+    )
+
+
+def test_main_handoff_json_outputs_compact_payload(monkeypatch, tmp_path, capsys):
+    _write_pyproject(tmp_path, version="0.16.256")
+    real_build_plan = plan_next_iteration.build_plan
+
+    def fake_build_plan(root, **kwargs):
+        readiness = _readiness_report()
+        target_version = kwargs.get("target_version")
+        if target_version:
+            readiness.target_version = target_version
+            readiness.draft.target_version = target_version
+        return real_build_plan(
+            tmp_path,
+            readiness_report=readiness,
+            publication_report=_published_release_with_unreleased_head_report(),
+            **kwargs,
+        )
+
+    monkeypatch.setattr(plan_next_iteration, "build_plan", fake_build_plan)
+
+    exit_code = plan_next_iteration.main(["--target-version", "0.16.257", "--handoff-json"])
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["schema_version"] == 1
+    assert payload["target_version"] == "0.16.257"
+    assert payload["primary_candidate"]["case_id"] == "pypi-project-search"
+    assert payload["primary_candidate"]["task"] == "adapter_package"
+    assert "candidate_promotions" not in payload
+    assert "case_promotion_evidence_summary" not in payload
+    assert payload["handoff_sha256"] == _stable_json_sha256(
+        {key: value for key, value in payload.items() if key != "handoff_sha256"}
+    )
+
+
 def test_candidate_issue_gate_allows_creation_after_publication_with_release_draft_review(tmp_path):
     _write_pyproject(tmp_path, version="0.16.1")
     reason_codes = ["release_draft_issues"]

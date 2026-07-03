@@ -9,6 +9,7 @@
 
 ### Added
 - Added a maintainer-facing Candidate Promotion Runbook that turns the `pypi-project-search/adapter_package` handoff into a concrete preflight, adapter package, metadata validation, and online smoke checklist, and linked it from the good-first-issue docs, weekly maintainer docs, and public website docs.
+- Added `python scripts/plan_next_iteration.py --handoff-json`, a compact planner output for release automation that needs the primary next action, publication summary, primary candidate task, issue/evidence bundle commands, validation commands, and a stable `handoff_sha256` without expanding full planner JSON.
 
 ## [0.16.256] - 2026-07-03
 

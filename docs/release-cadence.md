@@ -78,6 +78,7 @@ python scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --req
 
 # 汇总规划下一版（可选远端审计）
 python scripts/plan_next_iteration.py --target-version 0.15.0 --json
+python scripts/plan_next_iteration.py --target-version 0.15.0 --handoff-json
 python scripts/plan_next_iteration.py --target-version 0.15.0 --remote --json
 
 # 汇总检查发布节奏（默认只报告，不失败）
