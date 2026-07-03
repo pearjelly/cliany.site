@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Changed
+- Next-iteration planner JSON, text/Markdown reports, and candidate issue artifact summaries now expose primary candidate `issue_template` and `evidence_bundle` commands as top-level aliases, so automation can jump directly from the selected `adapter_package` task to reproducible issue and evidence handoffs.
+
 ## [0.16.255] - 2026-07-03
 
 ### Changed

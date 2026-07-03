@@ -1502,6 +1502,23 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         data["case_promotion_evidence_primary_priority_reason"]
         == primary_task["priority_reason"]
     )
+    primary_promotion = data["candidate_promotions"][0]
+    assert (
+        data["case_promotion_evidence_primary_issue_template_command"]
+        == primary_promotion["issue_template_command"]
+    )
+    assert (
+        data["case_promotion_evidence_primary_issue_template_json_command"]
+        == primary_promotion["issue_template_json_command"]
+    )
+    assert (
+        data["case_promotion_evidence_primary_evidence_bundle_command"]
+        == primary_promotion["evidence_bundle_command"]
+    )
+    assert (
+        data["case_promotion_evidence_primary_evidence_bundle_json_command"]
+        == primary_promotion["evidence_bundle_json_command"]
+    )
     primary_runbook = data["case_promotion_evidence_summary"]["primary_next_task_runbook"]
     primary_runbook_steps = [step["step"] for step in primary_runbook]
     assert data["case_promotion_evidence_primary_runbook"] == primary_runbook
@@ -3580,6 +3597,18 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "case_promotion_evidence_primary_priority_reason": (
             "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0"
         ),
+        "case_promotion_evidence_primary_issue_template_command": (
+            "cliany-site cases --case-id pypi-project-search --issue-template"
+        ),
+        "case_promotion_evidence_primary_issue_template_json_command": (
+            "cliany-site cases --case-id pypi-project-search --issue-template --json"
+        ),
+        "case_promotion_evidence_primary_evidence_bundle_command": (
+            "cliany-site cases --case-id pypi-project-search --evidence-bundle"
+        ),
+        "case_promotion_evidence_primary_evidence_bundle_json_command": (
+            "cliany-site cases --case-id pypi-project-search --evidence-bundle --json"
+        ),
         "case_promotion_evidence_primary_evidence_sha256": _stable_json_sha256(""),
         "case_promotion_evidence_primary_detail_sha256": _stable_json_sha256(
             plan.case_promotion_evidence_summary["primary_task_detail"]
@@ -5192,6 +5221,22 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert (
         "case_promotion_evidence_primary_priority_reason: "
         "`rank 1: complete 0/3, pending 3, blocked 0, missing commands 0`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_primary_issue_template_command: "
+        "`cliany-site cases --case-id pypi-project-search --issue-template`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_primary_issue_template_json_command: "
+        "`cliany-site cases --case-id pypi-project-search --issue-template --json`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_primary_evidence_bundle_command: "
+        "`cliany-site cases --case-id pypi-project-search --evidence-bundle`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_primary_evidence_bundle_json_command: "
+        "`cliany-site cases --case-id pypi-project-search --evidence-bundle --json`"
     ) in readme
     assert (
         "case_promotion_evidence_primary_evidence_sha256: "
