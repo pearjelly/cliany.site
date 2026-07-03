@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Changed
+- Next-iteration planner JSON, Markdown reports, plain text output, and candidate issue artifact summaries now expose primary candidate evidence aliases for `expected_adapter_package`, `acceptance_criteria`, `priority_rank`, and `priority_reason`, so release automation can act on the selected `adapter_package` task without expanding the nested primary task object.
+
 ## [0.16.254] - 2026-07-03
 
 ### Changed

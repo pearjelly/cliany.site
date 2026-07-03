@@ -1482,6 +1482,26 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         data["case_promotion_evidence_primary_next_action"]
         == data["case_promotion_evidence_summary"]["primary_next_action"]
     )
+    primary_task = data["case_promotion_evidence_summary"]["primary_next_task"]
+    assert (
+        data["case_promotion_evidence_primary_expected_adapter_package"]
+        == primary_task["expected_adapter_package"]
+    )
+    assert (
+        data["case_promotion_evidence_primary_acceptance_criteria"]
+        == plan_next_iteration.CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA["adapter_package"]
+    )
+    assert (
+        data["case_promotion_evidence_primary_acceptance_criteria_sha256"]
+        == _stable_json_sha256(
+            plan_next_iteration.CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA["adapter_package"]
+        )
+    )
+    assert data["case_promotion_evidence_primary_priority_rank"] == primary_task["priority_rank"]
+    assert (
+        data["case_promotion_evidence_primary_priority_reason"]
+        == primary_task["priority_reason"]
+    )
     primary_runbook = data["case_promotion_evidence_summary"]["primary_next_task_runbook"]
     primary_runbook_steps = [step["step"] for step in primary_runbook]
     assert data["case_promotion_evidence_primary_runbook"] == primary_runbook
@@ -3543,6 +3563,23 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "case_promotion_evidence_primary_case_id": "pypi-project-search",
         "case_promotion_evidence_primary_task": "adapter_package",
         "case_promotion_evidence_primary_status": "pending",
+        "case_promotion_evidence_primary_expected_adapter_package": (
+            "pypi.org-<version>.cliany-adapter.tar.gz"
+        ),
+        "case_promotion_evidence_primary_acceptance_criteria": (
+            plan_next_iteration.CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA["adapter_package"]
+        ),
+        "case_promotion_evidence_primary_acceptance_criteria_sha256": (
+            _stable_json_sha256(
+                plan_next_iteration.CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA[
+                    "adapter_package"
+                ]
+            )
+        ),
+        "case_promotion_evidence_primary_priority_rank": 1,
+        "case_promotion_evidence_primary_priority_reason": (
+            "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0"
+        ),
         "case_promotion_evidence_primary_evidence_sha256": _stable_json_sha256(""),
         "case_promotion_evidence_primary_detail_sha256": _stable_json_sha256(
             plan.case_promotion_evidence_summary["primary_task_detail"]
@@ -5138,6 +5175,24 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "case_promotion_evidence_primary_case_id: `pypi-project-search`" in readme
     assert "case_promotion_evidence_primary_task: `adapter_package`" in readme
     assert "case_promotion_evidence_primary_status: `pending`" in readme
+    assert (
+        "case_promotion_evidence_primary_expected_adapter_package: "
+        "`pypi.org-<version>.cliany-adapter.tar.gz`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_primary_acceptance_criteria: "
+        "`Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
+        "or GitHub Release asset name.`"
+    ) in readme
+    assert (
+        "case_promotion_evidence_primary_acceptance_criteria_sha256: "
+        f"`{artifact_bundle_summary['case_promotion_evidence_primary_acceptance_criteria_sha256']}`"
+    ) in readme
+    assert "case_promotion_evidence_primary_priority_rank: `1`" in readme
+    assert (
+        "case_promotion_evidence_primary_priority_reason: "
+        "`rank 1: complete 0/3, pending 3, blocked 0, missing commands 0`"
+    ) in readme
     assert (
         "case_promotion_evidence_primary_evidence_sha256: "
         f"`{_stable_json_sha256('')}`"

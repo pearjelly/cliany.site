@@ -258,6 +258,11 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "case_promotion_evidence_primary_case_id",
     "case_promotion_evidence_primary_task",
     "case_promotion_evidence_primary_status",
+    "case_promotion_evidence_primary_expected_adapter_package",
+    "case_promotion_evidence_primary_acceptance_criteria",
+    "case_promotion_evidence_primary_acceptance_criteria_sha256",
+    "case_promotion_evidence_primary_priority_rank",
+    "case_promotion_evidence_primary_priority_reason",
     "case_promotion_evidence_primary_evidence_sha256",
     "case_promotion_evidence_primary_detail_sha256",
     "case_promotion_evidence_primary_next_task_sha256",
@@ -809,6 +814,16 @@ class IterationPlan:
         primary_next_task = self.case_promotion_evidence_summary.get("primary_next_task")
         if not isinstance(primary_next_task, dict):
             primary_next_task = None
+        primary_task_name = (
+            str(primary_next_task.get("task"))
+            if primary_next_task and primary_next_task.get("task")
+            else None
+        )
+        primary_acceptance_criteria = (
+            CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA.get(primary_task_name)
+            if primary_task_name
+            else None
+        )
         primary_runbook = _primary_runbook_from_summary(self.case_promotion_evidence_summary)
         primary_runbook_steps = _runbook_steps(primary_runbook)
         primary_runbook_first_command = _runbook_first_command(primary_runbook)
@@ -978,6 +993,25 @@ class IterationPlan:
             "case_promotion_evidence_primary_next_task": primary_next_task,
             "case_promotion_evidence_primary_next_action": (
                 self.case_promotion_evidence_summary.get("primary_next_action")
+            ),
+            "case_promotion_evidence_primary_expected_adapter_package": (
+                primary_next_task.get("expected_adapter_package")
+                if primary_next_task
+                else None
+            ),
+            "case_promotion_evidence_primary_acceptance_criteria": (
+                primary_acceptance_criteria
+            ),
+            "case_promotion_evidence_primary_acceptance_criteria_sha256": (
+                _stable_json_sha256(primary_acceptance_criteria)
+                if primary_acceptance_criteria
+                else None
+            ),
+            "case_promotion_evidence_primary_priority_rank": (
+                primary_next_task.get("priority_rank") if primary_next_task else None
+            ),
+            "case_promotion_evidence_primary_priority_reason": (
+                primary_next_task.get("priority_reason") if primary_next_task else None
             ),
             "case_promotion_evidence_primary_runbook": primary_runbook,
             "case_promotion_evidence_primary_runbook_step_count": len(primary_runbook_steps),
@@ -3562,6 +3596,32 @@ def _print_text(plan: IterationPlan) -> None:
         print("case_promotion_evidence_primary_next_task:")
         for key, value in primary_next_task.items():
             print(f"  {key}: {value}")
+        primary_task_name = str(primary_next_task.get("task")) if primary_next_task.get("task") else None
+        primary_acceptance_criteria = (
+            CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA.get(primary_task_name)
+            if primary_task_name
+            else None
+        )
+        print(
+            "case_promotion_evidence_primary_expected_adapter_package: "
+            f"{primary_next_task.get('expected_adapter_package')}"
+        )
+        print(
+            "case_promotion_evidence_primary_acceptance_criteria: "
+            f"{primary_acceptance_criteria}"
+        )
+        print(
+            "case_promotion_evidence_primary_acceptance_criteria_sha256: "
+            f"{_stable_json_sha256(primary_acceptance_criteria) if primary_acceptance_criteria else None}"
+        )
+        print(
+            "case_promotion_evidence_primary_priority_rank: "
+            f"{primary_next_task.get('priority_rank')}"
+        )
+        print(
+            "case_promotion_evidence_primary_priority_reason: "
+            f"{primary_next_task.get('priority_reason')}"
+        )
     primary_next_action = plan.case_promotion_evidence_summary.get("primary_next_action")
     if primary_next_action:
         print(f"case_promotion_evidence_primary_next_action: {primary_next_action}")
@@ -3704,6 +3764,39 @@ def _render_markdown(plan: IterationPlan) -> str:
         )
     else:
         primary_candidate_task_value = "(none)"
+    primary_candidate_task_name = (
+        str(primary_candidate_task.get("task"))
+        if isinstance(primary_candidate_task, dict) and primary_candidate_task.get("task")
+        else None
+    )
+    primary_candidate_expected_adapter_package = (
+        _format_context_value(primary_candidate_task.get("expected_adapter_package"))
+        if isinstance(primary_candidate_task, dict)
+        else "(none)"
+    )
+    primary_candidate_acceptance_criteria_raw = (
+        CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA.get(primary_candidate_task_name)
+        if primary_candidate_task_name
+        else None
+    )
+    primary_candidate_acceptance_criteria = _format_context_value(
+        primary_candidate_acceptance_criteria_raw
+    )
+    primary_candidate_acceptance_criteria_sha256 = (
+        _stable_json_sha256(primary_candidate_acceptance_criteria_raw)
+        if primary_candidate_acceptance_criteria_raw
+        else "(none)"
+    )
+    primary_candidate_priority_rank = (
+        _format_context_value(primary_candidate_task.get("priority_rank"))
+        if isinstance(primary_candidate_task, dict)
+        else "(none)"
+    )
+    primary_candidate_priority_reason = (
+        _format_context_value(primary_candidate_task.get("priority_reason"))
+        if isinstance(primary_candidate_task, dict)
+        else "(none)"
+    )
     primary_candidate_action = _format_context_value(
         plan.case_promotion_evidence_summary.get("primary_next_action")
     )
@@ -4266,6 +4359,11 @@ def _render_markdown(plan: IterationPlan) -> str:
 | case_promotion_command_plan_summary_sha256 | `{_stable_json_sha256(plan.case_promotion_command_plan_summary)}` |
 | case_promotion_evidence_primary_next_task | `{primary_candidate_task_value}` |
 | case_promotion_evidence_primary_next_action | `{primary_candidate_action}` |
+| case_promotion_evidence_primary_expected_adapter_package | `{primary_candidate_expected_adapter_package}` |
+| case_promotion_evidence_primary_acceptance_criteria | `{primary_candidate_acceptance_criteria}` |
+| case_promotion_evidence_primary_acceptance_criteria_sha256 | `{primary_candidate_acceptance_criteria_sha256}` |
+| case_promotion_evidence_primary_priority_rank | `{primary_candidate_priority_rank}` |
+| case_promotion_evidence_primary_priority_reason | `{primary_candidate_priority_reason}` |
 | case_promotion_evidence_primary_runbook_step_count | `{len(primary_runbook_steps)}` |
 | case_promotion_evidence_primary_runbook_steps | `{json.dumps(primary_runbook_steps, ensure_ascii=False)}` |
 | case_promotion_evidence_primary_runbook_steps_sha256 | `{_stable_json_sha256(primary_runbook_steps)}` |
@@ -6523,6 +6621,18 @@ def _issue_artifact_bundle_summary(
     )
     if not isinstance(case_promotion_evidence_primary_next_task, dict):
         case_promotion_evidence_primary_next_task = {}
+    case_promotion_evidence_primary_task_name = (
+        str(case_promotion_evidence_primary_next_task.get("task"))
+        if case_promotion_evidence_primary_next_task.get("task")
+        else None
+    )
+    case_promotion_evidence_primary_acceptance_criteria = (
+        CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA.get(
+            case_promotion_evidence_primary_task_name
+        )
+        if case_promotion_evidence_primary_task_name
+        else None
+    )
     case_promotion_evidence_primary_runbook = _primary_runbook_from_summary(
         plan.case_promotion_evidence_summary
     )
@@ -6743,6 +6853,23 @@ def _issue_artifact_bundle_summary(
         ),
         "case_promotion_evidence_primary_status": (
             case_promotion_evidence_primary_task.get("status")
+        ),
+        "case_promotion_evidence_primary_expected_adapter_package": (
+            case_promotion_evidence_primary_next_task.get("expected_adapter_package")
+        ),
+        "case_promotion_evidence_primary_acceptance_criteria": (
+            case_promotion_evidence_primary_acceptance_criteria
+        ),
+        "case_promotion_evidence_primary_acceptance_criteria_sha256": (
+            _stable_json_sha256(case_promotion_evidence_primary_acceptance_criteria)
+            if case_promotion_evidence_primary_acceptance_criteria
+            else None
+        ),
+        "case_promotion_evidence_primary_priority_rank": (
+            case_promotion_evidence_primary_next_task.get("priority_rank")
+        ),
+        "case_promotion_evidence_primary_priority_reason": (
+            case_promotion_evidence_primary_next_task.get("priority_reason")
         ),
         "case_promotion_evidence_primary_evidence_sha256": _stable_json_sha256(
             case_promotion_evidence_primary_task.get("evidence")
@@ -7482,6 +7609,16 @@ def _issue_artifact_bundle_summary_markdown(
             f"{_summary_inline_code(summary['case_promotion_evidence_primary_task'])}",
             "- case_promotion_evidence_primary_status: "
             f"{_summary_inline_code(summary['case_promotion_evidence_primary_status'])}",
+            "- case_promotion_evidence_primary_expected_adapter_package: "
+            f"{_summary_inline_code(summary['case_promotion_evidence_primary_expected_adapter_package'])}",
+            "- case_promotion_evidence_primary_acceptance_criteria: "
+            f"{_summary_inline_code(summary['case_promotion_evidence_primary_acceptance_criteria'])}",
+            "- case_promotion_evidence_primary_acceptance_criteria_sha256: "
+            f"`{summary['case_promotion_evidence_primary_acceptance_criteria_sha256']}`",
+            "- case_promotion_evidence_primary_priority_rank: "
+            f"{_summary_inline_code(summary['case_promotion_evidence_primary_priority_rank'])}",
+            "- case_promotion_evidence_primary_priority_reason: "
+            f"{_summary_inline_code(summary['case_promotion_evidence_primary_priority_reason'])}",
             "- case_promotion_evidence_primary_evidence_sha256: "
             f"`{summary['case_promotion_evidence_primary_evidence_sha256']}`",
             "- case_promotion_evidence_primary_detail_sha256: "
