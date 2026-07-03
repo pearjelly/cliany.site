@@ -5176,6 +5176,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     artifact_files = _issue_artifact_files(issue_body_names)
     review_order = [
         "README.md",
+        "planner-handoff.json",
         "publication-handoff.json",
         "release-draft-handoff.json",
         "issue-metadata.json",
@@ -5219,6 +5220,12 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     )
     (directory / "issue-metadata.json").write_text(
         json.dumps(metadata, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    planner_handoff = _handoff_payload(plan)
+    (directory / "planner-handoff.json").write_text(
+        json.dumps(planner_handoff, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
         newline="\n",
     )
@@ -5334,6 +5341,20 @@ def _render_issue_artifacts_readme(
     gate_quick_summary = _issue_artifact_gate_quick_summary(plan)
     commit_cadence_summary = _issue_artifact_commit_cadence_markdown(plan)
     bundle_summary = _issue_artifact_bundle_summary_markdown(plan, summary=artifact_bundle_summary)
+    planner_handoff = _handoff_payload(plan)
+    planner_handoff_primary_candidate = planner_handoff["primary_candidate"]
+    planner_handoff_primary_case = _format_context_value(
+        planner_handoff_primary_candidate.get("case_id")
+    )
+    planner_handoff_primary_task = _format_context_value(
+        planner_handoff_primary_candidate.get("task")
+    )
+    planner_handoff_evidence_bundle_json_command = _format_context_value(
+        planner_handoff_primary_candidate.get("evidence_bundle_json_command")
+    )
+    planner_handoff_issue_template_command = _format_context_value(
+        planner_handoff_primary_candidate.get("issue_template_command")
+    )
     daily_release_handoff = _daily_release_handoff_aliases(plan)
     daily_release_resume_date_sha256 = _format_context_value(
         daily_release_handoff["daily_release_resume_date_sha256"]
@@ -5463,6 +5484,8 @@ Generated for target version `{plan.target_version}`.
   next actions, file names, review order, review checklist, candidate issue gate, publication status,
   publication ref context, worktree status, release draft handoff, reproduction command, plan report command,
   standard release flow, publish commands, and validation commands for this candidate issue artifact bundle.
+- `planner-handoff.json`: compact release handoff with the primary next action, publication summary,
+  primary candidate task, issue/evidence bundle commands, validation commands, and `handoff_sha256`.
 - `publication-handoff.json`: publication status, candidate issue gate, visibility, next actions,
   standard release flow, publication next actions, ref context, worktree status, and publish commands to review first.
 - `release-draft-handoff.json`: schema version, target version, release draft ok status, release draft path,
@@ -5488,6 +5511,14 @@ Generated for target version `{plan.target_version}`.
 {commit_cadence_summary}
 
 {bundle_summary}
+
+## Planner Handoff
+
+- handoff_sha256: `{planner_handoff["handoff_sha256"]}`
+- primary_next_action: {_summary_inline_code(planner_handoff.get("primary_next_action"))}
+- primary_candidate: `{planner_handoff_primary_case}/{planner_handoff_primary_task}`
+- evidence_bundle_json_command: `{planner_handoff_evidence_bundle_json_command}`
+- issue_template_command: `{planner_handoff_issue_template_command}`
 
 ## Publication Handoff
 
@@ -5958,6 +5989,7 @@ def _issue_artifact_files(issue_body_names: list[str]) -> dict[str, Any]:
     return {
         "readme": "README.md",
         "issue_metadata": "issue-metadata.json",
+        "planner_handoff": "planner-handoff.json",
         "publication_handoff": "publication-handoff.json",
         "release_draft_handoff": "release-draft-handoff.json",
         "create_issues_script": "create-issues.sh",
@@ -7677,6 +7709,7 @@ def _issue_artifact_bundle_summary_markdown(
     issue_body_inventory = _issue_body_inventory(plan.candidate_promotions)
     review_order = [
         "README.md",
+        "planner-handoff.json",
         "publication-handoff.json",
         "release-draft-handoff.json",
         "issue-metadata.json",

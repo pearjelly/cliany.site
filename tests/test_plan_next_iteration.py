@@ -2965,6 +2965,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     body = (issues_dir / "pypi-project-search.md").read_text(encoding="utf-8")
     artifact_manifest = json.loads((issues_dir / "artifact-manifest.json").read_text(encoding="utf-8"))
     metadata = json.loads((issues_dir / "issue-metadata.json").read_text(encoding="utf-8"))
+    planner_handoff = json.loads((issues_dir / "planner-handoff.json").read_text(encoding="utf-8"))
     publication_handoff = json.loads((issues_dir / "publication-handoff.json").read_text(encoding="utf-8"))
     release_draft_handoff = json.loads((issues_dir / "release-draft-handoff.json").read_text(encoding="utf-8"))
     script = (issues_dir / "create-issues.sh").read_text(encoding="utf-8")
@@ -3364,6 +3365,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     expected_artifact_files = {
         "readme": "README.md",
         "issue_metadata": "issue-metadata.json",
+        "planner_handoff": "planner-handoff.json",
         "publication_handoff": "publication-handoff.json",
         "release_draft_handoff": "release-draft-handoff.json",
         "create_issues_script": "create-issues.sh",
@@ -3466,6 +3468,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     create_issues_safety_contract_keys = list(expected_create_issues_safety_contract)
     review_order = [
         "README.md",
+        "planner-handoff.json",
         "publication-handoff.json",
         "release-draft-handoff.json",
         "issue-metadata.json",
@@ -5026,6 +5029,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert artifact_manifest["artifact_bundle_summary"][
         "next_action_last_item"
     ] == artifact_manifest["next_actions"][-1]
+    assert planner_handoff == plan_next_iteration._handoff_payload(plan)
+    assert artifact_manifest["files"]["planner_handoff"] == "planner-handoff.json"
+    assert "planner-handoff.json" in artifact_manifest["review_order"]
     assert publication_handoff == expected_publication_handoff
     assert release_draft_handoff == expected_release_draft_handoff
     assert "gh issue create" in script
@@ -5063,6 +5069,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "# cliany-site Candidate Issue Artifacts" in readme
     assert "Generated for target version `0.16.2`." in readme
     assert "`issue-metadata.json`: structured issue title, labels, reproduction context" in readme
+    assert "`planner-handoff.json`: compact release handoff" in readme
     assert (
         "`artifact-manifest.json`: schema version, candidate cases, promotion evidence summary,"
     ) in readme
@@ -5073,6 +5080,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "body file name" in readme
     assert "`publication-handoff.json`: publication status, candidate issue gate, visibility" in readme
     assert "`release-draft-handoff.json`: schema version, target version" in readme
+    assert "## Planner Handoff" in readme
+    assert "- handoff_sha256:" in readme
     assert "## Candidate Summary" in readme
     assert (
         "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands | "
@@ -5613,7 +5622,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         f"`{artifact_bundle_summary['issue_body_summary_key_tail_sha256']}`"
     ) in readme
     assert f"issue_body_summary_sha256: `{artifact_bundle_summary['issue_body_summary_sha256']}`" in readme
-    assert "review_item_count: `7`" in readme
+    assert "review_item_count: `8`" in readme
     assert f"review_order_sha256: `{review_order_sha256}`" in readme
     assert (
         "review_order_first_item: "
@@ -5671,7 +5680,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "issue_metadata_tail_sha256: "
         f"`{artifact_bundle_summary['issue_metadata_tail_sha256']}`"
     ) in readme
-    assert "artifact_files_key_count: `6`" in readme
+    assert "artifact_files_key_count: `7`" in readme
     assert f"artifact_files_sha256: `{artifact_bundle_summary['artifact_files_sha256']}`" in readme
     assert (
         "artifact_files_first_key: "
