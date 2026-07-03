@@ -56,6 +56,9 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "scripts/validate_cases.py --strict" in index
     assert "promotion_evidence_primary_doctor_preflight_evidence_template_sha256" in index
     assert "promotion_evidence_primary_llm_live_preflight_command_sha256" in index
+    assert "Candidate Promotion Runbook" in index
+    assert "docs/candidate-promotion-runbook.md" in index
+    assert "pypi.org-&lt;version&gt;.cliany-adapter.tar.gz" in index
     assert "issue_template_json_command" in index
     assert "primary_next_task_acceptance_criteria" in index
     assert "preflight_required" in index
@@ -85,6 +88,13 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "doctor_preflight_evidence_fields" in index
     assert "candidate_promotions[*].issue_template_command" in index
     assert "issue-metadata.json" in index
+    assert "Candidate Promotion Runbook" in docs
+    assert "docs/candidate-promotion-runbook.md" in docs
+    assert "pypi.org-&lt;version&gt;.cliany-adapter.tar.gz" in docs
+    assert (
+        "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json"
+        in docs
+    )
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert "1-3 releases/day loop" in index
     assert "Current baseline: v0.16.256" in index
@@ -111,6 +121,9 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "scripts/validate_cases.py --strict" in script
     assert "promotion_evidence_primary_doctor_preflight_evidence_template_sha256" in script
     assert "promotion_evidence_primary_llm_live_preflight_command_sha256" in script
+    assert "Candidate Promotion Runbook" in script
+    assert "docs/candidate-promotion-runbook.md" in script
+    assert "pypi.org-&lt;version&gt;.cliany-adapter.tar.gz" in script
     assert "issue_template_json_command" in script
     assert "python scripts/plan_next_iteration.py --issues-dir" in script
     assert "Primary Acceptance Criteria" in script

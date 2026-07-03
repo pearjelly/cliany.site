@@ -161,6 +161,10 @@ const I18N = {
     zh: '只读取 validation 的自动化可以从 <code>scripts/validate_cases.py --json</code> 的 <code>promotion_evidence_summary.primary_next_task.doctor_preflight_evidence_template_sha256</code>、<code>scripts/validate_cases.py --report</code> 的 <code>primary_doctor_preflight_evidence_template_sha256</code>，或纯文本 <code>scripts/validate_cases.py --strict</code> stdout 的 <code>promotion_evidence_primary_doctor_preflight_evidence_template_sha256</code> / <code>promotion_evidence_primary_llm_live_preflight_command_sha256</code> 读取同源漂移信号。',
     en: 'Validation-only automation can read <code>promotion_evidence_summary.primary_next_task.doctor_preflight_evidence_template_sha256</code> from <code>scripts/validate_cases.py --json</code>, <code>primary_doctor_preflight_evidence_template_sha256</code> from <code>scripts/validate_cases.py --report</code>, or <code>promotion_evidence_primary_doctor_preflight_evidence_template_sha256</code> / <code>promotion_evidence_primary_llm_live_preflight_command_sha256</code> from plain <code>scripts/validate_cases.py --strict</code> stdout.'
   },
+  'qs.contribute.runbook': {
+    zh: '推进 PyPI candidate 前，先按 <code>docs/candidate-promotion-runbook.md</code> 的 <code>Candidate Promotion Runbook</code> 跑 <code>cliany-site doctor --llm-live --json</code>、adapter package、metadata validation 和 online smoke；目标包名保持 <code>pypi.org-&lt;version&gt;.cliany-adapter.tar.gz</code>。',
+    en: 'Before advancing the PyPI candidate, use the <code>Candidate Promotion Runbook</code> in <code>docs/candidate-promotion-runbook.md</code> for <code>cliany-site doctor --llm-live --json</code>, adapter package, metadata validation, and online smoke; keep the target package name <code>pypi.org-&lt;version&gt;.cliany-adapter.tar.gz</code>.'
+  },
   'qs.contribute.goodfirst': {
     zh: '首次贡献者可以从 <code>docs/good-first-issues.md</code> 开始，选择默认离线、可本地验证的任务。',
     en: 'First-time contributors can start from <code>docs/good-first-issues.md</code> for offline, locally verifiable tasks.'
