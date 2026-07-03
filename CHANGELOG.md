@@ -15,6 +15,7 @@
 - Compact planner handoffs now include primary candidate `doctor_preflight_evidence_fields`, `doctor_preflight_evidence_selectors`, selector count, and selector SHA-256, so automation using only `--handoff-json` can attach live LLM blocker evidence without opening full issue artifacts.
 - Candidate issue artifact READMEs now show the compact planner handoff's doctor preflight selector count, selector SHA-256, and LLM error selector in the Planner Handoff section, so human artifact review can verify the same blocker-evidence mapping without opening JSON files.
 - Added `python scripts/extract_doctor_preflight_evidence.py <doctor.json>`, which converts `cliany-site doctor --llm-live --json` output into a compact values/selectors evidence JSON for candidate promotion blocker comments.
+- `scripts/extract_doctor_preflight_evidence.py` now supports `--markdown`, producing a copy-ready blocker evidence table for candidate promotion issues.
 
 ## [0.16.256] - 2026-07-03
 

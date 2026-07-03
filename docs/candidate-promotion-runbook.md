@@ -40,6 +40,7 @@ cliany-site cases --case-id pypi-project-search --evidence-bundle --json
 ```bash
 cliany-site doctor --llm-live --json > /tmp/cliany-doctor-preflight.json
 python scripts/extract_doctor_preflight_evidence.py /tmp/cliany-doctor-preflight.json
+python scripts/extract_doctor_preflight_evidence.py /tmp/cliany-doctor-preflight.json --markdown
 ```
 
 如果输出中任一条件不满足，停止真实探索，把 doctor JSON 摘要贴回 candidate issue，并保持 `adapter_package` 为 `pending` 或 `blocked`：
@@ -61,7 +62,7 @@ python scripts/extract_doctor_preflight_evidence.py /tmp/cliany-doctor-preflight
 - `checks[llm_live].details.phase`
 - `checks[llm_live].details.message`
 
-`scripts/extract_doctor_preflight_evidence.py` 会按 `doctor_preflight_evidence_selectors` 从 doctor JSON 的 `data.checks[name="..."]` 列表中提取这些字段，并输出 `values`、`missing_fields`、`selectors_sha256` 和 `values_sha256`。如果 `missing_count>0`，先贴回缺失字段和原始 doctor JSON 摘要，不继续运行真实 `explore`。
+`scripts/extract_doctor_preflight_evidence.py` 会按 `doctor_preflight_evidence_selectors` 从 doctor JSON 的 `data.checks[name="..."]` 列表中提取这些字段，并输出 `values`、`missing_fields`、`selectors_sha256` 和 `values_sha256`。加 `--markdown` 可生成直接粘贴到 candidate issue 的 blocker evidence 表格。如果 `missing_count>0`，先贴回缺失字段和原始 doctor JSON 摘要，不继续运行真实 `explore`。
 
 ## Step 2: Generate Adapter Package Evidence
 

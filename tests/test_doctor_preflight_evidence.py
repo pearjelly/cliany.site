@@ -85,3 +85,26 @@ def test_cli_outputs_evidence_json(tmp_path, capsys):
     assert evidence["values"]["checks[llm_live].details.error_code"] == (
         "E_LLM_UNAVAILABLE"
     )
+
+
+def test_cli_outputs_markdown_blocker_comment(tmp_path, capsys):
+    payload_path = tmp_path / "doctor.json"
+    payload_path.write_text(json.dumps(_doctor_payload()), encoding="utf-8")
+
+    exit_code = extract_doctor_preflight_evidence.main(
+        [str(payload_path), "--markdown"]
+    )
+
+    assert exit_code == 0
+    text = capsys.readouterr().out
+    assert "## Doctor Preflight Evidence" in text
+    assert "- ok: `true`" in text
+    assert "- missing_count: `0`" in text
+    assert "- selectors_sha256:" in text
+    assert "| `summary.ready_for_explore` | `false` |" in text
+    assert "| `summary.capabilities.generate_adapters.ready` | `false` |" in text
+    assert "| `checks[llm_live].details.error_code` | `E_LLM_UNAVAILABLE` |" in text
+    assert (
+        "| `checks[llm_live].details.message` | "
+        "`LLM upstream returned 502 Bad Gateway` |"
+    ) in text

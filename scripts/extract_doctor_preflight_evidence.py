@@ -90,15 +90,55 @@ def extract_file(path: Path) -> dict[str, Any]:
     return evidence
 
 
+def _markdown_value(value: Any) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if value is None:
+        return "null"
+    return str(value)
+
+
+def render_markdown(evidence: dict[str, Any]) -> str:
+    values = evidence.get("values")
+    values = values if isinstance(values, dict) else {}
+    lines = [
+        "## Doctor Preflight Evidence",
+        "",
+        f"- ok: `{str(bool(evidence.get('ok'))).lower()}`",
+        f"- field_count: `{evidence.get('field_count')}`",
+        f"- missing_count: `{evidence.get('missing_count')}`",
+        f"- selectors_sha256: `{evidence.get('selectors_sha256')}`",
+        f"- values_sha256: `{evidence.get('values_sha256')}`",
+        "",
+        "| Field | Value |",
+        "|-------|-------|",
+    ]
+    for field, value in values.items():
+        lines.append(f"| `{field}` | `{_markdown_value(value)}` |")
+    missing_fields = evidence.get("missing_fields")
+    if isinstance(missing_fields, list) and missing_fields:
+        lines.extend(["", "## Missing Fields"])
+        lines.extend(f"- `{field}`" for field in missing_fields)
+    return "\n".join(lines)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Extract doctor preflight evidence fields from doctor JSON.",
     )
     parser.add_argument("doctor_json", type=Path)
+    parser.add_argument(
+        "--markdown",
+        action="store_true",
+        help="输出可粘贴到 candidate issue 的 Markdown blocker evidence",
+    )
     args = parser.parse_args(argv)
 
     evidence = extract_file(args.doctor_json)
-    print(json.dumps(evidence, ensure_ascii=False, indent=2))
+    if args.markdown:
+        print(render_markdown(evidence))
+    else:
+        print(json.dumps(evidence, ensure_ascii=False, indent=2))
     return 0 if evidence["ok"] else 1
 
 
