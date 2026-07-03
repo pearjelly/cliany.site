@@ -61,6 +61,28 @@ DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE = {
     field: "<paste from doctor --llm-live --json>"
     for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
 }
+DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = {
+    "summary.ready_for_explore": "data.summary.ready_for_explore",
+    "summary.capabilities.run_browser_workflows.ready": (
+        "data.summary.capabilities.run_browser_workflows.ready"
+    ),
+    "summary.capabilities.generate_adapters.ready": (
+        "data.summary.capabilities.generate_adapters.ready"
+    ),
+    "checks[cdp].status": 'data.checks[name="cdp"].status',
+    "checks[cdp].action": 'data.checks[name="cdp"].action',
+    "checks[llm_live].status": 'data.checks[name="llm_live"].status',
+    "checks[llm_live].details.error_code": (
+        'data.checks[name="llm_live"].details.error_code'
+    ),
+    "checks[llm_live].details.retryable": (
+        'data.checks[name="llm_live"].details.retryable'
+    ),
+    "checks[llm_live].details.phase": 'data.checks[name="llm_live"].details.phase',
+    "checks[llm_live].details.message": (
+        'data.checks[name="llm_live"].details.message'
+    ),
+}
 DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT = len(
     DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
 )
@@ -196,17 +218,26 @@ def test_existing_case_promotion_summary_gets_doctor_preflight_fields() -> None:
     assert summary["primary_task"]["doctor_preflight_evidence_template"] == (
         DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
     )
+    assert summary["primary_task"]["doctor_preflight_evidence_selectors"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS
+    )
     assert summary["primary_next_task"]["doctor_preflight_evidence_fields"] == (
         DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
     )
     assert summary["primary_next_task"]["doctor_preflight_evidence_template"] == (
         DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
     )
+    assert summary["primary_next_task"]["doctor_preflight_evidence_selectors"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS
+    )
     assert summary["pending_tasks"][0]["doctor_preflight_evidence_fields"] == (
         DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
     )
     assert summary["pending_tasks"][0]["doctor_preflight_evidence_template"] == (
         DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
+    )
+    assert summary["pending_tasks"][0]["doctor_preflight_evidence_selectors"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS
     )
 
 
@@ -1567,6 +1598,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         ),
         "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+        "doctor_preflight_evidence_selectors": DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS,
         "doctor_preflight_evidence_template_field_count": (
             DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
         ),
@@ -1767,6 +1799,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
                 plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
             ),
             "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+            "doctor_preflight_evidence_selectors": DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS,
             "doctor_preflight_evidence_template_field_count": (
                 DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
             ),
@@ -1801,6 +1834,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
                 plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
             ),
             "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+            "doctor_preflight_evidence_selectors": DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS,
             "doctor_preflight_evidence_template_field_count": (
                 DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
             ),
@@ -1826,6 +1860,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "doctor_preflight_blocker_comment": DOCTOR_PREFLIGHT_BLOCKER_COMMENT,
         "doctor_preflight_evidence_fields": DOCTOR_PREFLIGHT_EVIDENCE_FIELDS,
         "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+        "doctor_preflight_evidence_selectors": DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS,
         "doctor_preflight_evidence_template_field_count": (
             DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
         ),
@@ -4521,6 +4556,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         ),
         "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+        "doctor_preflight_evidence_selectors": DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS,
         "doctor_preflight_evidence_template_field_count": (
             DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
         ),
@@ -4555,6 +4591,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             plan_next_iteration.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         ),
         "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+        "doctor_preflight_evidence_selectors": DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS,
         "doctor_preflight_evidence_template_field_count": (
             DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
         ),

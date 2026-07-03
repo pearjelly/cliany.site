@@ -62,6 +62,36 @@ DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = (
     "checks[llm_live].details.phase",
     "checks[llm_live].details.message",
 )
+DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = (
+    ("summary.ready_for_explore", "data.summary.ready_for_explore"),
+    (
+        "summary.capabilities.run_browser_workflows.ready",
+        "data.summary.capabilities.run_browser_workflows.ready",
+    ),
+    (
+        "summary.capabilities.generate_adapters.ready",
+        "data.summary.capabilities.generate_adapters.ready",
+    ),
+    ("checks[cdp].status", 'data.checks[name="cdp"].status'),
+    ("checks[cdp].action", 'data.checks[name="cdp"].action'),
+    ("checks[llm_live].status", 'data.checks[name="llm_live"].status'),
+    (
+        "checks[llm_live].details.error_code",
+        'data.checks[name="llm_live"].details.error_code',
+    ),
+    (
+        "checks[llm_live].details.retryable",
+        'data.checks[name="llm_live"].details.retryable',
+    ),
+    (
+        "checks[llm_live].details.phase",
+        'data.checks[name="llm_live"].details.phase',
+    ),
+    (
+        "checks[llm_live].details.message",
+        'data.checks[name="llm_live"].details.message',
+    ),
+)
 PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -230,6 +260,10 @@ def _stable_json_sha256(value: Any) -> str:
 def _doctor_preflight_evidence_template() -> dict[str, str]:
     placeholder = "<paste from doctor --llm-live --json>"
     return {field: placeholder for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS}
+
+
+def _doctor_preflight_evidence_selectors() -> dict[str, str]:
+    return dict(DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)
 
 
 def _doctor_preflight_evidence_template_aliases(template: dict[str, Any]) -> dict[str, Any]:
@@ -859,6 +893,11 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
                     else []
                 ),
                 "doctor_preflight_evidence_template": doctor_preflight_evidence_template,
+                "doctor_preflight_evidence_selectors": (
+                    _doctor_preflight_evidence_selectors()
+                    if llm_live_preflight_required
+                    else {}
+                ),
                 **_doctor_preflight_evidence_template_aliases(
                     doctor_preflight_evidence_template
                 ),

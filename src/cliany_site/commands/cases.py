@@ -55,6 +55,36 @@ DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = (
     "checks[llm_live].details.phase",
     "checks[llm_live].details.message",
 )
+DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = (
+    ("summary.ready_for_explore", "data.summary.ready_for_explore"),
+    (
+        "summary.capabilities.run_browser_workflows.ready",
+        "data.summary.capabilities.run_browser_workflows.ready",
+    ),
+    (
+        "summary.capabilities.generate_adapters.ready",
+        "data.summary.capabilities.generate_adapters.ready",
+    ),
+    ("checks[cdp].status", 'data.checks[name="cdp"].status'),
+    ("checks[cdp].action", 'data.checks[name="cdp"].action'),
+    ("checks[llm_live].status", 'data.checks[name="llm_live"].status'),
+    (
+        "checks[llm_live].details.error_code",
+        'data.checks[name="llm_live"].details.error_code',
+    ),
+    (
+        "checks[llm_live].details.retryable",
+        'data.checks[name="llm_live"].details.retryable',
+    ),
+    (
+        "checks[llm_live].details.phase",
+        'data.checks[name="llm_live"].details.phase',
+    ),
+    (
+        "checks[llm_live].details.message",
+        'data.checks[name="llm_live"].details.message',
+    ),
+)
 PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -237,6 +267,10 @@ def _doctor_preflight_evidence_template() -> dict[str, str]:
     return {field: placeholder for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS}
 
 
+def _doctor_preflight_evidence_selectors() -> dict[str, str]:
+    return dict(DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)
+
+
 def _stable_json_sha256(value: object) -> str:
     digest_source = json.dumps(
         value,
@@ -332,6 +366,9 @@ def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[st
             primary.get("doctor_preflight_evidence_fields") or []
         ),
         "doctor_preflight_evidence_template": doctor_preflight_evidence_template,
+        "doctor_preflight_evidence_selectors": dict(
+            primary.get("doctor_preflight_evidence_selectors") or {}
+        ),
         **_doctor_preflight_evidence_template_aliases(
             doctor_preflight_evidence_template
         ),
@@ -684,6 +721,11 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                     else []
                 ),
                 "doctor_preflight_evidence_template": doctor_preflight_evidence_template,
+                "doctor_preflight_evidence_selectors": (
+                    _doctor_preflight_evidence_selectors()
+                    if llm_live_preflight_required
+                    else {}
+                ),
                 **doctor_preflight_evidence_template_aliases,
                 "command": command,
                 "command_source": command_source,
@@ -729,6 +771,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "llm_live_preflight_evidence_fields": list(LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS),
         "doctor_preflight_evidence_fields": list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS),
         "doctor_preflight_evidence_template": _doctor_preflight_evidence_template(),
+        "doctor_preflight_evidence_selectors": _doctor_preflight_evidence_selectors(),
         **_doctor_preflight_evidence_template_aliases(),
         "candidate_package_validation_command": CANDIDATE_PACKAGE_VALIDATION_COMMAND
         if adapter_domain
@@ -859,6 +902,11 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
         if isinstance(evidence_fields, list) and evidence_fields:
             joined_fields = ", ".join(f"`{field}`" for field in evidence_fields)
             lines.append(f"- Evidence fields: {joined_fields}")
+        evidence_selectors = bundle.get("doctor_preflight_evidence_selectors")
+        if isinstance(evidence_selectors, dict) and evidence_selectors:
+            lines.extend(["", "## Doctor preflight evidence selectors"])
+            for field, selector in evidence_selectors.items():
+                lines.append(f"- `{field}` -> `{selector}`")
         if bundle.get("llm_live_preflight_blocker_note"):
             lines.append(f"- Blocker handling: {bundle['llm_live_preflight_blocker_note']}")
     if bundle.get("candidate_package_validation_command"):

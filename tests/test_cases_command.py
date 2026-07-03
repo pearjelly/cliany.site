@@ -960,6 +960,12 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "`checks[llm_live].details.error_code`" in result.output
     assert "`checks[llm_live].details.retryable`" in result.output
     assert "`checks[llm_live].details.status_code`" in result.output
+    assert "## Doctor preflight evidence selectors" in result.output
+    assert (
+        '`checks[llm_live].details.error_code` -> '
+        '`data.checks[name="llm_live"].details.error_code`'
+        in result.output
+    )
     assert "Blocker handling: Run the live LLM preflight before explore." in result.output
     assert "E_LLM_UNAVAILABLE" in result.output
     assert "## Promotion command plan" in result.output

@@ -80,6 +80,36 @@ DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = (
     "checks[llm_live].details.phase",
     "checks[llm_live].details.message",
 )
+DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = (
+    ("summary.ready_for_explore", "data.summary.ready_for_explore"),
+    (
+        "summary.capabilities.run_browser_workflows.ready",
+        "data.summary.capabilities.run_browser_workflows.ready",
+    ),
+    (
+        "summary.capabilities.generate_adapters.ready",
+        "data.summary.capabilities.generate_adapters.ready",
+    ),
+    ("checks[cdp].status", 'data.checks[name="cdp"].status'),
+    ("checks[cdp].action", 'data.checks[name="cdp"].action'),
+    ("checks[llm_live].status", 'data.checks[name="llm_live"].status'),
+    (
+        "checks[llm_live].details.error_code",
+        'data.checks[name="llm_live"].details.error_code',
+    ),
+    (
+        "checks[llm_live].details.retryable",
+        'data.checks[name="llm_live"].details.retryable',
+    ),
+    (
+        "checks[llm_live].details.phase",
+        'data.checks[name="llm_live"].details.phase',
+    ),
+    (
+        "checks[llm_live].details.message",
+        'data.checks[name="llm_live"].details.message',
+    ),
+)
 WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
 WEBSITE_INSPECT_COMMAND = "cd site && vercel inspect www.cliany.site --wait --timeout 90s"
 CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA = {
@@ -678,6 +708,10 @@ def _doctor_preflight_evidence_template() -> dict[str, str]:
     return {field: placeholder for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS}
 
 
+def _doctor_preflight_evidence_selectors() -> dict[str, str]:
+    return dict(DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)
+
+
 def _doctor_preflight_evidence_template_aliases(
     template: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -719,6 +753,7 @@ class CandidatePromotion:
     doctor_preflight_blocker_comment: str
     doctor_preflight_evidence_fields: list[str]
     doctor_preflight_evidence_template: dict[str, str]
+    doctor_preflight_evidence_selectors: dict[str, str]
     llm_live_preflight_evidence_fields: list[str]
     issue_template_command: str
     issue_template_json_command: str
@@ -760,6 +795,9 @@ class CandidatePromotion:
             "doctor_preflight_evidence_fields": self.doctor_preflight_evidence_fields,
             "doctor_preflight_evidence_template": (
                 self.doctor_preflight_evidence_template
+            ),
+            "doctor_preflight_evidence_selectors": (
+                self.doctor_preflight_evidence_selectors
             ),
             **_doctor_preflight_evidence_template_aliases(
                 self.doctor_preflight_evidence_template
@@ -2594,6 +2632,9 @@ def _llm_live_preflight_task_fields(task_name: str) -> dict[str, Any]:
             list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS) if required else []
         ),
         "doctor_preflight_evidence_template": doctor_preflight_evidence_template,
+        "doctor_preflight_evidence_selectors": (
+            _doctor_preflight_evidence_selectors() if required else {}
+        ),
         **_doctor_preflight_evidence_template_aliases(
             doctor_preflight_evidence_template
         ),
@@ -2629,6 +2670,9 @@ def _task_with_doctor_preflight_evidence_fields(task: Any) -> Any:
         normalized["doctor_preflight_evidence_fields"] = list(
             DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         )
+        normalized["doctor_preflight_evidence_selectors"] = (
+            _doctor_preflight_evidence_selectors()
+        )
         doctor_preflight_evidence_template = _doctor_preflight_evidence_template()
         normalized["doctor_preflight_evidence_template"] = (
             doctor_preflight_evidence_template
@@ -2645,6 +2689,7 @@ def _task_with_doctor_preflight_evidence_fields(task: Any) -> Any:
         )
     if required is not True and "doctor_preflight_evidence_fields" not in normalized:
         normalized["doctor_preflight_evidence_fields"] = []
+        normalized["doctor_preflight_evidence_selectors"] = {}
         doctor_preflight_evidence_template = dict(
             normalized.setdefault("doctor_preflight_evidence_template", {})
         )
@@ -2982,6 +3027,9 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 doctor_preflight_blocker_comment=DOCTOR_PREFLIGHT_BLOCKER_COMMENT,
                 doctor_preflight_evidence_fields=list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS),
                 doctor_preflight_evidence_template=_doctor_preflight_evidence_template(),
+                doctor_preflight_evidence_selectors=(
+                    _doctor_preflight_evidence_selectors()
+                ),
                 llm_live_preflight_evidence_fields=list(
                     LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
                 ),

@@ -19,6 +19,28 @@ DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE = {
     field: "<paste from doctor --llm-live --json>"
     for field in validate_cases.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
 }
+DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = {
+    "summary.ready_for_explore": "data.summary.ready_for_explore",
+    "summary.capabilities.run_browser_workflows.ready": (
+        "data.summary.capabilities.run_browser_workflows.ready"
+    ),
+    "summary.capabilities.generate_adapters.ready": (
+        "data.summary.capabilities.generate_adapters.ready"
+    ),
+    "checks[cdp].status": 'data.checks[name="cdp"].status',
+    "checks[cdp].action": 'data.checks[name="cdp"].action',
+    "checks[llm_live].status": 'data.checks[name="llm_live"].status',
+    "checks[llm_live].details.error_code": (
+        'data.checks[name="llm_live"].details.error_code'
+    ),
+    "checks[llm_live].details.retryable": (
+        'data.checks[name="llm_live"].details.retryable'
+    ),
+    "checks[llm_live].details.phase": 'data.checks[name="llm_live"].details.phase',
+    "checks[llm_live].details.message": (
+        'data.checks[name="llm_live"].details.message'
+    ),
+}
 DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT = len(
     DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
 )
@@ -388,6 +410,7 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
             validate_cases.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
         ),
         "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
+        "doctor_preflight_evidence_selectors": DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS,
         "doctor_preflight_evidence_template_field_count": (
             DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
         ),
@@ -406,6 +429,9 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     assert summary["pending_tasks"][0]["doctor_preflight_evidence_template"] == (
         DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
     )
+    assert summary["pending_tasks"][0]["doctor_preflight_evidence_selectors"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS
+    )
     assert (
         summary["pending_tasks"][0]["doctor_preflight_evidence_template_sha256"]
         == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
@@ -415,6 +441,7 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
     )
     assert summary["pending_tasks"][1]["doctor_preflight_evidence_template"] == {}
+    assert summary["pending_tasks"][1]["doctor_preflight_evidence_selectors"] == {}
     assert summary["pending_tasks"][1]["llm_live_preflight_command_sha256"] == ""
     assert summary["pending_tasks"][1]["doctor_preflight_evidence_template_field_count"] == 0
     assert (
@@ -673,6 +700,7 @@ def test_cases_report_prioritizes_candidate_with_more_complete_evidence(tmp_path
         "llm_live_preflight_evidence_fields": [],
         "doctor_preflight_evidence_fields": [],
         "doctor_preflight_evidence_template": {},
+        "doctor_preflight_evidence_selectors": {},
         "doctor_preflight_evidence_template_field_count": 0,
         "doctor_preflight_evidence_template_sha256": EMPTY_TEMPLATE_SHA256,
         "acceptance_criteria": (
