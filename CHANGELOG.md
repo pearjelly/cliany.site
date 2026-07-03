@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.256] - 2026-07-03
+
 ### Changed
 - Next-iteration planner JSON, text/Markdown reports, and candidate issue artifact summaries now expose primary candidate `issue_template` and `evidence_bundle` commands as top-level aliases, so automation can jump directly from the selected `adapter_package` task to reproducible issue and evidence handoffs.
 
@@ -2430,7 +2432,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.255...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.256...HEAD
+[0.16.256]: https://github.com/pearjelly/cliany.site/compare/v0.16.255...v0.16.256
 [0.16.255]: https://github.com/pearjelly/cliany.site/compare/v0.16.254...v0.16.255
 [0.16.254]: https://github.com/pearjelly/cliany.site/compare/v0.16.253...v0.16.254
 [0.16.253]: https://github.com/pearjelly/cliany.site/compare/v0.16.252...v0.16.253

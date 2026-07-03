@@ -167,8 +167,8 @@ const I18N = {
   },
   'qs.maintainer.title': { zh: '维护者循环', en: 'Maintainer Loop' },
   'qs.maintainer.desc': {
-    zh: '当前基线：v0.16.255。使用每天 1~3 个版本的发布循环、每周维护者循环、release readiness 的 next_actions、官网 alias inspect、PyPI 版本专属发布审计和 primary adapter handoff aliases，把路线图拆成小而可验证的发布切片。',
-    en: 'Current baseline: v0.16.255. Use the 1-3 releases/day loop, weekly maintainer loop, release readiness next_actions, website alias inspect, PyPI version-specific publication audit, and primary adapter handoff aliases to turn the roadmap into small verified releases.'
+    zh: '当前基线：v0.16.256。使用每天 1~3 个版本的发布循环、每周维护者循环、release readiness 的 next_actions、官网 alias inspect、PyPI 版本专属发布审计和 primary adapter handoff command aliases，把路线图拆成小而可验证的发布切片。',
+    en: 'Current baseline: v0.16.256. Use the 1-3 releases/day loop, weekly maintainer loop, release readiness next_actions, website alias inspect, PyPI version-specific publication audit, and primary adapter handoff command aliases to turn the roadmap into small verified releases.'
   },
   'qs.maintainer.loop': {
     zh: '选择下一块发布切片时，从 <code>docs/weekly-maintainer-loop.md</code> 开始。',
