@@ -94,6 +94,14 @@ DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256 = hashlib.sha256(
         separators=(",", ":"),
     ).encode()
 ).hexdigest()
+DOCTOR_PREFLIGHT_JSON_PATH = "/tmp/cliany-doctor-preflight.json"
+DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND = (
+    "python scripts/extract_doctor_preflight_evidence.py "
+    f"{DOCTOR_PREFLIGHT_JSON_PATH}"
+)
+DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND = (
+    f"{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND} --markdown"
+)
 
 
 def _stable_json_sha256(value: object) -> str:
@@ -420,6 +428,9 @@ def test_candidate_issue_body_checks_complete_tasks():
         "`<paste from doctor --llm-live --json>`"
         in issue_body
     )
+    assert "## Doctor Preflight Evidence Extractor" in issue_body
+    assert f"- JSON: `{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND}`" in issue_body
+    assert f"- Markdown: `{DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND}`" in issue_body
     assert "## Acceptance Criteria" in issue_body
     assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in issue_body
     assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in issue_body
@@ -1068,6 +1079,12 @@ def test_handoff_payload_projects_primary_release_and_candidate_actions(tmp_path
     assert payload["primary_candidate"]["doctor_preflight_evidence_selectors_sha256"] == (
         _stable_json_sha256(DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)
     )
+    assert payload["primary_candidate"]["doctor_preflight_evidence_extract_command"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
+    )
+    assert payload["primary_candidate"]["doctor_preflight_evidence_markdown_command"] == (
+        DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
+    )
     assert payload["primary_candidate"]["issue_template_command"] == (
         "cliany-site cases --case-id pypi-project-search --issue-template"
     )
@@ -1620,6 +1637,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "doctor_preflight_evidence_template_sha256": (
             DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
         ),
+        "doctor_preflight_evidence_extract_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
+        ),
+        "doctor_preflight_evidence_markdown_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
+        ),
     }
     assert (
         data["case_promotion_evidence_summary"]["primary_task_detail"]
@@ -1821,6 +1844,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "doctor_preflight_evidence_template_sha256": (
                 DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
             ),
+            "doctor_preflight_evidence_extract_command": (
+                DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
+            ),
+            "doctor_preflight_evidence_markdown_command": (
+                DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
+            ),
         },
         "evidence_bundle_primary_next_task": {
             "task": "adapter_package",
@@ -1856,6 +1885,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "doctor_preflight_evidence_template_sha256": (
                 DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
             ),
+            "doctor_preflight_evidence_extract_command": (
+                DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
+            ),
+            "doctor_preflight_evidence_markdown_command": (
+                DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
+            ),
         },
         "evidence_bundle_primary_next_task_runbook": _pypi_primary_runbook(),
         "candidate_package_validation_command": (
@@ -1881,6 +1916,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         ),
         "doctor_preflight_evidence_template_sha256": (
             DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+        ),
+        "doctor_preflight_evidence_extract_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
+        ),
+        "doctor_preflight_evidence_markdown_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
         ),
         "llm_live_preflight_evidence_fields": [
             "summary.ready_for_explore",
@@ -2002,6 +2043,9 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "`<paste from doctor --llm-live --json>`\n"
             "- `checks[llm_live].details.phase`: `<paste from doctor --llm-live --json>`\n"
             "- `checks[llm_live].details.message`: `<paste from doctor --llm-live --json>`\n\n"
+            "## Doctor Preflight Evidence Extractor\n"
+            f"- JSON: `{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND}`\n"
+            f"- Markdown: `{DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND}`\n\n"
             "## LLM Preflight Evidence Fields\n"
             "- `summary.ready_for_explore`\n"
             "- `summary.llm_live_preflight`\n"
@@ -4578,6 +4622,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "doctor_preflight_evidence_template_sha256": (
             DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
         ),
+        "doctor_preflight_evidence_extract_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
+        ),
+        "doctor_preflight_evidence_markdown_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
+        ),
     }
     assert metadata[0]["evidence_bundle_primary_next_task"] == {
         "task": "adapter_package",
@@ -4612,6 +4662,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "doctor_preflight_evidence_template_sha256": (
             DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+        ),
+        "doctor_preflight_evidence_extract_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
+        ),
+        "doctor_preflight_evidence_markdown_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
         ),
     }
     assert metadata[0]["evidence_bundle_primary_next_task_runbook"] == _pypi_primary_runbook()

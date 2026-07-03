@@ -30,6 +30,14 @@ CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
 )
 PACKAGE_EXTENSION = ".cliany-adapter.tar.gz"
 LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
+DOCTOR_PREFLIGHT_JSON_PATH = "/tmp/cliany-doctor-preflight.json"
+DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND = (
+    "python scripts/extract_doctor_preflight_evidence.py "
+    f"{DOCTOR_PREFLIGHT_JSON_PATH}"
+)
+DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND = (
+    f"{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND} --markdown"
+)
 LLM_LIVE_PREFLIGHT_BLOCKER_NOTE = (
     "Run the live LLM preflight before explore. If generate_adapters.ready=false "
     "or llm_live reports warning/error such as E_LLM_UNAVAILABLE "
@@ -712,6 +720,17 @@ def _doctor_preflight_evidence_selectors() -> dict[str, str]:
     return dict(DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)
 
 
+def _doctor_preflight_evidence_command_fields(*, required: bool) -> dict[str, str]:
+    return {
+        "doctor_preflight_evidence_extract_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND if required else ""
+        ),
+        "doctor_preflight_evidence_markdown_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND if required else ""
+        ),
+    }
+
+
 def _doctor_preflight_evidence_template_aliases(
     template: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -799,6 +818,7 @@ class CandidatePromotion:
             "doctor_preflight_evidence_selectors": (
                 self.doctor_preflight_evidence_selectors
             ),
+            **_doctor_preflight_evidence_command_fields(required=True),
             **_doctor_preflight_evidence_template_aliases(
                 self.doctor_preflight_evidence_template
             ),
@@ -1241,6 +1261,14 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
             "doctor_preflight_evidence_selectors_sha256": _stable_json_sha256(
                 primary_task.get("doctor_preflight_evidence_selectors") or {}
             ),
+            "doctor_preflight_evidence_extract_command": primary_task.get(
+                "doctor_preflight_evidence_extract_command"
+            )
+            or "",
+            "doctor_preflight_evidence_markdown_command": primary_task.get(
+                "doctor_preflight_evidence_markdown_command"
+            )
+            or "",
             "issue_template_command": data[
                 "case_promotion_evidence_primary_issue_template_command"
             ],
@@ -2649,6 +2677,7 @@ def _llm_live_preflight_task_fields(task_name: str) -> dict[str, Any]:
         "doctor_preflight_evidence_selectors": (
             _doctor_preflight_evidence_selectors() if required else {}
         ),
+        **_doctor_preflight_evidence_command_fields(required=required),
         **_doctor_preflight_evidence_template_aliases(
             doctor_preflight_evidence_template
         ),
@@ -2687,6 +2716,7 @@ def _task_with_doctor_preflight_evidence_fields(task: Any) -> Any:
         normalized["doctor_preflight_evidence_selectors"] = (
             _doctor_preflight_evidence_selectors()
         )
+        normalized.update(_doctor_preflight_evidence_command_fields(required=True))
         doctor_preflight_evidence_template = _doctor_preflight_evidence_template()
         normalized["doctor_preflight_evidence_template"] = (
             doctor_preflight_evidence_template
@@ -2704,6 +2734,7 @@ def _task_with_doctor_preflight_evidence_fields(task: Any) -> Any:
     if required is not True and "doctor_preflight_evidence_fields" not in normalized:
         normalized["doctor_preflight_evidence_fields"] = []
         normalized["doctor_preflight_evidence_selectors"] = {}
+        normalized.update(_doctor_preflight_evidence_command_fields(required=False))
         doctor_preflight_evidence_template = dict(
             normalized.setdefault("doctor_preflight_evidence_template", {})
         )
@@ -3460,6 +3491,10 @@ def _candidate_issue_body(
             "",
             "## Doctor Preflight Evidence Template",
             *_doctor_preflight_evidence_template_lines(),
+            "",
+            "## Doctor Preflight Evidence Extractor",
+            f"- JSON: `{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND}`",
+            f"- Markdown: `{DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND}`",
             "",
             "## LLM Preflight Evidence Fields",
             *(f"- `{field}`" for field in LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS),

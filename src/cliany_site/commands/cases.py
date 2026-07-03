@@ -26,6 +26,14 @@ CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     f"--packages-dir {CANDIDATE_PACKAGES_DIR} --include-candidate-packages --strict"
 )
 LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
+DOCTOR_PREFLIGHT_JSON_PATH = "/tmp/cliany-doctor-preflight.json"
+DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND = (
+    "python scripts/extract_doctor_preflight_evidence.py "
+    f"{DOCTOR_PREFLIGHT_JSON_PATH}"
+)
+DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND = (
+    f"{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND} --markdown"
+)
 LLM_LIVE_PREFLIGHT_BLOCKER_NOTE = (
     "Run the live LLM preflight before explore. If generate_adapters.ready=false "
     "or llm_live reports warning/error such as E_LLM_UNAVAILABLE "
@@ -271,6 +279,17 @@ def _doctor_preflight_evidence_selectors() -> dict[str, str]:
     return dict(DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)
 
 
+def _doctor_preflight_evidence_command_fields(*, required: bool) -> dict[str, str]:
+    return {
+        "doctor_preflight_evidence_extract_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND if required else ""
+        ),
+        "doctor_preflight_evidence_markdown_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND if required else ""
+        ),
+    }
+
+
 def _stable_json_sha256(value: object) -> str:
     digest_source = json.dumps(
         value,
@@ -368,6 +387,12 @@ def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[st
         "doctor_preflight_evidence_template": doctor_preflight_evidence_template,
         "doctor_preflight_evidence_selectors": dict(
             primary.get("doctor_preflight_evidence_selectors") or {}
+        ),
+        "doctor_preflight_evidence_extract_command": str(
+            primary.get("doctor_preflight_evidence_extract_command") or ""
+        ),
+        "doctor_preflight_evidence_markdown_command": str(
+            primary.get("doctor_preflight_evidence_markdown_command") or ""
         ),
         **_doctor_preflight_evidence_template_aliases(
             doctor_preflight_evidence_template
@@ -486,6 +511,14 @@ def _candidate_issue_template(case: dict[str, Any]) -> str:
     lines.extend(f"- `{field}`" for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS)
     lines.extend(["", "## Doctor Preflight Evidence Template"])
     lines.extend(_doctor_preflight_evidence_template_lines())
+    lines.extend(
+        [
+            "",
+            "## Doctor Preflight Evidence Extractor",
+            f"- JSON: `{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND}`",
+            f"- Markdown: `{DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND}`",
+        ]
+    )
 
     lines.extend(["", "## Acceptance Criteria"])
     for task in PROMOTION_TASKS:
@@ -693,6 +726,11 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                 doctor_preflight_evidence_template
             )
         )
+        doctor_preflight_evidence_command_fields = (
+            _doctor_preflight_evidence_command_fields(
+                required=llm_live_preflight_required
+            )
+        )
         tasks.append(
             {
                 "task": task,
@@ -726,6 +764,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                     if llm_live_preflight_required
                     else {}
                 ),
+                **doctor_preflight_evidence_command_fields,
                 **doctor_preflight_evidence_template_aliases,
                 "command": command,
                 "command_source": command_source,
@@ -772,6 +811,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "doctor_preflight_evidence_fields": list(DOCTOR_PREFLIGHT_EVIDENCE_FIELDS),
         "doctor_preflight_evidence_template": _doctor_preflight_evidence_template(),
         "doctor_preflight_evidence_selectors": _doctor_preflight_evidence_selectors(),
+        **_doctor_preflight_evidence_command_fields(required=True),
         **_doctor_preflight_evidence_template_aliases(),
         "candidate_package_validation_command": CANDIDATE_PACKAGE_VALIDATION_COMMAND
         if adapter_domain
@@ -907,6 +947,14 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
             lines.extend(["", "## Doctor preflight evidence selectors"])
             for field, selector in evidence_selectors.items():
                 lines.append(f"- `{field}` -> `{selector}`")
+        extract_command = bundle.get("doctor_preflight_evidence_extract_command")
+        markdown_command = bundle.get("doctor_preflight_evidence_markdown_command")
+        if extract_command or markdown_command:
+            lines.extend(["", "## Doctor preflight evidence extractor"])
+            if extract_command:
+                lines.append(f"- JSON: `{extract_command}`")
+            if markdown_command:
+                lines.append(f"- Markdown: `{markdown_command}`")
         if bundle.get("llm_live_preflight_blocker_note"):
             lines.append(f"- Blocker handling: {bundle['llm_live_preflight_blocker_note']}")
     if bundle.get("candidate_package_validation_command"):
@@ -983,6 +1031,16 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         primary_doctor_preflight_aliases = (
             _primary_doctor_preflight_evidence_template_aliases(primary_next_task)
         )
+        primary_doctor_preflight_command_fields = {
+            "doctor_preflight_evidence_extract_command": str(
+                primary_next_task.get("doctor_preflight_evidence_extract_command")
+                or ""
+            ),
+            "doctor_preflight_evidence_markdown_command": str(
+                primary_next_task.get("doctor_preflight_evidence_markdown_command")
+                or ""
+            ),
+        }
         candidate_item = {
             "case_id": case_id,
             "title": bundle.get("title"),
@@ -1005,6 +1063,7 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
                 "primary_next_task_acceptance_criteria", ""
             ),
             **primary_doctor_preflight_aliases,
+            **primary_doctor_preflight_command_fields,
             "promotion_command_plan_missing_tasks": bundle.get(
                 "promotion_command_plan_missing_tasks", []
             ),
@@ -1047,6 +1106,12 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
                         llm_live_preflight_command_sha256
                     ),
                     "llm_live_preflight_blocker_note": llm_live_preflight_blocker_note,
+                    "doctor_preflight_evidence_extract_command": str(
+                        task.get("doctor_preflight_evidence_extract_command") or ""
+                    ),
+                    "doctor_preflight_evidence_markdown_command": str(
+                        task.get("doctor_preflight_evidence_markdown_command") or ""
+                    ),
                     **doctor_preflight_aliases,
                     "priority_rank": priority_rank,
                     "priority_reason": priority_reason,
@@ -1329,6 +1394,18 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
                         ),
                         "doctor_preflight_evidence_template": (
                             doctor_preflight_evidence_template
+                        ),
+                        "doctor_preflight_evidence_extract_command": str(
+                            task_evidence.get(
+                                "doctor_preflight_evidence_extract_command"
+                            )
+                            or ""
+                        ),
+                        "doctor_preflight_evidence_markdown_command": str(
+                            task_evidence.get(
+                                "doctor_preflight_evidence_markdown_command"
+                            )
+                            or ""
                         ),
                         **_doctor_preflight_evidence_template_aliases(
                             doctor_preflight_evidence_template

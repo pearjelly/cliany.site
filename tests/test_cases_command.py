@@ -49,6 +49,14 @@ LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
 LLM_LIVE_PREFLIGHT_COMMAND_SHA256 = hashlib.sha256(
     LLM_LIVE_PREFLIGHT_COMMAND.encode("utf-8")
 ).hexdigest()
+DOCTOR_PREFLIGHT_JSON_PATH = "/tmp/cliany-doctor-preflight.json"
+DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND = (
+    "python scripts/extract_doctor_preflight_evidence.py "
+    f"{DOCTOR_PREFLIGHT_JSON_PATH}"
+)
+DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND = (
+    f"{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND} --markdown"
+)
 CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
     "--include-candidate-packages --strict"
@@ -181,6 +189,12 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
         ),
         "doctor_preflight_evidence_template_sha256": (
             DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+        ),
+        "doctor_preflight_evidence_extract_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
+        ),
+        "doctor_preflight_evidence_markdown_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
         ),
     }
     assert (
@@ -722,6 +736,14 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         bundle["doctor_preflight_evidence_template_sha256"]
         == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
     )
+    assert (
+        bundle["doctor_preflight_evidence_extract_command"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
+    )
+    assert (
+        bundle["doctor_preflight_evidence_markdown_command"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
+    )
     assert bundle["promotion_command_plan_count"] == 4
     assert bundle["promotion_command_plan_missing_tasks"] == []
     assert bundle["promotion_command_plan"] == [
@@ -800,6 +822,14 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         == bundle["doctor_preflight_evidence_template_sha256"]
     )
     assert (
+        bundle["tasks"][0]["doctor_preflight_evidence_extract_command"]
+        == bundle["doctor_preflight_evidence_extract_command"]
+    )
+    assert (
+        bundle["tasks"][0]["doctor_preflight_evidence_markdown_command"]
+        == bundle["doctor_preflight_evidence_markdown_command"]
+    )
+    assert (
         bundle["primary_next_task"]["doctor_preflight_evidence_fields"]
         == bundle["doctor_preflight_evidence_fields"]
     )
@@ -814,6 +844,14 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert (
         bundle["primary_next_task"]["doctor_preflight_evidence_template_sha256"]
         == bundle["doctor_preflight_evidence_template_sha256"]
+    )
+    assert (
+        bundle["primary_next_task"]["doctor_preflight_evidence_extract_command"]
+        == bundle["doctor_preflight_evidence_extract_command"]
+    )
+    assert (
+        bundle["primary_next_task"]["doctor_preflight_evidence_markdown_command"]
+        == bundle["doctor_preflight_evidence_markdown_command"]
     )
     assert bundle["tasks"][0]["complete"] is False
     assert bundle["tasks"][0]["command_source"] == "commands.explore"
@@ -1081,6 +1119,12 @@ def test_cases_command_promotion_plan_json(tmp_home):
         "doctor_preflight_evidence_template_sha256": (
             DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
         ),
+        "doctor_preflight_evidence_extract_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
+        ),
+        "doctor_preflight_evidence_markdown_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
+        ),
         "priority_rank": 1,
         "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
     }
@@ -1117,6 +1161,14 @@ def test_cases_command_promotion_plan_json(tmp_home):
     assert (
         plan["candidates"][0]["primary_doctor_preflight_evidence_template_sha256"]
         == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+    )
+    assert (
+        plan["candidates"][0]["doctor_preflight_evidence_extract_command"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
+    )
+    assert (
+        plan["candidates"][0]["doctor_preflight_evidence_markdown_command"]
+        == DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
     )
     assert plan["candidates"][0]["evidence_bundle_json_command"].endswith(
         "--evidence-bundle --json"
