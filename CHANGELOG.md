@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Added
+- Added a maintainer-facing Candidate Promotion Runbook that turns the `pypi-project-search/adapter_package` handoff into a concrete preflight, adapter package, metadata validation, and online smoke checklist, and linked it from the good-first-issue and weekly maintainer docs.
+
 ## [0.16.256] - 2026-07-03
 
 ### Changed

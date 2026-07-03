@@ -60,3 +60,4 @@
 
 如果任务来自真实案例库，优先引用 `cases/manifest.json` 中的 `promotion` 字段，保持 issue、case report 和 release readiness artifact 的下一步一致。
 如果任务来自 candidate promotion，优先复制带 `Reproduction Context`、`Promotion Command Plan` 和 `Evidence Bundle` 的 `Issue Body Template`，并附上 `cliany-site cases --case-id <id> --evidence-bundle --json` 的机器可读输出；把 `primary_next_task`、`primary_next_task_runbook`、`doctor_preflight_evidence_fields`、`promotion_command_plan` 和 `case_promotion_evidence_primary_runbook_steps` 写进 issue 摘要或首条评论，让 issue 描述和 `cases/manifest.json` 中的 `promotion_evidence` 保持一致。
+维护者推进 PyPI 等 candidate 案例时，先按 [Candidate Promotion Runbook](candidate-promotion-runbook.md) 核对 live LLM preflight、adapter package、metadata validation 和 online smoke 四步证据，再决定是否创建公开 issue 或更新 `promotion_evidence`。
