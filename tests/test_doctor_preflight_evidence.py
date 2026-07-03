@@ -46,6 +46,27 @@ def _doctor_payload() -> dict:
     }
 
 
+def _ready_doctor_payload() -> dict:
+    payload = _doctor_payload()
+    payload["data"]["summary"]["ready_for_explore"] = True
+    payload["data"]["summary"]["capabilities"]["generate_adapters"]["ready"] = True
+    payload["data"]["summary"]["llm_live_preflight"] = {
+        "ready": True,
+        "status": "ok",
+    }
+    payload["data"]["checks"][1] = {
+        "name": "llm_live",
+        "status": "ok",
+        "details": {
+            "error_code": "",
+            "retryable": False,
+            "phase": "llm_preflight",
+            "message": "Live LLM preflight passed",
+        },
+    }
+    return payload
+
+
 def test_extracts_doctor_preflight_evidence_from_named_checks(tmp_path):
     payload_path = tmp_path / "doctor.json"
     payload_path.write_text(json.dumps(_doctor_payload()), encoding="utf-8")
@@ -71,6 +92,51 @@ def test_extracts_doctor_preflight_evidence_from_named_checks(tmp_path):
         'data.checks[name="llm_live"].details.error_code'
     )
     assert evidence["selectors_sha256"]
+    assert evidence["preflight_state"] == {
+        "status": "blocked",
+        "ready_for_adapter_package": False,
+        "primary_reason": "Live LLM preflight is warning.",
+        "reason_codes": [
+            "ready_for_explore_false",
+            "generate_adapters_not_ready",
+            "llm_live_status_warning",
+        ],
+        "next_action": (
+            "Attach the doctor preflight evidence to the candidate issue and do "
+            "not run candidate explore until live preflight is ready."
+        ),
+    }
+
+
+def test_preflight_state_ready_when_all_required_values_pass(tmp_path):
+    payload_path = tmp_path / "doctor-ready.json"
+    payload_path.write_text(json.dumps(_ready_doctor_payload()), encoding="utf-8")
+
+    evidence = extract_doctor_preflight_evidence.extract_file(payload_path)
+
+    assert evidence["preflight_state"]["status"] == "ready"
+    assert evidence["preflight_state"]["ready_for_adapter_package"] is True
+    assert evidence["preflight_state"]["reason_codes"] == []
+    assert evidence["preflight_state"]["next_action"].startswith(
+        "Run the candidate explore command"
+    )
+
+
+def test_preflight_state_missing_fields_when_named_check_absent(tmp_path):
+    payload = _doctor_payload()
+    payload["data"]["checks"] = [payload["data"]["checks"][0]]
+    payload_path = tmp_path / "doctor-missing.json"
+    payload_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    evidence = extract_doctor_preflight_evidence.extract_file(payload_path)
+
+    assert evidence["ok"] is False
+    assert evidence["preflight_state"]["status"] == "missing_fields"
+    assert evidence["preflight_state"]["ready_for_adapter_package"] is False
+    assert evidence["preflight_state"]["reason_codes"] == ["missing_fields"]
+    assert evidence["preflight_state"]["primary_reason"].startswith(
+        "Missing required doctor evidence field:"
+    )
 
 
 def test_cli_outputs_evidence_json(tmp_path, capsys):
@@ -101,6 +167,12 @@ def test_cli_outputs_markdown_blocker_comment(tmp_path, capsys):
     assert "- ok: `true`" in text
     assert "- missing_count: `0`" in text
     assert "- selectors_sha256:" in text
+    assert "- preflight_status: `blocked`" in text
+    assert "- ready_for_adapter_package: `false`" in text
+    assert (
+        "- preflight_next_action: `Attach the doctor preflight evidence to the "
+        "candidate issue and do not run candidate explore until live preflight is ready.`"
+    ) in text
     assert "| `summary.ready_for_explore` | `false` |" in text
     assert "| `summary.capabilities.generate_adapters.ready` | `false` |" in text
     assert "| `checks[llm_live].details.error_code` | `E_LLM_UNAVAILABLE` |" in text

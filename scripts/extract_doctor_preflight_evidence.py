@@ -18,6 +18,18 @@ if str(SCRIPT_DIR) not in sys.path:
 import validate_cases  # noqa: E402
 
 NAMED_LIST_RE = re.compile(r'^(?P<field>\w+)\[name="(?P<name>[^"]+)"\]$')
+READY_NEXT_ACTION = (
+    "Run the candidate explore command, then package the adapter and attach "
+    "the package path or release asset name."
+)
+BLOCKED_NEXT_ACTION = (
+    "Attach the doctor preflight evidence to the candidate issue and do "
+    "not run candidate explore until live preflight is ready."
+)
+MISSING_FIELDS_NEXT_ACTION = (
+    "Attach the missing field list and original doctor JSON summary before "
+    "continuing candidate promotion."
+)
 
 
 def _stable_json_sha256(value: object) -> str:
@@ -59,6 +71,69 @@ def _resolve_selector(payload: Any, selector: str) -> Any:
     return current
 
 
+def _build_preflight_state(
+    values: dict[str, Any],
+    missing_fields: list[str],
+) -> dict[str, Any]:
+    if missing_fields:
+        return {
+            "status": "missing_fields",
+            "ready_for_adapter_package": False,
+            "primary_reason": f"Missing required doctor evidence field: {missing_fields[0]}.",
+            "reason_codes": ["missing_fields"],
+            "next_action": MISSING_FIELDS_NEXT_ACTION,
+        }
+
+    checks = [
+        (
+            values.get("summary.ready_for_explore") is True,
+            "ready_for_explore_false",
+            "Doctor summary is not ready for explore.",
+        ),
+        (
+            values.get("summary.capabilities.run_browser_workflows.ready") is True,
+            "run_browser_workflows_not_ready",
+            "Browser workflow capability is not ready.",
+        ),
+        (
+            values.get("summary.capabilities.generate_adapters.ready") is True,
+            "generate_adapters_not_ready",
+            "Adapter generation capability is not ready.",
+        ),
+        (
+            values.get("checks[cdp].status") == "ok",
+            f"cdp_status_{values.get('checks[cdp].status')}",
+            f"CDP check is {values.get('checks[cdp].status')}.",
+        ),
+        (
+            values.get("checks[llm_live].status") == "ok",
+            f"llm_live_status_{values.get('checks[llm_live].status')}",
+            f"Live LLM preflight is {values.get('checks[llm_live].status')}.",
+        ),
+    ]
+    failures = [
+        {"reason_code": reason_code, "reason": reason}
+        for ok, reason_code, reason in checks
+        if not ok
+    ]
+    if failures:
+        return {
+            "status": "blocked",
+            "ready_for_adapter_package": False,
+            "primary_reason": failures[-1]["reason"],
+            "reason_codes": [failure["reason_code"] for failure in failures],
+            "next_action": BLOCKED_NEXT_ACTION,
+        }
+
+    return {
+        "status": "ready",
+        "ready_for_adapter_package": True,
+        "primary_reason": "Doctor preflight is ready for candidate adapter generation.",
+        "reason_codes": [],
+        "next_action": READY_NEXT_ACTION,
+    }
+
+
 def extract_payload(payload: dict[str, Any]) -> dict[str, Any]:
     selectors = dict(validate_cases.DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)
     values = {
@@ -77,6 +152,7 @@ def extract_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "selectors_sha256": _stable_json_sha256(selectors),
         "values": values,
         "values_sha256": _stable_json_sha256(values),
+        "preflight_state": _build_preflight_state(values, missing_fields),
     }
 
 
@@ -101,6 +177,8 @@ def _markdown_value(value: Any) -> str:
 def render_markdown(evidence: dict[str, Any]) -> str:
     values = evidence.get("values")
     values = values if isinstance(values, dict) else {}
+    preflight_state = evidence.get("preflight_state")
+    preflight_state = preflight_state if isinstance(preflight_state, dict) else {}
     lines = [
         "## Doctor Preflight Evidence",
         "",
@@ -109,6 +187,13 @@ def render_markdown(evidence: dict[str, Any]) -> str:
         f"- missing_count: `{evidence.get('missing_count')}`",
         f"- selectors_sha256: `{evidence.get('selectors_sha256')}`",
         f"- values_sha256: `{evidence.get('values_sha256')}`",
+        f"- preflight_status: `{preflight_state.get('status', '-')}`",
+        (
+            "- ready_for_adapter_package: "
+            f"`{str(bool(preflight_state.get('ready_for_adapter_package'))).lower()}`"
+        ),
+        f"- preflight_primary_reason: `{preflight_state.get('primary_reason', '-')}`",
+        f"- preflight_next_action: `{preflight_state.get('next_action', '-')}`",
         "",
         "| Field | Value |",
         "|-------|-------|",
