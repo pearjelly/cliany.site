@@ -1197,6 +1197,7 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
         "publication_ok": data["publication_ok"],
         "daily_release_cap_blocked": data["daily_release_cap_blocked"],
         "daily_release_resume_date": data["daily_release_resume_date"],
+        "daily_release_resume_date_sha256": data["daily_release_resume_date_sha256"],
         "blocker_count": len(data["blockers"]),
         "blockers": data["blockers"],
         "next_action_count": data["next_action_count"],

@@ -1045,6 +1045,9 @@ def test_handoff_payload_projects_primary_release_and_candidate_actions(tmp_path
     assert payload["target_version"] == "0.16.2"
     assert payload["daily_release_cap_blocked"] is True
     assert payload["daily_release_resume_date"] == "2026-06-11"
+    assert payload["daily_release_resume_date_sha256"] == _stable_json_sha256(
+        "2026-06-11"
+    )
     assert payload["primary_next_action"] == plan.next_actions[0]
     assert payload["next_action_count"] == len(plan.next_actions)
     assert payload["blocker_count"] == len(plan.blockers)
