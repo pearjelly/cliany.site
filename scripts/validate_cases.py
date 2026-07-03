@@ -33,6 +33,14 @@ CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
 )
 LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
+DOCTOR_PREFLIGHT_JSON_PATH = "/tmp/cliany-doctor-preflight.json"
+DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND = (
+    "python scripts/extract_doctor_preflight_evidence.py "
+    f"{DOCTOR_PREFLIGHT_JSON_PATH}"
+)
+DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND = (
+    f"{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND} --markdown"
+)
 LLM_LIVE_PREFLIGHT_BLOCKER_NOTE = (
     "Run the live LLM preflight before explore. If generate_adapters.ready=false "
     "or llm_live reports warning/error such as E_LLM_UNAVAILABLE "
@@ -264,6 +272,17 @@ def _doctor_preflight_evidence_template() -> dict[str, str]:
 
 def _doctor_preflight_evidence_selectors() -> dict[str, str]:
     return dict(DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)
+
+
+def _doctor_preflight_evidence_command_fields(*, required: bool) -> dict[str, str]:
+    return {
+        "doctor_preflight_evidence_extract_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND if required else ""
+        ),
+        "doctor_preflight_evidence_markdown_command": (
+            DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND if required else ""
+        ),
+    }
 
 
 def _doctor_preflight_evidence_template_aliases(template: dict[str, Any]) -> dict[str, Any]:
@@ -898,6 +917,9 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
                     if llm_live_preflight_required
                     else {}
                 ),
+                **_doctor_preflight_evidence_command_fields(
+                    required=llm_live_preflight_required
+                ),
                 **_doctor_preflight_evidence_template_aliases(
                     doctor_preflight_evidence_template
                 ),
@@ -1119,6 +1141,14 @@ def _print_text(report: CasesReport) -> None:
             "promotion_evidence_primary_llm_live_preflight_command_sha256: "
             f"{primary_task.get('llm_live_preflight_command_sha256', '-')}"
         )
+        print(
+            "promotion_evidence_primary_doctor_preflight_evidence_extract_command: "
+            f"{primary_task.get('doctor_preflight_evidence_extract_command', '-')}"
+        )
+        print(
+            "promotion_evidence_primary_doctor_preflight_evidence_markdown_command: "
+            f"{primary_task.get('doctor_preflight_evidence_markdown_command', '-')}"
+        )
         primary_runbook = report.promotion_evidence_summary.get("primary_next_task_runbook")
         if isinstance(primary_runbook, list) and primary_runbook:
             print(f"promotion_evidence_primary_runbook: {_runbook_step_summary(primary_runbook)}")
@@ -1284,6 +1314,10 @@ def _candidate_promotion_evidence_summary_lines(summary: dict[str, Any]) -> list
         f"`{_markdown_cell(primary_task.get('doctor_preflight_evidence_template_field_count') or 0)}` |",
         "| primary_doctor_preflight_evidence_template_sha256 | "
         f"`{_markdown_cell(primary_task.get('doctor_preflight_evidence_template_sha256') or '-')}` |",
+        "| primary_doctor_preflight_evidence_extract_command | "
+        f"`{_markdown_cell(primary_task.get('doctor_preflight_evidence_extract_command') or '-')}` |",
+        "| primary_doctor_preflight_evidence_markdown_command | "
+        f"`{_markdown_cell(primary_task.get('doctor_preflight_evidence_markdown_command') or '-')}` |",
         f"| primary_task_detail | `{json.dumps(summary.get('primary_task_detail') or {}, ensure_ascii=False)}` |",
         f"| primary_next_task | `{json.dumps(summary.get('primary_next_task') or {}, ensure_ascii=False)}` |",
         "",

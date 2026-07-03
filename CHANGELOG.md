@@ -17,6 +17,7 @@
 - Added `python scripts/extract_doctor_preflight_evidence.py <doctor.json>`, which converts `cliany-site doctor --llm-live --json` output into a compact values/selectors evidence JSON for candidate promotion blocker comments.
 - `scripts/extract_doctor_preflight_evidence.py` now supports `--markdown`, producing a copy-ready blocker evidence table for candidate promotion issues.
 - Cases evidence bundles, promotion plans, candidate issue bodies, and compact planner handoffs now expose the doctor preflight evidence extractor JSON/Markdown commands directly, so maintainers and bots do not need to reconstruct the script path from docs before attaching blocker evidence.
+- Case validation JSON, Markdown reports, and plain text output now expose the same doctor preflight evidence extractor JSON/Markdown commands on the primary candidate task, so validation-only automation can attach blocker evidence without opening cases or planner artifacts.
 
 ## [0.16.256] - 2026-07-03
 
