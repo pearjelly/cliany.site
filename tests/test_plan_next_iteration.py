@@ -5134,6 +5134,17 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "`release-draft-handoff.json`: schema version, target version" in readme
     assert "## Planner Handoff" in readme
     assert "- handoff_sha256:" in readme
+    assert "- doctor_preflight_evidence_selector_count: `10`" in readme
+    assert (
+        "- doctor_preflight_evidence_selectors_sha256: "
+        f"`{_stable_json_sha256(DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)}`"
+        in readme
+    )
+    assert (
+        "- doctor_preflight_llm_error_selector: "
+        "`data.checks[name=\"llm_live\"].details.error_code`"
+        in readme
+    )
     assert "## Candidate Summary" in readme
     assert (
         "| Case | Issue Body | Target URL | Candidate Commands | Offline Validation Commands | "

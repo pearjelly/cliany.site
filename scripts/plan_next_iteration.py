@@ -5417,6 +5417,22 @@ def _render_issue_artifacts_readme(
     planner_handoff_issue_template_command = _format_context_value(
         planner_handoff_primary_candidate.get("issue_template_command")
     )
+    planner_handoff_selector_count = _format_context_value(
+        planner_handoff_primary_candidate.get("doctor_preflight_evidence_selector_count")
+    )
+    planner_handoff_selectors_sha256 = _format_context_value(
+        planner_handoff_primary_candidate.get(
+            "doctor_preflight_evidence_selectors_sha256"
+        )
+    )
+    planner_handoff_selectors = planner_handoff_primary_candidate.get(
+        "doctor_preflight_evidence_selectors"
+    )
+    planner_handoff_llm_error_selector = _format_context_value(
+        planner_handoff_selectors.get("checks[llm_live].details.error_code")
+        if isinstance(planner_handoff_selectors, dict)
+        else None
+    )
     daily_release_handoff = _daily_release_handoff_aliases(plan)
     daily_release_resume_date_sha256 = _format_context_value(
         daily_release_handoff["daily_release_resume_date_sha256"]
@@ -5581,6 +5597,9 @@ Generated for target version `{plan.target_version}`.
 - primary_candidate: `{planner_handoff_primary_case}/{planner_handoff_primary_task}`
 - evidence_bundle_json_command: `{planner_handoff_evidence_bundle_json_command}`
 - issue_template_command: `{planner_handoff_issue_template_command}`
+- doctor_preflight_evidence_selector_count: `{planner_handoff_selector_count}`
+- doctor_preflight_evidence_selectors_sha256: `{planner_handoff_selectors_sha256}`
+- doctor_preflight_llm_error_selector: `{planner_handoff_llm_error_selector}`
 
 ## Publication Handoff
 
