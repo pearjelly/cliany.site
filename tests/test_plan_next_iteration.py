@@ -320,6 +320,7 @@ def test_candidate_issue_script_uses_python3_default_with_override() -> None:
         plan_next_iteration._candidate_issue_script_lines(
             ["gh issue create --title 'Candidate'"],
             preflight_command="python scripts/plan_next_iteration.py --target-version 0.16.2 --json",
+            required_labels=[],
         )
     )
 
@@ -339,6 +340,7 @@ def test_candidate_issue_script_requires_review_ack_when_gate_needs_review() -> 
         plan_next_iteration._candidate_issue_script_lines(
             ["gh issue create --title 'Candidate'"],
             preflight_command="python scripts/plan_next_iteration.py --target-version 0.16.2 --json",
+            required_labels=[],
         )
     )
 
@@ -5291,6 +5293,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "CLIANY_CREATE_ISSUES_ACK_REVIEW" in script
     assert 'os.environ.get("CLIANY_CREATE_ISSUES_ACK_REVIEW") != "1"' in script
     assert "Set CLIANY_CREATE_ISSUES_ACK_REVIEW=1 after maintainer review" in script
+    assert "Required GitHub issue labels are missing." in script
+    assert "gh label list --json name --jq '.[].name'" in script
+    assert "case-proposal" in script
+    assert "good first issue" in script
+    assert script.index("gh label list --json name") < script.rindex("\ngh issue create")
     assert 'cat "$PREFLIGHT_JSON" >&2 || true' in script
     assert "  exit 1" in script
     assert "--body-file" in script

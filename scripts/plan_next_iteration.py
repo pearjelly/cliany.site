@@ -10,6 +10,7 @@ import re
 import shlex
 import sys
 import tomllib
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -5622,6 +5623,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
             _candidate_issue_script_lines(
                 issue_commands,
                 preflight_command=str(create_issues_safety["preflight_command"]),
+                required_labels=_candidate_issue_required_labels(plan.candidate_promotions),
             )
         )
         + "\n",
@@ -5636,7 +5638,23 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
     )
 
 
-def _candidate_issue_script_lines(issue_commands: list[str], *, preflight_command: str) -> list[str]:
+def _candidate_issue_required_labels(promotions: Sequence[CandidatePromotion]) -> list[str]:
+    labels: list[str] = []
+    seen: set[str] = set()
+    for promotion in promotions:
+        for label in promotion.issue_labels:
+            if label not in seen:
+                labels.append(label)
+                seen.add(label)
+    return labels
+
+
+def _candidate_issue_script_lines(
+    issue_commands: list[str],
+    *,
+    preflight_command: str,
+    required_labels: Sequence[str],
+) -> list[str]:
     preflight_shell_command = preflight_command
     if preflight_shell_command.startswith("python "):
         preflight_shell_command = '"$PYTHON_BIN" ' + preflight_shell_command.removeprefix("python ")
@@ -5699,6 +5717,25 @@ def _candidate_issue_script_lines(issue_commands: list[str], *, preflight_comman
             "fi",
         ]
     )
+    if required_labels:
+        label_array = " ".join(shlex.quote(label) for label in required_labels)
+        lines.extend(
+            [
+                f"REQUIRED_LABELS=({label_array})",
+                "MISSING_LABELS=()",
+                'for label in "${REQUIRED_LABELS[@]}"; do',
+                "  if ! gh label list --json name --jq '.[].name' | grep -Fx -- \"$label\" >/dev/null; then",
+                '    MISSING_LABELS+=("$label")',
+                "  fi",
+                "done",
+                'if (( ${#MISSING_LABELS[@]} > 0 )); then',
+                '  echo "Required GitHub issue labels are missing." >&2',
+                '  printf "  - %s\\n" "${MISSING_LABELS[@]}" >&2',
+                '  echo "Create the missing labels before rerunning create-issues.sh." >&2',
+                "  exit 1",
+                "fi",
+            ]
+        )
     lines.extend(f"\n{command}" for command in issue_commands)
     return lines
 
