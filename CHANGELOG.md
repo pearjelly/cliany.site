@@ -23,6 +23,7 @@
 - The public website maintainer entrypoints now spell out the same `preflight_state.*` field list and `ready` / `blocked` / `missing_fields` gate, so website-only readers can apply candidate blocker evidence without opening source docs.
 - The GitHub case proposal and pull request templates now ask candidate promotion contributors to include the same doctor preflight state fields and status contract, and release readiness now blocks those templates if the contract drifts.
 - Planner-generated candidate issue bodies now always render the doctor preflight state contract, including the `preflight_state.*` fields, `ready` / `blocked` / `missing_fields` statuses, and the exact gate for continuing `adapter_package`.
+- Release readiness now blocks planner issue-body drift when `scripts/plan_next_iteration.py` stops rendering the doctor preflight state contract or the exact `adapter_package` continuation gate.
 
 ## [0.16.259] - 2026-07-07
 

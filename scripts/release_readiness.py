@@ -736,6 +736,17 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "security/advisories/new",
             "Documentation",
         ],
+        "scripts/plan_next_iteration.py": [
+            "Doctor Preflight State Contract",
+            "preflight_state.status",
+            "preflight_state.ready_for_adapter_package",
+            "preflight_state.primary_reason",
+            "preflight_state.reason_codes",
+            "preflight_state.next_action",
+            "- statuses: `ready`, `blocked`, `missing_fields`",
+            "preflight_state.status=ready",
+            "preflight_state.ready_for_adapter_package=true",
+        ],
     }
     for filename, snippets in template_snippets.items():
         full_path = root / filename
