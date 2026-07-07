@@ -421,6 +421,8 @@ def _readme_content() -> str:
         "docs/module-ownership.md\n"
         "weekly-maintainer-loop.md\n"
         "next_actions\n"
+        "daily_release_resume_command\n"
+        "daily_release_resume_command_sha256\n"
         "primary_next_task_runbook\n"
         "case_promotion_evidence_primary_runbook_steps\n"
         "required_labels\n"
@@ -1297,6 +1299,11 @@ def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path, capsys):
     assert payload["daily_release_resume_date_sha256"] == release_readiness._stable_json_sha256(
         "2026-06-11"
     )
+    strict_command = "python scripts/release_readiness.py --strict --target-version 0.1.4"
+    assert payload["daily_release_resume_command"] == strict_command
+    assert payload["daily_release_resume_command_sha256"] == (
+        release_readiness._stable_json_sha256(strict_command)
+    )
     assert (
         "creating target tag v0.1.4 today would exceed the daily release cap 4/3"
         in report.blockers
@@ -1333,7 +1340,6 @@ def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path, capsys):
     assert payload["publication_tag_publish_decision"]["target_tag_command_count"] == 0
     assert payload["publication_tag_publish_decision"]["target_tag_primary_command"] is None
     assert payload["publication_tag_publish_decision"]["target_tag_commands"] == []
-    strict_command = "python scripts/release_readiness.py --strict --target-version 0.1.4"
     assert payload["standard_release_flow_primary_blocked_step_name"] == (
         "strict_release_readiness"
     )
@@ -1364,6 +1370,11 @@ def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path, capsys):
         "daily_release_resume_date_sha256: "
         f"{release_readiness._stable_json_sha256('2026-06-11')}"
     ) in output
+    assert f"daily_release_resume_command: {strict_command}" in output
+    assert (
+        "daily_release_resume_command_sha256: "
+        f"{release_readiness._stable_json_sha256(strict_command)}"
+    ) in output
 
     report_path = tmp_path / "reports" / "daily-cap-readiness.md"
     release_readiness._write_markdown_report(report, report_path)
@@ -1373,6 +1384,11 @@ def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path, capsys):
     assert (
         "| daily_release_resume_date_sha256 | "
         f"`{release_readiness._stable_json_sha256('2026-06-11')}` |"
+    ) in text
+    assert f"| daily_release_resume_command | `{strict_command}` |" in text
+    assert (
+        "| daily_release_resume_command_sha256 | "
+        f"`{release_readiness._stable_json_sha256(strict_command)}` |"
     ) in text
 
 

@@ -186,6 +186,10 @@ class ReadinessReport:
             _standard_release_flow_distribution_audit_command(standard_release_flow)
         )
         daily_release_resume_date = _target_daily_release_resume_date(self)
+        daily_release_resume_command = _daily_release_resume_command(
+            self,
+            standard_release_flow,
+        )
         return {
             "ok": self.ok,
             "current_version": self.current_version,
@@ -198,6 +202,12 @@ class ReadinessReport:
             "daily_release_resume_date_sha256": (
                 _stable_json_sha256(daily_release_resume_date)
                 if daily_release_resume_date
+                else None
+            ),
+            "daily_release_resume_command": daily_release_resume_command,
+            "daily_release_resume_command_sha256": (
+                _stable_json_sha256(daily_release_resume_command)
+                if daily_release_resume_command
                 else None
             ),
             "min_case_assets": self.min_case_assets,
@@ -578,6 +588,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "docs/good-first-issues.md",
             "weekly-maintainer-loop.md",
             "next_actions",
+            "daily_release_resume_command",
+            "daily_release_resume_command_sha256",
             "primary_next_task_runbook",
             "case_promotion_evidence_primary_runbook_steps",
             "required_labels",
@@ -596,6 +608,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "docs/good-first-issues.md",
             "weekly-maintainer-loop.md",
             "next_actions",
+            "daily_release_resume_command",
+            "daily_release_resume_command_sha256",
             "primary_next_task_runbook",
             "case_promotion_evidence_primary_runbook_steps",
             "required_labels",
@@ -731,6 +745,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "Real Demo Case Proposal",
             "docs/weekly-maintainer-loop.md",
             "next_actions",
+            "daily_release_resume_command",
+            "daily_release_resume_command_sha256",
             "primary_next_task_runbook",
             "case_promotion_evidence_primary_runbook_steps",
             "required_labels",
@@ -989,6 +1005,25 @@ def _target_daily_release_resume_date(report: ReadinessReport) -> str | None:
     return (cadence_today + timedelta(days=1)).isoformat()
 
 
+def _daily_release_resume_command(
+    report: ReadinessReport,
+    standard_release_flow: dict[str, Any],
+) -> str | None:
+    if _target_daily_release_resume_date(report) is None:
+        return None
+    blocked_step = _standard_release_flow_primary_step_handoff(
+        standard_release_flow,
+        "blocked",
+    )
+    command = blocked_step.get("command")
+    if command:
+        return str(command)
+    return (
+        "python scripts/release_readiness.py --strict "
+        f"--target-version {report.target_version}"
+    )
+
+
 def _mentions_create_new_release_tag(action: str) -> bool:
     return "create a new release tag at HEAD" in action
 
@@ -1119,11 +1154,20 @@ def _print_text(report: ReadinessReport) -> None:
     print(f"target_version: {report.target_version}")
     print(f"ok: {report.ok}")
     daily_release_resume_date = _target_daily_release_resume_date(report)
+    daily_release_resume_command = _daily_release_resume_command(
+        report,
+        standard_release_flow,
+    )
     print(f"daily_release_cap_blocked: {str(daily_release_resume_date is not None).lower()}")
     print(f"daily_release_resume_date: {daily_release_resume_date or '(none)'}")
     print(
         "daily_release_resume_date_sha256: "
         f"{_stable_json_sha256(daily_release_resume_date) if daily_release_resume_date else None}"
+    )
+    print(f"daily_release_resume_command: {daily_release_resume_command or '(none)'}")
+    print(
+        "daily_release_resume_command_sha256: "
+        f"{_stable_json_sha256(daily_release_resume_command) if daily_release_resume_command else None}"
     )
     if report.blockers:
         print("blockers:")
@@ -2481,10 +2525,25 @@ def _weekly_review_rows(report: ReadinessReport) -> list[str]:
 def _render_markdown_report(report: ReadinessReport) -> str:
     blockers = "<br>".join(report.blockers) if report.blockers else "-"
     commit_days = ", ".join(report.cadence.commit_days) if report.cadence.commit_days else "-"
+    publication_payload = _publication_handoff_payload(report)
+    standard_release_flow = _standard_release_flow(
+        report,
+        publication_payload=publication_payload,
+        next_actions=_next_action_lines(report),
+    )
     daily_release_resume_date = _target_daily_release_resume_date(report)
     daily_release_resume_date_sha256 = (
         _stable_json_sha256(daily_release_resume_date)
         if daily_release_resume_date
+        else "-"
+    )
+    daily_release_resume_command = _daily_release_resume_command(
+        report,
+        standard_release_flow,
+    )
+    daily_release_resume_command_sha256 = (
+        _stable_json_sha256(daily_release_resume_command)
+        if daily_release_resume_command
         else "-"
     )
     lines = [
@@ -2500,6 +2559,8 @@ def _render_markdown_report(report: ReadinessReport) -> str:
         f"| daily_release_cap_blocked | `{str(daily_release_resume_date is not None).lower()}` |",
         f"| daily_release_resume_date | `{daily_release_resume_date or '-'}` |",
         f"| daily_release_resume_date_sha256 | `{daily_release_resume_date_sha256}` |",
+        f"| daily_release_resume_command | `{daily_release_resume_command or '-'}` |",
+        f"| daily_release_resume_command_sha256 | `{daily_release_resume_command_sha256}` |",
         f"| blockers | {blockers} |",
         "",
         "## Gates",
