@@ -31,12 +31,9 @@ LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = [
     "checks[llm_live].details.message",
 ]
 DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE = {
-    field: "<paste from doctor --llm-live --json>"
-    for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+    field: "<paste from doctor --llm-live --json>" for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
 }
-DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT = len(
-    DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
-)
+DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT = len(DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE)
 DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256 = hashlib.sha256(
     json.dumps(
         DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
@@ -70,20 +67,14 @@ DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256 = hashlib.sha256(
     ).encode()
 ).hexdigest()
 LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
-LLM_LIVE_PREFLIGHT_COMMAND_SHA256 = hashlib.sha256(
-    LLM_LIVE_PREFLIGHT_COMMAND.encode("utf-8")
-).hexdigest()
+LLM_LIVE_PREFLIGHT_COMMAND_SHA256 = hashlib.sha256(LLM_LIVE_PREFLIGHT_COMMAND.encode("utf-8")).hexdigest()
 DOCTOR_PREFLIGHT_JSON_PATH = "/tmp/cliany-doctor-preflight.json"
 DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND = (
-    "python scripts/extract_doctor_preflight_evidence.py "
-    f"{DOCTOR_PREFLIGHT_JSON_PATH}"
+    f"python scripts/extract_doctor_preflight_evidence.py {DOCTOR_PREFLIGHT_JSON_PATH}"
 )
-DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND = (
-    f"{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND} --markdown"
-)
+DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND = f"{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND} --markdown"
 CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
-    "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
-    "--include-candidate-packages --strict"
+    "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
 )
 PYPI_PROMOTION_COMMAND_PLAN_SUMMARY = {
     "command_count": 4,
@@ -94,6 +85,48 @@ PYPI_PROMOTION_COMMAND_PLAN_SUMMARY = {
 
 def _command_sha256(command: str) -> str:
     return hashlib.sha256(command.encode("utf-8")).hexdigest() if command else ""
+
+
+def _write_blocked_doctor_json(tmp_path: Path) -> Path:
+    path = tmp_path / "doctor.json"
+    path.write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "version": "1",
+                "command": "doctor",
+                "data": {
+                    "checks": [
+                        {
+                            "name": "cdp",
+                            "status": "ok",
+                            "action": ("Chrome/CDP 可用，可以执行 login、explore 和浏览器 replay。"),
+                        },
+                        {
+                            "name": "llm_live",
+                            "status": "warning",
+                            "details": {
+                                "error_code": "E_LLM_UNAVAILABLE",
+                                "retryable": True,
+                                "phase": "llm_preflight",
+                                "message": "LLM upstream unavailable: Connection error.",
+                            },
+                        },
+                    ],
+                    "summary": {
+                        "ready_for_explore": False,
+                        "capabilities": {
+                            "run_browser_workflows": {"ready": True},
+                            "generate_adapters": {"ready": False},
+                        },
+                    },
+                },
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    return path
 
 
 def test_cases_command_returns_catalog_summary(tmp_home):
@@ -115,28 +148,18 @@ def test_cases_command_returns_catalog_summary(tmp_home):
     assert data["promotion_evidence_summary"]["primary_task_detail"]["task"] == "adapter_package"
     assert data["promotion_evidence_summary"]["primary_task_detail"]["status"] == "pending"
     assert data["promotion_evidence_summary"]["primary_task_detail"]["evidence"] == ""
-    assert data["promotion_evidence_summary"]["primary_task_detail"][
-        "acceptance_criteria"
-    ].startswith("Attach the generated")
-    assert (
-        data["promotion_evidence_summary"]["primary_task_detail"][
-            "llm_live_preflight_required"
-        ]
-        is True
+    assert data["promotion_evidence_summary"]["primary_task_detail"]["acceptance_criteria"].startswith(
+        "Attach the generated"
     )
+    assert data["promotion_evidence_summary"]["primary_task_detail"]["llm_live_preflight_required"] is True
     assert (
-        data["promotion_evidence_summary"]["primary_task_detail"][
-            "llm_live_preflight_command"
-        ]
+        data["promotion_evidence_summary"]["primary_task_detail"]["llm_live_preflight_command"]
         == "cliany-site doctor --llm-live --json"
     )
-    assert data["promotion_evidence_summary"][
-        "primary_next_task_acceptance_criteria"
-    ].startswith("Attach the generated")
-    assert (
-        data["promotion_evidence_summary"]["primary_next_task_runbook_first_step"]
-        == "llm_live_preflight"
+    assert data["promotion_evidence_summary"]["primary_next_task_acceptance_criteria"].startswith(
+        "Attach the generated"
     )
+    assert data["promotion_evidence_summary"]["primary_next_task_runbook_first_step"] == "llm_live_preflight"
     assert (
         data["promotion_evidence_summary"]["primary_next_task_runbook_first_command"]
         == "cliany-site doctor --llm-live --json"
@@ -150,15 +173,11 @@ def test_cases_command_returns_catalog_summary(tmp_home):
         == data["promotion_evidence_summary"]["primary_task_detail"]
     )
     assert (
-        data["promotion_evidence_summary"]["primary_task_detail"][
-            "doctor_preflight_evidence_template_field_count"
-        ]
+        data["promotion_evidence_summary"]["primary_task_detail"]["doctor_preflight_evidence_template_field_count"]
         == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
     )
     assert (
-        data["promotion_evidence_summary"]["primary_task_detail"][
-            "doctor_preflight_evidence_template_sha256"
-        ]
+        data["promotion_evidence_summary"]["primary_task_detail"]["doctor_preflight_evidence_template_sha256"]
         == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
     )
     assert any(case["id"] == "suitecrm-accounts" for case in data["cases"])
@@ -182,9 +201,7 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
         "status": "pending",
         "evidence": "",
         "next_action": data["promotion_evidence_summary"]["primary_next_action"],
-        "acceptance_criteria": data["promotion_evidence_summary"][
-            "primary_next_task_acceptance_criteria"
-        ],
+        "acceptance_criteria": data["promotion_evidence_summary"]["primary_next_task_acceptance_criteria"],
         "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
         "llm_live_preflight_required": True,
         "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
@@ -208,24 +225,14 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
         ],
         "doctor_preflight_evidence_fields": DOCTOR_PREFLIGHT_EVIDENCE_FIELDS,
         "doctor_preflight_evidence_template": DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE,
-        "doctor_preflight_evidence_template_field_count": (
-            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
-        ),
-        "doctor_preflight_evidence_template_sha256": (
-            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
-        ),
-        "doctor_preflight_evidence_extract_command": (
-            DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
-        ),
-        "doctor_preflight_evidence_markdown_command": (
-            DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
-        ),
+        "doctor_preflight_evidence_template_field_count": (DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT),
+        "doctor_preflight_evidence_template_sha256": (DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256),
+        "doctor_preflight_evidence_extract_command": (DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND),
+        "doctor_preflight_evidence_markdown_command": (DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND),
         "doctor_preflight_state_fields": DOCTOR_PREFLIGHT_STATE_FIELDS,
         "doctor_preflight_state_fields_sha256": DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256,
         "doctor_preflight_state_statuses": DOCTOR_PREFLIGHT_STATE_STATUSES,
-        "doctor_preflight_state_statuses_sha256": (
-            DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256
-        ),
+        "doctor_preflight_state_statuses_sha256": (DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256),
     }
     assert (
         data["promotion_evidence_summary"]["primary_next_task"]
@@ -237,12 +244,9 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
     assert all("promotion_evidence" in case for case in data["cases"])
     assert all("promotion_command_plan" in case for case in data["cases"])
     assert all("promotion_command_plan_summary" in case for case in data["cases"])
-    assert data["cases"][0]["promotion_command_plan_summary"] == (
-        PYPI_PROMOTION_COMMAND_PLAN_SUMMARY
-    )
+    assert data["cases"][0]["promotion_command_plan_summary"] == (PYPI_PROMOTION_COMMAND_PLAN_SUMMARY)
     explore_command = (
-        'cliany-site explore "https://pypi.org" '
-        '"search Python packages for cliany-site and list project names" --json'
+        'cliany-site explore "https://pypi.org" "search Python packages for cliany-site and list project names" --json'
     )
     assert data["cases"][0]["promotion_command_plan"][0] == {
         "task": "llm_live_preflight",
@@ -384,9 +388,7 @@ def test_cases_command_issue_template_json(tmp_home):
     payload = json.loads(result.output)
     template = payload["data"]["issue_template"]
     primary_task = payload["data"]["issue_template_primary_task"]
-    assert payload["data"]["issue_template_promotion_command_plan_summary"] == (
-        PYPI_PROMOTION_COMMAND_PLAN_SUMMARY
-    )
+    assert payload["data"]["issue_template_promotion_command_plan_summary"] == (PYPI_PROMOTION_COMMAND_PLAN_SUMMARY)
     assert primary_task["task"] == "adapter_package"
     assert primary_task["status"] == "pending"
     assert primary_task["evidence"] == ""
@@ -394,30 +396,18 @@ def test_cases_command_issue_template_json(tmp_home):
         "Generate pypi.org-<version>.cliany-adapter.tar.gz with cliany-site explore "
         "and market publish, then attach the package path or release asset name."
     )
-    assert primary_task["expected_adapter_package"] == (
-        "pypi.org-<version>.cliany-adapter.tar.gz"
-    )
+    assert primary_task["expected_adapter_package"] == ("pypi.org-<version>.cliany-adapter.tar.gz")
     assert primary_task["acceptance_criteria"].startswith("Attach the generated")
     assert primary_task["llm_live_preflight_required"] is True
     assert primary_task["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
     assert "E_LLM_UNAVAILABLE" in primary_task["llm_live_preflight_blocker_note"]
-    assert primary_task["llm_live_preflight_evidence_fields"] == (
-        LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
-    )
-    assert primary_task["doctor_preflight_evidence_fields"] == (
-        DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
-    )
-    assert primary_task["doctor_preflight_evidence_template"] == (
-        DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
-    )
+    assert primary_task["llm_live_preflight_evidence_fields"] == (LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS)
+    assert primary_task["doctor_preflight_evidence_fields"] == (DOCTOR_PREFLIGHT_EVIDENCE_FIELDS)
+    assert primary_task["doctor_preflight_evidence_template"] == (DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE)
     assert (
-        primary_task["doctor_preflight_evidence_template_field_count"]
-        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+        primary_task["doctor_preflight_evidence_template_field_count"] == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
     )
-    assert (
-        primary_task["doctor_preflight_evidence_template_sha256"]
-        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
-    )
+    assert primary_task["doctor_preflight_evidence_template_sha256"] == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
     assert primary_task["runbook"][0]["step"] == "llm_live_preflight"
     assert primary_task["runbook"][0]["command"] == "cliany-site doctor --llm-live --json"
     assert primary_task["runbook"][1]["step"] == "adapter_package"
@@ -431,8 +421,7 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "- `llm_live_preflight`: `cliany-site doctor --llm-live --json`" in template
     assert (
         '- `adapter_package`: `cliany-site explore "https://pypi.org" '
-        '"search Python packages for cliany-site and list project names" --json`'
-        in template
+        '"search Python packages for cliany-site and list project names" --json`' in template
     )
     assert "## Reproduction Context" in template
     assert "## Promotion Command Plan Summary" in template
@@ -440,16 +429,12 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "- missing_command_count: `0`" in template
     assert "- all_declared: `true`" in template
     assert "## Promotion Command Plan" in template
-    assert (
-        f"  - command_sha256: `{LLM_LIVE_PREFLIGHT_COMMAND_SHA256}`"
-        in template
-    )
+    assert f"  - command_sha256: `{LLM_LIVE_PREFLIGHT_COMMAND_SHA256}`" in template
     assert "  - source: `doctor.llm_live`" in template
     assert "  - missing: `false`" in template
     assert (
         "  - command_sha256: "
-        f"`{_command_sha256('cliany-site pypi.org search-projects --query cliany-site --limit 5 --json')}`"
-        in template
+        f"`{_command_sha256('cliany-site pypi.org search-projects --query cliany-site --limit 5 --json')}`" in template
     )
     assert "  - source: `commands.adapter`" in template
     assert "## LLM Preflight Gate" in template
@@ -478,30 +463,20 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "`checks[cdp].action`" in template
     assert "## Doctor Preflight Evidence Template" in template
     assert "- `summary.ready_for_explore`: `<paste from doctor --llm-live --json>`" in template
-    assert (
-        "- `checks[llm_live].details.error_code`: "
-        "`<paste from doctor --llm-live --json>`"
-        in template
-    )
+    assert "- `checks[llm_live].details.error_code`: `<paste from doctor --llm-live --json>`" in template
     assert "## Acceptance Criteria" in template
     assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in template
     assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in template
     assert "`online_smoke`: Paste the read-only adapter command JSON envelope summary" in template
     assert (
         '`adapter_package`: `cliany-site explore "https://pypi.org" '
-        '"search Python packages for cliany-site and list project names" --json`'
-        in template
+        '"search Python packages for cliany-site and list project names" --json`' in template
     )
     assert (
         "`metadata_validation`: `python scripts/validate_cases.py "
-        "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`"
-        in template
+        "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`" in template
     )
-    assert (
-        "`online_smoke`: `cliany-site pypi.org search-projects --query cliany-site "
-        "--limit 5 --json`"
-        in template
-    )
+    assert "`online_smoke`: `cliany-site pypi.org search-projects --query cliany-site --limit 5 --json`" in template
     assert "`adapter_package`" in template
     assert "Acceptance criteria: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in template
     assert "Generate pypi.org" in template
@@ -513,8 +488,7 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "Expected adapter package: `pypi.org-<version>.cliany-adapter.tar.gz`" in template
     assert (
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
-        "--include-candidate-packages --strict"
-        in template
+        "--include-candidate-packages --strict" in template
     )
     assert "Do not mark the case `active`" in template
 
@@ -543,8 +517,7 @@ def test_cases_command_issue_template_human_outputs_markdown(tmp_home):
     assert "Candidate package validation command" in result.output
     assert (
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
-        "--include-candidate-packages --strict"
-        in result.output
+        "--include-candidate-packages --strict" in result.output
     )
     assert "案例库" not in result.output
 
@@ -606,9 +579,7 @@ def test_cases_command_issue_template_checks_complete_tasks(tmp_home, monkeypatc
     assert primary_task["status"] == "pending"
     assert primary_task["evidence"] == ""
     assert primary_task["next_action"] == "Run read-only smoke."
-    assert primary_task["expected_adapter_package"] == (
-        "example.test-<version>.cliany-adapter.tar.gz"
-    )
+    assert primary_task["expected_adapter_package"] == ("example.test-<version>.cliany-adapter.tar.gz")
     assert primary_task["acceptance_criteria"].startswith("Paste the read-only")
     assert primary_task["llm_live_preflight_required"] is False
     assert primary_task["llm_live_preflight_evidence_fields"] == []
@@ -656,20 +627,14 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["primary_blocked_task"] is None
     assert bundle["primary_incomplete_task"]["task"] == "adapter_package"
     assert bundle["primary_next_task"]["task"] == "adapter_package"
-    assert (
-        bundle["primary_next_task"]["expected_adapter_package"]
-        == "pypi.org-<version>.cliany-adapter.tar.gz"
-    )
+    assert bundle["primary_next_task"]["expected_adapter_package"] == "pypi.org-<version>.cliany-adapter.tar.gz"
     assert bundle["primary_next_task"] == bundle["primary_pending_task"]
     assert bundle["primary_next_task_command"] == (
-        'cliany-site explore "https://pypi.org" '
-        '"search Python packages for cliany-site and list project names" --json'
+        'cliany-site explore "https://pypi.org" "search Python packages for cliany-site and list project names" --json'
     )
     assert bundle["primary_next_task_command_source"] == "commands.explore"
     assert bundle["primary_next_task_command_missing"] is False
-    assert bundle["primary_next_task_handoff"].startswith(
-        'Run `cliany-site explore "https://pypi.org"'
-    )
+    assert bundle["primary_next_task_handoff"].startswith('Run `cliany-site explore "https://pypi.org"')
     assert bundle["primary_next_task_runbook"] == [
         {
             "step": "llm_live_preflight",
@@ -697,23 +662,18 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         },
     ]
     assert bundle["primary_next_task_runbook_first_step"] == "llm_live_preflight"
-    assert (
-        bundle["primary_next_task_runbook_first_command"]
-        == "cliany-site doctor --llm-live --json"
-    )
+    assert bundle["primary_next_task_runbook_first_command"] == "cliany-site doctor --llm-live --json"
     assert (
         bundle["primary_next_task_runbook_first_command_sha256"]
         == "0ca644df288169289dd4dbc17aeacdc58b9898f05c0d4c5d304c17e33bdbcb96"
     )
     assert bundle["primary_next_task_acceptance_criteria"] == (
-        "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
-        "or GitHub Release asset name."
+        "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name."
     )
     assert bundle["primary_next_action"].startswith("Generate pypi.org")
     assert bundle["acceptance_criteria"] == {
         "adapter_package": (
-            "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
-            "or GitHub Release asset name."
+            "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name."
         ),
         "metadata_validation": (
             "Paste `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
@@ -758,32 +718,14 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     ]
     assert bundle["doctor_preflight_evidence_fields"] == DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
     assert bundle["doctor_preflight_evidence_template"] == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE
-    assert (
-        bundle["doctor_preflight_evidence_template_field_count"]
-        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
-    )
-    assert (
-        bundle["doctor_preflight_evidence_template_sha256"]
-        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
-    )
-    assert (
-        bundle["doctor_preflight_evidence_extract_command"]
-        == DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
-    )
-    assert (
-        bundle["doctor_preflight_evidence_markdown_command"]
-        == DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
-    )
+    assert bundle["doctor_preflight_evidence_template_field_count"] == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+    assert bundle["doctor_preflight_evidence_template_sha256"] == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
+    assert bundle["doctor_preflight_evidence_extract_command"] == DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
+    assert bundle["doctor_preflight_evidence_markdown_command"] == DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
     assert bundle["doctor_preflight_state_fields"] == DOCTOR_PREFLIGHT_STATE_FIELDS
-    assert (
-        bundle["doctor_preflight_state_fields_sha256"]
-        == DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256
-    )
+    assert bundle["doctor_preflight_state_fields_sha256"] == DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256
     assert bundle["doctor_preflight_state_statuses"] == DOCTOR_PREFLIGHT_STATE_STATUSES
-    assert (
-        bundle["doctor_preflight_state_statuses_sha256"]
-        == DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256
-    )
+    assert bundle["doctor_preflight_state_statuses_sha256"] == DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256
     assert bundle["promotion_command_plan_count"] == 4
     assert bundle["promotion_command_plan_missing_tasks"] == []
     assert bundle["promotion_command_plan"] == [
@@ -825,34 +767,14 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         },
     ]
     assert bundle["tasks"][0]["task"] == "adapter_package"
-    assert bundle["tasks"][0]["expected_adapter_package"] == (
-        "pypi.org-<version>.cliany-adapter.tar.gz"
-    )
+    assert bundle["tasks"][0]["expected_adapter_package"] == ("pypi.org-<version>.cliany-adapter.tar.gz")
     assert bundle["tasks"][0]["llm_live_preflight_required"] is True
-    assert (
-        bundle["tasks"][0]["llm_live_preflight_command"]
-        == "cliany-site doctor --llm-live --json"
-    )
-    assert (
-        bundle["tasks"][0]["llm_live_preflight_command_sha256"]
-        == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
-    )
-    assert (
-        bundle["tasks"][0]["llm_live_preflight_blocker_note"]
-        == bundle["llm_live_preflight_blocker_note"]
-    )
-    assert (
-        bundle["tasks"][0]["llm_live_preflight_evidence_fields"]
-        == bundle["llm_live_preflight_evidence_fields"]
-    )
-    assert (
-        bundle["tasks"][0]["doctor_preflight_evidence_fields"]
-        == bundle["doctor_preflight_evidence_fields"]
-    )
-    assert (
-        bundle["tasks"][0]["doctor_preflight_evidence_template"]
-        == bundle["doctor_preflight_evidence_template"]
-    )
+    assert bundle["tasks"][0]["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
+    assert bundle["tasks"][0]["llm_live_preflight_command_sha256"] == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
+    assert bundle["tasks"][0]["llm_live_preflight_blocker_note"] == bundle["llm_live_preflight_blocker_note"]
+    assert bundle["tasks"][0]["llm_live_preflight_evidence_fields"] == bundle["llm_live_preflight_evidence_fields"]
+    assert bundle["tasks"][0]["doctor_preflight_evidence_fields"] == bundle["doctor_preflight_evidence_fields"]
+    assert bundle["tasks"][0]["doctor_preflight_evidence_template"] == bundle["doctor_preflight_evidence_template"]
     assert (
         bundle["tasks"][0]["doctor_preflight_evidence_template_field_count"]
         == bundle["doctor_preflight_evidence_template_field_count"]
@@ -869,18 +791,9 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         bundle["tasks"][0]["doctor_preflight_evidence_markdown_command"]
         == bundle["doctor_preflight_evidence_markdown_command"]
     )
-    assert (
-        bundle["tasks"][0]["doctor_preflight_state_fields"]
-        == bundle["doctor_preflight_state_fields"]
-    )
-    assert (
-        bundle["tasks"][0]["doctor_preflight_state_statuses"]
-        == bundle["doctor_preflight_state_statuses"]
-    )
-    assert (
-        bundle["primary_next_task"]["doctor_preflight_evidence_fields"]
-        == bundle["doctor_preflight_evidence_fields"]
-    )
+    assert bundle["tasks"][0]["doctor_preflight_state_fields"] == bundle["doctor_preflight_state_fields"]
+    assert bundle["tasks"][0]["doctor_preflight_state_statuses"] == bundle["doctor_preflight_state_statuses"]
+    assert bundle["primary_next_task"]["doctor_preflight_evidence_fields"] == bundle["doctor_preflight_evidence_fields"]
     assert (
         bundle["primary_next_task"]["doctor_preflight_evidence_template"]
         == bundle["doctor_preflight_evidence_template"]
@@ -901,27 +814,102 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         bundle["primary_next_task"]["doctor_preflight_evidence_markdown_command"]
         == bundle["doctor_preflight_evidence_markdown_command"]
     )
-    assert (
-        bundle["primary_next_task"]["doctor_preflight_state_fields"]
-        == bundle["doctor_preflight_state_fields"]
-    )
-    assert (
-        bundle["primary_next_task"]["doctor_preflight_state_statuses"]
-        == bundle["doctor_preflight_state_statuses"]
-    )
+    assert bundle["primary_next_task"]["doctor_preflight_state_fields"] == bundle["doctor_preflight_state_fields"]
+    assert bundle["primary_next_task"]["doctor_preflight_state_statuses"] == bundle["doctor_preflight_state_statuses"]
     assert bundle["tasks"][0]["complete"] is False
     assert bundle["tasks"][0]["command_source"] == "commands.explore"
     assert bundle["tasks"][0]["command_missing"] is False
     assert bundle["tasks"][0]["runbook"] == bundle["primary_next_task_runbook"]
     assert bundle["tasks"][0]["acceptance_criteria"].startswith("Attach the generated")
-    assert bundle["tasks"][0]["handoff"].startswith(
-        'Run `cliany-site explore "https://pypi.org"'
-    )
+    assert bundle["tasks"][0]["handoff"].startswith('Run `cliany-site explore "https://pypi.org"')
     assert "python scripts/validate_cases.py --strict" in bundle["offline_commands"]
     assert bundle["candidate_package_validation_command"] == (
-        "python scripts/validate_cases.py "
-        "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
+        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
     )
+
+
+def test_cases_command_evidence_bundle_accepts_doctor_json(tmp_home, tmp_path):
+    doctor_json = _write_blocked_doctor_json(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "--json",
+            "cases",
+            "--case-id",
+            "pypi-project-search",
+            "--evidence-bundle",
+            "--doctor-json",
+            str(doctor_json),
+        ],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    bundle = payload["data"]["evidence_bundle"]
+    assert bundle["doctor_preflight_evidence_ok"] is True
+    assert bundle["doctor_preflight_evidence_source_path"] == str(doctor_json)
+    assert bundle["doctor_preflight_evidence_values"]["checks[llm_live].status"] == "warning"
+    assert bundle["doctor_preflight_evidence_values"]["checks[llm_live].details.error_code"] == "E_LLM_UNAVAILABLE"
+    assert bundle["doctor_preflight_state"]["status"] == "blocked"
+    assert bundle["doctor_preflight_state"]["ready_for_adapter_package"] is False
+    assert "llm_live_status_warning" in bundle["doctor_preflight_state"]["reason_codes"]
+    assert bundle["primary_next_task"]["doctor_preflight_state"] == bundle["doctor_preflight_state"]
+    assert bundle["tasks"][0]["doctor_preflight_evidence_values"] == bundle["doctor_preflight_evidence_values"]
+
+
+def test_cases_command_evidence_bundle_markdown_renders_doctor_json(
+    tmp_home,
+    tmp_path,
+):
+    doctor_json = _write_blocked_doctor_json(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "cases",
+            "--case-id",
+            "pypi-project-search",
+            "--evidence-bundle",
+            "--doctor-json",
+            str(doctor_json),
+        ],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    assert "## Doctor Preflight Evidence" in result.output
+    assert f"- source_path: `{doctor_json}`" in result.output
+    assert "- preflight_status: `blocked`" in result.output
+    assert "- ready_for_adapter_package: `false`" in result.output
+    assert "| `checks[llm_live].details.error_code` | `E_LLM_UNAVAILABLE` |" in result.output
+
+
+def test_cases_command_issue_template_accepts_doctor_json(tmp_home, tmp_path):
+    doctor_json = _write_blocked_doctor_json(tmp_path)
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "--json",
+            "cases",
+            "--case-id",
+            "pypi-project-search",
+            "--issue-template",
+            "--doctor-json",
+            str(doctor_json),
+        ],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    data = payload["data"]
+    assert "## Doctor Preflight Evidence" in data["issue_template"]
+    assert f"- source_path: `{doctor_json}`" in data["issue_template"]
+    assert "| `checks[llm_live].details.error_code` | `E_LLM_UNAVAILABLE` |" in data["issue_template"]
+    assert data["issue_template_primary_task"]["doctor_preflight_state"]["status"] == "blocked"
 
 
 def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatch):
@@ -1055,11 +1043,7 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "`checks[llm_live].details.retryable`" in result.output
     assert "`checks[llm_live].details.status_code`" in result.output
     assert "## Doctor preflight evidence selectors" in result.output
-    assert (
-        '`checks[llm_live].details.error_code` -> '
-        '`data.checks[name="llm_live"].details.error_code`'
-        in result.output
-    )
+    assert '`checks[llm_live].details.error_code` -> `data.checks[name="llm_live"].details.error_code`' in result.output
     assert "Blocker handling: Run the live LLM preflight before explore." in result.output
     assert "E_LLM_UNAVAILABLE" in result.output
     assert "## Promotion command plan" in result.output
@@ -1069,18 +1053,15 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert (
         "`metadata_validation` (candidate_package_validation_command): "
         "`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
-        "--include-candidate-packages --strict`"
-        in result.output
+        "--include-candidate-packages --strict`" in result.output
     )
     assert (
         "`online_smoke` (commands.adapter): "
-        "`cliany-site pypi.org search-projects --query cliany-site --limit 5 --json`"
-        in result.output
+        "`cliany-site pypi.org search-projects --query cliany-site --limit 5 --json`" in result.output
     )
     assert (
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
-        "--include-candidate-packages --strict"
-        in result.output
+        "--include-candidate-packages --strict" in result.output
     )
     assert "## Promotion evidence" in result.output
     assert "`adapter_package`: `pending`" in result.output
@@ -1114,13 +1095,9 @@ def test_cases_command_promotion_plan_json(tmp_home):
     assert plan["primary_runbook"][0]["step"] == "llm_live_preflight"
     assert plan["primary_runbook"][1]["step"] == "adapter_package"
     assert (
-        plan["primary_doctor_preflight_evidence_template_field_count"]
-        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
+        plan["primary_doctor_preflight_evidence_template_field_count"] == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
     )
-    assert (
-        plan["primary_doctor_preflight_evidence_template_sha256"]
-        == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
-    )
+    assert plan["primary_doctor_preflight_evidence_template_sha256"] == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
     assert plan["primary_issue_template_command"] == (
         "cliany-site cases --case-id pypi-project-search --issue-template"
     )
@@ -1130,16 +1107,10 @@ def test_cases_command_promotion_plan_json(tmp_home):
     assert plan["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
     assert plan["llm_live_preflight_command_sha256"] == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
     assert plan["primary_llm_live_preflight_command"] == plan["llm_live_preflight_command"]
-    assert (
-        plan["primary_llm_live_preflight_command_sha256"]
-        == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
-    )
+    assert plan["primary_llm_live_preflight_command_sha256"] == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
     assert "E_LLM_UNAVAILABLE" in plan["llm_live_preflight_blocker_note"]
     assert "provider connection failure" in plan["llm_live_preflight_blocker_note"]
-    assert (
-        plan["primary_llm_live_preflight_blocker_note"]
-        == plan["llm_live_preflight_blocker_note"]
-    )
+    assert plan["primary_llm_live_preflight_blocker_note"] == plan["llm_live_preflight_blocker_note"]
     assert plan["primary_next_item"] == plan["task_queue"][0]
     assert plan["primary_expected_adapter_package"] == "pypi.org-<version>.cliany-adapter.tar.gz"
     assert plan["task_queue"][0] == {
@@ -1156,38 +1127,22 @@ def test_cases_command_promotion_plan_json(tmp_home):
         "handoff": plan["primary_handoff"],
         "acceptance_criteria": plan["primary_acceptance_criteria"],
         "runbook": plan["primary_runbook"],
-        "issue_template_command": (
-            "cliany-site cases --case-id pypi-project-search --issue-template"
-        ),
-        "issue_template_json_command": (
-            "cliany-site cases --case-id pypi-project-search --issue-template --json"
-        ),
+        "issue_template_command": ("cliany-site cases --case-id pypi-project-search --issue-template"),
+        "issue_template_json_command": ("cliany-site cases --case-id pypi-project-search --issue-template --json"),
         "evidence_bundle_command": "cliany-site cases --case-id pypi-project-search --evidence-bundle",
-        "evidence_bundle_json_command": (
-            "cliany-site cases --case-id pypi-project-search --evidence-bundle --json"
-        ),
+        "evidence_bundle_json_command": ("cliany-site cases --case-id pypi-project-search --evidence-bundle --json"),
         "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
         "llm_live_preflight_command_sha256": LLM_LIVE_PREFLIGHT_COMMAND_SHA256,
         "llm_live_preflight_blocker_note": plan["llm_live_preflight_blocker_note"],
-        "doctor_preflight_evidence_template_field_count": (
-            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
-        ),
-        "doctor_preflight_evidence_template_sha256": (
-            DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
-        ),
-        "doctor_preflight_evidence_extract_command": (
-            DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
-        ),
-        "doctor_preflight_evidence_markdown_command": (
-            DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
-        ),
+        "doctor_preflight_evidence_template_field_count": (DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT),
+        "doctor_preflight_evidence_template_sha256": (DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256),
+        "doctor_preflight_evidence_extract_command": (DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND),
+        "doctor_preflight_evidence_markdown_command": (DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND),
         "priority_rank": 1,
         "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
     }
     assert plan["candidates"][0]["case_id"] == "pypi-project-search"
-    assert plan["candidates"][0]["expected_adapter_package"] == (
-        "pypi.org-<version>.cliany-adapter.tar.gz"
-    )
+    assert plan["candidates"][0]["expected_adapter_package"] == ("pypi.org-<version>.cliany-adapter.tar.gz")
     assert plan["candidates"][0]["primary_task"] == "adapter_package"
     assert plan["candidates"][0]["primary_status"] == "pending"
     assert plan["candidates"][0]["issue_template_command"] == (
@@ -1200,18 +1155,10 @@ def test_cases_command_promotion_plan_json(tmp_home):
     assert plan["candidates"][0]["priority_reason"] == (
         "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0"
     )
+    assert plan["candidates"][0]["llm_live_preflight_blocker_note"] == plan["llm_live_preflight_blocker_note"]
+    assert plan["candidates"][0]["llm_live_preflight_command_sha256"] == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
     assert (
-        plan["candidates"][0]["llm_live_preflight_blocker_note"]
-        == plan["llm_live_preflight_blocker_note"]
-    )
-    assert (
-        plan["candidates"][0]["llm_live_preflight_command_sha256"]
-        == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
-    )
-    assert (
-        plan["candidates"][0][
-            "primary_doctor_preflight_evidence_template_field_count"
-        ]
+        plan["candidates"][0]["primary_doctor_preflight_evidence_template_field_count"]
         == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT
     )
     assert (
@@ -1219,16 +1166,13 @@ def test_cases_command_promotion_plan_json(tmp_home):
         == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
     )
     assert (
-        plan["candidates"][0]["doctor_preflight_evidence_extract_command"]
-        == DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
+        plan["candidates"][0]["doctor_preflight_evidence_extract_command"] == DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND
     )
     assert (
         plan["candidates"][0]["doctor_preflight_evidence_markdown_command"]
         == DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
     )
-    assert plan["candidates"][0]["evidence_bundle_json_command"].endswith(
-        "--evidence-bundle --json"
-    )
+    assert plan["candidates"][0]["evidence_bundle_json_command"].endswith("--evidence-bundle --json")
 
 
 def test_cases_command_promotion_plan_human_outputs_queue(tmp_home):
@@ -1252,18 +1196,12 @@ def test_cases_command_promotion_plan_human_outputs_queue(tmp_home):
     assert "- Task: `adapter_package`" in result.output
     assert (
         "Evidence bundle JSON: "
-        "`cliany-site cases --case-id pypi-project-search --evidence-bundle --json`"
-        in result.output
+        "`cliany-site cases --case-id pypi-project-search --evidence-bundle --json`" in result.output
     )
-    assert (
-        "Issue template: "
-        "`cliany-site cases --case-id pypi-project-search --issue-template`"
-        in result.output
-    )
+    assert "Issue template: `cliany-site cases --case-id pypi-project-search --issue-template`" in result.output
     assert (
         "Issue template JSON: "
-        "`cliany-site cases --case-id pypi-project-search --issue-template --json`"
-        in result.output
+        "`cliany-site cases --case-id pypi-project-search --issue-template --json`" in result.output
     )
     assert "## Candidate queue" in result.output
     assert "priority: `1`" in result.output
@@ -1272,8 +1210,7 @@ def test_cases_command_promotion_plan_human_outputs_queue(tmp_home):
     assert "issue_template: `cliany-site cases --case-id pypi-project-search --issue-template`" in result.output
     assert (
         "issue_template_json: "
-        "`cliany-site cases --case-id pypi-project-search --issue-template --json`"
-        in result.output
+        "`cliany-site cases --case-id pypi-project-search --issue-template --json`" in result.output
     )
     assert "## Incomplete task queue" in result.output
     assert "`pypi-project-search/adapter_package` (pending)" in result.output
@@ -1435,10 +1372,7 @@ def test_cases_command_rejects_issue_template_and_evidence_bundle_together(tmp_h
     payload = json.loads(result.output)
     assert payload["ok"] is False
     assert payload["error"]["code"] == "E_INVALID_PARAM"
-    assert (
-        "--issue-template、--evidence-bundle 与 --promotion-plan 不能同时使用"
-        in payload["error"]["message"]
-    )
+    assert "--issue-template、--evidence-bundle 与 --promotion-plan 不能同时使用" in payload["error"]["message"]
 
 
 def test_cases_command_rejects_promotion_plan_with_other_renderers(tmp_home):
@@ -1460,10 +1394,7 @@ def test_cases_command_rejects_promotion_plan_with_other_renderers(tmp_home):
     payload = json.loads(result.output)
     assert payload["ok"] is False
     assert payload["error"]["code"] == "E_INVALID_PARAM"
-    assert (
-        "--issue-template、--evidence-bundle 与 --promotion-plan 不能同时使用"
-        in payload["error"]["message"]
-    )
+    assert "--issue-template、--evidence-bundle 与 --promotion-plan 不能同时使用" in payload["error"]["message"]
 
 
 def test_cases_command_issue_template_rejects_active_case(tmp_home):

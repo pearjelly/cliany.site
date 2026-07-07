@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.259] - 2026-07-07
+
+### Added
+- `cliany-site cases --case-id <id> --evidence-bundle --doctor-json <path>` now reads a saved `cliany-site doctor --llm-live --json` result and attaches actual doctor preflight values, hashes, missing-field counts, and `doctor_preflight_state` to the evidence bundle and primary `adapter_package` task.
+- Candidate issue templates also accept `--doctor-json`, rendering copy-ready blocker evidence directly in the issue body when live LLM/CDP preflight blocks adapter generation.
+
 ## [0.16.258] - 2026-07-07
 
 ### Added
@@ -2455,6 +2461,7 @@
 - 修正 QA 测试断言与实际 API 对齐
 
 [Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.258...HEAD
+[0.16.259]: https://github.com/pearjelly/cliany.site/compare/v0.16.258...v0.16.259
 [0.16.258]: https://github.com/pearjelly/cliany.site/compare/v0.16.257...v0.16.258
 [0.16.257]: https://github.com/pearjelly/cliany.site/compare/v0.16.256...v0.16.257
 [0.16.256]: https://github.com/pearjelly/cliany.site/compare/v0.16.255...v0.16.256
