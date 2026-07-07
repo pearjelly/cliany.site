@@ -499,6 +499,15 @@ def test_candidate_issue_body_checks_complete_tasks():
     assert "## Doctor Preflight Evidence Extractor" in issue_body
     assert f"- JSON: `{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND}`" in issue_body
     assert f"- Markdown: `{DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND}`" in issue_body
+    assert "## Doctor Preflight State Contract" in issue_body
+    for field in DOCTOR_PREFLIGHT_STATE_FIELDS:
+        assert f"- `{field}`" in issue_body
+    assert "- statuses: `ready`, `blocked`, `missing_fields`" in issue_body
+    assert (
+        "Continue `adapter_package` only when `preflight_state.status=ready` "
+        "and `preflight_state.ready_for_adapter_package=true`."
+        in issue_body
+    )
     assert "## Acceptance Criteria" in issue_body
     assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in issue_body
     assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in issue_body
@@ -2159,6 +2168,15 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "## Doctor Preflight Evidence Extractor\n"
             f"- JSON: `{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND}`\n"
             f"- Markdown: `{DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND}`\n\n"
+            "## Doctor Preflight State Contract\n"
+            "- `preflight_state.status`\n"
+            "- `preflight_state.ready_for_adapter_package`\n"
+            "- `preflight_state.primary_reason`\n"
+            "- `preflight_state.reason_codes`\n"
+            "- `preflight_state.next_action`\n"
+            "- statuses: `ready`, `blocked`, `missing_fields`\n"
+            "- Continue `adapter_package` only when `preflight_state.status=ready` "
+            "and `preflight_state.ready_for_adapter_package=true`.\n\n"
             "## LLM Preflight Evidence Fields\n"
             "- `summary.ready_for_explore`\n"
             "- `summary.llm_live_preflight`\n"

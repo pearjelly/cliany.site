@@ -3703,6 +3703,14 @@ def _candidate_issue_body(
             *(f"- `{field}`: `{_markdown_value(value)}`" for field, value in values.items()),
             "",
         ]
+    doctor_preflight_state_contract_lines = [
+        *(f"- `{field}`" for field in DOCTOR_PREFLIGHT_STATE_FIELDS),
+        "- statuses: `ready`, `blocked`, `missing_fields`",
+        (
+            "- Continue `adapter_package` only when `preflight_state.status=ready` "
+            "and `preflight_state.ready_for_adapter_package=true`."
+        ),
+    ]
 
     task_lines: list[str] = []
     for task_name in CANDIDATE_PROMOTION_FIELDS:
@@ -3770,6 +3778,9 @@ def _candidate_issue_body(
             "## Doctor Preflight Evidence Extractor",
             f"- JSON: `{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND}`",
             f"- Markdown: `{DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND}`",
+            "",
+            "## Doctor Preflight State Contract",
+            *doctor_preflight_state_contract_lines,
             "",
             "## LLM Preflight Evidence Fields",
             *(f"- `{field}`" for field in LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS),

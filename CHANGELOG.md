@@ -22,6 +22,7 @@
 - The case catalog README now documents the same doctor preflight state fields and `ready` / `blocked` / `missing_fields` status contract beside candidate evidence bundle handoffs, keeping case promotion guidance aligned with the runbook and contributor docs.
 - The public website maintainer entrypoints now spell out the same `preflight_state.*` field list and `ready` / `blocked` / `missing_fields` gate, so website-only readers can apply candidate blocker evidence without opening source docs.
 - The GitHub case proposal and pull request templates now ask candidate promotion contributors to include the same doctor preflight state fields and status contract, and release readiness now blocks those templates if the contract drifts.
+- Planner-generated candidate issue bodies now always render the doctor preflight state contract, including the `preflight_state.*` fields, `ready` / `blocked` / `missing_fields` statuses, and the exact gate for continuing `adapter_package`.
 
 ## [0.16.259] - 2026-07-07
 
