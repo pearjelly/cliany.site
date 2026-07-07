@@ -97,7 +97,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     )
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.256" in index
+    assert "Current baseline: v0.16.257" in index
     assert "website alias inspect" in index
     assert "PyPI version-specific publication audit" in index
     assert "10-Minute Success Path" in script
@@ -163,6 +163,6 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "doctor_preflight_evidence_fields" in script
     assert "candidate_promotions[*].issue_template_command" in script
     assert "issue-metadata.json" in script
-    assert "Current baseline: v0.16.256" in script
+    assert "Current baseline: v0.16.257" in script
     assert "website alias inspect" in script
     assert "pypi_latest_version" in script

@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.257] - 2026-07-07
+
 ### Added
 - Added a maintainer-facing Candidate Promotion Runbook that turns the `pypi-project-search/adapter_package` handoff into a concrete preflight, adapter package, metadata validation, and online smoke checklist, and linked it from the good-first-issue docs, weekly maintainer docs, and public website docs.
 - Added `python scripts/plan_next_iteration.py --handoff-json`, a compact planner output for release automation that needs the primary next action, publication summary, primary candidate task, issue/evidence bundle commands, validation commands, and a stable `handoff_sha256` without expanding full planner JSON.
@@ -2446,7 +2448,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.256...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.257...HEAD
+[0.16.257]: https://github.com/pearjelly/cliany.site/compare/v0.16.256...v0.16.257
 [0.16.256]: https://github.com/pearjelly/cliany.site/compare/v0.16.255...v0.16.256
 [0.16.255]: https://github.com/pearjelly/cliany.site/compare/v0.16.254...v0.16.255
 [0.16.254]: https://github.com/pearjelly/cliany.site/compare/v0.16.253...v0.16.254
