@@ -17,6 +17,7 @@
 - README and README.zh now spell out the `doctor_preflight_state_fields` values and the `ready` / `blocked` / `missing_fields` state set, so maintainers can apply the doctor-backed candidate blocker contract without cross-reading release drafts or source code.
 - The `v0.16.260` release draft now tracks the README/README.zh doctor preflight state contract and the related documentation checks, keeping release notes aligned with the current candidate blocker handoff.
 - The Candidate Promotion Runbook now documents the same `doctor_preflight_state_fields` and `doctor_preflight_state_statuses` contract, including when to continue to real `explore` versus attaching blocker evidence to the candidate issue.
+- Good First Issues now asks candidate-promotion issues to carry the same doctor preflight state fields and `ready` / `blocked` / `missing_fields` status contract, keeping first-contributor handoffs aligned with the runbook.
 
 ## [0.16.259] - 2026-07-07
 
