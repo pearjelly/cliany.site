@@ -568,7 +568,9 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "publication_remote_audit_command\n"
         "publication_remote_audit_command_sha256\n"
         "daily_release_resume_command\n"
-        "daily_release_resume_command_sha256\n",
+        "daily_release_resume_command_sha256\n"
+        "promotion_command_plan_sha256\n"
+        "promotion_command_plan_summary_sha256\n",
         encoding="utf-8",
     )
     (repo / "scripts" / "extract_doctor_preflight_evidence.py").write_text(

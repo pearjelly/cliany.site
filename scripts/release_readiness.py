@@ -703,6 +703,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "publication_remote_audit_command_sha256",
             "daily_release_resume_command",
             "daily_release_resume_command_sha256",
+            "promotion_command_plan_sha256",
+            "promotion_command_plan_summary_sha256",
         ],
         "docs/quickstart-10min.md": [
             "10 分钟成功路径",
@@ -844,6 +846,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "publication_remote_audit_command_sha256",
             "daily_release_resume_command",
             "daily_release_resume_command_sha256",
+            "promotion_command_plan_sha256",
+            "promotion_command_plan_summary_sha256",
         ],
     }
     for filename, snippets in template_snippets.items():

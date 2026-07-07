@@ -1213,6 +1213,19 @@ def test_handoff_payload_projects_primary_release_and_candidate_actions(tmp_path
     assert payload["primary_candidate"]["evidence_bundle_json_command"] == (
         "cliany-site cases --case-id pypi-project-search --evidence-bundle --json"
     )
+    assert payload["primary_candidate"]["promotion_command_plan"] == (
+        _pypi_promotion_command_plan()
+    )
+    assert payload["primary_candidate"]["promotion_command_plan_count"] == 4
+    assert payload["primary_candidate"]["promotion_command_plan_sha256"] == (
+        _stable_json_sha256(_pypi_promotion_command_plan())
+    )
+    assert payload["primary_candidate"]["promotion_command_plan_summary"] == (
+        _pypi_promotion_command_plan_summary()
+    )
+    assert payload["primary_candidate"]["promotion_command_plan_summary_sha256"] == (
+        _stable_json_sha256(_pypi_promotion_command_plan_summary())
+    )
     assert payload["validation_commands"] == plan.validation_commands
     assert payload["handoff_sha256"] == _stable_json_sha256(
         {key: value for key, value in payload.items() if key != "handoff_sha256"}

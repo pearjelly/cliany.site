@@ -1386,6 +1386,17 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
         )
     if not isinstance(primary_doctor_preflight_state, dict):
         primary_doctor_preflight_state = {}
+    primary_promotion_command_plan: list[Any] = []
+    primary_promotion_command_plan_summary: dict[str, Any] = {}
+    if isinstance(primary_candidate_promotion, dict):
+        promotion_command_plan = primary_candidate_promotion.get("promotion_command_plan")
+        if isinstance(promotion_command_plan, list):
+            primary_promotion_command_plan = promotion_command_plan
+        promotion_command_plan_summary = primary_candidate_promotion.get(
+            "promotion_command_plan_summary"
+        )
+        if isinstance(promotion_command_plan_summary, dict):
+            primary_promotion_command_plan_summary = promotion_command_plan_summary
     publication_decision = data.get("publication_tag_publish_decision")
     if not isinstance(publication_decision, dict):
         publication_decision = {}
@@ -1528,6 +1539,15 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
             "evidence_bundle_json_command": data[
                 "case_promotion_evidence_primary_evidence_bundle_json_command"
             ],
+            "promotion_command_plan": primary_promotion_command_plan,
+            "promotion_command_plan_count": len(primary_promotion_command_plan),
+            "promotion_command_plan_sha256": _stable_json_sha256(
+                primary_promotion_command_plan
+            ),
+            "promotion_command_plan_summary": primary_promotion_command_plan_summary,
+            "promotion_command_plan_summary_sha256": _stable_json_sha256(
+                primary_promotion_command_plan_summary
+            ),
             "runbook_steps": data["case_promotion_evidence_primary_runbook_steps"],
             "runbook_first_command": data[
                 "case_promotion_evidence_primary_runbook_first_command"
