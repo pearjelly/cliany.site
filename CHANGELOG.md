@@ -19,6 +19,7 @@
 - The Candidate Promotion Runbook now documents the same `doctor_preflight_state_fields` and `doctor_preflight_state_statuses` contract, including when to continue to real `explore` versus attaching blocker evidence to the candidate issue.
 - Good First Issues now asks candidate-promotion issues to carry the same doctor preflight state fields and `ready` / `blocked` / `missing_fields` status contract, keeping first-contributor handoffs aligned with the runbook.
 - The contributor starter map now mirrors the same doctor preflight state contract, so first-time contributors who enter through the starter guide see when to continue real `explore` versus attaching blocker evidence.
+- The case catalog README now documents the same doctor preflight state fields and `ready` / `blocked` / `missing_fields` status contract beside candidate evidence bundle handoffs, keeping case promotion guidance aligned with the runbook and contributor docs.
 
 ## [0.16.259] - 2026-07-07
 
