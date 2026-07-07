@@ -431,6 +431,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
     repo.mkdir()
     _git(repo, "init", "-b", "master")
     (repo / "cases").mkdir()
+    (repo / "scripts").mkdir()
     (repo / "docs" / "releases").mkdir(parents=True)
     (repo / ".github" / "workflows").mkdir(parents=True)
     (repo / ".github" / "ISSUE_TEMPLATE").mkdir(parents=True)
@@ -554,6 +555,27 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "doctor_preflight_primary_reason\n",
         encoding="utf-8",
     )
+    (repo / "scripts" / "extract_doctor_preflight_evidence.py").write_text(
+        "#!/usr/bin/env python3\n"
+        "\"\"\"Extract candidate-promotion doctor preflight evidence from doctor JSON.\"\"\"\n"
+        "READY_NEXT_ACTION = 'Run the candidate explore command.'\n"
+        "BLOCKED_NEXT_ACTION = 'Attach the doctor preflight evidence.'\n"
+        "MISSING_FIELDS_NEXT_ACTION = 'Attach the missing field list.'\n"
+        "schema_version\n"
+        "selectors_sha256\n"
+        "values_sha256\n"
+        "preflight_state\n"
+        "status\n"
+        "ready_for_adapter_package\n"
+        "primary_reason\n"
+        "reason_codes\n"
+        "next_action\n"
+        "missing_fields\n"
+        "render_markdown\n"
+        "preflight_status\n"
+        "return 0 if evidence[\"ok\"] else 1\n",
+        encoding="utf-8",
+    )
     (repo / "cases" / "manifest.json").write_text(_cases_manifest(), encoding="utf-8")
     (repo / "cases" / "examples").mkdir()
     (repo / "cases" / "examples" / "demo-case.json").write_text(
@@ -601,6 +623,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "docs/candidate-promotion-runbook.md",
         "docs/module-ownership.md",
         "docs/weekly-maintainer-loop.md",
+        "scripts/extract_doctor_preflight_evidence.py",
         "cases/manifest.json",
         "cases/examples/demo-case.json",
         ".github/workflows/ci.yml",
@@ -2218,6 +2241,40 @@ def test_release_readiness_blocks_stale_candidate_promotion_runbook_contract(tmp
     assert (
         "open source metadata file missing snippet: "
         "docs/candidate-promotion-runbook.md: preflight_state.status"
+    ) in report.project_metadata.issues
+
+
+def test_release_readiness_blocks_missing_doctor_preflight_extractor(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "scripts" / "extract_doctor_preflight_evidence.py").unlink()
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file is missing: "
+        "scripts/extract_doctor_preflight_evidence.py"
+    ) in report.project_metadata.issues
+
+
+def test_release_readiness_blocks_stale_doctor_preflight_extractor_contract(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "scripts" / "extract_doctor_preflight_evidence.py").write_text(
+        "#!/usr/bin/env python3\n"
+        "\"\"\"Extract candidate-promotion doctor preflight evidence from doctor JSON.\"\"\"\n"
+        "selectors_sha256\n"
+        "values_sha256\n",
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file missing snippet: "
+        "scripts/extract_doctor_preflight_evidence.py: preflight_state"
     ) in report.project_metadata.issues
 
 
