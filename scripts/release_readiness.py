@@ -746,6 +746,10 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "- statuses: `ready`, `blocked`, `missing_fields`",
             "preflight_state.status=ready",
             "preflight_state.ready_for_adapter_package=true",
+            "doctor_preflight_state",
+            "doctor_preflight_state_status",
+            "doctor_preflight_ready_for_adapter_package",
+            "doctor_preflight_primary_reason",
         ],
     }
     for filename, snippets in template_snippets.items():
