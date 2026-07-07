@@ -41,6 +41,7 @@ cliany-site cases --case-id pypi-project-search --evidence-bundle --json
 cliany-site doctor --llm-live --json > /tmp/cliany-doctor-preflight.json
 cliany-site cases --case-id pypi-project-search --evidence-bundle --doctor-json /tmp/cliany-doctor-preflight.json --json
 cliany-site cases --case-id pypi-project-search --issue-template --doctor-json /tmp/cliany-doctor-preflight.json
+python scripts/plan_next_iteration.py --target-version 0.16.260 --doctor-json /tmp/cliany-doctor-preflight.json --issues-dir /tmp/cliany-candidate-issues
 python scripts/extract_doctor_preflight_evidence.py /tmp/cliany-doctor-preflight.json
 python scripts/extract_doctor_preflight_evidence.py /tmp/cliany-doctor-preflight.json --markdown
 ```
@@ -64,7 +65,7 @@ python scripts/extract_doctor_preflight_evidence.py /tmp/cliany-doctor-preflight
 - `checks[llm_live].details.phase`
 - `checks[llm_live].details.message`
 
-`cliany-site cases --doctor-json` 会按 `doctor_preflight_evidence_selectors` 从 doctor JSON 的 `data.checks[name="..."]` 列表中提取这些字段，并把 `doctor_preflight_evidence_values`、`doctor_preflight_evidence_ok`、`doctor_preflight_evidence_missing_count` 和 `doctor_preflight_state` 附加到 evidence bundle、primary `adapter_package` task 或 issue body。`scripts/extract_doctor_preflight_evidence.py` 仍可作为低层备用；它会输出 `values`、`missing_fields`、`selectors_sha256` 和 `values_sha256`，加 `--markdown` 可生成直接粘贴到 candidate issue 的 blocker evidence 表格。如果 `missing_count>0`，先贴回缺失字段和原始 doctor JSON 摘要，不继续运行真实 `explore`。
+`cliany-site cases --doctor-json` 会按 `doctor_preflight_evidence_selectors` 从 doctor JSON 的 `data.checks[name="..."]` 列表中提取这些字段，并把 `doctor_preflight_evidence_values`、`doctor_preflight_evidence_ok`、`doctor_preflight_evidence_missing_count` 和 `doctor_preflight_state` 附加到 evidence bundle、primary `adapter_package` task 或 issue body。`scripts/plan_next_iteration.py --doctor-json ... --issues-dir ...` 会把同一份 evidence 写进批量 candidate issue artifacts 的 `issue-metadata.json` 和 issue body，并让 issue/evidence bundle commands 保留 `--doctor-json <path>`，适合 live LLM 仍 blocked 时生成 blocker-ready issue 草稿。`scripts/extract_doctor_preflight_evidence.py` 仍可作为低层备用；它会输出 `values`、`missing_fields`、`selectors_sha256` 和 `values_sha256`，加 `--markdown` 可生成直接粘贴到 candidate issue 的 blocker evidence 表格。如果 `missing_count>0`，先贴回缺失字段和原始 doctor JSON 摘要，不继续运行真实 `explore`。
 
 ## Step 2: Generate Adapter Package Evidence
 
@@ -158,7 +159,8 @@ cliany-site cases --case-id pypi-project-search --evidence-bundle --json
 批量生成 candidate issue artifacts：
 
 ```bash
-python scripts/plan_next_iteration.py --target-version 0.16.258 --remote --issues-dir /tmp/cliany-candidate-issues
+python scripts/plan_next_iteration.py --target-version 0.16.260 --remote --issues-dir /tmp/cliany-candidate-issues
+python scripts/plan_next_iteration.py --target-version 0.16.260 --remote --doctor-json /tmp/cliany-doctor-preflight.json --issues-dir /tmp/cliany-candidate-issues
 ```
 
 创建公开 GitHub issue 前，先审阅：

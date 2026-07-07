@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import shlex
 import sys
 import tomllib
@@ -126,6 +127,17 @@ DOCTOR_PREFLIGHT_STATE_FIELDS = (
     "preflight_state.next_action",
 )
 DOCTOR_PREFLIGHT_STATE_STATUSES = ("ready", "blocked", "missing_fields")
+NAMED_LIST_SELECTOR_RE = re.compile(r'^(?P<field>\w+)\[name="(?P<name>[^"]+)"\]$')
+READY_PREFLIGHT_NEXT_ACTION = (
+    "Run the candidate explore command, then package the adapter and attach the package path or release asset name."
+)
+BLOCKED_PREFLIGHT_NEXT_ACTION = (
+    "Attach the doctor preflight evidence to the candidate issue and do "
+    "not run candidate explore until live preflight is ready."
+)
+MISSING_PREFLIGHT_FIELDS_NEXT_ACTION = (
+    "Attach the missing field list and original doctor JSON summary before continuing candidate promotion."
+)
 WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
 WEBSITE_INSPECT_COMMAND = "cd site && vercel inspect www.cliany.site --wait --timeout 90s"
 CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA = {
@@ -724,6 +736,14 @@ def _doctor_preflight_evidence_template() -> dict[str, str]:
     return {field: placeholder for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS}
 
 
+def _markdown_value(value: Any) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if value is None:
+        return "null"
+    return str(value)
+
+
 def _doctor_preflight_evidence_selectors() -> dict[str, str]:
     return dict(DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)
 
@@ -751,6 +771,133 @@ def _doctor_preflight_evidence_template_aliases(
             evidence_template
         ),
     }
+
+
+def _resolve_doctor_selector(payload: Any, selector: str) -> Any:
+    current = payload
+    for part in selector.split("."):
+        if not part:
+            return None
+        match = NAMED_LIST_SELECTOR_RE.match(part)
+        if match:
+            if not isinstance(current, dict):
+                return None
+            items = current.get(match.group("field"))
+            if not isinstance(items, list):
+                return None
+            current = next(
+                (
+                    item
+                    for item in items
+                    if isinstance(item, dict) and item.get("name") == match.group("name")
+                ),
+                None,
+            )
+            if current is None:
+                return None
+            continue
+        if not isinstance(current, dict) or part not in current:
+            return None
+        current = current[part]
+    return current
+
+
+def _doctor_preflight_state_from_values(
+    values: dict[str, Any],
+    missing_fields: list[str],
+) -> dict[str, Any]:
+    if missing_fields:
+        return {
+            "status": "missing_fields",
+            "ready_for_adapter_package": False,
+            "primary_reason": f"Missing required doctor evidence field: {missing_fields[0]}.",
+            "reason_codes": ["missing_fields"],
+            "next_action": MISSING_PREFLIGHT_FIELDS_NEXT_ACTION,
+        }
+
+    checks = [
+        (
+            values.get("summary.ready_for_explore") is True,
+            "ready_for_explore_false",
+            "Doctor summary is not ready for explore.",
+        ),
+        (
+            values.get("summary.capabilities.run_browser_workflows.ready") is True,
+            "run_browser_workflows_not_ready",
+            "Browser workflow capability is not ready.",
+        ),
+        (
+            values.get("summary.capabilities.generate_adapters.ready") is True,
+            "generate_adapters_not_ready",
+            "Adapter generation capability is not ready.",
+        ),
+        (
+            values.get("checks[cdp].status") == "ok",
+            f"cdp_status_{values.get('checks[cdp].status')}",
+            f"CDP check is {values.get('checks[cdp].status')}.",
+        ),
+        (
+            values.get("checks[llm_live].status") == "ok",
+            f"llm_live_status_{values.get('checks[llm_live].status')}",
+            f"Live LLM preflight is {values.get('checks[llm_live].status')}.",
+        ),
+    ]
+    failures = [
+        {"reason_code": reason_code, "reason": reason}
+        for check_ok, reason_code, reason in checks
+        if not check_ok
+    ]
+    if failures:
+        return {
+            "status": "blocked",
+            "ready_for_adapter_package": False,
+            "primary_reason": failures[-1]["reason"],
+            "reason_codes": [failure["reason_code"] for failure in failures],
+            "next_action": BLOCKED_PREFLIGHT_NEXT_ACTION,
+        }
+
+    return {
+        "status": "ready",
+        "ready_for_adapter_package": True,
+        "primary_reason": "Doctor preflight is ready for candidate adapter generation.",
+        "reason_codes": [],
+        "next_action": READY_PREFLIGHT_NEXT_ACTION,
+    }
+
+
+def _doctor_preflight_evidence_from_payload(
+    payload: dict[str, Any],
+    *,
+    source_path: Path,
+) -> dict[str, Any]:
+    selectors = _doctor_preflight_evidence_selectors()
+    values = {
+        field: _resolve_doctor_selector(payload, selector)
+        for field, selector in selectors.items()
+    }
+    missing_fields = [field for field, value in values.items() if value is None]
+    return {
+        "doctor_preflight_evidence_ok": not missing_fields,
+        "doctor_preflight_evidence_source_path": str(source_path),
+        "doctor_preflight_evidence_field_count": len(selectors),
+        "doctor_preflight_evidence_missing_count": len(missing_fields),
+        "doctor_preflight_evidence_missing_fields": missing_fields,
+        "doctor_preflight_evidence_values": values,
+        "doctor_preflight_evidence_values_sha256": _stable_json_sha256(values),
+        "doctor_preflight_evidence_selectors_sha256": _stable_json_sha256(selectors),
+        "doctor_preflight_state": _doctor_preflight_state_from_values(
+            values,
+            missing_fields,
+        ),
+    }
+
+
+def _load_doctor_preflight_evidence(path: Path) -> dict[str, Any]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        msg = f"{path} must contain a JSON object"
+        raise ValueError(msg)
+    return _doctor_preflight_evidence_from_payload(payload, source_path=path)
 
 
 def _doctor_preflight_state_contract(*, required: bool) -> dict[str, Any]:
@@ -792,6 +939,7 @@ class CandidatePromotion:
     doctor_preflight_evidence_fields: list[str]
     doctor_preflight_evidence_template: dict[str, str]
     doctor_preflight_evidence_selectors: dict[str, str]
+    doctor_preflight_evidence: dict[str, Any]
     llm_live_preflight_evidence_fields: list[str]
     issue_template_command: str
     issue_template_json_command: str
@@ -837,6 +985,7 @@ class CandidatePromotion:
             "doctor_preflight_evidence_selectors": (
                 self.doctor_preflight_evidence_selectors
             ),
+            **self.doctor_preflight_evidence,
             **_doctor_preflight_evidence_command_fields(required=True),
             **_doctor_preflight_evidence_template_aliases(
                 self.doctor_preflight_evidence_template
@@ -3038,7 +3187,11 @@ def _case_promotion_command_plan_summary(cases_report: Any) -> dict[str, Any]:
     }
 
 
-def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
+def _candidate_promotions(
+    readiness: Any,
+    *,
+    doctor_preflight_evidence: dict[str, Any] | None = None,
+) -> list[CandidatePromotion]:
     promotions: list[CandidatePromotion] = []
     candidate_cases = [
         case
@@ -3079,9 +3232,29 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 "priority_reason": priority_reason,
                 "expected_adapter_package": expected_adapter_package,
             }
+            if doctor_preflight_evidence and evidence_bundle_primary_next_task.get(
+                "llm_live_preflight_required"
+            ):
+                evidence_bundle_primary_next_task.update(doctor_preflight_evidence)
         evidence_bundle_primary_next_task_runbook = _candidate_primary_task_runbook(
             evidence_bundle_primary_next_task,
             promotion_command_plan,
+        )
+        issue_template_command = _candidate_issue_template_command(
+            str(case.id),
+            doctor_preflight_evidence=doctor_preflight_evidence,
+        )
+        issue_template_json_command = _candidate_issue_template_json_command(
+            str(case.id),
+            doctor_preflight_evidence=doctor_preflight_evidence,
+        )
+        evidence_bundle_command = _candidate_evidence_bundle_command(
+            str(case.id),
+            doctor_preflight_evidence=doctor_preflight_evidence,
+        )
+        evidence_bundle_json_command = _candidate_evidence_bundle_json_command(
+            str(case.id),
+            doctor_preflight_evidence=doctor_preflight_evidence,
         )
         promotions.append(
             CandidatePromotion(
@@ -3115,13 +3288,14 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                 doctor_preflight_evidence_selectors=(
                     _doctor_preflight_evidence_selectors()
                 ),
+                doctor_preflight_evidence=dict(doctor_preflight_evidence or {}),
                 llm_live_preflight_evidence_fields=list(
                     LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS
                 ),
-                issue_template_command=_candidate_issue_template_command(str(case.id)),
-                issue_template_json_command=_candidate_issue_template_json_command(str(case.id)),
-                evidence_bundle_command=_candidate_evidence_bundle_command(str(case.id)),
-                evidence_bundle_json_command=_candidate_evidence_bundle_json_command(str(case.id)),
+                issue_template_command=issue_template_command,
+                issue_template_json_command=issue_template_json_command,
+                evidence_bundle_command=evidence_bundle_command,
+                evidence_bundle_json_command=evidence_bundle_json_command,
                 issue_body=_candidate_issue_body(
                     case_id=str(case.id),
                     target_url=_case_string_value(case, "target_url"),
@@ -3135,6 +3309,7 @@ def _candidate_promotions(readiness: Any) -> list[CandidatePromotion]:
                     expected_adapter_package=expected_adapter_package,
                     primary_task=evidence_bundle_primary_next_task,
                     primary_runbook=evidence_bundle_primary_next_task_runbook,
+                    doctor_preflight_evidence=doctor_preflight_evidence,
                 ),
             )
         )
@@ -3168,20 +3343,49 @@ def _candidate_promotion_primary_task(evidence: dict[str, Any]) -> dict[str, Any
     return dict(primary)
 
 
-def _candidate_evidence_bundle_command(case_id: str) -> str:
-    return f"cliany-site cases --case-id {case_id} --evidence-bundle"
+def _doctor_json_arg(doctor_preflight_evidence: dict[str, Any] | None) -> str:
+    if not doctor_preflight_evidence:
+        return ""
+    source_path = str(doctor_preflight_evidence.get("doctor_preflight_evidence_source_path") or "")
+    return f" --doctor-json {shlex.quote(source_path)}" if source_path else ""
 
 
-def _candidate_evidence_bundle_json_command(case_id: str) -> str:
-    return f"{_candidate_evidence_bundle_command(case_id)} --json"
+def _candidate_evidence_bundle_command(
+    case_id: str,
+    *,
+    doctor_preflight_evidence: dict[str, Any] | None = None,
+) -> str:
+    return f"cliany-site cases --case-id {case_id} --evidence-bundle{_doctor_json_arg(doctor_preflight_evidence)}"
 
 
-def _candidate_issue_template_command(case_id: str) -> str:
-    return f"cliany-site cases --case-id {case_id} --issue-template"
+def _candidate_evidence_bundle_json_command(
+    case_id: str,
+    *,
+    doctor_preflight_evidence: dict[str, Any] | None = None,
+) -> str:
+    return (
+        f"{_candidate_evidence_bundle_command(case_id, doctor_preflight_evidence=doctor_preflight_evidence)} "
+        "--json"
+    )
 
 
-def _candidate_issue_template_json_command(case_id: str) -> str:
-    return f"{_candidate_issue_template_command(case_id)} --json"
+def _candidate_issue_template_command(
+    case_id: str,
+    *,
+    doctor_preflight_evidence: dict[str, Any] | None = None,
+) -> str:
+    return f"cliany-site cases --case-id {case_id} --issue-template{_doctor_json_arg(doctor_preflight_evidence)}"
+
+
+def _candidate_issue_template_json_command(
+    case_id: str,
+    *,
+    doctor_preflight_evidence: dict[str, Any] | None = None,
+) -> str:
+    return (
+        f"{_candidate_issue_template_command(case_id, doctor_preflight_evidence=doctor_preflight_evidence)} "
+        "--json"
+    )
 
 
 def _candidate_issue_title(case_id: str) -> str:
@@ -3411,6 +3615,7 @@ def _candidate_issue_body(
     expected_adapter_package: str = "",
     primary_task: dict[str, Any] | None = None,
     primary_runbook: list[dict[str, Any]] | None = None,
+    doctor_preflight_evidence: dict[str, Any] | None = None,
 ) -> str:
     command_lines = [f"  - `{command}`" for command in commands] or ["  - Not declared."]
     offline_command_lines = [f"  - `{command}`" for command in offline_commands] or ["  - Not declared."]
@@ -3469,6 +3674,34 @@ def _candidate_issue_body(
         list(primary_runbook or _candidate_primary_task_runbook(primary_task, promotion_command_plan))
     )
     primary_runbook_section = [*primary_runbook_lines, ""] if primary_runbook_lines else []
+    evidence_bundle_command = _candidate_evidence_bundle_command(
+        case_id,
+        doctor_preflight_evidence=doctor_preflight_evidence,
+    )
+    evidence_bundle_json_command = _candidate_evidence_bundle_json_command(
+        case_id,
+        doctor_preflight_evidence=doctor_preflight_evidence,
+    )
+    current_doctor_preflight_section: list[str] = []
+    if doctor_preflight_evidence:
+        state = doctor_preflight_evidence.get("doctor_preflight_state")
+        values = doctor_preflight_evidence.get("doctor_preflight_evidence_values")
+        state = state if isinstance(state, dict) else {}
+        values = values if isinstance(values, dict) else {}
+        current_doctor_preflight_section = [
+            "## Current Doctor Preflight State",
+            f"- source_path: `{doctor_preflight_evidence.get('doctor_preflight_evidence_source_path')}`",
+            f"- ok: `{str(bool(doctor_preflight_evidence.get('doctor_preflight_evidence_ok'))).lower()}`",
+            f"- missing_count: `{doctor_preflight_evidence.get('doctor_preflight_evidence_missing_count')}`",
+            f"- status: `{state.get('status', '-')}`",
+            f"- ready_for_adapter_package: `{str(bool(state.get('ready_for_adapter_package'))).lower()}`",
+            f"- primary_reason: {state.get('primary_reason', '-')}",
+            f"- next_action: {state.get('next_action', '-')}",
+            "",
+            "## Current Doctor Preflight Evidence Values",
+            *(f"- `{field}`: `{_markdown_value(value)}`" for field, value in values.items()),
+            "",
+        ]
 
     task_lines: list[str] = []
     for task_name in CANDIDATE_PROMOTION_FIELDS:
@@ -3502,6 +3735,7 @@ def _candidate_issue_body(
             *primary_task_lines,
             "",
             *primary_runbook_section,
+            *current_doctor_preflight_section,
             "## Reproduction Context",
             f"- Target URL: {target_url or 'Not declared.'}",
             "- Candidate commands:",
@@ -3546,8 +3780,8 @@ def _candidate_issue_body(
             *task_lines,
             "",
             "## Evidence Bundle",
-            f"- Human: `{_candidate_evidence_bundle_command(case_id)}`",
-            f"- JSON: `{_candidate_evidence_bundle_json_command(case_id)}`",
+            f"- Human: `{evidence_bundle_command}`",
+            f"- JSON: `{evidence_bundle_json_command}`",
             "- Attach or paste the JSON output in the issue once evidence changes.",
             "",
             "## Validation Evidence",
@@ -3579,6 +3813,7 @@ def build_plan(
     min_case_assets: int = 8,
     packages_dir: Path | None = None,
     require_packages: bool = False,
+    doctor_preflight_evidence: dict[str, Any] | None = None,
     readiness_report: Any | None = None,
     publication_report: Any | None = None,
 ) -> IterationPlan:
@@ -3602,7 +3837,10 @@ def build_plan(
         remote=remote_name,
     )
     theme, release_slice = _recommended_slice(readiness, publication)
-    candidate_promotions = _candidate_promotions(readiness)
+    candidate_promotions = _candidate_promotions(
+        readiness,
+        doctor_preflight_evidence=doctor_preflight_evidence,
+    )
     case_promotion_evidence_summary = _case_promotion_evidence_summary(readiness.cases)
     case_promotion_command_plan_summary = _case_promotion_command_plan_summary(readiness.cases)
     publication_blockers = _publication_blockers(publication)
@@ -5292,6 +5530,7 @@ def _write_candidate_issue_files(plan: IterationPlan, directory: Path) -> None:
                 "doctor_preflight_evidence_template": dict(
                     promotion.doctor_preflight_evidence_template
                 ),
+                **promotion.doctor_preflight_evidence,
                 **_doctor_preflight_evidence_template_aliases(
                     promotion.doctor_preflight_evidence_template
                 ),
@@ -8754,9 +8993,19 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         help="Optional directory for candidate issue body files, metadata JSON, and a reviewable gh script.",
     )
+    parser.add_argument(
+        "--doctor-json",
+        type=Path,
+        help="Optional cliany-site doctor --llm-live --json output to embed in candidate issue artifacts.",
+    )
     args = parser.parse_args(argv)
 
     today = datetime.strptime(args.today, "%Y-%m-%d").date() if args.today else None
+    doctor_preflight_evidence = (
+        _load_doctor_preflight_evidence(args.doctor_json)
+        if args.doctor_json is not None
+        else None
+    )
     plan = build_plan(
         ROOT,
         today=today,
@@ -8768,6 +9017,7 @@ def main(argv: list[str] | None = None) -> int:
         min_case_assets=args.min_case_assets,
         packages_dir=args.packages_dir,
         require_packages=args.require_packages,
+        doctor_preflight_evidence=doctor_preflight_evidence,
     )
     if args.report:
         _write_markdown_report(plan, args.report)

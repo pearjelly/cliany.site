@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+- `scripts/plan_next_iteration.py --doctor-json <path> --issues-dir ...` now embeds saved `cliany-site doctor --llm-live --json` evidence into candidate issue artifacts, including `doctor_preflight_state`, extracted values, source path, and doctor-json-aware issue/evidence bundle commands.
+- Planner-generated candidate issue bodies now render a `Current Doctor Preflight State` section when `--doctor-json` is provided, so maintainers can file blocker-ready PyPI candidate issues without hand-splicing live LLM/CDP evidence.
+
 ## [0.16.259] - 2026-07-07
 
 ### Added

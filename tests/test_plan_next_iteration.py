@@ -137,6 +137,48 @@ def _command_sha256(command: str) -> str:
     return hashlib.sha256(command.encode("utf-8")).hexdigest() if command else ""
 
 
+def _write_blocked_doctor_json(tmp_path: Path) -> Path:
+    path = tmp_path / "doctor.json"
+    path.write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "version": "1",
+                "command": "doctor",
+                "data": {
+                    "checks": [
+                        {
+                            "name": "cdp",
+                            "status": "ok",
+                            "action": "Chrome/CDP 可用，可以执行 login、explore 和浏览器 replay。",
+                        },
+                        {
+                            "name": "llm_live",
+                            "status": "warning",
+                            "details": {
+                                "error_code": "E_LLM_UNAVAILABLE",
+                                "retryable": True,
+                                "phase": "llm_preflight",
+                                "message": "LLM upstream unavailable: Connection error.",
+                            },
+                        },
+                    ],
+                    "summary": {
+                        "ready_for_explore": False,
+                        "capabilities": {
+                            "run_browser_workflows": {"ready": True},
+                            "generate_adapters": {"ready": False},
+                        },
+                    },
+                },
+            },
+            ensure_ascii=False,
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
 def _standard_release_flow_step_status_counts(
     steps: list[dict[str, object]],
 ) -> dict[str, int]:
@@ -7084,6 +7126,68 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "python scripts/release_readiness.py --target-version 0.16.2 --json" in readme
     assert "python scripts/check_release_publication.py --json" in readme
     assert "python scripts/validate_cases.py --strict" in readme
+
+
+def test_plan_cli_issue_files_accept_doctor_json(tmp_path, monkeypatch, capsys):
+    _write_pyproject(tmp_path)
+    issues_dir = tmp_path / "issue-artifacts"
+    doctor_json = _write_blocked_doctor_json(tmp_path)
+
+    monkeypatch.setattr(
+        plan_next_iteration,
+        "build_readiness_report",
+        lambda root, **kwargs: _readiness_report(),
+    )
+    monkeypatch.setattr(
+        plan_next_iteration,
+        "build_publication_report",
+        lambda root, **kwargs: _publication_report(),
+    )
+    monkeypatch.setattr(plan_next_iteration, "ROOT", tmp_path)
+
+    exit_code = plan_next_iteration.main(
+        [
+            "--target-version",
+            "0.16.2",
+            "--doctor-json",
+            str(doctor_json),
+            "--issues-dir",
+            str(issues_dir),
+            "--json",
+        ]
+    )
+
+    assert exit_code == 0
+    capsys.readouterr()
+    metadata = json.loads((issues_dir / "issue-metadata.json").read_text(encoding="utf-8"))
+    body = (issues_dir / "pypi-project-search.md").read_text(encoding="utf-8")
+    primary = metadata[0]
+
+    assert primary["doctor_preflight_evidence_source_path"] == str(doctor_json)
+    assert primary["doctor_preflight_evidence_ok"] is True
+    assert primary["doctor_preflight_evidence_missing_count"] == 0
+    assert primary["doctor_preflight_state"] == {
+        "status": "blocked",
+        "ready_for_adapter_package": False,
+        "primary_reason": "Live LLM preflight is warning.",
+        "reason_codes": [
+            "ready_for_explore_false",
+            "generate_adapters_not_ready",
+            "llm_live_status_warning",
+        ],
+        "next_action": (
+            "Attach the doctor preflight evidence to the candidate issue and do "
+            "not run candidate explore until live preflight is ready."
+        ),
+    }
+    assert primary["evidence_bundle_json_command"].endswith(
+        f"--evidence-bundle --doctor-json {doctor_json} --json"
+    )
+    assert "## Current Doctor Preflight State" in body
+    assert "- status: `blocked`" in body
+    assert "- primary_reason: Live LLM preflight is warning." in body
+    assert "- `checks[llm_live].details.error_code`: `E_LLM_UNAVAILABLE`" in body
+    assert f"- source_path: `{doctor_json}`" in body
 
 
 def test_plan_cli_writes_json_for_current_repo(capsys):
