@@ -11196,3 +11196,26 @@ def test_v016260_release_draft_describes_projected_daily_cap_blocker():
     assert "today would exceed the daily release cap 4/3" in text
     assert "daily_release_cap_blocked=false" in text
     assert "超过 `3/3` 上限" not in text
+
+
+def test_v016260_release_draft_tracks_doctor_state_contract_docs():
+    text = (ROOT / "docs" / "releases" / "v0.16.260-draft.md").read_text(
+        encoding="utf-8"
+    )
+
+    required = [
+        "README.md",
+        "README.zh.md",
+        "doctor_preflight_state_fields",
+        "doctor_preflight_state_statuses",
+        "preflight_state.status",
+        "preflight_state.ready_for_adapter_package",
+        "preflight_state.primary_reason",
+        "preflight_state.reason_codes",
+        "preflight_state.next_action",
+        "ready",
+        "blocked",
+        "missing_fields",
+    ]
+    for snippet in required:
+        assert snippet in text
