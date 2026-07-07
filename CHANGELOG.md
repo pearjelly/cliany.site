@@ -9,6 +9,7 @@
 
 ### Added
 - `scripts/plan_next_iteration.py --doctor-json <path> --issues-dir ...` now embeds saved `cliany-site doctor --llm-live --json` evidence into candidate issue artifacts, including `doctor_preflight_state`, extracted values, source path, and doctor-json-aware issue/evidence bundle commands.
+- `scripts/plan_next_iteration.py --doctor-json <path> --handoff-json` now exposes the primary candidate `doctor_preflight_state` plus direct status, ready, and primary-reason aliases, so release automation can stop before `explore` without expanding full issue artifacts.
 - Planner-generated candidate issue bodies now render a `Current Doctor Preflight State` section when `--doctor-json` is provided, so maintainers can file blocker-ready PyPI candidate issues without hand-splicing live LLM/CDP evidence.
 - Planner-generated `create-issues.sh` scripts now preflight required GitHub labels before running `gh issue create`, listing missing labels such as `case-proposal` so candidate issue publication fails before any partial issue creation.
 

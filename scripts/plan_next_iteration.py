@@ -1347,6 +1347,25 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
     primary_task = data.get("case_promotion_evidence_primary_next_task")
     if not isinstance(primary_task, dict):
         primary_task = {}
+    primary_candidate_promotion = next(
+        (
+            promotion
+            for promotion in data.get("candidate_promotions", [])
+            if isinstance(promotion, dict)
+            and promotion.get("case_id") == primary_task.get("case_id")
+        ),
+        {},
+    )
+    primary_doctor_preflight_state = primary_task.get("doctor_preflight_state")
+    if (
+        not isinstance(primary_doctor_preflight_state, dict)
+        and isinstance(primary_candidate_promotion, dict)
+    ):
+        primary_doctor_preflight_state = primary_candidate_promotion.get(
+            "doctor_preflight_state"
+        )
+    if not isinstance(primary_doctor_preflight_state, dict):
+        primary_doctor_preflight_state = {}
     publication_decision = data.get("publication_tag_publish_decision")
     if not isinstance(publication_decision, dict):
         publication_decision = {}
@@ -1456,6 +1475,16 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
                 "doctor_preflight_state_statuses_sha256"
             )
             or _stable_json_sha256([]),
+            "doctor_preflight_state": primary_doctor_preflight_state,
+            "doctor_preflight_state_status": primary_doctor_preflight_state.get(
+                "status"
+            ),
+            "doctor_preflight_ready_for_adapter_package": (
+                primary_doctor_preflight_state.get("ready_for_adapter_package")
+            ),
+            "doctor_preflight_primary_reason": primary_doctor_preflight_state.get(
+                "primary_reason"
+            ),
             "issue_template_command": data[
                 "case_promotion_evidence_primary_issue_template_command"
             ],

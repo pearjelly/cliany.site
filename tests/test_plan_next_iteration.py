@@ -1232,6 +1232,65 @@ def test_main_handoff_json_outputs_compact_payload(monkeypatch, tmp_path, capsys
     )
 
 
+def test_main_handoff_json_exposes_doctor_preflight_state(
+    monkeypatch, tmp_path, capsys
+):
+    _write_pyproject(tmp_path, version="0.16.256")
+    doctor_json = _write_blocked_doctor_json(tmp_path)
+    real_build_plan = plan_next_iteration.build_plan
+
+    def fake_build_plan(root, **kwargs):
+        readiness = _readiness_report()
+        target_version = kwargs.get("target_version")
+        if target_version:
+            readiness.target_version = target_version
+            readiness.draft.target_version = target_version
+        return real_build_plan(
+            tmp_path,
+            readiness_report=readiness,
+            publication_report=_published_release_with_unreleased_head_report(),
+            **kwargs,
+        )
+
+    monkeypatch.setattr(plan_next_iteration, "build_plan", fake_build_plan)
+
+    exit_code = plan_next_iteration.main(
+        [
+            "--target-version",
+            "0.16.257",
+            "--doctor-json",
+            str(doctor_json),
+            "--handoff-json",
+        ]
+    )
+
+    assert exit_code == 0
+    payload = json.loads(capsys.readouterr().out)
+    primary = payload["primary_candidate"]
+    assert primary["doctor_preflight_state"] == {
+        "status": "blocked",
+        "ready_for_adapter_package": False,
+        "primary_reason": "Live LLM preflight is warning.",
+        "reason_codes": [
+            "ready_for_explore_false",
+            "generate_adapters_not_ready",
+            "llm_live_status_warning",
+        ],
+        "next_action": (
+            "Attach the doctor preflight evidence to the candidate issue and do not "
+            "run candidate explore until live preflight is ready."
+        ),
+    }
+    assert primary["doctor_preflight_state_status"] == "blocked"
+    assert primary["doctor_preflight_ready_for_adapter_package"] is False
+    assert primary["doctor_preflight_primary_reason"] == (
+        "Live LLM preflight is warning."
+    )
+    assert payload["handoff_sha256"] == _stable_json_sha256(
+        {key: value for key, value in payload.items() if key != "handoff_sha256"}
+    )
+
+
 def test_candidate_issue_gate_allows_creation_after_publication_with_release_draft_review(tmp_path):
     _write_pyproject(tmp_path, version="0.16.1")
     reason_codes = ["release_draft_issues"]
