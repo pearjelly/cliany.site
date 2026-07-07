@@ -5896,6 +5896,11 @@ def _render_issue_artifacts_readme(
     gate_draft_ok = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_ok"))
     gate_draft_issues = _format_context_value(_candidate_issue_gate_evidence_value(plan, "release_draft_issue_count"))
     create_issues_safety = _issue_artifact_create_issues_safety(Path("create-issues.sh"), plan)
+    required_labels_text = (
+        ", ".join(f"`{label}`" for label in create_issues_safety["required_labels"])
+        if create_issues_safety["required_labels"]
+        else "`(none)`"
+    )
     release_draft_required_actions = _release_draft_required_actions(plan.release_draft_issues)
     standard_flow_status = _format_context_value(plan.standard_release_flow.get("status"))
     standard_flow_target_tag = _format_context_value(plan.standard_release_flow.get("target_tag"))
@@ -6162,6 +6167,9 @@ been reviewed and `{create_issues_safety["maintainer_review_ack_env"]}` is set.
 - preflight_required: `{str(create_issues_safety["preflight_required"]).lower()}`
 - preflight_command: `{create_issues_safety["preflight_command"]}`
 - preflight_json: `{create_issues_safety["preflight_json"]}`
+- required_labels: {required_labels_text}
+- required_label_count: `{create_issues_safety["required_label_count"]}`
+- required_labels_sha256: `{create_issues_safety["required_labels_sha256"]}`
 - maintainer_review_ack_env: `{create_issues_safety["maintainer_review_ack_env"]}`
 - maintainer_review_ack_required_when: `{create_issues_safety["maintainer_review_ack_required_when"]}`
 
@@ -6449,6 +6457,7 @@ def _issue_artifact_candidate_gate_preflight_command(plan: IterationPlan) -> str
 
 
 def _issue_artifact_create_issues_safety(script_path: Path, plan: IterationPlan) -> dict[str, Any]:
+    required_labels = _candidate_issue_required_labels(plan.candidate_promotions)
     return {
         "script": str(script_path),
         "dry_run_supported": True,
@@ -6457,6 +6466,9 @@ def _issue_artifact_create_issues_safety(script_path: Path, plan: IterationPlan)
         "preflight_required": True,
         "preflight_command": _issue_artifact_candidate_gate_preflight_command(plan),
         "preflight_json": "/tmp/cliany-issue-gate-check.json",
+        "required_labels": required_labels,
+        "required_label_count": len(required_labels),
+        "required_labels_sha256": _stable_json_sha256(required_labels),
         "maintainer_review_ack_env": "CLIANY_CREATE_ISSUES_ACK_REVIEW=1",
         "maintainer_review_ack_required_when": "candidate_issue_gate.requires_maintainer_review=true",
     }
@@ -6469,6 +6481,9 @@ def _issue_artifact_create_issues_safety_contract(create_issues_safety: dict[str
         "preflight_required": create_issues_safety["preflight_required"],
         "preflight_command": create_issues_safety["preflight_command"],
         "preflight_json": create_issues_safety["preflight_json"],
+        "required_labels": create_issues_safety["required_labels"],
+        "required_label_count": create_issues_safety["required_label_count"],
+        "required_labels_sha256": create_issues_safety["required_labels_sha256"],
         "maintainer_review_ack_env": create_issues_safety["maintainer_review_ack_env"],
         "maintainer_review_ack_required_when": create_issues_safety[
             "maintainer_review_ack_required_when"

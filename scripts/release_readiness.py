@@ -798,6 +798,9 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "doctor_preflight_state_status",
             "doctor_preflight_ready_for_adapter_package",
             "doctor_preflight_primary_reason",
+            "required_labels",
+            "required_label_count",
+            "required_labels_sha256",
         ],
     }
     for filename, snippets in template_snippets.items():

@@ -3766,6 +3766,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "python scripts/plan_next_iteration.py --target-version 0.16.2 --json"
         ),
         "preflight_json": "/tmp/cliany-issue-gate-check.json",
+        "required_labels": ["case-proposal", "good first issue"],
+        "required_label_count": 2,
+        "required_labels_sha256": _stable_json_sha256(
+            ["case-proposal", "good first issue"]
+        ),
         "maintainer_review_ack_env": "CLIANY_CREATE_ISSUES_ACK_REVIEW=1",
         "maintainer_review_ack_required_when": (
             "candidate_issue_gate.requires_maintainer_review=true"
@@ -3820,6 +3825,11 @@ def test_plan_writes_candidate_issue_files(tmp_path):
             "python scripts/plan_next_iteration.py --target-version 0.16.2 --json"
         ),
         "preflight_json": "/tmp/cliany-issue-gate-check.json",
+        "required_labels": ["case-proposal", "good first issue"],
+        "required_label_count": 2,
+        "required_labels_sha256": _stable_json_sha256(
+            ["case-proposal", "good first issue"]
+        ),
         "maintainer_review_ack_env": "CLIANY_CREATE_ISSUES_ACK_REVIEW=1",
         "maintainer_review_ack_required_when": (
             "candidate_issue_gate.requires_maintainer_review=true"
@@ -4621,7 +4631,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "review_checklist_tail_sha256": _stable_json_sha256(
             expected_review_checklist[-8:]
         ),
-        "create_issues_safety_contract_key_count": 7,
+        "create_issues_safety_contract_key_count": len(
+            expected_create_issues_safety_contract
+        ),
         "create_issues_safety_contract_sha256": _stable_json_sha256(
             expected_create_issues_safety_contract
         ),
@@ -6711,7 +6723,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "review_checklist_tail_sha256: "
         f"`{artifact_bundle_summary['review_checklist_tail_sha256']}`"
     ) in readme
-    assert "create_issues_safety_contract_key_count: `7`" in readme
+    assert (
+        f"create_issues_safety_contract_key_count: "
+        f"`{artifact_bundle_summary['create_issues_safety_contract_key_count']}`"
+    ) in readme
     assert (
         "create_issues_safety_contract_sha256: "
         f"`{artifact_bundle_summary['create_issues_safety_contract_sha256']}`"
@@ -7231,6 +7246,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "--target-version 0.16.2 --json`"
     ) in readme
     assert "preflight_json: `/tmp/cliany-issue-gate-check.json`" in readme
+    assert "required_labels: `case-proposal`, `good first issue`" in readme
+    assert "required_label_count: `2`" in readme
+    assert (
+        "required_labels_sha256: "
+        f"`{_stable_json_sha256(['case-proposal', 'good first issue'])}`"
+    ) in readme
     assert "maintainer_review_ack_env: `CLIANY_CREATE_ISSUES_ACK_REVIEW=1`" in readme
     assert (
         "maintainer_review_ack_required_when: "
