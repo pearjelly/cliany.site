@@ -564,7 +564,9 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "publication_remote_checked\n"
         "publication_remote_check_required\n"
         "publication_remote_audit_command\n"
-        "publication_remote_audit_command_sha256\n",
+        "publication_remote_audit_command_sha256\n"
+        "daily_release_resume_command\n"
+        "daily_release_resume_command_sha256\n",
         encoding="utf-8",
     )
     (repo / "scripts" / "extract_doctor_preflight_evidence.py").write_text(
@@ -2392,6 +2394,59 @@ def test_release_readiness_blocks_missing_planner_remote_handoff_contract(tmp_pa
     ) in report.project_metadata.issues
 
 
+def test_release_readiness_blocks_missing_planner_daily_resume_contract(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    script_path = repo / "scripts" / "plan_next_iteration.py"
+    script_path.parent.mkdir(parents=True, exist_ok=True)
+    script_path.write_text(
+        "Doctor Preflight State Contract\n"
+        "preflight_state.status\n"
+        "preflight_state.ready_for_adapter_package\n"
+        "preflight_state.primary_reason\n"
+        "preflight_state.reason_codes\n"
+        "preflight_state.next_action\n"
+        "- statuses: `ready`, `blocked`, `missing_fields`\n"
+        "preflight_state.status=ready\n"
+        "preflight_state.ready_for_adapter_package=true\n"
+        "doctor_preflight_state\n"
+        "doctor_preflight_state_status\n"
+        "doctor_preflight_ready_for_adapter_package\n"
+        "doctor_preflight_primary_reason\n"
+        "required_labels\n"
+        "required_label_count\n"
+        "required_labels_sha256\n"
+        "publication_remote_checked\n"
+        "publication_remote_check_required\n"
+        "publication_remote_audit_command\n"
+        "publication_remote_audit_command_sha256\n",
+        encoding="utf-8",
+    )
+    _git(repo, "add", "scripts/plan_next_iteration.py")
+    _git(
+        repo,
+        "commit",
+        "-m",
+        "add planner without daily resume handoff fixture",
+        env={
+            "GIT_AUTHOR_NAME": "Test",
+            "GIT_AUTHOR_EMAIL": "test@example.com",
+            "GIT_COMMITTER_NAME": "Test",
+            "GIT_COMMITTER_EMAIL": "test@example.com",
+            "GIT_AUTHOR_DATE": "2026-06-10T12:00:00+00:00",
+            "GIT_COMMITTER_DATE": "2026-06-10T12:00:00+00:00",
+        },
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file missing snippet: scripts/plan_next_iteration.py: "
+        "daily_release_resume_command"
+    ) in report.project_metadata.issues
+
+
 def test_release_readiness_blocks_missing_weekly_maintainer_loop_doc(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     (repo / "docs" / "weekly-maintainer-loop.md").unlink()
@@ -2423,6 +2478,38 @@ def test_release_readiness_blocks_stale_weekly_loop_handoff_preflight_aliases(tm
     assert (
         "open source metadata file missing snippet: docs/weekly-maintainer-loop.md: "
         "doctor_preflight_state_status"
+    ) in report.project_metadata.issues
+
+
+def test_release_readiness_blocks_stale_weekly_loop_daily_resume_contract(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "docs" / "weekly-maintainer-loop.md").write_text(
+        "# 每周维护者循环\n\n"
+        "python scripts/release_readiness.py --json\n"
+        "python scripts/validate_cases.py --strict\n"
+        "CLIANY_QA_OFFLINE=1\n"
+        "commit days N/3\n"
+        "doctor_preflight_state\n"
+        "doctor_preflight_state_status\n"
+        "doctor_preflight_ready_for_adapter_package\n"
+        "doctor_preflight_primary_reason\n"
+        "required_labels\n"
+        "required_label_count\n"
+        "required_labels_sha256\n"
+        "publication_remote_checked\n"
+        "publication_remote_check_required\n"
+        "publication_remote_audit_command\n"
+        "publication_remote_audit_command_sha256\n",
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file missing snippet: docs/weekly-maintainer-loop.md: "
+        "daily_release_resume_command"
     ) in report.project_metadata.issues
 
 

@@ -172,6 +172,8 @@ ARTIFACT_MANIFEST_KEYS = (
     "daily_release_cap_blocked",
     "daily_release_resume_date",
     "daily_release_resume_date_sha256",
+    "daily_release_resume_command",
+    "daily_release_resume_command_sha256",
     "candidate_count",
     "candidate_cases",
     "case_promotion_evidence_summary",
@@ -295,6 +297,8 @@ ARTIFACT_BUNDLE_SUMMARY_KEYS = (
     "daily_release_cap_blocked",
     "daily_release_resume_date",
     "daily_release_resume_date_sha256",
+    "daily_release_resume_command",
+    "daily_release_resume_command_sha256",
     "candidate_count",
     "candidate_cases_first_case",
     "candidate_cases_last_case",
@@ -1397,6 +1401,7 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
         remote_check=True,
         remote_name=publication_remote_name,
     )
+    daily_release_handoff = _daily_release_handoff_aliases(plan)
 
     payload: dict[str, Any] = {
         "schema_version": 1,
@@ -1406,9 +1411,7 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
         "recommended_slice": data["recommended_slice"],
         "readiness_ok": data["readiness_ok"],
         "publication_ok": data["publication_ok"],
-        "daily_release_cap_blocked": data["daily_release_cap_blocked"],
-        "daily_release_resume_date": data["daily_release_resume_date"],
-        "daily_release_resume_date_sha256": data["daily_release_resume_date_sha256"],
+        **daily_release_handoff,
         "blocker_count": len(data["blockers"]),
         "blockers": data["blockers"],
         "next_action_count": data["next_action_count"],
@@ -6359,7 +6362,24 @@ def _release_readiness_handoff_aliases(plan: IterationPlan) -> dict[str, object]
     return {key: value for key, value in aliases.items() if value is not None}
 
 
+def _daily_release_resume_command(plan: IterationPlan) -> str | None:
+    if not plan.daily_release_cap_blocked or not plan.daily_release_resume_date:
+        return None
+    primary_blocked_step = _standard_release_flow_primary_step_handoff(
+        plan.standard_release_flow,
+        "blocked",
+    )
+    command = primary_blocked_step.get("command")
+    if command:
+        return str(command)
+    return (
+        "python scripts/release_readiness.py --strict "
+        f"--target-version {plan.target_version}"
+    )
+
+
 def _daily_release_handoff_aliases(plan: IterationPlan) -> dict[str, object]:
+    resume_command = _daily_release_resume_command(plan)
     return {
         "daily_release_cap_blocked": plan.daily_release_cap_blocked,
         "daily_release_resume_date": plan.daily_release_resume_date,
@@ -6367,6 +6387,10 @@ def _daily_release_handoff_aliases(plan: IterationPlan) -> dict[str, object]:
             _stable_json_sha256(plan.daily_release_resume_date)
             if plan.daily_release_resume_date
             else None
+        ),
+        "daily_release_resume_command": resume_command,
+        "daily_release_resume_command_sha256": (
+            _stable_json_sha256(resume_command) if resume_command else None
         ),
     }
 

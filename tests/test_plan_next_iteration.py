@@ -1141,6 +1141,12 @@ def test_handoff_payload_projects_primary_release_and_candidate_actions(tmp_path
     assert payload["daily_release_resume_date_sha256"] == _stable_json_sha256(
         "2026-06-11"
     )
+    assert payload["daily_release_resume_command"] == (
+        "python scripts/release_readiness.py --strict --target-version 0.16.2"
+    )
+    assert payload["daily_release_resume_command_sha256"] == _stable_json_sha256(
+        payload["daily_release_resume_command"]
+    )
     assert payload["primary_next_action"] == plan.next_actions[0]
     assert payload["next_action_count"] == len(plan.next_actions)
     assert payload["blocker_count"] == len(plan.blockers)
@@ -3569,6 +3575,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "daily_release_cap_blocked": False,
         "daily_release_resume_date": None,
         "daily_release_resume_date_sha256": None,
+        "daily_release_resume_command": None,
+        "daily_release_resume_command_sha256": None,
         "candidate_issue_gate": _blocked_candidate_issue_gate(),
         "candidate_issue_gate_primary_reason_code": "publication_not_published",
         "candidate_issue_gate_primary_reason_description": (
@@ -3970,6 +3978,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "daily_release_cap_blocked": False,
         "daily_release_resume_date": None,
         "daily_release_resume_date_sha256": None,
+        "daily_release_resume_command": None,
+        "daily_release_resume_command_sha256": None,
         "candidate_count": 2,
         "candidate_cases_first_case": "pypi-project-search",
         "candidate_cases_last_case": "npm-package-search",
@@ -5014,6 +5024,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "daily_release_cap_blocked": False,
         "daily_release_resume_date": None,
         "daily_release_resume_date_sha256": None,
+        "daily_release_resume_command": None,
+        "daily_release_resume_command_sha256": None,
         "candidate_count": 2,
         "candidate_cases": ["pypi-project-search", "npm-package-search"],
         "case_promotion_evidence_summary": plan.case_promotion_evidence_summary,
