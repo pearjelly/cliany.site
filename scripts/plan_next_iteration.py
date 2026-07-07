@@ -1391,6 +1391,12 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
     publication_ref_context = data.get("publication_ref_context")
     if not isinstance(publication_ref_context, dict):
         publication_ref_context = {}
+    publication_remote_name = str(publication_ref_context.get("remote") or "origin")
+    publication_remote_checked = bool(publication_ref_context.get("remote_checked", False))
+    publication_remote_audit_command = _publication_audit_validation_command(
+        remote_check=True,
+        remote_name=publication_remote_name,
+    )
 
     payload: dict[str, Any] = {
         "schema_version": 1,
@@ -1436,6 +1442,12 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
             "branch_published": publication_ref_context.get("branch_published"),
             "tag_published": publication_ref_context.get("tag_published"),
         },
+        "publication_remote_checked": publication_remote_checked,
+        "publication_remote_check_required": not publication_remote_checked,
+        "publication_remote_audit_command": publication_remote_audit_command,
+        "publication_remote_audit_command_sha256": _stable_json_sha256(
+            publication_remote_audit_command
+        ),
         "primary_candidate": {
             "case_id": primary_task.get("case_id"),
             "task": primary_task.get("task"),

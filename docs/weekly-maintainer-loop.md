@@ -64,6 +64,8 @@ Candidate promotion 的 issue template、evidence bundle、promotion plan、case
 
 如果工具只读取候选 issue artifact 的 safety 层，优先读取 `create_issues_safety.required_labels`、`create_issues_safety.required_label_count` 和 `create_issues_safety.required_labels_sha256`。这些字段会和 `dry_run_supported`、`dry_run_env`、`preflight_required`、`preflight_command`、`preflight_json` 一起写入 `artifact-manifest.json` 和 artifacts `README.md` 的 `Create Issues Safety` 小节；创建 GitHub issue 前先确认这些 required labels 已存在，避免 `gh issue create` 在部分 issue 已创建后才因为 label 缺失失败。
 
+如果工具只读取 `python scripts/plan_next_iteration.py --handoff-json`，优先读取 `publication_remote_checked`、`publication_remote_check_required`、`publication_remote_audit_command` 和 `publication_remote_audit_command_sha256`。当 `publication_remote_check_required=true` 时，发布脚本先执行 handoff 给出的 `publication_remote_audit_command`，再继续判断 target tag、官网部署或候选 issue 创建，避免只凭本地 refs 推断远端发布状态。
+
 `plan_next_iteration.py` 的顶层 JSON、默认文本输出和 Markdown report 也会展示 `case_promotion_evidence_primary_next_task`、`case_promotion_evidence_primary_next_action`、`case_promotion_evidence_summary_sha256` 和 `case_promotion_command_plan_summary_sha256`，让维护工具不用展开完整 `case_promotion_evidence_summary` 就能直接定位首要 candidate evidence 任务，并在不生成 issue artifacts 的情况下检测 candidate evidence / command plan 摘要是否漂移。
 
 `plan_next_iteration.py` 还会输出 `plan_report_command`，默认给出 `python scripts/plan_next_iteration.py --target-version <version> --report /tmp/cliany-next-iteration.md`，让维护者和自动化能从 JSON 或默认文本直接复现同一份 Markdown 周计划报告。

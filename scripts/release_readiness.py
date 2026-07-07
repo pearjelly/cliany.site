@@ -683,6 +683,10 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "required_labels",
             "required_label_count",
             "required_labels_sha256",
+            "publication_remote_checked",
+            "publication_remote_check_required",
+            "publication_remote_audit_command",
+            "publication_remote_audit_command_sha256",
         ],
         "docs/quickstart-10min.md": [
             "10 分钟成功路径",
@@ -816,6 +820,10 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "required_labels",
             "required_label_count",
             "required_labels_sha256",
+            "publication_remote_checked",
+            "publication_remote_check_required",
+            "publication_remote_audit_command",
+            "publication_remote_audit_command_sha256",
         ],
     }
     for filename, snippets in template_snippets.items():

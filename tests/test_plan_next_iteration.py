@@ -1155,6 +1155,14 @@ def test_handoff_payload_projects_primary_release_and_candidate_actions(tmp_path
     assert payload["publication_summary"]["tag_decision_status"] == (
         "blocked_by_daily_release_cap"
     )
+    assert payload["publication_remote_checked"] is True
+    assert payload["publication_remote_check_required"] is False
+    assert payload["publication_remote_audit_command"] == (
+        "python scripts/check_release_publication.py --remote --json"
+    )
+    assert payload["publication_remote_audit_command_sha256"] == _stable_json_sha256(
+        payload["publication_remote_audit_command"]
+    )
     assert payload["primary_candidate"]["case_id"] == "pypi-project-search"
     assert payload["primary_candidate"]["task"] == "adapter_package"
     assert payload["primary_candidate"]["expected_adapter_package"] == (
@@ -1202,6 +1210,26 @@ def test_handoff_payload_projects_primary_release_and_candidate_actions(tmp_path
     assert payload["validation_commands"] == plan.validation_commands
     assert payload["handoff_sha256"] == _stable_json_sha256(
         {key: value for key, value in payload.items() if key != "handoff_sha256"}
+    )
+
+
+def test_handoff_payload_flags_missing_remote_publication_check(tmp_path):
+    _write_pyproject(tmp_path, version="0.16.1")
+    plan = plan_next_iteration.build_plan(
+        tmp_path,
+        readiness_report=_readiness_report(),
+        publication_report=_publication_report(),
+    )
+
+    payload = plan_next_iteration._handoff_payload(plan)
+
+    assert payload["publication_remote_checked"] is False
+    assert payload["publication_remote_check_required"] is True
+    assert payload["publication_remote_audit_command"] == (
+        "python scripts/check_release_publication.py --remote --json"
+    )
+    assert payload["publication_remote_audit_command_sha256"] == _stable_json_sha256(
+        "python scripts/check_release_publication.py --remote --json"
     )
 
 
