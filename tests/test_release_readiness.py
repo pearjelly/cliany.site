@@ -565,6 +565,8 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "selectors_sha256\n"
         "values_sha256\n"
         "preflight_state\n"
+        "summary.llm_live_preflight\n"
+        "checks[llm_live].details.status_code\n"
         "status\n"
         "ready_for_adapter_package\n"
         "primary_reason\n"

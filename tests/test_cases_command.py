@@ -9,6 +9,7 @@ from cliany_site.commands.cases import _print_human_cases
 
 DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = [
     "summary.ready_for_explore",
+    "summary.llm_live_preflight",
     "summary.capabilities.run_browser_workflows.ready",
     "summary.capabilities.generate_adapters.ready",
     "checks[cdp].status",
@@ -16,6 +17,7 @@ DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = [
     "checks[llm_live].status",
     "checks[llm_live].details.error_code",
     "checks[llm_live].details.retryable",
+    "checks[llm_live].details.status_code",
     "checks[llm_live].details.phase",
     "checks[llm_live].details.message",
 ]
@@ -108,6 +110,7 @@ def _write_blocked_doctor_json(tmp_path: Path) -> Path:
                             "details": {
                                 "error_code": "E_LLM_UNAVAILABLE",
                                 "retryable": True,
+                                "status_code": 502,
                                 "phase": "llm_preflight",
                                 "message": "LLM upstream unavailable: Connection error.",
                             },
@@ -115,6 +118,12 @@ def _write_blocked_doctor_json(tmp_path: Path) -> Path:
                     ],
                     "summary": {
                         "ready_for_explore": False,
+                        "llm_live_preflight": {
+                            "ready": False,
+                            "status": "warning",
+                            "error_code": "E_LLM_UNAVAILABLE",
+                            "status_code": 502,
+                        },
                         "capabilities": {
                             "run_browser_workflows": {"ready": True},
                             "generate_adapters": {"ready": False},
@@ -852,8 +861,10 @@ def test_cases_command_evidence_bundle_accepts_doctor_json(tmp_home, tmp_path):
     assert bundle["doctor_preflight_evidence_source_path"] == str(doctor_json)
     assert bundle["doctor_preflight_evidence_values"]["checks[llm_live].status"] == "warning"
     assert bundle["doctor_preflight_evidence_values"]["checks[llm_live].details.error_code"] == "E_LLM_UNAVAILABLE"
+    assert bundle["doctor_preflight_evidence_values"]["checks[llm_live].details.status_code"] == 502
     assert bundle["doctor_preflight_state"]["status"] == "blocked"
     assert bundle["doctor_preflight_state"]["ready_for_adapter_package"] is False
+    assert "llm_live_preflight_not_ready" in bundle["doctor_preflight_state"]["reason_codes"]
     assert "llm_live_status_warning" in bundle["doctor_preflight_state"]["reason_codes"]
     assert bundle["primary_next_task"]["doctor_preflight_state"] == bundle["doctor_preflight_state"]
     assert bundle["tasks"][0]["doctor_preflight_evidence_values"] == bundle["doctor_preflight_evidence_values"]

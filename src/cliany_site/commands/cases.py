@@ -50,6 +50,7 @@ LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = (
 )
 DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = (
     "summary.ready_for_explore",
+    "summary.llm_live_preflight",
     "summary.capabilities.run_browser_workflows.ready",
     "summary.capabilities.generate_adapters.ready",
     "checks[cdp].status",
@@ -57,11 +58,13 @@ DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = (
     "checks[llm_live].status",
     "checks[llm_live].details.error_code",
     "checks[llm_live].details.retryable",
+    "checks[llm_live].details.status_code",
     "checks[llm_live].details.phase",
     "checks[llm_live].details.message",
 )
 DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = (
     ("summary.ready_for_explore", "data.summary.ready_for_explore"),
+    ("summary.llm_live_preflight", "data.summary.llm_live_preflight"),
     (
         "summary.capabilities.run_browser_workflows.ready",
         "data.summary.capabilities.run_browser_workflows.ready",
@@ -80,6 +83,10 @@ DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = (
     (
         "checks[llm_live].details.retryable",
         'data.checks[name="llm_live"].details.retryable',
+    ),
+    (
+        "checks[llm_live].details.status_code",
+        'data.checks[name="llm_live"].details.status_code',
     ),
     (
         "checks[llm_live].details.phase",
@@ -269,6 +276,7 @@ def _doctor_preflight_blocker_comment() -> str:
         "Doctor preflight is blocking candidate promotion. Paste the doctor JSON "
         f"fields {fields}; keep `adapter_package` pending or blocked until "
         "`summary.ready_for_explore=true` and "
+        "`summary.llm_live_preflight.ready=true` and "
         "`summary.capabilities.generate_adapters.ready=true`."
     )
 
@@ -354,6 +362,12 @@ def _doctor_preflight_state_from_values(
             values.get("summary.ready_for_explore") is True,
             "ready_for_explore_false",
             "Doctor summary is not ready for explore.",
+        ),
+        (
+            isinstance(values.get("summary.llm_live_preflight"), dict)
+            and values["summary.llm_live_preflight"].get("ready") is True,
+            "llm_live_preflight_not_ready",
+            "Doctor LLM live preflight summary is not ready.",
         ),
         (
             values.get("summary.capabilities.run_browser_workflows.ready") is True,

@@ -60,6 +60,7 @@ LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = (
 )
 DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = (
     "summary.ready_for_explore",
+    "summary.llm_live_preflight",
     "summary.capabilities.run_browser_workflows.ready",
     "summary.capabilities.generate_adapters.ready",
     "checks[cdp].status",
@@ -67,11 +68,13 @@ DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = (
     "checks[llm_live].status",
     "checks[llm_live].details.error_code",
     "checks[llm_live].details.retryable",
+    "checks[llm_live].details.status_code",
     "checks[llm_live].details.phase",
     "checks[llm_live].details.message",
 )
 DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = (
     ("summary.ready_for_explore", "data.summary.ready_for_explore"),
+    ("summary.llm_live_preflight", "data.summary.llm_live_preflight"),
     (
         "summary.capabilities.run_browser_workflows.ready",
         "data.summary.capabilities.run_browser_workflows.ready",
@@ -90,6 +93,10 @@ DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = (
     (
         "checks[llm_live].details.retryable",
         'data.checks[name="llm_live"].details.retryable',
+    ),
+    (
+        "checks[llm_live].details.status_code",
+        'data.checks[name="llm_live"].details.status_code',
     ),
     (
         "checks[llm_live].details.phase",

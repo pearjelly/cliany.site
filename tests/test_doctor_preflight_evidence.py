@@ -27,6 +27,7 @@ def _doctor_payload() -> dict:
                     "ready": False,
                     "status": "warning",
                     "error_code": "E_LLM_UNAVAILABLE",
+                    "status_code": 502,
                 },
             },
             "checks": [
@@ -37,6 +38,7 @@ def _doctor_payload() -> dict:
                     "details": {
                         "error_code": "E_LLM_UNAVAILABLE",
                         "retryable": True,
+                        "status_code": 502,
                         "phase": "llm_preflight",
                         "message": "LLM upstream returned 502 Bad Gateway",
                     },
@@ -60,6 +62,7 @@ def _ready_doctor_payload() -> dict:
         "details": {
             "error_code": "",
             "retryable": False,
+            "status_code": 200,
             "phase": "llm_preflight",
             "message": "Live LLM preflight passed",
         },
@@ -74,9 +77,15 @@ def test_extracts_doctor_preflight_evidence_from_named_checks(tmp_path):
     evidence = extract_doctor_preflight_evidence.extract_file(payload_path)
 
     assert evidence["ok"] is True
-    assert evidence["field_count"] == 10
+    assert evidence["field_count"] == 12
     assert evidence["missing_count"] == 0
     assert evidence["values"]["summary.ready_for_explore"] is False
+    assert evidence["values"]["summary.llm_live_preflight"] == {
+        "ready": False,
+        "status": "warning",
+        "error_code": "E_LLM_UNAVAILABLE",
+        "status_code": 502,
+    }
     assert evidence["values"]["summary.capabilities.run_browser_workflows.ready"] is True
     assert evidence["values"]["summary.capabilities.generate_adapters.ready"] is False
     assert evidence["values"]["checks[cdp].status"] == "ok"
@@ -85,6 +94,7 @@ def test_extracts_doctor_preflight_evidence_from_named_checks(tmp_path):
         "E_LLM_UNAVAILABLE"
     )
     assert evidence["values"]["checks[llm_live].details.retryable"] is True
+    assert evidence["values"]["checks[llm_live].details.status_code"] == 502
     assert evidence["values"]["checks[llm_live].details.message"] == (
         "LLM upstream returned 502 Bad Gateway"
     )
@@ -98,6 +108,7 @@ def test_extracts_doctor_preflight_evidence_from_named_checks(tmp_path):
         "primary_reason": "Live LLM preflight is warning.",
         "reason_codes": [
             "ready_for_explore_false",
+            "llm_live_preflight_not_ready",
             "generate_adapters_not_ready",
             "llm_live_status_warning",
         ],
@@ -120,6 +131,19 @@ def test_preflight_state_ready_when_all_required_values_pass(tmp_path):
     assert evidence["preflight_state"]["next_action"].startswith(
         "Run the candidate explore command"
     )
+
+
+def test_preflight_state_blocks_when_summary_llm_live_preflight_is_not_ready(tmp_path):
+    payload = _ready_doctor_payload()
+    payload["data"]["summary"]["llm_live_preflight"]["ready"] = False
+    payload_path = tmp_path / "doctor-llm-summary-blocked.json"
+    payload_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    evidence = extract_doctor_preflight_evidence.extract_file(payload_path)
+
+    assert evidence["preflight_state"]["status"] == "blocked"
+    assert evidence["preflight_state"]["ready_for_adapter_package"] is False
+    assert "llm_live_preflight_not_ready" in evidence["preflight_state"]["reason_codes"]
 
 
 def test_preflight_state_missing_fields_when_named_check_absent(tmp_path):
@@ -174,8 +198,10 @@ def test_cli_outputs_markdown_blocker_comment(tmp_path, capsys):
         "candidate issue and do not run candidate explore until live preflight is ready.`"
     ) in text
     assert "| `summary.ready_for_explore` | `false` |" in text
+    assert "| `summary.llm_live_preflight` | `{'ready': False" in text
     assert "| `summary.capabilities.generate_adapters.ready` | `false` |" in text
     assert "| `checks[llm_live].details.error_code` | `E_LLM_UNAVAILABLE` |" in text
+    assert "| `checks[llm_live].details.status_code` | `502` |" in text
     assert (
         "| `checks[llm_live].details.message` | "
         "`LLM upstream returned 502 Bad Gateway` |"

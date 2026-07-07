@@ -30,6 +30,10 @@ MISSING_FIELDS_NEXT_ACTION = (
     "Attach the missing field list and original doctor JSON summary before "
     "continuing candidate promotion."
 )
+EXTRACTOR_CONTRACT_FIELDS = (
+    "summary.llm_live_preflight",
+    "checks[llm_live].details.status_code",
+)
 
 
 def _stable_json_sha256(value: object) -> str:
@@ -89,6 +93,12 @@ def _build_preflight_state(
             values.get("summary.ready_for_explore") is True,
             "ready_for_explore_false",
             "Doctor summary is not ready for explore.",
+        ),
+        (
+            isinstance(values.get("summary.llm_live_preflight"), dict)
+            and values["summary.llm_live_preflight"].get("ready") is True,
+            "llm_live_preflight_not_ready",
+            "Doctor LLM live preflight summary is not ready.",
         ),
         (
             values.get("summary.capabilities.run_browser_workflows.ready") is True,

@@ -36,17 +36,21 @@ LLM_LIVE_PREFLIGHT_BLOCKER_COMMENT = (
 )
 DOCTOR_PREFLIGHT_BLOCKER_COMMENT = (
     "Doctor preflight is blocking candidate promotion. Paste the doctor JSON fields "
-    "`summary.ready_for_explore`, `summary.capabilities.run_browser_workflows.ready`, "
+    "`summary.ready_for_explore`, `summary.llm_live_preflight`, "
+    "`summary.capabilities.run_browser_workflows.ready`, "
     "`summary.capabilities.generate_adapters.ready`, `checks[cdp].status`, "
     "`checks[cdp].action`, `checks[llm_live].status`, "
     "`checks[llm_live].details.error_code`, `checks[llm_live].details.retryable`, "
-    "`checks[llm_live].details.phase`, and `checks[llm_live].details.message`; "
+    "`checks[llm_live].details.status_code`, `checks[llm_live].details.phase`, "
+    "and `checks[llm_live].details.message`; "
     "keep `adapter_package` pending or blocked until "
     "`summary.ready_for_explore=true` and "
+    "`summary.llm_live_preflight.ready=true` and "
     "`summary.capabilities.generate_adapters.ready=true`."
 )
 DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = [
     "summary.ready_for_explore",
+    "summary.llm_live_preflight",
     "summary.capabilities.run_browser_workflows.ready",
     "summary.capabilities.generate_adapters.ready",
     "checks[cdp].status",
@@ -54,6 +58,7 @@ DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = [
     "checks[llm_live].status",
     "checks[llm_live].details.error_code",
     "checks[llm_live].details.retryable",
+    "checks[llm_live].details.status_code",
     "checks[llm_live].details.phase",
     "checks[llm_live].details.message",
 ]
@@ -63,6 +68,7 @@ DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE = {
 }
 DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = {
     "summary.ready_for_explore": "data.summary.ready_for_explore",
+    "summary.llm_live_preflight": "data.summary.llm_live_preflight",
     "summary.capabilities.run_browser_workflows.ready": (
         "data.summary.capabilities.run_browser_workflows.ready"
     ),
@@ -77,6 +83,9 @@ DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = {
     ),
     "checks[llm_live].details.retryable": (
         'data.checks[name="llm_live"].details.retryable'
+    ),
+    "checks[llm_live].details.status_code": (
+        'data.checks[name="llm_live"].details.status_code'
     ),
     "checks[llm_live].details.phase": 'data.checks[name="llm_live"].details.phase',
     "checks[llm_live].details.message": (
@@ -158,6 +167,7 @@ def _write_blocked_doctor_json(tmp_path: Path) -> Path:
                             "details": {
                                 "error_code": "E_LLM_UNAVAILABLE",
                                 "retryable": True,
+                                "status_code": 502,
                                 "phase": "llm_preflight",
                                 "message": "LLM upstream unavailable: Connection error.",
                             },
@@ -165,6 +175,12 @@ def _write_blocked_doctor_json(tmp_path: Path) -> Path:
                     ],
                     "summary": {
                         "ready_for_explore": False,
+                        "llm_live_preflight": {
+                            "ready": False,
+                            "status": "warning",
+                            "error_code": "E_LLM_UNAVAILABLE",
+                            "status_code": 502,
+                        },
                         "capabilities": {
                             "run_browser_workflows": {"ready": True},
                             "generate_adapters": {"ready": False},
@@ -1273,6 +1289,7 @@ def test_main_handoff_json_exposes_doctor_preflight_state(
         "primary_reason": "Live LLM preflight is warning.",
         "reason_codes": [
             "ready_for_explore_false",
+            "llm_live_preflight_not_ready",
             "generate_adapters_not_ready",
             "llm_live_status_warning",
         ],
@@ -2200,6 +2217,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             f"{DOCTOR_PREFLIGHT_BLOCKER_COMMENT}\n\n"
             "## Doctor Preflight Evidence Fields\n"
             "- `summary.ready_for_explore`\n"
+            "- `summary.llm_live_preflight`\n"
             "- `summary.capabilities.run_browser_workflows.ready`\n"
             "- `summary.capabilities.generate_adapters.ready`\n"
             "- `checks[cdp].status`\n"
@@ -2207,10 +2225,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- `checks[llm_live].status`\n"
             "- `checks[llm_live].details.error_code`\n"
             "- `checks[llm_live].details.retryable`\n"
+            "- `checks[llm_live].details.status_code`\n"
             "- `checks[llm_live].details.phase`\n"
             "- `checks[llm_live].details.message`\n\n"
             "## Doctor Preflight Evidence Template\n"
             "- `summary.ready_for_explore`: `<paste from doctor --llm-live --json>`\n"
+            "- `summary.llm_live_preflight`: `<paste from doctor --llm-live --json>`\n"
             "- `summary.capabilities.run_browser_workflows.ready`: "
             "`<paste from doctor --llm-live --json>`\n"
             "- `summary.capabilities.generate_adapters.ready`: "
@@ -2221,6 +2241,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- `checks[llm_live].details.error_code`: "
             "`<paste from doctor --llm-live --json>`\n"
             "- `checks[llm_live].details.retryable`: "
+            "`<paste from doctor --llm-live --json>`\n"
+            "- `checks[llm_live].details.status_code`: "
             "`<paste from doctor --llm-live --json>`\n"
             "- `checks[llm_live].details.phase`: `<paste from doctor --llm-live --json>`\n"
             "- `checks[llm_live].details.message`: `<paste from doctor --llm-live --json>`\n\n"
@@ -5397,7 +5419,10 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "`release-draft-handoff.json`: schema version, target version" in readme
     assert "## Planner Handoff" in readme
     assert "- handoff_sha256:" in readme
-    assert "- doctor_preflight_evidence_selector_count: `10`" in readme
+    assert (
+        f"- doctor_preflight_evidence_selector_count: "
+        f"`{DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT}`"
+    ) in readme
     assert (
         "- doctor_preflight_evidence_selectors_sha256: "
         f"`{_stable_json_sha256(DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)}`"
@@ -5433,11 +5458,13 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "`checks[llm_live].status`, `checks[llm_live].details.error_code`, "
         "`checks[llm_live].details.retryable`, `checks[llm_live].details.status_code`, "
         "`checks[llm_live].details.phase`, `checks[llm_live].details.message` | "
-        "`summary.ready_for_explore`, `summary.capabilities.run_browser_workflows.ready`, "
+        "`summary.ready_for_explore`, `summary.llm_live_preflight`, "
+        "`summary.capabilities.run_browser_workflows.ready`, "
         "`summary.capabilities.generate_adapters.ready`, `checks[cdp].status`, "
         "`checks[cdp].action`, `checks[llm_live].status`, "
         "`checks[llm_live].details.error_code`, `checks[llm_live].details.retryable`, "
-        "`checks[llm_live].details.phase`, `checks[llm_live].details.message` | "
+        "`checks[llm_live].details.status_code`, `checks[llm_live].details.phase`, "
+        "`checks[llm_live].details.message` | "
         "`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict` | "
         "`cliany-site cases --case-id pypi-project-search --issue-template` | "
@@ -7269,6 +7296,7 @@ def test_plan_cli_issue_files_accept_doctor_json(tmp_path, monkeypatch, capsys):
         "primary_reason": "Live LLM preflight is warning.",
         "reason_codes": [
             "ready_for_explore_false",
+            "llm_live_preflight_not_ready",
             "generate_adapters_not_ready",
             "llm_live_status_warning",
         ],

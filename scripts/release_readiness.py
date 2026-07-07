@@ -693,6 +693,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "selectors_sha256",
             "values_sha256",
             "preflight_state",
+            "summary.llm_live_preflight",
+            "checks[llm_live].details.status_code",
             "status",
             "ready_for_adapter_package",
             "primary_reason",

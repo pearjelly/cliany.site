@@ -21,6 +21,7 @@ DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE = {
 }
 DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = {
     "summary.ready_for_explore": "data.summary.ready_for_explore",
+    "summary.llm_live_preflight": "data.summary.llm_live_preflight",
     "summary.capabilities.run_browser_workflows.ready": (
         "data.summary.capabilities.run_browser_workflows.ready"
     ),
@@ -35,6 +36,9 @@ DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = {
     ),
     "checks[llm_live].details.retryable": (
         'data.checks[name="llm_live"].details.retryable'
+    ),
+    "checks[llm_live].details.status_code": (
+        'data.checks[name="llm_live"].details.status_code'
     ),
     "checks[llm_live].details.phase": 'data.checks[name="llm_live"].details.phase',
     "checks[llm_live].details.message": (
@@ -1144,7 +1148,7 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "| pending_count | `3` |" in text
     assert "| primary_next_action | Generate the adapter package. |" in text
     assert "| primary_next_task_acceptance_criteria | Attach the generated" in text
-    assert "| primary_doctor_preflight_evidence_template_field_count | `10` |" in text
+    assert "| primary_doctor_preflight_evidence_template_field_count | `12` |" in text
     assert (
         "| primary_doctor_preflight_evidence_template_sha256 | "
         f"`{DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256}` |"
@@ -1254,7 +1258,7 @@ def test_cases_report_prints_candidate_promotion_checklist(tmp_path, capsys):
     assert "promotion_evidence_primary: candidate-case/adapter_package (pending)" in text
     assert "promotion_evidence_evidence: Not attached yet." in text
     assert "promotion_evidence_next: Generate the adapter package." in text
-    assert "promotion_evidence_primary_doctor_preflight_evidence_template_field_count: 10" in text
+    assert "promotion_evidence_primary_doctor_preflight_evidence_template_field_count: 12" in text
     assert (
         "promotion_evidence_primary_doctor_preflight_evidence_template_sha256: "
         f"{DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256}"
