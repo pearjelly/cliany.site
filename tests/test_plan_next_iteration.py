@@ -5405,6 +5405,19 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert f"body_count: `{issue_body_summary['body_count']}`" in readme
     assert f"total_byte_count: `{issue_body_summary['total_byte_count']}`" in readme
     assert f"inventory_sha256: `{issue_body_summary['inventory_sha256']}`" in readme
+    assert "## Issue Body State Contract" in readme
+    assert (
+        "Each generated issue body must include `## Doctor Preflight State Contract`."
+        in readme
+    )
+    for field in DOCTOR_PREFLIGHT_STATE_FIELDS:
+        assert f"- `{field}`" in readme
+    assert "- statuses: `ready`, `blocked`, `missing_fields`" in readme
+    assert (
+        "Continue `adapter_package` only when `preflight_state.status=ready` "
+        "and `preflight_state.ready_for_adapter_package=true`."
+        in readme
+    )
     assert "## Artifact Bundle Summary" in readme
     assert (
         f"artifact_bundle_summary_key_count: `{len(plan_next_iteration.ARTIFACT_BUNDLE_SUMMARY_KEYS)}`"

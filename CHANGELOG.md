@@ -24,6 +24,7 @@
 - The GitHub case proposal and pull request templates now ask candidate promotion contributors to include the same doctor preflight state fields and status contract, and release readiness now blocks those templates if the contract drifts.
 - Planner-generated candidate issue bodies now always render the doctor preflight state contract, including the `preflight_state.*` fields, `ready` / `blocked` / `missing_fields` statuses, and the exact gate for continuing `adapter_package`.
 - Release readiness now blocks planner issue-body drift when `scripts/plan_next_iteration.py` stops rendering the doctor preflight state contract or the exact `adapter_package` continuation gate.
+- Candidate issue artifact READMEs now include an `Issue Body State Contract` section, so maintainers can verify the generated issue-body preflight gate before opening or copying individual issue files.
 
 ## [0.16.259] - 2026-07-07
 

@@ -5762,6 +5762,7 @@ def _render_issue_artifacts_readme(
     case_promotion_evidence_summary = _case_promotion_evidence_markdown(plan.case_promotion_evidence_summary)
     body_inventory = _issue_artifact_body_inventory_markdown(plan.candidate_promotions)
     body_summary = _issue_artifact_body_summary_markdown(plan.candidate_promotions)
+    body_state_contract = _issue_artifact_body_state_contract_markdown()
     gate_quick_summary = _issue_artifact_gate_quick_summary(plan)
     commit_cadence_summary = _issue_artifact_commit_cadence_markdown(plan)
     bundle_summary = _issue_artifact_bundle_summary_markdown(plan, summary=artifact_bundle_summary)
@@ -5945,6 +5946,8 @@ Generated for target version `{plan.target_version}`.
 {body_inventory}
 
 {body_summary}
+
+{body_state_contract}
 
 {gate_quick_summary}
 
@@ -6952,6 +6955,22 @@ def _issue_artifact_body_summary_markdown(promotions: list[CandidatePromotion]) 
             f"- body_count: `{summary['body_count']}`",
             f"- total_byte_count: `{summary['total_byte_count']}`",
             f"- inventory_sha256: `{summary['inventory_sha256']}`",
+        ]
+    )
+
+
+def _issue_artifact_body_state_contract_markdown() -> str:
+    return "\n".join(
+        [
+            "## Issue Body State Contract",
+            "",
+            "Each generated issue body must include `## Doctor Preflight State Contract`.",
+            *(f"- `{field}`" for field in DOCTOR_PREFLIGHT_STATE_FIELDS),
+            "- statuses: `ready`, `blocked`, `missing_fields`",
+            (
+                "- Continue `adapter_package` only when `preflight_state.status=ready` "
+                "and `preflight_state.ready_for_adapter_package=true`."
+            ),
         ]
     )
 
