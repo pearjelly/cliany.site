@@ -349,6 +349,14 @@ def _template_content(filename: str) -> str:
             "python scripts/validate_cases.py --strict\n"
             "python scripts/release_readiness.py --json\n"
             "primary_next_task_runbook\n"
+            "doctor_preflight_state_fields\n"
+            "doctor_preflight_state_statuses\n"
+            "preflight_state.status\n"
+            "preflight_state.ready_for_adapter_package\n"
+            "preflight_state.primary_reason\n"
+            "preflight_state.reason_codes\n"
+            "preflight_state.next_action\n"
+            "missing_fields\n"
             "case_promotion_evidence_primary_runbook_steps\n"
             "CLIANY_QA_OFFLINE=1\n"
             "~/.cliany-site/\n"
@@ -373,6 +381,14 @@ def _template_content(filename: str) -> str:
             "Candidate Promotion Tasks\n"
             "Issue Body Template\n"
             "primary_next_task_runbook\n"
+            "doctor_preflight_state_fields\n"
+            "doctor_preflight_state_statuses\n"
+            "preflight_state.status\n"
+            "preflight_state.ready_for_adapter_package\n"
+            "preflight_state.primary_reason\n"
+            "preflight_state.reason_codes\n"
+            "preflight_state.next_action\n"
+            "missing_fields\n"
             "case_promotion_evidence_primary_runbook_steps\n"
             "adapter_package\n"
             "metadata_validation\n"
@@ -1985,6 +2001,44 @@ def test_release_readiness_blocks_stale_case_proposal_candidate_runbook_alias(tm
     assert (
         "open source metadata file missing snippet: .github/ISSUE_TEMPLATE/case_proposal.yml: "
         "primary_next_task_runbook"
+    ) in report.project_metadata.issues
+
+
+def test_release_readiness_blocks_stale_pr_template_preflight_state_contract(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    template_path = repo / ".github" / "PULL_REQUEST_TEMPLATE.md"
+    text = template_path.read_text(encoding="utf-8")
+    template_path.write_text(
+        text.replace("doctor_preflight_state_fields\n", ""),
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file missing snippet: .github/PULL_REQUEST_TEMPLATE.md: "
+        "doctor_preflight_state_fields"
+    ) in report.project_metadata.issues
+
+
+def test_release_readiness_blocks_stale_case_proposal_preflight_state_contract(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    template_path = repo / ".github" / "ISSUE_TEMPLATE" / "case_proposal.yml"
+    text = template_path.read_text(encoding="utf-8")
+    template_path.write_text(
+        text.replace("doctor_preflight_state_fields\n", ""),
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file missing snippet: .github/ISSUE_TEMPLATE/case_proposal.yml: "
+        "doctor_preflight_state_fields"
     ) in report.project_metadata.issues
 
 

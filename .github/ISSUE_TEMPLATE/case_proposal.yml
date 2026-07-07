@@ -84,7 +84,7 @@ body:
     id: promotion
     attributes:
       label: "晋级证据 / Promotion Evidence"
-      description: "如果希望该候选案例后续晋级 active，请按 Candidate Promotion Tasks / Issue Body Template 结构说明包资产、metadata 校验和在线只读 smoke 证据；若从 issue artifacts 创建，请引用 primary_next_task_runbook 和 doctor_preflight_evidence_fields，并对比 case_promotion_evidence_primary_runbook_steps / hash 是否漂移。"
+      description: "如果希望该候选案例后续晋级 active，请按 Candidate Promotion Tasks / Issue Body Template 结构说明包资产、metadata 校验和在线只读 smoke 证据；若从 issue artifacts 创建，请引用 primary_next_task_runbook、doctor_preflight_evidence_fields、doctor_preflight_state_fields 和 doctor_preflight_state_statuses，并对比 case_promotion_evidence_primary_runbook_steps / hash 是否漂移。"
       placeholder: |
         primary_next_task_runbook:
         - cliany-site doctor --llm-live --json
@@ -95,6 +95,18 @@ body:
         - summary.capabilities.run_browser_workflows.ready
         - checks[cdp].status
         - checks[llm_live].details.error_code
+
+        doctor_preflight_state_fields:
+        - preflight_state.status
+        - preflight_state.ready_for_adapter_package
+        - preflight_state.primary_reason
+        - preflight_state.reason_codes
+        - preflight_state.next_action
+
+        doctor_preflight_state_statuses:
+        - ready
+        - blocked
+        - missing_fields
 
         case_promotion_evidence_primary_runbook_steps:
         - 对比 scripts/plan_next_iteration.py --issues-dir 生成的 summary/hash 是否仍匹配

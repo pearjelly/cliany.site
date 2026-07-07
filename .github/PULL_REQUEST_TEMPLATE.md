@@ -28,7 +28,7 @@
 - [ ] 本地运行相关 `ruff check ...` 通过 / Ran relevant `ruff check ...`
 - [ ] 如涉及真实案例库，已运行 `python scripts/validate_cases.py --strict`
 - [ ] 如涉及发布脚本、发布文档或 CI gate，已运行 `python scripts/release_readiness.py --json`
-- [ ] 如涉及 candidate promotion，PR 描述已贴出 `primary_next_task_runbook` 与 `doctor_preflight_evidence_fields`，并核对 `case_promotion_evidence_primary_runbook_steps` / hash 未漂移
+- [ ] 如涉及 candidate promotion，PR 描述已贴出 `primary_next_task_runbook`、`doctor_preflight_evidence_fields`、`doctor_preflight_state_fields` 和 `doctor_preflight_state_statuses`，确认 state contract 包含 `preflight_state.status`、`preflight_state.ready_for_adapter_package`、`preflight_state.primary_reason`、`preflight_state.reason_codes`、`preflight_state.next_action` 以及 `ready` / `blocked` / `missing_fields`，并核对 `case_promotion_evidence_primary_runbook_steps` / hash 未漂移
 - [ ] 如涉及默认 PR 门禁，已确认路径使用 `CLIANY_QA_OFFLINE=1`，不依赖真实 LLM key
 - [ ] 手动测试了以下场景 / Manually tested the following scenarios:
   <!-- 描述测试场景 / Describe your test scenarios -->

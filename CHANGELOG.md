@@ -21,6 +21,7 @@
 - The contributor starter map now mirrors the same doctor preflight state contract, so first-time contributors who enter through the starter guide see when to continue real `explore` versus attaching blocker evidence.
 - The case catalog README now documents the same doctor preflight state fields and `ready` / `blocked` / `missing_fields` status contract beside candidate evidence bundle handoffs, keeping case promotion guidance aligned with the runbook and contributor docs.
 - The public website maintainer entrypoints now spell out the same `preflight_state.*` field list and `ready` / `blocked` / `missing_fields` gate, so website-only readers can apply candidate blocker evidence without opening source docs.
+- The GitHub case proposal and pull request templates now ask candidate promotion contributors to include the same doctor preflight state fields and status contract, and release readiness now blocks those templates if the contract drifts.
 
 ## [0.16.259] - 2026-07-07
 
