@@ -569,6 +569,8 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "publication_remote_audit_command_sha256\n"
         "daily_release_resume_command\n"
         "daily_release_resume_command_sha256\n"
+        "issue_template_command_sha256\n"
+        "evidence_bundle_json_command_sha256\n"
         "promotion_command_plan_task_names_sha256\n"
         "promotion_command_plan_first_command_sha256\n"
         "promotion_command_plan_sha256\n"

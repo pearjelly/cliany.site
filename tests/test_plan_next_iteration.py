@@ -1210,8 +1210,34 @@ def test_handoff_payload_projects_primary_release_and_candidate_actions(tmp_path
     assert payload["primary_candidate"]["issue_template_command"] == (
         "cliany-site cases --case-id pypi-project-search --issue-template"
     )
+    assert payload["primary_candidate"]["issue_template_command_sha256"] == (
+        _stable_json_sha256(
+            "cliany-site cases --case-id pypi-project-search --issue-template"
+        )
+    )
+    assert payload["primary_candidate"]["issue_template_json_command"] == (
+        "cliany-site cases --case-id pypi-project-search --issue-template --json"
+    )
+    assert payload["primary_candidate"]["issue_template_json_command_sha256"] == (
+        _stable_json_sha256(
+            "cliany-site cases --case-id pypi-project-search --issue-template --json"
+        )
+    )
+    assert payload["primary_candidate"]["evidence_bundle_command"] == (
+        "cliany-site cases --case-id pypi-project-search --evidence-bundle"
+    )
+    assert payload["primary_candidate"]["evidence_bundle_command_sha256"] == (
+        _stable_json_sha256(
+            "cliany-site cases --case-id pypi-project-search --evidence-bundle"
+        )
+    )
     assert payload["primary_candidate"]["evidence_bundle_json_command"] == (
         "cliany-site cases --case-id pypi-project-search --evidence-bundle --json"
+    )
+    assert payload["primary_candidate"]["evidence_bundle_json_command_sha256"] == (
+        _stable_json_sha256(
+            "cliany-site cases --case-id pypi-project-search --evidence-bundle --json"
+        )
     )
     assert payload["primary_candidate"]["promotion_command_plan"] == (
         _pypi_promotion_command_plan()

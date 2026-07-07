@@ -1542,15 +1542,27 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
             "issue_template_command": data[
                 "case_promotion_evidence_primary_issue_template_command"
             ],
+            "issue_template_command_sha256": _stable_json_sha256(
+                data["case_promotion_evidence_primary_issue_template_command"]
+            ),
             "issue_template_json_command": data[
                 "case_promotion_evidence_primary_issue_template_json_command"
             ],
+            "issue_template_json_command_sha256": _stable_json_sha256(
+                data["case_promotion_evidence_primary_issue_template_json_command"]
+            ),
             "evidence_bundle_command": data[
                 "case_promotion_evidence_primary_evidence_bundle_command"
             ],
+            "evidence_bundle_command_sha256": _stable_json_sha256(
+                data["case_promotion_evidence_primary_evidence_bundle_command"]
+            ),
             "evidence_bundle_json_command": data[
                 "case_promotion_evidence_primary_evidence_bundle_json_command"
             ],
+            "evidence_bundle_json_command_sha256": _stable_json_sha256(
+                data["case_promotion_evidence_primary_evidence_bundle_json_command"]
+            ),
             "promotion_command_plan": primary_promotion_command_plan,
             "promotion_command_plan_count": len(primary_promotion_command_plan),
             "promotion_command_plan_sha256": _stable_json_sha256(
