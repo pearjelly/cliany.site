@@ -647,6 +647,10 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "python scripts/validate_cases.py --strict",
             "CLIANY_QA_OFFLINE=1",
             "commit days N/3",
+            "doctor_preflight_state",
+            "doctor_preflight_state_status",
+            "doctor_preflight_ready_for_adapter_package",
+            "doctor_preflight_primary_reason",
         ],
         "docs/quickstart-10min.md": [
             "10 分钟成功路径",

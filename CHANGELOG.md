@@ -16,6 +16,7 @@
 ### Fixed
 - The `v0.16.260` release draft now describes the daily release cap as a projected `3/3` to `4/3` target-tag blocker, avoiding ambiguous wording that implied the current `3/3` state was already over the limit.
 - Release readiness now blocks compact planner handoff drift when `scripts/plan_next_iteration.py` stops exposing the primary candidate `doctor_preflight_state` status, ready flag, or primary reason aliases.
+- Release readiness now blocks stale weekly maintainer loop handoff docs when `docs/weekly-maintainer-loop.md` stops documenting the compact planner `doctor_preflight_state` aliases used by release automation.
 - README and README.zh now spell out the `doctor_preflight_state_fields` values and the `ready` / `blocked` / `missing_fields` state set, so maintainers can apply the doctor-backed candidate blocker contract without cross-reading release drafts or source code.
 - The `v0.16.260` release draft now tracks the README/README.zh doctor preflight state contract and the related documentation checks, keeping release notes aligned with the current candidate blocker handoff.
 - The Candidate Promotion Runbook now documents the same `doctor_preflight_state_fields` and `doctor_preflight_state_statuses` contract, including when to continue to real `explore` versus attaching blocker evidence to the candidate issue.

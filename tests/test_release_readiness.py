@@ -526,7 +526,11 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "python scripts/release_readiness.py --json\n"
         "python scripts/validate_cases.py --strict\n"
         "CLIANY_QA_OFFLINE=1\n"
-        "commit days N/3\n",
+        "commit days N/3\n"
+        "doctor_preflight_state\n"
+        "doctor_preflight_state_status\n"
+        "doctor_preflight_ready_for_adapter_package\n"
+        "doctor_preflight_primary_reason\n",
         encoding="utf-8",
     )
     (repo / "cases" / "manifest.json").write_text(_cases_manifest(), encoding="utf-8")
@@ -2137,6 +2141,27 @@ def test_release_readiness_blocks_missing_weekly_maintainer_loop_doc(tmp_path):
     assert "open source metadata file is missing: docs/weekly-maintainer-loop.md" in (
         report.project_metadata.issues
     )
+
+
+def test_release_readiness_blocks_stale_weekly_loop_handoff_preflight_aliases(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "docs" / "weekly-maintainer-loop.md").write_text(
+        "# 每周维护者循环\n\n"
+        "python scripts/release_readiness.py --json\n"
+        "python scripts/validate_cases.py --strict\n"
+        "CLIANY_QA_OFFLINE=1\n"
+        "commit days N/3\n",
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file missing snippet: docs/weekly-maintainer-loop.md: "
+        "doctor_preflight_state_status"
+    ) in report.project_metadata.issues
 
 
 def test_release_readiness_blocks_missing_weekly_loop_link(tmp_path):
