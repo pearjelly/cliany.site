@@ -433,6 +433,7 @@ def _build_draft_report(root: Path, current_version: str, target_version: str) -
         "cases/README.md",
         "cases/manifest.json",
         "search-extraction-gap",
+        "llm_live_preflight_not_ready",
         "## 风险与兼容性",
         "## 发版前验证",
         "## 发版步骤",

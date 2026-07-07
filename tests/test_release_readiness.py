@@ -107,6 +107,8 @@ def _release_draft(target_version: str, current_version: str) -> str:
 ## 风险与兼容性
 
 - No compatibility risk.
+- doctor_preflight_state.reason_codes includes `llm_live_preflight_not_ready` when
+  `summary.llm_live_preflight.ready=false`.
 
 ## 发版前验证
 
@@ -1728,6 +1730,28 @@ def test_release_readiness_blocks_missing_release_draft(tmp_path):
     assert "release draft validation failed" in report.blockers
     assert report.draft.ok is False
     assert report.draft.issues == ["release draft is missing"]
+
+
+def test_release_readiness_blocks_stale_doctor_preflight_reason_code_draft(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    draft_path = repo / "docs" / "releases" / "v0.1.1-draft.md"
+    draft_path.write_text(
+        draft_path.read_text(encoding="utf-8").replace(
+            "- doctor_preflight_state.reason_codes includes `llm_live_preflight_not_ready` "
+            "when\n  `summary.llm_live_preflight.ready=false`.\n",
+            "",
+        ),
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "release draft validation failed" in report.blockers
+    assert report.draft.ok is False
+    assert report.draft.issues == [
+        "release draft missing snippet: llm_live_preflight_not_ready"
+    ]
 
 
 def test_release_readiness_blocks_stale_changelog_compare_link(tmp_path):

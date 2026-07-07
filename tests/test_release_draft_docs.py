@@ -11216,6 +11216,8 @@ def test_v016260_release_draft_tracks_doctor_state_contract_docs():
         "preflight_state.primary_reason",
         "preflight_state.reason_codes",
         "preflight_state.next_action",
+        "summary.llm_live_preflight.ready=false",
+        "llm_live_preflight_not_ready",
         "ready",
         "blocked",
         "missing_fields",
