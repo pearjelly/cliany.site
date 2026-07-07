@@ -1220,6 +1220,28 @@ def test_handoff_payload_projects_primary_release_and_candidate_actions(tmp_path
     assert payload["primary_candidate"]["promotion_command_plan_sha256"] == (
         _stable_json_sha256(_pypi_promotion_command_plan())
     )
+    assert payload["primary_candidate"]["promotion_command_plan_task_names"] == [
+        "llm_live_preflight",
+        "adapter_package",
+        "metadata_validation",
+        "online_smoke",
+    ]
+    assert payload["primary_candidate"]["promotion_command_plan_task_names_sha256"] == (
+        _stable_json_sha256(
+            [
+                "llm_live_preflight",
+                "adapter_package",
+                "metadata_validation",
+                "online_smoke",
+            ]
+        )
+    )
+    assert payload["primary_candidate"]["promotion_command_plan_first_command"] == (
+        "cliany-site doctor --llm-live --json"
+    )
+    assert payload["primary_candidate"]["promotion_command_plan_first_command_sha256"] == (
+        _stable_json_sha256("cliany-site doctor --llm-live --json")
+    )
     assert payload["primary_candidate"]["promotion_command_plan_summary"] == (
         _pypi_promotion_command_plan_summary()
     )

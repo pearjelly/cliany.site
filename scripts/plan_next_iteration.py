@@ -1397,6 +1397,18 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
         )
         if isinstance(promotion_command_plan_summary, dict):
             primary_promotion_command_plan_summary = promotion_command_plan_summary
+    primary_promotion_command_plan_task_names = [
+        str(item.get("task"))
+        for item in primary_promotion_command_plan
+        if isinstance(item, dict) and item.get("task")
+    ]
+    primary_promotion_command_plan_first_command = ""
+    if primary_promotion_command_plan:
+        first_plan_item = primary_promotion_command_plan[0]
+        if isinstance(first_plan_item, dict):
+            primary_promotion_command_plan_first_command = str(
+                first_plan_item.get("command") or ""
+            )
     publication_decision = data.get("publication_tag_publish_decision")
     if not isinstance(publication_decision, dict):
         publication_decision = {}
@@ -1543,6 +1555,20 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
             "promotion_command_plan_count": len(primary_promotion_command_plan),
             "promotion_command_plan_sha256": _stable_json_sha256(
                 primary_promotion_command_plan
+            ),
+            "promotion_command_plan_task_names": (
+                primary_promotion_command_plan_task_names
+            ),
+            "promotion_command_plan_task_names_sha256": _stable_json_sha256(
+                primary_promotion_command_plan_task_names
+            ),
+            "promotion_command_plan_first_command": (
+                primary_promotion_command_plan_first_command
+            ),
+            "promotion_command_plan_first_command_sha256": (
+                _stable_json_sha256(primary_promotion_command_plan_first_command)
+                if primary_promotion_command_plan_first_command
+                else None
             ),
             "promotion_command_plan_summary": primary_promotion_command_plan_summary,
             "promotion_command_plan_summary_sha256": _stable_json_sha256(
