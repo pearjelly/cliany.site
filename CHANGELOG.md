@@ -12,6 +12,9 @@
 - Planner-generated candidate issue bodies now render a `Current Doctor Preflight State` section when `--doctor-json` is provided, so maintainers can file blocker-ready PyPI candidate issues without hand-splicing live LLM/CDP evidence.
 - Planner-generated `create-issues.sh` scripts now preflight required GitHub labels before running `gh issue create`, listing missing labels such as `case-proposal` so candidate issue publication fails before any partial issue creation.
 
+### Fixed
+- The `v0.16.260` release draft now describes the daily release cap as a projected `3/3` to `4/3` target-tag blocker, avoiding ambiguous wording that implied the current `3/3` state was already over the limit.
+
 ## [0.16.259] - 2026-07-07
 
 ### Added

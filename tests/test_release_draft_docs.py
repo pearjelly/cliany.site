@@ -11185,3 +11185,14 @@ def test_v016254_release_draft_tracks_planner_issue_template_handoff():
     ]
     for snippet in required:
         assert snippet in text
+
+
+def test_v016260_release_draft_describes_projected_daily_cap_blocker():
+    text = (ROOT / "docs" / "releases" / "v0.16.260-draft.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "今天不再创建第四个 release tag" in text
+    assert "today would exceed the daily release cap 4/3" in text
+    assert "daily_release_cap_blocked=false" in text
+    assert "超过 `3/3` 上限" not in text
