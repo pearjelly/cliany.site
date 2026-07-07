@@ -1,6 +1,6 @@
 # Candidate Promotion Runbook
 
-**适用版本：** v0.16.257+
+**适用版本：** v0.16.258+
 **默认首要案例：** `pypi-project-search`
 **目标：** 把 candidate 案例晋级所需的 adapter package、metadata validation 和 online smoke 证据整理成可复制的维护流程。
 
@@ -18,7 +18,7 @@
 先运行：
 
 ```bash
-python scripts/plan_next_iteration.py --target-version 0.16.257 --remote --json
+python scripts/plan_next_iteration.py --target-version 0.16.258 --remote --json
 cliany-site cases --status candidate --promotion-plan --json
 cliany-site cases --case-id pypi-project-search --evidence-bundle --json
 ```
@@ -156,7 +156,7 @@ cliany-site cases --case-id pypi-project-search --evidence-bundle --json
 批量生成 candidate issue artifacts：
 
 ```bash
-python scripts/plan_next_iteration.py --target-version 0.16.257 --remote --issues-dir /tmp/cliany-candidate-issues
+python scripts/plan_next_iteration.py --target-version 0.16.258 --remote --issues-dir /tmp/cliany-candidate-issues
 ```
 
 创建公开 GitHub issue 前，先审阅：

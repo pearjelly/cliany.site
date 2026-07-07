@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.258] - 2026-07-07
+
+### Added
+- Candidate promotion handoffs now expose a stable doctor preflight state contract: `doctor_preflight_state_fields`, `doctor_preflight_state_fields_sha256`, `doctor_preflight_state_statuses`, and `doctor_preflight_state_statuses_sha256`.
+- Cases evidence bundles, promotion summaries, case validation summaries, planner candidate metadata, issue metadata, and compact planner handoffs now surface the same `preflight_state.*` contract so automation can read `ready`, `blocked`, and `missing_fields` semantics without opening the extractor source.
+
 ## [0.16.257] - 2026-07-07
 
 ### Added
@@ -2449,6 +2455,7 @@
 - 修正 QA 测试断言与实际 API 对齐
 
 [Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.257...HEAD
+[0.16.258]: https://github.com/pearjelly/cliany.site/compare/v0.16.257...v0.16.258
 [0.16.257]: https://github.com/pearjelly/cliany.site/compare/v0.16.256...v0.16.257
 [0.16.256]: https://github.com/pearjelly/cliany.site/compare/v0.16.255...v0.16.256
 [0.16.255]: https://github.com/pearjelly/cliany.site/compare/v0.16.254...v0.16.255

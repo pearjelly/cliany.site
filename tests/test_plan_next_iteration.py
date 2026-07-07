@@ -94,6 +94,30 @@ DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256 = hashlib.sha256(
         separators=(",", ":"),
     ).encode()
 ).hexdigest()
+DOCTOR_PREFLIGHT_STATE_FIELDS = [
+    "preflight_state.status",
+    "preflight_state.ready_for_adapter_package",
+    "preflight_state.primary_reason",
+    "preflight_state.reason_codes",
+    "preflight_state.next_action",
+]
+DOCTOR_PREFLIGHT_STATE_STATUSES = ["ready", "blocked", "missing_fields"]
+DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256 = hashlib.sha256(
+    json.dumps(
+        DOCTOR_PREFLIGHT_STATE_FIELDS,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+).hexdigest()
+DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256 = hashlib.sha256(
+    json.dumps(
+        DOCTOR_PREFLIGHT_STATE_STATUSES,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+).hexdigest()
 DOCTOR_PREFLIGHT_JSON_PATH = "/tmp/cliany-doctor-preflight.json"
 DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND = (
     "python scripts/extract_doctor_preflight_evidence.py "
@@ -1088,6 +1112,18 @@ def test_handoff_payload_projects_primary_release_and_candidate_actions(tmp_path
     assert payload["primary_candidate"]["doctor_preflight_evidence_markdown_command"] == (
         DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
     )
+    assert payload["primary_candidate"]["doctor_preflight_state_fields"] == (
+        DOCTOR_PREFLIGHT_STATE_FIELDS
+    )
+    assert payload["primary_candidate"]["doctor_preflight_state_fields_sha256"] == (
+        DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256
+    )
+    assert payload["primary_candidate"]["doctor_preflight_state_statuses"] == (
+        DOCTOR_PREFLIGHT_STATE_STATUSES
+    )
+    assert payload["primary_candidate"]["doctor_preflight_state_statuses_sha256"] == (
+        DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256
+    )
     assert payload["primary_candidate"]["issue_template_command"] == (
         "cliany-site cases --case-id pypi-project-search --issue-template"
     )
@@ -1129,6 +1165,12 @@ def test_main_handoff_json_outputs_compact_payload(monkeypatch, tmp_path, capsys
     assert payload["primary_candidate"]["task"] == "adapter_package"
     assert payload["primary_candidate"]["doctor_preflight_evidence_selectors"] == (
         DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS
+    )
+    assert payload["primary_candidate"]["doctor_preflight_state_fields"] == (
+        DOCTOR_PREFLIGHT_STATE_FIELDS
+    )
+    assert payload["primary_candidate"]["doctor_preflight_state_statuses"] == (
+        DOCTOR_PREFLIGHT_STATE_STATUSES
     )
     assert "candidate_promotions" not in payload
     assert "case_promotion_evidence_summary" not in payload
@@ -1646,6 +1688,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "doctor_preflight_evidence_markdown_command": (
             DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
         ),
+        "doctor_preflight_state_fields": DOCTOR_PREFLIGHT_STATE_FIELDS,
+        "doctor_preflight_state_fields_sha256": DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256,
+        "doctor_preflight_state_statuses": DOCTOR_PREFLIGHT_STATE_STATUSES,
+        "doctor_preflight_state_statuses_sha256": (
+            DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256
+        ),
     }
     assert (
         data["case_promotion_evidence_summary"]["primary_task_detail"]
@@ -1853,6 +1901,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "doctor_preflight_evidence_markdown_command": (
                 DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
             ),
+            "doctor_preflight_state_fields": DOCTOR_PREFLIGHT_STATE_FIELDS,
+            "doctor_preflight_state_fields_sha256": DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256,
+            "doctor_preflight_state_statuses": DOCTOR_PREFLIGHT_STATE_STATUSES,
+            "doctor_preflight_state_statuses_sha256": (
+                DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256
+            ),
         },
         "evidence_bundle_primary_next_task": {
             "task": "adapter_package",
@@ -1894,6 +1948,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "doctor_preflight_evidence_markdown_command": (
                 DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
             ),
+            "doctor_preflight_state_fields": DOCTOR_PREFLIGHT_STATE_FIELDS,
+            "doctor_preflight_state_fields_sha256": DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256,
+            "doctor_preflight_state_statuses": DOCTOR_PREFLIGHT_STATE_STATUSES,
+            "doctor_preflight_state_statuses_sha256": (
+                DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256
+            ),
         },
         "evidence_bundle_primary_next_task_runbook": _pypi_primary_runbook(),
         "candidate_package_validation_command": (
@@ -1925,6 +1985,12 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         ),
         "doctor_preflight_evidence_markdown_command": (
             DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
+        ),
+        "doctor_preflight_state_fields": DOCTOR_PREFLIGHT_STATE_FIELDS,
+        "doctor_preflight_state_fields_sha256": DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256,
+        "doctor_preflight_state_statuses": DOCTOR_PREFLIGHT_STATE_STATUSES,
+        "doctor_preflight_state_statuses_sha256": (
+            DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256
         ),
         "llm_live_preflight_evidence_fields": [
             "summary.ready_for_explore",
@@ -4631,6 +4697,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "doctor_preflight_evidence_markdown_command": (
             DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
         ),
+        "doctor_preflight_state_fields": DOCTOR_PREFLIGHT_STATE_FIELDS,
+        "doctor_preflight_state_fields_sha256": DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256,
+        "doctor_preflight_state_statuses": DOCTOR_PREFLIGHT_STATE_STATUSES,
+        "doctor_preflight_state_statuses_sha256": (
+            DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256
+        ),
     }
     assert metadata[0]["evidence_bundle_primary_next_task"] == {
         "task": "adapter_package",
@@ -4671,6 +4743,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         ),
         "doctor_preflight_evidence_markdown_command": (
             DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
+        ),
+        "doctor_preflight_state_fields": DOCTOR_PREFLIGHT_STATE_FIELDS,
+        "doctor_preflight_state_fields_sha256": DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256,
+        "doctor_preflight_state_statuses": DOCTOR_PREFLIGHT_STATE_STATUSES,
+        "doctor_preflight_state_statuses_sha256": (
+            DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256
         ),
     }
     assert metadata[0]["evidence_bundle_primary_next_task_runbook"] == _pypi_primary_runbook()

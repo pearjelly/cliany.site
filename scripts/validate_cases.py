@@ -100,6 +100,14 @@ DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = (
         'data.checks[name="llm_live"].details.message',
     ),
 )
+DOCTOR_PREFLIGHT_STATE_FIELDS = (
+    "preflight_state.status",
+    "preflight_state.ready_for_adapter_package",
+    "preflight_state.primary_reason",
+    "preflight_state.reason_codes",
+    "preflight_state.next_action",
+)
+DOCTOR_PREFLIGHT_STATE_STATUSES = ("ready", "blocked", "missing_fields")
 PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -289,6 +297,17 @@ def _doctor_preflight_evidence_template_aliases(template: dict[str, Any]) -> dic
     return {
         "doctor_preflight_evidence_template_field_count": len(template),
         "doctor_preflight_evidence_template_sha256": _stable_json_sha256(template),
+    }
+
+
+def _doctor_preflight_state_contract(*, required: bool) -> dict[str, Any]:
+    fields = list(DOCTOR_PREFLIGHT_STATE_FIELDS) if required else []
+    statuses = list(DOCTOR_PREFLIGHT_STATE_STATUSES) if required else []
+    return {
+        "doctor_preflight_state_fields": fields,
+        "doctor_preflight_state_fields_sha256": _stable_json_sha256(fields),
+        "doctor_preflight_state_statuses": statuses,
+        "doctor_preflight_state_statuses_sha256": _stable_json_sha256(statuses),
     }
 
 
@@ -922,6 +941,9 @@ def _build_promotion_evidence_summary(checks: list[CaseCheck]) -> dict[str, Any]
                 ),
                 **_doctor_preflight_evidence_template_aliases(
                     doctor_preflight_evidence_template
+                ),
+                **_doctor_preflight_state_contract(
+                    required=llm_live_preflight_required
                 ),
                 "acceptance_criteria": PROMOTION_ACCEPTANCE_CRITERIA[field_name],
             }

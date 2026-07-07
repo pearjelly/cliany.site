@@ -93,6 +93,14 @@ DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = (
         'data.checks[name="llm_live"].details.message',
     ),
 )
+DOCTOR_PREFLIGHT_STATE_FIELDS = (
+    "preflight_state.status",
+    "preflight_state.ready_for_adapter_package",
+    "preflight_state.primary_reason",
+    "preflight_state.reason_codes",
+    "preflight_state.next_action",
+)
+DOCTOR_PREFLIGHT_STATE_STATUSES = ("ready", "blocked", "missing_fields")
 PROMOTION_ACCEPTANCE_CRITERIA = {
     "adapter_package": (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path "
@@ -314,6 +322,17 @@ def _doctor_preflight_evidence_template_aliases(
     }
 
 
+def _doctor_preflight_state_contract(*, required: bool) -> dict[str, Any]:
+    fields = list(DOCTOR_PREFLIGHT_STATE_FIELDS) if required else []
+    statuses = list(DOCTOR_PREFLIGHT_STATE_STATUSES) if required else []
+    return {
+        "doctor_preflight_state_fields": fields,
+        "doctor_preflight_state_fields_sha256": _stable_json_sha256(fields),
+        "doctor_preflight_state_statuses": statuses,
+        "doctor_preflight_state_statuses_sha256": _stable_json_sha256(statuses),
+    }
+
+
 def _doctor_preflight_evidence_template_aliases_from_task(
     task: dict[str, Any],
 ) -> dict[str, Any]:
@@ -396,6 +415,9 @@ def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[st
         ),
         **_doctor_preflight_evidence_template_aliases(
             doctor_preflight_evidence_template
+        ),
+        **_doctor_preflight_state_contract(
+            required=bool(primary.get("llm_live_preflight_required"))
         ),
         "command": str(primary.get("command") or ""),
         "command_source": str(primary.get("command_source") or ""),
@@ -731,6 +753,9 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                 required=llm_live_preflight_required
             )
         )
+        doctor_preflight_state_contract = _doctor_preflight_state_contract(
+            required=llm_live_preflight_required
+        )
         tasks.append(
             {
                 "task": task,
@@ -766,6 +791,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
                 ),
                 **doctor_preflight_evidence_command_fields,
                 **doctor_preflight_evidence_template_aliases,
+                **doctor_preflight_state_contract,
                 "command": command,
                 "command_source": command_source,
                 "command_missing": command_missing,
@@ -813,6 +839,7 @@ def _candidate_evidence_bundle(case: dict[str, Any]) -> dict[str, Any]:
         "doctor_preflight_evidence_selectors": _doctor_preflight_evidence_selectors(),
         **_doctor_preflight_evidence_command_fields(required=True),
         **_doctor_preflight_evidence_template_aliases(),
+        **_doctor_preflight_state_contract(required=True),
         "candidate_package_validation_command": CANDIDATE_PACKAGE_VALIDATION_COMMAND
         if adapter_domain
         else "",
@@ -1320,7 +1347,7 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
 def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
     status_counts: Counter[str] = Counter()
     task_status_counts: dict[str, Counter[str]] = {task: Counter() for task in PROMOTION_TASKS}
-    pending_tasks: list[dict[str, str]] = []
+    pending_tasks: list[dict[str, Any]] = []
     task_count = 0
     candidate_bundles = [
         _candidate_evidence_bundle(case)
@@ -1410,19 +1437,24 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
                         **_doctor_preflight_evidence_template_aliases(
                             doctor_preflight_evidence_template
                         ),
+                        **_doctor_preflight_state_contract(
+                            required=bool(
+                                task_evidence.get("llm_live_preflight_required")
+                            )
+                        ),
                     }
                 )
 
     primary = pending_tasks[0] if pending_tasks else {}
     primary_runbook: list[dict[str, Any]] = []
-    primary_case_id = primary.get("case_id", "")
-    primary_task = primary.get("task", "")
+    primary_case_id = str(primary.get("case_id") or "")
+    primary_task = str(primary.get("task") or "")
     if primary_case_id and primary_task:
         for bundle in ranked_bundles:
             if bundle.get("case_id") != primary_case_id:
                 continue
-            task = bundle.get("primary_next_task")
-            if not isinstance(task, dict) or task.get("task") != primary_task:
+            bundle_task = bundle.get("primary_next_task")
+            if not isinstance(bundle_task, dict) or bundle_task.get("task") != primary_task:
                 continue
             runbook = bundle.get("primary_next_task_runbook")
             if isinstance(runbook, list):

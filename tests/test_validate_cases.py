@@ -52,6 +52,30 @@ DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256 = hashlib.sha256(
         separators=(",", ":"),
     ).encode()
 ).hexdigest()
+DOCTOR_PREFLIGHT_STATE_FIELDS = [
+    "preflight_state.status",
+    "preflight_state.ready_for_adapter_package",
+    "preflight_state.primary_reason",
+    "preflight_state.reason_codes",
+    "preflight_state.next_action",
+]
+DOCTOR_PREFLIGHT_STATE_STATUSES = ["ready", "blocked", "missing_fields"]
+DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256 = hashlib.sha256(
+    json.dumps(
+        DOCTOR_PREFLIGHT_STATE_FIELDS,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+).hexdigest()
+DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256 = hashlib.sha256(
+    json.dumps(
+        DOCTOR_PREFLIGHT_STATE_STATUSES,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+).hexdigest()
 LLM_LIVE_PREFLIGHT_COMMAND_SHA256 = hashlib.sha256(
     validate_cases.LLM_LIVE_PREFLIGHT_COMMAND.encode("utf-8")
 ).hexdigest()
@@ -68,6 +92,9 @@ CANDIDATE_PACKAGE_VALIDATION_COMMAND_SHA256 = hashlib.sha256(
 ).hexdigest()
 EMPTY_TEMPLATE_SHA256 = hashlib.sha256(
     json.dumps({}, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+).hexdigest()
+EMPTY_LIST_SHA256 = hashlib.sha256(
+    json.dumps([], ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
 ).hexdigest()
 
 
@@ -431,6 +458,12 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         "doctor_preflight_evidence_markdown_command": (
             DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
         ),
+        "doctor_preflight_state_fields": DOCTOR_PREFLIGHT_STATE_FIELDS,
+        "doctor_preflight_state_fields_sha256": DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256,
+        "doctor_preflight_state_statuses": DOCTOR_PREFLIGHT_STATE_STATUSES,
+        "doctor_preflight_state_statuses_sha256": (
+            DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256
+        ),
         "acceptance_criteria": (
             "Attach the generated <domain>-<version>.cliany-adapter.tar.gz "
             "package path or GitHub Release asset name."
@@ -458,6 +491,12 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         summary["pending_tasks"][0]["doctor_preflight_evidence_markdown_command"]
         == DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
     )
+    assert summary["pending_tasks"][0]["doctor_preflight_state_fields"] == (
+        DOCTOR_PREFLIGHT_STATE_FIELDS
+    )
+    assert summary["pending_tasks"][0]["doctor_preflight_state_statuses"] == (
+        DOCTOR_PREFLIGHT_STATE_STATUSES
+    )
     assert (
         summary["pending_tasks"][0]["llm_live_preflight_command_sha256"]
         == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
@@ -466,6 +505,8 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     assert summary["pending_tasks"][1]["doctor_preflight_evidence_selectors"] == {}
     assert summary["pending_tasks"][1]["doctor_preflight_evidence_extract_command"] == ""
     assert summary["pending_tasks"][1]["doctor_preflight_evidence_markdown_command"] == ""
+    assert summary["pending_tasks"][1]["doctor_preflight_state_fields"] == []
+    assert summary["pending_tasks"][1]["doctor_preflight_state_statuses"] == []
     assert summary["pending_tasks"][1]["llm_live_preflight_command_sha256"] == ""
     assert summary["pending_tasks"][1]["doctor_preflight_evidence_template_field_count"] == 0
     assert (
@@ -729,6 +770,10 @@ def test_cases_report_prioritizes_candidate_with_more_complete_evidence(tmp_path
         "doctor_preflight_evidence_template_sha256": EMPTY_TEMPLATE_SHA256,
         "doctor_preflight_evidence_extract_command": "",
         "doctor_preflight_evidence_markdown_command": "",
+        "doctor_preflight_state_fields": [],
+        "doctor_preflight_state_fields_sha256": EMPTY_LIST_SHA256,
+        "doctor_preflight_state_statuses": [],
+        "doctor_preflight_state_statuses_sha256": EMPTY_LIST_SHA256,
         "acceptance_criteria": (
             "Paste `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
             "--include-candidate-packages --strict` output showing the candidate package "

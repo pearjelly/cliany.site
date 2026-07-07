@@ -118,6 +118,14 @@ DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = (
         'data.checks[name="llm_live"].details.message',
     ),
 )
+DOCTOR_PREFLIGHT_STATE_FIELDS = (
+    "preflight_state.status",
+    "preflight_state.ready_for_adapter_package",
+    "preflight_state.primary_reason",
+    "preflight_state.reason_codes",
+    "preflight_state.next_action",
+)
+DOCTOR_PREFLIGHT_STATE_STATUSES = ("ready", "blocked", "missing_fields")
 WEBSITE_DEPLOY_COMMAND = "cd site && vercel link --yes --project cliany.site && vercel --prod --yes"
 WEBSITE_INSPECT_COMMAND = "cd site && vercel inspect www.cliany.site --wait --timeout 90s"
 CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA = {
@@ -745,6 +753,17 @@ def _doctor_preflight_evidence_template_aliases(
     }
 
 
+def _doctor_preflight_state_contract(*, required: bool) -> dict[str, Any]:
+    fields = list(DOCTOR_PREFLIGHT_STATE_FIELDS) if required else []
+    statuses = list(DOCTOR_PREFLIGHT_STATE_STATUSES) if required else []
+    return {
+        "doctor_preflight_state_fields": fields,
+        "doctor_preflight_state_fields_sha256": _stable_json_sha256(fields),
+        "doctor_preflight_state_statuses": statuses,
+        "doctor_preflight_state_statuses_sha256": _stable_json_sha256(statuses),
+    }
+
+
 @dataclass(frozen=True)
 class CandidatePromotion:
     case_id: str
@@ -822,6 +841,7 @@ class CandidatePromotion:
             **_doctor_preflight_evidence_template_aliases(
                 self.doctor_preflight_evidence_template
             ),
+            **_doctor_preflight_state_contract(required=True),
             "llm_live_preflight_evidence_fields": self.llm_live_preflight_evidence_fields,
             "issue_template_command": self.issue_template_command,
             "issue_template_json_command": self.issue_template_json_command,
@@ -1270,6 +1290,22 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
                 "doctor_preflight_evidence_markdown_command"
             )
             or "",
+            "doctor_preflight_state_fields": primary_task.get(
+                "doctor_preflight_state_fields"
+            )
+            or [],
+            "doctor_preflight_state_fields_sha256": primary_task.get(
+                "doctor_preflight_state_fields_sha256"
+            )
+            or _stable_json_sha256([]),
+            "doctor_preflight_state_statuses": primary_task.get(
+                "doctor_preflight_state_statuses"
+            )
+            or [],
+            "doctor_preflight_state_statuses_sha256": primary_task.get(
+                "doctor_preflight_state_statuses_sha256"
+            )
+            or _stable_json_sha256([]),
             "issue_template_command": data[
                 "case_promotion_evidence_primary_issue_template_command"
             ],
@@ -2682,6 +2718,7 @@ def _llm_live_preflight_task_fields(task_name: str) -> dict[str, Any]:
         **_doctor_preflight_evidence_template_aliases(
             doctor_preflight_evidence_template
         ),
+        **_doctor_preflight_state_contract(required=required),
     }
 
 
@@ -2727,6 +2764,7 @@ def _task_with_doctor_preflight_evidence_fields(task: Any) -> Any:
                 doctor_preflight_evidence_template
             )
         )
+        normalized.update(_doctor_preflight_state_contract(required=True))
     else:
         command_text = str(normalized.get("llm_live_preflight_command") or "")
         normalized["llm_live_preflight_command_sha256"] = (
@@ -2744,6 +2782,7 @@ def _task_with_doctor_preflight_evidence_fields(task: Any) -> Any:
                 doctor_preflight_evidence_template
             )
         )
+        normalized.update(_doctor_preflight_state_contract(required=False))
     return normalized
 
 

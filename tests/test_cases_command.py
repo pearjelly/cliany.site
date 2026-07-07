@@ -45,6 +45,30 @@ DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256 = hashlib.sha256(
         separators=(",", ":"),
     ).encode()
 ).hexdigest()
+DOCTOR_PREFLIGHT_STATE_FIELDS = [
+    "preflight_state.status",
+    "preflight_state.ready_for_adapter_package",
+    "preflight_state.primary_reason",
+    "preflight_state.reason_codes",
+    "preflight_state.next_action",
+]
+DOCTOR_PREFLIGHT_STATE_STATUSES = ["ready", "blocked", "missing_fields"]
+DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256 = hashlib.sha256(
+    json.dumps(
+        DOCTOR_PREFLIGHT_STATE_FIELDS,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+).hexdigest()
+DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256 = hashlib.sha256(
+    json.dumps(
+        DOCTOR_PREFLIGHT_STATE_STATUSES,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+).hexdigest()
 LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
 LLM_LIVE_PREFLIGHT_COMMAND_SHA256 = hashlib.sha256(
     LLM_LIVE_PREFLIGHT_COMMAND.encode("utf-8")
@@ -195,6 +219,12 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
         ),
         "doctor_preflight_evidence_markdown_command": (
             DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
+        ),
+        "doctor_preflight_state_fields": DOCTOR_PREFLIGHT_STATE_FIELDS,
+        "doctor_preflight_state_fields_sha256": DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256,
+        "doctor_preflight_state_statuses": DOCTOR_PREFLIGHT_STATE_STATUSES,
+        "doctor_preflight_state_statuses_sha256": (
+            DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256
         ),
     }
     assert (
@@ -744,6 +774,16 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         bundle["doctor_preflight_evidence_markdown_command"]
         == DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND
     )
+    assert bundle["doctor_preflight_state_fields"] == DOCTOR_PREFLIGHT_STATE_FIELDS
+    assert (
+        bundle["doctor_preflight_state_fields_sha256"]
+        == DOCTOR_PREFLIGHT_STATE_FIELDS_SHA256
+    )
+    assert bundle["doctor_preflight_state_statuses"] == DOCTOR_PREFLIGHT_STATE_STATUSES
+    assert (
+        bundle["doctor_preflight_state_statuses_sha256"]
+        == DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256
+    )
     assert bundle["promotion_command_plan_count"] == 4
     assert bundle["promotion_command_plan_missing_tasks"] == []
     assert bundle["promotion_command_plan"] == [
@@ -830,6 +870,14 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         == bundle["doctor_preflight_evidence_markdown_command"]
     )
     assert (
+        bundle["tasks"][0]["doctor_preflight_state_fields"]
+        == bundle["doctor_preflight_state_fields"]
+    )
+    assert (
+        bundle["tasks"][0]["doctor_preflight_state_statuses"]
+        == bundle["doctor_preflight_state_statuses"]
+    )
+    assert (
         bundle["primary_next_task"]["doctor_preflight_evidence_fields"]
         == bundle["doctor_preflight_evidence_fields"]
     )
@@ -852,6 +900,14 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert (
         bundle["primary_next_task"]["doctor_preflight_evidence_markdown_command"]
         == bundle["doctor_preflight_evidence_markdown_command"]
+    )
+    assert (
+        bundle["primary_next_task"]["doctor_preflight_state_fields"]
+        == bundle["doctor_preflight_state_fields"]
+    )
+    assert (
+        bundle["primary_next_task"]["doctor_preflight_state_statuses"]
+        == bundle["doctor_preflight_state_statuses"]
     )
     assert bundle["tasks"][0]["complete"] is False
     assert bundle["tasks"][0]["command_source"] == "commands.explore"
