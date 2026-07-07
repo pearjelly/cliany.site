@@ -494,6 +494,27 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "~/.cliany-site/\n",
         encoding="utf-8",
     )
+    (repo / "docs" / "candidate-promotion-runbook.md").write_text(
+        "# Candidate Promotion Runbook\n\n"
+        "cliany-site doctor --llm-live --json\n"
+        "cliany-site explore\n"
+        "adapter_package\n"
+        "metadata_validation\n"
+        "online_smoke\n"
+        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "--include-candidate-packages --strict\n"
+        "doctor_preflight_state_fields\n"
+        "doctor_preflight_state_statuses\n"
+        "preflight_state.status\n"
+        "preflight_state.ready_for_adapter_package\n"
+        "preflight_state.primary_reason\n"
+        "preflight_state.reason_codes\n"
+        "preflight_state.next_action\n"
+        "ready\n"
+        "blocked\n"
+        "missing_fields\n",
+        encoding="utf-8",
+    )
     (repo / "docs" / "contributor-starter.md").write_text(
         "# 贡献者上手地图\n\n"
         "good-first-issues.md\n"
@@ -577,6 +598,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "docs/release-cadence.md",
         "docs/contributor-starter.md",
         "docs/good-first-issues.md",
+        "docs/candidate-promotion-runbook.md",
         "docs/module-ownership.md",
         "docs/weekly-maintainer-loop.md",
         "cases/manifest.json",
@@ -2161,6 +2183,41 @@ def test_release_readiness_blocks_stale_weekly_loop_handoff_preflight_aliases(tm
     assert (
         "open source metadata file missing snippet: docs/weekly-maintainer-loop.md: "
         "doctor_preflight_state_status"
+    ) in report.project_metadata.issues
+
+
+def test_release_readiness_blocks_missing_candidate_promotion_runbook(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "docs" / "candidate-promotion-runbook.md").unlink()
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert "open source metadata file is missing: docs/candidate-promotion-runbook.md" in (
+        report.project_metadata.issues
+    )
+
+
+def test_release_readiness_blocks_stale_candidate_promotion_runbook_contract(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "docs" / "candidate-promotion-runbook.md").write_text(
+        "# Candidate Promotion Runbook\n\n"
+        "cliany-site doctor --llm-live --json\n"
+        "cliany-site explore\n"
+        "adapter_package\n"
+        "metadata_validation\n"
+        "online_smoke\n",
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file missing snippet: "
+        "docs/candidate-promotion-runbook.md: preflight_state.status"
     ) in report.project_metadata.issues
 
 
