@@ -38,6 +38,12 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "doctor_preflight_evidence_template_sha256" in index
     assert "doctor_preflight_state_fields" in index
     assert "doctor_preflight_state_statuses" in index
+    assert "preflight_state.status" in index
+    assert "preflight_state.ready_for_adapter_package" in index
+    assert "preflight_state.primary_reason" in index
+    assert "preflight_state.reason_codes" in index
+    assert "preflight_state.next_action" in index
+    assert "missing_fields" in index
     assert "--doctor-json /tmp/cliany-doctor-preflight.json --json" in index
     assert "doctor_preflight_evidence_values" in index
     assert "doctor_preflight_evidence_ok" in index
@@ -142,6 +148,14 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "doctor_preflight_evidence_ok" in script
     assert "doctor_preflight_evidence_missing_count" in script
     assert "doctor_preflight_state" in script
+    assert "doctor_preflight_state_fields" in script
+    assert "doctor_preflight_state_statuses" in script
+    assert "preflight_state.status" in script
+    assert "preflight_state.ready_for_adapter_package" in script
+    assert "preflight_state.primary_reason" in script
+    assert "preflight_state.reason_codes" in script
+    assert "preflight_state.next_action" in script
+    assert "missing_fields" in script
     assert "First-time contributors" in script
     assert "Maintainer Loop" in script
     assert "weekly_commit_cadence_ok" in script
