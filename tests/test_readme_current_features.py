@@ -69,6 +69,16 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "doctor_preflight_evidence_template" in text
         assert "doctor_preflight_evidence_template_field_count" in text
         assert "doctor_preflight_evidence_template_sha256" in text
+        assert "doctor_preflight_state_fields" in text
+        assert "doctor_preflight_state_statuses" in text
+        assert "preflight_state.status" in text
+        assert "preflight_state.ready_for_adapter_package" in text
+        assert "preflight_state.primary_reason" in text
+        assert "preflight_state.reason_codes" in text
+        assert "preflight_state.next_action" in text
+        assert "ready" in text
+        assert "blocked" in text
+        assert "missing_fields" in text
         assert "expected_adapter_package" in text
         assert "llm_live_preflight_required" in text
         assert "preflight_required" in text

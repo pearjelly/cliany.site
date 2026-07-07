@@ -14,6 +14,7 @@
 
 ### Fixed
 - The `v0.16.260` release draft now describes the daily release cap as a projected `3/3` to `4/3` target-tag blocker, avoiding ambiguous wording that implied the current `3/3` state was already over the limit.
+- README and README.zh now spell out the `doctor_preflight_state_fields` values and the `ready` / `blocked` / `missing_fields` state set, so maintainers can apply the doctor-backed candidate blocker contract without cross-reading release drafts or source code.
 
 ## [0.16.259] - 2026-07-07
 
