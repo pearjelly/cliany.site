@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.260] - 2026-07-08
+
 ### Added
 - `scripts/plan_next_iteration.py --doctor-json <path> --issues-dir ...` now embeds saved `cliany-site doctor --llm-live --json` evidence into candidate issue artifacts, including `doctor_preflight_state`, extracted values, source path, and doctor-json-aware issue/evidence bundle commands.
 - `scripts/plan_next_iteration.py --doctor-json <path> --handoff-json` now exposes the primary candidate `doctor_preflight_state` plus direct status, ready, and primary-reason aliases, so release automation can stop before `explore` without expanding full issue artifacts.
@@ -2486,7 +2488,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.259...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.260...HEAD
+[0.16.260]: https://github.com/pearjelly/cliany.site/compare/v0.16.259...v0.16.260
 [0.16.259]: https://github.com/pearjelly/cliany.site/compare/v0.16.258...v0.16.259
 [0.16.258]: https://github.com/pearjelly/cliany.site/compare/v0.16.257...v0.16.258
 [0.16.257]: https://github.com/pearjelly/cliany.site/compare/v0.16.256...v0.16.257
