@@ -11224,3 +11224,20 @@ def test_v016260_release_draft_tracks_doctor_state_contract_docs():
     ]
     for snippet in required:
         assert snippet in text
+
+
+def test_v016261_release_draft_tracks_nullable_status_code_evidence():
+    text = (ROOT / "docs" / "releases" / "v0.16.261-draft.md").read_text(
+        encoding="utf-8"
+    )
+
+    required = [
+        "status_code: null",
+        "present JSON `null`",
+        "missing_fields",
+        "doctor_preflight_state.status=blocked",
+        "llm_live_preflight_not_ready",
+        "E_LLM_UNAVAILABLE",
+    ]
+    for snippet in required:
+        assert snippet in text

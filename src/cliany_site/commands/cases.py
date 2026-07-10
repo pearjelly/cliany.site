@@ -106,6 +106,7 @@ DOCTOR_PREFLIGHT_STATE_FIELDS = (
 )
 DOCTOR_PREFLIGHT_STATE_STATUSES = ("ready", "blocked", "missing_fields")
 NAMED_LIST_SELECTOR_RE = re.compile(r'^(?P<field>\w+)\[name="(?P<name>[^"]+)"\]$')
+MISSING_DOCTOR_SELECTOR_VALUE = object()
 READY_PREFLIGHT_NEXT_ACTION = (
     "Run the candidate explore command, then package the adapter and attach the package path or release asset name."
 )
@@ -323,23 +324,23 @@ def _resolve_doctor_selector(payload: Any, selector: str) -> Any:
     current = payload
     for part in selector.split("."):
         if not part:
-            return None
+            return MISSING_DOCTOR_SELECTOR_VALUE
         match = NAMED_LIST_SELECTOR_RE.match(part)
         if match:
             if not isinstance(current, dict):
-                return None
+                return MISSING_DOCTOR_SELECTOR_VALUE
             items = current.get(match.group("field"))
             if not isinstance(items, list):
-                return None
+                return MISSING_DOCTOR_SELECTOR_VALUE
             current = next(
                 (item for item in items if isinstance(item, dict) and item.get("name") == match.group("name")),
-                None,
+                MISSING_DOCTOR_SELECTOR_VALUE,
             )
-            if current is None:
-                return None
+            if current is MISSING_DOCTOR_SELECTOR_VALUE:
+                return MISSING_DOCTOR_SELECTOR_VALUE
             continue
         if not isinstance(current, dict) or part not in current:
-            return None
+            return MISSING_DOCTOR_SELECTOR_VALUE
         current = current[part]
     return current
 
@@ -415,8 +416,19 @@ def _doctor_preflight_evidence_from_payload(
     source_path: Path,
 ) -> dict[str, Any]:
     selectors = _doctor_preflight_evidence_selectors()
-    values = {field: _resolve_doctor_selector(payload, selector) for field, selector in selectors.items()}
-    missing_fields = [field for field, value in values.items() if value is None]
+    resolved_values = {
+        field: _resolve_doctor_selector(payload, selector)
+        for field, selector in selectors.items()
+    }
+    missing_fields = [
+        field
+        for field, value in resolved_values.items()
+        if value is MISSING_DOCTOR_SELECTOR_VALUE
+    ]
+    values = {
+        field: None if value is MISSING_DOCTOR_SELECTOR_VALUE else value
+        for field, value in resolved_values.items()
+    }
     return {
         "doctor_preflight_evidence_ok": not missing_fields,
         "doctor_preflight_evidence_source_path": str(source_path),

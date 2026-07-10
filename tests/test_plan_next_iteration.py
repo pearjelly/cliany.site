@@ -1403,6 +1403,40 @@ def test_main_handoff_json_exposes_doctor_preflight_state(
     )
 
 
+def test_main_handoff_json_treats_null_status_code_as_present(
+    monkeypatch, tmp_path, capsys
+):
+    _write_pyproject(tmp_path, version="0.16.256")
+    doctor_json = _write_blocked_doctor_json(tmp_path)
+    doctor_payload = json.loads(doctor_json.read_text(encoding="utf-8"))
+    doctor_payload["data"]["summary"]["llm_live_preflight"]["status_code"] = None
+    doctor_payload["data"]["checks"][1]["details"]["status_code"] = None
+    doctor_json.write_text(json.dumps(doctor_payload), encoding="utf-8")
+    real_build_plan = plan_next_iteration.build_plan
+
+    def fake_build_plan(root, **kwargs):
+        readiness = _readiness_report()
+        return real_build_plan(
+            tmp_path,
+            readiness_report=readiness,
+            publication_report=_published_release_with_unreleased_head_report(),
+            **kwargs,
+        )
+
+    monkeypatch.setattr(plan_next_iteration, "build_plan", fake_build_plan)
+
+    exit_code = plan_next_iteration.main(
+        ["--doctor-json", str(doctor_json), "--handoff-json"]
+    )
+
+    assert exit_code == 0
+    primary = json.loads(capsys.readouterr().out)["primary_candidate"]
+    assert primary["doctor_preflight_state_status"] == "blocked"
+    assert primary["doctor_preflight_state"]["reason_codes"][-1] == (
+        "llm_live_status_warning"
+    )
+
+
 def test_candidate_issue_gate_allows_creation_after_publication_with_release_draft_review(tmp_path):
     _write_pyproject(tmp_path, version="0.16.1")
     reason_codes = ["release_draft_issues"]

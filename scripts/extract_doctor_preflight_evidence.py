@@ -18,6 +18,7 @@ if str(SCRIPT_DIR) not in sys.path:
 import validate_cases  # noqa: E402
 
 NAMED_LIST_RE = re.compile(r'^(?P<field>\w+)\[name="(?P<name>[^"]+)"\]$')
+MISSING_SELECTOR_VALUE = object()
 READY_NEXT_ACTION = (
     "Run the candidate explore command, then package the adapter and attach "
     "the package path or release asset name."
@@ -50,27 +51,27 @@ def _resolve_selector(payload: Any, selector: str) -> Any:
     current = payload
     for part in selector.split("."):
         if not part:
-            return None
+            return MISSING_SELECTOR_VALUE
         match = NAMED_LIST_RE.match(part)
         if match:
             if not isinstance(current, dict):
-                return None
+                return MISSING_SELECTOR_VALUE
             items = current.get(match.group("field"))
             if not isinstance(items, list):
-                return None
+                return MISSING_SELECTOR_VALUE
             current = next(
                 (
                     item
                     for item in items
                     if isinstance(item, dict) and item.get("name") == match.group("name")
                 ),
-                None,
+                MISSING_SELECTOR_VALUE,
             )
-            if current is None:
-                return None
+            if current is MISSING_SELECTOR_VALUE:
+                return MISSING_SELECTOR_VALUE
             continue
         if not isinstance(current, dict) or part not in current:
-            return None
+            return MISSING_SELECTOR_VALUE
         current = current[part]
     return current
 
@@ -146,11 +147,19 @@ def _build_preflight_state(
 
 def extract_payload(payload: dict[str, Any]) -> dict[str, Any]:
     selectors = dict(validate_cases.DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)
-    values = {
+    resolved_values = {
         field: _resolve_selector(payload, selector)
         for field, selector in selectors.items()
     }
-    missing_fields = [field for field, value in values.items() if value is None]
+    missing_fields = [
+        field
+        for field, value in resolved_values.items()
+        if value is MISSING_SELECTOR_VALUE
+    ]
+    values = {
+        field: None if value is MISSING_SELECTOR_VALUE else value
+        for field, value in resolved_values.items()
+    }
     return {
         "schema_version": 1,
         "ok": not missing_fields,

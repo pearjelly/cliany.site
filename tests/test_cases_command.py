@@ -870,6 +870,36 @@ def test_cases_command_evidence_bundle_accepts_doctor_json(tmp_home, tmp_path):
     assert bundle["tasks"][0]["doctor_preflight_evidence_values"] == bundle["doctor_preflight_evidence_values"]
 
 
+def test_cases_command_treats_null_status_code_as_present(tmp_home, tmp_path):
+    doctor_json = _write_blocked_doctor_json(tmp_path)
+    doctor_payload = json.loads(doctor_json.read_text(encoding="utf-8"))
+    doctor_payload["data"]["summary"]["llm_live_preflight"]["status_code"] = None
+    doctor_payload["data"]["checks"][1]["details"]["status_code"] = None
+    doctor_json.write_text(json.dumps(doctor_payload), encoding="utf-8")
+    result = CliRunner().invoke(
+        cli,
+        [
+            "--json",
+            "cases",
+            "--case-id",
+            "pypi-project-search",
+            "--evidence-bundle",
+            "--doctor-json",
+            str(doctor_json),
+        ],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    bundle = json.loads(result.output)["data"]["evidence_bundle"]
+    assert bundle["doctor_preflight_evidence_ok"] is True
+    assert bundle["doctor_preflight_evidence_missing_count"] == 0
+    assert bundle["doctor_preflight_evidence_values"][
+        "checks[llm_live].details.status_code"
+    ] is None
+    assert bundle["doctor_preflight_state"]["status"] == "blocked"
+
+
 def test_cases_command_evidence_bundle_markdown_renders_doctor_json(
     tmp_home,
     tmp_path,

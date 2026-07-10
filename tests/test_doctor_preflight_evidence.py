@@ -119,6 +119,23 @@ def test_extracts_doctor_preflight_evidence_from_named_checks(tmp_path):
     }
 
 
+def test_null_status_code_is_present_blocker_evidence(tmp_path):
+    payload = _doctor_payload()
+    payload["data"]["summary"]["llm_live_preflight"]["status_code"] = None
+    payload["data"]["checks"][1]["details"]["status_code"] = None
+    payload_path = tmp_path / "doctor-connection-error.json"
+    payload_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    evidence = extract_doctor_preflight_evidence.extract_file(payload_path)
+
+    assert evidence["ok"] is True
+    assert evidence["missing_count"] == 0
+    assert evidence["missing_fields"] == []
+    assert evidence["values"]["checks[llm_live].details.status_code"] is None
+    assert evidence["preflight_state"]["status"] == "blocked"
+    assert "llm_live_status_warning" in evidence["preflight_state"]["reason_codes"]
+
+
 def test_preflight_state_ready_when_all_required_values_pass(tmp_path):
     payload_path = tmp_path / "doctor-ready.json"
     payload_path.write_text(json.dumps(_ready_doctor_payload()), encoding="utf-8")

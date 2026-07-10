@@ -7,6 +7,11 @@
 
 ## [Unreleased]
 
+## [0.16.261] - 2026-07-10
+
+### Fixed
+- Doctor preflight evidence now distinguishes an absent selector from a present JSON `null`, so connection-level `E_LLM_UNAVAILABLE` results with `status_code: null` are classified as `blocked` instead of `missing_fields` across the cases CLI, next-iteration planner, and standalone evidence extractor.
+
 ## [0.16.260] - 2026-07-08
 
 ### Added
@@ -2488,7 +2493,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.260...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.261...HEAD
+[0.16.261]: https://github.com/pearjelly/cliany.site/compare/v0.16.260...v0.16.261
 [0.16.260]: https://github.com/pearjelly/cliany.site/compare/v0.16.259...v0.16.260
 [0.16.259]: https://github.com/pearjelly/cliany.site/compare/v0.16.258...v0.16.259
 [0.16.258]: https://github.com/pearjelly/cliany.site/compare/v0.16.257...v0.16.258
