@@ -131,9 +131,17 @@ def test_null_status_code_is_present_blocker_evidence(tmp_path):
     assert evidence["ok"] is True
     assert evidence["missing_count"] == 0
     assert evidence["missing_fields"] == []
+    assert evidence["null_count"] == 1
+    assert evidence["null_fields"] == [
+        "checks[llm_live].details.status_code",
+    ]
     assert evidence["values"]["checks[llm_live].details.status_code"] is None
     assert evidence["preflight_state"]["status"] == "blocked"
     assert "llm_live_status_warning" in evidence["preflight_state"]["reason_codes"]
+    markdown = extract_doctor_preflight_evidence.render_markdown(evidence)
+    assert "- null_count: `1`" in markdown
+    assert "## Null Fields" in markdown
+    assert "- `checks[llm_live].details.status_code`" in markdown
 
 
 def test_preflight_state_ready_when_all_required_values_pass(tmp_path):
@@ -172,6 +180,8 @@ def test_preflight_state_missing_fields_when_named_check_absent(tmp_path):
     evidence = extract_doctor_preflight_evidence.extract_file(payload_path)
 
     assert evidence["ok"] is False
+    assert evidence["null_count"] == 0
+    assert evidence["null_fields"] == []
     assert evidence["preflight_state"]["status"] == "missing_fields"
     assert evidence["preflight_state"]["ready_for_adapter_package"] is False
     assert evidence["preflight_state"]["reason_codes"] == ["missing_fields"]
@@ -207,6 +217,7 @@ def test_cli_outputs_markdown_blocker_comment(tmp_path, capsys):
     assert "## Doctor Preflight Evidence" in text
     assert "- ok: `true`" in text
     assert "- missing_count: `0`" in text
+    assert "- null_count: `0`" in text
     assert "- selectors_sha256:" in text
     assert "- preflight_status: `blocked`" in text
     assert "- ready_for_adapter_package: `false`" in text

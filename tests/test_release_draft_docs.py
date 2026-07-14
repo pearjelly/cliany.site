@@ -11241,3 +11241,23 @@ def test_v016261_release_draft_tracks_nullable_status_code_evidence():
     ]
     for snippet in required:
         assert snippet in text
+
+
+def test_v016262_release_draft_tracks_null_field_metadata():
+    text = (ROOT / "docs" / "releases" / "v0.16.262-draft.md").read_text(
+        encoding="utf-8"
+    )
+
+    required = [
+        "null_count",
+        "null_fields",
+        "doctor_preflight_evidence_null_count",
+        "doctor_preflight_evidence_null_fields",
+        "missing_fields",
+        "search-extraction-gap",
+        "llm_live_preflight_not_ready",
+        "cases/README.md",
+        "cases/manifest.json",
+    ]
+    for snippet in required:
+        assert snippet in text

@@ -902,6 +902,11 @@ def _doctor_preflight_evidence_from_payload(
         for field, value in resolved_values.items()
         if value is MISSING_DOCTOR_SELECTOR_VALUE
     ]
+    null_fields = [
+        field
+        for field, value in resolved_values.items()
+        if value is None
+    ]
     values = {
         field: None if value is MISSING_DOCTOR_SELECTOR_VALUE else value
         for field, value in resolved_values.items()
@@ -912,6 +917,8 @@ def _doctor_preflight_evidence_from_payload(
         "doctor_preflight_evidence_field_count": len(selectors),
         "doctor_preflight_evidence_missing_count": len(missing_fields),
         "doctor_preflight_evidence_missing_fields": missing_fields,
+        "doctor_preflight_evidence_null_count": len(null_fields),
+        "doctor_preflight_evidence_null_fields": null_fields,
         "doctor_preflight_evidence_values": values,
         "doctor_preflight_evidence_values_sha256": _stable_json_sha256(values),
         "doctor_preflight_evidence_selectors_sha256": _stable_json_sha256(selectors),
@@ -1386,11 +1393,18 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
         {},
     )
     primary_doctor_preflight_state = primary_task.get("doctor_preflight_state")
+    primary_doctor_preflight_evidence: dict[str, Any] = primary_task
+    if isinstance(primary_candidate_promotion, dict):
+        promotion_evidence_task = primary_candidate_promotion.get(
+            "evidence_bundle_primary_next_task"
+        )
+        if isinstance(promotion_evidence_task, dict):
+            primary_doctor_preflight_evidence = promotion_evidence_task
     if (
         not isinstance(primary_doctor_preflight_state, dict)
-        and isinstance(primary_candidate_promotion, dict)
+        and primary_doctor_preflight_evidence is not primary_task
     ):
-        primary_doctor_preflight_state = primary_candidate_promotion.get(
+        primary_doctor_preflight_state = primary_doctor_preflight_evidence.get(
             "doctor_preflight_state"
         )
     if not isinstance(primary_doctor_preflight_state, dict):
@@ -1514,6 +1528,13 @@ def _handoff_payload(plan: IterationPlan) -> dict[str, Any]:
             "doctor_preflight_evidence_selectors_sha256": _stable_json_sha256(
                 primary_task.get("doctor_preflight_evidence_selectors") or {}
             ),
+            "doctor_preflight_evidence_null_count": primary_doctor_preflight_evidence.get(
+                "doctor_preflight_evidence_null_count"
+            ),
+            "doctor_preflight_evidence_null_fields": primary_doctor_preflight_evidence.get(
+                "doctor_preflight_evidence_null_fields"
+            )
+            or [],
             "doctor_preflight_evidence_extract_command": primary_task.get(
                 "doctor_preflight_evidence_extract_command"
             )
@@ -3821,6 +3842,7 @@ def _candidate_issue_body(
             f"- source_path: `{doctor_preflight_evidence.get('doctor_preflight_evidence_source_path')}`",
             f"- ok: `{str(bool(doctor_preflight_evidence.get('doctor_preflight_evidence_ok'))).lower()}`",
             f"- missing_count: `{doctor_preflight_evidence.get('doctor_preflight_evidence_missing_count')}`",
+            f"- null_count: `{doctor_preflight_evidence.get('doctor_preflight_evidence_null_count')}`",
             f"- status: `{state.get('status', '-')}`",
             f"- ready_for_adapter_package: `{str(bool(state.get('ready_for_adapter_package'))).lower()}`",
             f"- primary_reason: {state.get('primary_reason', '-')}",

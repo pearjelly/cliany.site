@@ -425,6 +425,11 @@ def _doctor_preflight_evidence_from_payload(
         for field, value in resolved_values.items()
         if value is MISSING_DOCTOR_SELECTOR_VALUE
     ]
+    null_fields = [
+        field
+        for field, value in resolved_values.items()
+        if value is None
+    ]
     values = {
         field: None if value is MISSING_DOCTOR_SELECTOR_VALUE else value
         for field, value in resolved_values.items()
@@ -435,6 +440,8 @@ def _doctor_preflight_evidence_from_payload(
         "doctor_preflight_evidence_field_count": len(selectors),
         "doctor_preflight_evidence_missing_count": len(missing_fields),
         "doctor_preflight_evidence_missing_fields": missing_fields,
+        "doctor_preflight_evidence_null_count": len(null_fields),
+        "doctor_preflight_evidence_null_fields": null_fields,
         "doctor_preflight_evidence_values": values,
         "doctor_preflight_evidence_values_sha256": _stable_json_sha256(values),
         "doctor_preflight_evidence_selectors_sha256": _stable_json_sha256(selectors),
@@ -546,6 +553,10 @@ def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[st
         "doctor_preflight_evidence_values": doctor_preflight_evidence_values,
         "doctor_preflight_evidence_ok": primary.get("doctor_preflight_evidence_ok"),
         "doctor_preflight_evidence_missing_count": primary.get("doctor_preflight_evidence_missing_count"),
+        "doctor_preflight_evidence_null_count": primary.get("doctor_preflight_evidence_null_count"),
+        "doctor_preflight_evidence_null_fields": list(
+            primary.get("doctor_preflight_evidence_null_fields") or []
+        ),
         "doctor_preflight_evidence_source_path": str(primary.get("doctor_preflight_evidence_source_path") or ""),
         "command": str(primary.get("command") or ""),
         "command_source": str(primary.get("command_source") or ""),
@@ -680,6 +691,7 @@ def _candidate_issue_template(
                 "",
                 "## Doctor Preflight Evidence",
                 (f"- source_path: `{doctor_preflight_evidence.get('doctor_preflight_evidence_source_path')}`"),
+                f"- null_count: `{doctor_preflight_evidence.get('doctor_preflight_evidence_null_count')}`",
                 f"- preflight_status: `{state.get('status', '-')}`",
                 (f"- ready_for_adapter_package: `{str(bool(state.get('ready_for_adapter_package'))).lower()}`"),
                 f"- preflight_primary_reason: `{state.get('primary_reason', '-')}`",
@@ -1108,6 +1120,7 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
                     f"- source_path: `{bundle.get('doctor_preflight_evidence_source_path')}`",
                     (f"- ok: `{str(bool(bundle.get('doctor_preflight_evidence_ok'))).lower()}`"),
                     f"- missing_count: `{bundle.get('doctor_preflight_evidence_missing_count')}`",
+                    f"- null_count: `{bundle.get('doctor_preflight_evidence_null_count')}`",
                     f"- values_sha256: `{bundle.get('doctor_preflight_evidence_values_sha256')}`",
                     f"- preflight_status: `{preflight_state.get('status', '-')}`",
                     (

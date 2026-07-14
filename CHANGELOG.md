@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.262] - 2026-07-14
+
+### Added
+- Doctor preflight evidence now exposes `null_count` and `null_fields` separately from missing-field metadata across the standalone extractor, cases evidence bundles, planner issue artifacts, and compact planner handoffs, so automation can distinguish a present JSON `null` from an absent selector without scanning every extracted value.
+- Human and Markdown evidence output now renders the nullable-field count, while the standalone extractor also lists the exact nullable selectors in a dedicated section.
+
 ## [0.16.261] - 2026-07-10
 
 ### Fixed
@@ -2493,7 +2499,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.261...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.262...HEAD
+[0.16.262]: https://github.com/pearjelly/cliany.site/compare/v0.16.261...v0.16.262
 [0.16.261]: https://github.com/pearjelly/cliany.site/compare/v0.16.260...v0.16.261
 [0.16.260]: https://github.com/pearjelly/cliany.site/compare/v0.16.259...v0.16.260
 [0.16.259]: https://github.com/pearjelly/cliany.site/compare/v0.16.258...v0.16.259

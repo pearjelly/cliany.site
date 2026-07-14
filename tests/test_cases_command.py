@@ -894,6 +894,10 @@ def test_cases_command_treats_null_status_code_as_present(tmp_home, tmp_path):
     bundle = json.loads(result.output)["data"]["evidence_bundle"]
     assert bundle["doctor_preflight_evidence_ok"] is True
     assert bundle["doctor_preflight_evidence_missing_count"] == 0
+    assert bundle["doctor_preflight_evidence_null_count"] == 1
+    assert bundle["doctor_preflight_evidence_null_fields"] == [
+        "checks[llm_live].details.status_code",
+    ]
     assert bundle["doctor_preflight_evidence_values"][
         "checks[llm_live].details.status_code"
     ] is None
@@ -923,6 +927,7 @@ def test_cases_command_evidence_bundle_markdown_renders_doctor_json(
     assert "## Doctor Preflight Evidence" in result.output
     assert f"- source_path: `{doctor_json}`" in result.output
     assert "- preflight_status: `blocked`" in result.output
+    assert "- null_count: `0`" in result.output
     assert "- ready_for_adapter_package: `false`" in result.output
     assert "| `checks[llm_live].details.error_code` | `E_LLM_UNAVAILABLE` |" in result.output
 

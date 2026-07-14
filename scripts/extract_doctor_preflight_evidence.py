@@ -156,6 +156,11 @@ def extract_payload(payload: dict[str, Any]) -> dict[str, Any]:
         for field, value in resolved_values.items()
         if value is MISSING_SELECTOR_VALUE
     ]
+    null_fields = [
+        field
+        for field, value in resolved_values.items()
+        if value is None
+    ]
     values = {
         field: None if value is MISSING_SELECTOR_VALUE else value
         for field, value in resolved_values.items()
@@ -166,6 +171,8 @@ def extract_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "field_count": len(selectors),
         "missing_count": len(missing_fields),
         "missing_fields": missing_fields,
+        "null_count": len(null_fields),
+        "null_fields": null_fields,
         "fields": list(selectors),
         "selectors": selectors,
         "selectors_sha256": _stable_json_sha256(selectors),
@@ -204,6 +211,7 @@ def render_markdown(evidence: dict[str, Any]) -> str:
         f"- ok: `{str(bool(evidence.get('ok'))).lower()}`",
         f"- field_count: `{evidence.get('field_count')}`",
         f"- missing_count: `{evidence.get('missing_count')}`",
+        f"- null_count: `{evidence.get('null_count')}`",
         f"- selectors_sha256: `{evidence.get('selectors_sha256')}`",
         f"- values_sha256: `{evidence.get('values_sha256')}`",
         f"- preflight_status: `{preflight_state.get('status', '-')}`",
@@ -223,6 +231,10 @@ def render_markdown(evidence: dict[str, Any]) -> str:
     if isinstance(missing_fields, list) and missing_fields:
         lines.extend(["", "## Missing Fields"])
         lines.extend(f"- `{field}`" for field in missing_fields)
+    null_fields = evidence.get("null_fields")
+    if isinstance(null_fields, list) and null_fields:
+        lines.extend(["", "## Null Fields"])
+        lines.extend(f"- `{field}`" for field in null_fields)
     return "\n".join(lines)
 
 

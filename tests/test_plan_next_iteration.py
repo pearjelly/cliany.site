@@ -1431,6 +1431,10 @@ def test_main_handoff_json_treats_null_status_code_as_present(
 
     assert exit_code == 0
     primary = json.loads(capsys.readouterr().out)["primary_candidate"]
+    assert primary["doctor_preflight_evidence_null_count"] == 1
+    assert primary["doctor_preflight_evidence_null_fields"] == [
+        "checks[llm_live].details.status_code",
+    ]
     assert primary["doctor_preflight_state_status"] == "blocked"
     assert primary["doctor_preflight_state"]["reason_codes"][-1] == (
         "llm_live_status_warning"
@@ -7446,6 +7450,8 @@ def test_plan_cli_issue_files_accept_doctor_json(tmp_path, monkeypatch, capsys):
     assert primary["doctor_preflight_evidence_source_path"] == str(doctor_json)
     assert primary["doctor_preflight_evidence_ok"] is True
     assert primary["doctor_preflight_evidence_missing_count"] == 0
+    assert primary["doctor_preflight_evidence_null_count"] == 0
+    assert primary["doctor_preflight_evidence_null_fields"] == []
     assert primary["doctor_preflight_state"] == {
         "status": "blocked",
         "ready_for_adapter_package": False,
@@ -7465,6 +7471,7 @@ def test_plan_cli_issue_files_accept_doctor_json(tmp_path, monkeypatch, capsys):
         f"--evidence-bundle --doctor-json {doctor_json} --json"
     )
     assert "## Current Doctor Preflight State" in body
+    assert "- null_count: `0`" in body
     assert "- status: `blocked`" in body
     assert "- primary_reason: Live LLM preflight is warning." in body
     assert "- `checks[llm_live].details.error_code`: `E_LLM_UNAVAILABLE`" in body
