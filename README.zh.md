@@ -359,7 +359,10 @@ cliany-site workflow batch github.com search data.csv --concurrency 3 --json
 # 打包适配器
 cliany-site market publish github.com --version 1.0.0
 
-# 安装适配器
+# 预检本地适配器包（不写入运行时目录）
+cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz --dry-run --json
+
+# 查看 dry_run、package_sha256、files、would_replace 和 would_create_backup 后再安装
 cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz
 
 # 回滚
@@ -382,7 +385,7 @@ cliany-site market rollback github.com
 | `tui` | | 启动 TUI 管理界面 |
 | `serve` | `[--host] [--port]` | 启动 HTTP API 服务 |
 | `market publish <domain>` | `[--version] [--json]` | 打包导出适配器 |
-| `market install <path>` | `[--force] [--json]` | 安装适配器包 |
+| `market install <path>` | `[--force] [--dry-run] [--json]` | 安装适配器包 |
 | `market uninstall <domain>` | `[--json]` | 卸载适配器 |
 | `market rollback <domain>` | `[--index] [--json]` | 回滚到备份版本 |
 | `workflow run <file>` | `[--json] [--dry-run]` | 执行 YAML 工作流 |

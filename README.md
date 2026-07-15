@@ -354,7 +354,10 @@ See [Adapter lifecycle and package format](docs/adapter-lifecycle.md) for the ru
 # Pack adapter
 cliany-site market publish github.com --version 1.0.0
 
-# Install adapter
+# Preflight the local adapter package (no runtime writes)
+cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz --dry-run --json
+
+# Install adapter after reviewing dry_run, package_sha256, files, would_replace, and would_create_backup
 cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz
 
 # Rollback
@@ -378,7 +381,7 @@ cliany-site market rollback github.com
 | `tui` | | Start TUI management interface. |
 | `serve` | `[--host] [--port]` | Start HTTP API service. |
 | `market publish <domain>` | `[--version] [--json]` | Pack and export adapter. |
-| `market install <path>` | `[--force] [--json]` | Install adapter package. |
+| `market install <path>` | `[--force] [--dry-run] [--json]` | Install adapter package. |
 | `market uninstall <domain>` | `[--json]` | Uninstall adapter. |
 | `market rollback <domain>` | `[--index] [--json]` | Rollback to a backup version. |
 | `workflow run <file>` | `[--json] [--dry-run]` | Execute YAML workflow. |

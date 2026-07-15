@@ -24,13 +24,16 @@
    cliany-site market publish github.com --version 1.0.0 --author "team" --json
    ```
 
-4. 在目标环境安装并检查：
+4. 先预检，再在目标环境安装并检查：
 
    ```bash
+   cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz --dry-run --json
    cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz --json
    cliany-site market info github.com --json
    cliany-site check github.com --json
    ```
+
+   预检会报告 `dry_run`、`package_sha256`、`files`、`would_replace` 和 `would_create_backup`。它只在临时提取目录中校验本地包，不会写入 adapter 或 backup 运行时目录。
 
 5. 出现回归时查看备份并回滚：
 
