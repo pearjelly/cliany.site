@@ -413,6 +413,15 @@ class TestInstallAdapter:
         with pytest.raises(FileNotFoundError, match="安装包不存在"):
             install_adapter(tmp_path / "ghost.tar.gz")
 
+    def test_install_corrupt_pack_raises_normalized_value_error(self, tmp_path: Path) -> None:
+        pack_path = tmp_path / "corrupt.tar.gz"
+        pack_path.write_bytes(b"not a gzip archive")
+
+        with pytest.raises(ValueError) as exc_info:
+            install_adapter(pack_path)
+
+        assert str(exc_info.value) == f"安装包无法读取: {pack_path}"
+
     def test_install_missing_domain_raises(self, tmp_path: Path) -> None:
         import hashlib
 
