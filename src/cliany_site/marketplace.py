@@ -223,7 +223,7 @@ def _validated_adapter_package(
                 tar.extractall(tmp_path, filter="data")  # noqa: S202
                 _validate_extracted_adapter_package(manifest, tmp_path)
                 yield manifest, tmp_path, _sha256_file(archive_path)
-    except tarfile.TarError as exc:
+    except (tarfile.TarError, EOFError) as exc:
         msg = f"安装包无法读取: {archive_path}"
         raise ValueError(msg) from exc
 

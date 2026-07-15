@@ -917,3 +917,26 @@ class TestMarketCLI:
         assert result.exit_code == 0
         assert json.loads(result.output)["data"]["dry_run"] is True
         assert not runtime_home.exists()
+
+    def test_root_install_dry_run_truncated_gzip_uses_install_failed_envelope(
+        self,
+        tmp_path: Path,
+        tmp_home: Path,
+    ) -> None:
+        from cliany_site.cli import cli
+
+        runtime_home = tmp_home / ".cliany-site"
+        pack_path = tmp_path / "truncated.cliany-adapter.tar.gz"
+        pack_path.write_bytes(b"\x1f\x8b\x08\x00")
+
+        result = CliRunner().invoke(
+            cli,
+            ["--json", "market", "install", str(pack_path), "--dry-run"],
+        )
+
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["error"]["code"] == "INSTALL_FAILED"
+        assert data["success"] is False
+        assert data["error"]["message"] == f"安装包无法读取: {pack_path}"
+        assert not runtime_home.exists()
