@@ -817,3 +817,35 @@ class TestMarketCLI:
         data = json.loads(result.output)
         assert data["error"]["code"] == "INSTALL_FAILED"
         assert "--force" in data["error"]["fix"]
+
+    def test_install_dry_run_returns_package_plan(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        pack_path = _make_tarball(tmp_path / "packs", "cli-dry-run.com", version="2.0.0")
+
+        result = self._invoke(["install", str(pack_path), "--dry-run", "--json"], cfg)
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["success"] is True
+        assert data["data"]["dry_run"] is True
+        assert data["data"]["domain"] == "cli-dry-run.com"
+        assert data["data"]["version"] == "2.0.0"
+        assert data["data"]["would_replace"] is False
+        assert data["data"]["would_create_backup"] is False
+        assert not (cfg.adapters_dir / "cli-dry-run.com").exists()
+
+    def test_install_dry_run_duplicate_uses_install_failed_envelope(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter(cfg.adapters_dir, "cli-dry-duplicate.com")
+        commands_before = (adapter_dir / "commands.py").read_bytes()
+        pack_path = _make_tarball(tmp_path / "packs", "cli-dry-duplicate.com")
+
+        result = self._invoke(["install", str(pack_path), "--dry-run", "--json"], cfg)
+
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["success"] is False
+        assert data["error"]["code"] == "INSTALL_FAILED"
+        assert "--force" in data["error"]["fix"]
+        assert (adapter_dir / "commands.py").read_bytes() == commands_before
+        assert not (cfg.home_dir / "backups").exists()
