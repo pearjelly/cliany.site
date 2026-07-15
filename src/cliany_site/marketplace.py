@@ -13,6 +13,7 @@ import logging
 import shutil
 import tarfile
 import tempfile
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from io import BytesIO
@@ -143,70 +144,109 @@ def install_adapter(
     force: bool = False,
 ) -> AdapterManifest:
     """从 .tar.gz 分发包安装 adapter，返回安装后的 manifest"""
-    pack_path = Path(pack_path)
-    if not pack_path.exists():
-        msg = f"安装包不存在: {pack_path}"
+    with _validated_adapter_package(pack_path) as (manifest, tmp_path, _package_sha256):
+        adapter_dir, would_replace = _adapter_install_target(manifest, force=force)
+
+        if would_replace:
+            _create_backup(manifest.domain)
+            shutil.rmtree(adapter_dir)
+        adapter_dir.mkdir(parents=True, exist_ok=True)
+
+        for filename in manifest.files:
+            shutil.copy2(str(tmp_path / filename), str(adapter_dir / filename))
+
+        manifest_dest = adapter_dir / "manifest.json"
+        manifest_dest.write_text(
+            json.dumps(manifest.to_dict(), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+    logger.info(
+        "adapter 已安装: domain=%s version=%s",
+        manifest.domain,
+        manifest.version,
+    )
+    return manifest
+
+
+@contextlib.contextmanager
+def _validated_adapter_package(
+    pack_path: str | Path,
+) -> Iterator[tuple[AdapterManifest, Path, str]]:
+    archive_path = Path(pack_path)
+    if not archive_path.exists():
+        msg = f"安装包不存在: {archive_path}"
         raise FileNotFoundError(msg)
 
-    with tarfile.open(pack_path, "r:gz") as tar:
-        # SECURITY: 阻止 tarball 路径穿越攻击
-        for member in tar.getmembers():
-            if member.name.startswith("/") or ".." in member.name:
-                msg = f"安装包包含不安全路径: {member.name}"
-                raise ValueError(msg)
+    try:
+        with tarfile.open(archive_path, "r:gz") as tar:
+            for member in tar.getmembers():
+                if member.name.startswith("/") or ".." in member.name:
+                    msg = f"安装包包含不安全路径: {member.name}"
+                    raise ValueError(msg)
 
-        try:
-            manifest_file = tar.extractfile("manifest.json")
-            if manifest_file is None:
+            try:
+                manifest_file = tar.extractfile("manifest.json")
+                if manifest_file is None:
+                    msg = "安装包缺少 manifest.json"
+                    raise ValueError(msg)
+                with manifest_file:
+                    manifest_data = json.loads(manifest_file.read().decode("utf-8"))
+            except KeyError:
                 msg = "安装包缺少 manifest.json"
+                raise ValueError(msg) from None
+
+            manifest = AdapterManifest.from_dict(manifest_data)
+            if not manifest.domain:
+                msg = "manifest.json 缺少 domain 字段"
                 raise ValueError(msg)
-            manifest_data = json.loads(manifest_file.read().decode("utf-8"))
-        except KeyError:
-            msg = "安装包缺少 manifest.json"
-            raise ValueError(msg) from None
 
-        manifest = AdapterManifest.from_dict(manifest_data)
-        if not manifest.domain:
-            msg = "manifest.json 缺少 domain 字段"
-            raise ValueError(msg)
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                tmp_path = Path(tmp_dir)
+                tar.extractall(tmp_path, filter="data")  # noqa: S202
+                _validate_extracted_adapter_package(manifest, tmp_path)
+                yield manifest, tmp_path, _sha256_file(archive_path)
+    except tarfile.TarError as exc:
+        msg = f"安装包无法读取: {archive_path}"
+        raise ValueError(msg) from exc
 
-        cfg = get_config()
-        adapter_dir = cfg.adapters_dir / manifest.domain
 
-        if adapter_dir.exists() and not force:
-            existing_version = _get_installed_version(manifest.domain)
-            if existing_version:
-                msg = f"adapter '{manifest.domain}' 已安装 (版本 {existing_version})。使用 --force 覆盖安装，或先卸载。"
-                raise FileExistsError(msg)
-
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            tmp_path = Path(tmp_dir)
-            tar.extractall(tmp_path, filter="data")  # noqa: S202
-
-            _validate_extracted_adapter_package(manifest, tmp_path)
-
-            if adapter_dir.exists():
-                _create_backup(manifest.domain)
-
-            if adapter_dir.exists():
-                shutil.rmtree(adapter_dir)
-            adapter_dir.mkdir(parents=True, exist_ok=True)
-
-            for filename in manifest.files:
-                shutil.copy2(str(tmp_path / filename), str(adapter_dir / filename))
-
-            manifest_dest = adapter_dir / "manifest.json"
-            manifest_dest.write_text(
-                json.dumps(manifest.to_dict(), ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
-
-        logger.info(
-            "adapter 已安装: domain=%s version=%s",
-            manifest.domain,
-            manifest.version,
+def _adapter_install_target(
+    manifest: AdapterManifest,
+    *,
+    force: bool,
+) -> tuple[Path, bool]:
+    cfg = get_config()
+    adapter_dir = cfg.adapters_dir / manifest.domain
+    would_replace = adapter_dir.exists()
+    if would_replace and not force:
+        existing_version = _get_installed_version(manifest.domain)
+        version_detail = f" (版本 {existing_version})" if existing_version else ""
+        msg = (
+            f"adapter '{manifest.domain}' 已安装{version_detail}。"
+            "使用 --force 覆盖安装，或先卸载。"
         )
-        return manifest
+        raise FileExistsError(msg)
+    return adapter_dir, would_replace
+
+
+def inspect_adapter_package(
+    pack_path: str | Path,
+    *,
+    force: bool = False,
+) -> dict[str, Any]:
+    """校验 adapter 分发包并报告安装计划，不写入运行时状态。"""
+    with _validated_adapter_package(pack_path) as (manifest, _tmp_path, package_sha256):
+        _adapter_dir, would_replace = _adapter_install_target(manifest, force=force)
+        return {
+            "dry_run": True,
+            "package_sha256": package_sha256,
+            "domain": manifest.domain,
+            "version": manifest.version,
+            "files": sorted(manifest.files),
+            "would_replace": would_replace,
+            "would_create_backup": would_replace and force,
+        }
 
 
 def _validate_extracted_adapter_package(manifest: AdapterManifest, tmp_path: Path) -> None:

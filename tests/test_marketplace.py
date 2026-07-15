@@ -17,6 +17,7 @@ from cliany_site.marketplace import (
     AdapterManifest,
     _sha256_file,
     get_adapter_info,
+    inspect_adapter_package,
     install_adapter,
     list_backups,
     pack_adapter,
@@ -437,6 +438,80 @@ class TestInstallAdapter:
         cfg = _make_config(tmp_path)
         with patch("cliany_site.marketplace.get_config", return_value=cfg), pytest.raises(ValueError, match="domain"):
             install_adapter(pack_path)
+
+
+class TestInspectAdapterPackage:
+    def test_inspect_valid_new_package_has_no_runtime_side_effects(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        pack_path = _make_tarball(tmp_path / "packs", "inspect-new.com", version="2.0.0")
+
+        with patch("cliany_site.marketplace.get_config", return_value=cfg):
+            report = inspect_adapter_package(pack_path)
+
+        assert report == {
+            "dry_run": True,
+            "package_sha256": _sha256_file(pack_path),
+            "domain": "inspect-new.com",
+            "version": "2.0.0",
+            "files": ["commands.py", "metadata.json"],
+            "would_replace": False,
+            "would_create_backup": False,
+        }
+        assert not (cfg.adapters_dir / "inspect-new.com").exists()
+        assert not (cfg.home_dir / "backups").exists()
+
+    def test_inspect_force_reports_replace_without_writing_backup(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter(cfg.adapters_dir, "inspect-force.com", version="1.0.0")
+        commands_before = (adapter_dir / "commands.py").read_bytes()
+        pack_path = _make_tarball(tmp_path / "packs", "inspect-force.com", version="2.0.0")
+
+        with patch("cliany_site.marketplace.get_config", return_value=cfg):
+            report = inspect_adapter_package(pack_path, force=True)
+            backups_after = list_backups("inspect-force.com")
+
+        assert report["would_replace"] is True
+        assert report["would_create_backup"] is True
+        assert (adapter_dir / "commands.py").read_bytes() == commands_before
+        assert backups_after == []
+
+    def test_inspect_duplicate_without_force_raises_without_writing(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter(cfg.adapters_dir, "inspect-duplicate.com")
+        commands_before = (adapter_dir / "commands.py").read_bytes()
+        pack_path = _make_tarball(tmp_path / "packs", "inspect-duplicate.com")
+
+        with patch("cliany_site.marketplace.get_config", return_value=cfg), pytest.raises(
+            FileExistsError, match="已安装"
+        ):
+            inspect_adapter_package(pack_path)
+
+        assert (adapter_dir / "commands.py").read_bytes() == commands_before
+        assert not (cfg.home_dir / "backups").exists()
+
+    @pytest.mark.parametrize(
+        ("kwargs", "message"),
+        [
+            ({"bad_hash": True}, "文件校验失败"),
+            ({"path_traversal": True}, "不安全路径"),
+        ],
+    )
+    def test_inspect_rejects_invalid_package_without_writing(
+        self,
+        tmp_path: Path,
+        kwargs: dict[str, bool],
+        message: str,
+    ) -> None:
+        cfg = _make_config(tmp_path)
+        pack_path = _make_tarball(tmp_path / "packs", "inspect-invalid.com", **kwargs)
+
+        with patch("cliany_site.marketplace.get_config", return_value=cfg), pytest.raises(
+            ValueError, match=message
+        ):
+            inspect_adapter_package(pack_path)
+
+        assert not (cfg.adapters_dir / "inspect-invalid.com").exists()
+        assert not (cfg.home_dir / "backups").exists()
 
 
 # ── uninstall_adapter ────────────────────────────────────
