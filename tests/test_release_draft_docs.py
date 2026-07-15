@@ -11287,6 +11287,8 @@ def test_v016263_release_draft_tracks_market_install_dry_run() -> None:
         "vercel inspect www.cliany.site --wait --timeout 90s",
         "uv run --extra dev --frozen python scripts/check_release_publication.py "
         "--strict --remote --distribution --json",
+        "The preceding `vercel inspect www.cliany.site --wait --timeout 90s` is the website verification",
+        "the final audit checks remote Git, GitHub Release, and the PyPI distribution, not website status",
     ]
     for snippet in required:
         assert snippet in text
