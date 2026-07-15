@@ -11280,8 +11280,13 @@ def test_v016263_release_draft_tracks_market_install_dry_run() -> None:
         "search-extraction-gap",
         "llm_live_preflight_not_ready",
         "git tag v0.16.263",
+        "uv run --extra dev --frozen python scripts/release_readiness.py --strict --target-version 0.16.263 --remote",
+        "before the local tag exists, only the expected latest-tag mismatch may remain",
+        "uv run --extra dev --frozen python scripts/release_readiness.py --strict "
+        "--release-tag v0.16.263 --remote --remote-name origin",
         "vercel inspect www.cliany.site --wait --timeout 90s",
-        "check_release_publication.py --remote --distribution --json",
+        "uv run --extra dev --frozen python scripts/check_release_publication.py "
+        "--strict --remote --distribution --json",
     ]
     for snippet in required:
         assert snippet in text
