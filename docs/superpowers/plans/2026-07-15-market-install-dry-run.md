@@ -569,7 +569,7 @@ uvx twine check /tmp/cliany-site-v0.16.263-dist/*
 uv run --extra dev --frozen python scripts/release_readiness.py --strict --target-version 0.16.263 --remote
 ```
 
-Expected: formatting, focused tests, full offline suite, case validation, wheel/sdist metadata and target-version readiness all pass. Do not proceed to a tag if any command fails.
+Expected: formatting, focused tests, full offline suite, case validation, and wheel/sdist metadata all pass. Before the local tag exists, target-version readiness must report no blocker other than `latest tag v0.16.262 != v0.16.263`; that expected pre-tag mismatch is recorded but is not a tag-publish approval. Do not proceed to a tag if any other local validation or readiness check fails.
 
 - [ ] **Step 5: Commit the release preparation and publish branch and tag**
 
@@ -586,7 +586,7 @@ RELEASE_RUN_ID="$(gh run list --workflow release.yml --commit "$(git rev-parse H
 gh run watch "$RELEASE_RUN_ID" --exit-status
 ```
 
-Expected: branch CI succeeds before the tag, the release workflow creates the GitHub Release and publishes `cliany-site==0.16.263` to PyPI, and the release-tag readiness gate remains green.
+Expected: branch CI succeeds before the tag; after the local tag is created, the strict release-tag readiness gate passes before that tag is pushed. The release workflow then creates the GitHub Release and publishes `cliany-site==0.16.263` to PyPI.
 
 - [ ] **Step 6: Deploy and verify the official website and public release**
 
