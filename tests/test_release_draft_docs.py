@@ -11292,3 +11292,32 @@ def test_v016263_release_draft_tracks_market_install_dry_run() -> None:
     ]
     for snippet in required:
         assert snippet in text
+
+
+def test_v016263_release_draft_orders_changelog_finalization_before_tagging() -> None:
+    text = (ROOT / "docs" / "releases" / "v0.16.263-draft.md").read_text(encoding="utf-8")
+
+    target_check = "release_readiness.py --strict --target-version 0.16.263 --remote"
+    finalize_changelog = "清空 `[Unreleased]`"
+    commit_release = "git commit -m \"chore(release): finalize v0.16.263\""
+    create_tag = "git tag v0.16.263"
+    release_tag_check = "release_readiness.py --strict --release-tag v0.16.263 --remote --remote-name origin"
+    push_tag = "git push origin v0.16.263"
+
+    assert "`[Unreleased]` 仍包含本版条目" in text
+    assert "`v0.16.262...HEAD`" in text
+    assert text.index(target_check) < text.index(finalize_changelog)
+    assert text.index(finalize_changelog) < text.index(commit_release)
+    assert text.index(commit_release) < text.index(create_tag)
+    assert text.index(create_tag) < text.index(release_tag_check)
+    assert text.index(release_tag_check) < text.index(push_tag)
+
+
+def test_v016263_changelog_is_finalized() -> None:
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.263]", 1)[0]
+
+    assert unreleased.strip() == ""
+    assert "## [0.16.263] - 2026-07-15" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.263...HEAD" in text
+    assert "[0.16.263]: https://github.com/pearjelly/cliany.site/compare/v0.16.262...v0.16.263" in text

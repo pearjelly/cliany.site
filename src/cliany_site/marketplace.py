@@ -58,7 +58,24 @@ class AdapterManifest:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> AdapterManifest:
+    def from_dict(cls, data: object) -> AdapterManifest:
+        if not isinstance(data, dict):
+            msg = "manifest.json 根节点必须是对象"
+            raise ValueError(msg)
+
+        files = data.get("files", [])
+        if not isinstance(files, list) or not all(isinstance(filename, str) for filename in files):
+            msg = "manifest.json 的 files 必须是字符串列表"
+            raise ValueError(msg)
+
+        file_hashes = data.get("file_hashes", {})
+        if not isinstance(file_hashes, dict) or not all(
+            isinstance(filename, str) and isinstance(file_hash, str)
+            for filename, file_hash in file_hashes.items()
+        ):
+            msg = "manifest.json 的 file_hashes 必须是字符串映射"
+            raise ValueError(msg)
+
         return cls(
             manifest_version=str(data.get("manifest_version", MANIFEST_VERSION)),
             domain=str(data.get("domain", "")),
@@ -68,8 +85,8 @@ class AdapterManifest:
             author=str(data.get("author", "")),
             created_at=str(data.get("created_at", "")),
             cliany_site_min_version=str(data.get("cliany_site_min_version", "0.2.0")),
-            files=list(data.get("files", [])),
-            file_hashes=dict(data.get("file_hashes", {})),
+            files=list(files),
+            file_hashes=dict(file_hashes),
             checksum=str(data.get("checksum", "")),
         )
 

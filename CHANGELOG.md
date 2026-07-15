@@ -7,8 +7,14 @@
 
 ## [Unreleased]
 
+## [0.16.263] - 2026-07-15
+
 ### Added
 - `cliany-site market install <package> --dry-run --json` now validates a local adapter package and reports its replacement and backup intent without writing adapters or backups.
+
+### Fixed
+- Root CLI dry-run installation now skips runtime directory bootstrap, so preflight does not create the configured home, adapters, sessions, backups, or snapshots paths.
+- Missing archives and malformed manifest container shapes now return the normal `INSTALL_FAILED` JSON envelope while corrupt tar archives retain their normalized read error.
 
 ## [0.16.262] - 2026-07-14
 
@@ -2502,7 +2508,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.262...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.263...HEAD
+[0.16.263]: https://github.com/pearjelly/cliany.site/compare/v0.16.262...v0.16.263
 [0.16.262]: https://github.com/pearjelly/cliany.site/compare/v0.16.261...v0.16.262
 [0.16.261]: https://github.com/pearjelly/cliany.site/compare/v0.16.260...v0.16.261
 [0.16.260]: https://github.com/pearjelly/cliany.site/compare/v0.16.259...v0.16.260

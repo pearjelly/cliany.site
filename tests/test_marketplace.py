@@ -64,6 +64,7 @@ def _make_tarball(
     extra_file: bool = False,
     path_traversal: bool = False,
     no_manifest: bool = False,
+    manifest_data: object | None = None,
 ) -> Path:
     """手工构建一个 .tar.gz 安装包"""
     import hashlib
@@ -78,16 +79,18 @@ def _make_tarball(
     if bad_hash:
         commands_hash = "0" * 64
 
-    manifest = {
-        "manifest_version": MANIFEST_VERSION,
-        "domain": domain,
-        "version": version,
-        "description": "test",
-        "author": "tester",
-        "created_at": "2025-01-01T00:00:00+00:00",
-        "files": ["commands.py", "metadata.json"],
-        "file_hashes": {"commands.py": commands_hash, "metadata.json": metadata_hash},
-    }
+    manifest = manifest_data
+    if manifest is None:
+        manifest = {
+            "manifest_version": MANIFEST_VERSION,
+            "domain": domain,
+            "version": version,
+            "description": "test",
+            "author": "tester",
+            "created_at": "2025-01-01T00:00:00+00:00",
+            "files": ["commands.py", "metadata.json"],
+            "file_hashes": {"commands.py": commands_hash, "metadata.json": metadata_hash},
+        }
 
     tmp_path.mkdir(parents=True, exist_ok=True)
     with tarfile.open(pack_path, "w:gz") as tar:
@@ -818,6 +821,49 @@ class TestMarketCLI:
         assert data["error"]["code"] == "INSTALL_FAILED"
         assert "--force" in data["error"]["fix"]
 
+    def test_install_missing_package_uses_install_failed_envelope(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        missing_pack = tmp_path / "missing.cliany-adapter.tar.gz"
+
+        result = self._invoke(["install", str(missing_pack), "--dry-run", "--json"], cfg)
+
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["success"] is False
+        assert data["error"]["code"] == "INSTALL_FAILED"
+        assert data["error"]["message"] == f"安装包不存在: {missing_pack}"
+
+    @pytest.mark.parametrize(
+        ("manifest_data", "message"),
+        [
+            (["not", "an", "object"], "manifest.json 根节点必须是对象"),
+            (
+                {"domain": "bad-files.com", "files": None, "file_hashes": {}},
+                "manifest.json 的 files 必须是字符串列表",
+            ),
+            (
+                {"domain": "bad-hashes.com", "files": [], "file_hashes": None},
+                "manifest.json 的 file_hashes 必须是字符串映射",
+            ),
+        ],
+    )
+    def test_install_malformed_manifest_uses_install_failed_envelope(
+        self,
+        tmp_path: Path,
+        manifest_data: object,
+        message: str,
+    ) -> None:
+        cfg = _make_config(tmp_path)
+        pack_path = _make_tarball(tmp_path / "packs", "malformed.com", manifest_data=manifest_data)
+
+        result = self._invoke(["install", str(pack_path), "--dry-run", "--json"], cfg)
+
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["success"] is False
+        assert data["error"]["code"] == "INSTALL_FAILED"
+        assert data["error"]["message"] == message
+
     def test_install_dry_run_returns_package_plan(self, tmp_path: Path) -> None:
         cfg = _make_config(tmp_path)
         pack_path = _make_tarball(tmp_path / "packs", "cli-dry-run.com", version="2.0.0")
@@ -849,3 +895,25 @@ class TestMarketCLI:
         assert "--force" in data["error"]["fix"]
         assert (adapter_dir / "commands.py").read_bytes() == commands_before
         assert not (cfg.home_dir / "backups").exists()
+
+    @pytest.mark.parametrize("dry_run_first", [False, True])
+    def test_root_install_dry_run_does_not_create_runtime_home(
+        self,
+        tmp_path: Path,
+        tmp_home: Path,
+        dry_run_first: bool,
+    ) -> None:
+        from cliany_site.cli import cli
+
+        runtime_home = tmp_home / ".cliany-site"
+        pack_path = _make_tarball(tmp_path / "packs", "root-dry-run.com")
+        install_args = ["--dry-run", str(pack_path)] if dry_run_first else [str(pack_path), "--dry-run"]
+
+        result = CliRunner().invoke(
+            cli,
+            ["--json", "market", "install", *install_args],
+        )
+
+        assert result.exit_code == 0
+        assert json.loads(result.output)["data"]["dry_run"] is True
+        assert not runtime_home.exists()

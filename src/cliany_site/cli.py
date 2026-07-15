@@ -75,6 +75,16 @@ def _render_error(exc: Exception, json_mode: bool) -> None:
 
 
 class SafeGroup(click.Group):
+    def invoke(self, ctx: click.Context) -> object:
+        args = [*ctx._protected_args, *ctx.args]
+        option_args = args[2:]
+        if "--" in option_args:
+            option_args = option_args[: option_args.index("--")]
+        ctx.meta["skip_runtime_bootstrap"] = (
+            args[:2] == ["market", "install"] and "--dry-run" in option_args
+        )
+        return super().invoke(ctx)
+
     def main(
         self,
         args: Sequence[str] | None = None,
@@ -125,7 +135,8 @@ class SafeGroup(click.Group):
 @click.pass_context
 def cli(ctx, json_mode, verbose, debug, cdp_url, headless, sandbox, explain, force_browser, diagnose):
     """cliany-site: 将任意网站 CLI 化"""
-    _ensure_dirs()
+    if not ctx.meta.get("skip_runtime_bootstrap", False):
+        _ensure_dirs()
     ctx.ensure_object(dict)
     ctx.obj["json_mode"] = json_mode
     ctx.obj["cdp_url"] = cdp_url

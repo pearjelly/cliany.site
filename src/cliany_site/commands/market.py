@@ -61,7 +61,7 @@ def publish_cmd(ctx: click.Context, domain: str, version: str, author: str, json
 
 
 @market_group.command("install")
-@click.argument("pack_path", type=click.Path(exists=True))
+@click.argument("pack_path", type=click.Path())
 @click.option("--force", is_flag=True, default=False, help="强制覆盖已安装版本")
 @click.option("--dry-run", is_flag=True, default=False, help="仅校验包与安装计划，不写入运行时状态")
 @click.option("--json", "json_mode", is_flag=True, default=False, help="JSON 输出")
