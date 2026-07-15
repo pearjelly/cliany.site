@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gzip
 import json
 import tarfile
 from io import BytesIO
@@ -424,6 +425,17 @@ class TestInstallAdapter:
             install_adapter(pack_path)
 
         assert str(exc_info.value) == f"安装包无法读取: {pack_path}"
+
+    def test_install_body_eof_error_is_not_mislabeled_as_archive_error(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        pack_path = _make_tarball(tmp_path / "packs", "body-eof.com")
+
+        with (
+            patch("cliany_site.marketplace.get_config", return_value=cfg),
+            patch("cliany_site.marketplace.shutil.copy2", side_effect=EOFError("install body failed")),
+            pytest.raises(EOFError, match="install body failed"),
+        ):
+            install_adapter(pack_path)
 
     def test_install_missing_domain_raises(self, tmp_path: Path) -> None:
         import hashlib
@@ -938,5 +950,38 @@ class TestMarketCLI:
         data = json.loads(result.output)
         assert data["error"]["code"] == "INSTALL_FAILED"
         assert data["success"] is False
+        assert data["error"]["message"] == f"安装包无法读取: {pack_path}"
+        assert not runtime_home.exists()
+
+    def test_root_install_dry_run_corrupt_gzip_crc_uses_normalized_error(
+        self,
+        tmp_path: Path,
+        tmp_home: Path,
+    ) -> None:
+        from cliany_site.cli import cli
+
+        runtime_home = tmp_home / ".cliany-site"
+        pack_path = _make_tarball(tmp_path / "packs", "corrupt-crc.com")
+        with tarfile.open(pack_path, "r:gz") as tar:
+            payload_end = max(
+                member.offset_data
+                + ((member.size + tarfile.BLOCKSIZE - 1) // tarfile.BLOCKSIZE) * tarfile.BLOCKSIZE
+                for member in tar.getmembers()
+            )
+        tar_payload = gzip.decompress(pack_path.read_bytes())[:payload_end]
+        pack_path.write_bytes(gzip.compress(tar_payload))
+        archive_bytes = bytearray(pack_path.read_bytes())
+        archive_bytes[-8] ^= 0xFF
+        pack_path.write_bytes(archive_bytes)
+
+        result = CliRunner().invoke(
+            cli,
+            ["--json", "market", "install", str(pack_path), "--dry-run"],
+        )
+
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["success"] is False
+        assert data["error"]["code"] == "INSTALL_FAILED"
         assert data["error"]["message"] == f"安装包无法读取: {pack_path}"
         assert not runtime_home.exists()

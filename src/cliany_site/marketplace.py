@@ -7,6 +7,7 @@ manifest.json 记录版本、依赖、签名哈希、兼容性信息。
 from __future__ import annotations
 
 import contextlib
+import gzip
 import hashlib
 import json
 import logging
@@ -195,37 +196,39 @@ def _validated_adapter_package(
         msg = f"安装包不存在: {archive_path}"
         raise FileNotFoundError(msg)
 
-    try:
-        with tarfile.open(archive_path, "r:gz") as tar:
-            for member in tar.getmembers():
-                if member.name.startswith("/") or ".." in member.name:
-                    msg = f"安装包包含不安全路径: {member.name}"
-                    raise ValueError(msg)
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        tmp_path = Path(tmp_dir)
+        try:
+            with tarfile.open(archive_path, "r:gz") as tar:
+                for member in tar.getmembers():
+                    if member.name.startswith("/") or ".." in member.name:
+                        msg = f"安装包包含不安全路径: {member.name}"
+                        raise ValueError(msg)
 
-            try:
-                manifest_file = tar.extractfile("manifest.json")
-                if manifest_file is None:
+                try:
+                    manifest_file = tar.extractfile("manifest.json")
+                    if manifest_file is None:
+                        msg = "安装包缺少 manifest.json"
+                        raise ValueError(msg)
+                    with manifest_file:
+                        manifest_data = json.loads(manifest_file.read().decode("utf-8"))
+                except KeyError:
                     msg = "安装包缺少 manifest.json"
+                    raise ValueError(msg) from None
+
+                manifest = AdapterManifest.from_dict(manifest_data)
+                if not manifest.domain:
+                    msg = "manifest.json 缺少 domain 字段"
                     raise ValueError(msg)
-                with manifest_file:
-                    manifest_data = json.loads(manifest_file.read().decode("utf-8"))
-            except KeyError:
-                msg = "安装包缺少 manifest.json"
-                raise ValueError(msg) from None
 
-            manifest = AdapterManifest.from_dict(manifest_data)
-            if not manifest.domain:
-                msg = "manifest.json 缺少 domain 字段"
-                raise ValueError(msg)
-
-            with tempfile.TemporaryDirectory() as tmp_dir:
-                tmp_path = Path(tmp_dir)
                 tar.extractall(tmp_path, filter="data")  # noqa: S202
                 _validate_extracted_adapter_package(manifest, tmp_path)
-                yield manifest, tmp_path, _sha256_file(archive_path)
-    except (tarfile.TarError, EOFError) as exc:
-        msg = f"安装包无法读取: {archive_path}"
-        raise ValueError(msg) from exc
+                package_sha256 = _sha256_file(archive_path)
+        except (tarfile.TarError, EOFError, gzip.BadGzipFile) as exc:
+            msg = f"安装包无法读取: {archive_path}"
+            raise ValueError(msg) from exc
+
+        yield manifest, tmp_path, package_sha256
 
 
 def _adapter_install_target(
