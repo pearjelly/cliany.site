@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Added
+- `cliany-site market install <package> --dry-run --json` now validates a local adapter package and reports its replacement and backup intent without writing adapters or backups.
+
 ## [0.16.262] - 2026-07-14
 
 ### Added

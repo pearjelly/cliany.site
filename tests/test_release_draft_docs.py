@@ -11261,3 +11261,27 @@ def test_v016262_release_draft_tracks_null_field_metadata():
     ]
     for snippet in required:
         assert snippet in text
+
+
+def test_v016263_release_draft_tracks_market_install_dry_run() -> None:
+    text = (ROOT / "docs" / "releases" / "v0.16.263-draft.md").read_text(
+        encoding="utf-8"
+    )
+
+    required = [
+        "market install <package> --dry-run",
+        "package_sha256",
+        "would_replace",
+        "would_create_backup",
+        "INSTALL_FAILED",
+        "~/.cliany-site/backups/",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "llm_live_preflight_not_ready",
+        "git tag v0.16.263",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --remote --distribution --json",
+    ]
+    for snippet in required:
+        assert snippet in text
