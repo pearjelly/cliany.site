@@ -5,8 +5,14 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_readmes_document_adapter_package_preflight() -> None:
     expected = {
-        "README.md": "cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz --dry-run --json",
-        "README.zh.md": "cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz --dry-run --json",
+        "README.md": (
+            "cliany-site market install ~/.cliany-site/packages/"
+            "github.com-1.0.0.cliany-adapter.tar.gz --dry-run --json"
+        ),
+        "README.zh.md": (
+            "cliany-site market install ~/.cliany-site/packages/"
+            "github.com-1.0.0.cliany-adapter.tar.gz --dry-run --json"
+        ),
     }
     for filename, command in expected.items():
         text = (ROOT / filename).read_text(encoding="utf-8")
