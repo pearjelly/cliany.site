@@ -9,6 +9,7 @@ from cliany_site.marketplace import (
     install_adapter,
     list_backups,
     pack_adapter,
+    resolve_adapter_source,
     rollback_adapter,
     uninstall_adapter,
 )
@@ -61,22 +62,31 @@ def publish_cmd(ctx: click.Context, domain: str, version: str, author: str, json
 
 
 @market_group.command("install")
-@click.argument("pack_path", type=click.Path())
+@click.argument("source", type=click.Path())
+@click.option("--sha256", default=None, help="远程安装包的 64 位十六进制 SHA-256")
 @click.option("--force", is_flag=True, default=False, help="强制覆盖已安装版本")
 @click.option("--dry-run", is_flag=True, default=False, help="仅校验包与安装计划，不写入运行时状态")
 @click.option("--json", "json_mode", is_flag=True, default=False, help="JSON 输出")
 @click.pass_context
-def install_cmd(ctx: click.Context, pack_path: str, force: bool, dry_run: bool, json_mode: bool) -> None:
+def install_cmd(
+    ctx: click.Context,
+    source: str,
+    sha256: str | None,
+    force: bool,
+    dry_run: bool,
+    json_mode: bool,
+) -> None:
     """从分发包安装适配器，或预检安装计划。"""
     root = ctx.find_root()
     jm = json_mode or (isinstance(root.obj, dict) and root.obj.get("json_mode", False))
 
     try:
-        if dry_run:
-            resp = success_response(inspect_adapter_package(pack_path, force=force))
-        else:
-            manifest = install_adapter(pack_path, force=force)
-            resp = success_response(manifest.to_dict())
+        with resolve_adapter_source(source, expected_sha256=sha256) as pack_path:
+            if dry_run:
+                resp = success_response(inspect_adapter_package(pack_path, force=force))
+            else:
+                manifest = install_adapter(pack_path, force=force)
+                resp = success_response(manifest.to_dict())
     except (FileNotFoundError, FileExistsError, ValueError) as exc:
         resp = error_response(INSTALL_FAILED, str(exc), _install_fix_hint(str(exc)))
     except OSError as exc:

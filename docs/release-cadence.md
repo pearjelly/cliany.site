@@ -20,7 +20,7 @@
 1. 运行 `python scripts/plan_next_iteration.py --json`，读取 `recommended_theme`、`recommended_slice`、`primary_next_action` 和 `standard_release_flow_primary_next_action`。
    如果 `commit_cadence.release_count_today >= commit_cadence.max_daily_releases` 或 `daily_release_limit_ok=false`，当天停止 tag 发布。
 2. 选择能当天验证的最小切片，并在 `docs/releases/vX.Y.Z-draft.md` 写清用户价值、风险、验证命令和剩余阻塞。
-3. 实现或补证据后运行 `python scripts/release_readiness.py --strict --target-version X.Y.Z`、`python scripts/validate_cases.py --strict`，必要时加相关 `pytest` 或 `qa/*.sh`。
+3. 实现或补证据后运行 `python scripts/release_readiness.py --strict --target-version X.Y.Z`、`python scripts/validate_cases.py --strict`，必要时加相关 `pytest` 或 `qa/*.sh`。target-mode 允许在项目版本已经 bump、上一版 tag 仍为 latest 的待发状态运行；创建 tag 后必须改用 `--release-tag` 做严格校验。
 4. 更新 `CHANGELOG.md`、`pyproject.toml`、README/README.zh/官网中受影响入口。
 5. 创建并推送 `vX.Y.Z` tag，等待 `.github/workflows/release.yml` 更新 GitHub Release 和 PyPI。
 6. 对官网有影响时按 `AGENTS.md` 的 Vercel 步骤在 `site/` 部署，并在 release notes 里记录官网同步。

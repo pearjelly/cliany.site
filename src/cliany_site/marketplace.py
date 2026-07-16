@@ -11,15 +11,18 @@ import gzip
 import hashlib
 import json
 import logging
+import os
 import shutil
 import tarfile
 import tempfile
+import urllib.request
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from io import BytesIO
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 
 from cliany_site.config import get_config
 
@@ -27,6 +30,154 @@ logger = logging.getLogger(__name__)
 
 MANIFEST_VERSION = "1"
 PACK_EXTENSION = ".cliany-adapter.tar.gz"
+MAX_REMOTE_PACKAGE_SIZE = 64 * 1024 * 1024
+_REMOTE_READ_CHUNK_SIZE = 64 * 1024
+
+
+def _display_source(source: str) -> str:
+    """Return a source suitable for user-facing errors without URL secrets."""
+    try:
+        parsed = urlsplit(source)
+    except ValueError:
+        return source.split("?", 1)[0].split("#", 1)[0]
+    if not parsed.scheme:
+        return source
+    return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
+
+
+def _validate_remote_sha256(expected_sha256: str | None) -> str:
+    if expected_sha256 is None:
+        msg = "远程安装包必须提供 --sha256（64 位十六进制 SHA-256）"
+        raise ValueError(msg)
+    if len(expected_sha256) != 64 or any(char not in "0123456789abcdefABCDEF" for char in expected_sha256):
+        msg = "--sha256 必须是 64 位十六进制 SHA-256"
+        raise ValueError(msg)
+    return expected_sha256.lower()
+
+
+class _HTTPSOnlyRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(
+        self,
+        req: Any,
+        fp: Any,
+        code: int,
+        msg: str,
+        headers: Any,
+        newurl: str,
+    ) -> Any:
+        try:
+            parsed = urlsplit(newurl)
+            is_https = parsed.scheme.lower() == "https" and bool(parsed.hostname)
+        except ValueError:
+            is_https = False
+        if not is_https:
+            error_source = _display_source(newurl)
+            msg = f"禁止 HTTPS 降级重定向: {error_source}"
+            raise ValueError(msg)
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+def _response_content_length(response: Any) -> int | None:
+    headers = getattr(response, "headers", None)
+    content_length = headers.get("Content-Length") if headers is not None else None
+    if content_length is None:
+        getheader = getattr(response, "getheader", None)
+        if getheader is not None:
+            content_length = getheader("Content-Length")
+    if content_length is None:
+        return None
+    try:
+        length = int(content_length)
+    except (TypeError, ValueError) as exc:
+        msg = "远程响应 Content-Length 无效"
+        raise ValueError(msg) from exc
+    if length < 0:
+        msg = "远程响应 Content-Length 无效"
+        raise ValueError(msg)
+    return length
+
+
+@contextlib.contextmanager
+def resolve_adapter_source(
+    source: str | Path,
+    *,
+    expected_sha256: str | None = None,
+) -> Iterator[Path]:
+    """Resolve a local package or download and verify one direct HTTPS package."""
+    source_text = str(source)
+    parsed = urlsplit(source_text)
+    is_windows_drive_path = len(parsed.scheme) == 1 and len(source_text) > 1 and source_text[1] == ":"
+    if not parsed.scheme or is_windows_drive_path:
+        yield Path(source_text)
+        return
+
+    if parsed.scheme.lower() != "https" or not parsed.hostname:
+        msg = f"安装包来源必须是本地路径或 HTTPS URL: {_display_source(source_text)}"
+        raise ValueError(msg)
+    expected_digest = _validate_remote_sha256(expected_sha256)
+    display_source = _display_source(source_text)
+    temp_path: Path | None = None
+
+    try:
+        try:
+            opener = urllib.request.build_opener(_HTTPSOnlyRedirectHandler())
+            with opener.open(source_text) as response:
+                content_length = _response_content_length(response)
+                if content_length is not None and content_length > MAX_REMOTE_PACKAGE_SIZE:
+                    msg = "远程安装包超过 64 MiB 限制"
+                    raise ValueError(msg)
+
+                fd, temp_name = tempfile.mkstemp(
+                    prefix="cliany-site-",
+                    suffix=PACK_EXTENSION,
+                )
+                temp_path = Path(temp_name)
+                try:
+                    digest = hashlib.sha256()
+                    total_size = 0
+                    with os.fdopen(fd, "wb") as output:
+                        fd = -1
+                        while True:
+                            chunk = response.read(_REMOTE_READ_CHUNK_SIZE)
+                            if not chunk:
+                                break
+                            total_size += len(chunk)
+                            if total_size > MAX_REMOTE_PACKAGE_SIZE:
+                                msg = "远程安装包超过 64 MiB 限制"
+                                raise ValueError(msg)
+                            output.write(chunk)
+                            digest.update(chunk)
+                finally:
+                    if fd != -1:
+                        os.close(fd)
+
+                actual_digest = digest.hexdigest()
+                if actual_digest != expected_digest:
+                    msg = (
+                        "远程安装包 SHA-256 校验失败 "
+                        f"(期望 {expected_digest}，实际 {actual_digest})"
+                    )
+                    raise ValueError(msg)
+        except ValueError:
+            raise
+        except Exception as exc:
+            msg = f"远程安装包下载失败: {display_source}"
+            raise ValueError(msg) from exc
+
+        assert temp_path is not None
+        try:
+            yield temp_path
+        except Exception as exc:
+            temp_text = str(temp_path)
+            if temp_text in str(exc):
+                exc.args = tuple(
+                    value.replace(temp_text, display_source) if isinstance(value, str) else value
+                    for value in exc.args
+                )
+            raise
+    finally:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
 
 
 @dataclass(frozen=True)
@@ -220,6 +371,7 @@ def _validated_adapter_package(
                 if not manifest.domain:
                     msg = "manifest.json 缺少 domain 字段"
                     raise ValueError(msg)
+                _validate_manifest_domain(manifest.domain)
 
                 tar.extractall(tmp_path, filter="data")  # noqa: S202
                 _validate_extracted_adapter_package(manifest, tmp_path)
@@ -229,6 +381,21 @@ def _validated_adapter_package(
             raise ValueError(msg) from exc
 
         yield manifest, tmp_path, package_sha256
+
+
+def _validate_manifest_domain(domain: str) -> None:
+    """Keep manifest domains as single safe adapter directory names."""
+    windows_path = PureWindowsPath(domain)
+    if (
+        domain in {".", ".."}
+        or Path(domain).is_absolute()
+        or bool(windows_path.drive or windows_path.root)
+        or "/" in domain
+        or "\\" in domain
+        or ":" in domain
+    ):
+        msg = f"manifest.json 的 domain 包含不安全路径: {domain}"
+        raise ValueError(msg)
 
 
 def _adapter_install_target(

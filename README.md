@@ -357,6 +357,9 @@ cliany-site market publish github.com --version 1.0.0
 # Preflight the local adapter package (no runtime writes)
 cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz --dry-run --json
 
+# Preflight or install a publisher-provided remote package with a pinned digest
+cliany-site market install https://publisher.example/releases/github.com-1.0.0.cliany-adapter.tar.gz --sha256 <64-hex-sha256> --dry-run --json
+
 # Install adapter after reviewing dry_run, package_sha256, files, would_replace, and would_create_backup
 cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz
 
@@ -381,7 +384,7 @@ cliany-site market rollback github.com
 | `tui` | | Start TUI management interface. |
 | `serve` | `[--host] [--port]` | Start HTTP API service. |
 | `market publish <domain>` | `[--version] [--json]` | Pack and export adapter. |
-| `market install <path>` | `[--force] [--dry-run] [--json]` | Install adapter package. |
+| `market install <source>` | `[--sha256] [--force] [--dry-run] [--json]` | Install a local package or an HTTPS package with a pinned SHA-256. |
 | `market uninstall <domain>` | `[--json]` | Uninstall adapter. |
 | `market rollback <domain>` | `[--index] [--json]` | Rollback to a backup version. |
 | `workflow run <file>` | `[--json] [--dry-run]` | Execute YAML workflow. |

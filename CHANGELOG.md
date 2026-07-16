@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+### Added
+- `cliany-site market install` now accepts a direct HTTPS adapter package URL when paired with an explicit 64-character SHA-256 digest. Downloads are size-limited, HTTPS-only across redirects, verified before installation, and removed from temporary storage after every path.
+- Remote adapter packages reuse the existing tar, manifest, payload-hash, dry-run, force, backup, and `INSTALL_FAILED` contracts, so a published package can be preflighted without writing runtime state.
+
+### Fixed
+- Target-mode release readiness now recognizes an explicitly bumped project version whose previous release tag is still the latest tag, while tagged-mode readiness remains strict about tag/version alignment.
+
 ## [0.16.263] - 2026-07-15
 
 ### Added

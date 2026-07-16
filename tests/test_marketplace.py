@@ -3,25 +3,32 @@
 from __future__ import annotations
 
 import gzip
+import hashlib
 import json
 import tarfile
+import tempfile
 from io import BytesIO
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+from urllib.error import URLError
+from urllib.request import Request
 
 import pytest
 from click.testing import CliRunner, Result
 
 from cliany_site.marketplace import (
     MANIFEST_VERSION,
+    MAX_REMOTE_PACKAGE_SIZE,
     PACK_EXTENSION,
     AdapterManifest,
+    _HTTPSOnlyRedirectHandler,
     _sha256_file,
     get_adapter_info,
     inspect_adapter_package,
     install_adapter,
     list_backups,
     pack_adapter,
+    resolve_adapter_source,
     rollback_adapter,
     uninstall_adapter,
 )
@@ -60,6 +67,7 @@ def _make_tarball(
     domain: str,
     *,
     version: str = "0.1.0",
+    manifest_domain: str | None = None,
     bad_hash: bool = False,
     missing_declared_file: bool = False,
     extra_file: bool = False,
@@ -84,7 +92,7 @@ def _make_tarball(
     if manifest is None:
         manifest = {
             "manifest_version": MANIFEST_VERSION,
-            "domain": domain,
+            "domain": domain if manifest_domain is None else manifest_domain,
             "version": version,
             "description": "test",
             "author": "tester",
@@ -125,6 +133,380 @@ def _make_tarball(
     return pack_path
 
 
+class _FakeResponse:
+    def __init__(self, body: bytes, *, content_length: int | None = None) -> None:
+        self._body = body
+        self.headers = {} if content_length is None else {"Content-Length": str(content_length)}
+        self.read_calls = 0
+
+    def __enter__(self) -> _FakeResponse:
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        return None
+
+    def read(self, size: int = -1) -> bytes:
+        self.read_calls += 1
+        if size < 0:
+            size = len(self._body)
+        body, self._body = self._body[:size], self._body[size:]
+        return body
+
+
+class _GeneratedResponse(_FakeResponse):
+    def __init__(self, size: int) -> None:
+        super().__init__(b"")
+        self.remaining = size
+
+    def read(self, size: int = -1) -> bytes:
+        self.read_calls += 1
+        if self.remaining <= 0:
+            return b""
+        chunk_size = min(size, self.remaining)
+        self.remaining -= chunk_size
+        return b"x" * chunk_size
+
+
+def _patch_download_temp_dir(tmp_path: Path):
+    download_dir = tmp_path / "downloads"
+    download_dir.mkdir()
+    real_mkstemp = tempfile.mkstemp
+
+    def mkstemp(*args: object, **kwargs: object) -> tuple[int, str]:
+        kwargs["dir"] = str(download_dir)
+        return real_mkstemp(*args, **kwargs)
+
+    return patch("cliany_site.marketplace.tempfile.mkstemp", side_effect=mkstemp), download_dir
+
+
+# ── remote adapter source ────────────────────────────────
+
+
+class TestRemoteAdapterSource:
+    @pytest.mark.parametrize(
+        "source",
+        [
+            "http://downloads.example.test/adapter.tar.gz",
+            "file:///tmp/adapter.tar.gz",
+            "data:application/gzip;base64,ZmFrZQ==",
+        ],
+    )
+    def test_rejects_non_https_before_request(self, source: str) -> None:
+        with (
+            patch("cliany_site.marketplace.urllib.request.build_opener") as build_opener,
+            pytest.raises(ValueError, match="HTTPS"),
+            resolve_adapter_source(source, expected_sha256="0" * 64),
+        ):
+            pass
+
+        build_opener.assert_not_called()
+
+    @pytest.mark.parametrize("expected_sha256", [None, "abc", "g" * 64])
+    def test_requires_a_64_hex_digest_before_request(self, expected_sha256: str | None) -> None:
+        with (
+            patch("cliany_site.marketplace.urllib.request.build_opener") as build_opener,
+            pytest.raises(ValueError, match="SHA-256"),
+            resolve_adapter_source(
+                "https://downloads.example.test/adapter.tar.gz?token=secret#fragment",
+                expected_sha256=expected_sha256,
+            ),
+        ):
+            pass
+
+        build_opener.assert_not_called()
+
+    def test_https_redirect_handler_rejects_downgrade_before_body_read(self) -> None:
+        handler = _HTTPSOnlyRedirectHandler()
+        response = MagicMock()
+
+        with pytest.raises(ValueError, match="降级"):
+            handler.redirect_request(
+                Request("https://downloads.example.test/adapter.tar.gz"),
+                response,
+                302,
+                "Found",
+                {},
+                "http://cdn.example.test/adapter.tar.gz?token=secret#fragment",
+            )
+
+        response.read.assert_not_called()
+
+    def test_local_path_yields_original_path_without_digest(self, tmp_path: Path) -> None:
+        pack_path = tmp_path / "local.cliany-adapter.tar.gz"
+        pack_path.write_bytes(b"local")
+
+        with resolve_adapter_source(str(pack_path)) as resolved_path:
+            assert resolved_path == pack_path
+
+    def test_windows_drive_path_is_local_source(self) -> None:
+        source = r"C:\\packages\\adapter.cliany-adapter.tar.gz"
+
+        with resolve_adapter_source(source) as resolved_path:
+            assert str(resolved_path) == source
+
+    def test_downstream_error_redacts_temp_path_and_url_secrets(self, tmp_path: Path) -> None:
+        archive = b"remote archive"
+        digest = hashlib.sha256(archive).hexdigest()
+        response = _FakeResponse(archive, content_length=len(archive))
+        opener = MagicMock()
+        opener.open.return_value = response
+        source = "https://downloads.example.test/adapter.tar.gz?token=secret#fragment"
+        temp_patch, download_dir = _patch_download_temp_dir(tmp_path)
+
+        with (
+            patch("cliany_site.marketplace.urllib.request.build_opener", return_value=opener),
+            temp_patch,
+            pytest.raises(ValueError) as exc_info,
+            resolve_adapter_source(source, expected_sha256=digest) as resolved_path,
+        ):
+            raise ValueError(f"安装包无法读取: {resolved_path}")
+
+        assert str(exc_info.value) == "安装包无法读取: https://downloads.example.test/adapter.tar.gz"
+        assert str(download_dir) not in str(exc_info.value)
+        assert "secret" not in str(exc_info.value)
+        assert "fragment" not in str(exc_info.value)
+        assert list(download_dir.iterdir()) == []
+
+
+class TestRemoteAdapterCLI:
+    def _invoke(self, args: list[str], cfg: MagicMock) -> Result:
+        from cliany_site.commands.market import market_group
+
+        runner = CliRunner()
+        with patch("cliany_site.marketplace.get_config", return_value=cfg):
+            return runner.invoke(market_group, args)
+
+    def test_correct_digest_reaches_existing_dry_run_plan_and_cleans_temp_file(
+        self, tmp_path: Path
+    ) -> None:
+        cfg = _make_config(tmp_path)
+        pack_path = _make_tarball(tmp_path / "packs", "remote-dry-run.com", version="2.0.0")
+        archive = pack_path.read_bytes()
+        digest = hashlib.sha256(archive).hexdigest()
+        response = _FakeResponse(archive, content_length=len(archive))
+        opener = MagicMock()
+        opener.open.return_value = response
+        source = "https://downloads.example.test/adapter.tar.gz?token=secret#fragment"
+        temp_patch, download_dir = _patch_download_temp_dir(tmp_path)
+
+        with patch("cliany_site.marketplace.urllib.request.build_opener", return_value=opener), temp_patch:
+            result = self._invoke(
+                ["install", source, "--sha256", digest.upper(), "--dry-run", "--json"],
+                cfg,
+            )
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["success"] is True
+        assert data["data"] == {
+            "dry_run": True,
+            "package_sha256": digest,
+            "domain": "remote-dry-run.com",
+            "version": "2.0.0",
+            "files": ["commands.py", "metadata.json"],
+            "would_replace": False,
+            "would_create_backup": False,
+        }
+        assert response.read_calls > 0
+        assert not (cfg.adapters_dir / "remote-dry-run.com").exists()
+        assert not (cfg.home_dir / "backups").exists()
+        assert list(download_dir.iterdir()) == []
+        opener.open.assert_called_once()
+
+    def test_remote_install_uses_existing_local_install_path(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        pack_path = _make_tarball(tmp_path / "packs", "remote-install.com")
+        archive = pack_path.read_bytes()
+        digest = hashlib.sha256(archive).hexdigest()
+        opener = MagicMock()
+        opener.open.return_value = _FakeResponse(archive, content_length=len(archive))
+        temp_patch, download_dir = _patch_download_temp_dir(tmp_path)
+
+        with patch("cliany_site.marketplace.urllib.request.build_opener", return_value=opener), temp_patch:
+            result = self._invoke(
+                ["install", "https://downloads.example.test/adapter.tar.gz", "--sha256", digest, "--json"],
+                cfg,
+            )
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["success"] is True
+        assert data["data"]["domain"] == "remote-install.com"
+        assert (cfg.adapters_dir / "remote-install.com" / "commands.py").exists()
+        assert list(download_dir.iterdir()) == []
+
+    def test_remote_digest_mismatch_is_install_failed_without_secrets_or_temp_path(
+        self, tmp_path: Path
+    ) -> None:
+        cfg = _make_config(tmp_path)
+        archive = b"remote archive"
+        actual_digest = hashlib.sha256(archive).hexdigest()
+        expected_digest = "a" * 64
+        opener = MagicMock()
+        opener.open.return_value = _FakeResponse(archive, content_length=len(archive))
+        source = "https://downloads.example.test/adapter.tar.gz?token=secret#fragment"
+        temp_patch, download_dir = _patch_download_temp_dir(tmp_path)
+
+        with patch("cliany_site.marketplace.urllib.request.build_opener", return_value=opener), temp_patch:
+            result = self._invoke(
+                ["install", source, "--sha256", expected_digest, "--dry-run", "--json"],
+                cfg,
+            )
+
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["error"]["code"] == "INSTALL_FAILED"
+        assert expected_digest in data["error"]["message"]
+        assert actual_digest in data["error"]["message"]
+        assert "secret" not in result.output
+        assert "fragment" not in result.output
+        assert str(download_dir) not in result.output
+        assert not (cfg.home_dir / "backups").exists()
+        assert list(download_dir.iterdir()) == []
+
+    def test_remote_network_failure_is_install_failed_without_url_query(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        opener = MagicMock()
+        opener.open.side_effect = URLError("failed https://bad.example.test/?token=secret")
+        source = "https://downloads.example.test/adapter.tar.gz?token=secret#fragment"
+
+        with patch("cliany_site.marketplace.urllib.request.build_opener", return_value=opener):
+            result = self._invoke(
+                ["install", source, "--sha256", "0" * 64, "--dry-run", "--json"],
+                cfg,
+            )
+
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["error"]["code"] == "INSTALL_FAILED"
+        assert "远程安装包下载失败" in data["error"]["message"]
+        assert "secret" not in result.output
+        assert "fragment" not in result.output
+
+    def test_declared_oversize_response_is_rejected_before_reading(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        response = _FakeResponse(b"should not be read", content_length=MAX_REMOTE_PACKAGE_SIZE + 1)
+        opener = MagicMock()
+        opener.open.return_value = response
+        temp_patch, download_dir = _patch_download_temp_dir(tmp_path)
+
+        with patch("cliany_site.marketplace.urllib.request.build_opener", return_value=opener), temp_patch:
+            result = self._invoke(
+                [
+                    "install",
+                    "https://downloads.example.test/adapter.tar.gz",
+                    "--sha256",
+                    "0" * 64,
+                    "--dry-run",
+                    "--json",
+                ],
+                cfg,
+            )
+
+        assert result.exit_code == 1
+        assert json.loads(result.output)["error"]["code"] == "INSTALL_FAILED"
+        assert "64 MiB" in json.loads(result.output)["error"]["message"]
+        assert response.read_calls == 0
+        assert list(download_dir.iterdir()) == []
+
+    def test_streamed_oversize_response_is_rejected_and_cleaned(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        response = _GeneratedResponse(MAX_REMOTE_PACKAGE_SIZE + 1)
+        opener = MagicMock()
+        opener.open.return_value = response
+        temp_patch, download_dir = _patch_download_temp_dir(tmp_path)
+
+        with patch("cliany_site.marketplace.urllib.request.build_opener", return_value=opener), temp_patch:
+            result = self._invoke(
+                [
+                    "install",
+                    "https://downloads.example.test/adapter.tar.gz",
+                    "--sha256",
+                    "0" * 64,
+                    "--dry-run",
+                    "--json",
+                ],
+                cfg,
+            )
+
+        assert result.exit_code == 1
+        assert json.loads(result.output)["error"]["code"] == "INSTALL_FAILED"
+        assert response.read_calls > 0
+        assert list(download_dir.iterdir()) == []
+
+    @pytest.mark.parametrize(
+        "pack_path_factory",
+        [
+            lambda tmp_path: tmp_path / "corrupt.tar.gz",
+            lambda tmp_path: _make_tarball(
+                tmp_path / "packs", "remote-malformed.com", manifest_data=["not", "an", "object"]
+            ),
+        ],
+    )
+    def test_remote_archive_validation_errors_are_install_failed_without_temp_path(
+        self, tmp_path: Path, pack_path_factory
+    ) -> None:
+        cfg = _make_config(tmp_path)
+        pack_path = pack_path_factory(tmp_path)
+        if not pack_path.exists():
+            pack_path.write_bytes(b"not a gzip archive")
+        archive = pack_path.read_bytes()
+        digest = hashlib.sha256(archive).hexdigest()
+        opener = MagicMock()
+        opener.open.return_value = _FakeResponse(archive, content_length=len(archive))
+        temp_patch, download_dir = _patch_download_temp_dir(tmp_path)
+
+        with patch("cliany_site.marketplace.urllib.request.build_opener", return_value=opener), temp_patch:
+            result = self._invoke(
+                [
+                    "install",
+                    "https://downloads.example.test/adapter.tar.gz?token=secret",
+                    "--sha256",
+                    digest,
+                    "--dry-run",
+                    "--json",
+                ],
+                cfg,
+            )
+
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["error"]["code"] == "INSTALL_FAILED"
+        assert str(download_dir) not in result.output
+        assert "secret" not in result.output
+        assert list(download_dir.iterdir()) == []
+
+    def test_root_remote_dry_run_does_not_create_runtime_home(self, tmp_path: Path, tmp_home: Path) -> None:
+        from cliany_site.cli import cli
+
+        pack_path = _make_tarball(tmp_path / "packs", "root-remote-dry-run.com")
+        archive = pack_path.read_bytes()
+        digest = hashlib.sha256(archive).hexdigest()
+        opener = MagicMock()
+        opener.open.return_value = _FakeResponse(archive, content_length=len(archive))
+        runtime_home = tmp_home / ".cliany-site"
+        temp_patch, download_dir = _patch_download_temp_dir(tmp_path)
+
+        with patch("cliany_site.marketplace.urllib.request.build_opener", return_value=opener), temp_patch:
+            result = CliRunner().invoke(
+                cli,
+                [
+                    "--json",
+                    "market",
+                    "install",
+                    "https://downloads.example.test/adapter.tar.gz",
+                    "--sha256",
+                    digest,
+                    "--dry-run",
+                ],
+            )
+
+        assert result.exit_code == 0
+        assert json.loads(result.output)["data"]["package_sha256"] == digest
+        assert not runtime_home.exists()
+        assert list(download_dir.iterdir()) == []
+
+
 # ── AdapterManifest ──────────────────────────────────────
 
 
@@ -156,6 +538,14 @@ class TestAdapterManifest:
         assert m2.author == m.author
         assert m2.files == m.files
         assert m2.file_hashes == m.file_hashes
+
+    def test_to_dict_contains_created_at_once(self) -> None:
+        manifest = AdapterManifest(created_at="2026-07-16T00:00:00+00:00")
+
+        serialized = manifest.to_dict()
+
+        assert list(serialized).count("created_at") == 1
+        assert serialized["created_at"] == "2026-07-16T00:00:00+00:00"
 
     def test_from_dict_missing_fields(self) -> None:
         m = AdapterManifest.from_dict({})
@@ -293,6 +683,27 @@ class TestPackAdapter:
 
 
 class TestInstallAdapter:
+    @pytest.mark.parametrize(
+        "manifest_domain",
+        ["/absolute", ".", "..", "nested/domain", r"nested\domain", "C:escape"],
+    )
+    def test_install_rejects_path_like_manifest_domain(self, tmp_path: Path, manifest_domain: str) -> None:
+        cfg = _make_config(tmp_path)
+        pack_path = _make_tarball(
+            tmp_path / "packs",
+            "domain-validation.com",
+            manifest_domain=manifest_domain,
+        )
+
+        with (
+            patch("cliany_site.marketplace.get_config", return_value=cfg),
+            pytest.raises(ValueError, match="domain.*不安全路径"),
+        ):
+            install_adapter(pack_path)
+
+        assert list(cfg.adapters_dir.iterdir()) == []
+        assert not (cfg.home_dir / "backups").exists()
+
     def test_install_from_pack(self, tmp_path: Path) -> None:
         cfg = _make_config(tmp_path)
         pack_path = _make_tarball(tmp_path / "packs", "fresh.com")

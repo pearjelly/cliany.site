@@ -362,6 +362,9 @@ cliany-site market publish github.com --version 1.0.0
 # 预检本地适配器包（不写入运行时目录）
 cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz --dry-run --json
 
+# 预检或安装发布者提供的远程包（必须固定 SHA-256）
+cliany-site market install https://publisher.example/releases/github.com-1.0.0.cliany-adapter.tar.gz --sha256 <64-hex-sha256> --dry-run --json
+
 # 查看 dry_run、package_sha256、files、would_replace 和 would_create_backup 后再安装
 cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz
 
@@ -385,7 +388,7 @@ cliany-site market rollback github.com
 | `tui` | | 启动 TUI 管理界面 |
 | `serve` | `[--host] [--port]` | 启动 HTTP API 服务 |
 | `market publish <domain>` | `[--version] [--json]` | 打包导出适配器 |
-| `market install <path>` | `[--force] [--dry-run] [--json]` | 安装适配器包 |
+| `market install <source>` | `[--sha256] [--force] [--dry-run] [--json]` | 安装本地包，或安装带固定 SHA-256 的 HTTPS 包 |
 | `market uninstall <domain>` | `[--json]` | 卸载适配器 |
 | `market rollback <domain>` | `[--index] [--json]` | 回滚到备份版本 |
 | `workflow run <file>` | `[--json] [--dry-run]` | 执行 YAML 工作流 |

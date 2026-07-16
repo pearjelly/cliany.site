@@ -2676,6 +2676,45 @@ def test_release_readiness_blocks_release_workflow_without_clean_dist(tmp_path):
     assert any("rm -rf dist" in issue for issue in report.release_workflow.issues)
 
 
+def test_release_readiness_allows_bumped_target_before_tag(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.1"\ndescription = "Demo package."\n'
+        'readme = "README.md"\n\n[project.urls]\n'
+        'Homepage = "https://demo.example.com"\n'
+        'Repository = "https://github.com/example/demo"\n'
+        'Changelog = "https://github.com/example/demo/blob/main/CHANGELOG.md"\n',
+        encoding="utf-8",
+    )
+    draft = repo / "docs" / "releases" / "v0.1.1-draft.md"
+    draft.write_text(
+        draft.read_text(encoding="utf-8") + "\n**提交范围：** `v0.1.1..HEAD`\n",
+        encoding="utf-8",
+    )
+    _git(repo, "add", "pyproject.toml", "docs/releases/v0.1.1-draft.md")
+    _git(repo, "commit", "-m", "prepare release", env={
+        "GIT_AUTHOR_NAME": "Test",
+        "GIT_AUTHOR_EMAIL": "test@example.com",
+        "GIT_COMMITTER_NAME": "Test",
+        "GIT_COMMITTER_EMAIL": "test@example.com",
+        "GIT_AUTHOR_DATE": "2026-06-10T12:00:00+00:00",
+        "GIT_COMMITTER_DATE": "2026-06-10T12:00:00+00:00",
+    })
+
+    report = _build_report(
+        repo,
+        today=date(2026, 6, 10),
+        min_commit_days=1,
+        target_version="0.1.1",
+    )
+
+    assert report.ok is True
+    assert report.cadence.latest_tag == "v0.1.0"
+    assert report.cadence.tag_matches_version is False
+    assert "latest tag v0.1.0 != v0.1.1" not in report.blockers
+    assert all("Align `pyproject.toml` version" not in action for action in report.to_dict()["next_actions"])
+
+
 def test_release_readiness_accepts_tagged_release_mode(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     _commit(repo, "notes/tuesday.md", "tuesday", "2026-06-09")

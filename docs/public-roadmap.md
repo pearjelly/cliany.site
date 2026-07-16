@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-07-07
-- **Current baseline:** v0.16.257
+- **Updated:** 2026-07-16
+- **Current baseline:** v0.16.264
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -21,7 +21,7 @@ The next focus is turning candidate real-world cases into verified active demos.
 Planned outcomes:
 
 - Promote package-search cases for PyPI, npm, and crates.io after adapter packages and read-only smoke checks are ready.
-- Publish downloadable adapter assets that users can install and verify locally.
+- Publish downloadable adapter assets that users can install and verify locally, including a pinned HTTPS install path when an asset is available.
 - Keep candidate cases clearly labeled until release assets and online smoke evidence exist.
 - Improve the public quickstart and website so users can pick a real demo without reading internal maintainer docs.
 - Keep live LLM preflight failures visible as blockers instead of treating them as adapter evidence.

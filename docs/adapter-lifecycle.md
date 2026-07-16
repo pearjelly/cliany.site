@@ -35,6 +35,19 @@
 
    预检会报告 `dry_run`、`package_sha256`、`files`、`would_replace` 和 `would_create_backup`。它只在临时提取目录中校验本地包，不会写入 adapter 或 backup 运行时目录。
 
+   对发布在可信来源的包，也可以使用直接 HTTPS URL。远程来源必须显式提供 64 位十六进制 SHA-256；`--dry-run` 会校验下载后的完整归档，但不会保留下载缓存：
+
+   ```bash
+   cliany-site market install \
+     https://publisher.example/releases/github.com-1.0.0.cliany-adapter.tar.gz \
+     --sha256 <64-hex-sha256> --dry-run --json
+   cliany-site market install \
+     https://publisher.example/releases/github.com-1.0.0.cliany-adapter.tar.gz \
+     --sha256 <64-hex-sha256> --json
+   ```
+
+   远程安装只允许 HTTPS，并限制归档大小为 64 MiB；HTTPS 重定向不能降级到其他协议。下载、摘要校验和本地包校验全部通过后，才会进入安装或覆盖流程。
+
 5. 出现回归时查看备份并回滚：
 
    ```bash
@@ -109,6 +122,7 @@ adapter 分发包后缀为 `.cliany-adapter.tar.gz`，由 `src/cliany_site/marke
 - 禁止把 adapter、session、snapshot 等运行时状态写进仓库。
 - 禁止在生成的 adapter 代码中使用 `eval`、`exec`、`os.system` 等危险调用。
 - 安装 tarball 时拒绝绝对路径和 `..` 路径穿越成员。
+- 远程安装只接受 HTTPS，要求调用方提供 64 位十六进制 SHA-256，并限制下载归档为 64 MiB；重定向不得降级协议。
 - 安装时按 `manifest.file_hashes` 校验文件哈希，哈希不匹配直接失败。
 - 安装时拒绝缺失声明文件、缺失哈希和未在 manifest 中声明的额外文件。
 - adapter 动作回放必须基于 AXTree 语义信息和 `selector_map` 做模糊匹配，不能新增脆弱 CSS selector 兜底。
@@ -124,6 +138,7 @@ adapter 分发包后缀为 `.cliany-adapter.tar.gz`，由 `src/cliany_site/marke
 | `文件校验失败` | 包内容与 `manifest.file_hashes` 不一致 | 重新下载包，或在来源环境重新运行 `cliany-site market publish <domain>` |
 | `缺少声明文件` / `缺少文件哈希` | `manifest.files` 与 `file_hashes` 不完整 | 使用 `market publish` 重新打包，不要手工拼 tarball |
 | `未声明文件` | tarball 中夹带了 manifest 未列出的文件 | 移除额外文件后重新打包，确认不会分发私密数据 |
+| `远程来源校验失败` | URL 不是 HTTPS、缺少摘要、摘要不匹配或下载超过 64 MiB | 使用发布者提供的直接 HTTPS URL 和对应 SHA-256；远程失败不会写入 adapter 或 backup |
 | `不安全路径` | tarball 包含绝对路径或 `..` 路径穿越 | 丢弃该包，从可信来源重新获取 |
 
 ## 安装后验证

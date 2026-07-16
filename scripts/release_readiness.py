@@ -915,14 +915,18 @@ def _build_package_gate_report(
     )
 
 
-def _cadence_blockers(report: CadenceReport) -> list[str]:
+def _cadence_blockers(
+    report: CadenceReport,
+    *,
+    ignore_expected_target_transition: bool = False,
+) -> list[str]:
     blockers: list[str] = []
     if not report.daily_release_limit_ok:
         blockers.append(
             "daily release tags "
             f"{report.release_count_today}/{report.max_daily_releases} exceed the allowed maximum"
         )
-    if not report.tag_matches_version:
+    if not report.tag_matches_version and not ignore_expected_target_transition:
         blockers.append(f"latest tag {report.latest_tag or '(none)'} != {report.expected_tag}")
     if not report.changelog_ok:
         blockers.append("CHANGELOG Unreleased has no content while HEAD is ahead of latest tag")
@@ -1094,7 +1098,17 @@ def build_report(
         cases=cases,
     )
 
-    blockers = _cadence_blockers(cadence)
+    expected_target_transition = (
+        release_tag is None
+        and target_version is not None
+        and current_version == expected_target
+        and cadence.latest_tag is not None
+        and not cadence.tag_matches_version
+    )
+    blockers = _cadence_blockers(
+        cadence,
+        ignore_expected_target_transition=expected_target_transition,
+    )
     target_daily_blocker = _target_daily_release_limit_blocker(
         cadence,
         expected_target,
@@ -1966,7 +1980,14 @@ def _next_action_lines(report: ReadinessReport) -> list[str]:
         lines.append("Commit or revert the working tree before tagging a release.")
     if any(blocker.startswith("release tag ") and "does not point at HEAD" in blocker for blocker in report.blockers):
         lines.append("Check out the release tag commit before running `--release-tag` preflight.")
-    if not report.cadence.tag_matches_version:
+    target_transition_expected = (
+        report.release_mode == "target"
+        and report.release_tag is None
+        and report.current_version == report.target_version
+        and report.cadence.latest_tag is not None
+        and not report.cadence.tag_matches_version
+    )
+    if not report.cadence.tag_matches_version and not target_transition_expected:
         lines.append("Align `pyproject.toml` version and the latest release tag before publishing.")
     if not report.cadence.changelog_ok:
         lines.append("Update `CHANGELOG.md` Unreleased content and compare link before release.")

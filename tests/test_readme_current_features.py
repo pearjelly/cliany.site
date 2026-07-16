@@ -17,7 +17,9 @@ def test_readmes_document_adapter_package_preflight() -> None:
     for filename, command in expected.items():
         text = (ROOT / filename).read_text(encoding="utf-8")
         assert command in text
-        assert "[--force] [--dry-run] [--json]" in text
+        assert "https://publisher.example/releases/github.com-1.0.0.cliany-adapter.tar.gz" in text
+        assert "--sha256 <64-hex-sha256> --dry-run --json" in text
+        assert "[--sha256] [--force] [--dry-run] [--json]" in text
 
 
 def test_readmes_document_current_extract_quality_and_readiness():
