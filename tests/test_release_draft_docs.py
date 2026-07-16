@@ -11313,14 +11313,17 @@ def test_v016263_release_draft_orders_changelog_finalization_before_tagging() ->
     assert text.index(release_tag_check) < text.index(push_tag)
 
 
-def test_v016263_changelog_remains_finalized_while_v016264_is_unreleased() -> None:
+def test_v016264_changelog_is_finalized() -> None:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.263]", 1)[0]
+    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.264]", 1)[0]
 
-    assert "direct HTTPS adapter package URL" in unreleased
-    assert "INSTALL_FAILED" in unreleased
+    assert unreleased.strip() == ""
+    assert "## [0.16.264] - 2026-07-16" in text
+    assert "direct HTTPS adapter package URL" in text.split("## [0.16.264]", 1)[1].split("## [0.16.263]", 1)[0]
+    assert "INSTALL_FAILED" in text.split("## [0.16.264]", 1)[1].split("## [0.16.263]", 1)[0]
     assert "## [0.16.263] - 2026-07-15" in text
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.263...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.264...HEAD" in text
+    assert "[0.16.264]: https://github.com/pearjelly/cliany.site/compare/v0.16.263...v0.16.264" in text
     assert "[0.16.263]: https://github.com/pearjelly/cliany.site/compare/v0.16.262...v0.16.263" in text
 
 

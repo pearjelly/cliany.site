@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.264] - 2026-07-16
+
 ### Added
 - `cliany-site market install` now accepts a direct HTTPS adapter package URL when paired with an explicit 64-character SHA-256 digest. Downloads are size-limited, HTTPS-only across redirects, verified before installation, and removed from temporary storage after every path.
 - Remote adapter packages reuse the existing tar, manifest, payload-hash, dry-run, force, backup, and `INSTALL_FAILED` contracts, so a published package can be preflighted without writing runtime state.
@@ -2515,7 +2517,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.263...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.264...HEAD
+[0.16.264]: https://github.com/pearjelly/cliany.site/compare/v0.16.263...v0.16.264
 [0.16.263]: https://github.com/pearjelly/cliany.site/compare/v0.16.262...v0.16.263
 [0.16.262]: https://github.com/pearjelly/cliany.site/compare/v0.16.261...v0.16.262
 [0.16.261]: https://github.com/pearjelly/cliany.site/compare/v0.16.260...v0.16.261
