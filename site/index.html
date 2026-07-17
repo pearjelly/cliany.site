@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>cliany-site | Turn Browser Actions into CLI Commands</title>
-  <meta name="description" content="Powered by LLM and Chrome CDP, cliany-site automatically explores web workflows and generates reusable CLI commands. Control any website like calling a script.">
-  <meta property="og:title" content="cliany-site | Turn Browser Actions into CLI Commands">
-  <meta property="og:description" content="Powered by LLM and Chrome CDP — automatically explore web workflows and generate reusable CLI commands.">
+  <title>cliany-site | Make browser work reusable</title>
+  <meta name="description" content="Turn repeated browser work into reusable CLI commands. Install cliany-site, check readiness, and automate your next workflow.">
+  <meta property="og:title" content="cliany-site | Make browser work reusable">
+  <meta property="og:description" content="Turn repeated browser work into reusable CLI commands — start with a quick readiness check.">
   <meta property="og:type" content="website">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%231A1612%22/><text x=%2218%22 y=%2270%22 font-family=%22monospace%22 font-size=%2260%22 font-weight=%22bold%22 fill=%22%23D97757%22>%3E_</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20260702a">
+  <link rel="stylesheet" href="style.css?v=20260717a">
   <script>document.documentElement.classList.replace('no-js','js');</script>
   <script>(function(){var s;try{s=localStorage.getItem('cliany-lang')}catch(e){}var l=(s==='en'||s==='zh')?s:(navigator.language&&navigator.language.startsWith('zh')?'zh':'en');document.documentElement.lang=l==='en'?'en':'zh-CN';document.documentElement.dataset.lang=l;})()</script>
 </head>
@@ -35,7 +35,8 @@
         <a href="#features" class="nav-link" data-i18n="nav.features">Features</a>
         <a href="#use-cases" class="nav-link" data-i18n="nav.usecases">Use Cases</a>
         <a href="#how-it-works" class="nav-link" data-i18n="nav.how">How It Works</a>
-        <a href="#quickstart" class="nav-link" data-i18n="nav.quickstart">Get Started</a>
+        <a href="#try-it" class="nav-link" data-i18n="nav.try">Try it</a>
+        <a href="#feedback" class="nav-link" data-i18n="nav.feedback">Feedback</a>
         <div class="lang-toggle" role="radiogroup" aria-label="Language" data-active="en" data-i18n-aria="aria.langToggle">
           <button class="lang-option" data-lang="zh" role="radio" aria-checked="false" tabindex="-1">ZH</button>
           <button class="lang-option" data-lang="en" role="radio" aria-checked="true" tabindex="0">EN</button>
@@ -46,7 +47,7 @@
             <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.418 22 12c0-5.523-4.477-10-10-10z"></path>
           </svg>
         </a>
-        <a href="#quickstart" class="btn btn-primary nav-cta" data-i18n="nav.cta">Get Started</a>
+        <a href="#try-it" class="btn btn-primary nav-cta" data-i18n="nav.cta">Start your first workflow</a>
       </nav>
     </div>
   </header>
@@ -54,10 +55,11 @@
   <main>
     <section class="hero reveal">
       <div class="container hero-container">
-        <h1 class="hero-title" data-i18n="hero.title">Turn Browser Actions into CLI Commands</h1>
-        <p class="hero-subtitle" data-i18n="hero.subtitle">Powered by LLM and Chrome CDP, cliany-site automatically explores web workflows and generates reusable CLI commands. Control any website like calling a script.</p>
+        <p class="hero-kicker" data-i18n="hero.kicker">From repeated clicks to reusable commands</p>
+        <h1 class="hero-title" data-i18n="hero.title">Make browser work reusable</h1>
+        <p class="hero-subtitle" data-i18n="hero.subtitle">Turn a browser workflow into a site-specific CLI command you can run again, script, and inspect as JSON.</p>
         <div class="hero-actions">
-          <a href="#quickstart" class="btn btn-primary" data-i18n="hero.cta">Get Started</a>
+          <a href="#try-it" class="btn btn-primary" data-i18n="hero.cta">Start your first workflow</a>
           <a href="https://github.com/pearjelly/cliany.site" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" data-i18n="hero.github">View on GitHub →</a>
         </div>
 
@@ -82,6 +84,21 @@
             </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section id="try-it" class="first-success section-padding">
+      <div class="container">
+        <div class="section-header reveal">
+          <h2 class="section-title" data-i18n="try.title">Try it in three commands</h2>
+          <p class="section-subtitle" data-i18n="try.subtitle">Install, see the next safe step, then choose a maintained example before connecting an LLM.</p>
+        </div>
+        <div class="first-success-grid reveal">
+          <article class="first-success-card"><span class="first-success-number">01</span><h3 data-i18n="try.install.title">Install</h3><p data-i18n="try.install.body">Get the CLI from PyPI.</p><div class="code-block-container"><pre class="code-block"><code>pip install cliany-site</code></pre><button class="copy-btn" data-clipboard="pip install cliany-site" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button></div></article>
+          <article class="first-success-card"><span class="first-success-number">02</span><h3 data-i18n="try.check.title">Check readiness</h3><p data-i18n="try.check.body">Read the human-friendly next step for your machine.</p><div class="code-block-container"><pre class="code-block"><code>cliany-site doctor</code></pre><button class="copy-btn" data-clipboard="cliany-site doctor" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button></div></article>
+          <article class="first-success-card"><span class="first-success-number">03</span><h3 data-i18n="try.cases.title">Choose a maintained example</h3><p data-i18n="try.cases.body">Browse public demos before you configure Chrome/CDP or an LLM for your own workflow.</p><div class="code-block-container"><pre class="code-block"><code>cliany-site cases</code></pre><button class="copy-btn" data-clipboard="cliany-site cases" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button></div></article>
+        </div>
+        <p class="first-success-guide reveal"><a href="https://github.com/pearjelly/cliany.site/blob/master/docs/quickstart-10min.md" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" data-i18n="try.guide">Follow the 10-minute guide →</a></p>
       </div>
     </section>
 
@@ -502,6 +519,17 @@ cliany-site explore "https://github.com" "search repos" --json</code></pre>
         </div>
       </div>
     </section>
+
+    <section id="feedback" class="feedback section-padding">
+      <div class="container">
+        <div class="section-header reveal"><h2 class="section-title" data-i18n="feedback.title">Help shape the next workflow</h2><p class="section-subtitle" data-i18n="feedback.subtitle">A target URL, expected result, and reproducible steps are the most useful feedback.</p></div>
+        <div class="feedback-grid reveal">
+          <article class="feedback-card"><h3 data-i18n="feedback.bug.title">Something broke</h3><p data-i18n="feedback.bug.body">Tell us what you expected and what happened instead.</p><a href="https://github.com/pearjelly/cliany.site/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" data-i18n="feedback.bug.cta">Report a bug</a></article>
+          <article class="feedback-card"><h3 data-i18n="feedback.feature.title">Want an automation</h3><p data-i18n="feedback.feature.body">Describe the repeated browser task you want to turn into a command.</p><a href="https://github.com/pearjelly/cliany.site/issues/new?template=feature_request.yml" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" data-i18n="feedback.feature.cta">Request a feature</a></article>
+          <article class="feedback-card"><h3 data-i18n="feedback.case.title">Have a public workflow</h3><p data-i18n="feedback.case.body">Share a safe, read-only scenario that other people can verify.</p><a href="https://github.com/pearjelly/cliany.site/issues/new?template=case_proposal.yml" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" data-i18n="feedback.case.cta">Propose a workflow</a></article>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -513,7 +541,8 @@ cliany-site explore "https://github.com" "search repos" --json</code></pre>
       <div class="footer-right">
         <a href="https://github.com/pearjelly/cliany.site" target="_blank" rel="noopener noreferrer" class="footer-link" data-i18n="footer.github">GitHub</a>
         <a href="https://github.com/pearjelly/cliany.site#readme" target="_blank" rel="noopener noreferrer" class="footer-link" data-i18n="footer.docs">Docs</a>
-        <a href="#quickstart" class="footer-link" data-i18n="footer.quickstart">Quick Start</a>
+        <a href="#try-it" class="footer-link" data-i18n="footer.quickstart">Quick Start</a>
+        <a href="#feedback" class="footer-link" data-i18n="footer.feedback">Feedback</a>
       </div>
     </div>
     <div class="container footer-bottom">
@@ -522,7 +551,7 @@ cliany-site explore "https://github.com" "search repos" --json</code></pre>
     </div>
   </footer>
 
-  <script src="script.js?v=20260702a"></script>
+  <script src="script.js?v=20260717a"></script>
   <script>setTimeout(function(){document.body.style.visibility='visible'},2000)</script>
 </body>
 </html>

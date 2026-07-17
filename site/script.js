@@ -2,15 +2,25 @@ const I18N = {
   'nav.features': { zh: '功能', en: 'Features' },
   'nav.how': { zh: '工作原理', en: 'How It Works' },
   'nav.quickstart': { zh: '快速开始', en: 'Get Started' },
-  'nav.cta': { zh: '开始使用', en: 'Get Started' },
+  'nav.try': { zh: '立即试用', en: 'Try it' },
+  'nav.feedback': { zh: '反馈', en: 'Feedback' },
+  'nav.cta': { zh: '开始第一个工作流', en: 'Start your first workflow' },
 
-  'hero.title': { zh: '将浏览器操作，变成命令行指令', en: 'Turn Browser Actions into CLI Commands' },
-  'hero.subtitle': {
-    zh: '基于 LLM 与 Chrome CDP 协议，cliany-site 自动探索网页工作流，生成可复用的 CLI 命令。像调用脚本一样操控任何网站。',
-    en: 'Powered by LLM and Chrome CDP, cliany-site automatically explores web workflows and generates reusable CLI commands. Control any website like calling a script.'
-  },
-  'hero.cta': { zh: '开始使用', en: 'Get Started' },
+  'hero.kicker': { zh: '从重复点击，到可复用命令', en: 'From repeated clicks to reusable commands' },
+  'hero.title': { zh: '让浏览器工作流可以复用', en: 'Make browser work reusable' },
+  'hero.subtitle': { zh: '把浏览器工作流转成站点专属 CLI 命令，重复执行、写入脚本，并以 JSON 查看结果。', en: 'Turn a browser workflow into a site-specific CLI command you can run again, script, and inspect as JSON.' },
+  'hero.cta': { zh: '开始第一个工作流', en: 'Start your first workflow' },
   'hero.github': { zh: '查看 GitHub →', en: 'View on GitHub →' },
+
+  'try.title': { zh: '三条命令开始试用', en: 'Try it in three commands' },
+  'try.subtitle': { zh: '安装、查看安全的下一步，再在连接 LLM 前选择一个维护中的案例。', en: 'Install, see the next safe step, then choose a maintained example before connecting an LLM.' },
+  'try.install.title': { zh: '安装', en: 'Install' },
+  'try.install.body': { zh: '从 PyPI 获取 CLI。', en: 'Get the CLI from PyPI.' },
+  'try.check.title': { zh: '检查就绪状态', en: 'Check readiness' },
+  'try.check.body': { zh: '查看适合你当前机器的下一步建议。', en: 'Read the human-friendly next step for your machine.' },
+  'try.cases.title': { zh: '选择维护中的案例', en: 'Choose a maintained example' },
+  'try.cases.body': { zh: '在为自己的工作流配置 Chrome/CDP 或 LLM 前，先浏览公开 demo。', en: 'Browse public demos before you configure Chrome/CDP or an LLM for your own workflow.' },
+  'try.guide': { zh: '查看 10 分钟指南 →', en: 'Follow the 10-minute guide →' },
 
   'terminal.connecting': { zh: '✓ 正在连接 Chrome CDP...', en: '✓ Connecting to Chrome CDP...' },
   'terminal.analyzing': { zh: '✓ 正在分析页面结构...', en: '✓ Analyzing page structure...' },
@@ -189,12 +199,25 @@ const I18N = {
   'obscura.platforms': { zh: '<strong>支持平台：</strong> <code>darwin-arm64</code>, <code>darwin-x86_64</code>, <code>linux-x86_64</code>, <code>windows-x86_64</code>', en: '<strong>Platforms:</strong> <code>darwin-arm64</code>, <code>darwin-x86_64</code>, <code>linux-x86_64</code>, <code>windows-x86_64</code>' },
   'obscura.lifecycle': { zh: '<strong>生命周期命令：</strong> <code>install / use / status / clean / rollback / upgrade / doctor</code>', en: '<strong>Lifecycle Commands:</strong> <code>install / use / status / clean / rollback / upgrade / doctor</code>' },
 
+  'feedback.title': { zh: '一起完善下一个工作流', en: 'Help shape the next workflow' },
+  'feedback.subtitle': { zh: '目标 URL、预期结果和可复现步骤，是最有价值的反馈。', en: 'A target URL, expected result, and reproducible steps are the most useful feedback.' },
+  'feedback.bug.title': { zh: '遇到问题了', en: 'Something broke' },
+  'feedback.bug.body': { zh: '告诉我们你的预期，以及实际发生了什么。', en: 'Tell us what you expected and what happened instead.' },
+  'feedback.bug.cta': { zh: '提交 Bug', en: 'Report a bug' },
+  'feedback.feature.title': { zh: '想自动化一个流程', en: 'Want an automation' },
+  'feedback.feature.body': { zh: '描述你想变成命令的重复浏览器任务。', en: 'Describe the repeated browser task you want to turn into a command.' },
+  'feedback.feature.cta': { zh: '提交功能建议', en: 'Request a feature' },
+  'feedback.case.title': { zh: '有公开工作流可分享', en: 'Have a public workflow' },
+  'feedback.case.body': { zh: '分享其他人也能验证的安全、只读场景。', en: 'Share a safe, read-only scenario that other people can verify.' },
+  'feedback.case.cta': { zh: '提交案例建议', en: 'Propose a workflow' },
+
   'copy.btn': { zh: '复制', en: 'Copy' },
   'copy.done': { zh: '已复制 ✓', en: 'Copied ✓' },
 
   'footer.desc': { zh: '将任意网页操作自动化为 CLI 命令', en: 'Automate any web action into CLI commands' },
   'footer.docs': { zh: '文档', en: 'Docs' },
   'footer.quickstart': { zh: '快速开始', en: 'Quick Start' },
+  'footer.feedback': { zh: '反馈', en: 'Feedback' },
   'footer.github': { zh: 'GitHub', en: 'GitHub' },
   'footer.built': { zh: '基于 Python、Chrome CDP 和 LLM 构建', en: 'Built with Python, Chrome CDP & LLM' },
   'footer.copyright': { zh: '© 2024-2026 cliany-site', en: '© 2024-2026 cliany-site' },
@@ -214,16 +237,16 @@ const I18N = {
   },
 
   'meta.title': {
-    zh: 'cliany-site | 将浏览器操作变成命令行指令',
-    en: 'cliany-site | Turn Browser Actions into CLI Commands'
+    zh: 'cliany-site | 让浏览器工作流可以复用',
+    en: 'cliany-site | Make browser work reusable'
   },
   'meta.description': {
-    zh: '基于 LLM 与 Chrome CDP 协议，cliany-site 自动探索网页工作流，生成可复用的 CLI 命令。像调用脚本一样操控任何网站。',
-    en: 'Powered by LLM and Chrome CDP, cliany-site automatically explores web workflows and generates reusable CLI commands. Control any website like calling a script.'
+    zh: '把重复的浏览器工作转成可复用的 CLI 命令。安装 cliany-site、检查就绪状态，然后自动化你的下一个工作流。',
+    en: 'Turn repeated browser work into reusable CLI commands. Install cliany-site, check readiness, and automate your next workflow.'
   },
   'meta.og.description': {
-    zh: '基于 LLM 与 Chrome CDP 协议，自动探索网页工作流，生成可复用的 CLI 命令。',
-    en: 'Powered by LLM and Chrome CDP — automatically explore web workflows and generate reusable CLI commands.'
+    zh: '把重复的浏览器工作转成可复用的 CLI 命令，从快速就绪检查开始。',
+    en: 'Turn repeated browser work into reusable CLI commands — start with a quick readiness check.'
   },
 
   // --- Nav: Use Cases ---

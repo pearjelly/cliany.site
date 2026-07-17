@@ -764,6 +764,64 @@ html.js .qs-grid.visible .qs-card {
   background: rgba(255,255,255,0.2);
 }
 
+.hero-kicker {
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  margin-bottom: 1rem;
+}
+
+.first-success { background: var(--color-surface); }
+
+.first-success-grid,
+.feedback-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.first-success-card,
+.feedback-card {
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  min-width: 0;
+  padding: 2rem;
+}
+
+.first-success-number {
+  color: var(--color-accent);
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.first-success-card h3,
+.feedback-card h3 {
+  font-family: var(--font-body);
+  font-size: 1.2rem;
+  margin-bottom: 0.75rem;
+}
+
+.first-success-card p,
+.feedback-card p {
+  color: var(--color-text-muted);
+  margin-bottom: 1.25rem;
+}
+
+.first-success-guide { margin-top: 2rem; text-align: center; }
+
+.feedback { background: var(--color-bg-dark); }
+.feedback .section-title { color: var(--color-white); }
+.feedback .section-subtitle { color: #D3C6AA; }
+.feedback-card { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.18); }
+.feedback-card h3 { color: var(--color-white); }
+.feedback-card p { color: #D3C6AA; }
+.feedback-card .btn-secondary { border-color: rgba(255, 255, 255, 0.35); color: var(--color-white); }
+.feedback-card .btn-secondary:hover { background: rgba(255, 255, 255, 0.12); }
+
 /* Footer */
 .footer {
   background: var(--color-surface);
@@ -960,6 +1018,9 @@ html.js .reveal.visible {
     flex-direction: column;
     gap: 1rem;
   }
+
+  .first-success-grid,
+  .feedback-grid { grid-template-columns: 1fr; }
 }
 
 /* ============================================================

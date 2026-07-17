@@ -56,5 +56,44 @@ for readme in README.md README.zh.md; do
   done
 done
 
+SITE_HTML="$ROOT_DIR/site/index.html"
+SITE_JS="$ROOT_DIR/site/script.js"
+
+assert_contains "$SITE_HTML" 'id="try-it"' "site exposes first-success anchor"
+assert_contains "$SITE_HTML" 'id="feedback"' "site exposes feedback anchor"
+assert_contains "$SITE_HTML" 'href="#try-it"' "site routes primary CTA to first success"
+assert_contains "$SITE_HTML" 'href="#feedback"' "site navigation reaches feedback"
+assert_contains "$SITE_HTML" 'data-clipboard="pip install cliany-site"' "site copies install command"
+assert_contains "$SITE_HTML" 'data-clipboard="cliany-site doctor"' "site copies readiness command"
+assert_contains "$SITE_HTML" 'data-clipboard="cliany-site cases"' "site copies case discovery command"
+
+for template in bug_report.yml feature_request.yml case_proposal.yml; do
+  assert_contains "$SITE_HTML" "issues/new?template=$template" "site links $template"
+done
+
+for key in nav.try nav.feedback hero.kicker try.title try.subtitle try.install.title try.install.body try.check.title try.check.body try.cases.title try.cases.body try.guide feedback.title feedback.subtitle feedback.bug.title feedback.bug.body feedback.bug.cta feedback.feature.title feedback.feature.body feedback.feature.cta feedback.case.title feedback.case.body feedback.case.cta footer.feedback; do
+  if grep -F "'$key': { zh:" "$SITE_JS" | grep -Fq 'en:'; then
+    pass "translation key $key has Chinese and English text"
+  else
+    fail "translation key $key has Chinese and English text"
+  fi
+done
+
+if python3 - "$SITE_HTML" <<'PY'
+from html.parser import HTMLParser
+from pathlib import Path
+import sys
+
+class PageParser(HTMLParser):
+    pass
+
+PageParser().feed(Path(sys.argv[1]).read_text(encoding="utf-8"))
+PY
+then
+  pass "site HTML parses with the standard library"
+else
+  fail "site HTML parses with the standard library"
+fi
+
 printf '\nSite conversion checks: %d passed, %d failed\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
