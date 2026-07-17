@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Added
+- `market publish --json` emits `package_sha256` for the exact completed adapter archive, which publishers can carry to release-asset `market install --sha256` instructions.
+
 ## [0.16.264] - 2026-07-16
 
 ### Added

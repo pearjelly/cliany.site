@@ -11317,7 +11317,11 @@ def test_v016264_changelog_is_finalized() -> None:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.264]", 1)[0]
 
-    assert unreleased.strip() == ""
+    assert "### Added" in unreleased
+    assert "market publish --json" in unreleased
+    assert "package_sha256" in unreleased
+    assert "completed adapter archive" in unreleased
+    assert "market install --sha256" in unreleased
     assert "## [0.16.264] - 2026-07-16" in text
     assert "direct HTTPS adapter package URL" in text.split("## [0.16.264]", 1)[1].split("## [0.16.263]", 1)[0]
     assert "INSTALL_FAILED" in text.split("## [0.16.264]", 1)[1].split("## [0.16.263]", 1)[0]
@@ -11370,3 +11374,26 @@ def test_v016264_release_draft_orders_readiness_before_tagging() -> None:
     assert text.index(commit_release) < text.index(create_tag)
     assert text.index(create_tag) < text.index(release_tag_check)
     assert text.index(release_tag_check) < text.index(push_tag)
+
+
+def test_v016265_release_draft_tracks_package_digest_handoff() -> None:
+    text = (ROOT / "docs" / "releases" / "v0.16.265-draft.md").read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.265 发布草案",
+        "**目标版本：** `0.16.265`",
+        "**提交范围：** `v0.16.264..HEAD`",
+        "package_sha256",
+        "completed archive",
+        "market publish",
+        "--sha256",
+        "pypi-project-search",
+        "E_LLM_UNAVAILABLE",
+        "git tag v0.16.265",
+        "release_readiness.py --strict --target-version 0.16.265 --remote",
+        "release_readiness.py --strict --release-tag v0.16.265 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]
+    for snippet in required:
+        assert snippet in text
