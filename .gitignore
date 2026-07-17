@@ -26,6 +26,7 @@ MANIFEST
 .sisyphus/
 .playwright-mcp/
 .opencode/
+.worktrees/
 
 scripts/.pypi-token
 
