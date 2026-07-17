@@ -357,7 +357,7 @@ cliany-site workflow batch github.com search data.csv --concurrency 3 --json
 
 ```bash
 # 打包适配器
-cliany-site market publish github.com --version 1.0.0
+cliany-site market publish github.com --version 1.0.0 --json
 
 # 预检本地适配器包（不写入运行时目录）
 cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz --dry-run --json
@@ -371,6 +371,8 @@ cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapt
 # 回滚
 cliany-site market rollback github.com
 ```
+
+发布成功 JSON 中的 `data.package_sha256` 是完成归档的 SHA-256 摘要。将该值交接给安装方，并填入远程包的 `--sha256 <64-hex-sha256>` 参数。
 
 ## 命令参考
 

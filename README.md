@@ -352,7 +352,7 @@ See [Adapter lifecycle and package format](docs/adapter-lifecycle.md) for the ru
 
 ```bash
 # Pack adapter
-cliany-site market publish github.com --version 1.0.0
+cliany-site market publish github.com --version 1.0.0 --json
 
 # Preflight the local adapter package (no runtime writes)
 cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz --dry-run --json
@@ -366,6 +366,8 @@ cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapt
 # Rollback
 cliany-site market rollback github.com
 ```
+
+The successful publish JSON returns `data.package_sha256`, the SHA-256 digest of the completed archive. Hand that value to the installer and use it in the remote package's `--sha256 <64-hex-sha256>` argument.
 
 ## Command Reference
 

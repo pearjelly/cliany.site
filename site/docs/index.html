@@ -107,7 +107,7 @@
 
       <main>
         <h1>cliany-site 文档</h1>
-        <p class="intro-meta">v0.16.264 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
+        <p class="intro-meta">v0.16.265 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
 
         <p>cliany-site 基于 LLM 和 Chrome CDP 协议，将任意网页操作自动化为可重复调用的 CLI 命令。核心流程：<strong>explore（探索）→ generate（生成适配器）→ run（执行）</strong>。</p>
 
@@ -147,6 +147,8 @@ cliany-site verify issues.apache.org --json
 # 4. 执行只读命令
 cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json</code></pre>
         <p>发布者也可以提供直接 HTTPS adapter 包；远程安装必须固定 64 位十六进制 SHA-256，并会复用同一套包校验：</p>
+        <pre><code>cliany-site market publish github.com --version 1.0.0 --json</code></pre>
+        <p>发布成功 JSON 中的 <code>data.package_sha256</code> 是完成归档的 SHA-256 摘要；将该值填入发布者提供的通用 HTTPS 安装命令：</p>
         <pre><code>cliany-site market install https://publisher.example/releases/adapter.cliany-adapter.tar.gz --sha256 &lt;64-hex-sha256&gt; --dry-run --json</code></pre>
 
         <h2 id="doctor">doctor — 环境检查</h2>

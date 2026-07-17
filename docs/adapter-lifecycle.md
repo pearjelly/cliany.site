@@ -24,6 +24,8 @@
    cliany-site market publish github.com --version 1.0.0 --author "team" --json
    ```
 
+   成功 JSON 的 `data.package_sha256` 是完成 tarball 的 SHA-256 摘要。将该值随发布包一同交接给安装方。
+
 4. 先预检，再在目标环境安装并检查：
 
    ```bash
@@ -35,7 +37,7 @@
 
    预检会报告 `dry_run`、`package_sha256`、`files`、`would_replace` 和 `would_create_backup`。它只在临时提取目录中校验本地包，不会写入 adapter 或 backup 运行时目录。
 
-   对发布在可信来源的包，也可以使用直接 HTTPS URL。远程来源必须显式提供 64 位十六进制 SHA-256；`--dry-run` 会校验下载后的完整归档，但不会保留下载缓存：
+   对发布在可信来源的包，也可以使用直接 HTTPS URL。远程来源必须显式提供 64 位十六进制 SHA-256：将发布成功 JSON 中的 `data.package_sha256` 填入 `<64-hex-sha256>`；`--dry-run` 会校验下载后的完整归档，但不会保留下载缓存：
 
    ```bash
    cliany-site market install \

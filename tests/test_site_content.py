@@ -100,8 +100,14 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in docs
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.264" in index
-    assert "v0.16.264 · Python" in docs
+    assert "Current baseline: v0.16.265" in index
+    assert "当前基线：v0.16.265" in script
+    assert "market publish" in index
+    assert "package_sha256" in index
+    assert "v0.16.265 · Python" in docs
+    assert "package_sha256" in docs
+    assert "pypi-project-search" in index
+    assert "E_LLM_UNAVAILABLE" in index
     assert "cliany-site market install &lt;package&gt; --dry-run --json" in index
     assert "--sha256 &lt;64-hex-sha256&gt;" in index
     assert "website alias inspect" in index
@@ -175,7 +181,6 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "doctor_preflight_evidence_fields" in script
     assert "candidate_promotions[*].issue_template_command" in script
     assert "issue-metadata.json" in script
-    assert "Current baseline: v0.16.264" in script
     assert "cliany-site market install &lt;package&gt; --dry-run --json" in script
     assert "--sha256 &lt;64-hex-sha256&gt;" in script
     assert "website alias inspect" in script
