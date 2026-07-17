@@ -42,6 +42,7 @@ if [ -f "$SCRIPT_DIR/fixtures/serve.sh" ]; then
 fi
 
 run_script "$SCRIPT_DIR/doctor_check.sh"
+run_script "$SCRIPT_DIR/test_site_conversion.sh"
 run_script "$SCRIPT_DIR/test_errors.sh"
 run_script "$SCRIPT_DIR/test_commands.sh"
 run_script "$SCRIPT_DIR/test_explore.sh"

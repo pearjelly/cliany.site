@@ -7,19 +7,27 @@
 
 > 🌐 Languages: [English](README.md) | [简体中文](README.zh.md)
 
-> **🧪 v0.14.4 质量门禁**：结构化抽取现在返回 `data.quality`，`browser extract --strict-quality` 可将空结果或关键字段缺失判为 `E_EMPTY_RESULT`，生成的 `list-` / `search-` 命令也会输出抽取质量；`scripts/release_readiness.py` 会在发版前统一检查案例库、CI 门禁、发布草案、CHANGELOG 和每周提交节奏。详见 [v0.14.4 发布草案](docs/releases/v0.14.4-draft.md)。
-> **🧭 v0.14.3 开源可用性增强**：新增 Q3 路线图、10 分钟成功路径、真实 demo 案例索引、面向人的 `doctor` 摘要、贡献者上手地图和本地发布节奏检查，详见 [CHANGELOG.md](CHANGELOG.md)。
-> **🤖 v0.14.2 自主改进闭环**：新增 5 维度自主改进脚手架——确定性 benchmark 回归测试、headless Chrome 具身验证、Dependabot 依赖哨兵、运行时反馈闭环、Agent 守则文档，使 OpenCode 可触发自主演进循环，详见 [CHANGELOG.md](CHANGELOG.md)。  
-> **🔧 v0.14.1 修复与增强**：新增 `E_PAGE_NOT_READY` / `E_PARSE_FAILED` / `E_EMPTY_RESULT` 错误码、修复 navigate/extract/action_runtime 失败语义、doctor 同时识别 `AGENT.md` / `AGENTS.md`、Obscura 能力声明修正（navigation/cookies）、list-/search- 命令空结果 opt-in 检测、Obscura 友好错误提示，详见 [CHANGELOG.md](CHANGELOG.md)。  
-> **✨ v0.14.0 真实演示上线**：官网案例 2 (企业 CRM) 和案例 3 (团队工具箱) 现已支持真实的公开 demo 站点 — SuiteCRM Demo、ASF Jira、ASF Confluence、ASF Jenkins。详见 [体验真实演示](#体验真实演示)。
-> **✨ v0.13.0 开发者体验加固**：修复 loader RuntimeError bug、稳定 test_session_lock 测试、补全 ERROR_FIX_HINTS 27 条提示、新增 SuccessEnvelope/ErrorEnvelope TypedDict、核心模块 pyright strict（0 errors）、doctor 命令增强（versions + adapter_stats），详见 [CHANGELOG.md](CHANGELOG.md)。  
-> **🔒 v0.12.0 稳定性与质量加固**：新增文件锁保护（manifest/session 并发写安全）、tar 路径穿越防护、Obscura 下载重试、统一错误码体系，详见 [CHANGELOG.md](CHANGELOG.md)。  
-> **🚀 v0.11.0 已发布**: 新增实验性 Obscura 浏览器提供者、多平台二进制支持及生命周期管理。  
-> ⚠️ **v0.10.0 BREAKING**: metadata schema v3 硬切换。请使用 `cliany-site migrate` 升级旧版适配器。
+> 把重复的浏览器操作，变成可复用的 CLI 命令。
 
-> 将任意网页操作自动化为可调用的 CLI 命令
+cliany-site 通过 Chrome CDP 观察浏览器工作流，用 LLM 将其转成站点专属命令，并以结构化 JSON 回放。先完成一次快速就绪检查，再选择维护中的 demo，或自动化你自己的工作流。
 
-cliany-site 基于 browser-use 和大语言模型（LLM），通过 Chrome CDP 协议实现从网页探索到代码生成、回放的全流程自动化。一条命令探索、一条命令执行，把复杂的网页工作流变成可重复调用的 CLI 工具。
+**从这里开始：** [10 分钟成功路径](docs/quickstart-10min.md) · [发布记录](CHANGELOG.md)
+
+## Start here
+
+```bash
+pip install cliany-site
+cliany-site doctor
+cliany-site cases
+```
+
+`doctor` 会给出适合人的下一步建议；`cases` 会列出维护中的公开 demo 及其验证路径，让你在配置 LLM 前先了解真实案例。想运行 demo，请继续阅读 [10 分钟成功路径](docs/quickstart-10min.md)；准备自动化自己的站点时，再配置 Chrome/CDP 与 LLM。
+
+### 告诉我们结果
+
+- 安装、探索或回放不符合预期？请[提交 Bug](https://github.com/pearjelly/cliany.site/issues/new?template=bug_report.yml)。
+- 想要某项能力或自动化流程？请[提交功能建议](https://github.com/pearjelly/cliany.site/issues/new?template=feature_request.yml)。
+- 有其他人也能安全运行的公开只读流程？请[提交案例建议](https://github.com/pearjelly/cliany.site/issues/new?template=case_proposal.yml)。
 
 ## 特性
 
@@ -454,5 +462,7 @@ Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for dev
 ## 更新日志 / Changelog
 
 查看完整更新日志：[CHANGELOG.md](CHANGELOG.md)
+
+有关 v0.14.4 质量门禁的详细信息，请参阅[发布草案](docs/releases/v0.14.4-draft.md)。
 
 See full changelog: [CHANGELOG.md](CHANGELOG.md)

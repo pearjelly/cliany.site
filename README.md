@@ -7,19 +7,27 @@
 
 > 🌐 Languages: [English](README.md) | [简体中文](README.zh.md)
 
-> **🧪 v0.14.4 Quality Gates**: Structured extraction now reports `data.quality`, `browser extract --strict-quality` can fail empty or partially missing results with `E_EMPTY_RESULT`, generated `list-` / `search-` commands expose extraction quality, and `scripts/release_readiness.py` checks case catalog, CI gates, release draft, changelog, and weekly commit cadence before release. See [v0.14.4 release draft](docs/releases/v0.14.4-draft.md).
-> **🧭 v0.14.3 Open-Source Readiness**: Added the Q3 roadmap, 10-minute quickstart, structured real-demo case index, human-readable `doctor` summary, contributor starter map, and local release cadence checks. See [CHANGELOG.md](CHANGELOG.md).
-> **🤖 v0.14.2 自主改进闭环**：新增 5 维度自主改进脚手架——确定性 benchmark 回归测试、headless Chrome 具身验证、Dependabot 依赖哨兵、运行时反馈闭环、Agent 守则文档，使 OpenCode 可触发自主演进循环，详见 [CHANGELOG.md](CHANGELOG.md)。  
-> **🔧 v0.14.1 修复与增强**：新增 `E_PAGE_NOT_READY` / `E_PARSE_FAILED` / `E_EMPTY_RESULT` 错误码、修复 navigate/extract/action_runtime 失败语义、doctor 同时识别 `AGENT.md` / `AGENTS.md`、Obscura 能力声明修正（navigation/cookies）、list-/search- 命令空结果 opt-in 检测、Obscura 友好错误提示，详见 [CHANGELOG.md](CHANGELOG.md)。  
-> **✨ v0.14.0 Real-World Demos**: Case 2 (Enterprise CRM) & Case 3 (Team Toolbox) on the website now use real public demo sites — SuiteCRM Demo, ASF Jira, ASF Confluence, ASF Jenkins. See [Try Real Demos](#try-real-demos).
-> **✨ v0.13.0 开发者体验加固**：修复 loader RuntimeError bug、稳定 test_session_lock 测试、补全 ERROR_FIX_HINTS 27 条提示、新增 SuccessEnvelope/ErrorEnvelope TypedDict、核心模块 pyright strict（0 errors）、doctor 命令增强（versions + adapter_stats），详见 [CHANGELOG.md](CHANGELOG.md)。  
-> **🔒 v0.12.0 稳定性与质量加固**：新增文件锁保护（manifest/session 并发写安全）、tar 路径穿越防护、Obscura 下载重试、统一错误码体系，详见 [CHANGELOG.md](CHANGELOG.md)。  
-> **🚀 v0.11.0**: Added experimental Obscura browser provider, multi-platform binaries, and lifecycle management.  
-> ⚠️ **v0.10.0 BREAKING**: metadata schema v3 hardcut. Use `cliany-site migrate` to upgrade legacy adapters.
+> Turn repeated browser workflows into reusable CLI commands.
 
-> Automate any web workflow into callable CLI commands
+cliany-site observes a browser workflow through Chrome CDP, uses an LLM to turn it into a site-specific command, and replays that command as structured JSON. Start with a quick readiness check, then choose a maintained demo or automate a workflow of your own.
 
-cliany-site is built on browser-use and Large Language Models (LLMs), enabling full-process automation from web exploration to code generation and replay via the Chrome CDP protocol. Explore with one command, execute with another—turning complex web workflows into repeatable CLI tools.
+**Start here:** [10-minute success path](docs/quickstart-10min.md) · [Release history](CHANGELOG.md)
+
+## Start here
+
+```bash
+pip install cliany-site
+cliany-site doctor
+cliany-site cases
+```
+
+`doctor` gives you a human-readable next step. `cases` lists maintained public demos and their verification paths, so you can explore a real example before configuring an LLM. Follow the [10-minute success path](docs/quickstart-10min.md) to run a demo, or configure Chrome/CDP and an LLM when you are ready to generate a command for your own site.
+
+### Tell us what happened
+
+- [Report a bug](https://github.com/pearjelly/cliany.site/issues/new?template=bug_report.yml) if installation, exploration, or replay did not behave as expected.
+- [Request a feature or automation](https://github.com/pearjelly/cliany.site/issues/new?template=feature_request.yml) if a capability or workflow would make the tool more useful.
+- [Propose a public read-only workflow](https://github.com/pearjelly/cliany.site/issues/new?template=case_proposal.yml) if you have a safe scenario others can try.
 
 ## Features
 
@@ -447,3 +455,5 @@ First-time contributors can start from the [contributor starter map](docs/contri
 ## Changelog
 
 See full changelog: [CHANGELOG.md](CHANGELOG.md)
+
+For v0.14.4 quality-gate details, see the [release draft](docs/releases/v0.14.4-draft.md).
