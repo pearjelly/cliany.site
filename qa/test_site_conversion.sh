@@ -30,6 +30,11 @@ assert_not_in_first_lines() {
   if head -n 35 "$file" | grep -Fq -- "$text"; then fail "$label"; else pass "$label"; fi
 }
 
+assert_not_matches() {
+  local file="$1" pattern="$2" label="$3"
+  if grep -Eiq -- "$pattern" "$file"; then fail "$label"; else pass "$label"; fi
+}
+
 for template in bug_report.yml feature_request.yml case_proposal.yml; do
   if [ -f "$ROOT_DIR/.github/ISSUE_TEMPLATE/$template" ]; then
     pass "tracked issue template: $template"
@@ -55,6 +60,13 @@ for readme in README.md README.zh.md; do
     assert_contains "$path" "issues/new?template=$template" "$readme links $template"
   done
 done
+
+QUICKSTART="$ROOT_DIR/docs/quickstart-10min.md"
+assert_contains "$QUICKSTART" "pip install cliany-site" "promoted quickstart installs from PyPI"
+assert_contains "$QUICKSTART" "cliany-site doctor" "promoted quickstart checks readiness"
+assert_contains "$QUICKSTART" "cliany-site cases" "promoted quickstart finds maintained cases"
+assert_not_matches "$QUICKSTART" 'v0\.14' "promoted quickstart avoids legacy v0.14 paths"
+assert_not_matches "$QUICKSTART" '\.cliany-adapter-v[0-9]' "promoted quickstart avoids version-pinned adapter archives"
 
 SITE_HTML="$ROOT_DIR/site/index.html"
 SITE_JS="$ROOT_DIR/site/script.js"

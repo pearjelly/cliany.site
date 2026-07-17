@@ -1,17 +1,15 @@
 # 10 分钟成功路径
 
-**适用版本：** v0.14.2+  
-**目标：** 先跑通一个真实 adapter，再决定是否配置 LLM 生成自己的命令。
+**目标：** 先确认 CLI 可用并查看维护中的案例，再决定是否配置 LLM 生成自己的命令。
 
-## 路径 A：先验证 CLI 与真实 demo
+## 路径 A：先验证 CLI 并查看维护中的案例
 
-这条路径优先验证安装、命令入口、adapter 安装和只读执行体验。它不要求你先配置 LLM key。
+这条路径优先验证安装、命令入口和维护中的公开案例。它不要求你先配置 LLM key 或 Chrome/CDP。
 
 ### 1. 安装
 
 ```bash
 pip install cliany-site
-cliany-site --version
 ```
 
 源码开发时：
@@ -28,13 +26,13 @@ pip install -e ".[dev,test]"
 cliany-site doctor
 ```
 
-先看 human summary 中的三类提示。Chrome/CDP 或 LLM key 的错误不一定阻塞 demo adapter 的静态安装，但会影响 `login` 和 `explore`。
+先看 human summary 中的三类提示。Chrome/CDP 或 LLM key 的提示不会阻塞本路径；它们会影响后续的 `login` 和 `explore`。
 
 - `必须修复`：先处理，否则关键路径不可用。
-- `建议处理`：建议处理；例如没有 LLM key 时仍可先安装/执行已有 adapter。
+- `建议处理`：建议处理；例如没有 LLM key 时仍可先查看维护中的案例。
 - `诊断信息`：通常无需动作。
 
-摘要中的 `下一步` 会直接告诉你当前应该先运行真实 demo adapter、配置 LLM key，还是先修复必须项。
+摘要中的 `下一步` 会直接告诉你当前应该配置 LLM key，还是先修复必须项。
 
 自动化脚本可以使用 JSON：
 
@@ -45,35 +43,28 @@ cliany-site doctor --json
 重点看 `data.summary`：
 
 - `must_fix`：先处理，否则关键路径不可用。
-- `should_fix`：建议处理；例如没有 LLM key 时仍可先安装/执行已有 adapter。
+- `should_fix`：建议处理；例如没有 LLM key 时仍可先查看维护中的案例。
 - `info`：诊断信息，通常无需动作。
 - `capabilities`：按 `manage_adapters`、`run_browser_workflows`、`generate_adapters` 展示当前可用路径和 blockers。
 - `recommended_next_step`：和 human 输出中的 `下一步` 一致，可用于脚本判断后续引导。
-- `demo_adapter_quickstart`：列出本页路径 A 使用的 demo adapter 安装、列出、验证和只读执行命令，方便 UI 或脚本直接展示同一组命令。
 
-### 3. 下载一个 demo adapter
-
-到 [GitHub Release v0.14.1](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.1) 下载只读 demo adapter，例如：
+### 3. 查看维护中的案例
 
 ```bash
-cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz
-cliany-site list --json
-cliany-site verify issues.apache.org --json
+cliany-site cases
 ```
 
-### 4. 执行只读命令
+这个命令会列出维护中的公开案例、状态和各案例当前的验证路径。先选择一个你关心的案例；需要机器可读输出时，可使用：
 
 ```bash
-cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json
+cliany-site cases --json
 ```
 
 预期结果：
 
-- 命令输出是 `{ok, data, error, meta}` JSON envelope。
-- `ok=true` 时，`data` 中应包含只读查询结果。
-- 如果第三方 demo 站点临时不可用，把问题按站点可用性处理，不要先假设本地安装失败。
-
-更多案例见 [cases/README.md](../cases/README.md)。
+- 终端会显示案例库及每个案例的首条命令。
+- `--json` 输出是 `{ok, data, error, meta}` JSON envelope；`ok=true` 时，`data` 中包含案例和验证信息。
+- 以当前 `cases` 输出为准，不要从历史文档复制旧的发布归档文件名。
 
 ## 路径 B：生成自己的站点命令
 
@@ -124,20 +115,17 @@ cliany-site github.com search --query "cliany.site" --json
 
 | 情况 | 下一步 |
 |------|--------|
-| 没有 LLM key | 先跑路径 A 的 demo adapter、`list`、`verify`、`market` |
-| 没有 Chrome/CDP | 先跑 `verify`、`list`、`market install`，再处理 `doctor` 提示 |
+| 没有 LLM key | 路径 A 到 `cases` 即可完成；需要生成自己的命令时再配置 LLM |
+| 没有 Chrome/CDP | 先完成路径 A，再按 `doctor` 提示为 `explore` 准备 Chrome |
 | 使用 Obscura provider | 目前不要用它跑 `explore`；Chrome 仍是探索默认路径 |
 | 命令成功但没有业务数据 | 记录为任务级失败，参考 [搜索抽取复盘](../cases/cliany-site-case-review.md) |
-| 第三方 demo 站点不可用 | 在案例库中标记 `degraded`，保留 adapter 离线校验 |
 
 ## 判断是否成功
 
 一次有效的首次成功应满足：
 
-- `cliany-site --version` 正常。
 - `cliany-site doctor` 返回可读摘要和 `下一步`；`cliany-site doctor --json` 返回结构化 JSON 与 `recommended_next_step`。
-- 至少一个 demo adapter 能安装、列出、验证。
-- 至少一个只读命令返回 JSON envelope。
+- `cliany-site cases` 能列出维护中的案例；`cliany-site cases --json` 返回结构化 JSON。
 - 如果继续使用 `explore`，生成结果能被 `list` 发现，并能用 `--json` 执行。
 
 ## 跑通后的下一步
