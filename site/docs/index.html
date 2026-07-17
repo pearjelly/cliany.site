@@ -146,9 +146,9 @@ cliany-site verify issues.apache.org --json
 
 # 4. 执行只读命令
 cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json</code></pre>
-        <p>发布者也可以提供直接 HTTPS adapter 包；远程安装必须固定 64 位十六进制 SHA-256，并会复用同一套包校验：</p>
+        <p>发布者也可以提供直接 HTTPS adapter 包；远程安装必须固定完成归档的 64 个字符小写十六进制 SHA-256，并会复用同一套包校验：</p>
         <pre><code>cliany-site market publish github.com --version 1.0.0 --json</code></pre>
-        <p>发布成功 JSON 中的 <code>data.package_sha256</code> 是完成归档的 SHA-256 摘要；将该值填入发布者提供的通用 HTTPS 安装命令：</p>
+        <p>发布成功 JSON 中的 <code>data.package_sha256</code> 是完成归档的 64 个字符小写十六进制 SHA-256 摘要；将该值填入发布者提供的通用 HTTPS 安装命令：</p>
         <pre><code>cliany-site market install https://publisher.example/releases/adapter.cliany-adapter.tar.gz --sha256 &lt;64-hex-sha256&gt; --dry-run --json</code></pre>
 
         <h2 id="doctor">doctor — 环境检查</h2>

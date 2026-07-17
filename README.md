@@ -367,7 +367,7 @@ cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapt
 cliany-site market rollback github.com
 ```
 
-The successful publish JSON returns `data.package_sha256`, the SHA-256 digest of the completed archive. Hand that value to the installer and use it in the remote package's `--sha256 <64-hex-sha256>` argument.
+The successful publish JSON returns `data.package_sha256`, a lowercase 64-character hexadecimal SHA-256 of the completed archive. Hand that value to the installer and use it in the remote package's `--sha256 <64-hex-sha256>` argument.
 
 ## Command Reference
 

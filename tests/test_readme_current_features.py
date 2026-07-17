@@ -18,6 +18,10 @@ def test_readmes_document_adapter_package_preflight() -> None:
         text = (ROOT / filename).read_text(encoding="utf-8")
         assert "cliany-site market publish github.com --version 1.0.0 --json" in text
         assert "package_sha256" in text
+        if filename == "README.md":
+            assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in text
+        else:
+            assert "64 个字符小写十六进制 SHA-256 摘要" in text
         assert command in text
         assert "https://publisher.example/releases/github.com-1.0.0.cliany-adapter.tar.gz" in text
         assert "--sha256 <64-hex-sha256> --dry-run --json" in text

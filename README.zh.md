@@ -372,7 +372,7 @@ cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapt
 cliany-site market rollback github.com
 ```
 
-发布成功 JSON 中的 `data.package_sha256` 是完成归档的 SHA-256 摘要。将该值交接给安装方，并填入远程包的 `--sha256 <64-hex-sha256>` 参数。
+发布成功 JSON 中的 `data.package_sha256` 是完成归档的 64 个字符小写十六进制 SHA-256 摘要。将该值交接给安装方，并填入远程包的 `--sha256 <64-hex-sha256>` 参数。
 
 ## 命令参考
 
