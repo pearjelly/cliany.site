@@ -106,7 +106,7 @@ cliany-site cases
 
 ## Quick Start (v0.11.0+)
 
-For a guided first run, see [10-minute success path](docs/quickstart-10min.md). It starts with a real demo adapter before requiring LLM setup, then points successful users toward the `Real Demo Case Proposal` path for contributing new public read-only cases.
+For a guided first run, see [10-minute success path](docs/quickstart-10min.md). It guides you from installation through `doctor` to maintained cases, then points successful users toward the `Real Demo Case Proposal` path for contributing new public read-only cases.
 
 For upcoming work, see the user-facing [public roadmap](docs/public-roadmap.md) and the maintainer [Q3 roadmap](docs/roadmap-2026-q3.md).
 

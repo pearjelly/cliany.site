@@ -106,7 +106,7 @@ cliany-site cases
 
 ## 快速开始 (v0.11.0+)
 
-首次上手建议先走 [10 分钟成功路径](docs/quickstart-10min.md)：先运行真实 demo adapter，再配置 LLM 生成自己的命令；跑通后可通过 `Real Demo Case Proposal` 路径贡献新的公开只读案例。
+首次上手建议先走 [10 分钟成功路径](docs/quickstart-10min.md)：从安装、运行 `doctor` 到查看维护中的案例；跑通后可通过 `Real Demo Case Proposal` 路径贡献新的公开只读案例。
 
 后续规划可看面向用户的 [公开路线图](docs/public-roadmap.md) 和面向维护者的 [Q3 路线图](docs/roadmap-2026-q3.md)。
 
