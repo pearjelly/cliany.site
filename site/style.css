@@ -948,7 +948,7 @@ html.js .reveal.visible {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
   html.js .nav-links {
     display: none;
     position: absolute;
@@ -974,7 +974,9 @@ html.js .reveal.visible {
   html.js .menu-toggle {
     display: block;
   }
+}
 
+@media (max-width: 768px) {
   .features-grid {
     grid-template-columns: 1fr;
   }
