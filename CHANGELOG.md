@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.265] - 2026-07-17
+
 ### Added
 - `market publish --json` emits `package_sha256` for the exact completed adapter archive, which publishers can carry to release-asset `market install --sha256` instructions.
 
@@ -2520,7 +2522,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.264...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.265...HEAD
+[0.16.265]: https://github.com/pearjelly/cliany.site/compare/v0.16.264...v0.16.265
 [0.16.264]: https://github.com/pearjelly/cliany.site/compare/v0.16.263...v0.16.264
 [0.16.263]: https://github.com/pearjelly/cliany.site/compare/v0.16.262...v0.16.263
 [0.16.262]: https://github.com/pearjelly/cliany.site/compare/v0.16.261...v0.16.262
