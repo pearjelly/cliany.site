@@ -11389,6 +11389,10 @@ def test_v016265_release_draft_tracks_package_digest_handoff() -> None:
         "--sha256",
         "pypi-project-search",
         "E_LLM_UNAVAILABLE",
+        "uv run --extra dev --frozen ruff check src/cliany_site/marketplace.py "
+        "src/cliany_site/commands/market.py tests/test_marketplace.py",
+        "uv run --extra dev --frozen mypy src/cliany_site/marketplace.py "
+        "src/cliany_site/commands/market.py",
         "git tag v0.16.265",
         "release_readiness.py --strict --target-version 0.16.265 --remote",
         "release_readiness.py --strict --release-tag v0.16.265 --remote --remote-name origin",
@@ -11397,3 +11401,24 @@ def test_v016265_release_draft_tracks_package_digest_handoff() -> None:
     ]
     for snippet in required:
         assert snippet in text
+
+
+def test_v016265_release_draft_orders_readiness_before_tagging_and_audit() -> None:
+    text = (ROOT / "docs" / "releases" / "v0.16.265-draft.md").read_text(encoding="utf-8")
+
+    target_check = "release_readiness.py --strict --target-version 0.16.265 --remote"
+    finalize_changelog = "清空 `[Unreleased]`"
+    commit_release = "git commit -m \"chore(release): finalize v0.16.265\""
+    create_tag = "git tag v0.16.265"
+    release_tag_check = "release_readiness.py --strict --release-tag v0.16.265 --remote --remote-name origin"
+    push_tag = "git push origin v0.16.265"
+    vercel_inspect = "vercel inspect www.cliany.site --wait --timeout 90s"
+    publication_audit = "check_release_publication.py --strict --remote --distribution --json"
+
+    assert text.index(target_check) < text.index(finalize_changelog)
+    assert text.index(finalize_changelog) < text.index(commit_release)
+    assert text.index(commit_release) < text.index(create_tag)
+    assert text.index(create_tag) < text.index(release_tag_check)
+    assert text.index(release_tag_check) < text.index(push_tag)
+    assert text.index(push_tag) < text.index(vercel_inspect)
+    assert text.index(vercel_inspect) < text.index(publication_audit)
