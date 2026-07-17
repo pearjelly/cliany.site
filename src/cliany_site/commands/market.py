@@ -9,6 +9,7 @@ from cliany_site.marketplace import (
     install_adapter,
     list_backups,
     pack_adapter,
+    package_sha256,
     resolve_adapter_source,
     rollback_adapter,
     uninstall_adapter,
@@ -52,7 +53,14 @@ def publish_cmd(ctx: click.Context, domain: str, version: str, author: str, json
 
     try:
         pack_path = pack_adapter(domain, version=version, author=author)
-        resp = success_response({"domain": domain, "version": version, "pack_path": str(pack_path)})
+        resp = success_response(
+            {
+                "domain": domain,
+                "version": version,
+                "pack_path": str(pack_path),
+                "package_sha256": package_sha256(pack_path),
+            }
+        )
     except FileNotFoundError as exc:
         resp = error_response(ADAPTER_NOT_FOUND, str(exc))
     except OSError as exc:

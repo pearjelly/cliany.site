@@ -251,6 +251,11 @@ def _sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+def package_sha256(pack_path: str | Path) -> str:
+    """Return the SHA-256 digest of one completed adapter package archive."""
+    return _sha256_file(Path(pack_path))
+
+
 def pack_adapter(domain: str, version: str = "0.1.0", author: str = "") -> Path:
     """将指定域名的 adapter 打包为 .tar.gz 分发包，返回打包文件路径"""
     cfg = get_config()

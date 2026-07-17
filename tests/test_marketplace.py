@@ -16,6 +16,7 @@ from urllib.request import Request
 import pytest
 from click.testing import CliRunner, Result
 
+from cliany_site.errors import ADAPTER_NOT_FOUND
 from cliany_site.marketplace import (
     MANIFEST_VERSION,
     MAX_REMOTE_PACKAGE_SIZE,
@@ -1177,6 +1178,45 @@ class TestMarketCLI:
         data = json.loads(result.output)
         assert data["success"] is True
         assert data["data"]["domain"] == "cli-pub.com"
+
+    def test_publish_success_returns_exact_package_sha256(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        _create_adapter(cfg.adapters_dir, "cli-pub.com")
+
+        result = self._invoke(["publish", "cli-pub.com", "--json"], cfg)
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)["data"]
+        pack_path = Path(data["pack_path"])
+        expected = hashlib.sha256(pack_path.read_bytes()).hexdigest()
+        assert data["package_sha256"] == expected
+        assert len(data["package_sha256"]) == 64
+        assert data["package_sha256"] == data["package_sha256"].lower()
+        assert set(data["package_sha256"]) <= set("0123456789abcdef")
+
+    def test_root_json_publish_returns_package_sha256(self, tmp_path: Path, tmp_home: Path) -> None:
+        from cliany_site.cli import cli
+
+        pack_path = tmp_path / "root-publish.cliany-adapter.tar.gz"
+        pack_path.write_bytes(b"completed adapter archive")
+
+        with patch("cliany_site.commands.market.pack_adapter", return_value=pack_path):
+            result = CliRunner().invoke(cli, ["--json", "market", "publish", "root-publish.com"])
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)["data"]
+        assert data["package_sha256"] == hashlib.sha256(pack_path.read_bytes()).hexdigest()
+        assert (tmp_home / ".cliany-site").exists()
+
+    def test_publish_missing_adapter_keeps_adapter_not_found_envelope(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+
+        result = self._invoke(["publish", "nope.com", "--json"], cfg)
+
+        assert result.exit_code == 1
+        data = json.loads(result.output)
+        assert data["success"] is False
+        assert data["error"]["code"] == ADAPTER_NOT_FOUND
 
     def test_publish_missing_adapter(self, tmp_path: Path) -> None:
         cfg = _make_config(tmp_path)
