@@ -7,15 +7,18 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     index = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
     docs = (ROOT / "site" / "docs" / "index.html").read_text(encoding="utf-8")
     script = (ROOT / "site" / "script.js").read_text(encoding="utf-8")
+    styles = (ROOT / "site" / "style.css").read_text(encoding="utf-8")
 
     assert "cliany-site doctor" in index
     assert "10-Minute Success Path" in index
     assert "10 分钟成功路径" in docs
-    assert "issues.apache.org.cliany-adapter-v0.14.0.tar.gz" in index
-    assert "issues.apache.org.cliany-adapter-v0.14.0.tar.gz" in docs
-    assert "cliany-site verify issues.apache.org --json" in index
-    assert "cliany-site verify issues.apache.org --json" in docs
-    assert "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json" in docs
+    assert "cliany-site cases" in index
+    assert "cliany-site cases" in docs
+    assert "issues.apache.org.cliany-adapter-v0.14.0.tar.gz" not in index
+    assert "issues.apache.org.cliany-adapter-v0.14.0.tar.gz" not in docs
+    assert "cliany-site verify issues.apache.org --json" not in index
+    assert "cliany-site verify issues.apache.org --json" not in docs
+    assert "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json" not in docs
     assert "不需要先配置 LLM key" in docs
     assert "E_LLM_UNAVAILABLE" in docs
     assert "provider connection failure" in docs
@@ -100,14 +103,14 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in docs
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.265" in index
-    assert "当前基线：v0.16.265" in script
+    assert "Current baseline: v0.16.266" in index
+    assert "当前基线：v0.16.266" in script
     assert "64 个字符小写十六进制 SHA-256 摘要" in script
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in script
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.265 · Python" in docs
+    assert "v0.16.266 · Python" in docs
     assert "package_sha256" in docs
     assert "64 个字符小写十六进制 SHA-256 摘要" in docs
     assert "pypi-project-search" in index
@@ -117,7 +120,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "website alias inspect" in index
     assert "PyPI version-specific publication audit" in index
     assert "10-Minute Success Path" in script
-    assert "Run a real demo adapter first" in script
+    assert "Browse public cases and their current validation paths before you configure Chrome/CDP" in script
     assert "primary_next_task_acceptance_criteria" in script
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in script
     assert "promotion_command_plan[*].command_sha256" in script
@@ -189,3 +192,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "--sha256 &lt;64-hex-sha256&gt;" in script
     assert "website alias inspect" in script
     assert "pypi_latest_version" in script
+    assert ".first-success-card .code-block-container" in styles
+    assert ".first-success-card .copy-btn" in styles
+    assert "position: static;" in styles
+    assert ".first-success-card .code-block" in styles
+    assert "white-space: pre-wrap;" in styles

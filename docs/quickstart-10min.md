@@ -47,6 +47,7 @@ cliany-site doctor --json
 - `info`：诊断信息，通常无需动作。
 - `capabilities`：按 `manage_adapters`、`run_browser_workflows`、`generate_adapters` 展示当前可用路径和 blockers。
 - `recommended_next_step`：和 human 输出中的 `下一步` 一致，可用于脚本判断后续引导。
+- `case_catalog_quickstart`：可立即运行的案例目录命令；在获取到 adapter 包之前，先用它查看公开案例和各自的验证路径。
 
 ### 3. 查看维护中的案例
 

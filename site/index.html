@@ -96,7 +96,7 @@
         <div class="first-success-grid reveal">
           <article class="first-success-card"><span class="first-success-number">01</span><h3 data-i18n="try.install.title">Install</h3><p data-i18n="try.install.body">Get the CLI from PyPI.</p><div class="code-block-container"><pre class="code-block"><code>pip install cliany-site</code></pre><button class="copy-btn" data-clipboard="pip install cliany-site" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button></div></article>
           <article class="first-success-card"><span class="first-success-number">02</span><h3 data-i18n="try.check.title">Check readiness</h3><p data-i18n="try.check.body">Read the human-friendly next step for your machine.</p><div class="code-block-container"><pre class="code-block"><code>cliany-site doctor</code></pre><button class="copy-btn" data-clipboard="cliany-site doctor" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button></div></article>
-          <article class="first-success-card"><span class="first-success-number">03</span><h3 data-i18n="try.cases.title">Choose a maintained example</h3><p data-i18n="try.cases.body">Browse public demos before you configure Chrome/CDP or an LLM for your own workflow.</p><div class="code-block-container"><pre class="code-block"><code>cliany-site cases</code></pre><button class="copy-btn" data-clipboard="cliany-site cases" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button></div></article>
+          <article class="first-success-card"><span class="first-success-number">03</span><h3 data-i18n="try.cases.title">Choose a maintained example</h3><p data-i18n="try.cases.body">Browse public cases and their current validation paths before you configure Chrome/CDP or an LLM for your own workflow.</p><div class="code-block-container"><pre class="code-block"><code>cliany-site cases</code></pre><button class="copy-btn" data-clipboard="cliany-site cases" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button></div></article>
         </div>
         <p class="first-success-guide reveal"><a href="https://github.com/pearjelly/cliany.site/blob/master/docs/quickstart-10min.md" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" data-i18n="try.guide">Follow the 10-minute guide →</a></p>
       </div>
@@ -429,7 +429,7 @@
       <div class="container">
         <div class="section-header reveal">
           <h2 class="section-title" data-i18n="qs.title">10-Minute Success Path</h2>
-          <p class="section-subtitle" data-i18n="qs.subtitle">Run a real demo adapter first, then configure LLM to generate your own commands</p>
+          <p class="section-subtitle" data-i18n="qs.subtitle">Browse maintained cases before configuring an LLM for your own commands</p>
         </div>
 
         <div class="qs-grid reveal">
@@ -463,13 +463,14 @@ cliany-site doctor --llm-live --json</code></pre>
           </div>
 
           <div class="qs-card">
-            <h3 class="qs-title" data-i18n="qs.step3">Step 3: Run a Demo Adapter</h3>
+            <h3 class="qs-title" data-i18n="qs.step3">Step 3: Browse Maintained Cases</h3>
             <div class="code-block-container">
-              <pre class="code-block"><code># Download a verified adapter asset from a GitHub Release
-cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz
-cliany-site verify issues.apache.org --json
-cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json</code></pre>
-              <button class="copy-btn" data-clipboard="cliany-site verify issues.apache.org --json" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button>
+              <pre class="code-block"><code># Browse public cases and their current validation paths
+cliany-site cases
+
+# Machine-readable catalog for scripts
+cliany-site cases --json</code></pre>
+              <button class="copy-btn" data-clipboard="cliany-site cases --json" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button>
             </div>
           </div>
 
@@ -501,7 +502,7 @@ cliany-site explore "https://github.com" "search repos" --json</code></pre>
 
         <div class="obscura-note reveal">
             <h3 class="obscura-title" data-i18n="qs.maintainer.title">Maintainer Loop</h3>
-            <p class="obscura-desc" data-i18n="qs.maintainer.desc">Current baseline: v0.16.265. Use the 1-3 releases/day loop, weekly maintainer loop, release readiness next_actions, website alias inspect, and PyPI version-specific publication audit to turn the roadmap into small verified releases. Use <code>cliany-site market publish github.com --version 1.0.0 --json</code>; its successful <code>data.package_sha256</code> is the lowercase 64-character hexadecimal SHA-256 of the completed archive to hand to the installer. Use that value with the generic direct HTTPS URL and <code>--sha256 &lt;64-hex-sha256&gt;</code>, or run <code>cliany-site market install &lt;package&gt; --dry-run --json</code> for a local preflight.</p>
+            <p class="obscura-desc" data-i18n="qs.maintainer.desc">Current baseline: v0.16.266. Use the 1-3 releases/day loop, weekly maintainer loop, release readiness next_actions, website alias inspect, and PyPI version-specific publication audit to turn the roadmap into small verified releases. Use <code>cliany-site market publish github.com --version 1.0.0 --json</code>; its successful <code>data.package_sha256</code> is the lowercase 64-character hexadecimal SHA-256 of the completed archive to hand to the installer. Use that value with the generic direct HTTPS URL and <code>--sha256 &lt;64-hex-sha256&gt;</code>, or run <code>cliany-site market install &lt;package&gt; --dry-run --json</code> for a local preflight.</p>
             <ul class="obscura-list">
                 <li data-i18n="qs.maintainer.loop">Start from <code>docs/weekly-maintainer-loop.md</code> when choosing the next release slice.</li>
                 <li data-i18n="qs.maintainer.actions">Read <code>next_actions</code>, <code>weekly_commit_cadence_ok</code>, <code>release_count_today</code>, <code>max_daily_releases</code>, <code>daily_release_limit_ok</code>, <code>daily_release_cap_blocked</code>, and <code>daily_release_resume_date</code> from <code>python scripts/release_readiness.py --json</code> or <code>python scripts/check_release_cadence.py --json</code>; when the daily cap pauses a tag, <code>release_readiness.py --json</code> also exposes <code>daily_release_resume_command</code> and <code>daily_release_resume_command_sha256</code>. After release, confirm GitHub Release plus <code>pypi_version</code>, <code>pypi_latest_version</code>, and <code>pypi_release_version</code> with <code>python scripts/check_release_publication.py --remote --distribution --json</code>.</li>
@@ -551,7 +552,7 @@ cliany-site explore "https://github.com" "search repos" --json</code></pre>
     </div>
   </footer>
 
-  <script src="script.js?v=20260717a"></script>
+  <script src="script.js?v=20260720a"></script>
   <script>setTimeout(function(){document.body.style.visibility='visible'},2000)</script>
 </body>
 </html>

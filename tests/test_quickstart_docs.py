@@ -14,6 +14,7 @@ def test_quickstart_documents_the_release_agnostic_first_success_path():
         "cliany-site cases",
         "capabilities",
         "recommended_next_step",
+        "case_catalog_quickstart",
         "下一步",
         "Real Demo Case Proposal",
         "cases/manifest.json",

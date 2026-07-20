@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+### Added
+- `doctor --json` now includes `case_catalog_quickstart`, a release-agnostic route to `cliany-site cases` and its machine-readable output.
+
+### Changed
+- The first-success guidance in `doctor`, README, the 10-minute guide, and the official site now directs users to maintained cases before they configure an LLM for their own workflow.
+
+### Fixed
+- Onboarding and release-readiness checks now reject the historical `issues.apache.org.cliany-adapter-v0.14.0.tar.gz` filename instead of presenting an unpublished asset as a quickstart dependency.
+- The official site's mobile first-success command blocks wrap long commands without letting the copy button cover the text.
+
 ## [0.16.265] - 2026-07-17
 
 ### Added

@@ -9,7 +9,7 @@
 
 > Turn repeated browser workflows into reusable CLI commands.
 
-cliany-site observes a browser workflow through Chrome CDP, uses an LLM to turn it into a site-specific command, and replays that command as structured JSON. Start with a quick readiness check, then choose a maintained demo or automate a workflow of your own.
+cliany-site observes a browser workflow through Chrome CDP, uses an LLM to turn it into a site-specific command, and replays that command as structured JSON. Start with a quick readiness check, then review a maintained case or automate a workflow of your own.
 
 **Start here:** [10-minute success path](docs/quickstart-10min.md) · [Release history](CHANGELOG.md)
 
@@ -21,7 +21,7 @@ cliany-site doctor
 cliany-site cases
 ```
 
-`doctor` gives you a human-readable next step. `cases` lists maintained public demos and their verification paths, so you can explore a real example before configuring an LLM. Follow the [10-minute success path](docs/quickstart-10min.md) to run a demo, or configure Chrome/CDP and an LLM when you are ready to generate a command for your own site.
+`doctor` gives you a human-readable next step. `cases` lists maintained public cases and their current verification paths, so you can understand a real example before configuring an LLM. Follow the [10-minute success path](docs/quickstart-10min.md) to review a case, or configure Chrome/CDP and an LLM when you are ready to generate a command for your own site.
 
 ### Tell us what happened
 

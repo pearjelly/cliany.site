@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Do not change CLI behavior, package release automation, the case catalogue, or generated adapter code.
+- Do not change adapter execution, package release automation, the case catalogue, or generated adapter code. The `doctor` onboarding summary may add a release-agnostic case-discovery route.
 - Keep English and Simplified Chinese user-facing copy equivalent.
 - Use `pip install cliany-site`, `cliany-site doctor`, and `cliany-site cases` as the release-agnostic first-success route.
 - Do not place version-pinned adapter archive filenames in the first-success path.
@@ -18,6 +18,10 @@
 - Add no runtime dependencies, analytics, forms, authentication, or backend services.
 - Use shell QA rather than adding pytest-only documentation tests.
 - Do not publish the Vercel site without an explicit user request.
+
+### v0.16.266 alignment
+
+The follow-up preserves the `demo_adapter_quickstart` JSON field for compatibility, but makes `case_catalog_quickstart` the recommended first-success route because no referenced release asset is currently published. It keeps the first-success path honest while users review maintained cases and their validation paths.
 
 ---
 

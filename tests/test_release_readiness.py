@@ -2633,7 +2633,39 @@ def test_release_readiness_blocks_stale_quickstart_path(tmp_path):
     )
     assert (
         "open source metadata file missing snippet: docs/quickstart-10min.md: "
-        "cliany-site verify issues.apache.org --json"
+        "case_catalog_quickstart"
+    ) in report.project_metadata.issues
+
+
+def test_release_readiness_blocks_version_pinned_quickstart_archive(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    quickstart = repo / "docs" / "quickstart-10min.md"
+    quickstart.write_text(
+        "\n".join(
+            [
+                "# 10 分钟成功路径",
+                "cliany-site doctor",
+                "capabilities",
+                "recommended_next_step",
+                "case_catalog_quickstart",
+                "cliany-site cases",
+                "没有 LLM key",
+                "Real Demo Case Proposal",
+                "python scripts/validate_cases.py --strict",
+                "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file contains forbidden snippet: docs/quickstart-10min.md: "
+        "issues.apache.org.cliany-adapter-v0.14.0.tar.gz"
     ) in report.project_metadata.issues
 
 

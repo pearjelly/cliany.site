@@ -715,10 +715,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "cliany-site doctor",
             "capabilities",
             "recommended_next_step",
-            "demo_adapter_quickstart",
-            "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
-            "cliany-site verify issues.apache.org --json",
-            "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json",
+            "case_catalog_quickstart",
+            "cliany-site cases",
             "没有 LLM key",
             "Real Demo Case Proposal",
             "python scripts/validate_cases.py --strict",
@@ -746,8 +744,9 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         ],
         "site/index.html": [
             "10-Minute Success Path",
-            "issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
-            "cliany-site verify issues.apache.org --json",
+            "Try it in three commands",
+            "Browse maintained cases before configuring an LLM",
+            "cliany-site cases",
             "Real Demo Case Proposal",
             "docs/weekly-maintainer-loop.md",
             "next_actions",
@@ -762,9 +761,7 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         "site/docs/index.html": [
             "10 分钟成功路径",
             "不需要先配置 LLM key",
-            "issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
-            "cliany-site verify issues.apache.org --json",
-            "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json",
+            "cliany-site cases",
             "primary_next_task_runbook",
             "case_promotion_evidence_primary_runbook_steps",
             "required_labels",
@@ -858,6 +855,11 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "promotion_command_plan_summary_sha256",
         ],
     }
+    forbidden_snippets = {
+        "docs/quickstart-10min.md": ["issues.apache.org.cliany-adapter-v0.14.0.tar.gz"],
+        "site/index.html": ["issues.apache.org.cliany-adapter-v0.14.0.tar.gz"],
+        "site/docs/index.html": ["issues.apache.org.cliany-adapter-v0.14.0.tar.gz"],
+    }
     for filename, snippets in template_snippets.items():
         full_path = root / filename
         if not full_path.exists():
@@ -866,6 +868,9 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         for snippet in snippets:
             if snippet not in text:
                 issues.append(f"open source metadata file missing snippet: {filename}: {snippet}")
+        for snippet in forbidden_snippets.get(filename, []):
+            if snippet in text:
+                issues.append(f"open source metadata file contains forbidden snippet: {filename}: {snippet}")
 
     return ProjectMetadataReport(ok=not issues, path=str(path), issues=issues)
 

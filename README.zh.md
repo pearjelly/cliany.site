@@ -9,7 +9,7 @@
 
 > 把重复的浏览器操作，变成可复用的 CLI 命令。
 
-cliany-site 通过 Chrome CDP 观察浏览器工作流，用 LLM 将其转成站点专属命令，并以结构化 JSON 回放。先完成一次快速就绪检查，再选择维护中的 demo，或自动化你自己的工作流。
+cliany-site 通过 Chrome CDP 观察浏览器工作流，用 LLM 将其转成站点专属命令，并以结构化 JSON 回放。先完成一次快速就绪检查，再查看维护中的案例，或自动化你自己的工作流。
 
 **从这里开始：** [10 分钟成功路径](docs/quickstart-10min.md) · [发布记录](CHANGELOG.md)
 
@@ -21,7 +21,7 @@ cliany-site doctor
 cliany-site cases
 ```
 
-`doctor` 会给出适合人的下一步建议；`cases` 会列出维护中的公开 demo 及其验证路径，让你在配置 LLM 前先了解真实案例。想运行 demo，请继续阅读 [10 分钟成功路径](docs/quickstart-10min.md)；准备自动化自己的站点时，再配置 Chrome/CDP 与 LLM。
+`doctor` 会给出适合人的下一步建议；`cases` 会列出维护中的公开案例及其当前验证路径，让你在配置 LLM 前先了解真实案例。想查看案例，请继续阅读 [10 分钟成功路径](docs/quickstart-10min.md)；准备自动化自己的站点时，再配置 Chrome/CDP 与 LLM。
 
 ### 告诉我们结果
 

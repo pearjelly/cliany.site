@@ -811,6 +811,23 @@ html.js .qs-grid.visible .qs-card {
   margin-bottom: 1.25rem;
 }
 
+.first-success-card .code-block-container {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.first-success-card .code-block {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.first-success-card .copy-btn {
+  flex: 0 0 auto;
+  position: static;
+}
+
 .first-success-guide { margin-top: 2rem; text-align: center; }
 
 .feedback { background: var(--color-bg-dark); }
@@ -1023,6 +1040,12 @@ html.js .reveal.visible {
 
   .first-success-grid,
   .feedback-grid { grid-template-columns: 1fr; }
+
+  .first-success-card .code-block {
+    overflow-x: hidden;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
 }
 
 /* ============================================================

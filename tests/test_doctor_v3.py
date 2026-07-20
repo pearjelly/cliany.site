@@ -83,7 +83,9 @@ def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):
     assert any(item["name"] == "llm" for item in summary["should_fix"])
     assert summary["ready_for_demo_adapters"] is True
     assert summary["ready_for_explore"] is False
-    assert summary["recommended_next_step"] == "先运行真实 demo adapter；需要生成新 adapter 时再配置 LLM key。"
+    assert summary["recommended_next_step"] == (
+        "先运行 cliany-site cases 查看维护中的案例；需要生成新 adapter 时再配置 LLM key。"
+    )
     capabilities = summary["capabilities"]
     assert capabilities["manage_adapters"]["ready"] is True
     assert capabilities["run_browser_workflows"]["ready"] is True
@@ -97,6 +99,11 @@ def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):
         "cliany-site verify issues.apache.org --json",
         "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json",
     ]
+    assert summary["case_catalog_quickstart"] == {
+        "label": "先查看维护中的公开案例",
+        "commands": ["cliany-site cases", "cliany-site cases --json"],
+        "docs": "docs/quickstart-10min.md",
+    }
 
 
 def test_doctor_human_output_groups_action_items(tmp_home, no_llm, monkeypatch):
@@ -120,13 +127,14 @@ def test_doctor_human_output_groups_action_items(tmp_home, no_llm, monkeypatch):
     assert result.exit_code == 0
     assert "cliany-site doctor" in result.output
     assert "状态: 可继续" in result.output
-    assert "Demo adapter ready: yes" in result.output
+    assert "Existing adapter runtime ready: yes" in result.output
     assert "Explore ready: no" in result.output
-    assert "下一步: 先运行真实 demo adapter；需要生成新 adapter 时再配置 LLM key。" in result.output
-    assert "Demo adapter 快速路径:" in result.output
-    assert "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz" in result.output
-    assert "cliany-site verify issues.apache.org --json" in result.output
-    assert "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json" in result.output
+    assert "下一步: 先运行 cliany-site cases 查看维护中的案例；需要生成新 adapter 时再配置 LLM key。" in result.output
+    assert "维护案例快速路径:" in result.output
+    assert "cliany-site cases" in result.output
+    assert "cliany-site cases --json" in result.output
+    assert "Demo adapter 快速路径:" not in result.output
+    assert "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz" not in result.output
     assert "可用能力:" in result.output
     assert "manage_adapters: yes" in result.output
     assert "run_browser_workflows: yes" in result.output
@@ -215,7 +223,9 @@ def test_doctor_recommends_explore_when_llm_and_cdp_are_ready(tmp_home, no_llm, 
     summary = data["data"]["summary"]
     assert summary["ready_for_demo_adapters"] is True
     assert summary["ready_for_explore"] is True
-    assert summary["recommended_next_step"] == "可以运行真实 demo adapter，或使用 explore 生成自己的命令。"
+    assert summary["recommended_next_step"] == (
+        "先运行 cliany-site cases 查看维护中的案例；准备好后可使用 explore 生成自己的命令。"
+    )
     capabilities = summary["capabilities"]
     assert capabilities["manage_adapters"]["ready"] is True
     assert capabilities["run_browser_workflows"]["ready"] is True

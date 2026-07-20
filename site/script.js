@@ -19,7 +19,7 @@ const I18N = {
   'try.check.title': { zh: '检查就绪状态', en: 'Check readiness' },
   'try.check.body': { zh: '查看适合你当前机器的下一步建议。', en: 'Read the human-friendly next step for your machine.' },
   'try.cases.title': { zh: '选择维护中的案例', en: 'Choose a maintained example' },
-  'try.cases.body': { zh: '在为自己的工作流配置 Chrome/CDP 或 LLM 前，先浏览公开 demo。', en: 'Browse public demos before you configure Chrome/CDP or an LLM for your own workflow.' },
+  'try.cases.body': { zh: '在为自己的工作流配置 Chrome/CDP 或 LLM 前，先浏览公开案例及其当前验证路径。', en: 'Browse public cases and their current validation paths before you configure Chrome/CDP or an LLM for your own workflow.' },
   'try.guide': { zh: '查看 10 分钟指南 →', en: 'Follow the 10-minute guide →' },
 
   'terminal.connecting': { zh: '✓ 正在连接 Chrome CDP...', en: '✓ Connecting to Chrome CDP...' },
@@ -145,10 +145,10 @@ const I18N = {
   'demo.explore.done': { zh: '✓ 探索完成，已生成适配器', en: '✓ Exploration complete, adapter generated' },
 
   'qs.title': { zh: '10 分钟成功路径', en: '10-Minute Success Path' },
-  'qs.subtitle': { zh: '先跑真实 demo adapter，再配置 LLM 生成自己的命令', en: 'Run a real demo adapter first, then configure LLM to generate your own commands' },
+  'qs.subtitle': { zh: '先浏览维护中的案例，再为自己的命令配置 LLM', en: 'Browse maintained cases before configuring an LLM for your own commands' },
   'qs.step1': { zh: 'Step 1: 安装', en: 'Step 1: Install' },
   'qs.step2': { zh: 'Step 2: 检查就绪状态', en: 'Step 2: Check Readiness' },
-  'qs.step3': { zh: 'Step 3: 运行真实 Demo Adapter', en: 'Step 3: Run a Demo Adapter' },
+  'qs.step3': { zh: 'Step 3: 浏览维护中的案例', en: 'Step 3: Browse Maintained Cases' },
   'qs.step4': { zh: 'Step 4: 生成你的命令', en: 'Step 4: Generate Your Own' },
   'qs.contribute.title': { zh: '首次成功之后', en: 'After Your First Success' },
   'qs.contribute.desc': {
@@ -181,8 +181,8 @@ const I18N = {
   },
   'qs.maintainer.title': { zh: '维护者循环', en: 'Maintainer Loop' },
   'qs.maintainer.desc': {
-    zh: '当前基线：v0.16.265。使用每天 1~3 个版本的发布循环、每周维护者循环、release readiness 的 next_actions、官网 alias inspect 和 PyPI 版本专属发布审计，把路线图拆成小而可验证的发布切片。运行 <code>cliany-site market publish github.com --version 1.0.0 --json</code>；成功输出的 <code>data.package_sha256</code> 是完成归档的 64 个字符小写十六进制 SHA-256 摘要，应交接给安装方。将该值用于通用直接 HTTPS URL 的 <code>--sha256 &lt;64-hex-sha256&gt;</code>，或使用 <code>cliany-site market install &lt;package&gt; --dry-run --json</code> 预检本地包。',
-    en: 'Current baseline: v0.16.265. Use the 1-3 releases/day loop, weekly maintainer loop, release readiness next_actions, website alias inspect, and PyPI version-specific publication audit to turn the roadmap into small verified releases. Use <code>cliany-site market publish github.com --version 1.0.0 --json</code>; its successful <code>data.package_sha256</code> is the lowercase 64-character hexadecimal SHA-256 of the completed archive to hand to the installer. Use that value with the generic direct HTTPS URL and <code>--sha256 &lt;64-hex-sha256&gt;</code>, or run <code>cliany-site market install &lt;package&gt; --dry-run --json</code> for a local preflight.'
+    zh: '当前基线：v0.16.266。使用每天 1~3 个版本的发布循环、每周维护者循环、release readiness 的 next_actions、官网 alias inspect 和 PyPI 版本专属发布审计，把路线图拆成小而可验证的发布切片。运行 <code>cliany-site market publish github.com --version 1.0.0 --json</code>；成功输出的 <code>data.package_sha256</code> 是完成归档的 64 个字符小写十六进制 SHA-256 摘要，应交接给安装方。将该值用于通用直接 HTTPS URL 的 <code>--sha256 &lt;64-hex-sha256&gt;</code>，或使用 <code>cliany-site market install &lt;package&gt; --dry-run --json</code> 预检本地包。',
+    en: 'Current baseline: v0.16.266. Use the 1-3 releases/day loop, weekly maintainer loop, release readiness next_actions, website alias inspect, and PyPI version-specific publication audit to turn the roadmap into small verified releases. Use <code>cliany-site market publish github.com --version 1.0.0 --json</code>; its successful <code>data.package_sha256</code> is the lowercase 64-character hexadecimal SHA-256 of the completed archive to hand to the installer. Use that value with the generic direct HTTPS URL and <code>--sha256 &lt;64-hex-sha256&gt;</code>, or run <code>cliany-site market install &lt;package&gt; --dry-run --json</code> for a local preflight.'
   },
   'qs.maintainer.loop': {
     zh: '选择下一块发布切片时，从 <code>docs/weekly-maintainer-loop.md</code> 开始。',

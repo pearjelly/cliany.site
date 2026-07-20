@@ -11325,12 +11325,15 @@ def test_v016264_changelog_is_finalized() -> None:
     assert "[0.16.263]: https://github.com/pearjelly/cliany.site/compare/v0.16.262...v0.16.263" in text
 
 
-def test_v016265_changelog_is_finalized() -> None:
+def test_v016266_changelog_tracks_pre_tag_first_success_changes() -> None:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.265]", 1)[0]
     release = text.split("## [0.16.265]", 1)[1].split("## [0.16.264]", 1)[0]
 
-    assert unreleased.strip() == ""
+    assert "case_catalog_quickstart" in unreleased
+    assert "maintained cases" in unreleased
+    assert "issues.apache.org.cliany-adapter-v0.14.0.tar.gz" in unreleased
+    assert "copy button" in unreleased
     assert "## [0.16.265] - 2026-07-17" in text
     assert "market publish --json" in release
     assert "package_sha256" in release
@@ -11421,6 +11424,57 @@ def test_v016265_release_draft_orders_readiness_before_tagging_and_audit() -> No
     create_tag = "git tag v0.16.265"
     release_tag_check = "release_readiness.py --strict --release-tag v0.16.265 --remote --remote-name origin"
     push_tag = "git push origin v0.16.265"
+    vercel_inspect = "vercel inspect www.cliany.site --wait --timeout 90s"
+    publication_audit = "check_release_publication.py --strict --remote --distribution --json"
+
+    assert text.index(target_check) < text.index(finalize_changelog)
+    assert text.index(finalize_changelog) < text.index(commit_release)
+    assert text.index(commit_release) < text.index(create_tag)
+    assert text.index(create_tag) < text.index(release_tag_check)
+    assert text.index(release_tag_check) < text.index(push_tag)
+    assert text.index(push_tag) < text.index(vercel_inspect)
+    assert text.index(vercel_inspect) < text.index(publication_audit)
+
+
+def test_v016266_release_draft_tracks_truthful_first_success_path() -> None:
+    text = (ROOT / "docs" / "releases" / "v0.16.266-draft.md").read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.266 发布草案",
+        "**目标版本：** `0.16.266`",
+        "**提交范围：** `v0.16.265..HEAD`",
+        "case_catalog_quickstart",
+        "demo_adapter_quickstart",
+        "cliany-site cases",
+        "issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "llm_live_preflight_not_ready",
+        "E_LLM_UNAVAILABLE",
+        "src/cliany_site/commands/doctor.py",
+        "tests/test_doctor_v3.py",
+        "tests/test_site_content.py",
+        "release_readiness.py --strict --target-version 0.16.266 --remote",
+        "git tag v0.16.266",
+        "release_readiness.py --strict --release-tag v0.16.266 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016266_release_draft_orders_readiness_before_tagging_and_audit() -> None:
+    text = (ROOT / "docs" / "releases" / "v0.16.266-draft.md").read_text(encoding="utf-8")
+
+    target_check = "release_readiness.py --strict --target-version 0.16.266 --remote"
+    finalize_changelog = "清空 `[Unreleased]`"
+    commit_release = 'git commit -m "chore(release): finalize v0.16.266"'
+    create_tag = "git tag v0.16.266"
+    release_tag_check = "release_readiness.py --strict --release-tag v0.16.266 --remote --remote-name origin"
+    push_tag = "git push origin v0.16.266"
     vercel_inspect = "vercel inspect www.cliany.site --wait --timeout 90s"
     publication_audit = "check_release_publication.py --strict --remote --distribution --json"
 

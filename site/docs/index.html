@@ -107,7 +107,7 @@
 
       <main>
         <h1>cliany-site 文档</h1>
-        <p class="intro-meta">v0.16.265 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
+        <p class="intro-meta">v0.16.266 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
 
         <p>cliany-site 基于 LLM 和 Chrome CDP 协议，将任意网页操作自动化为可重复调用的 CLI 命令。核心流程：<strong>explore（探索）→ generate（生成适配器）→ run（执行）</strong>。</p>
 
@@ -133,19 +133,17 @@ export CLIANY_OPENAI_API_KEY="sk-..."</code></pre>
         <p><code>explore --json</code> 遇到 LLM 网关、限流或服务暂不可用时会返回 <code>E_LLM_UNAVAILABLE</code>，并在 <code>details.retryable</code>、<code>details.status_code</code> 和 <code>details.phase</code> 中给出可重试上下文；错误消息会清洗原始 HTML 网关页。</p>
 
         <h2 id="quickstart">10 分钟成功路径</h2>
-        <p>首次运行先验证一个真实只读 demo adapter；不需要先配置 LLM key。跑通后再进入 <a href="#config">配置 LLM</a> 和 <a href="#explore">explore</a>。</p>
+        <p>首次运行先确认 CLI 可用并查看维护中的公开案例；不需要先配置 LLM key。准备好生成自己的命令时，再进入 <a href="#config">配置 LLM</a> 和 <a href="#explore">explore</a>。</p>
         <pre><code># 1. 查看 human 摘要和下一步
 cliany-site doctor
 
-# 2. 安装 GitHub Release 中的只读 demo adapter
-cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz
+# 2. 查看维护中的公开案例和各自的验证路径
+cliany-site cases
 
-# 3. 查看并验证 adapter
-cliany-site list --json
-cliany-site verify issues.apache.org --json
+# 3. 脚本使用机器可读案例目录
+cliany-site cases --json
 
-# 4. 执行只读命令
-cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json</code></pre>
+# 4. 准备好后再配置 LLM 并生成自己的命令</code></pre>
         <p>发布者也可以提供直接 HTTPS adapter 包；远程安装必须固定完成归档的 64 个字符小写十六进制 SHA-256，并会复用同一套包校验：</p>
         <pre><code>cliany-site market publish github.com --version 1.0.0 --json</code></pre>
         <p>发布成功 JSON 中的 <code>data.package_sha256</code> 是完成归档的 64 个字符小写十六进制 SHA-256 摘要；将该值填入发布者提供的通用 HTTPS 安装命令：</p>
