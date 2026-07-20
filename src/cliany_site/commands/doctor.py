@@ -173,14 +173,13 @@ def _llm_live_preflight_summary(checks: list[dict[str, Any]]) -> dict[str, Any]:
 
 def _demo_adapter_quickstart() -> dict[str, Any]:
     return {
-        "label": "先跑一个真实只读 demo adapter",
-        "commands": [
-            "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
-            "cliany-site list --json",
-            "cliany-site verify issues.apache.org --json",
-            "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json",
-        ],
+        "label": "历史 demo adapter 路径（当前不可用）",
+        "commands": [],
         "docs": "docs/quickstart-10min.md",
+        "available": False,
+        "deprecated": True,
+        "reason": "当前没有可安装的 demo adapter release asset。",
+        "replacement": "case_catalog_quickstart",
     }
 
 

@@ -7,6 +7,11 @@
 
 ## [Unreleased]
 
+## [0.16.268] - 2026-07-20
+
+### Fixed
+- `doctor --json` now marks the retained `demo_adapter_quickstart` compatibility field as unavailable and deprecated, with no runnable historical archive command and an explicit `case_catalog_quickstart` replacement.
+
 ## [0.16.267] - 2026-07-20
 
 ### Fixed
@@ -2539,7 +2544,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.267...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.268...HEAD
+[0.16.268]: https://github.com/pearjelly/cliany.site/compare/v0.16.267...v0.16.268
 [0.16.267]: https://github.com/pearjelly/cliany.site/compare/v0.16.266...v0.16.267
 [0.16.266]: https://github.com/pearjelly/cliany.site/compare/v0.16.265...v0.16.266
 [0.16.265]: https://github.com/pearjelly/cliany.site/compare/v0.16.264...v0.16.265

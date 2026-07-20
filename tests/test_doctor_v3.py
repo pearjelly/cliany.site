@@ -91,14 +91,16 @@ def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):
     assert capabilities["run_browser_workflows"]["ready"] is True
     assert capabilities["generate_adapters"]["ready"] is False
     assert capabilities["generate_adapters"]["blockers"] == ["llm"]
-    demo_quickstart = summary["demo_adapter_quickstart"]
-    assert demo_quickstart["docs"] == "docs/quickstart-10min.md"
-    assert demo_quickstart["commands"] == [
-        "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
-        "cliany-site list --json",
-        "cliany-site verify issues.apache.org --json",
-        "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json",
-    ]
+    assert summary["demo_adapter_quickstart"] == {
+        "label": "历史 demo adapter 路径（当前不可用）",
+        "commands": [],
+        "docs": "docs/quickstart-10min.md",
+        "available": False,
+        "deprecated": True,
+        "reason": "当前没有可安装的 demo adapter release asset。",
+        "replacement": "case_catalog_quickstart",
+    }
+    assert "issues.apache.org.cliany-adapter-v0.14.0.tar.gz" not in result.output
     assert summary["case_catalog_quickstart"] == {
         "label": "先查看维护中的公开案例",
         "commands": ["cliany-site cases", "cliany-site cases --json"],
@@ -231,9 +233,10 @@ def test_doctor_recommends_explore_when_llm_and_cdp_are_ready(tmp_home, no_llm, 
     assert capabilities["run_browser_workflows"]["ready"] is True
     assert capabilities["generate_adapters"]["ready"] is True
     assert capabilities["generate_adapters"]["blockers"] == []
-    assert summary["demo_adapter_quickstart"]["commands"][0] == (
-        "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz"
-    )
+    assert summary["demo_adapter_quickstart"]["available"] is False
+    assert summary["demo_adapter_quickstart"]["deprecated"] is True
+    assert summary["demo_adapter_quickstart"]["commands"] == []
+    assert summary["demo_adapter_quickstart"]["replacement"] == "case_catalog_quickstart"
 
 
 def test_doctor_does_not_call_llm_live_by_default(tmp_home, no_llm, monkeypatch):
