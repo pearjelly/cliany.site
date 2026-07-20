@@ -911,3 +911,10 @@ class TestPackageExports:
         assert callable(login)
         assert callable(doctor)
         assert callable(list_adapters)
+
+    def test_package_version_matches_installed_distribution(self):
+        from importlib.metadata import version
+
+        from cliany_site import __version__
+
+        assert __version__ == version("cliany-site")
