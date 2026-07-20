@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.267] - 2026-07-20
+
 ### Fixed
 - `cliany_site.__version__` now reads installed distribution metadata instead of returning the stale `0.14.0` constant, so Python SDK consumers receive the same version as `cliany-site --version` and PyPI.
 
@@ -2537,7 +2539,7 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.266...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.267...HEAD
 [0.16.267]: https://github.com/pearjelly/cliany.site/compare/v0.16.266...v0.16.267
 [0.16.266]: https://github.com/pearjelly/cliany.site/compare/v0.16.265...v0.16.266
 [0.16.265]: https://github.com/pearjelly/cliany.site/compare/v0.16.264...v0.16.265

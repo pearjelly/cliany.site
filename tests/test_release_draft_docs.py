@@ -11325,20 +11325,17 @@ def test_v016264_changelog_is_finalized() -> None:
     assert "[0.16.263]: https://github.com/pearjelly/cliany.site/compare/v0.16.262...v0.16.263" in text
 
 
-def test_v016267_changelog_tracks_pre_tag_sdk_version_fix() -> None:
+def test_v016267_changelog_is_finalized() -> None:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.266]", 1)[0]
-    release = text.split("## [0.16.266]", 1)[1].split("## [0.16.265]", 1)[0]
+    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.267]", 1)[0]
+    release = text.split("## [0.16.267]", 1)[1].split("## [0.16.266]", 1)[0]
 
-    assert "cliany_site.__version__" in unreleased
-    assert "stale `0.14.0`" in unreleased
-    assert "## [0.16.266] - 2026-07-20" in text
-    assert "case_catalog_quickstart" in release
-    assert "maintained cases" in release
-    assert "issues.apache.org.cliany-adapter-v0.14.0.tar.gz" in release
-    assert "copy button" in release
+    assert unreleased.strip() == ""
+    assert "## [0.16.267] - 2026-07-20" in text
+    assert "cliany_site.__version__" in release
+    assert "stale `0.14.0`" in release
     assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.267...HEAD" in text
-    assert "[0.16.266]: https://github.com/pearjelly/cliany.site/compare/v0.16.265...v0.16.266" in text
+    assert "[0.16.267]: https://github.com/pearjelly/cliany.site/compare/v0.16.266...v0.16.267" in text
 
 
 def test_v016264_release_draft_tracks_remote_adapter_install() -> None:
