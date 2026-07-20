@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.266] - 2026-07-20
+
 ### Added
 - `doctor --json` now includes `case_catalog_quickstart`, a release-agnostic route to `cliany-site cases` and its machine-readable output.
 
@@ -2532,7 +2534,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.265...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.266...HEAD
+[0.16.266]: https://github.com/pearjelly/cliany.site/compare/v0.16.265...v0.16.266
 [0.16.265]: https://github.com/pearjelly/cliany.site/compare/v0.16.264...v0.16.265
 [0.16.264]: https://github.com/pearjelly/cliany.site/compare/v0.16.263...v0.16.264
 [0.16.263]: https://github.com/pearjelly/cliany.site/compare/v0.16.262...v0.16.263

@@ -11320,27 +11320,24 @@ def test_v016264_changelog_is_finalized() -> None:
     assert "direct HTTPS adapter package URL" in text.split("## [0.16.264]", 1)[1].split("## [0.16.263]", 1)[0]
     assert "INSTALL_FAILED" in text.split("## [0.16.264]", 1)[1].split("## [0.16.263]", 1)[0]
     assert "## [0.16.263] - 2026-07-15" in text
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.265...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.266...HEAD" in text
     assert "[0.16.264]: https://github.com/pearjelly/cliany.site/compare/v0.16.263...v0.16.264" in text
     assert "[0.16.263]: https://github.com/pearjelly/cliany.site/compare/v0.16.262...v0.16.263" in text
 
 
-def test_v016266_changelog_tracks_pre_tag_first_success_changes() -> None:
+def test_v016266_changelog_is_finalized() -> None:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.265]", 1)[0]
-    release = text.split("## [0.16.265]", 1)[1].split("## [0.16.264]", 1)[0]
+    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.266]", 1)[0]
+    release = text.split("## [0.16.266]", 1)[1].split("## [0.16.265]", 1)[0]
 
-    assert "case_catalog_quickstart" in unreleased
-    assert "maintained cases" in unreleased
-    assert "issues.apache.org.cliany-adapter-v0.14.0.tar.gz" in unreleased
-    assert "copy button" in unreleased
-    assert "## [0.16.265] - 2026-07-17" in text
-    assert "market publish --json" in release
-    assert "package_sha256" in release
-    assert "completed adapter archive" in release
-    assert "market install --sha256" in release
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.265...HEAD" in text
-    assert "[0.16.265]: https://github.com/pearjelly/cliany.site/compare/v0.16.264...v0.16.265" in text
+    assert unreleased.strip() == ""
+    assert "## [0.16.266] - 2026-07-20" in text
+    assert "case_catalog_quickstart" in release
+    assert "maintained cases" in release
+    assert "issues.apache.org.cliany-adapter-v0.14.0.tar.gz" in release
+    assert "copy button" in release
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.266...HEAD" in text
+    assert "[0.16.266]: https://github.com/pearjelly/cliany.site/compare/v0.16.265...v0.16.266" in text
 
 
 def test_v016264_release_draft_tracks_remote_adapter_install() -> None:
