@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.269] - 2026-07-21
+
 ### Fixed
 - `doctor --json` now separates `ready_for_existing_adapters` from `ready_for_demo_adapters`, so an available runtime no longer falsely implies that a published demo adapter asset exists.
 
@@ -2547,7 +2549,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.268...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.269...HEAD
+[0.16.269]: https://github.com/pearjelly/cliany.site/compare/v0.16.268...v0.16.269
 [0.16.268]: https://github.com/pearjelly/cliany.site/compare/v0.16.267...v0.16.268
 [0.16.267]: https://github.com/pearjelly/cliany.site/compare/v0.16.266...v0.16.267
 [0.16.266]: https://github.com/pearjelly/cliany.site/compare/v0.16.265...v0.16.266
