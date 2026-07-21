@@ -206,13 +206,17 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
         item = {"name": check["name"], "status": check["status"], "action": action}
         summary[severity].append(item)
         summary["counts"][severity] += 1
-    summary["ready_for_demo_adapters"] = not summary["must_fix"]
+    summary["ready_for_existing_adapters"] = not summary["must_fix"]
     summary["ready_for_explore"] = not summary["must_fix"] and not any(
         item["name"] in {"llm", "llm_live"} for item in summary["should_fix"]
     )
     summary["capabilities"] = _build_capabilities(checks)
     summary["llm_live_preflight"] = _llm_live_preflight_summary(checks)
-    summary["demo_adapter_quickstart"] = _demo_adapter_quickstart()
+    demo_adapter_quickstart = _demo_adapter_quickstart()
+    summary["demo_adapter_quickstart"] = demo_adapter_quickstart
+    summary["ready_for_demo_adapters"] = bool(demo_adapter_quickstart["available"]) and bool(
+        summary["ready_for_existing_adapters"]
+    )
     summary["case_catalog_quickstart"] = _case_catalog_quickstart()
     if summary["must_fix"]:
         summary["recommended_next_step"] = "先处理必须修复项，然后重新运行 cliany-site doctor。"
@@ -254,7 +258,7 @@ def _print_doctor_human(result: Envelope) -> None:
         click.secho(f"状态: 需要修复 {message}".strip(), fg="red")
 
     if summary:
-        adapter_runtime_ready = "yes" if summary.get("ready_for_demo_adapters") else "no"
+        adapter_runtime_ready = "yes" if summary.get("ready_for_existing_adapters") else "no"
         explore_ready = "yes" if summary.get("ready_for_explore") else "no"
         click.echo(f"Existing adapter runtime ready: {adapter_runtime_ready}")
         click.echo(f"Explore ready: {explore_ready}")
@@ -266,7 +270,11 @@ def _print_doctor_human(result: Envelope) -> None:
             case_catalog_quickstart if isinstance(case_catalog_quickstart, dict) else {}
         )
         case_catalog_commands = case_catalog_quickstart.get("commands")
-        if summary.get("ready_for_demo_adapters") and isinstance(case_catalog_commands, list) and case_catalog_commands:
+        if (
+            summary.get("ready_for_existing_adapters")
+            and isinstance(case_catalog_commands, list)
+            and case_catalog_commands
+        ):
             click.echo("\n维护案例快速路径:")
             for command in case_catalog_commands:
                 click.echo(f"- {command}")

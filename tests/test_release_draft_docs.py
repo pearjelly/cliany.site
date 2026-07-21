@@ -11337,16 +11337,23 @@ def test_v016267_changelog_is_finalized() -> None:
 
 def test_v016268_changelog_is_finalized() -> None:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.268]", 1)[0]
     release = text.split("## [0.16.268]", 1)[1].split("## [0.16.267]", 1)[0]
 
-    assert unreleased.strip() == ""
     assert "## [0.16.268] - 2026-07-20" in text
     assert "demo_adapter_quickstart" in release
     assert "unavailable and deprecated" in release
     assert "case_catalog_quickstart" in release
     assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.268...HEAD" in text
     assert "[0.16.268]: https://github.com/pearjelly/cliany.site/compare/v0.16.267...v0.16.268" in text
+
+
+def test_v016269_changelog_has_unreleased_doctor_readiness_fix() -> None:
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.268]", 1)[0]
+
+    assert "ready_for_existing_adapters" in unreleased
+    assert "ready_for_demo_adapters" in unreleased
+    assert "published demo adapter asset" in unreleased
 
 
 def test_v016264_release_draft_tracks_remote_adapter_install() -> None:

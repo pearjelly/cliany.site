@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- `doctor --json` now separates `ready_for_existing_adapters` from `ready_for_demo_adapters`, so an available runtime no longer falsely implies that a published demo adapter asset exists.
+
 ## [0.16.268] - 2026-07-20
 
 ### Fixed

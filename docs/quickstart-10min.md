@@ -47,6 +47,8 @@ cliany-site doctor --json
 - `info`：诊断信息，通常无需动作。
 - `capabilities`：按 `manage_adapters`、`run_browser_workflows`、`generate_adapters` 展示当前可用路径和 blockers。
 - `recommended_next_step`：和 human 输出中的 `下一步` 一致，可用于脚本判断后续引导。
+- `ready_for_existing_adapters`：当前环境是否可运行已有 adapter；和 human 输出的 `Existing adapter runtime ready` 一致。
+- `ready_for_demo_adapters`：当前是否真的有可用的 demo adapter asset；没有公开 asset 时为 `false`，不要把运行时就绪误解为 demo 可安装。
 - `case_catalog_quickstart`：可立即运行的案例目录命令；在获取到 adapter 包之前，先用它查看公开案例和各自的验证路径。
 - `demo_adapter_quickstart`：保留给兼容旧脚本的字段。若 `deprecated=true` 或 `available=false`，不要执行其中的命令；读取 `replacement` 并改用 `case_catalog_quickstart`。
 

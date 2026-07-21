@@ -14,6 +14,8 @@ def test_quickstart_documents_the_release_agnostic_first_success_path():
         "cliany-site cases",
         "capabilities",
         "recommended_next_step",
+        "ready_for_existing_adapters",
+        "ready_for_demo_adapters",
         "case_catalog_quickstart",
         "demo_adapter_quickstart",
         "deprecated",

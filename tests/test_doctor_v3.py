@@ -81,7 +81,8 @@ def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):
     summary = data["data"]["summary"]
     assert summary["counts"]["must_fix"] == 0
     assert any(item["name"] == "llm" for item in summary["should_fix"])
-    assert summary["ready_for_demo_adapters"] is True
+    assert summary["ready_for_existing_adapters"] is True
+    assert summary["ready_for_demo_adapters"] is False
     assert summary["ready_for_explore"] is False
     assert summary["recommended_next_step"] == (
         "先运行 cliany-site cases 查看维护中的案例；需要生成新 adapter 时再配置 LLM key。"
@@ -165,6 +166,7 @@ async def test_doctor_cdp_failure_includes_must_fix_summary(tmp_home, no_llm, mo
     assert details is not None
     summary = details["summary"]
     assert summary["counts"]["must_fix"] >= 1
+    assert summary["ready_for_existing_adapters"] is False
     assert summary["ready_for_demo_adapters"] is False
     assert summary["ready_for_explore"] is False
     assert summary["recommended_next_step"] == "先处理必须修复项，然后重新运行 cliany-site doctor。"
@@ -223,7 +225,8 @@ def test_doctor_recommends_explore_when_llm_and_cdp_are_ready(tmp_home, no_llm, 
     assert result.exit_code == 0
     data = json.loads(result.output)
     summary = data["data"]["summary"]
-    assert summary["ready_for_demo_adapters"] is True
+    assert summary["ready_for_existing_adapters"] is True
+    assert summary["ready_for_demo_adapters"] is False
     assert summary["ready_for_explore"] is True
     assert summary["recommended_next_step"] == (
         "先运行 cliany-site cases 查看维护中的案例；准备好后可使用 explore 生成自己的命令。"
@@ -363,7 +366,8 @@ def test_doctor_llm_live_unavailable_blocks_explore_ready(tmp_home, no_llm, monk
     }
 
     summary = data["data"]["summary"]
-    assert summary["ready_for_demo_adapters"] is True
+    assert summary["ready_for_existing_adapters"] is True
+    assert summary["ready_for_demo_adapters"] is False
     assert summary["ready_for_explore"] is False
     assert any(item["name"] == "llm_live" for item in summary["should_fix"])
     assert summary["capabilities"]["generate_adapters"]["ready"] is False
