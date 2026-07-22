@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.270] - 2026-07-22
+
 ### Added
 - Generated `list-` and `search-` adapter commands can declare `expects_nonempty=false` when a zero-match result is valid, preserving `data.quality` while returning a successful envelope for that business outcome.
 
@@ -2555,7 +2557,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.269...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.270...HEAD
+[0.16.270]: https://github.com/pearjelly/cliany.site/compare/v0.16.269...v0.16.270
 [0.16.269]: https://github.com/pearjelly/cliany.site/compare/v0.16.268...v0.16.269
 [0.16.268]: https://github.com/pearjelly/cliany.site/compare/v0.16.267...v0.16.268
 [0.16.267]: https://github.com/pearjelly/cliany.site/compare/v0.16.266...v0.16.267
