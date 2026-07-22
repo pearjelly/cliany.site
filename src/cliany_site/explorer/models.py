@@ -31,6 +31,7 @@ class CommandSuggestion:
     description: str
     args: list[dict[str, Any]]
     action_steps: list[int]
+    expects_nonempty: bool = True
 
 
 @dataclass

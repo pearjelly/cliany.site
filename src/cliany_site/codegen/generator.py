@@ -430,6 +430,7 @@ def save_adapter(
                 "description": cmd.description,
                 "args": cmd.args,
                 "action_steps": cmd.action_steps,
+                "expects_nonempty": cmd.expects_nonempty,
                 "actions": cmd_actions,
             }
             if atom_refs:

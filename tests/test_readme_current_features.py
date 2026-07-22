@@ -48,6 +48,8 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "data.quality" in text
         assert "--strict-quality" in text
         assert "E_EMPTY_RESULT" in text
+        assert "expects_nonempty" in text
+        assert "expects_nonempty=false" in text
         assert "scripts/release_readiness.py" in text
         assert "scripts/check_release_publication.py --json" in text
         assert "cliany-site cases --case-id pypi-project-search --json" in text

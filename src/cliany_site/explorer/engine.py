@@ -890,6 +890,11 @@ class WorkflowExplorer:
                             description=cmd_data.get("description", ""),
                             args=args,
                             action_steps=action_steps,
+                            expects_nonempty=(
+                                cmd_data["expects_nonempty"]
+                                if isinstance(cmd_data.get("expects_nonempty"), bool)
+                                else True
+                            ),
                         )
                         result.commands.append(cmd)
 

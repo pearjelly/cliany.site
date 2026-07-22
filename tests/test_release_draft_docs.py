@@ -11348,10 +11348,8 @@ def test_v016268_changelog_is_finalized() -> None:
 
 def test_v016269_changelog_is_finalized() -> None:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.269]", 1)[0]
     release = text.split("## [0.16.269]", 1)[1].split("## [0.16.268]", 1)[0]
 
-    assert unreleased.strip() == ""
     assert "## [0.16.269] - 2026-07-21" in text
     assert "ready_for_existing_adapters" in release
     assert "ready_for_demo_adapters" in release
@@ -11502,3 +11500,34 @@ def test_v016266_release_draft_orders_readiness_before_tagging_and_audit() -> No
     assert text.index(release_tag_check) < text.index(push_tag)
     assert text.index(push_tag) < text.index(vercel_inspect)
     assert text.index(vercel_inspect) < text.index(publication_audit)
+
+
+def test_v016270_release_draft_tracks_declared_empty_result_expectations() -> None:
+    text = (ROOT / "docs" / "releases" / "v0.16.270-draft.md").read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.270 发布草案",
+        "**目标版本：** `0.16.270`",
+        "**提交范围：** `v0.16.269..HEAD`",
+        "**提交范围：** `v0.16.270..HEAD`",
+        "## 用户价值",
+        "expects_nonempty=false",
+        "data.quality",
+        "## 案例库映射",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "llm_live_preflight_not_ready",
+        "E_LLM_UNAVAILABLE",
+        "## 风险与兼容性",
+        "E_EMPTY_RESULT",
+        "## 发版前验证",
+        "tests/test_generated_orchestration.py",
+        "release_readiness.py --strict --target-version 0.16.270 --remote",
+        "git tag v0.16.270",
+        "release_readiness.py --strict --release-tag v0.16.270 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]
+    for snippet in required:
+        assert snippet in text

@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+### Added
+- Generated `list-` and `search-` adapter commands can declare `expects_nonempty=false` when a zero-match result is valid, preserving `data.quality` while returning a successful envelope for that business outcome.
+
+### Fixed
+- Empty-result tolerance no longer suppresses partial extraction failures: missing required fields and partial row data still return `E_EMPTY_RESULT`.
+
 ## [0.16.269] - 2026-07-21
 
 ### Fixed

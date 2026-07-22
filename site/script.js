@@ -29,6 +29,10 @@ const I18N = {
     zh: '✓ 生成 CLI 命令至 ~/.cliany-site/adapters/github.com/',
     en: '✓ CLI commands generated to ~/.cliany-site/adapters/github.com/'
   },
+  'demo.quality.contract': {
+    zh: '生成的 list/search 命令默认 expects_nonempty=true。只有零匹配本来合法时才声明 expects_nonempty=false；此时 ok 仍为 true，data.quality 仍会保留。',
+    en: 'Generated list/search commands default to expects_nonempty=true. Declare expects_nonempty=false only when zero matches are valid; ok stays true and data.quality remains available.'
+  },
 
   'features.title': { zh: '核心特性', en: 'Core Features' },
   'features.subtitle': { zh: '4 个核心能力 + 12 个扩展能力', en: '4 core capabilities + 12 extended capabilities' },
@@ -181,8 +185,8 @@ const I18N = {
   },
   'qs.maintainer.title': { zh: '维护者循环', en: 'Maintainer Loop' },
   'qs.maintainer.desc': {
-    zh: '当前基线：v0.16.269。使用每天 1~3 个版本的发布循环、每周维护者循环、release readiness 的 next_actions、官网 alias inspect 和 PyPI 版本专属发布审计，把路线图拆成小而可验证的发布切片。运行 <code>cliany-site market publish github.com --version 1.0.0 --json</code>；成功输出的 <code>data.package_sha256</code> 是完成归档的 64 个字符小写十六进制 SHA-256 摘要，应交接给安装方。将该值用于通用直接 HTTPS URL 的 <code>--sha256 &lt;64-hex-sha256&gt;</code>，或使用 <code>cliany-site market install &lt;package&gt; --dry-run --json</code> 预检本地包。',
-    en: 'Current baseline: v0.16.269. Use the 1-3 releases/day loop, weekly maintainer loop, release readiness next_actions, website alias inspect, and PyPI version-specific publication audit to turn the roadmap into small verified releases. Use <code>cliany-site market publish github.com --version 1.0.0 --json</code>; its successful <code>data.package_sha256</code> is the lowercase 64-character hexadecimal SHA-256 of the completed archive to hand to the installer. Use that value with the generic direct HTTPS URL and <code>--sha256 &lt;64-hex-sha256&gt;</code>, or run <code>cliany-site market install &lt;package&gt; --dry-run --json</code> for a local preflight.'
+    zh: '当前基线：v0.16.270。使用每天 1~3 个版本的发布循环、每周维护者循环、release readiness 的 next_actions、官网 alias inspect 和 PyPI 版本专属发布审计，把路线图拆成小而可验证的发布切片。运行 <code>cliany-site market publish github.com --version 1.0.0 --json</code>；成功输出的 <code>data.package_sha256</code> 是完成归档的 64 个字符小写十六进制 SHA-256 摘要，应交接给安装方。将该值用于通用直接 HTTPS URL 的 <code>--sha256 &lt;64-hex-sha256&gt;</code>，或使用 <code>cliany-site market install &lt;package&gt; --dry-run --json</code> 预检本地包。',
+    en: 'Current baseline: v0.16.270. Use the 1-3 releases/day loop, weekly maintainer loop, release readiness next_actions, website alias inspect, and PyPI version-specific publication audit to turn the roadmap into small verified releases. Use <code>cliany-site market publish github.com --version 1.0.0 --json</code>; its successful <code>data.package_sha256</code> is the lowercase 64-character hexadecimal SHA-256 of the completed archive to hand to the installer. Use that value with the generic direct HTTPS URL and <code>--sha256 &lt;64-hex-sha256&gt;</code>, or run <code>cliany-site market install &lt;package&gt; --dry-run --json</code> for a local preflight.'
   },
   'qs.maintainer.loop': {
     zh: '选择下一块发布切片时，从 <code>docs/weekly-maintainer-loop.md</code> 开始。',

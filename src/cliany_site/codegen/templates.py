@@ -674,18 +674,22 @@ def _shift_indent(text: str, remove: int = 8) -> str:
     return "\n".join(result)
 
 
-def _render_empty_result_check(command_name: str) -> str:
+def _render_empty_result_check(command_name: str, expects_nonempty: bool) -> str:
+    expectation_literal = repr(expects_nonempty)
     return (
-        "    # opt-in 结果质量检测：list-/search- 命令在抽取为空、字段缺失或聚合 data 为空时返回 E_EMPTY_RESULT\n"
-        "    # 如需关闭：在 metadata 中设置 expects_nonempty=False（当前仅占位，未实现）\n"
+        "    # list-/search- 命令默认把空结果、字段缺失或聚合 data 为空视为 E_EMPTY_RESULT。\n"
+        f"    # expects_nonempty={expectation_literal} 仅允许空结果；部分字段缺失仍为质量错误。\n"
         "    if failed is None:\n"
         '        if not quality.get("ok", True):\n'
-        '            if quality.get("status") == "empty":\n'
+        f'            if quality.get("status") == "empty" and not {expectation_literal}:\n'
+        "                pass\n"
+        '            elif quality.get("status") == "empty":\n'
         f'                _message = "{command_name} 提取结果为空"\n'
         "            else:\n"
         f'                _message = "{command_name} 提取结果质量未通过"\n'
-        '            failed = {"ok": False, "error": {"code": "E_EMPTY_RESULT", "message": _message, "details": quality}}\n'
-        "        else:\n"
+        f'            if not (quality.get("status") == "empty" and not {expectation_literal}):\n'
+        '                failed = {"ok": False, "error": {"code": "E_EMPTY_RESULT", "message": _message, "details": quality}}\n'
+        f"        elif {expectation_literal}:\n"
         "            _agg: list = []\n"
         "            for _r in results:\n"
         '                if _r.get("ok"):\n'
@@ -750,7 +754,7 @@ def render_command_block_v2(
 
     # opt-in 结果质量检测：list-/search- 命令在抽取质量未通过或聚合 data 为空时注入 E_EMPTY_RESULT 判定
     empty_result_check = (
-        _render_empty_result_check(command_name)
+        _render_empty_result_check(command_name, command.expects_nonempty)
         if command_name.startswith(("list-", "search-"))
         else ""
     )
@@ -765,7 +769,7 @@ def {function_name}({function_signature}):
 {empty_result_check}    if _resolve_json_mode(json_mode):
         click.echo(json.dumps({{
             "ok": failed is None,
-            "data": {{"results": results, "quality": quality, "command": "{command_name}", "args": {args_payload}}},
+            "data": {{"results": results, "quality": quality, "command": "{command_name}", "args": {args_payload}, "expects_nonempty": {command.expects_nonempty!r}}},
             "error": (failed or {{}}).get("error"),
             "meta": {{"source": "adapter"}},
         }}, ensure_ascii=False))

@@ -347,6 +347,11 @@ class AdapterMerger:
                     description=str(cmd_def.get("description") or ""),
                     args=args if isinstance(args, list) else [],
                     action_steps=list(range(action_start, action_start + action_count)),
+                    expects_nonempty=(
+                        cmd_def["expects_nonempty"]
+                        if isinstance(cmd_def.get("expects_nonempty"), bool)
+                        else True
+                    ),
                 )
             )
 

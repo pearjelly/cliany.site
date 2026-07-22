@@ -128,6 +128,7 @@ class TestGeneratedNoCdpImport:
         assert payload["error"]["code"] == "E_EMPTY_RESULT"
         assert payload["error"]["details"] == quality
         assert payload["data"]["quality"] == quality
+        assert payload["data"]["expects_nonempty"] is True
 
     def test_generated_list_command_returns_partial_quality_error(self):
         actions = [
@@ -167,6 +168,93 @@ class TestGeneratedNoCdpImport:
         assert payload["error"]["message"] == "list-results 提取结果质量未通过"
         assert payload["error"]["details"] == quality
         assert payload["data"]["quality"] == quality
+
+    def test_generated_list_command_allows_declared_empty_result(self):
+        actions = [
+            ActionStep(
+                action_type="extract",
+                page_url="https://example.com",
+                selector=".result",
+                extract_mode="list",
+                fields_map={"title": "h3", "url": "a@href"},
+            )
+        ]
+        commands = [
+            CommandSuggestion(
+                name="list-results",
+                description="查询是否存在结果",
+                args=[],
+                action_steps=[0],
+                expects_nonempty=False,
+            ),
+        ]
+        code = AdapterGenerator(domain="example.com").generate(
+            _make_explore_result(actions=actions, commands=commands),
+            "example.com",
+        )
+        module = types.ModuleType("generated_adapter")
+        exec(code, module.__dict__)  # noqa: S102 - 测试生成代码的 Click 行为
+        quality = {
+            "status": "empty",
+            "ok": False,
+            "extracts": [{"issues": ["empty list"]}],
+        }
+        module.execute_steps_via_atoms = lambda action_steps, source_url, domain: [  # noqa: ARG005
+            {"ok": True, "command": "browser extract", "data": {"content": []}}
+        ]
+        module.summarize_extract_quality = lambda results, action_steps: quality  # noqa: ARG005
+
+        result = CliRunner().invoke(module.cli, ["list-results", "--json"])
+
+        assert result.exit_code == 0
+        payload = json.loads(result.output)
+        assert payload["ok"] is True
+        assert payload["error"] is None
+        assert payload["data"]["quality"] == quality
+        assert payload["data"]["expects_nonempty"] is False
+
+    def test_generated_list_command_keeps_partial_quality_as_error_when_empty_is_allowed(self):
+        actions = [
+            ActionStep(
+                action_type="extract",
+                page_url="https://example.com",
+                selector=".result",
+                extract_mode="list",
+                fields_map={"title": "h3", "url": "a@href"},
+            )
+        ]
+        commands = [
+            CommandSuggestion(
+                name="list-results",
+                description="查询是否存在结果",
+                args=[],
+                action_steps=[0],
+                expects_nonempty=False,
+            ),
+        ]
+        code = AdapterGenerator(domain="example.com").generate(
+            _make_explore_result(actions=actions, commands=commands),
+            "example.com",
+        )
+        module = types.ModuleType("generated_adapter")
+        exec(code, module.__dict__)  # noqa: S102 - 测试生成代码的 Click 行为
+        quality = {
+            "status": "partial",
+            "ok": False,
+            "extracts": [{"issues": ["field is blank in 1/2 rows: url"]}],
+        }
+        module.execute_steps_via_atoms = lambda action_steps, source_url, domain: [  # noqa: ARG005
+            {"ok": True, "command": "browser extract", "data": {"content": [{"title": "A", "url": ""}]}}
+        ]
+        module.summarize_extract_quality = lambda results, action_steps: quality  # noqa: ARG005
+
+        result = CliRunner().invoke(module.cli, ["list-results", "--json"])
+
+        assert result.exit_code == 0
+        payload = json.loads(result.output)
+        assert payload["ok"] is False
+        assert payload["error"]["code"] == "E_EMPTY_RESULT"
+        assert payload["data"]["expects_nonempty"] is False
 
 
 class TestGeneratedCodeStructure:
@@ -212,6 +300,25 @@ class TestCanonicalActionsPopulated:
         assert meta["canonical_actions"][0]["action_type"] == "navigate"
         assert meta["canonical_actions"][1]["action_type"] == "click"
         assert meta["canonical_actions"][1]["target_ref"] == "ref-1"
+
+    def test_metadata_persists_command_empty_result_expectation(self, tmp_home):
+        result = _make_explore_result(
+            commands=[
+                CommandSuggestion(
+                    name="list-results",
+                    description="检查是否存在结果",
+                    args=[],
+                    action_steps=[],
+                    expects_nonempty=False,
+                )
+            ]
+        )
+        save_adapter("example.com", MINIMAL_CODE, explore_result=result)
+
+        meta_path = tmp_home / ".cliany-site" / "adapters" / "example.com" / "metadata.json"
+        meta = json.loads(meta_path.read_text())
+
+        assert meta["commands"][0]["expects_nonempty"] is False
 
     def test_canonical_actions_empty_without_explore_result(self, tmp_home):
         save_adapter("example.com", MINIMAL_CODE)

@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-07-16
-- **Current baseline:** v0.16.264
+- **Updated:** 2026-07-22
+- **Current baseline:** v0.16.270
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -14,9 +14,11 @@ cliany-site turns real browser workflows into reusable CLI commands. The Q3 road
 - Adapter verification, marketplace packaging, metadata validation, and generated-code security checks.
 - Release readiness and publication checks that keep GitHub Release, PyPI, CI, changelog, website publication, and case catalog validation tied together.
 
-## Near Term: 2026-07-01 to 2026-07-07
+## Near Term: 2026-07-22 to 2026-07-28
 
 The next focus is turning candidate real-world cases into verified active demos.
+
+As of 2026-07-22, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 
 Planned outcomes:
 
@@ -34,7 +36,8 @@ Planned outcomes:
 
 - Make adapter packaging, installation, verification, rollback, and failure hints a documented loop.
 - Expand structured extraction quality checks for search and list pages.
-- Make common failures easier to understand: LLM provider outage, Chrome/CDP connection, page readiness, selector mismatch, empty result, and partial data quality.
+- Let generated list/search commands explicitly declare when zero matches are valid: `expects_nonempty=false` returns `ok=true` for that outcome while retaining `data.quality`; the default remains `true`.
+- Make common failures easier to understand: LLM provider outage, Chrome/CDP connection, page readiness, selector mismatch, unexpected empty result, and partial data quality.
 - Keep generated adapters safe by auditing code before it is written.
 
 ## Late Q3: 2026-07-29 to 2026-08-05

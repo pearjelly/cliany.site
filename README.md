@@ -41,7 +41,7 @@ cliany-site cases
 - **Persistent Sessions** — Maintains Cookie / LocalStorage login states across commands.
 - **Dynamic Adapter Loading** — Automatically registers CLI subcommands by domain, allowing for easy expansion.
 - **Automatic Browser Management** — Manages Chrome debugging instances or experimental Obscura binaries automatically.
-- **Data Extraction with Quality Signals** — Extracts structured page data, saves Markdown reports, and reports empty/partial results through `data.quality` or `E_EMPTY_RESULT` when strict quality is enabled.
+- **Data Extraction with Quality Signals** — Extracts structured page data, saves Markdown reports, and keeps empty/partial results visible through `data.quality`; list/search commands can explicitly accept an expected zero-match result without hiding that quality signal.
 
 ### Developer Experience
 
@@ -241,7 +241,7 @@ cliany-site browser extract \
   --json
 ```
 
-Structured extraction responses include `data.quality`. Generated `list-` and `search-` adapter commands also include that summary and return `E_EMPTY_RESULT` when extraction quality is empty or partially missing required fields, so automation can distinguish "command ran" from "useful data was found".
+Structured extraction responses include `data.quality`. Generated `list-` and `search-` adapter commands also include that summary. Their `expects_nonempty` contract defaults to `true`, preserving the existing strict zero-match behavior and `E_EMPTY_RESULT` response. A command may declare `expects_nonempty=false` when zero matches are a valid outcome: it then returns `ok=true` for that outcome while retaining `data.quality` as the machine-readable row-count and data-quality signal. Missing required fields and partial results, including partially missing required fields, continue to expose the existing quality summary, so automation can distinguish "command ran", "no matching data was expected", and "data needs review".
 
 ### Conversational Exploration (v0.8)
 
