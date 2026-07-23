@@ -73,7 +73,12 @@ def test_release_publication_checks_github_release_and_pypi_visibility(tmp_path,
 
     def fake_fetch_json(url: str):
         if url == "https://api.github.com/repos/pearjelly/cliany.site/releases/latest":
-            return {"tag_name": "v0.1.0", "draft": False, "prerelease": False}
+            return {
+                "tag_name": "v0.1.0",
+                "draft": False,
+                "prerelease": False,
+                "body": "## Fixed\n\nRelease notes for users.",
+            }
         if url == "https://pypi.org/pypi/cliany-site/json":
             return {"info": {"version": "0.1.0"}}
         raise AssertionError(f"unexpected URL: {url}")
@@ -100,6 +105,7 @@ def test_release_publication_checks_github_release_and_pypi_visibility(tmp_path,
         "github_repo": "pearjelly/cliany.site",
         "github_release_tag": "v0.1.0",
         "github_release_published": True,
+        "github_release_notes_status": "present",
         "pypi_project": "cliany-site",
         "pypi_version": "0.1.0",
         "pypi_latest_version": "0.1.0",
@@ -124,7 +130,12 @@ def test_release_publication_accepts_pypi_version_url_when_latest_cache_lags(tmp
     def fake_fetch_json(url: str):
         fetched_urls.append(url)
         if url == "https://api.github.com/repos/pearjelly/cliany.site/releases/latest":
-            return {"tag_name": "v0.1.1", "draft": False, "prerelease": False}
+            return {
+                "tag_name": "v0.1.1",
+                "draft": False,
+                "prerelease": False,
+                "body": "## Fixed\n\nRelease notes for users.",
+            }
         if url == "https://pypi.org/pypi/cliany-site/json":
             return {"info": {"version": "0.1.0"}}
         if url == "https://pypi.org/pypi/cliany-site/0.1.1/json":
@@ -150,6 +161,119 @@ def test_release_publication_accepts_pypi_version_url_when_latest_cache_lags(tmp
     assert payload["distribution"]["pypi_release_version"] == "0.1.1"
     assert payload["distribution"]["issues"] == []
     assert "https://pypi.org/pypi/cliany-site/0.1.1/json" in fetched_urls
+
+
+def test_release_publication_rejects_compare_only_github_release_notes(tmp_path, monkeypatch):
+    repo = _init_repo_with_origin(tmp_path)
+
+    def fake_fetch_json(url: str):
+        if url == "https://api.github.com/repos/pearjelly/cliany.site/releases/latest":
+            return {
+                "tag_name": "v0.1.0",
+                "draft": False,
+                "prerelease": False,
+                "body": "**Full Changelog**: https://github.com/pearjelly/cliany.site/compare/v0.0.9...v0.1.0",
+            }
+        if url == "https://pypi.org/pypi/cliany-site/json":
+            return {"info": {"version": "0.1.0"}}
+        raise AssertionError(f"unexpected URL: {url}")
+
+    monkeypatch.setattr(release_publication, "_fetch_json", fake_fetch_json)
+
+    report = release_publication.build_report(
+        repo,
+        remote_check=True,
+        distribution_check=True,
+        github_repo="pearjelly/cliany.site",
+        pypi_project="cliany-site",
+    )
+
+    payload = report.to_dict()
+    assert report.ok is False
+    assert payload["distribution_ok"] is False
+    assert payload["distribution"]["github_release_notes_status"] == "compare_only"
+    assert payload["distribution"]["issues"] == [
+        "GitHub Release notes are compare_only; replace the automatic compare-only body "
+        "with reviewed notes before considering the release complete."
+    ]
+    assert payload["distribution"]["next_actions"] == [
+        "Replace GitHub Release `v0.1.0` with reviewed user-facing notes before considering the release complete."
+    ]
+
+
+def test_release_publication_rejects_empty_github_release_notes(tmp_path, monkeypatch):
+    repo = _init_repo_with_origin(tmp_path)
+
+    def fake_fetch_json(url: str):
+        if url == "https://api.github.com/repos/pearjelly/cliany.site/releases/latest":
+            return {"tag_name": "v0.1.0", "draft": False, "prerelease": False, "body": "  \n"}
+        if url == "https://pypi.org/pypi/cliany-site/json":
+            return {"info": {"version": "0.1.0"}}
+        raise AssertionError(f"unexpected URL: {url}")
+
+    monkeypatch.setattr(release_publication, "_fetch_json", fake_fetch_json)
+
+    report = release_publication.build_report(
+        repo,
+        remote_check=True,
+        distribution_check=True,
+        github_repo="pearjelly/cliany.site",
+        pypi_project="cliany-site",
+    )
+
+    payload = report.to_dict()
+    assert report.ok is False
+    assert payload["distribution"]["github_release_notes_status"] == "empty"
+    assert payload["distribution"]["next_actions"] == [
+        "Add reviewed user-facing notes to GitHub Release `v0.1.0` before considering the release complete."
+    ]
+
+
+def test_github_release_notes_status_allows_meaningful_compare_links():
+    assert release_publication._github_release_notes_status({"body": None}) == "empty"
+    assert release_publication._github_release_notes_status({"body": "\t"}) == "empty"
+    assert (
+        release_publication._github_release_notes_status(
+            {
+                "body": "## What's Changed\n\n- Fix extraction quality\n\n"
+                "**Full Changelog**: https://github.com/pearjelly/cliany.site/compare/v0.0.9...v0.1.0"
+            }
+        )
+        == "present"
+    )
+
+
+def test_release_publication_skips_notes_for_wrong_github_release_tag(tmp_path, monkeypatch):
+    repo = _init_repo_with_origin(tmp_path)
+
+    def fake_fetch_json(url: str):
+        if url == "https://api.github.com/repos/pearjelly/cliany.site/releases/latest":
+            return {
+                "tag_name": "v0.0.9",
+                "draft": False,
+                "prerelease": False,
+                "body": "## Fixed\n\nRelease notes for a different version.",
+            }
+        if url == "https://pypi.org/pypi/cliany-site/json":
+            return {"info": {"version": "0.1.0"}}
+        raise AssertionError(f"unexpected URL: {url}")
+
+    monkeypatch.setattr(release_publication, "_fetch_json", fake_fetch_json)
+
+    report = release_publication.build_report(
+        repo,
+        remote_check=True,
+        distribution_check=True,
+        github_repo="pearjelly/cliany.site",
+        pypi_project="cliany-site",
+    )
+
+    payload = report.to_dict()
+    assert report.ok is False
+    assert payload["distribution"]["github_release_notes_status"] is None
+    assert payload["distribution"]["issues"] == [
+        "GitHub Release latest tag v0.0.9 != v0.1.0"
+    ]
 
 
 def test_release_publication_reports_unpushed_release_commit_and_tag(tmp_path):
@@ -315,6 +439,39 @@ def test_release_publication_text_output_includes_next_actions(tmp_path, capsys)
     assert "Push `master` to `origin`" in output
     assert "publish_commands:" in output
     assert "git push origin master" in output
+
+
+def test_release_publication_reports_release_notes_status_in_text_and_markdown(tmp_path, monkeypatch, capsys):
+    repo = _init_repo_with_origin(tmp_path)
+
+    def fake_fetch_json(url: str):
+        if url == "https://api.github.com/repos/pearjelly/cliany.site/releases/latest":
+            return {
+                "tag_name": "v0.1.0",
+                "draft": False,
+                "prerelease": False,
+                "body": "## Fixed\n\nRelease notes for users.",
+            }
+        if url == "https://pypi.org/pypi/cliany-site/json":
+            return {"info": {"version": "0.1.0"}}
+        raise AssertionError(f"unexpected URL: {url}")
+
+    monkeypatch.setattr(release_publication, "_fetch_json", fake_fetch_json)
+    report = release_publication.build_report(
+        repo,
+        remote_check=True,
+        distribution_check=True,
+        github_repo="pearjelly/cliany.site",
+        pypi_project="cliany-site",
+    )
+
+    release_publication._print_text(report)
+    output = capsys.readouterr().out
+    assert "github_release_notes_status: present" in output
+
+    report_path = tmp_path / "reports" / "publication.md"
+    release_publication._write_markdown_report(report, report_path)
+    assert "- github_release_notes_status: `present`" in report_path.read_text(encoding="utf-8")
 
 
 def test_release_publication_writes_markdown_report(tmp_path):
@@ -592,7 +749,12 @@ def test_release_publication_cli_accepts_distribution_check(tmp_path, monkeypatc
 
     def fake_fetch_json(url: str):
         if url == "https://api.github.com/repos/pearjelly/cliany.site/releases/latest":
-            return {"tag_name": "v0.1.0", "draft": False, "prerelease": False}
+            return {
+                "tag_name": "v0.1.0",
+                "draft": False,
+                "prerelease": False,
+                "body": "## Fixed\n\nRelease notes for users.",
+            }
         if url == "https://pypi.org/pypi/cliany-site/json":
             return {"info": {"version": "0.1.0"}}
         raise AssertionError(f"unexpected URL: {url}")
@@ -617,4 +779,5 @@ def test_release_publication_cli_accepts_distribution_check(tmp_path, monkeypatc
     assert payload["distribution_checked"] is True
     assert payload["distribution_ok"] is True
     assert payload["distribution"]["github_release_tag"] == "v0.1.0"
+    assert payload["distribution"]["github_release_notes_status"] == "present"
     assert payload["distribution"]["pypi_version"] == "0.1.0"

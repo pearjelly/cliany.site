@@ -23,7 +23,8 @@
 3. 实现或补证据后运行 `python scripts/release_readiness.py --strict --target-version X.Y.Z`、`python scripts/validate_cases.py --strict`，必要时加相关 `pytest` 或 `qa/*.sh`。target-mode 允许在项目版本已经 bump、上一版 tag 仍为 latest 的待发状态运行；创建 tag 后必须改用 `--release-tag` 做严格校验。
 4. 更新 `CHANGELOG.md`、`pyproject.toml`、README/README.zh/官网中受影响入口。
 5. 创建并推送 `vX.Y.Z` tag，等待 `.github/workflows/release.yml` 更新 GitHub Release 和 PyPI。
-6. 对官网有影响时按 `AGENTS.md` 的 Vercel 步骤在 `site/` 部署，并在 release notes 里记录官网同步。
+6. workflow 成功后，用 `gh release edit vX.Y.Z --repo pearjelly/cliany.site --notes-file docs/releases/vX.Y.Z-github-release.md` 写入已审阅的用户可读 Release Notes；再用 `gh release view vX.Y.Z --repo pearjelly/cliany.site --json body` 确认 body 不是只有自动生成的 `Full Changelog` compare 链接。
+7. 对官网有影响时按 `AGENTS.md` 的 Vercel 步骤在 `site/` 部署，并在 release notes 里记录官网同步。
 
 ## 周节奏
 
@@ -61,6 +62,7 @@
 - [ ] 对 CLI 或 adapter 行为有影响时，运行相关 `qa/*.sh` 脚本。
 - [ ] 对官网有影响时，按 `AGENTS.md` 的 Vercel 步骤部署 `site/`。
 - [ ] tag 使用 `vX.Y.Z` 格式，触发 `.github/workflows/release.yml`。
+- [ ] GitHub Release body 使用对应 `docs/releases/vX.Y.Z-github-release.md` 更新，且不是只有 `Full Changelog` compare 链接。
 
 如果某项无法完成，必须在 CHANGELOG 或 release notes 中说明原因和风险。
 
@@ -130,6 +132,8 @@ CI 的 `Release Readiness Report` job 会在 PR/主分支生成 `release-readine
 发布 workflow 会先清理 `dist/`，再运行 `uv build` 和 `uvx twine check dist/*`，用于在 GitHub Release 和 PyPI 发布前发现 wheel/sdist 元数据问题，并避免历史构建产物污染检查结果。
 
 `check_release_publication.py` 用于发布后的本地审计：默认只读取本地 upstream 跟踪信息，不访问网络；传入 `--remote` 时会用 `git ls-remote` 检查实时远端 branch 和 tag refs。发布 workflow 完成后，再传入 `--distribution` 可显式检查 GitHub Release latest tag 与 PyPI 是否暴露最新本地 tag 对应的版本；JSON 会输出 `distribution_checked`、`distribution_ok`、`distribution.github_release_tag`、`distribution.pypi_version`、`distribution.pypi_latest_version`、`distribution.pypi_release_version` 和 `distribution.next_actions`。当 PyPI project latest JSON 仍缓存旧版本时，审计会继续读取版本专属 JSON；只要目标版本 endpoint 存在且带发布文件，`pypi_version` 会记录目标版本、`pypi_latest_version` 会保留旧 latest、`pypi_release_version` 会记录版本专属 endpoint 的版本。它会报告当前分支相对 upstream 的 ahead/behind、最新 tag 是否指向 HEAD、tag commit 是否已进入 upstream，以及需要执行的 `next_actions`。JSON、文本和 Markdown report 还会输出 `worktree_clean`、`worktree_status` 和 `publish_commands`，把 `git push origin master`、`git push origin vX.Y.Z` 和 `python scripts/check_release_publication.py --remote --json` 这类可复制命令放在一起；如果 worktree 不干净，`next_actions` 会先要求提交、stash 或丢弃本地改动，`publish_commands` 只保留重新运行 publication audit 的命令，避免维护者从 JSON 里直接复制 push。传入 `--report /tmp/cliany-release-publication.md` 时会保存 Markdown 报告，便于发版复盘或 CI artifact 留档；传入 `--publish-script /tmp/cliany-publish-release.sh` 时会写出可审阅的 shell 脚本并设置可执行权限，脚本顶部会带 `Publication context` 注释，列出 repo_root、branch、upstream、latest_tag、local_head、tag_commit、ahead_count 和 remote_checked，方便维护者确认脚本对应的本地 release。脚本执行时会先进入 `REPO_ROOT`，确认 `git rev-parse --show-toplevel` 仍是生成时的仓库根目录，再用 `EXPECTED_LOCAL_HEAD`、`EXPECTED_LATEST_TAG` 和 `EXPECTED_TAG_COMMIT` 做本地 stale preflight，并运行 `git status --porcelain` 确认工作区干净；如果当前 repo root、HEAD、latest tag、tag commit 或 worktree 状态已经变化，会打印 `Publish script is stale` 并退出，不执行后续 push。 当本地已经完成 tag 但尚未公开发布时，先运行 `python scripts/check_release_publication.py --json --publish-script /tmp/cliany-publish-release.sh`，确认需要 push 的 branch/tag，再由维护者手动决定是否触发真实 GitHub Release/PyPI 流程；tag workflow 完成后运行 `python scripts/check_release_publication.py --remote --distribution --json` 作为最终公开渠道审计。
+
+`check_release_publication.py --distribution` 还会输出 `distribution.github_release_notes_status`：空 body 为 `empty`，只有自动 compare 链接的 body 为 `compare_only`，有用户可读内容时为 `present`。前两种状态会让严格公开审计失败；`github_release_notes_status` 只在目标 tag 的正式 GitHub Release 已被读取时出现，避免用旧版本的 body 掩盖 tag 不匹配。
 
 `check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、当天 release tag 数量是否不超过 3、`CHANGELOG.md` Unreleased 是否有内容、`[Unreleased]` compare 链接是否指向最新 tag 到 `HEAD`，以及工作区是否干净。默认模式用于观察，`--strict` 用于发版前拦截；`--max-daily-releases` 可在 `check_release_cadence.py`、`release_readiness.py` 和 `plan_next_iteration.py` 三个入口使用，默认值为 3。周提交天数通过 `weekly_commit_cadence_ok`、`missing_commit_days` 和 cadence `next_actions` 暴露为周节奏提醒，不作为当天合格 release tag 的硬阻塞；发版硬门禁仍会拦截超过每日发布上限、tag/version 不一致、CHANGELOG 缺失、compare 链接漂移或工作区未清理。
 

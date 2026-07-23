@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import shlex
 import subprocess
 import sys
@@ -17,6 +18,9 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+_COMPARE_ONLY_RELEASE_NOTES = re.compile(
+    r"^\*\*Full Changelog\*\*:\s*https://github\.com/[^/\s]+/[^/\s]+/compare/\S+\s*$"
+)
 
 
 @dataclass(frozen=True)
@@ -28,6 +32,7 @@ class DistributionReport:
     github_repo: str | None
     github_release_tag: str | None
     github_release_published: bool | None
+    github_release_notes_status: str | None
     pypi_project: str | None
     pypi_version: str | None
     pypi_latest_version: str | None
@@ -45,6 +50,7 @@ class DistributionReport:
             "github_repo": self.github_repo,
             "github_release_tag": self.github_release_tag,
             "github_release_published": self.github_release_published,
+            "github_release_notes_status": self.github_release_notes_status,
             "pypi_project": self.pypi_project,
             "pypi_version": self.pypi_version,
             "pypi_latest_version": self.pypi_latest_version,
@@ -242,6 +248,15 @@ def _infer_github_repo(root: Path) -> str | None:
     return _github_repo_from_url(remote_url) if remote_url else None
 
 
+def _github_release_notes_status(payload: dict[str, Any]) -> str:
+    body = str(payload.get("body") or "").strip()
+    if not body:
+        return "empty"
+    if _COMPARE_ONLY_RELEASE_NOTES.fullmatch(body):
+        return "compare_only"
+    return "present"
+
+
 def _build_distribution_report(
     root: Path,
     *,
@@ -260,6 +275,7 @@ def _build_distribution_report(
             github_repo=github_repo,
             github_release_tag=None,
             github_release_published=None,
+            github_release_notes_status=None,
             pypi_project=pypi_project,
             pypi_version=None,
             pypi_latest_version=None,
@@ -273,6 +289,7 @@ def _build_distribution_report(
     issues: list[str] = []
     github_release_tag = None
     github_release_published = None
+    github_release_notes_status = None
     pypi_version = None
     pypi_latest_version = None
     pypi_release_version = None
@@ -295,6 +312,18 @@ def _build_distribution_report(
             if not github_release_published:
                 issues.append(
                     f"GitHub Release latest tag {github_release_tag or '(missing)'} != {latest_tag}"
+                )
+            else:
+                github_release_notes_status = _github_release_notes_status(github_payload)
+            if github_release_notes_status == "empty":
+                issues.append(
+                    "GitHub Release notes are empty; add reviewed user-facing notes "
+                    "before considering the release complete."
+                )
+            elif github_release_notes_status == "compare_only":
+                issues.append(
+                    "GitHub Release notes are compare_only; replace the automatic compare-only body "
+                    "with reviewed notes before considering the release complete."
                 )
         except Exception as exc:  # noqa: BLE001 - report network/API failures as audit evidence.
             issues.append(f"GitHub Release check failed: {exc}")
@@ -347,6 +376,7 @@ def _build_distribution_report(
         github_repo=resolved_github_repo,
         github_release_tag=github_release_tag,
         github_release_published=github_release_published,
+        github_release_notes_status=github_release_notes_status,
         pypi_project=resolved_pypi_project,
         pypi_version=pypi_version,
         pypi_latest_version=pypi_latest_version,
@@ -501,6 +531,16 @@ def _distribution_next_actions(report: DistributionReport) -> list[str]:
             actions.append(
                 f"Wait for or repair GitHub Release `{report.expected_tag}` before considering the release complete."
             )
+        elif issue.startswith("GitHub Release notes are empty"):
+            actions.append(
+                f"Add reviewed user-facing notes to GitHub Release `{report.expected_tag}` "
+                "before considering the release complete."
+            )
+        elif issue.startswith("GitHub Release notes are compare_only"):
+            actions.append(
+                f"Replace GitHub Release `{report.expected_tag}` with reviewed user-facing notes "
+                "before considering the release complete."
+            )
         elif issue.startswith("PyPI latest version"):
             actions.append(
                 f"Wait for or repair PyPI version `{report.expected_version}` before considering the release complete."
@@ -653,6 +693,7 @@ def _print_text(report: PublicationReport) -> None:
         print(f"- github_repo: {report.distribution.github_repo or '(none)'}")
         print(f"- github_release_tag: {report.distribution.github_release_tag or '(none)'}")
         print(f"- github_release_published: {report.distribution.github_release_published}")
+        print(f"- github_release_notes_status: {report.distribution.github_release_notes_status}")
         print(f"- pypi_project: {report.distribution.pypi_project or '(none)'}")
         print(f"- pypi_version: {report.distribution.pypi_version or '(none)'}")
         print(f"- pypi_latest_version: {report.distribution.pypi_latest_version or '(none)'}")
@@ -767,6 +808,7 @@ def _write_markdown_report(report: PublicationReport, path: Path) -> None:
                 f"- github_repo: `{_format_value(report.distribution.github_repo)}`",
                 f"- github_release_tag: `{_format_value(report.distribution.github_release_tag)}`",
                 f"- github_release_published: `{_format_bool(report.distribution.github_release_published)}`",
+                f"- github_release_notes_status: `{_format_value(report.distribution.github_release_notes_status)}`",
                 f"- pypi_project: `{_format_value(report.distribution.pypi_project)}`",
                 f"- pypi_version: `{_format_value(report.distribution.pypi_version)}`",
                 f"- pypi_latest_version: `{_format_value(report.distribution.pypi_latest_version)}`",

@@ -11614,6 +11614,22 @@ def test_v016273_release_draft_tracks_doctor_active_demo_path() -> None:
         assert snippet in text
 
 
+def test_v016273_github_release_notes_are_user_facing() -> None:
+    text = (ROOT / "docs" / "releases" / "v0.16.273-github-release.md").read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.273",
+        "## What Changed",
+        "demo_adapter_quickstart",
+        "Apache Jira",
+        "## Trust Boundaries",
+        "E_LLM_UNAVAILABLE",
+        "No third-party business result",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
 def test_v016274_release_draft_tracks_generated_data_command_quality() -> None:
     text = (ROOT / "docs" / "releases" / "v0.16.274-draft.md").read_text(encoding="utf-8")
 
@@ -11635,8 +11651,28 @@ def test_v016274_release_draft_tracks_generated_data_command_quality() -> None:
         "release_readiness.py --strict --target-version 0.16.274 --remote --remote-name origin",
         "git tag v0.16.274",
         "release_readiness.py --strict --release-tag v0.16.274 --remote --remote-name origin",
+        "gh release edit v0.16.274 --repo pearjelly/cliany.site --notes-file docs/releases/v0.16.274-github-release.md",
+        "gh release view v0.16.274 --repo pearjelly/cliany.site --json body",
         "vercel inspect www.cliany.site --wait --timeout 90s",
         "check_release_publication.py --strict --remote --distribution --json",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_v016274_github_release_notes_are_user_facing() -> None:
+    text = (ROOT / "docs" / "releases" / "v0.16.274-github-release.md").read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.274",
+        "## What Changed",
+        "data.quality",
+        "E_EMPTY_RESULT",
+        "expects_nonempty=false",
+        "## Compatibility",
+        "not silently rewritten",
+        "## Verification",
+        "No live LLM",
     ]
     for snippet in required:
         assert snippet in text

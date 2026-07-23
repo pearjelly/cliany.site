@@ -53,6 +53,10 @@ def test_release_cadence_doc_explains_readiness_triage():
         "每日发布循环",
         "standard_release_flow_primary_next_action",
         "GitHub Release 和 PyPI",
+        "gh release edit vX.Y.Z --repo pearjelly/cliany.site --notes-file docs/releases/vX.Y.Z-github-release.md",
+        "gh release view vX.Y.Z --repo pearjelly/cliany.site --json body",
+        "distribution.github_release_notes_status",
+        "compare_only",
         "project_metadata",
         "package_gate",
     ]
