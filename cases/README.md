@@ -28,6 +28,16 @@
 | `crates-io-crate-search` | crates.io crate 搜索 | candidate | Rust 包注册表搜索候选；样例输出见 [crates-io-crate-search.json](examples/crates-io-crate-search.json)，待生成 adapter 包和在线 smoke 后晋级 active |
 | `search-extraction-gap` | 搜索结果抽取复盘 | known-gap | 明确「页面交互强、列表抽取弱」的产品边界 |
 
+## Active Demo Downloads
+
+四个 `active` 案例的首条 `commands` 已是可复制的 GitHub Release v0.14.1 HTTPS 安装命令，并固定对应 archive 的 SHA-256。先用下面命令查看并复制该案例的完整安装和 replay 路径；需要无写入预检时，在安装命令末尾追加 `--dry-run --json`。
+
+```bash
+cliany-site cases --case-id suitecrm-accounts
+```
+
+这些历史 demo asset 已验证可以被当前 `market install` 读取，但本目录不把第三方站点的实时可用性或在线 replay 结果当作永久承诺。
+
 ## Candidate Cases
 
 `candidate` 表示真实公开只读工作流已经进入案例管道，但尚未承诺已有 release adapter 包。候选案例必须有期望命令、离线样例输出、`promotion` 清单和 `promotion_evidence` 状态；当 adapter 包、metadata 校验和在线只读 smoke 都准备好后，再改为 `active`。

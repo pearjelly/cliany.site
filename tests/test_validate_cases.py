@@ -266,6 +266,36 @@ def test_current_cases_manifest_validates_without_packages():
             "online_smoke",
         ]
 
+    expected_active_installs = {
+        "demo.suiteondemand.com": (
+            "https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/"
+            "demo.suiteondemand.com-0.14.1.cliany-adapter.tar.gz",
+            "1671dd92d3828cecb1f04f41eefceb7bdc727d0dee1f35d4f14ca360432ced31",
+        ),
+        "issues.apache.org": (
+            "https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/"
+            "issues.apache.org-0.14.1.cliany-adapter.tar.gz",
+            "ad5867d361f372914c536fb59c8f26837af96ed407859cf69dc8464922f05319",
+        ),
+        "cwiki.apache.org": (
+            "https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/"
+            "cwiki.apache.org-0.14.1.cliany-adapter.tar.gz",
+            "effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa",
+        ),
+        "builds.apache.org": (
+            "https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/"
+            "builds.apache.org-0.14.1.cliany-adapter.tar.gz",
+            "b09710acbabfb5465a6e04b5b140a4ffa4aa24795a2b4ada60eeabbddddea0c2",
+        ),
+    }
+    active_cases = [
+        case for case in report.to_dict()["cases"] if case["status"] == "active"
+    ]
+    assert {case["adapter_domain"] for case in active_cases} == set(expected_active_installs)
+    for case in active_cases:
+        url, sha256 = expected_active_installs[case["adapter_domain"]]
+        assert case["commands"][0] == f"cliany-site market install {url} --sha256 {sha256}"
+
 
 def test_cases_report_flags_duplicate_ids(tmp_path):
     _write_cases(tmp_path, [_case("dup"), _case("dup")])
@@ -306,6 +336,21 @@ def test_cases_report_rejects_install_package_domain_mismatch(tmp_path):
 
     assert report.ok is False
     assert "install package domain mismatch" in report.cases[0].issues[0]
+
+
+def test_cases_report_accepts_release_asset_install_command(tmp_path):
+    case = _case(domain="demo.example.com")
+    case["commands"][0] = (
+        "cliany-site market install "
+        "https://github.com/example/project/releases/download/v0.1.0/"
+        "demo.example.com-0.1.0.cliany-adapter.tar.gz "
+        "--sha256 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    )
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is True
 
 
 def test_cases_report_rejects_adapter_command_domain_mismatch(tmp_path):

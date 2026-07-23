@@ -241,6 +241,10 @@ def _install_package_name(case: dict[str, Any]) -> str | None:
     return None
 
 
+def _matches_adapter_package_domain(package_name: str, adapter_domain: str) -> bool:
+    return package_name.startswith((f"{adapter_domain}.", f"{adapter_domain}-"))
+
+
 def _command_parts(command: Any) -> list[str]:
     try:
         return shlex.split(str(command))
@@ -732,7 +736,7 @@ def _check_case(
                 check.issues.append(f"command must start with cliany-site: {command}")
         if adapter_domain:
             package_name = _install_package_name(case)
-            if package_name and not package_name.startswith(f"{adapter_domain}."):
+            if package_name and not _matches_adapter_package_domain(package_name, adapter_domain):
                 check.issues.append(
                     f"install package domain mismatch: expected prefix {adapter_domain!r}, got {package_name!r}"
                 )

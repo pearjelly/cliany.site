@@ -276,6 +276,7 @@ async with ClanySite() as cs:
 
 以下适配器可在 [GitHub Release v0.14.1](https://github.com/pearjelly/cliany.site/releases/tag/v0.14.1) 的资源中下载。
 可维护案例索引见 [cases/README.md](cases/README.md) 与 [cases/manifest.json](cases/manifest.json)。
+下面的安装命令使用已发布的 HTTPS 资源及其 release SHA-256；只想检查包时，可先追加 `--dry-run --json`，不会安装。
 可以运行 `cliany-site cases --json`，直接从 CLI 查看 active demo、candidate 工作流、离线验证命令和 candidate 晋级下一步；`promotion_evidence_summary.primary_next_task` 会把自动化指向第一个待推进的 candidate 任务，`promotion_evidence_summary.primary_next_task_acceptance_criteria` 会直接给出该任务必须贴上的完成证据。追加 `--promotion-plan` 可直接输出所有匹配 candidate 的晋级队列；同时加 `--json` 可读取 `promotion_plan.primary_next_item`、`promotion_plan.primary_runbook`、`promotion_plan.primary_issue_template_command`、每个 candidate 的首要任务、预期 release asset 名称 `expected_adapter_package`、每个 candidate 的 `issue_template_json_command` 和未完成 `task_queue`。使用 `cliany-site cases --case-id pypi-project-search --json` 可以展开单个案例的验证和晋级详情，包括 `promotion_command_plan_summary`；去掉 `--json` 时会输出适合复制交接的 Promotion Tasks。candidate human handoff 现在也会渲染 `preflight_required`、`preflight_blocker` 和 `runbook_first`，让贡献者在开始真实 `explore` 前先看到 live LLM gate。追加 `--issue-template` 可直接打印带 Acceptance Criteria、`expected_adapter_package`、`Primary Runbook`、LLM preflight `Command SHA-256`、`Promotion Command Plan Summary`、`Promotion Command Plan` 的 `command_sha256` 子行和 `source` / `missing` 元数据、标准 LLM/doctor blocker comments 和 `Doctor Preflight Evidence Fields` 的 candidate 晋级 GitHub issue body；同时加 `--json` 会额外输出 `issue_template_promotion_command_plan_summary`，以及带同一组 acceptance、runbook、preflight 字段、结构化 `doctor_preflight_evidence_template` 映射和 `doctor_preflight_evidence_template_field_count` / `doctor_preflight_evidence_template_sha256` 的 `issue_template_primary_task`，让自动化不用解析 Markdown 就能读取首要待补证据任务。追加 `--evidence-bundle` 可输出结构化本地证据清单；再加 `--json` 可得到机器可读的 evidence bundle，其中 `promotion_command_plan_summary` 会汇总命令数量、缺失数量和 all-declared 状态，`promotion_command_plan` 会先列出 `llm_live_preflight`，再列出 adapter package、metadata validation 和 online smoke 的执行命令，并为每条命令提供 `promotion_command_plan[*].command_sha256` 漂移检查；`primary_next_task_runbook` 与 `primary_next_task_runbook_first_command` 会给出当前首要任务的有序 checklist 和第一条应执行命令，adapter package 任务会带 `llm_live_preflight_required`、`llm_live_preflight_command_sha256`、`doctor_preflight_evidence_fields`、`doctor_preflight_evidence_template` 与模板 count/hash 别名，`expected_adapter_package` 会给出应上传/校验的包名模板，`acceptance_criteria` 会列出每个证据任务必须附上的完成证明。运行 `python scripts/plan_next_iteration.py --issues-dir /tmp/cliany-candidate-issues` 可生成可审阅的候选 issue artifacts；planner JSON 会输出 `candidate_promotions[*].issue_template_command`、`candidate_promotions[*].issue_template_json_command`、`candidate_promotions[*].promotion_command_plan_summary`、`candidate_promotions[*].doctor_preflight_evidence_template` 与模板 count/hash 别名，`issue-metadata.json` 和 artifacts README 也会把同源的 Issue Template / Issue Template JSON 交接命令、`promotion_command_plan_summary`、`Primary Evidence Status`、`Primary Acceptance Criteria`、`primary_next_task_acceptance_criteria`、compact 的 `case_promotion_evidence_primary_runbook_steps` / hash 字段、`case_promotion_evidence_primary_runbook_first_command`、`case_promotion_evidence_primary_llm_live_preflight_required`、`case_promotion_evidence_primary_llm_live_preflight_command_sha256`、`case_promotion_evidence_primary_llm_live_preflight_blocker_comment`、`case_promotion_evidence_primary_doctor_preflight_blocker_comment`、`case_promotion_evidence_primary_doctor_preflight_evidence_template_sha256`、`case_promotion_doctor_preflight_evidence_template_sha256`、`doctor_preflight_evidence_fields`、`required_labels`、`required_label_count`、`required_labels_sha256`，以及 `case_promotion_llm_live_preflight_evidence_fields` 的数量和 hash 别名一起展示，便于维护者先比较 artifact 是否漂移。Candidate 晋级会把 `summary.capabilities.run_browser_workflows.ready=false`、`summary.llm_live_preflight.ready=false`、`generate_adapters.ready=false` 或任意 `llm_live` warning/error（例如 `E_LLM_UNAVAILABLE` provider connection failure）视为 blocker 证据，此时保持 `adapter_package` pending 或 blocked，不伪造 adapter package 证明。
 `--promotion-plan --json` 还会把 doctor template 漂移元数据同步到 `promotion_plan.primary_doctor_preflight_evidence_template_field_count`、`promotion_plan.primary_doctor_preflight_evidence_template_sha256`、`promotion_plan.primary_llm_live_preflight_command_sha256`、每个 candidate 的 `primary_doctor_preflight_evidence_template_sha256`，以及每个未完成 `task_queue[*].doctor_preflight_evidence_template_sha256` / `task_queue[*].llm_live_preflight_command_sha256`；只读取候选队列的机器人不用打开完整 evidence bundle，也能比对当前 doctor 证据契约。
 `scripts/validate_cases.py --json` 也会在 `promotion_evidence_summary.primary_next_task.doctor_preflight_evidence_template_sha256` 暴露同源漂移信号；`scripts/validate_cases.py --report` 会在 Candidate Promotion Evidence Summary 表格中渲染 `primary_doctor_preflight_evidence_template_field_count` 与 `primary_doctor_preflight_evidence_template_sha256`；纯文本 `scripts/validate_cases.py --strict` 也会打印 `promotion_evidence_primary_doctor_preflight_evidence_template_field_count`、`promotion_evidence_primary_doctor_preflight_evidence_template_sha256` 和 `promotion_evidence_primary_llm_live_preflight_command_sha256`，方便只保存 stdout 的验证日志直接比对。
@@ -285,7 +286,7 @@ async with ClanySite() as cs:
 ### SuiteCRM Demo (企业 CRM)
 ```bash
 # 1. 安装适配器
-cliany-site market install ./demo.suiteondemand.com.cliany-adapter-v0.14.0.tar.gz
+cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/demo.suiteondemand.com-0.14.1.cliany-adapter.tar.gz --sha256 1671dd92d3828cecb1f04f41eefceb7bdc727d0dee1f35d4f14ca360432ced31
 
 # 2. 登录 (会打开浏览器 — 请使用 https://demo.suiteondemand.com/ 提供的 demo 账号)
 cliany-site login https://demo.suiteondemand.com/
@@ -296,19 +297,19 @@ cliany-site demo.suiteondemand.com list-accounts --limit 5 --json
 
 ### ASF Jira (任务追踪)
 ```bash
-cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz
+cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/issues.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 ad5867d361f372914c536fb59c8f26837af96ed407859cf69dc8464922f05319
 cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json
 ```
 
 ### ASF Confluence (Wiki)
 ```bash
-cliany-site market install ./cwiki.apache.org.cliany-adapter-v0.14.0.tar.gz
+cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/cwiki.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa
 cliany-site cwiki.apache.org search-pages --space SPARK --query "release" --json
 ```
 
 ### ASF Jenkins (构建状态)
 ```bash
-cliany-site market install ./builds.apache.org.cliany-adapter-v0.14.0.tar.gz
+cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/builds.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 b09710acbabfb5465a6e04b5b140a4ffa4aa24795a2b4ada60eeabbddddea0c2
 cliany-site builds.apache.org list-jobs --json
 ```
 

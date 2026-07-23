@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+- Active SuiteCRM, Jira, Confluence, and Jenkins cases now publish their real GitHub Release v0.14.1 HTTPS adapter URLs with pinned SHA-256 digests instead of nonexistent local `0.14.0` archive names.
+- Case catalog validation now accepts the standard `<domain>-<version>.cliany-adapter.tar.gz` release-asset filename alongside the legacy local filename pattern.
+
 ## [0.16.271] - 2026-07-23
 
 ### Added

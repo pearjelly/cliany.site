@@ -11561,12 +11561,34 @@ def test_v016271_release_draft_tracks_merged_empty_result_expectations() -> None
         assert snippet in text
 
 
+def test_v016272_release_draft_tracks_verified_active_demo_assets() -> None:
+    text = (ROOT / "docs" / "releases" / "v0.16.272-draft.md").read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.272 发布草案",
+        "**目标版本：** `0.16.272`",
+        "**提交范围：** `v0.16.271..HEAD`",
+        "**提交范围：** `v0.16.272..HEAD`",
+        "GitHub Release v0.14.1",
+        "--dry-run --json",
+        "E_LLM_UNAVAILABLE",
+        "llm_live_preflight_not_ready",
+        "cases/manifest.json",
+        "scripts/validate_cases.py",
+        "tests/test_validate_cases.py",
+        "release_readiness.py --strict --target-version 0.16.272 --remote --remote-name origin",
+        "git tag v0.16.272",
+        "release_readiness.py --strict --release-tag v0.16.272 --remote --remote-name origin",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
 def test_v016271_changelog_is_finalized() -> None:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.271]", 1)[0]
     release = text.split("## [0.16.271]", 1)[1].split("## [0.16.270]", 1)[0]
 
-    assert unreleased.strip() == ""
     assert "## [0.16.271] - 2026-07-23" in text
     assert "expects_nonempty=false" in release
     assert "schema-v3 metadata" in release

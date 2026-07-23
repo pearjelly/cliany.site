@@ -10,7 +10,7 @@
     "docs": "README.md#suitecrm-demo-enterprise-crm",
     "example_output": "cases/examples/suitecrm-accounts.json",
     "commands": [
-      "cliany-site market install ./demo.suiteondemand.com.cliany-adapter-v0.14.0.tar.gz",
+      "cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/demo.suiteondemand.com-0.14.1.cliany-adapter.tar.gz --sha256 1671dd92d3828cecb1f04f41eefceb7bdc727d0dee1f35d4f14ca360432ced31",
       "cliany-site login https://demo.suiteondemand.com/",
       "cliany-site demo.suiteondemand.com list-accounts --limit 5 --json"
     ],
@@ -33,7 +33,7 @@
     "docs": "README.md#asf-jira-issue-tracker",
     "example_output": "cases/examples/apache-jira-issues.json",
     "commands": [
-      "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz",
+      "cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/issues.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 ad5867d361f372914c536fb59c8f26837af96ed407859cf69dc8464922f05319",
       "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json"
     ],
     "validation": {
@@ -55,7 +55,7 @@
     "docs": "README.md#asf-confluence-wiki",
     "example_output": "cases/examples/apache-confluence-search.json",
     "commands": [
-      "cliany-site market install ./cwiki.apache.org.cliany-adapter-v0.14.0.tar.gz",
+      "cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/cwiki.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa",
       "cliany-site cwiki.apache.org search-pages --space SPARK --query \"release\" --json"
     ],
     "validation": {
@@ -77,7 +77,7 @@
     "docs": "README.md#asf-jenkins-build-status",
     "example_output": "cases/examples/apache-jenkins-jobs.json",
     "commands": [
-      "cliany-site market install ./builds.apache.org.cliany-adapter-v0.14.0.tar.gz",
+      "cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/builds.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 b09710acbabfb5465a6e04b5b140a4ffa4aa24795a2b4ada60eeabbddddea0c2",
       "cliany-site builds.apache.org list-jobs --json"
     ],
     "validation": {

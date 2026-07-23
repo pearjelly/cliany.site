@@ -19,7 +19,7 @@ const I18N = {
   'try.check.title': { zh: '检查就绪状态', en: 'Check readiness' },
   'try.check.body': { zh: '查看适合你当前机器的下一步建议。', en: 'Read the human-friendly next step for your machine.' },
   'try.cases.title': { zh: '选择维护中的案例', en: 'Choose a maintained example' },
-  'try.cases.body': { zh: '在为自己的工作流配置 Chrome/CDP 或 LLM 前，先浏览公开案例及其当前验证路径。', en: 'Browse public cases and their current validation paths before you configure Chrome/CDP or an LLM for your own workflow.' },
+  'try.cases.body': { zh: '在为自己的工作流配置 Chrome/CDP 或 LLM 前，先浏览公开案例、验证路径和已发布 demo 的固定安装命令。', en: 'Browse public cases, their validation paths, and pinned install commands for published demos before you configure Chrome/CDP or an LLM for your own workflow.' },
   'try.guide': { zh: '查看 10 分钟指南 →', en: 'Follow the 10-minute guide →' },
 
   'terminal.connecting': { zh: '✓ 正在连接 Chrome CDP...', en: '✓ Connecting to Chrome CDP...' },
@@ -185,8 +185,8 @@ const I18N = {
   },
   'qs.maintainer.title': { zh: '维护者循环', en: 'Maintainer Loop' },
   'qs.maintainer.desc': {
-    zh: '当前基线：v0.16.271。使用每天 1~3 个版本的发布循环、每周维护者循环、release readiness 的 next_actions、官网 alias inspect 和 PyPI 版本专属发布审计，把路线图拆成小而可验证的发布切片。运行 <code>cliany-site market publish github.com --version 1.0.0 --json</code>；成功输出的 <code>data.package_sha256</code> 是完成归档的 64 个字符小写十六进制 SHA-256 摘要，应交接给安装方。将该值用于通用直接 HTTPS URL 的 <code>--sha256 &lt;64-hex-sha256&gt;</code>，或使用 <code>cliany-site market install &lt;package&gt; --dry-run --json</code> 预检本地包。',
-    en: 'Current baseline: v0.16.271. Use the 1-3 releases/day loop, weekly maintainer loop, release readiness next_actions, website alias inspect, and PyPI version-specific publication audit to turn the roadmap into small verified releases. Use <code>cliany-site market publish github.com --version 1.0.0 --json</code>; its successful <code>data.package_sha256</code> is the lowercase 64-character hexadecimal SHA-256 of the completed archive to hand to the installer. Use that value with the generic direct HTTPS URL and <code>--sha256 &lt;64-hex-sha256&gt;</code>, or run <code>cliany-site market install &lt;package&gt; --dry-run --json</code> for a local preflight.'
+    zh: '当前基线：v0.16.272。使用每天 1~3 个版本的发布循环、每周维护者循环、release readiness 的 next_actions、官网 alias inspect 和 PyPI 版本专属发布审计，把路线图拆成小而可验证的发布切片。active demo 现在提供已验证的 GitHub Release URL 和 SHA-256 安装预检。运行 <code>cliany-site market publish github.com --version 1.0.0 --json</code>；成功输出的 <code>data.package_sha256</code> 是完成归档的 64 个字符小写十六进制 SHA-256 摘要，应交接给安装方。将该值用于通用直接 HTTPS URL 的 <code>--sha256 &lt;64-hex-sha256&gt;</code>，或使用 <code>cliany-site market install &lt;package&gt; --dry-run --json</code> 预检本地包。',
+    en: 'Current baseline: v0.16.272. Use the 1-3 releases/day loop, weekly maintainer loop, release readiness next_actions, website alias inspect, and PyPI version-specific publication audit to turn the roadmap into small verified releases. Active demos now provide verified GitHub Release URLs and SHA-256 installation preflights. Use <code>cliany-site market publish github.com --version 1.0.0 --json</code>; its successful <code>data.package_sha256</code> is the lowercase 64-character hexadecimal SHA-256 of the completed archive to hand to the installer. Use that value with the generic direct HTTPS URL and <code>--sha256 &lt;64-hex-sha256&gt;</code>, or run <code>cliany-site market install &lt;package&gt; --dry-run --json</code> for a local preflight.'
   },
   'qs.maintainer.loop': {
     zh: '选择下一块发布切片时，从 <code>docs/weekly-maintainer-loop.md</code> 开始。',

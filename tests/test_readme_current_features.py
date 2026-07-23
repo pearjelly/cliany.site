@@ -28,6 +28,30 @@ def test_readmes_document_adapter_package_preflight() -> None:
         assert "[--sha256] [--force] [--dry-run] [--json]" in text
 
 
+def test_readmes_publish_copyable_active_demo_installs() -> None:
+    expected_assets = {
+        "demo.suiteondemand.com-0.14.1.cliany-adapter.tar.gz": (
+            "1671dd92d3828cecb1f04f41eefceb7bdc727d0dee1f35d4f14ca360432ced31"
+        ),
+        "issues.apache.org-0.14.1.cliany-adapter.tar.gz": (
+            "ad5867d361f372914c536fb59c8f26837af96ed407859cf69dc8464922f05319"
+        ),
+        "cwiki.apache.org-0.14.1.cliany-adapter.tar.gz": (
+            "effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa"
+        ),
+        "builds.apache.org-0.14.1.cliany-adapter.tar.gz": (
+            "b09710acbabfb5465a6e04b5b140a4ffa4aa24795a2b4ada60eeabbddddea0c2"
+        ),
+    }
+    for filename in ("README.md", "README.zh.md"):
+        text = (ROOT / filename).read_text(encoding="utf-8")
+        assert "https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/" in text
+        assert "v0.14.0.tar.gz" not in text
+        for asset, sha256 in expected_assets.items():
+            assert asset in text
+            assert sha256 in text
+
+
 def test_readmes_document_current_extract_quality_and_readiness():
     expected_partial_terms = {
         "README.md": "partially missing required fields",
