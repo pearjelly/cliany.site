@@ -11598,6 +11598,7 @@ def test_v016273_release_draft_tracks_doctor_active_demo_path() -> None:
         "deprecated=false",
         "apache-jira-issues",
         "E_LLM_UNAVAILABLE",
+        "llm_live_preflight_not_ready",
         "candidate",
         "tests/test_doctor_v3.py",
         "tests/test_schema_v3.py",
