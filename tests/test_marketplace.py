@@ -1130,6 +1130,33 @@ class TestPackInstallEndToEnd:
         assert manifest.version == "1.0.0"
         assert (cfg.adapters_dir / "e2e.com" / "commands.py").exists()
 
+    def test_pack_install_preserves_declared_empty_result_metadata(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter(cfg.adapters_dir, "empty-result.com")
+        metadata_path = adapter_dir / "metadata.json"
+        metadata_path.write_text(
+            json.dumps(
+                {
+                    "schema_version": 3,
+                    "domain": "empty-result.com",
+                    "generated_at": "2026-07-23T00:00:00+00:00",
+                    "generator_version": "test",
+                    "commands": [
+                        {"name": "search-results", "expects_nonempty": False}
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        with patch("cliany_site.marketplace.get_config", return_value=cfg):
+            pack_path = pack_adapter("empty-result.com", version="1.0.0")
+            uninstall_adapter("empty-result.com")
+            install_adapter(pack_path)
+
+        installed_metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        assert installed_metadata["commands"][0]["expects_nonempty"] is False
+
     def test_pack_install_upgrade(self, tmp_path: Path) -> None:
         cfg = _make_config(tmp_path)
         _create_adapter(cfg.adapters_dir, "upg.com", version="1.0.0")

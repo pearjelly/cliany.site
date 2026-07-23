@@ -247,7 +247,7 @@ cliany-site browser extract \
   --json
 ```
 
-结构化抽取响应会包含 `data.quality`。生成的 `list-` 和 `search-` adapter 命令也会输出这份质量摘要。它们的 `expects_nonempty` 默认值为 `true`，保留既有的严格零匹配语义和 `E_EMPTY_RESULT` 响应。若零匹配本来就是合法结果，命令可声明 `expects_nonempty=false`：此时零匹配返回 `ok=true`，但仍保留 `data.quality` 作为机器可读的行数和数据质量信号。关键字段缺失和关键字段部分缺失的 partial 结果继续保留现有质量摘要，让自动化能够区分“命令执行了”“预期没有匹配数据”和“数据需要复核”。
+结构化抽取响应会包含 `data.quality`。生成的 `list-` 和 `search-` adapter 命令也会输出这份质量摘要。它们的 `expects_nonempty` 默认值为 `true`，保留既有的严格零匹配语义和 `E_EMPTY_RESULT` 响应。若零匹配本来就是合法结果，命令可声明 `expects_nonempty=false`：此时零匹配返回 `ok=true`，但仍保留 `data.quality` 作为机器可读的行数和数据质量信号。对已有 adapter 重新运行 `explore` 合并新命令，再打包和安装后，这个声明的布尔值仍会保留。关键字段缺失和关键字段部分缺失的 partial 结果继续保留现有质量摘要，让自动化能够区分“命令执行了”“预期没有匹配数据”和“数据需要复核”。
 
 ### 会话式探索（v0.8）
 

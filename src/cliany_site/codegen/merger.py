@@ -4,11 +4,10 @@ import json
 import os
 import tempfile
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from cliany_site.codegen.generator import AdapterGenerator, _safe_domain
+from cliany_site.codegen.generator import AdapterGenerator, _safe_domain, save_adapter
 from cliany_site.config import get_config
 from cliany_site.explorer.models import (
     ActionStep,
@@ -116,19 +115,15 @@ class AdapterMerger:
         generator = AdapterGenerator()
         code = generator.generate(explore_result, self.domain)
         existing_metadata = self._load_existing_metadata()
-
-        self._adapter_dir.mkdir(parents=True, exist_ok=True)
-
-        self._atomic_write_text(self._commands_path, code)
-
-        metadata = {
-            "domain": self.domain,
-            "commands": merge_result.merged,
-            "generated_at": datetime.now(UTC).isoformat(),
-            "source_url": existing_metadata.get("source_url", f"https://{self.domain}"),
-            "workflow": workflow or existing_metadata.get("workflow", ""),
-        }
-        self._atomic_write_json(self._metadata_path, metadata)
+        save_adapter(
+            self.domain,
+            code,
+            metadata={
+                "source_url": existing_metadata.get("source_url", f"https://{self.domain}"),
+                "workflow": workflow or existing_metadata.get("workflow", ""),
+            },
+            explore_result=explore_result,
+        )
 
     def _load_existing_metadata(self) -> dict[str, Any]:
         if not self._metadata_path.exists():
@@ -293,6 +288,7 @@ class AdapterMerger:
             "description": command.description,
             "args": command.args,
             "action_steps": command.action_steps,
+            "expects_nonempty": command.expects_nonempty,
             "actions": cmd_actions,
         }
 

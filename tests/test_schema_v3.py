@@ -1,13 +1,12 @@
 from __future__ import annotations
 
+import inspect
 import json
 import pathlib
 
 import jsonschema
-import pytest
 
 from cliany_site.metadata import load_metadata
-
 
 _V3_SAMPLE = {
     "schema_version": 3,
@@ -20,14 +19,10 @@ _V3_SAMPLE = {
     "smoke": [],
     "heal_history": [],
     "axtree": {
-        "compounds": [],
+        "compounds": {},
         "pruning_meta": {},
     },
-    "capability": {
-        "read": True,
-        "write": False,
-        "navigate": True,
-    },
+    "capability": "browser",
     "api_endpoints": [],
 }
 
@@ -38,10 +33,10 @@ class TestMetadataV3TypedDict:
 
     def test_typed_dicts_exist(self):
         from cliany_site.codegen.schema_v3 import (
+            CapabilityMeta,
             CompoundsMeta,
             MetadataV3,
             PruningMeta,
-            CapabilityMeta,
         )
         assert CompoundsMeta is not None
         assert PruningMeta is not None
@@ -105,6 +100,19 @@ class TestSchemaV3Json:
         assert "capability" in props
         assert "api_endpoints" in props
 
+    def test_command_empty_result_expectation_is_boolean(self):
+        schema_path = pathlib.Path("src/cliany_site/schemas/metadata.v3.json")
+        schema = json.loads(schema_path.read_text())
+        command_properties = schema["properties"]["commands"]["items"]["properties"]
+        assert command_properties["expects_nonempty"]["type"] == "boolean"
+
+    def test_packaged_schema_matches_repository_schema(self):
+        package_schema = json.loads(
+            pathlib.Path("src/cliany_site/schemas/metadata.v3.json").read_text()
+        )
+        repository_schema = json.loads(pathlib.Path("schemas/metadata.v3.json").read_text())
+        assert package_schema == repository_schema
+
 
 class TestLoadMetadataV3:
     def test_v3_file_accepted(self, tmp_path):
@@ -127,7 +135,6 @@ class TestLoadMetadataV3:
 
     def test_signature_accepts_dict_type(self):
         """load_metadata 시그니처가 dict를 받아야 한다"""
-        import inspect
         from cliany_site.metadata import load_metadata as _lm
         sig = inspect.signature(_lm)
         first_param = next(iter(sig.parameters.values()))

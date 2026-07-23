@@ -26,6 +26,9 @@
           "name": {
             "type": "string"
           },
+          "expects_nonempty": {
+            "type": "boolean"
+          },
           "params": {
             "type": "array"
           },

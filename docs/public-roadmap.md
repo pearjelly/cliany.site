@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-07-22
-- **Current baseline:** v0.16.270
+- **Updated:** 2026-07-23
+- **Current baseline:** v0.16.271
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -36,7 +36,7 @@ Planned outcomes:
 
 - Make adapter packaging, installation, verification, rollback, and failure hints a documented loop.
 - Expand structured extraction quality checks for search and list pages.
-- Let generated list/search commands explicitly declare when zero matches are valid: `expects_nonempty=false` returns `ok=true` for that outcome while retaining `data.quality`; the default remains `true`.
+- Let generated list/search commands explicitly declare when zero matches are valid: `expects_nonempty=false` returns `ok=true` for that outcome while retaining `data.quality`; the default remains `true`, and the declaration survives later explore merges plus package installation.
 - Make common failures easier to understand: LLM provider outage, Chrome/CDP connection, page readiness, selector mismatch, unexpected empty result, and partial data quality.
 - Keep generated adapters safe by auditing code before it is written.
 

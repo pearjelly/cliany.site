@@ -241,7 +241,7 @@ cliany-site browser extract \
   --json
 ```
 
-Structured extraction responses include `data.quality`. Generated `list-` and `search-` adapter commands also include that summary. Their `expects_nonempty` contract defaults to `true`, preserving the existing strict zero-match behavior and `E_EMPTY_RESULT` response. A command may declare `expects_nonempty=false` when zero matches are a valid outcome: it then returns `ok=true` for that outcome while retaining `data.quality` as the machine-readable row-count and data-quality signal. Missing required fields and partial results, including partially missing required fields, continue to expose the existing quality summary, so automation can distinguish "command ran", "no matching data was expected", and "data needs review".
+Structured extraction responses include `data.quality`. Generated `list-` and `search-` adapter commands also include that summary. Their `expects_nonempty` contract defaults to `true`, preserving the existing strict zero-match behavior and `E_EMPTY_RESULT` response. A command may declare `expects_nonempty=false` when zero matches are a valid outcome: it then returns `ok=true` for that outcome while retaining `data.quality` as the machine-readable row-count and data-quality signal. Re-running `explore` to merge more commands, then packaging and installing the adapter, retains this declared boolean. Missing required fields and partial results, including partially missing required fields, continue to expose the existing quality summary, so automation can distinguish "command ran", "no matching data was expected", and "data needs review".
 
 ### Conversational Exploration (v0.8)
 

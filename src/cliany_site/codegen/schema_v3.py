@@ -32,5 +32,5 @@ class MetadataV3(TypedDict, total=False):
     smoke: list[Any]
     heal_history: list[Any]
     axtree: dict
-    capability: CapabilityMeta
+    capability: str | CapabilityMeta
     api_endpoints: list[Any]
