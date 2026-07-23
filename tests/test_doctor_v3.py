@@ -4,7 +4,21 @@ import pytest
 from click.testing import CliRunner
 
 from cliany_site.cli import cli
+from cliany_site.commands import cases as cases_module
+from cliany_site.commands import doctor as doctor_module
 from cliany_site.commands.doctor import _run_checks
+
+ACTIVE_INSTALL_COMMAND = (
+    "cliany-site market install "
+    "https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/"
+    "issues.apache.org-0.14.1.cliany-adapter.tar.gz "
+    "--sha256 ad5867d361f372914c536fb59c8f26837af96ed407859cf69dc8464922f05319"
+)
+ACTIVE_VERIFY_COMMAND = "cliany-site verify issues.apache.org --json"
+ACTIVE_READ_ONLY_COMMAND = "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json"
+ACTIVE_DEMO_RECOMMENDATION = (
+    "按 demo_adapter_quickstart.commands 依次安装已发布 active adapter、运行 verify，再执行只读案例命令。"
+)
 
 
 def test_doctor_has_schema_version(tmp_home, no_llm, monkeypatch):
@@ -82,26 +96,31 @@ def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):
     assert summary["counts"]["must_fix"] == 0
     assert any(item["name"] == "llm" for item in summary["should_fix"])
     assert summary["ready_for_existing_adapters"] is True
-    assert summary["ready_for_demo_adapters"] is False
+    assert summary["ready_for_demo_adapters"] is True
     assert summary["ready_for_explore"] is False
-    assert summary["recommended_next_step"] == (
-        "先运行 cliany-site cases 查看维护中的案例；需要生成新 adapter 时再配置 LLM key。"
-    )
+    assert summary["recommended_next_step"] == ACTIVE_DEMO_RECOMMENDATION
     capabilities = summary["capabilities"]
     assert capabilities["manage_adapters"]["ready"] is True
     assert capabilities["run_browser_workflows"]["ready"] is True
     assert capabilities["generate_adapters"]["ready"] is False
     assert capabilities["generate_adapters"]["blockers"] == ["llm"]
     assert summary["demo_adapter_quickstart"] == {
-        "label": "历史 demo adapter 路径（当前不可用）",
-        "commands": [],
-        "docs": "docs/quickstart-10min.md",
-        "available": False,
-        "deprecated": True,
-        "reason": "当前没有可安装的 demo adapter release asset。",
-        "replacement": "case_catalog_quickstart",
+        "label": "已发布 active demo adapter 快速路径",
+        "case_id": "apache-jira-issues",
+        "case_status": "active",
+        "commands": [
+            ACTIVE_INSTALL_COMMAND,
+            ACTIVE_VERIFY_COMMAND,
+            ACTIVE_READ_ONLY_COMMAND,
+        ],
+        "install_command": ACTIVE_INSTALL_COMMAND,
+        "verify_command": ACTIVE_VERIFY_COMMAND,
+        "read_only_command": ACTIVE_READ_ONLY_COMMAND,
+        "docs": "README.md#asf-jira-issue-tracker",
+        "source_release": "v0.14.1",
+        "available": True,
+        "deprecated": False,
     }
-    assert "issues.apache.org.cliany-adapter-v0.14.0.tar.gz" not in result.output
     assert summary["case_catalog_quickstart"] == {
         "label": "先查看维护中的公开案例",
         "commands": ["cliany-site cases", "cliany-site cases --json"],
@@ -132,11 +151,14 @@ def test_doctor_human_output_groups_action_items(tmp_home, no_llm, monkeypatch):
     assert "状态: 可继续" in result.output
     assert "Existing adapter runtime ready: yes" in result.output
     assert "Explore ready: no" in result.output
-    assert "下一步: 先运行 cliany-site cases 查看维护中的案例；需要生成新 adapter 时再配置 LLM key。" in result.output
+    assert f"下一步: {ACTIVE_DEMO_RECOMMENDATION}" in result.output
     assert "维护案例快速路径:" in result.output
     assert "cliany-site cases" in result.output
     assert "cliany-site cases --json" in result.output
-    assert "Demo adapter 快速路径:" not in result.output
+    assert "已发布 active demo 快速路径:" in result.output
+    assert ACTIVE_INSTALL_COMMAND in result.output
+    assert ACTIVE_VERIFY_COMMAND in result.output
+    assert ACTIVE_READ_ONLY_COMMAND in result.output
     assert "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz" not in result.output
     assert "可用能力:" in result.output
     assert "manage_adapters: yes" in result.output
@@ -226,20 +248,38 @@ def test_doctor_recommends_explore_when_llm_and_cdp_are_ready(tmp_home, no_llm, 
     data = json.loads(result.output)
     summary = data["data"]["summary"]
     assert summary["ready_for_existing_adapters"] is True
-    assert summary["ready_for_demo_adapters"] is False
+    assert summary["ready_for_demo_adapters"] is True
     assert summary["ready_for_explore"] is True
-    assert summary["recommended_next_step"] == (
-        "先运行 cliany-site cases 查看维护中的案例；准备好后可使用 explore 生成自己的命令。"
-    )
+    assert summary["recommended_next_step"] == ACTIVE_DEMO_RECOMMENDATION
     capabilities = summary["capabilities"]
     assert capabilities["manage_adapters"]["ready"] is True
     assert capabilities["run_browser_workflows"]["ready"] is True
     assert capabilities["generate_adapters"]["ready"] is True
     assert capabilities["generate_adapters"]["blockers"] == []
-    assert summary["demo_adapter_quickstart"]["available"] is False
-    assert summary["demo_adapter_quickstart"]["deprecated"] is True
-    assert summary["demo_adapter_quickstart"]["commands"] == []
-    assert summary["demo_adapter_quickstart"]["replacement"] == "case_catalog_quickstart"
+    assert summary["demo_adapter_quickstart"]["available"] is True
+    assert summary["demo_adapter_quickstart"]["deprecated"] is False
+    assert summary["demo_adapter_quickstart"]["case_status"] == "active"
+    assert summary["demo_adapter_quickstart"]["verify_command"] == "cliany-site verify issues.apache.org --json"
+
+
+def test_demo_adapter_quickstart_does_not_promote_candidate(monkeypatch):
+    candidate = {
+        "id": "candidate-with-package-like-command",
+        "status": "candidate",
+        "adapter_domain": "candidate.example",
+        "commands": [
+            "cliany-site market install https://example.test/candidate.cliany-adapter.tar.gz "
+            "--sha256 " + "a" * 64,
+            "cliany-site candidate.example list-items --json",
+        ],
+    }
+    monkeypatch.setattr(cases_module, "_load_cases_manifest", lambda: ([candidate], None, []))
+
+    quickstart = doctor_module._demo_adapter_quickstart()
+
+    assert quickstart["available"] is False
+    assert quickstart["commands"] == []
+    assert quickstart["replacement"] == "case_catalog_quickstart"
 
 
 def test_doctor_does_not_call_llm_live_by_default(tmp_home, no_llm, monkeypatch):
@@ -367,7 +407,7 @@ def test_doctor_llm_live_unavailable_blocks_explore_ready(tmp_home, no_llm, monk
 
     summary = data["data"]["summary"]
     assert summary["ready_for_existing_adapters"] is True
-    assert summary["ready_for_demo_adapters"] is False
+    assert summary["ready_for_demo_adapters"] is True
     assert summary["ready_for_explore"] is False
     assert any(item["name"] == "llm_live" for item in summary["should_fix"])
     assert summary["capabilities"]["generate_adapters"]["ready"] is False

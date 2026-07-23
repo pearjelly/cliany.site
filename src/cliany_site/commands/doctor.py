@@ -172,6 +172,60 @@ def _llm_live_preflight_summary(checks: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def _demo_adapter_quickstart() -> dict[str, Any]:
+    from cliany_site.commands.cases import _load_cases_manifest
+
+    try:
+        catalog_cases, _source_path, _checked_paths = _load_cases_manifest()
+    except (OSError, ValueError, json.JSONDecodeError):
+        catalog_cases = []
+
+    for case in catalog_cases:
+        if case.get("status") != "active":
+            continue
+
+        commands = case.get("commands")
+        if not isinstance(commands, list):
+            continue
+        command_strings = [str(command) for command in commands]
+        if any(command.startswith("cliany-site login ") for command in command_strings):
+            continue
+
+        install_command = next(
+            (command for command in command_strings if command.startswith("cliany-site market install ")),
+            "",
+        )
+        adapter_domain = str(case.get("adapter_domain") or "")
+        read_only_command = next(
+            (
+                command
+                for command in command_strings
+                if command.startswith(f"cliany-site {adapter_domain} ")
+            ),
+            "",
+        )
+        if (
+            not install_command.startswith("cliany-site market install https://")
+            or " --sha256 " not in install_command
+            or not adapter_domain
+            or not read_only_command
+        ):
+            continue
+
+        verify_command = f"cliany-site verify {adapter_domain} --json"
+        return {
+            "label": "已发布 active demo adapter 快速路径",
+            "case_id": case.get("id"),
+            "case_status": "active",
+            "commands": [install_command, verify_command, read_only_command],
+            "install_command": install_command,
+            "verify_command": verify_command,
+            "read_only_command": read_only_command,
+            "docs": case.get("docs"),
+            "source_release": case.get("source_release"),
+            "available": True,
+            "deprecated": False,
+        }
+
     return {
         "label": "历史 demo adapter 路径（当前不可用）",
         "commands": [],
@@ -220,6 +274,11 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
     summary["case_catalog_quickstart"] = _case_catalog_quickstart()
     if summary["must_fix"]:
         summary["recommended_next_step"] = "先处理必须修复项，然后重新运行 cliany-site doctor。"
+    elif summary["ready_for_demo_adapters"]:
+        summary["recommended_next_step"] = (
+            "按 demo_adapter_quickstart.commands 依次安装已发布 active adapter、运行 verify，"
+            "再执行只读案例命令。"
+        )
     elif summary["ready_for_explore"]:
         summary["recommended_next_step"] = (
             "先运行 cliany-site cases 查看维护中的案例；准备好后可使用 explore 生成自己的命令。"
@@ -277,6 +336,20 @@ def _print_doctor_human(result: Envelope) -> None:
         ):
             click.echo("\n维护案例快速路径:")
             for command in case_catalog_commands:
+                click.echo(f"- {command}")
+
+        demo_adapter_quickstart = summary.get("demo_adapter_quickstart")
+        demo_adapter_quickstart = (
+            demo_adapter_quickstart if isinstance(demo_adapter_quickstart, dict) else {}
+        )
+        demo_adapter_commands = demo_adapter_quickstart.get("commands")
+        if (
+            summary.get("ready_for_demo_adapters")
+            and isinstance(demo_adapter_commands, list)
+            and demo_adapter_commands
+        ):
+            click.echo("\n已发布 active demo 快速路径:")
+            for command in demo_adapter_commands:
                 click.echo(f"- {command}")
 
         capabilities = summary.get("capabilities") if isinstance(summary.get("capabilities"), dict) else {}
