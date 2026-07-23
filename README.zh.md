@@ -41,7 +41,7 @@ cliany-site cases
 - **持久化 Session** — 跨命令保持 Cookie / LocalStorage 登录状态
 - **动态适配器加载** — 按域名自动注册 CLI 子命令，随时扩展
 - **自动浏览器管理** — 自动管理 Chrome 调试实例或实验性 Obscura 二进制文件
-- **带质量信号的数据抽取** — 支持从页面提取结构化数据、保存 Markdown 报告，并持续通过 `data.quality` 暴露空结果与字段缺失；list/search 命令可显式接受合法零匹配，但不会隐藏质量信号
+- **带质量信号的数据抽取** — 支持从页面提取结构化数据、保存 Markdown 报告，并持续通过 `data.quality` 暴露空结果与字段缺失；生成的数据命令必须返回真实提取结果，除非明确声明零匹配本来合法
 
 ### 开发体验
 
@@ -247,7 +247,7 @@ cliany-site browser extract \
   --json
 ```
 
-结构化抽取响应会包含 `data.quality`。生成的 `list-` 和 `search-` adapter 命令也会输出这份质量摘要。它们的 `expects_nonempty` 默认值为 `true`，保留既有的严格零匹配语义和 `E_EMPTY_RESULT` 响应。若零匹配本来就是合法结果，命令可声明 `expects_nonempty=false`：此时零匹配返回 `ok=true`，但仍保留 `data.quality` 作为机器可读的行数和数据质量信号。对已有 adapter 重新运行 `explore` 合并新命令，再打包和安装后，这个声明的布尔值仍会保留。关键字段缺失和关键字段部分缺失的 partial 结果继续保留现有质量摘要，让自动化能够区分“命令执行了”“预期没有匹配数据”和“数据需要复核”。
+结构化抽取响应会包含 `data.quality`。生成的 `list-`、`search-`、`read-` 和 `extract-` adapter 命令，以及包含 `extract` action 的任何命令，都会以这份摘要兑现读取语义。它们的 `expects_nonempty` 默认值为 `true`：零条数据、关键字段缺失和 partial 行都会返回 `E_EMPTY_RESULT`。只有零匹配本来就是合法结果时，命令才可声明 `expects_nonempty=false`；此时零匹配返回 `ok=true`，但仍保留 `data.quality` 作为机器可读的行数和数据质量信号。对某个命令重新运行 `explore` 会把该规则应用到新生成的代码，但不会静默改写已安装的旧 adapter。即使允许零匹配，关键字段缺失和关键字段部分缺失的 partial 结果仍然失败，让自动化能够区分“命令执行了”“预期没有匹配数据”和“数据需要复核”。
 
 ### 会话式探索（v0.8）
 

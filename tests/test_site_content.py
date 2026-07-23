@@ -119,9 +119,17 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "pypi-project-search" in index
     assert "E_LLM_UNAVAILABLE" in index
     assert "expects_nonempty" in index
+    assert "list/search/read/extract" in index
+    assert "extract action" in index
     assert "expects_nonempty=false" in script
+    assert "list/search/read/extract" in script
+    assert "extract action" in script
+    assert "not silently rewritten" in script
     assert "expects_nonempty=false" in docs
     assert "data.quality" in docs
+    assert "read-" in docs
+    assert "extract-" in docs
+    assert "E_EMPTY_RESULT" in docs
     assert "cliany-site market install &lt;package&gt; --dry-run --json" in index
     assert "--sha256 &lt;64-hex-sha256&gt;" in index
     assert "website alias inspect" in index

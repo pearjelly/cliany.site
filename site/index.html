@@ -420,7 +420,7 @@
             <br>
             <div class="line"><span class="prompt">$</span> <span class="cmd">cliany-site</span> <span class="subcmd">github.com</span> search <span class="flag">--query</span> <span class="string">"browser-use"</span> <span class="flag">--json</span></div>
             <div class="line json">{"ok": true, "data": {"results": [...]}}</div>
-            <div class="line muted" data-i18n="demo.quality.contract">For generated list/search commands, `expects_nonempty` defaults to true. Set it to false only when zero matches are valid; `ok` stays true and `data.quality` remains available.</div>
+            <div class="line muted" data-i18n="demo.quality.contract">Generated list/search/read/extract commands, and any command with an extract action, default to expects_nonempty=true; empty, missing, or partial data fails. Declare expects_nonempty=false only when zero matches are valid; installed adapters are not silently rewritten.</div>
           </div>
         </div>
       </div>

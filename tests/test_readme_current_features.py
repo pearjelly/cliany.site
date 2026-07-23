@@ -65,6 +65,10 @@ def test_readmes_document_current_extract_quality_and_readiness():
         "README.md": "`source` / `missing` metadata",
         "README.zh.md": "`source` / `missing` 元数据",
     }
+    expected_data_command_terms = {
+        "README.md": "Generated `list-`, `search-`, `read-`, and `extract-` adapter commands",
+        "README.zh.md": "生成的 `list-`、`search-`、`read-` 和 `extract-` adapter 命令",
+    }
     for filename in ("README.md", "README.zh.md"):
         text = (ROOT / filename).read_text(encoding="utf-8")
 
@@ -171,3 +175,6 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "github.com-1.0.0.cliany-adapter.tar.gz" in text
         assert "./github.com.cliany-adapter.tar.gz" not in text
         assert expected_partial_terms[filename] in text
+        assert expected_data_command_terms[filename] in text
+        assert "extract` action" in text
+        assert "not silently rewritten" in text or "不会静默改写" in text

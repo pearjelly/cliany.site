@@ -30,8 +30,8 @@ const I18N = {
     en: '✓ CLI commands generated to ~/.cliany-site/adapters/github.com/'
   },
   'demo.quality.contract': {
-    zh: '生成的 list/search 命令默认 expects_nonempty=true。只有零匹配本来合法时才声明 expects_nonempty=false；此时 ok 仍为 true，data.quality 仍会保留。重新 explore 合并、打包和安装也会保留这个声明。',
-    en: 'Generated list/search commands default to expects_nonempty=true. Declare expects_nonempty=false only when zero matches are valid; ok stays true and data.quality remains available. Later explore merges, packaging, and installation retain that declaration.'
+    zh: '生成的 list/search/read/extract 命令及包含 extract action 的命令默认 expects_nonempty=true；零条数据、缺失字段或 partial 结果都会失败。只有零匹配本来合法时才声明 expects_nonempty=false；已安装的旧 adapter 不会被静默改写。',
+    en: 'Generated list/search/read/extract commands, and any command with an extract action, default to expects_nonempty=true; empty, missing, or partial data fails. Declare expects_nonempty=false only when zero matches are valid; installed adapters are not silently rewritten.'
   },
 
   'features.title': { zh: '核心特性', en: 'Core Features' },

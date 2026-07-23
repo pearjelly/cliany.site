@@ -41,7 +41,7 @@ cliany-site cases
 - **Persistent Sessions** — Maintains Cookie / LocalStorage login states across commands.
 - **Dynamic Adapter Loading** — Automatically registers CLI subcommands by domain, allowing for easy expansion.
 - **Automatic Browser Management** — Manages Chrome debugging instances or experimental Obscura binaries automatically.
-- **Data Extraction with Quality Signals** — Extracts structured page data, saves Markdown reports, and keeps empty/partial results visible through `data.quality`; list/search commands can explicitly accept an expected zero-match result without hiding that quality signal.
+- **Data Extraction with Quality Signals** — Extracts structured page data, saves Markdown reports, and keeps empty/partial results visible through `data.quality`; generated data commands require actual extracted results unless they explicitly model a legitimate zero-match result.
 
 ### Developer Experience
 
@@ -241,7 +241,7 @@ cliany-site browser extract \
   --json
 ```
 
-Structured extraction responses include `data.quality`. Generated `list-` and `search-` adapter commands also include that summary. Their `expects_nonempty` contract defaults to `true`, preserving the existing strict zero-match behavior and `E_EMPTY_RESULT` response. A command may declare `expects_nonempty=false` when zero matches are a valid outcome: it then returns `ok=true` for that outcome while retaining `data.quality` as the machine-readable row-count and data-quality signal. Re-running `explore` to merge more commands, then packaging and installing the adapter, retains this declared boolean. Missing required fields and partial results, including partially missing required fields, continue to expose the existing quality summary, so automation can distinguish "command ran", "no matching data was expected", and "data needs review".
+Structured extraction responses include `data.quality`. Generated `list-`, `search-`, `read-`, and `extract-` adapter commands, plus any command containing an `extract` action, enforce that summary. Their `expects_nonempty` contract defaults to `true`: zero data, missing required fields, and partial rows return `E_EMPTY_RESULT`. A command may declare `expects_nonempty=false` only when zero matches are a valid outcome; it then returns `ok=true` for that outcome while retaining `data.quality` as the machine-readable row-count and data-quality signal. Re-running `explore` for a command applies this rule to its newly generated code, but existing installed adapters are not silently rewritten. Missing required fields and partial results, including partially missing required fields, remain failures even when zero matches are permitted, so automation can distinguish "command ran", "no matching data was expected", and "data needs review".
 
 ### Conversational Exploration (v0.8)
 

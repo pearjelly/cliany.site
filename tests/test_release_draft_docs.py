@@ -11614,6 +11614,34 @@ def test_v016273_release_draft_tracks_doctor_active_demo_path() -> None:
         assert snippet in text
 
 
+def test_v016274_release_draft_tracks_generated_data_command_quality() -> None:
+    text = (ROOT / "docs" / "releases" / "v0.16.274-draft.md").read_text(encoding="utf-8")
+
+    required = [
+        "# v0.16.274 发布草案",
+        "**目标版本：** `0.16.274`",
+        "**提交范围：** `v0.16.273..HEAD`",
+        "**提交范围：** `v0.16.274..HEAD`",
+        "search-extraction-gap",
+        "read-",
+        "extract-",
+        "E_EMPTY_RESULT",
+        "expects_nonempty=false",
+        "llm_live_preflight_not_ready",
+        "cases/README.md",
+        "cases/manifest.json",
+        "tests/test_generated_orchestration.py",
+        "tests/test_search_extraction_gap_fixture.py",
+        "release_readiness.py --strict --target-version 0.16.274 --remote --remote-name origin",
+        "git tag v0.16.274",
+        "release_readiness.py --strict --release-tag v0.16.274 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
 def test_v016272_changelog_is_finalized() -> None:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     release = text.split("## [0.16.272]", 1)[1].split("## [0.16.271]", 1)[0]
@@ -11636,12 +11664,14 @@ def test_v016271_changelog_is_finalized() -> None:
     assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.273...HEAD" in text
 
 
-def test_v016273_changelog_is_finalized() -> None:
+def test_v016273_changelog_is_finalized_and_v016274_is_unreleased() -> None:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.273]", 1)[0]
     release = text.split("## [0.16.273]", 1)[1].split("## [0.16.272]", 1)[0]
 
-    assert unreleased.strip() == ""
+    assert "Generated data commands no longer report success" in unreleased
+    assert "any command containing an `extract` action" in unreleased
+    assert "expects_nonempty=false" in unreleased
     assert "## [0.16.273] - 2026-07-23" in text
     assert "real no-login Jira demo path" in release
     assert "legacy string endpoint and command declarations" in release

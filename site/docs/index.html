@@ -198,8 +198,8 @@ cliany-site github.com search --query "browser automation" --json
 
 # 从断点恢复
 cliany-site github.com search --query "browser automation" --resume --json</code></pre>
-        <h3>搜索与列表的零匹配语义</h3>
-        <p>生成的 <code>list-</code> 和 <code>search-</code> 命令默认使用 <code>expects_nonempty=true</code>，保留既有的严格零匹配行为。若某个工作流中零匹配本来就是合法结果，生成的命令可以声明 <code>expects_nonempty=false</code>：零匹配仍返回 <code>ok=true</code>，同时继续提供 <code>data.quality</code> 作为行数和数据质量信号。对已有 adapter 重新 explore 合并新命令，再打包和安装后，该声明仍会保留。关键字段缺失或 partial 结果仍保留原有质量摘要，调用方不应仅依据 <code>ok</code> 忽略它。</p>
+        <h3>数据命令的提取质量语义</h3>
+        <p>生成的 <code>list-</code>、<code>search-</code>、<code>read-</code> 和 <code>extract-</code> 命令，以及包含 <code>extract</code> action 的任何命令，默认使用 <code>expects_nonempty=true</code>。零条数据、关键字段缺失和 partial 结果都会返回 <code>E_EMPTY_RESULT</code>，而不是只完成点击后报告成功。只有某个工作流的零匹配本来就是合法结果时，命令才可声明 <code>expects_nonempty=false</code>：零匹配仍返回 <code>ok=true</code>，同时继续提供 <code>data.quality</code> 作为行数和数据质量信号。重新 explore 某个命令会应用这条规则到新生成的代码，但不会静默改写已安装的旧 adapter；即使允许零匹配，关键字段缺失或 partial 结果仍然失败。</p>
 
         <h2 id="sdk">Python SDK</h2>
         <pre><code>from cliany_site.sdk import ClanySite
