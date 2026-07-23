@@ -91,6 +91,58 @@ class TestGeneratedNoCdpImport:
         assert '"code": "E_EMPTY_RESULT"' in code
         assert '"details": quality' in code
 
+    def test_generated_extract_command_fails_when_actions_return_no_data(self):
+        actions = [
+            ActionStep(
+                action_type="click",
+                page_url="https://example.com",
+                target_ref="ref-results",
+                target_name="结果",
+            )
+        ]
+        commands = [
+            CommandSuggestion(name="extract-results", description="提取结果", args=[], action_steps=[0]),
+        ]
+        code = AdapterGenerator(domain="example.com").generate(
+            _make_explore_result(actions=actions, commands=commands),
+            "example.com",
+        )
+        module = types.ModuleType("generated_adapter")
+        exec(code, module.__dict__)  # noqa: S102 - 测试生成代码的 Click 行为
+        module.execute_steps_via_atoms = lambda action_steps, source_url, domain: [  # noqa: ARG005
+            {"ok": True, "command": "click", "data": {"status": "completed"}}
+        ]
+        module.summarize_extract_quality = lambda results, action_steps: {"ok": True, "status": "ok"}  # noqa: ARG005
+
+        result = CliRunner().invoke(module.cli, ["extract-results", "--json"])
+
+        assert result.exit_code == 0
+        payload = json.loads(result.output)
+        assert payload["ok"] is False
+        assert payload["error"]["code"] == "E_EMPTY_RESULT"
+        assert payload["error"]["message"] == "extract-results 未找到任何结果"
+
+    def test_generated_command_with_extract_action_enforces_quality_regardless_of_name(self):
+        actions = [
+            ActionStep(
+                action_type="extract",
+                page_url="https://example.com",
+                selector=".result",
+                extract_mode="list",
+                fields_map={"title": "h3", "url": "a@href"},
+            )
+        ]
+        commands = [
+            CommandSuggestion(name="fetch-results", description="获取结果", args=[], action_steps=[0]),
+        ]
+        code = AdapterGenerator(domain="example.com").generate(
+            _make_explore_result(actions=actions, commands=commands),
+            "example.com",
+        )
+
+        assert 'if not quality.get("ok", True):' in code
+        assert '"code": "E_EMPTY_RESULT"' in code
+
     def test_generated_list_command_returns_empty_result_error(self):
         actions = [
             ActionStep(

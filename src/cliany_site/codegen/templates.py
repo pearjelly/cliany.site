@@ -706,6 +706,22 @@ def _render_empty_result_check(command_name: str, expects_nonempty: bool) -> str
     )
 
 
+def _requires_data_quality_check(
+    command_name: str,
+    action_steps: list[int],
+    all_actions: list[ActionStep],
+) -> bool:
+    normalized_name = command_name.strip().lower().replace("_", "-")
+    if normalized_name.startswith(("list-", "search-", "read-", "extract-")):
+        return True
+    return any(
+        isinstance(step_index, int)
+        and 0 <= step_index < len(all_actions)
+        and all_actions[step_index].action_type == "extract"
+        for step_index in action_steps
+    )
+
+
 def render_command_block_v2(
     command: CommandSuggestion,
     all_actions: list[ActionStep],
@@ -752,10 +768,11 @@ def render_command_block_v2(
     )
     execution_blocks = _shift_indent(raw_blocks, remove=8)
 
-    # opt-in 结果质量检测：list-/search- 命令在抽取质量未通过或聚合 data 为空时注入 E_EMPTY_RESULT 判定
+    # 数据命令在抽取质量未通过或聚合 data 为空时注入 E_EMPTY_RESULT 判定。
+    # 显式 read-/extract- 命令和包含 extract action 的命令也必须兑现其读取语义。
     empty_result_check = (
         _render_empty_result_check(command_name, command.expects_nonempty)
-        if command_name.startswith(("list-", "search-"))
+        if _requires_data_quality_check(command_name, cleaned_steps, all_actions)
         else ""
     )
 
