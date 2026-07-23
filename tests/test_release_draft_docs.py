@@ -11592,6 +11592,7 @@ def test_v016273_release_draft_tracks_doctor_active_demo_path() -> None:
         "# v0.16.273 发布草案",
         "**目标版本：** `0.16.273`",
         "**提交范围：** `v0.16.272..HEAD`",
+        "**提交范围：** `v0.16.273..HEAD`",
         "cases/README.md",
         "demo_adapter_quickstart",
         "available=true",
