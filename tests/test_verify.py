@@ -110,6 +110,43 @@ def test_verify_market_manifest_ok(tmp_home, no_llm, adapters_dir):
     assert verified["manifest"]["issues"] == []
 
 
+def test_verify_accepts_api_capability_with_legacy_endpoint_strings(tmp_home, no_llm, adapters_dir):
+    metadata = VALID_V3_METADATA | {
+        "domain": "api.example",
+        "capability": "api",
+        "api_endpoints": ["https://api.example/v1/search"],
+    }
+    adapter_dir = _make_adapter(adapters_dir, "api.example", metadata)
+    _write_manifest(adapter_dir, "api.example")
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["verify", "--json", "api.example"])
+
+    assert result.exit_code == 0, result.output
+    verified = json.loads(result.output)["data"]["results"][0]
+    assert verified["verdict"] == "ok"
+    assert verified["manifest"]["status"] == "ok"
+
+
+def test_verify_accepts_api_capability_with_legacy_command_strings(tmp_home, no_llm, adapters_dir):
+    metadata = VALID_V3_METADATA | {
+        "domain": "api.example",
+        "capability": "api",
+        "commands": ["list-issues"],
+        "api_endpoints": ["https://api.example/v1/search"],
+    }
+    adapter_dir = _make_adapter(adapters_dir, "api.example", metadata)
+    _write_manifest(adapter_dir, "api.example")
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["verify", "--json", "api.example"])
+
+    assert result.exit_code == 0, result.output
+    verified = json.loads(result.output)["data"]["results"][0]
+    assert verified["verdict"] == "ok"
+    assert verified["manifest"]["status"] == "ok"
+
+
 def test_verify_manifest_hash_mismatch(tmp_home, no_llm, adapters_dir):
     adapter_dir = _make_adapter(adapters_dir, "hash-bad.com", VALID_V3_METADATA | {"domain": "hash-bad.com"})
     _write_manifest(adapter_dir, "hash-bad.com", bad_hash=True)

@@ -13,13 +13,13 @@ const I18N = {
   'hero.github': { zh: '查看 GitHub →', en: 'View on GitHub →' },
 
   'try.title': { zh: '三条命令开始试用', en: 'Try it in three commands' },
-  'try.subtitle': { zh: '安装、查看安全的下一步，再在连接 LLM 前选择一个维护中的案例。', en: 'Install, see the next safe step, then choose a maintained example before connecting an LLM.' },
+  'try.subtitle': { zh: '安装后让 doctor 给出已发布 demo 或案例目录的安全下一步，再决定是否连接 LLM。', en: 'Install, let doctor offer a published demo or case catalog as the safe next step, then decide whether to connect an LLM.' },
   'try.install.title': { zh: '安装', en: 'Install' },
   'try.install.body': { zh: '从 PyPI 获取 CLI。', en: 'Get the CLI from PyPI.' },
   'try.check.title': { zh: '检查就绪状态', en: 'Check readiness' },
   'try.check.body': { zh: '查看适合你当前机器的下一步建议。', en: 'Read the human-friendly next step for your machine.' },
   'try.cases.title': { zh: '选择维护中的案例', en: 'Choose a maintained example' },
-  'try.cases.body': { zh: '在为自己的工作流配置 Chrome/CDP 或 LLM 前，先浏览公开案例、验证路径和已发布 demo 的固定安装命令。', en: 'Browse public cases, their validation paths, and pinned install commands for published demos before you configure Chrome/CDP or an LLM for your own workflow.' },
+  'try.cases.body': { zh: '当 doctor 报告 ready_for_demo_adapters=true 时，按 demo_adapter_quickstart.commands 安装、verify 并执行只读 active demo；否则浏览公开案例及其验证路径。', en: 'When doctor reports ready_for_demo_adapters=true, follow demo_adapter_quickstart.commands to install, verify, and run a read-only active demo; otherwise browse public cases and their validation paths.' },
   'try.guide': { zh: '查看 10 分钟指南 →', en: 'Follow the 10-minute guide →' },
 
   'terminal.connecting': { zh: '✓ 正在连接 Chrome CDP...', en: '✓ Connecting to Chrome CDP...' },
@@ -149,10 +149,10 @@ const I18N = {
   'demo.explore.done': { zh: '✓ 探索完成，已生成适配器', en: '✓ Exploration complete, adapter generated' },
 
   'qs.title': { zh: '10 分钟成功路径', en: '10-Minute Success Path' },
-  'qs.subtitle': { zh: '先浏览维护中的案例，再为自己的命令配置 LLM', en: 'Browse maintained cases before configuring an LLM for your own commands' },
+  'qs.subtitle': { zh: '先运行 doctor 指向的 active demo 或案例目录，再为自己的命令配置 LLM', en: 'Follow doctor to an active demo or case catalog before configuring an LLM for your own commands' },
   'qs.step1': { zh: 'Step 1: 安装', en: 'Step 1: Install' },
   'qs.step2': { zh: 'Step 2: 检查就绪状态', en: 'Step 2: Check Readiness' },
-  'qs.step3': { zh: 'Step 3: 浏览维护中的案例', en: 'Step 3: Browse Maintained Cases' },
+  'qs.step3': { zh: 'Step 3: 运行 active demo 或浏览案例', en: 'Step 3: Run an Active Demo or Browse Cases' },
   'qs.step4': { zh: 'Step 4: 生成你的命令', en: 'Step 4: Generate Your Own' },
   'qs.contribute.title': { zh: '首次成功之后', en: 'After Your First Success' },
   'qs.contribute.desc': {
@@ -185,8 +185,8 @@ const I18N = {
   },
   'qs.maintainer.title': { zh: '维护者循环', en: 'Maintainer Loop' },
   'qs.maintainer.desc': {
-    zh: '当前基线：v0.16.272。使用每天 1~3 个版本的发布循环、每周维护者循环、release readiness 的 next_actions、官网 alias inspect 和 PyPI 版本专属发布审计，把路线图拆成小而可验证的发布切片。active demo 现在提供已验证的 GitHub Release URL 和 SHA-256 安装预检。运行 <code>cliany-site market publish github.com --version 1.0.0 --json</code>；成功输出的 <code>data.package_sha256</code> 是完成归档的 64 个字符小写十六进制 SHA-256 摘要，应交接给安装方。将该值用于通用直接 HTTPS URL 的 <code>--sha256 &lt;64-hex-sha256&gt;</code>，或使用 <code>cliany-site market install &lt;package&gt; --dry-run --json</code> 预检本地包。',
-    en: 'Current baseline: v0.16.272. Use the 1-3 releases/day loop, weekly maintainer loop, release readiness next_actions, website alias inspect, and PyPI version-specific publication audit to turn the roadmap into small verified releases. Active demos now provide verified GitHub Release URLs and SHA-256 installation preflights. Use <code>cliany-site market publish github.com --version 1.0.0 --json</code>; its successful <code>data.package_sha256</code> is the lowercase 64-character hexadecimal SHA-256 of the completed archive to hand to the installer. Use that value with the generic direct HTTPS URL and <code>--sha256 &lt;64-hex-sha256&gt;</code>, or run <code>cliany-site market install &lt;package&gt; --dry-run --json</code> for a local preflight.'
+    zh: '当前基线：v0.16.273。使用每天 1~3 个版本的发布循环、每周维护者循环、release readiness 的 next_actions、官网 alias inspect 和 PyPI 版本专属发布审计，把路线图拆成小而可验证的发布切片。doctor 现在会从打包的 active 案例目录选择无需登录的已发布 demo，并提供固定 GitHub Release URL、SHA-256 安装、verify 和只读命令；它不把 candidate 或第三方在线成功伪装成已验证事实。运行 <code>cliany-site market publish github.com --version 1.0.0 --json</code>；成功输出的 <code>data.package_sha256</code> 是完成归档的 64 个字符小写十六进制 SHA-256 摘要，应交接给安装方。将该值用于通用直接 HTTPS URL 的 <code>--sha256 &lt;64-hex-sha256&gt;</code>，或使用 <code>cliany-site market install &lt;package&gt; --dry-run --json</code> 预检本地包。',
+    en: 'Current baseline: v0.16.273. Use the 1-3 releases/day loop, weekly maintainer loop, release readiness next_actions, website alias inspect, and PyPI version-specific publication audit to turn the roadmap into small verified releases. Doctor now selects a published no-login demo from the packaged active case catalog and provides a pinned GitHub Release URL, SHA-256 install, verify, and read-only command; it does not present a candidate or third-party online success as verified fact. Use <code>cliany-site market publish github.com --version 1.0.0 --json</code>; its successful <code>data.package_sha256</code> is the lowercase 64-character hexadecimal SHA-256 of the completed archive to hand to the installer. Use that value with the generic direct HTTPS URL and <code>--sha256 &lt;64-hex-sha256&gt;</code>, or run <code>cliany-site market install &lt;package&gt; --dry-run --json</code> for a local preflight.'
   },
   'qs.maintainer.loop': {
     zh: '选择下一块发布切片时，从 <code>docs/weekly-maintainer-loop.md</code> 开始。',

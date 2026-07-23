@@ -20,28 +20,36 @@
     "commands": {
       "type": "array",
       "items": {
-        "type": "object",
-        "required": ["name"],
-        "properties": {
-          "name": {
-            "type": "string"
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "expects_nonempty": {
+                "type": "boolean"
+              },
+              "params": {
+                "type": "array"
+              },
+              "returns": {
+                "type": "object"
+              },
+              "examples": {
+                "type": "array"
+              },
+              "source": {
+                "type": "string"
+              }
+            }
           },
-          "expects_nonempty": {
-            "type": "boolean"
-          },
-          "params": {
-            "type": "array"
-          },
-          "returns": {
-            "type": "object"
-          },
-          "examples": {
-            "type": "array"
-          },
-          "source": {
-            "type": "string"
+          {
+            "type": "string",
+            "minLength": 1
           }
-        }
+        ]
       }
     },
     "canonical_actions": {
@@ -69,12 +77,15 @@
     },
     "capability": {
       "type": "string",
-      "enum": ["browser"]
+      "enum": ["browser", "api"]
     },
     "api_endpoints": {
       "type": "array",
       "items": {
-        "type": "object"
+        "oneOf": [
+          {"type": "object"},
+          {"type": "string"}
+        ]
       }
     }
   }

@@ -103,15 +103,17 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in docs
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.272" in index
-    assert "当前基线：v0.16.272" in script
+    assert "Current baseline: v0.16.273" in index
+    assert "当前基线：v0.16.273" in script
     assert "64 个字符小写十六进制 SHA-256 摘要" in script
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in script
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.272 · Python" in docs
-    assert "verified GitHub Release URLs and SHA-256 installation preflights" in script
+    assert "v0.16.273 · Python" in docs
+    assert "demo_adapter_quickstart.commands" in index
+    assert "ready_for_demo_adapters=true" in docs
+    assert "pinned GitHub Release URL, SHA-256 install, verify, and read-only command" in script
     assert "package_sha256" in docs
     assert "64 个字符小写十六进制 SHA-256 摘要" in docs
     assert "pypi-project-search" in index
@@ -125,7 +127,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "website alias inspect" in index
     assert "PyPI version-specific publication audit" in index
     assert "10-Minute Success Path" in script
-    assert "pinned install commands for published demos" in script
+    assert "demo_adapter_quickstart.commands" in script
     assert "cliany-site cases --case-id suitecrm-accounts" in docs
     assert "primary_next_task_acceptance_criteria" in script
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in script

@@ -1,10 +1,10 @@
 # 10 分钟成功路径
 
-**目标：** 先确认 CLI 可用并查看维护中的案例，再决定是否配置 LLM 生成自己的命令。
+**目标：** 先确认 CLI 可用，验证一个已发布的只读 demo，再决定是否配置 LLM 生成自己的命令。
 
 ## 路径 A：先验证 CLI 并查看维护中的案例
 
-这条路径优先验证安装、命令入口和维护中的公开案例。它不要求你先配置 LLM key 或 Chrome/CDP。
+这条路径优先验证安装、命令入口和维护中的公开案例。它不要求你先配置 LLM key；只查看案例也不需要 Chrome/CDP。执行已发布 demo 的最后一条只读命令时，仍按 `doctor` 的 CDP 提示准备浏览器。
 
 ### 1. 安装
 
@@ -48,9 +48,11 @@ cliany-site doctor --json
 - `capabilities`：按 `manage_adapters`、`run_browser_workflows`、`generate_adapters` 展示当前可用路径和 blockers。
 - `recommended_next_step`：和 human 输出中的 `下一步` 一致，可用于脚本判断后续引导。
 - `ready_for_existing_adapters`：当前环境是否可运行已有 adapter；和 human 输出的 `Existing adapter runtime ready` 一致。
-- `ready_for_demo_adapters`：当前是否真的有可用的 demo adapter asset；没有公开 asset 时为 `false`，不要把运行时就绪误解为 demo 可安装。
+- `ready_for_demo_adapters`：当前是否真的有可用的已发布 active demo adapter asset；只有它为 `true` 时，才执行 demo 快速路径。
 - `case_catalog_quickstart`：可立即运行的案例目录命令；在获取到 adapter 包之前，先用它查看公开案例和各自的验证路径。
-- `demo_adapter_quickstart`：保留给兼容旧脚本的字段。若 `deprecated=true` 或 `available=false`，不要执行其中的命令；读取 `replacement` 并改用 `case_catalog_quickstart`。
+- `demo_adapter_quickstart`：当 `available=true`、`deprecated=false` 时，`commands` 按顺序提供固定 HTTPS + SHA-256 安装、`verify` 和只读案例命令。它只会选择 `active`、无需登录的案例，不会把 candidate 当成可安装 demo。若 `deprecated=true` 或 `available=false`，不要执行其中的命令；读取 `replacement` 并改用 `case_catalog_quickstart`。
+
+当 `ready_for_demo_adapters=true` 时，依次执行 `data.summary.demo_adapter_quickstart.commands` 中的三条命令：先安装并校验 archive，再运行 `verify`，最后执行只读案例命令。安装和静态校验成功只证明归档可用；第三方站点的实际返回仍以最后一条命令的 JSON envelope 为准。
 
 ### 3. 查看维护中的案例
 

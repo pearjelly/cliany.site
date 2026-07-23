@@ -7,6 +7,11 @@
 
 ## [Unreleased]
 
+### Fixed
+- `doctor` now reads the packaged active case catalog and offers a real no-login Jira demo path: the pinned GitHub Release HTTPS install command, static `verify`, then the declared read-only command.
+- The doctor quickstart keeps candidate cases out of the runnable demo path and continues to report third-party replay results only when the user runs the final command.
+- Metadata schema v3 again accepts the framework's supported API-capability adapter metadata, including legacy string endpoint and command declarations, so `verify` can still enforce schema, security-scan, and manifest-hash checks for published API demos.
+
 ## [0.16.272] - 2026-07-23
 
 ### Fixed
@@ -2571,7 +2576,7 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.272...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.273...HEAD
 [0.16.272]: https://github.com/pearjelly/cliany.site/compare/v0.16.271...v0.16.272
 [0.16.271]: https://github.com/pearjelly/cliany.site/compare/v0.16.270...v0.16.271
 [0.16.270]: https://github.com/pearjelly/cliany.site/compare/v0.16.269...v0.16.270

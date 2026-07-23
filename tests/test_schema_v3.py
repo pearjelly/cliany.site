@@ -88,6 +88,23 @@ class TestSchemaV3Json:
         schema = json.loads(schema_path.read_text())
         jsonschema.validate(_V3_SAMPLE, schema)
 
+    def test_v3_api_metadata_with_legacy_endpoint_strings_validates(self):
+        schema_path = pathlib.Path("src/cliany_site/schemas/metadata.v3.json")
+        schema = json.loads(schema_path.read_text())
+        api_metadata = _V3_SAMPLE | {
+            "capability": "api",
+            "api_endpoints": ["https://issues.apache.org/jira/rest/api/2/search"],
+        }
+
+        jsonschema.validate(api_metadata, schema)
+
+    def test_v3_metadata_with_legacy_command_strings_validates(self):
+        schema_path = pathlib.Path("src/cliany_site/schemas/metadata.v3.json")
+        schema = json.loads(schema_path.read_text())
+        legacy_commands = _V3_SAMPLE | {"commands": ["list-issues"]}
+
+        jsonschema.validate(legacy_commands, schema)
+
     def test_v2_json_still_exists(self):
         v2_path = pathlib.Path("src/cliany_site/schemas/metadata.v2.json")
         assert v2_path.exists()
@@ -103,7 +120,7 @@ class TestSchemaV3Json:
     def test_command_empty_result_expectation_is_boolean(self):
         schema_path = pathlib.Path("src/cliany_site/schemas/metadata.v3.json")
         schema = json.loads(schema_path.read_text())
-        command_properties = schema["properties"]["commands"]["items"]["properties"]
+        command_properties = schema["properties"]["commands"]["items"]["oneOf"][0]["properties"]
         assert command_properties["expects_nonempty"]["type"] == "boolean"
 
     def test_packaged_schema_matches_repository_schema(self):
