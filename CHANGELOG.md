@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.272] - 2026-07-23
+
 ### Fixed
 - Active SuiteCRM, Jira, Confluence, and Jenkins cases now publish their real GitHub Release v0.14.1 HTTPS adapter URLs with pinned SHA-256 digests instead of nonexistent local `0.14.0` archive names.
 - Case catalog validation now accepts the standard `<domain>-<version>.cliany-adapter.tar.gz` release-asset filename alongside the legacy local filename pattern.
@@ -2569,7 +2571,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.271...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.272...HEAD
+[0.16.272]: https://github.com/pearjelly/cliany.site/compare/v0.16.271...v0.16.272
 [0.16.271]: https://github.com/pearjelly/cliany.site/compare/v0.16.270...v0.16.271
 [0.16.270]: https://github.com/pearjelly/cliany.site/compare/v0.16.269...v0.16.270
 [0.16.269]: https://github.com/pearjelly/cliany.site/compare/v0.16.268...v0.16.269
