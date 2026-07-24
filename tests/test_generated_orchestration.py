@@ -122,6 +122,46 @@ class TestGeneratedNoCdpImport:
         assert payload["error"]["code"] == "E_EMPTY_RESULT"
         assert payload["error"]["message"] == "extract-results 未找到任何结果"
 
+    def test_generated_data_command_requires_extract_even_when_empty_is_allowed(self):
+        actions = [
+            ActionStep(
+                action_type="click",
+                page_url="https://example.com",
+                target_ref="ref-results",
+                target_name="结果",
+            )
+        ]
+        commands = [
+            CommandSuggestion(
+                name="list-results",
+                description="列出结果",
+                args=[],
+                action_steps=[0],
+                expects_nonempty=False,
+            )
+        ]
+        code = AdapterGenerator(domain="example.com").generate(
+            _make_explore_result(actions=actions, commands=commands),
+            "example.com",
+        )
+        module = types.ModuleType("generated_adapter")
+        exec(code, module.__dict__)  # noqa: S102 - 测试生成代码的 Click 行为
+        module.execute_steps_via_atoms = lambda action_steps, source_url, domain: [  # noqa: ARG005
+            {"ok": True, "command": "click", "data": {"status": "completed"}}
+        ]
+        quality = {"status": "not_applicable", "ok": True, "extracts": []}
+        module.summarize_extract_quality = lambda results, action_steps: quality  # noqa: ARG005
+
+        result = CliRunner().invoke(module.cli, ["list-results", "--json"])
+
+        assert result.exit_code == 0
+        payload = json.loads(result.output)
+        assert payload["ok"] is False
+        assert payload["error"]["code"] == "E_EMPTY_RESULT"
+        assert payload["error"]["message"] == "list-results 未执行数据提取"
+        assert payload["error"]["details"] == quality
+        assert payload["data"]["expects_nonempty"] is False
+
     def test_generated_command_with_extract_action_enforces_quality_regardless_of_name(self):
         actions = [
             ActionStep(

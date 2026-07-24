@@ -20,11 +20,12 @@
 1. 运行 `python scripts/plan_next_iteration.py --json`，读取 `recommended_theme`、`recommended_slice`、`primary_next_action` 和 `standard_release_flow_primary_next_action`。
    如果 `commit_cadence.release_count_today >= commit_cadence.max_daily_releases` 或 `daily_release_limit_ok=false`，当天停止 tag 发布。
 2. 选择能当天验证的最小切片，并在 `docs/releases/vX.Y.Z-draft.md` 写清用户价值、风险、验证命令和剩余阻塞。
-3. 实现或补证据后运行 `python scripts/release_readiness.py --strict --target-version X.Y.Z`、`python scripts/validate_cases.py --strict`，必要时加相关 `pytest` 或 `qa/*.sh`。target-mode 允许在项目版本已经 bump、上一版 tag 仍为 latest 的待发状态运行；创建 tag 后必须改用 `--release-tag` 做严格校验。
-4. 更新 `CHANGELOG.md`、`pyproject.toml`、README/README.zh/官网中受影响入口。
-5. 创建并推送 `vX.Y.Z` tag，等待 `.github/workflows/release.yml` 更新 GitHub Release 和 PyPI。
-6. workflow 成功后，用 `gh release edit vX.Y.Z --repo pearjelly/cliany.site --notes-file docs/releases/vX.Y.Z-github-release.md` 写入已审阅的用户可读 Release Notes；再用 `gh release view vX.Y.Z --repo pearjelly/cliany.site --json body` 确认 body 不是只有自动生成的 `Full Changelog` compare 链接。
-7. 对官网有影响时按 `AGENTS.md` 的 Vercel 步骤在 `site/` 部署，并在 release notes 里记录官网同步。
+3. 将 `pyproject.toml`、受影响的 README/官网入口和目标版本的 CHANGELOG 内容准备到干净的 release-base commit；在内容仍位于 `Unreleased` 时运行 `python scripts/release_readiness.py --strict --target-version X.Y.Z --remote --remote-name origin`、`python scripts/validate_cases.py --strict`，并补充相关 `pytest` 或 `qa/*.sh`。target-mode 允许项目版本已经 bump、上一版 tag 仍为 latest 的待发状态；创建 tag 后必须改用 `--release-tag` 做严格校验。
+4. 完成 CHANGELOG 的目标版本标题与 compare links、最终官网/文档和已审阅的 GitHub Release Notes；重新运行相关测试、`uv build` 与 `twine check`，提交后确保工作树干净。
+5. 推送 `master`，等待 GitHub CI 与 Embodied CI 都成功；任一失败都不创建 tag。
+6. 仅在两项 CI 成功后创建本地 `vX.Y.Z` tag，运行 `python scripts/release_readiness.py --strict --release-tag vX.Y.Z --remote --remote-name origin`，只在该 gate 通过后推送 tag。
+7. 等待 `.github/workflows/release.yml` 更新 GitHub Release 和 PyPI；随后用 `gh release edit vX.Y.Z --repo pearjelly/cliany.site --notes-file docs/releases/vX.Y.Z-github-release.md` 写入已审阅的用户可读 Release Notes，再用 `gh release view vX.Y.Z --repo pearjelly/cliany.site --json body` 确认 body 不是只有自动生成的 `Full Changelog` compare 链接。
+8. 对官网有影响时按 `AGENTS.md` 的 Vercel 步骤在 `site/` 部署并 inspect；最后运行 `python scripts/check_release_publication.py --strict --remote --distribution --json`。
 
 ## 周节奏
 
@@ -56,13 +57,16 @@
 - [ ] `CHANGELOG.md` 底部 `[Unreleased]` compare 链接从最新 tag 指向 `HEAD`。
 - [ ] `pyproject.toml` 版本号与 tag 一致。
 - [ ] README/README.zh/官网中受影响的版本文案同步。
-- [ ] 运行离线默认检查：`CLIANY_QA_OFFLINE=1 pytest tests/ -q`。
-- [ ] 运行统一发版门禁：`python scripts/release_readiness.py --strict`。
+- [ ] 在干净 release-base 上先运行 `python scripts/release_readiness.py --strict --target-version X.Y.Z --remote --remote-name origin`。
+- [ ] 推送 `master` 后确认 GitHub CI 与 Embodied CI 都成功，再创建本地 tag。
+- [ ] 创建本地 tag 后运行 `python scripts/release_readiness.py --strict --release-tag vX.Y.Z --remote --remote-name origin`；通过后才推送 tag。
+- [ ] 运行离线默认检查：`CLIANY_QA_OFFLINE=1 pytest tests/ -q`，并完成 `uv build` 和 `twine check`。
 - [ ] 运行真实案例库离线验收：`python scripts/validate_cases.py --strict`。
 - [ ] 对 CLI 或 adapter 行为有影响时，运行相关 `qa/*.sh` 脚本。
 - [ ] 对官网有影响时，按 `AGENTS.md` 的 Vercel 步骤部署 `site/`。
 - [ ] tag 使用 `vX.Y.Z` 格式，触发 `.github/workflows/release.yml`。
 - [ ] GitHub Release body 使用对应 `docs/releases/vX.Y.Z-github-release.md` 更新，且不是只有 `Full Changelog` compare 链接。
+- [ ] `python scripts/check_release_publication.py --strict --remote --distribution --json` 通过。
 
 如果某项无法完成，必须在 CHANGELOG 或 release notes 中说明原因和风险。
 
@@ -188,6 +192,7 @@ chore(release): bump version to 0.15.0
 - [v0.15.1 发布草案](releases/v0.15.1-draft.md)
 - [v0.15.2 发布草案](releases/v0.15.2-draft.md)
 - [v0.15.3 发布草案](releases/v0.15.3-draft.md)
+- [v0.16.274 发布草案](releases/v0.16.274-draft.md)
 
 如果下一版是 minor，而不是默认的下一 patch，运行 readiness 时显式传入目标版本，例如：
 

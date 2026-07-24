@@ -62,3 +62,18 @@ def test_release_cadence_doc_explains_readiness_triage():
     ]
     for snippet in required:
         assert snippet in text
+
+
+def test_release_cadence_requires_ci_before_tag_and_release_tag_gate_before_push():
+    text = DOC.read_text(encoding="utf-8")
+
+    push_master = "推送 `master`"
+    ci_success = "GitHub CI 与 Embodied CI 都成功"
+    create_tag = "创建本地 `vX.Y.Z` tag"
+    release_tag_gate = "--release-tag vX.Y.Z --remote --remote-name origin"
+    push_tag = "推送 tag"
+
+    assert text.index(push_master) < text.index(ci_success)
+    assert text.index(ci_success) < text.index(create_tag)
+    assert text.index(create_tag) < text.index(release_tag_gate)
+    assert text.index(release_tag_gate) < text.index(push_tag)

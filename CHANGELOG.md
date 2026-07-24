@@ -9,6 +9,7 @@
 
 ### Fixed
 - Generated data commands no longer report success when their action sequence produces no result data: quality gating now covers `read-` and `extract-` names as well as `list-` and `search-`, plus any command containing an `extract` action.
+- A named data command that contains no `extract` action now returns `E_EMPTY_RESULT`, even when `expects_nonempty=false`; that opt-in permits only a genuine zero-match extraction.
 - The exploration contract now requires named data commands to include a real `extract` action with stable fields before it can mark the workflow complete; `expects_nonempty=false` still permits only a legitimate zero-match result, never partial or missing data.
 
 ## [0.16.273] - 2026-07-23

@@ -677,10 +677,12 @@ def _shift_indent(text: str, remove: int = 8) -> str:
 def _render_empty_result_check(command_name: str, expects_nonempty: bool) -> str:
     expectation_literal = repr(expects_nonempty)
     return (
-        "    # list-/search- 命令默认把空结果、字段缺失或聚合 data 为空视为 E_EMPTY_RESULT。\n"
-        f"    # expects_nonempty={expectation_literal} 仅允许空结果；部分字段缺失仍为质量错误。\n"
+        "    # 数据命令默认把未执行 extract、空结果、字段缺失或聚合 data 为空视为 E_EMPTY_RESULT。\n"
+        f"    # expects_nonempty={expectation_literal} 仅允许实际 extract 的合法空结果；部分字段缺失仍为质量错误。\n"
         "    if failed is None:\n"
-        '        if not quality.get("ok", True):\n'
+        '        if quality.get("status") == "not_applicable":\n'
+        f'            failed = {{"ok": False, "error": {{"code": "E_EMPTY_RESULT", "message": "{command_name} 未执行数据提取", "details": quality}}}}\n'
+        '        elif not quality.get("ok", True):\n'
         f'            if quality.get("status") == "empty" and not {expectation_literal}:\n'
         "                pass\n"
         '            elif quality.get("status") == "empty":\n'
