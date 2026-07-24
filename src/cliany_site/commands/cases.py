@@ -533,6 +533,15 @@ def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[st
         "status": str(primary.get("status") or "pending"),
         "evidence": primary.get("evidence") or "",
         "next_action": str(primary.get("next_action") or ""),
+        "next_step": str(primary.get("next_step") or ""),
+        "next_command": str(primary.get("next_command") or ""),
+        "next_command_source": str(primary.get("next_command_source") or ""),
+        "next_command_missing": bool(primary.get("next_command_missing", False)),
+        "next_handoff": str(primary.get("next_handoff") or ""),
+        "task_command": str(primary.get("command") or ""),
+        "task_command_source": str(primary.get("command_source") or ""),
+        "task_command_missing": bool(primary.get("command_missing", False)),
+        "task_handoff": str(primary.get("handoff") or ""),
         "acceptance_criteria": str(primary.get("acceptance_criteria") or ""),
         "expected_adapter_package": str(
             primary.get("expected_adapter_package") or bundle.get("expected_adapter_package") or ""
@@ -609,11 +618,20 @@ def _candidate_issue_template(
                 f"- Task: `{primary_task['task']}`",
                 f"- Status: `{primary_task['status']}`",
                 f"- Current evidence: {current_evidence}",
-                f"- Next action: {next_action}",
+                f"- Next executable step: `{primary_task.get('next_step') or '-'}`",
+                f"- Next executable command: `{primary_task.get('next_command') or 'Not declared.'}`",
                 f"- Acceptance criteria: {acceptance_criteria}",
                 f"- Expected adapter package: `{expected_adapter_package or '-'}`",
             ]
         )
+        task_command = primary_task.get("task_command")
+        if task_command and task_command != primary_task.get("next_command"):
+            lines.append(f"- Task command after preflight: `{task_command}`")
+        if primary_task.get("next_handoff"):
+            lines.append(f"- Next executable handoff: {primary_task['next_handoff']}")
+        if primary_task.get("task_handoff") and primary_task.get("task_handoff") != primary_task.get("next_handoff"):
+            lines.append(f"- Task handoff: {primary_task['task_handoff']}")
+        lines.append(f"- Next action: {next_action}")
     else:
         lines.append("- All promotion tasks already have complete evidence.")
 

@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-07-24
-- **Current baseline:** v0.16.275
+- **Current baseline:** v0.16.276
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -21,7 +21,7 @@ The next focus is turning candidate real-world cases into verified active demos.
 
 As of 2026-07-22, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 
-As of v0.16.275, the candidate evidence and promotion-plan JSON makes that gate executable-first: `primary_command` and the queue command point to `cliany-site doctor --llm-live --json` for `adapter_package`, while the later explore command is retained as `task_command`. This is a handoff safety improvement, not evidence that any candidate has passed live LLM, packaging, or online smoke validation.
+As of v0.16.276, candidate evidence, promotion-plan JSON, and generated public issue templates make that gate executable-first: `primary_command`, the queue command, and the issue's Primary Evidence Task point to `cliany-site doctor --llm-live --json` for `adapter_package`, while the later explore command is retained as `task_command`. This is a handoff safety improvement, not evidence that any candidate has passed live LLM, packaging, or online smoke validation.
 
 Planned outcomes:
 

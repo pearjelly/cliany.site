@@ -422,6 +422,13 @@ def test_cases_command_issue_template_json(tmp_home):
         "Generate pypi.org-<version>.cliany-adapter.tar.gz with cliany-site explore "
         "and market publish, then attach the package path or release asset name."
     )
+    assert primary_task["next_step"] == "llm_live_preflight"
+    assert primary_task["next_command"] == LLM_LIVE_PREFLIGHT_COMMAND
+    assert primary_task["next_command_source"] == "doctor.llm_live_preflight"
+    assert primary_task["next_command_missing"] is False
+    assert primary_task["task_command"].startswith('cliany-site explore "https://pypi.org"')
+    assert primary_task["task_command_source"] == "commands.explore"
+    assert primary_task["task_command_missing"] is False
     assert primary_task["expected_adapter_package"] == ("pypi.org-<version>.cliany-adapter.tar.gz")
     assert primary_task["acceptance_criteria"].startswith("Attach the generated")
     assert primary_task["llm_live_preflight_required"] is True
@@ -442,6 +449,10 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "## Primary Evidence Task" in template
     assert "- Task: `adapter_package`" in template
     assert "- Status: `pending`" in template
+    assert "- Next executable step: `llm_live_preflight`" in template
+    assert "- Next executable command: `cliany-site doctor --llm-live --json`" in template
+    assert "- Task command after preflight: `cliany-site explore" in template
+    assert template.index("cliany-site doctor --llm-live --json") < template.index("cliany-site explore")
     assert "- Expected adapter package: `pypi.org-<version>.cliany-adapter.tar.gz`" in template
     assert "## Primary Runbook" in template
     assert "- `llm_live_preflight`: `cliany-site doctor --llm-live --json`" in template
@@ -605,6 +616,9 @@ def test_cases_command_issue_template_checks_complete_tasks(tmp_home, monkeypatc
     assert primary_task["status"] == "pending"
     assert primary_task["evidence"] == ""
     assert primary_task["next_action"] == "Run read-only smoke."
+    assert primary_task["next_step"] == "online_smoke"
+    assert primary_task["next_command"] == "cliany-site example.test search --json"
+    assert primary_task["task_command"] == "cliany-site example.test search --json"
     assert primary_task["expected_adapter_package"] == ("example.test-<version>.cliany-adapter.tar.gz")
     assert primary_task["acceptance_criteria"].startswith("Paste the read-only")
     assert primary_task["llm_live_preflight_required"] is False

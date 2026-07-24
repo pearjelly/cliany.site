@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.276] - 2026-07-24
+
+### Fixed
+- Candidate issue templates now lead their Primary Evidence Task with the executable next step and command, so `adapter_package` explicitly requires `cliany-site doctor --llm-live --json` before `explore`.
+- The post-preflight command, source, missing state, and handoff remain available as explicit `task_command` fields in issue-template JSON, keeping automated and human issue handoffs aligned with evidence bundles and promotion plans.
+- Tasks that no longer need adapter packaging, such as metadata validation and online smoke, retain their direct executable command instead of receiving an unnecessary LLM preflight.
+
 ## [0.16.275] - 2026-07-24
 
 ### Fixed
@@ -2594,7 +2601,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.275...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.276...HEAD
+[0.16.276]: https://github.com/pearjelly/cliany.site/compare/v0.16.275...v0.16.276
 [0.16.275]: https://github.com/pearjelly/cliany.site/compare/v0.16.274...v0.16.275
 [0.16.274]: https://github.com/pearjelly/cliany.site/compare/v0.16.273...v0.16.274
 [0.16.273]: https://github.com/pearjelly/cliany.site/compare/v0.16.272...v0.16.273
