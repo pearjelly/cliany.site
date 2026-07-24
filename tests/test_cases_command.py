@@ -210,6 +210,19 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
         "status": "pending",
         "evidence": "",
         "next_action": data["promotion_evidence_summary"]["primary_next_action"],
+        "next_step": "llm_live_preflight",
+        "next_command": LLM_LIVE_PREFLIGHT_COMMAND,
+        "next_command_missing": False,
+        "next_task_command": (
+            'cliany-site explore "https://pypi.org" '
+            '"search Python packages for cliany-site and list project names" --json'
+        ),
+        "next_handoff": (
+            "Run the live LLM preflight before explore. If generate_adapters.ready=false "
+            "or llm_live reports warning/error such as E_LLM_UNAVAILABLE "
+            "(including provider connection failure), stop candidate promotion, attach "
+            "the doctor JSON/error summary, and leave adapter_package pending or blocked."
+        ),
         "acceptance_criteria": data["promotion_evidence_summary"]["primary_next_task_acceptance_criteria"],
         "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
         "llm_live_preflight_required": True,
@@ -318,6 +331,10 @@ def test_cases_command_human_candidate_next_step_shows_primary_detail(tmp_home):
     assert "package path or release asset name" in result.output
     assert "preflight_required: true" in result.output
     assert "preflight_blocker: Run the live LLM preflight before explore." in result.output
+    assert result.output.index("cliany-site doctor --llm-live --json") < result.output.index(
+        "cliany-site explore"
+    )
+    assert "preflight 通过后再执行:" in result.output
 
 
 def test_cases_human_output_uses_primary_next_task(capsys):
@@ -638,12 +655,17 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["primary_next_task"]["task"] == "adapter_package"
     assert bundle["primary_next_task"]["expected_adapter_package"] == "pypi.org-<version>.cliany-adapter.tar.gz"
     assert bundle["primary_next_task"] == bundle["primary_pending_task"]
-    assert bundle["primary_next_task_command"] == (
+    assert bundle["primary_next_task_step"] == "llm_live_preflight"
+    assert bundle["primary_next_task_command"] == LLM_LIVE_PREFLIGHT_COMMAND
+    assert bundle["primary_next_task_command_source"] == "doctor.llm_live_preflight"
+    assert bundle["primary_next_task_command_missing"] is False
+    assert bundle["primary_next_task_handoff"] == bundle["llm_live_preflight_blocker_note"]
+    assert bundle["primary_next_task_task_command"] == (
         'cliany-site explore "https://pypi.org" "search Python packages for cliany-site and list project names" --json'
     )
-    assert bundle["primary_next_task_command_source"] == "commands.explore"
-    assert bundle["primary_next_task_command_missing"] is False
-    assert bundle["primary_next_task_handoff"].startswith('Run `cliany-site explore "https://pypi.org"')
+    assert bundle["primary_next_task_task_command_source"] == "commands.explore"
+    assert bundle["primary_next_task_task_command_missing"] is False
+    assert bundle["primary_next_task_task_handoff"].startswith('Run `cliany-site explore "https://pypi.org"')
     assert bundle["primary_next_task_runbook"] == [
         {
             "step": "llm_live_preflight",
@@ -658,7 +680,7 @@ def test_cases_command_evidence_bundle_json(tmp_home):
                 '"search Python packages for cliany-site and list project names" --json'
             ),
             "required": True,
-            "handoff": bundle["primary_next_task_handoff"],
+            "handoff": bundle["primary_next_task_task_handoff"],
         },
         {
             "step": "acceptance",
@@ -1017,10 +1039,15 @@ def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatc
     assert bundle["primary_incomplete_task"]["task"] == "adapter_package"
     assert bundle["primary_next_task"]["task"] == "adapter_package"
     assert bundle["primary_next_task"] == bundle["primary_pending_task"]
-    assert bundle["primary_next_task_command"] == ""
-    assert bundle["primary_next_task_command_source"] == "commands.explore"
-    assert bundle["primary_next_task_command_missing"] is True
-    assert bundle["primary_next_task_handoff"] == (
+    assert bundle["primary_next_task_step"] == "llm_live_preflight"
+    assert bundle["primary_next_task_command"] == LLM_LIVE_PREFLIGHT_COMMAND
+    assert bundle["primary_next_task_command_source"] == "doctor.llm_live_preflight"
+    assert bundle["primary_next_task_command_missing"] is False
+    assert bundle["primary_next_task_handoff"] == bundle["llm_live_preflight_blocker_note"]
+    assert bundle["primary_next_task_task_command"] == ""
+    assert bundle["primary_next_task_task_command_source"] == "commands.explore"
+    assert bundle["primary_next_task_task_command_missing"] is True
+    assert bundle["primary_next_task_task_handoff"] == (
         "No executable command declared for `adapter_package`; Package the adapter."
     )
     assert bundle["primary_next_task_runbook"][0] == {
@@ -1033,7 +1060,7 @@ def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatc
         "step": "adapter_package",
         "command": "",
         "required": False,
-        "handoff": bundle["primary_next_task_handoff"],
+        "handoff": bundle["primary_next_task_task_handoff"],
     }
     assert bundle["primary_next_task_acceptance_criteria"].startswith("Attach the generated")
     assert bundle["pending_task_count"] == 1
@@ -1043,8 +1070,8 @@ def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatc
     assert bundle["ready_to_promote"] is False
     assert bundle["primary_next_action"] == "Package the adapter."
     assert bundle["tasks"][0]["command_missing"] is True
-    assert bundle["tasks"][0]["handoff"] == bundle["primary_next_task_handoff"]
-    assert bundle["task_handoffs"][0]["handoff"] == bundle["primary_next_task_handoff"]
+    assert bundle["tasks"][0]["handoff"] == bundle["primary_next_task_task_handoff"]
+    assert bundle["task_handoffs"][0]["handoff"] == bundle["primary_next_task_task_handoff"]
 
     human = runner.invoke(
         cli,
@@ -1054,7 +1081,8 @@ def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatc
 
     assert human.exit_code == 0
     assert "Primary next task: `adapter_package`" in human.output
-    assert "Primary next handoff: No executable command declared for `adapter_package`" in human.output
+    assert "Primary next handoff: Run the live LLM preflight before explore." in human.output
+    assert "Primary task handoff: No executable command declared for `adapter_package`" in human.output
     assert "Primary incomplete task: `adapter_package`" in human.output
     assert "Blocked tasks: `1`" in human.output
     assert "Blocked task names: `metadata_validation`" in human.output
@@ -1074,8 +1102,11 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "Blocked tasks: `0`" in result.output
     assert "Incomplete tasks: `3`" in result.output
     assert "Primary next task: `adapter_package`" in result.output
-    assert "Primary next command: `cliany-site explore" in result.output
-    assert "Primary next handoff: Run `cliany-site explore" in result.output
+    assert "Primary next step: `llm_live_preflight`" in result.output
+    assert "Primary next command: `cliany-site doctor --llm-live --json`" in result.output
+    assert "Primary task command after preflight: `cliany-site explore" in result.output
+    assert "Primary next handoff: Run the live LLM preflight before explore." in result.output
+    assert "Primary task handoff: Run `cliany-site explore" in result.output
     assert "## Primary next runbook" in result.output
     assert "`llm_live_preflight`: `cliany-site doctor --llm-live --json`" in result.output
     assert "`adapter_package`: `cliany-site explore" in result.output
@@ -1134,8 +1165,13 @@ def test_cases_command_promotion_plan_json(tmp_home):
     assert plan["incomplete_task_count"] >= 9
     assert plan["primary_case_id"] == "pypi-project-search"
     assert plan["primary_task"] == "adapter_package"
-    assert plan["primary_command"].startswith('cliany-site explore "https://pypi.org"')
-    assert plan["primary_handoff"].startswith('Run `cliany-site explore "https://pypi.org"')
+    assert plan["primary_next_step"] == "llm_live_preflight"
+    assert plan["primary_command"] == LLM_LIVE_PREFLIGHT_COMMAND
+    assert plan["primary_handoff"] == plan["llm_live_preflight_blocker_note"]
+    assert plan["primary_task_command"].startswith('cliany-site explore "https://pypi.org"')
+    assert plan["primary_task_command_source"] == "commands.explore"
+    assert plan["primary_task_command_missing"] is False
+    assert plan["primary_task_handoff"].startswith('Run `cliany-site explore "https://pypi.org"')
     assert plan["primary_acceptance_criteria"].startswith("Attach the generated")
     assert plan["primary_runbook"] == plan["primary_next_item"]["runbook"]
     assert plan["primary_runbook"][0]["step"] == "llm_live_preflight"
@@ -1164,13 +1200,18 @@ def test_cases_command_promotion_plan_json(tmp_home):
         "task": "adapter_package",
         "status": "pending",
         "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
-        "command": (
+        "next_step": "llm_live_preflight",
+        "command": LLM_LIVE_PREFLIGHT_COMMAND,
+        "command_source": "doctor.llm_live_preflight",
+        "command_missing": False,
+        "handoff": plan["primary_handoff"],
+        "task_command": (
             'cliany-site explore "https://pypi.org" '
             '"search Python packages for cliany-site and list project names" --json'
         ),
-        "command_source": "commands.explore",
-        "command_missing": False,
-        "handoff": plan["primary_handoff"],
+        "task_command_source": "commands.explore",
+        "task_command_missing": False,
+        "task_handoff": plan["primary_task_handoff"],
         "acceptance_criteria": plan["primary_acceptance_criteria"],
         "runbook": plan["primary_runbook"],
         "issue_template_command": ("cliany-site cases --case-id pypi-project-search --issue-template"),
@@ -1191,6 +1232,9 @@ def test_cases_command_promotion_plan_json(tmp_home):
     assert plan["candidates"][0]["expected_adapter_package"] == ("pypi.org-<version>.cliany-adapter.tar.gz")
     assert plan["candidates"][0]["primary_task"] == "adapter_package"
     assert plan["candidates"][0]["primary_status"] == "pending"
+    assert plan["candidates"][0]["primary_next_step"] == "llm_live_preflight"
+    assert plan["candidates"][0]["primary_command"] == LLM_LIVE_PREFLIGHT_COMMAND
+    assert plan["candidates"][0]["primary_task_command"] == plan["primary_task_command"]
     assert plan["candidates"][0]["issue_template_command"] == (
         "cliany-site cases --case-id pypi-project-search --issue-template"
     )
@@ -1352,6 +1396,11 @@ def test_cases_command_promotion_plan_prioritizes_closest_candidate(tmp_home, mo
     plan = json.loads(result.output)["data"]["promotion_plan"]
     assert plan["primary_case_id"] == "nearly-ready-candidate"
     assert plan["primary_task"] == "metadata_validation"
+    assert plan["primary_next_step"] == "metadata_validation"
+    assert plan["primary_command"] == CANDIDATE_PACKAGE_VALIDATION_COMMAND
+    assert plan["primary_task_command"] == CANDIDATE_PACKAGE_VALIDATION_COMMAND
+    assert plan["primary_next_item"]["command"] == CANDIDATE_PACKAGE_VALIDATION_COMMAND
+    assert plan["primary_next_item"]["task_command"] == CANDIDATE_PACKAGE_VALIDATION_COMMAND
     assert plan["primary_next_item"]["case_id"] == "nearly-ready-candidate"
     assert plan["primary_next_item"]["priority_rank"] == 1
     assert plan["primary_next_item"]["priority_reason"] == (

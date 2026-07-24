@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.275] - 2026-07-24
+
+### Fixed
+- Candidate evidence bundles and promotion plans now expose the executable next command, so `adapter_package` starts with `cliany-site doctor --llm-live --json` instead of inviting automation to run `explore` before the required live-LLM gate.
+- The task command that follows a successful preflight is retained as `task_command` in the JSON contract and human output, preserving the full handoff without treating it as the first safe action.
+- `cliany-site cases` displays the same safe next command in its table and quick-command output; later metadata validation and online smoke tasks keep their direct commands and are not unnecessarily preflight-gated.
+
 ## [0.16.274] - 2026-07-24
 
 ### Fixed
@@ -2587,7 +2594,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.274...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.275...HEAD
+[0.16.275]: https://github.com/pearjelly/cliany.site/compare/v0.16.274...v0.16.275
 [0.16.274]: https://github.com/pearjelly/cliany.site/compare/v0.16.273...v0.16.274
 [0.16.273]: https://github.com/pearjelly/cliany.site/compare/v0.16.272...v0.16.273
 [0.16.272]: https://github.com/pearjelly/cliany.site/compare/v0.16.271...v0.16.272

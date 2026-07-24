@@ -237,14 +237,20 @@ def _compact_case(case: dict[str, Any], *, detail: bool) -> dict[str, Any]:
         "commands": case.get("commands") if isinstance(case.get("commands"), list) else [],
         "offline_commands": _offline_commands(case),
     }
+    if case.get("status") == "candidate":
+        bundle = _candidate_evidence_bundle(case)
+        item["next_step"] = bundle.get("primary_next_task_step", "")
+        item["next_command"] = bundle.get("primary_next_task_command", "")
+        item["next_command_missing"] = bundle.get("primary_next_task_command_missing", False)
+        item["next_task_command"] = bundle.get("primary_next_task_task_command", "")
+        item["next_handoff"] = bundle.get("primary_next_task_handoff", "")
+        if detail:
+            item["promotion_command_plan"] = bundle.get("promotion_command_plan", [])
+            item["promotion_command_plan_summary"] = bundle.get("promotion_command_plan_summary", {})
     if detail:
         for key in ("source_release", "validation", "promotion", "promotion_evidence"):
             if key in case:
                 item[key] = case.get(key)
-        if case.get("status") == "candidate":
-            promotion_command_plan = _candidate_promotion_command_plan(case)
-            item["promotion_command_plan"] = promotion_command_plan
-            item["promotion_command_plan_summary"] = _promotion_command_plan_summary(promotion_command_plan)
     return item
 
 
@@ -841,6 +847,35 @@ def _runbook_first_step(runbook: Any) -> dict[str, Any]:
     return {}
 
 
+def _candidate_task_next_executable_step(
+    *,
+    runbook: list[dict[str, Any]],
+    command: str,
+    command_source: str,
+    command_missing: bool,
+    handoff: str,
+) -> dict[str, Any]:
+    """Return the first runnable instruction without discarding the task command."""
+    first_step = _runbook_first_step(runbook)
+    step = str(first_step.get("step") or "")
+    next_command = str(first_step.get("command") or "")
+    if step == "llm_live_preflight":
+        return {
+            "step": step,
+            "command": next_command,
+            "command_source": "doctor.llm_live_preflight",
+            "command_missing": not bool(next_command),
+            "handoff": str(first_step.get("handoff") or handoff),
+        }
+    return {
+        "step": step,
+        "command": command,
+        "command_source": command_source,
+        "command_missing": command_missing,
+        "handoff": handoff,
+    }
+
+
 def _sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
@@ -896,6 +931,13 @@ def _candidate_evidence_bundle(
             handoff=handoff,
             acceptance_criteria=acceptance_criteria,
         )
+        next_executable_step = _candidate_task_next_executable_step(
+            runbook=runbook,
+            command=command,
+            command_source=command_source,
+            command_missing=command_missing,
+            handoff=handoff,
+        )
         llm_live_preflight_required = task == "adapter_package"
         llm_live_preflight_command = LLM_LIVE_PREFLIGHT_COMMAND if llm_live_preflight_required else ""
         doctor_preflight_evidence_template = (
@@ -938,6 +980,11 @@ def _candidate_evidence_bundle(
             "command_missing": command_missing,
             "handoff": handoff,
             "runbook": runbook,
+            "next_step": next_executable_step["step"],
+            "next_command": next_executable_step["command"],
+            "next_command_source": next_executable_step["command_source"],
+            "next_command_missing": next_executable_step["command_missing"],
+            "next_handoff": next_executable_step["handoff"],
             "complete": status == "complete" and bool(evidence_value),
         }
         if llm_live_preflight_required and doctor_preflight_evidence:
@@ -999,10 +1046,15 @@ def _candidate_evidence_bundle(
         "primary_blocked_task": primary_blocked_task,
         "primary_incomplete_task": primary_incomplete_task,
         "primary_next_task": primary_next_task,
-        "primary_next_task_command": primary_next_action_task.get("command", ""),
-        "primary_next_task_command_source": primary_next_action_task.get("command_source", ""),
-        "primary_next_task_command_missing": bool(primary_next_action_task.get("command_missing", False)),
-        "primary_next_task_handoff": primary_next_action_task.get("handoff", ""),
+        "primary_next_task_step": primary_next_action_task.get("next_step", ""),
+        "primary_next_task_command": primary_next_action_task.get("next_command", ""),
+        "primary_next_task_command_source": primary_next_action_task.get("next_command_source", ""),
+        "primary_next_task_command_missing": bool(primary_next_action_task.get("next_command_missing", False)),
+        "primary_next_task_handoff": primary_next_action_task.get("next_handoff", ""),
+        "primary_next_task_task_command": primary_next_action_task.get("command", ""),
+        "primary_next_task_task_command_source": primary_next_action_task.get("command_source", ""),
+        "primary_next_task_task_command_missing": bool(primary_next_action_task.get("command_missing", False)),
+        "primary_next_task_task_handoff": primary_next_action_task.get("handoff", ""),
         "primary_next_task_runbook": primary_runbook,
         "primary_next_task_runbook_first_step": str(primary_runbook_first_step.get("step") or ""),
         "primary_next_task_runbook_first_command": primary_runbook_first_command,
@@ -1053,10 +1105,18 @@ def _candidate_evidence_bundle_markdown(bundle: dict[str, Any]) -> str:
     primary_next_task = bundle.get("primary_next_task")
     if isinstance(primary_next_task, dict) and primary_next_task.get("task"):
         lines.append(f"- Primary next task: `{primary_next_task['task']}`")
-        if primary_next_task.get("command"):
-            lines.append(f"- Primary next command: `{primary_next_task['command']}`")
-        if primary_next_task.get("handoff"):
-            lines.append(f"- Primary next handoff: {primary_next_task['handoff']}")
+        if bundle.get("primary_next_task_step"):
+            lines.append(f"- Primary next step: `{bundle['primary_next_task_step']}`")
+        if bundle.get("primary_next_task_command"):
+            lines.append(f"- Primary next command: `{bundle['primary_next_task_command']}`")
+        task_command = bundle.get("primary_next_task_task_command")
+        if task_command and task_command != bundle.get("primary_next_task_command"):
+            lines.append(f"- Primary task command after preflight: `{task_command}`")
+        if bundle.get("primary_next_task_handoff"):
+            lines.append(f"- Primary next handoff: {bundle['primary_next_task_handoff']}")
+        task_handoff = bundle.get("primary_next_task_task_handoff")
+        if task_handoff and task_handoff != bundle.get("primary_next_task_handoff"):
+            lines.append(f"- Primary task handoff: {task_handoff}")
         if primary_next_task.get("acceptance_criteria"):
             lines.append(f"- Primary next acceptance: {primary_next_task['acceptance_criteria']}")
     primary_runbook = bundle.get("primary_next_task_runbook")
@@ -1224,9 +1284,14 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
             "incomplete_task_count": bundle.get("incomplete_task_count"),
             "primary_task": primary_next_task.get("task", ""),
             "primary_status": primary_next_task.get("status", ""),
+            "primary_next_step": bundle.get("primary_next_task_step", ""),
             "primary_command": bundle.get("primary_next_task_command", ""),
             "primary_command_missing": bundle.get("primary_next_task_command_missing", False),
             "primary_handoff": bundle.get("primary_next_task_handoff", ""),
+            "primary_task_command": bundle.get("primary_next_task_task_command", ""),
+            "primary_task_command_source": bundle.get("primary_next_task_task_command_source", ""),
+            "primary_task_command_missing": bundle.get("primary_next_task_task_command_missing", False),
+            "primary_task_handoff": bundle.get("primary_next_task_task_handoff", ""),
             "primary_runbook": bundle.get("primary_next_task_runbook", []),
             "primary_acceptance_criteria": bundle.get("primary_next_task_acceptance_criteria", ""),
             **primary_doctor_preflight_aliases,
@@ -1254,10 +1319,15 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
                     "task": task.get("task", ""),
                     "status": task.get("status", ""),
                     "expected_adapter_package": expected_adapter_package,
-                    "command": task.get("command", ""),
-                    "command_source": task.get("command_source", ""),
-                    "command_missing": task.get("command_missing", False),
-                    "handoff": task.get("handoff", ""),
+                    "next_step": task.get("next_step", ""),
+                    "command": task.get("next_command", ""),
+                    "command_source": task.get("next_command_source", ""),
+                    "command_missing": task.get("next_command_missing", False),
+                    "handoff": task.get("next_handoff", ""),
+                    "task_command": task.get("command", ""),
+                    "task_command_source": task.get("command_source", ""),
+                    "task_command_missing": task.get("command_missing", False),
+                    "task_handoff": task.get("handoff", ""),
                     "acceptance_criteria": task.get("acceptance_criteria", ""),
                     "runbook": task.get("runbook", []),
                     "issue_template_command": issue_template_command,
@@ -1291,8 +1361,13 @@ def _candidate_promotion_plan(cases: list[dict[str, Any]]) -> dict[str, Any]:
         "primary_next_item": primary_next_item,
         "primary_case_id": primary_next_item.get("case_id", ""),
         "primary_task": primary_next_item.get("task", ""),
+        "primary_next_step": primary_next_item.get("next_step", ""),
         "primary_command": primary_next_item.get("command", ""),
         "primary_handoff": primary_next_item.get("handoff", ""),
+        "primary_task_command": primary_next_item.get("task_command", ""),
+        "primary_task_command_source": primary_next_item.get("task_command_source", ""),
+        "primary_task_command_missing": primary_next_item.get("task_command_missing", False),
+        "primary_task_handoff": primary_next_item.get("task_handoff", ""),
         "primary_acceptance_criteria": primary_next_item.get("acceptance_criteria", ""),
         "primary_expected_adapter_package": primary_next_item.get("expected_adapter_package", ""),
         "primary_runbook": primary_next_item.get("runbook", []),
@@ -1364,7 +1439,8 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                 f"- Status: `{primary_next_item['status']}`",
                 f"- Priority: `{primary_next_item.get('priority_rank')}`",
                 f"- Priority reason: {primary_next_item.get('priority_reason')}",
-                f"- Command: `{primary_next_item.get('command') or 'Not declared.'}`",
+                f"- Next step: `{primary_next_item.get('next_step') or '-'}`",
+                f"- Next command: `{primary_next_item.get('command') or 'Not declared.'}`",
                 (f"- Expected adapter package: `{primary_next_item.get('expected_adapter_package') or '-'}`"),
                 f"- Handoff: {primary_next_item.get('handoff') or 'No handoff declared.'}",
                 (f"- Acceptance criteria: {primary_next_item.get('acceptance_criteria') or 'Not declared.'}"),
@@ -1374,6 +1450,12 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                 (f"- LLM blocker handling: {primary_next_item.get('llm_live_preflight_blocker_note')}"),
             ]
         )
+        task_command = primary_next_item.get("task_command")
+        if task_command and task_command != primary_next_item.get("command"):
+            lines.append(f"- Task command after preflight: `{task_command}`")
+        task_handoff = primary_next_item.get("task_handoff")
+        if task_handoff and task_handoff != primary_next_item.get("handoff"):
+            lines.append(f"- Task handoff: {task_handoff}")
         runbook = primary_next_item.get("runbook")
         if isinstance(runbook, list) and runbook:
             lines.extend(["", "## Primary runbook"])
@@ -1401,7 +1483,8 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                 f"  - priority_reason: {candidate.get('priority_reason')}",
                 f"  - ready_to_promote: `{str(candidate.get('ready_to_promote')).lower()}`",
                 (f"  - primary: `{candidate.get('primary_task') or '-'}` ({candidate.get('primary_status') or '-'})"),
-                f"  - command: `{command}`",
+                f"  - next_step: `{candidate.get('primary_next_step') or '-'}`",
+                f"  - next_command: `{command}`",
                 f"  - handoff: {candidate.get('primary_handoff') or 'No handoff declared.'}",
                 (f"  - acceptance: {candidate.get('primary_acceptance_criteria') or 'Not declared.'}"),
                 f"  - issue_template: `{candidate['issue_template_command']}`",
@@ -1410,6 +1493,9 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                 f"  - evidence_bundle_json: `{candidate['evidence_bundle_json_command']}`",
             ]
         )
+        task_command = candidate.get("primary_task_command")
+        if task_command and task_command != candidate.get("primary_command"):
+            lines.append(f"  - task_command_after_preflight: `{task_command}`")
 
     lines.extend(["", "## Incomplete task queue"])
     for item in plan.get("task_queue", []):
@@ -1419,7 +1505,8 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                 f"- `{item['case_id']}/{item['task']}` ({item['status']})",
                 f"  - priority: `{item.get('priority_rank')}`",
                 f"  - priority_reason: {item.get('priority_reason')}",
-                f"  - command: `{command}`",
+                f"  - next_step: `{item.get('next_step') or '-'}`",
+                f"  - next_command: `{command}`",
                 f"  - expected_adapter_package: `{item.get('expected_adapter_package') or '-'}`",
                 f"  - command_missing: `{str(item.get('command_missing', False)).lower()}`",
                 f"  - handoff: {item.get('handoff') or 'No handoff declared.'}",
@@ -1429,6 +1516,9 @@ def _candidate_promotion_plan_markdown(plan: dict[str, Any]) -> str:
                 (f"  - llm_blocker: {item.get('llm_live_preflight_blocker_note') or 'Not declared.'}"),
             ]
         )
+        task_command = item.get("task_command")
+        if task_command and task_command != item.get("command"):
+            lines.append(f"  - task_command_after_preflight: `{task_command}`")
     return "\n".join(lines)
 
 
@@ -1471,6 +1561,11 @@ def _promotion_evidence_summary(cases: list[dict[str, Any]]) -> dict[str, Any]:
                         "status": status,
                         "evidence": evidence_value,
                         "next_action": next_action,
+                        "next_step": str(task_evidence.get("next_step") or ""),
+                        "next_command": str(task_evidence.get("next_command") or ""),
+                        "next_command_missing": bool(task_evidence.get("next_command_missing", False)),
+                        "next_task_command": str(task_evidence.get("command") or ""),
+                        "next_handoff": str(task_evidence.get("next_handoff") or ""),
                         "acceptance_criteria": acceptance_criteria,
                         "expected_adapter_package": str(task_evidence.get("expected_adapter_package") or ""),
                         "llm_live_preflight_required": bool(task_evidence.get("llm_live_preflight_required")),
@@ -1605,6 +1700,12 @@ def _print_single_case_detail(console: Any, case: dict[str, Any]) -> None:
             console.print(f"  acceptance: {PROMOTION_ACCEPTANCE_CRITERIA[task]}")
 
 
+def _candidate_next_command(case: dict[str, Any]) -> str:
+    if case.get("status") != "candidate":
+        return ""
+    return str(case.get("next_command") or LLM_LIVE_PREFLIGHT_COMMAND)
+
+
 def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
     from rich.console import Console
     from rich.table import Table
@@ -1637,24 +1738,15 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
     table.add_column("First command")
     for case in cases:
         commands = case.get("commands") if isinstance(case.get("commands"), list) else []
+        next_command = _candidate_next_command(case)
         table.add_row(
             str(case.get("id") or ""),
             str(case.get("status") or ""),
             str(case.get("category") or ""),
             str(case.get("adapter_domain") or "-"),
-            str(commands[0]) if commands else "-",
+            next_command or (str(commands[0]) if commands else "-"),
         )
     console.print(table)
-
-    console.print("\n[bold]快速命令[/bold]")
-    for case in cases:
-        commands = case.get("commands") if isinstance(case.get("commands"), list) else []
-        if not commands:
-            continue
-        console.print(f"- {case.get('id')}:")
-        command_lines = commands if detail else commands[:1]
-        for command in command_lines:
-            console.print(f"  {command}")
 
     promotion = data.get("promotion_evidence_summary")
     if isinstance(promotion, dict) and promotion.get("primary_next_action"):
@@ -1669,10 +1761,6 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
             "primary_next_task_acceptance_criteria"
         )
         console.print("\n[bold]Candidate 下一步[/bold]")
-        console.print(f"- {primary_case_id}/{primary_task_name} ({primary_status}): {primary_next_action}")
-        console.print(f"  evidence: {primary_evidence}")
-        if primary_acceptance:
-            console.print(f"  acceptance: {primary_acceptance}")
         preflight_required = primary_task.get("llm_live_preflight_required")
         if isinstance(preflight_required, bool):
             console.print(f"  preflight_required: {str(preflight_required).lower()}")
@@ -1683,6 +1771,41 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
         if first_runbook_command:
             first_runbook_step = promotion.get("primary_next_task_runbook_first_step")
             console.print(f"  runbook_first: {first_runbook_step} -> {first_runbook_command}")
+        console.print(f"- {primary_case_id}/{primary_task_name} ({primary_status}): {primary_next_action}")
+        console.print(f"  evidence: {primary_evidence}")
+        if primary_acceptance:
+            console.print(f"  acceptance: {primary_acceptance}")
+        primary_next_step = primary_task.get("next_step")
+        primary_next_command = primary_task.get("next_command")
+        primary_task_command = primary_task.get("next_task_command")
+        if primary_next_step:
+            console.print(f"  next_step: {primary_next_step}")
+        if primary_next_command:
+            console.print(f"  next_command: {primary_next_command}")
+        if primary_task_command and primary_task_command != primary_next_command:
+            console.print(f"  task_command_after_preflight: {primary_task_command}")
+
+    console.print("\n[bold]快速命令[/bold]")
+    for case in cases:
+        commands = case.get("commands") if isinstance(case.get("commands"), list) else []
+        next_command = _candidate_next_command(case)
+        if not commands and not next_command:
+            continue
+        console.print(f"- {case.get('id')}:")
+        if next_command:
+            console.print(f"  {next_command}")
+            next_task_command = str(case.get("next_task_command") or "")
+            if next_task_command and next_task_command != next_command:
+                console.print("  preflight 通过后再执行:")
+                console.print(f"  {next_task_command}")
+            if detail:
+                for command in commands:
+                    if command not in {next_command, next_task_command}:
+                        console.print(f"  {command}")
+            continue
+        command_lines = commands if detail else commands[:1]
+        for command in command_lines:
+            console.print(f"  {command}")
 
     if detail:
         console.print("\n[bold]离线验证命令[/bold]")
