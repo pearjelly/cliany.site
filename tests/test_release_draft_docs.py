@@ -11320,7 +11320,7 @@ def test_v016264_changelog_is_finalized() -> None:
     assert "direct HTTPS adapter package URL" in text.split("## [0.16.264]", 1)[1].split("## [0.16.263]", 1)[0]
     assert "INSTALL_FAILED" in text.split("## [0.16.264]", 1)[1].split("## [0.16.263]", 1)[0]
     assert "## [0.16.263] - 2026-07-15" in text
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.273...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.274...HEAD" in text
     assert "[0.16.264]: https://github.com/pearjelly/cliany.site/compare/v0.16.263...v0.16.264" in text
     assert "[0.16.263]: https://github.com/pearjelly/cliany.site/compare/v0.16.262...v0.16.263" in text
 
@@ -11354,7 +11354,7 @@ def test_v016269_changelog_is_finalized() -> None:
     assert "ready_for_existing_adapters" in release
     assert "ready_for_demo_adapters" in release
     assert "published demo adapter asset" in release
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.273...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.274...HEAD" in text
     assert "[0.16.269]: https://github.com/pearjelly/cliany.site/compare/v0.16.268...v0.16.269" in text
 
 
@@ -11687,7 +11687,7 @@ def test_v016272_changelog_is_finalized() -> None:
     assert "## [0.16.272] - 2026-07-23" in text
     assert "GitHub Release v0.14.1 HTTPS adapter URLs" in release
     assert "<domain>-<version>.cliany-adapter.tar.gz" in release
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.273...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.274...HEAD" in text
     assert "[0.16.272]: https://github.com/pearjelly/cliany.site/compare/v0.16.271...v0.16.272" in text
 
 
@@ -11699,21 +11699,22 @@ def test_v016271_changelog_is_finalized() -> None:
     assert "expects_nonempty=false" in release
     assert "schema-v3 metadata" in release
     assert "packaging and installation" in release
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.273...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.274...HEAD" in text
 
 
-def test_v016273_changelog_is_finalized_and_v016274_is_unreleased() -> None:
+def test_v016274_changelog_is_finalized() -> None:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.273]", 1)[0]
-    release = text.split("## [0.16.273]", 1)[1].split("## [0.16.272]", 1)[0]
+    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.274]", 1)[0]
+    release = text.split("## [0.16.274]", 1)[1].split("## [0.16.273]", 1)[0]
 
-    assert "Generated data commands no longer report success" in unreleased
-    assert "any command containing an `extract` action" in unreleased
-    assert "expects_nonempty=false" in unreleased
+    assert unreleased.strip() == ""
+    assert "## [0.16.274] - 2026-07-24" in text
+    assert "Generated data commands no longer report success" in release
+    assert "contains no `extract` action" in release
+    assert "expects_nonempty=false" in release
     assert "## [0.16.273] - 2026-07-23" in text
-    assert "real no-login Jira demo path" in release
-    assert "legacy string endpoint and command declarations" in release
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.273...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.274...HEAD" in text
+    assert "[0.16.274]: https://github.com/pearjelly/cliany.site/compare/v0.16.273...v0.16.274" in text
     assert "[0.16.273]: https://github.com/pearjelly/cliany.site/compare/v0.16.272...v0.16.273" in text
     assert "[0.16.271]: https://github.com/pearjelly/cliany.site/compare/v0.16.270...v0.16.271" in text
     assert "[0.16.270]: https://github.com/pearjelly/cliany.site/compare/v0.16.269...v0.16.270" in text

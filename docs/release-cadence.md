@@ -20,8 +20,8 @@
 1. 运行 `python scripts/plan_next_iteration.py --json`，读取 `recommended_theme`、`recommended_slice`、`primary_next_action` 和 `standard_release_flow_primary_next_action`。
    如果 `commit_cadence.release_count_today >= commit_cadence.max_daily_releases` 或 `daily_release_limit_ok=false`，当天停止 tag 发布。
 2. 选择能当天验证的最小切片，并在 `docs/releases/vX.Y.Z-draft.md` 写清用户价值、风险、验证命令和剩余阻塞。
-3. 将 `pyproject.toml`、受影响的 README/官网入口和目标版本的 CHANGELOG 内容准备到干净的 release-base commit；在内容仍位于 `Unreleased` 时运行 `python scripts/release_readiness.py --strict --target-version X.Y.Z --remote --remote-name origin`、`python scripts/validate_cases.py --strict`，并补充相关 `pytest` 或 `qa/*.sh`。target-mode 允许项目版本已经 bump、上一版 tag 仍为 latest 的待发状态；创建 tag 后必须改用 `--release-tag` 做严格校验。
-4. 完成 CHANGELOG 的目标版本标题与 compare links、最终官网/文档和已审阅的 GitHub Release Notes；重新运行相关测试、`uv build` 与 `twine check`，提交后确保工作树干净。
+3. 完成 `pyproject.toml`、CHANGELOG 的目标版本标题与 compare links、受影响的 README/官网入口和已审阅的 GitHub Release Notes；运行相关测试、`uv build` 与 `twine check`，提交后确保工作树干净。target-mode 接受项目版本已经 bump、上一版 tag 仍为 latest 的最终 CHANGELOG 状态；创建 tag 后必须改用 `--release-tag` 做严格校验。
+4. 在最终 HEAD 运行 `python scripts/release_readiness.py --strict --target-version X.Y.Z --remote --remote-name origin` 和 `python scripts/validate_cases.py --strict`，并补充相关 `pytest` 或 `qa/*.sh`。
 5. 推送 `master`，等待 GitHub CI 与 Embodied CI 都成功；任一失败都不创建 tag。
 6. 仅在两项 CI 成功后创建本地 `vX.Y.Z` tag，运行 `python scripts/release_readiness.py --strict --release-tag vX.Y.Z --remote --remote-name origin`，只在该 gate 通过后推送 tag。
 7. 等待 `.github/workflows/release.yml` 更新 GitHub Release 和 PyPI；随后用 `gh release edit vX.Y.Z --repo pearjelly/cliany.site --notes-file docs/releases/vX.Y.Z-github-release.md` 写入已审阅的用户可读 Release Notes，再用 `gh release view vX.Y.Z --repo pearjelly/cliany.site --json body` 确认 body 不是只有自动生成的 `Full Changelog` compare 链接。

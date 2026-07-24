@@ -1270,7 +1270,7 @@ def _candidate_promotion_command_plan(commands: list[str]) -> list[dict[str, Any
         for command in commands
         if command.startswith("cliany-site ") and not command.startswith("cliany-site explore ")
     ]
-    plan = [
+    plan: list[dict[str, Any]] = [
         {
             "task": "llm_live_preflight",
             "command": LLM_LIVE_PREFLIGHT_COMMAND,

@@ -839,12 +839,16 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
         "latest local release tag is not published",
     ]
     assert standard_release_flow["primary_next_action"] == payload["next_actions"][0]
-    assert "python scripts/release_readiness.py --strict --target-version 0.1.1" in (
+    assert "python scripts/release_readiness.py --strict --target-version 0.1.1 --remote" in (
         standard_release_flow["commands"]
     )
     assert "CLIANY_QA_OFFLINE=1 pytest tests/ -q" in standard_release_flow["commands"]
     assert "python scripts/validate_cases.py --strict" in standard_release_flow["commands"]
     assert "git tag v0.1.1" in standard_release_flow["commands"]
+    assert (
+        "python scripts/release_readiness.py --strict --release-tag v0.1.1 --remote"
+        in standard_release_flow["commands"]
+    )
     assert "git push origin v0.1.1" in standard_release_flow["commands"]
     assert WEBSITE_DEPLOY_COMMAND in standard_release_flow["commands"]
     assert WEBSITE_INSPECT_COMMAND in standard_release_flow["commands"]
@@ -899,6 +903,20 @@ def test_release_readiness_json_includes_next_actions_when_blocked(tmp_path):
         standard_release_flow["steps"]
     )
     assert payload["standard_release_flow_step_names"] == standard_release_flow_step_names
+    assert standard_release_flow_step_names.index("publish_branch") < (
+        standard_release_flow_step_names.index("ci_verification")
+    )
+    assert standard_release_flow_step_names.index("ci_verification") < (
+        standard_release_flow_step_names.index("target_tag")
+    )
+    target_tag_step = next(
+        step for step in standard_release_flow["steps"] if step["name"] == "target_tag"
+    )
+    assert target_tag_step["commands"] == [
+        "git tag v0.1.1",
+        "python scripts/release_readiness.py --strict --release-tag v0.1.1 --remote",
+        "git push origin v0.1.1",
+    ]
     assert standard_release_flow_step_names.index("website_deploy") < (
         standard_release_flow_step_names.index("website_inspect")
     )
@@ -1204,7 +1222,8 @@ def test_release_readiness_writes_markdown_report(tmp_path):
     assert "- standard_release_flow_distribution_audit_command_sha256: `" in text
     assert "- standard_release_flow_sha256: `" in text
     assert "### Standard Release Commands" in text
-    assert "`python scripts/release_readiness.py --strict --target-version 0.1.1`" in text
+    assert "`python scripts/release_readiness.py --strict --target-version 0.1.1 --remote`" in text
+    assert "`python scripts/release_readiness.py --strict --release-tag v0.1.1 --remote`" in text
     assert "`git tag v0.1.1`" in text
     assert "`git push origin v0.1.1`" in text
     assert "### Standard Release Steps" in text
@@ -1305,7 +1324,7 @@ def test_release_readiness_blocks_new_target_tag_at_daily_cap(tmp_path, capsys):
     assert payload["daily_release_resume_date_sha256"] == release_readiness._stable_json_sha256(
         "2026-06-11"
     )
-    strict_command = "python scripts/release_readiness.py --strict --target-version 0.1.4"
+    strict_command = "python scripts/release_readiness.py --strict --target-version 0.1.4 --remote"
     assert payload["daily_release_resume_command"] == strict_command
     assert payload["daily_release_resume_command_sha256"] == (
         release_readiness._stable_json_sha256(strict_command)
@@ -1443,6 +1462,11 @@ def test_standard_release_flow_preserves_remote_name():
 
     assert "python scripts/release_readiness.py --strict --target-version 0.1.1 --remote --remote-name upstream" in (
         flow["commands"]
+    )
+    assert (
+        "python scripts/release_readiness.py --strict --release-tag v0.1.1 --remote "
+        "--remote-name upstream"
+        in flow["commands"]
     )
     assert (
         "python scripts/check_release_publication.py --remote --remote-name upstream "
@@ -2745,6 +2769,54 @@ def test_release_readiness_allows_bumped_target_before_tag(tmp_path):
     assert report.cadence.tag_matches_version is False
     assert "latest tag v0.1.0 != v0.1.1" not in report.blockers
     assert all("Align `pyproject.toml` version" not in action for action in report.to_dict()["next_actions"])
+
+
+def test_release_readiness_allows_finalized_target_changelog_before_tag(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "pyproject.toml").write_text(
+        '[project]\nname = "demo"\nversion = "0.1.1"\ndescription = "Demo package."\n'
+        'readme = "README.md"\n\n[project.urls]\n'
+        'Homepage = "https://demo.example.com"\n'
+        'Repository = "https://github.com/example/demo"\n'
+        'Changelog = "https://github.com/example/demo/blob/main/CHANGELOG.md"\n',
+        encoding="utf-8",
+    )
+    (repo / "CHANGELOG.md").write_text(
+        "# Changelog\n\n"
+        "## [Unreleased]\n\n"
+        "## [0.1.1] - 2026-06-10\n\n"
+        "### Added\n"
+        "- Finalized release note.\n\n"
+        "## [0.1.0] - 2026-06-08\n\n"
+        "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD\n",
+        encoding="utf-8",
+    )
+    draft = repo / "docs" / "releases" / "v0.1.1-draft.md"
+    draft.write_text(
+        draft.read_text(encoding="utf-8") + "\n**提交范围：** `v0.1.1..HEAD`\n",
+        encoding="utf-8",
+    )
+    _git(repo, "add", "pyproject.toml", "CHANGELOG.md", "docs/releases/v0.1.1-draft.md")
+    _git(repo, "commit", "-m", "finalize release", env={
+        "GIT_AUTHOR_NAME": "Test",
+        "GIT_AUTHOR_EMAIL": "test@example.com",
+        "GIT_COMMITTER_NAME": "Test",
+        "GIT_COMMITTER_EMAIL": "test@example.com",
+        "GIT_AUTHOR_DATE": "2026-06-10T12:00:00+00:00",
+        "GIT_COMMITTER_DATE": "2026-06-10T12:00:00+00:00",
+    })
+
+    report = _build_report(
+        repo,
+        today=date(2026, 6, 10),
+        min_commit_days=1,
+        target_version="0.1.1",
+    )
+
+    assert report.ok is True
+    assert report.cadence.changelog_unreleased_has_content is False
+    assert report.cadence.changelog_ok is True
+    assert "CHANGELOG Unreleased has no content while HEAD is ahead of latest tag" not in report.blockers
 
 
 def test_release_readiness_accepts_tagged_release_mode(tmp_path):

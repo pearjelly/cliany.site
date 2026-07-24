@@ -6,11 +6,12 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import shlex
 import subprocess
 import sys
 import tomllib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -965,6 +966,12 @@ def _target_daily_release_limit_context(
     return target_tag, report.release_count_today + 1
 
 
+def _target_changelog_is_finalized(root: Path, target_version: str) -> bool:
+    changelog = (root / "CHANGELOG.md").read_text(encoding="utf-8")
+    heading = rf"^## \[{re.escape(target_version)}\] - \d{{4}}-\d{{2}}-\d{{2}}\s*$"
+    return re.search(heading, changelog, flags=re.MULTILINE) is not None
+
+
 def _target_daily_release_limit_blocker(
     report: CadenceReport,
     target_version: str | None,
@@ -1110,6 +1117,8 @@ def build_report(
         and cadence.latest_tag is not None
         and not cadence.tag_matches_version
     )
+    if expected_target_transition and _target_changelog_is_finalized(root, expected_target):
+        cadence = replace(cadence, changelog_ok=True)
     blockers = _cadence_blockers(
         cadence,
         ignore_expected_target_transition=expected_target_transition,
@@ -1557,6 +1566,8 @@ def _publication_tag_publish_decision(
     decision_status = decision.get("status")
     decision_can_push_tag = decision.get("can_push_tag")
     decision_required_action = decision.get("required_action")
+    commands: list[str]
+    required_action: str | None
 
     if _has_target_daily_release_limit_blocker(blockers):
         target_status = "blocked_by_daily_release_cap"
@@ -1567,8 +1578,8 @@ def _publication_tag_publish_decision(
         decision_required_action = required_action
     elif target_tag_matches_latest and tag_points_at_head:
         target_status = "current_tag_at_head"
-        required_action = decision.get("required_action")
-        commands: list[str] = []
+        required_action = str(decision.get("required_action") or "") or None
+        commands = []
     elif not bool(publication_payload.get("worktree_clean", True)):
         target_status = "blocked_by_worktree"
         required_action = (
@@ -1645,6 +1656,28 @@ def _release_readiness_strict_command(report: ReadinessReport) -> str:
     )
 
 
+def _standard_target_readiness_command(report: ReadinessReport) -> str:
+    remote_args = _remote_audit_args(
+        remote_check=True,
+        remote_name=str(getattr(report, "remote_name", "origin") or "origin"),
+    )
+    return (
+        "python scripts/release_readiness.py --strict "
+        f"--target-version {shlex.quote(report.target_version)}{remote_args}"
+    )
+
+
+def _release_tag_readiness_command(report: ReadinessReport, release_tag: str) -> str:
+    remote_args = _remote_audit_args(
+        remote_check=True,
+        remote_name=str(getattr(report, "remote_name", "origin") or "origin"),
+    )
+    return (
+        "python scripts/release_readiness.py --strict "
+        f"--release-tag {shlex.quote(release_tag)}{remote_args}"
+    )
+
+
 def _remote_publication_audit_command(report: ReadinessReport) -> str:
     remote_args = _remote_audit_args(
         remote_check=True,
@@ -1717,7 +1750,7 @@ def _standard_release_flow(
 ) -> dict[str, Any]:
     tag_publish_decision = publication_payload["tag_publish_decision"]
     target_tag = tag_publish_decision.get("target_tag") or _target_tag_name(report.target_version)
-    strict_command = _release_readiness_strict_command(report)
+    strict_command = _standard_target_readiness_command(report)
     validation_command = "CLIANY_QA_OFFLINE=1 pytest tests/ -q"
     case_validation_command = "python scripts/validate_cases.py --strict"
     release_notes_action = (
@@ -1728,6 +1761,17 @@ def _standard_release_flow(
     target_tag_commands = [
         str(command) for command in tag_publish_decision.get("target_tag_commands") or []
     ]
+    if target_tag:
+        release_tag_command = _release_tag_readiness_command(report, str(target_tag))
+        push_index = next(
+            (
+                index
+                for index, command in enumerate(target_tag_commands)
+                if command.startswith("git push ")
+            ),
+            len(target_tag_commands),
+        )
+        target_tag_commands.insert(push_index, release_tag_command)
     remote_audit_command = _remote_publication_audit_command(report)
 
     commands = [
@@ -1785,6 +1829,14 @@ def _standard_release_flow(
                 "name": "publish_branch",
                 "status": "blocked" if not publication_payload["worktree_clean"] else "pending",
                 "commands": list(publication_payload["publish_commands"]),
+            },
+            {
+                "name": "ci_verification",
+                "status": "pending",
+                "action": (
+                    "Wait for successful GitHub CI and Embodied CI on the pushed master commit; "
+                    "do not create or push the release tag if either workflow fails."
+                ),
             },
             {
                 "name": "target_tag",

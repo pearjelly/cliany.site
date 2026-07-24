@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.274] - 2026-07-24
+
 ### Fixed
 - Generated data commands no longer report success when their action sequence produces no result data: quality gating now covers `read-` and `extract-` names as well as `list-` and `search-`, plus any command containing an `extract` action.
 - A named data command that contains no `extract` action now returns `E_EMPTY_RESULT`, even when `expects_nonempty=false`; that opt-in permits only a genuine zero-match extraction.
@@ -2583,7 +2585,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.273...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.274...HEAD
+[0.16.274]: https://github.com/pearjelly/cliany.site/compare/v0.16.273...v0.16.274
 [0.16.273]: https://github.com/pearjelly/cliany.site/compare/v0.16.272...v0.16.273
 [0.16.272]: https://github.com/pearjelly/cliany.site/compare/v0.16.271...v0.16.272
 [0.16.271]: https://github.com/pearjelly/cliany.site/compare/v0.16.270...v0.16.271
