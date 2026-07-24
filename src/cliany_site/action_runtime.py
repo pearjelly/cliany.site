@@ -740,15 +740,10 @@ async def execute_action_steps(
                     await asyncio.sleep(_get_post_navigate_delay())
 
                 elif action_type == "submit":
-                    submit_node = await _resolve_action_node(browser_session, action_data)
-                    if submit_node is not None:
-                        event = browser_session.event_bus.dispatch(ClickElementEvent(node=submit_node))
-                    else:
-                        event = browser_session.event_bus.dispatch(SendKeysEvent(keys="Enter"))
+                    # `submit` is reserved for Enter-based forms. Explicit buttons use `click`.
+                    event = browser_session.event_bus.dispatch(SendKeysEvent(keys="Enter"))
                     await event
                     await event.event_result(raise_if_any=not continue_on_error, raise_if_none=False)
-                    if _action_has_href(action_data) or _action_opens_new_tab(action_data):
-                        await _handle_post_click_navigation(browser_session, action_data)
 
                 elif action_type == "extract":
                     await asyncio.sleep(1.5)
@@ -896,7 +891,7 @@ async def execute_action_steps(
             reporter.on_execute_step_done(idx, len(effective_actions), True, step_elapsed)
             logger.debug("%s步骤 %d 完成: 耗时 %.0fms", mode_label, idx + 1, step_elapsed)
 
-        if extraction_results and any(
+        if not continue_on_error and extraction_results and any(
             isinstance(r, dict) and r.get("ok") is False for r in extraction_results
         ):
             _extract_fail_count = sum(

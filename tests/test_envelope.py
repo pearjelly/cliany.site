@@ -3,7 +3,14 @@ import json
 import pytest
 
 from cliany_site.envelope import ErrorCode, err, ok
-from cliany_site.errors import ERROR_FIX_HINTS, CdpError, ExplorerError, LlmUnavailableError, SessionError
+from cliany_site.errors import (
+    ERROR_FIX_HINTS,
+    CdpError,
+    DataCommandQualityError,
+    ExplorerError,
+    LlmUnavailableError,
+    SessionError,
+)
 
 try:
     import jsonschema
@@ -83,6 +90,13 @@ def test_from_exception_llm_unavailable_error():
     """from_exception(LlmUnavailableError()) 返回 E_LLM_UNAVAILABLE"""
     code = ErrorCode.from_exception(LlmUnavailableError("test"))
     assert code == ErrorCode.E_LLM_UNAVAILABLE
+
+
+def test_from_exception_data_command_quality_error():
+    """数据命令质量错误返回 E_EMPTY_RESULT。"""
+    code = ErrorCode.from_exception(DataCommandQualityError("test", details={}))
+    assert code == ErrorCode.E_EMPTY_RESULT
+
 
 def test_from_exception_unknown_error():
     """from_exception(RuntimeError()) 返回 E_UNKNOWN"""

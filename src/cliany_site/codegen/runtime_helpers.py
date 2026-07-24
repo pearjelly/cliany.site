@@ -109,6 +109,28 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
         args.extend(["--value", value])
         return run_atom(args, session=domain)
 
+    if action_type == "select":
+        args = ["browser", "select"]
+        ref = step.get("ref")
+        name = step.get("target_name")
+        value = str(step.get("value") or "")
+        if ref:
+            args.extend(["--ref", str(ref)])
+        elif name:
+            args.extend(["--text", str(name)])
+        args.extend(["--value", value])
+        return run_atom(args, session=domain)
+
+    if action_type == "submit":
+        args = ["browser", "submit"]
+        ref = step.get("ref")
+        name = step.get("target_name")
+        if ref:
+            args.extend(["--ref", str(ref)])
+        elif name:
+            args.extend(["--text", str(name)])
+        return run_atom(args, session=domain)
+
     if action_type == "extract":
         args = ["browser", "extract"]
         selector = step.get("selector")

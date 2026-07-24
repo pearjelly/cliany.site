@@ -144,6 +144,44 @@ def test_explore_llm_gateway_failure_returns_llm_unavailable_json(monkeypatch):
         "status_code": 502,
         "phase": "llm_invoke",
     }
+
+
+def test_explore_data_quality_failure_returns_structured_json(monkeypatch):
+    from click.testing import CliRunner
+
+    from cliany_site.cli import cli
+    from cliany_site.errors import DataCommandQualityError
+
+    monkeypatch.delenv("CLIANY_QA_OFFLINE", raising=False)
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("CLIANY_OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("CLIANY_OPENAI_BASE_URL", "https://example.com/v1")
+
+    cdp = SimpleNamespace(check_available=_async_true)
+    monkeypatch.setattr("cliany_site.browser.cdp.cdp_from_context", lambda _ctx: cdp)
+
+    class FailingExplorer:
+        def __init__(self, **_kwargs):
+            pass
+
+        async def explore(self, *_args, **_kwargs):
+            raise DataCommandQualityError(
+                "数据命令未通过提取质量门禁",
+                details={"repair_attempts": 1, "data_commands": [{"name": "search-results"}]},
+            )
+
+    monkeypatch.setattr("cliany_site.explorer.engine.WorkflowExplorer", FailingExplorer)
+
+    result = CliRunner().invoke(cli, ["explore", "--json", "https://pypi.org", "search packages"])
+    payload, json_end = json.JSONDecoder().raw_decode(result.output)
+
+    assert result.exit_code == 1
+    assert payload["ok"] is False
+    assert payload["error"]["code"] == "E_EMPTY_RESULT"
+    assert payload["error"]["details"] == {
+        "repair_attempts": 1,
+        "data_commands": [{"name": "search-results"}],
+    }
     assert "[explore]" in result.output[json_end:]
 
 

@@ -36,6 +36,14 @@ class LlmUnavailableError(ExplorerError):
         self.retryable = retryable
 
 
+class DataCommandQualityError(ExplorerError):
+    """数据命令缺少可验证的提取结果，不能生成 adapter。"""
+
+    def __init__(self, message: str, *, details: dict) -> None:
+        super().__init__(message)
+        self.details = details
+
+
 class CodegenError(ClanySiteError):
     """代码生成（adapter 输出 / 模板渲染）相关异常"""
 

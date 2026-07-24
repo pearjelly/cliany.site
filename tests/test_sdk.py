@@ -438,6 +438,24 @@ class TestSDKExplore:
             assert "LLM_UNAVAILABLE" in result["error"]["code"]
 
     @pytest.mark.asyncio
+    async def test_explore_data_quality_error_keeps_details(self):
+        from cliany_site.errors import DataCommandQualityError
+        from cliany_site.sdk import ClanySite
+
+        details = {"repair_attempts": 1, "data_commands": [{"name": "search-results"}]}
+        with patch("cliany_site.explorer.engine.WorkflowExplorer") as MockExplorer:
+            mock_instance = MockExplorer.return_value
+            mock_instance.explore = AsyncMock(
+                side_effect=DataCommandQualityError("数据命令未通过提取质量门禁", details=details)
+            )
+
+            result = await ClanySite().explore("https://test.com", "测试")
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_EMPTY_RESULT"
+        assert result["error"]["details"] == details
+
+    @pytest.mark.asyncio
     async def test_explore_success_create(self, tmp_path):
         from cliany_site.explorer.models import CommandSuggestion, ExploreResult, PageInfo
         from cliany_site.sdk import ClanySite

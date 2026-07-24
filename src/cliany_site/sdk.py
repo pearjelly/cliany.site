@@ -40,6 +40,7 @@ from cliany_site.errors import (
     EXPLORE_FAILED,
     LLM_UNAVAILABLE,
     CdpError,
+    DataCommandQualityError,
 )
 from cliany_site.response import error_response, success_response
 
@@ -151,6 +152,13 @@ class ClanySite:
             explore_result = await explorer.explore(url, workflow_description, port=self._port)
         except ConnectionError as e:
             return error_response(CDP_UNAVAILABLE, str(e), "请确保 Chrome CDP 可用")
+        except DataCommandQualityError as e:
+            return error_response(
+                "E_EMPTY_RESULT",
+                str(e),
+                "请重新探索并确认数据命令的提取结果",
+                details=e.details,
+            )
         except OSError as e:
             if "API" in str(e) or "Key" in str(e):
                 return error_response(LLM_UNAVAILABLE, str(e))

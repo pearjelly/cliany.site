@@ -22,7 +22,7 @@ from cliany_site.browser.selector import format_selector_candidates_section
 from cliany_site.capability import sniff_api_endpoints
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
 from cliany_site.config import get_config
-from cliany_site.errors import LlmUnavailableError
+from cliany_site.errors import DataCommandQualityError, LlmUnavailableError
 from cliany_site.explorer.models import (
     ActionStep,
     CommandSuggestion,
@@ -36,6 +36,7 @@ from cliany_site.explorer.prompts import (
     SYSTEM_PROMPT,
     build_atom_inventory_section,
 )
+from cliany_site.extract_quality import evaluate_extract_quality
 from cliany_site.extract_writer import save_extract_markdown
 from cliany_site.progress import NullProgressReporter, ProgressReporter
 
@@ -72,6 +73,116 @@ _GENERIC_COMMAND_NAMES = frozenset(
         "command-1",
     }
 )
+
+_DATA_COMMAND_PREFIXES = ("list-", "search-", "read-", "extract-")
+_MAX_DATA_COMPLETION_REPAIRS = 1
+
+
+def _is_data_command_name(value: object) -> bool:
+    name = str(value or "").strip().lower()
+    return name.startswith(_DATA_COMMAND_PREFIXES)
+
+
+def _valid_action_indices(raw_indices: object, action_count: int) -> list[int]:
+    if not isinstance(raw_indices, list):
+        return []
+    return [index for index in raw_indices if isinstance(index, int) and 0 <= index < action_count]
+
+
+def _data_command_completion_failures(
+    commands_data: list[object],
+    actions: list[ActionStep],
+    extraction_results: list[object],
+) -> list[dict[str, Any]]:
+    """Return only evidence-backed completion failures for declared data commands."""
+    evidence_by_action: dict[int, list[dict[str, Any]]] = {}
+    for evidence in extraction_results:
+        if not isinstance(evidence, dict):
+            continue
+        action_index = evidence.get("action_index")
+        if isinstance(action_index, int):
+            evidence_by_action.setdefault(action_index, []).append(evidence)
+
+    failures: list[dict[str, Any]] = []
+    for command_position, raw_command in enumerate(commands_data):
+        if not isinstance(raw_command, dict) or not _is_data_command_name(raw_command.get("name")):
+            continue
+
+        name = str(raw_command.get("name", "")).strip()
+        action_indices = _valid_action_indices(raw_command.get("action_steps"), len(actions))
+        extract_indices = [
+            action_index
+            for action_index in action_indices
+            if actions[action_index].action_type == "extract"
+        ]
+        base_failure = {
+            "command_index": command_position,
+            "name": name,
+            "action_steps": action_indices,
+            "extract_action_indices": extract_indices,
+        }
+        if not extract_indices:
+            failures.append({**base_failure, "reason": "missing_owned_extract"})
+            continue
+
+        expects_nonempty = raw_command.get("expects_nonempty")
+        requires_nonempty = expects_nonempty if isinstance(expects_nonempty, bool) else True
+        for action_index in extract_indices:
+            evidence_items = evidence_by_action.get(action_index, [])
+            if not evidence_items:
+                failures.append(
+                    {
+                        **base_failure,
+                        "reason": "missing_extraction_evidence",
+                        "action_index": action_index,
+                    }
+                )
+                continue
+
+            latest_evidence = evidence_items[-1]
+            if latest_evidence.get("ok") is False:
+                failures.append(
+                    {
+                        **base_failure,
+                        "reason": "extraction_execution_failed",
+                        "action_index": action_index,
+                        "error": latest_evidence.get("error"),
+                    }
+                )
+                continue
+
+            action = actions[action_index]
+            fields_map = action.fields_map if isinstance(action.fields_map, dict) else {}
+            quality = evaluate_extract_quality(
+                action.extract_mode,
+                latest_evidence.get("data"),
+                fields_map,
+            )
+            accepts_empty = not requires_nonempty and quality.status == "empty"
+            if not quality.ok and not accepts_empty:
+                failures.append(
+                    {
+                        **base_failure,
+                        "reason": "extract_quality_failed",
+                        "action_index": action_index,
+                        "quality": quality.to_dict(),
+                    }
+                )
+
+    return failures
+
+
+def _data_completion_feedback(failures: list[dict[str, Any]]) -> str:
+    lines = [
+        "## 数据命令完成门禁",
+        "上一次尝试不能结束探索。只修正以下数据命令，并再次执行其自己的 extract 动作。",
+        "缺失、空结果或字段不完整时必须保持 done=false；不要编造数据或把其他命令的 extract 归属给它。",
+    ]
+    for failure in failures:
+        name = failure.get("name") or f"command-{failure.get('command_index', 0) + 1}"
+        reason = failure.get("reason", "unknown")
+        lines.append(f"- {name}: {reason}")
+    return "\n".join(lines)
 
 
 def _infer_command_name_from_description(description: str) -> str:
@@ -604,6 +715,8 @@ class WorkflowExplorer:
             completed_steps_text = "（无）"
             final_step_count = 0
             all_extraction_results: list = []
+            data_completion_repairs = 0
+            data_completion_feedback = ""
 
             for step_num in range(cfg.explore_max_steps):
                 step_start = time.monotonic()
@@ -637,6 +750,9 @@ class WorkflowExplorer:
                     workflow_description=workflow_description,
                     completed_steps=completed_steps_text,
                 )
+
+                if data_completion_feedback:
+                    prompt_text = f"{prompt_text}\n\n{data_completion_feedback}"
 
                 atom_inventory = build_atom_inventory_section(domain)
                 if atom_inventory:
@@ -799,8 +915,18 @@ class WorkflowExplorer:
                 await execute_action_steps(
                     browser_session, actions_data, continue_on_error=True, extraction_results=_extraction_results
                 )
-                if _extraction_results:
-                    all_extraction_results.extend(_extraction_results)
+                for extraction_result in _extraction_results:
+                    if not isinstance(extraction_result, dict):
+                        continue
+                    evidence = dict(extraction_result)
+                    local_index = evidence.get("step_index")
+                    if not isinstance(local_index, int):
+                        error = evidence.get("error")
+                        if isinstance(error, dict):
+                            local_index = error.get("step_index")
+                    if isinstance(local_index, int) and 0 <= local_index < len(actions_data):
+                        evidence["action_index"] = turn_snapshot.actions_before_count + local_index
+                    all_extraction_results.append(evidence)
 
                 if recording_manager is not None and recording_manifest is not None:
                     try:
@@ -857,16 +983,42 @@ class WorkflowExplorer:
                                 logger.info("步骤 %d: 用户选择继续探索", step_num + 1)
                                 continue
 
+                    commands_data = parsed.get("commands", [])
+                    if not isinstance(commands_data, list):
+                        commands_data = []
+
+                    completion_failures = _data_command_completion_failures(
+                        commands_data,
+                        result.actions,
+                        all_extraction_results,
+                    )
+                    if completion_failures:
+                        can_repair = (
+                            data_completion_repairs < _MAX_DATA_COMPLETION_REPAIRS
+                            and step_num + 1 < cfg.explore_max_steps
+                        )
+                        details = {
+                            "repair_attempts": data_completion_repairs,
+                            "data_commands": completion_failures,
+                        }
+                        if can_repair:
+                            data_completion_repairs += 1
+                            data_completion_feedback = _data_completion_feedback(completion_failures)
+                            logger.info(
+                                "步骤 %d 的数据命令未通过完成门禁，发起第 %d 次修正",
+                                step_num + 1,
+                                data_completion_repairs,
+                            )
+                            continue
+                        raise DataCommandQualityError("数据命令未通过提取质量门禁", details=details)
+
                     logger.info(
                         "探索完成: 共 %d 步, %d 个动作, %d 个命令",
                         step_num + 1,
                         len(result.actions),
-                        len(parsed.get("commands", [])),
+                        len(commands_data),
                     )
                     final_step_count = step_num + 1
-                    commands_data = parsed.get("commands", [])
-                    if not isinstance(commands_data, list):
-                        commands_data = []
 
                     for cmd_data in commands_data:
                         if not isinstance(cmd_data, dict):
@@ -875,15 +1027,7 @@ class WorkflowExplorer:
                         if not isinstance(args, list):
                             args = []
 
-                        raw_action_steps = cmd_data.get("action_steps")
-                        if isinstance(raw_action_steps, list):
-                            action_steps = [
-                                idx
-                                for idx in raw_action_steps
-                                if isinstance(idx, int) and 0 <= idx < len(result.actions)
-                            ]
-                        else:
-                            action_steps = []  # will be fixed in validation below
+                        action_steps = _valid_action_indices(cmd_data.get("action_steps"), len(result.actions))
 
                         cmd = CommandSuggestion(
                             name=cmd_data.get("name", f"command-{len(result.commands) + 1}"),

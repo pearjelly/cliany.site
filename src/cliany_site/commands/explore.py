@@ -63,7 +63,7 @@ def explore_cmd(
             save_adapter,
         )
         from cliany_site.codegen.merger import AdapterMerger
-        from cliany_site.errors import LlmUnavailableError
+        from cliany_site.errors import DataCommandQualityError, LlmUnavailableError
         from cliany_site.explorer.engine import (
             WorkflowExplorer,
             _load_dotenv,
@@ -197,6 +197,14 @@ def explore_cmd(
                     "status_code": e.status_code,
                     "phase": "llm_invoke",
                 },
+            )
+        except DataCommandQualityError as e:
+            return err(
+                "explore",
+                ErrorCode.E_EMPTY_RESULT,
+                str(e),
+                hint="请重新探索并确认数据命令的 extract 返回完整结果。",
+                details=e.details,
             )
         except ValueError as e:
             if "CLIANY_QA_FAKE_LLM_RESPONSES" in str(e):

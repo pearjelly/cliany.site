@@ -7,11 +7,19 @@ def success_response(data: dict[str, Any]) -> dict[str, Any]:
     return {"success": True, "data": data, "error": None}
 
 
-def error_response(code: str, message: str, fix: str | None = None) -> dict[str, Any]:
+def error_response(
+    code: str,
+    message: str,
+    fix: str | None = None,
+    details: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    error: dict[str, Any] = {"code": code, "message": message, "fix": fix}
+    if details is not None:
+        error["details"] = details
     return {
         "success": False,
         "data": None,
-        "error": {"code": code, "message": message, "fix": fix},
+        "error": error,
     }
 
 

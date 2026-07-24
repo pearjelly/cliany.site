@@ -136,7 +136,7 @@ async def test_route_action_dispatches_by_type(action_type, monkeypatch):
         "type": "TypeTextEvent",
         "select": "SelectDropdownOptionEvent",
         "navigate": "NavigateToUrlEvent",
-        "submit": "ClickElementEvent",
+        "submit": "SendKeysEvent",
     }[action_type]
     action = {
         "type": action_type,
@@ -154,6 +154,8 @@ async def test_route_action_dispatches_by_type(action_type, monkeypatch):
 
     dispatched_event = session.event_bus.dispatch.call_args.args[0]
     assert dispatched_event.__class__.__name__ == expected_event
+    if action_type == "submit":
+        assert dispatched_event.kwargs["keys"] == "Enter"
 
 
 @pytest.mark.asyncio
