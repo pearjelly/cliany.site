@@ -972,6 +972,10 @@ def _target_changelog_is_finalized(root: Path, target_version: str) -> bool:
     return re.search(heading, changelog, flags=re.MULTILINE) is not None
 
 
+def _target_changelog_compare_link(target_version: str) -> str:
+    return f"https://github.com/pearjelly/cliany.site/compare/v{target_version}...HEAD"
+
+
 def _target_daily_release_limit_blocker(
     report: CadenceReport,
     target_version: str | None,
@@ -1118,7 +1122,14 @@ def build_report(
         and not cadence.tag_matches_version
     )
     if expected_target_transition and _target_changelog_is_finalized(root, expected_target):
-        cadence = replace(cadence, changelog_ok=True)
+        target_compare = _target_changelog_compare_link(expected_target)
+        if cadence.changelog_unreleased_compare_actual == target_compare:
+            cadence = replace(
+                cadence,
+                changelog_ok=True,
+                changelog_unreleased_compare_ok=True,
+                changelog_unreleased_compare_expected=target_compare,
+            )
     blockers = _cadence_blockers(
         cadence,
         ignore_expected_target_transition=expected_target_transition,

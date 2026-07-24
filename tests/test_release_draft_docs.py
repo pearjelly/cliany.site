@@ -11673,6 +11673,9 @@ def test_v016274_github_release_notes_are_user_facing() -> None:
         "expects_nonempty=false",
         "## Compatibility",
         "not silently rewritten",
+        "## Release Safety",
+        "Embodied CI",
+        "--release-tag",
         "## Verification",
         "No live LLM",
     ]

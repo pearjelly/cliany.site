@@ -2788,7 +2788,7 @@ def test_release_readiness_allows_finalized_target_changelog_before_tag(tmp_path
         "### Added\n"
         "- Finalized release note.\n\n"
         "## [0.1.0] - 2026-06-08\n\n"
-        "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.1.0...HEAD\n",
+        "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.1.1...HEAD\n",
         encoding="utf-8",
     )
     draft = repo / "docs" / "releases" / "v0.1.1-draft.md"
@@ -2816,6 +2816,8 @@ def test_release_readiness_allows_finalized_target_changelog_before_tag(tmp_path
     assert report.ok is True
     assert report.cadence.changelog_unreleased_has_content is False
     assert report.cadence.changelog_ok is True
+    assert report.cadence.changelog_unreleased_compare_ok is True
+    assert report.cadence.changelog_unreleased_compare_expected.endswith("v0.1.1...HEAD")
     assert "CHANGELOG Unreleased has no content while HEAD is ahead of latest tag" not in report.blockers
 
 
