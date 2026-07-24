@@ -11743,12 +11743,10 @@ def test_v016275_changelog_and_release_docs_are_finalized() -> None:
 
 def test_v016276_changelog_and_release_docs_are_finalized() -> None:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.276]", 1)[0]
     release = text.split("## [0.16.276]", 1)[1].split("## [0.16.275]", 1)[0]
     draft = (ROOT / "docs" / "releases" / "v0.16.276-draft.md").read_text(encoding="utf-8")
     notes = (ROOT / "docs" / "releases" / "v0.16.276-github-release.md").read_text(encoding="utf-8")
 
-    assert unreleased.strip() == ""
     assert "Primary Evidence Task" in release
     assert "cliany-site doctor --llm-live --json" in release
     assert "task_command" in release
@@ -11761,6 +11759,21 @@ def test_v016276_changelog_and_release_docs_are_finalized() -> None:
     assert "No live LLM" in notes
     assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.276...HEAD" in text
     assert "[0.16.276]: https://github.com/pearjelly/cliany.site/compare/v0.16.275...v0.16.276" in text
+
+
+def test_unreleased_tracks_v016277_generated_action_and_completion_gates() -> None:
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.276]", 1)[0]
+
+    for snippet in [
+        "browser select",
+        "browser submit",
+        "list-`, `search-`, `read-`, or `extract-",
+        "E_EMPTY_RESULT",
+        "data_commands",
+        "one bounded correction round",
+    ]:
+        assert snippet in unreleased
 
 
 def test_v016277_release_draft_tracks_generated_action_and_completion_gates() -> None:

@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+### Added
+- Generated adapters can now replay semantic dropdown selections and Enter-based form submissions through built-in `browser select` and `browser submit` commands.
+
+### Fixed
+- `explore` now requires every named `list-`, `search-`, `read-`, or `extract-` command to own a real `extract` action and quality-checked extraction evidence before it can generate an adapter.
+- Missing extraction evidence, execution failures, required empty results, and partial rows receive one bounded correction round; a remaining failure returns `E_EMPTY_RESULT` with machine-readable `data_commands` details instead of writing an action-only adapter.
+- The SDK preserves those data-command diagnostics in its error envelope, and extraction evaluation failures remain visible to the completion gate when execution continues after errors.
+
 ## [0.16.276] - 2026-07-24
 
 ### Fixed
