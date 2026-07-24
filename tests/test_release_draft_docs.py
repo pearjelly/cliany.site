@@ -11761,3 +11761,46 @@ def test_v016276_changelog_and_release_docs_are_finalized() -> None:
     assert "No live LLM" in notes
     assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.276...HEAD" in text
     assert "[0.16.276]: https://github.com/pearjelly/cliany.site/compare/v0.16.275...v0.16.276" in text
+
+
+def test_v016277_release_draft_tracks_generated_action_and_completion_gates() -> None:
+    draft = (ROOT / "docs" / "releases" / "v0.16.277-draft.md").read_text(encoding="utf-8")
+    notes = (ROOT / "docs" / "releases" / "v0.16.277-github-release.md").read_text(encoding="utf-8")
+
+    required_draft = [
+        "# v0.16.277 发布草案",
+        "**目标版本：** `0.16.277`",
+        "**提交范围：** `v0.16.276..HEAD`",
+        "**提交范围：** `v0.16.277..HEAD`",
+        "browser select",
+        "browser submit",
+        "action_steps",
+        "E_EMPTY_RESULT",
+        "data_commands",
+        "expects_nonempty=false",
+        "search-extraction-gap",
+        "llm_live_preflight_not_ready",
+        "E_LLM_UNAVAILABLE",
+        "release_readiness.py --strict --target-version 0.16.277 --remote",
+        "git tag v0.16.277",
+        "release_readiness.py --strict --release-tag v0.16.277 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]
+    for snippet in required_draft:
+        assert snippet in draft
+
+    required_notes = [
+        "# v0.16.277",
+        "## What Changed",
+        "browser select",
+        "browser submit",
+        "E_EMPTY_RESULT",
+        "data_commands",
+        "## Compatibility",
+        "not silently rewritten",
+        "## Trust Boundaries",
+        "No live LLM",
+    ]
+    for snippet in required_notes:
+        assert snippet in notes
