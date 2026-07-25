@@ -1,8 +1,8 @@
 # cliany-site 2026 Q3 路线图
 
 - **制定日期：** 2026-06-10
-- **校准日期：** 2026-07-24
-- **基线版本：** v0.16.276
+- **校准日期：** 2026-07-25
+- **基线版本：** v0.16.277
 - **目标周期：** 2026-06-10 ~ 2026-08-05
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -13,7 +13,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 已完成校准
 
-2026-06-10 的原始路线图以 v0.14.2 为基线；到 2026-07-24 已进入 v0.16.276 发布验证。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
+2026-06-10 的原始路线图以 v0.14.2 为基线；到 2026-07-25 已进入 v0.16.277 发布验证。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
 
 - 首次成功路径：README、README.zh、官网和 `doctor` 输出已经围绕 10 分钟路径、真实 demo、LLM live preflight 和可执行下一步重新组织。
 - 真实案例库：`cliany-site cases` 已成为案例发现、单案例展开、issue template、evidence bundle 和 promotion plan 的统一入口。

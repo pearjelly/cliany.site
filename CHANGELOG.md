@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.277] - 2026-07-25
+
 ### Added
 - Generated adapters can now replay semantic dropdown selections and Enter-based form submissions through built-in `browser select` and `browser submit` commands.
 
@@ -2609,7 +2611,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.276...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.277...HEAD
+[0.16.277]: https://github.com/pearjelly/cliany.site/compare/v0.16.276...v0.16.277
 [0.16.276]: https://github.com/pearjelly/cliany.site/compare/v0.16.275...v0.16.276
 [0.16.275]: https://github.com/pearjelly/cliany.site/compare/v0.16.274...v0.16.275
 [0.16.274]: https://github.com/pearjelly/cliany.site/compare/v0.16.273...v0.16.274
