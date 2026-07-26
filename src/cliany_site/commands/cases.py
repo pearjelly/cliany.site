@@ -25,7 +25,9 @@ CANDIDATE_PACKAGES_DIR = "~/.cliany-site/packages"
 CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     f"python scripts/validate_cases.py --packages-dir {CANDIDATE_PACKAGES_DIR} --include-candidate-packages --strict"
 )
-LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
+LLM_LIVE_PREFLIGHT_COMMAND = (
+    "cliany-site doctor --llm-live --require-capability generate_adapters --json"
+)
 DOCTOR_PREFLIGHT_JSON_PATH = "/tmp/cliany-doctor-preflight.json"
 DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND = (
     f"python scripts/extract_doctor_preflight_evidence.py {DOCTOR_PREFLIGHT_JSON_PATH}"
@@ -188,7 +190,7 @@ def _candidate_promotion_command_plan(case: dict[str, Any]) -> list[dict[str, An
         {
             "task": "llm_live_preflight",
             "command": LLM_LIVE_PREFLIGHT_COMMAND,
-            "source": "doctor.llm_live",
+            "source": "doctor.require_capability",
         },
         {
             "task": "adapter_package",
@@ -301,7 +303,7 @@ def _markdown_value(value: Any) -> str:
 
 
 def _doctor_preflight_evidence_template() -> dict[str, str]:
-    placeholder = "<paste from doctor --llm-live --json>"
+    placeholder = "<paste from doctor --llm-live --require-capability generate_adapters --json>"
     return {field: placeholder for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS}
 
 
@@ -463,6 +465,9 @@ def _load_doctor_preflight_evidence(path: Path) -> dict[str, Any]:
     if not isinstance(payload, dict):
         msg = f"{path} must contain a JSON object"
         raise ValueError(msg)
+    error = payload.get("error")
+    if payload.get("ok") is False and isinstance(error, dict) and isinstance(error.get("details"), dict):
+        payload = {**payload, "data": error["details"]}
     return _doctor_preflight_evidence_from_payload(payload, source_path=path)
 
 
@@ -881,7 +886,7 @@ def _candidate_task_next_executable_step(
         return {
             "step": step,
             "command": next_command,
-            "command_source": "doctor.llm_live_preflight",
+            "command_source": "doctor.require_capability_preflight",
             "command_missing": not bool(next_command),
             "handoff": str(first_step.get("handoff") or handoff),
         }
@@ -1846,7 +1851,10 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
     "--doctor-json",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     default=None,
-    help="读取 cliany-site doctor --llm-live --json 输出并附加实际 preflight evidence",
+    help=(
+        "读取 cliany-site doctor --llm-live --require-capability generate_adapters "
+        "--json 输出并附加实际 preflight evidence"
+    ),
 )
 @click.option("--promotion-plan", is_flag=True, default=False, help="输出 candidate 晋级队列和首要证据任务")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")
@@ -1910,7 +1918,8 @@ def cases_cmd(
             ErrorCode.E_INVALID_PARAM,
             "--doctor-json 必须配合 --issue-template 或 --evidence-bundle 使用",
             hint=(
-                "先运行 cliany-site doctor --llm-live --json > /tmp/cliany-doctor-preflight.json，"
+                "先运行 cliany-site doctor --llm-live --require-capability generate_adapters "
+                "--json > /tmp/cliany-doctor-preflight.json，"
                 "再生成 candidate evidence bundle。"
             ),
             details={"doctor_json": str(doctor_json)},
@@ -1965,7 +1974,10 @@ def cases_cmd(
                 "cases",
                 ErrorCode.E_INVALID_PARAM,
                 f"doctor JSON 读取失败: {exc}",
-                hint="请传入 cliany-site doctor --llm-live --json 生成的 JSON 对象。",
+                hint=(
+                    "请传入 cliany-site doctor --llm-live --require-capability "
+                    "generate_adapters --json 生成的 JSON 对象。"
+                ),
                 details={"doctor_json": str(doctor_json)},
             )
             print_response(result, effective_json_mode)

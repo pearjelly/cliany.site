@@ -33,7 +33,7 @@ LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS = [
     "checks[llm_live].details.message",
 ]
 DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE = {
-    field: "<paste from doctor --llm-live --json>" for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
+    field: "<paste from doctor --llm-live --require-capability generate_adapters --json>" for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
 }
 DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT = len(DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE)
 DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256 = hashlib.sha256(
@@ -68,7 +68,7 @@ DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256 = hashlib.sha256(
         separators=(",", ":"),
     ).encode()
 ).hexdigest()
-LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
+LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --require-capability generate_adapters --json"
 LLM_LIVE_PREFLIGHT_COMMAND_SHA256 = hashlib.sha256(LLM_LIVE_PREFLIGHT_COMMAND.encode("utf-8")).hexdigest()
 DOCTOR_PREFLIGHT_JSON_PATH = "/tmp/cliany-doctor-preflight.json"
 DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND = (
@@ -163,7 +163,7 @@ def test_cases_command_returns_catalog_summary(tmp_home):
     assert data["promotion_evidence_summary"]["primary_task_detail"]["llm_live_preflight_required"] is True
     assert (
         data["promotion_evidence_summary"]["primary_task_detail"]["llm_live_preflight_command"]
-        == "cliany-site doctor --llm-live --json"
+        == "cliany-site doctor --llm-live --require-capability generate_adapters --json"
     )
     assert data["promotion_evidence_summary"]["primary_next_task_acceptance_criteria"].startswith(
         "Attach the generated"
@@ -171,11 +171,11 @@ def test_cases_command_returns_catalog_summary(tmp_home):
     assert data["promotion_evidence_summary"]["primary_next_task_runbook_first_step"] == "llm_live_preflight"
     assert (
         data["promotion_evidence_summary"]["primary_next_task_runbook_first_command"]
-        == "cliany-site doctor --llm-live --json"
+        == "cliany-site doctor --llm-live --require-capability generate_adapters --json"
     )
     assert (
         data["promotion_evidence_summary"]["primary_next_task_runbook_first_command_sha256"]
-        == "0ca644df288169289dd4dbc17aeacdc58b9898f05c0d4c5d304c17e33bdbcb96"
+        == "99b1e98311c14ad5d50d358b2e90bec3e8a92f53ef9fd033d76319cb6921f802"
     )
     assert (
         data["promotion_evidence_summary"]["primary_next_task"]
@@ -226,7 +226,7 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
         "acceptance_criteria": data["promotion_evidence_summary"]["primary_next_task_acceptance_criteria"],
         "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
         "llm_live_preflight_required": True,
-        "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
+        "llm_live_preflight_command": "cliany-site doctor --llm-live --require-capability generate_adapters --json",
         "llm_live_preflight_command_sha256": LLM_LIVE_PREFLIGHT_COMMAND_SHA256,
         "llm_live_preflight_blocker_note": (
             "Run the live LLM preflight before explore. If generate_adapters.ready=false "
@@ -272,9 +272,9 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
     )
     assert data["cases"][0]["promotion_command_plan"][0] == {
         "task": "llm_live_preflight",
-        "command": "cliany-site doctor --llm-live --json",
+        "command": "cliany-site doctor --llm-live --require-capability generate_adapters --json",
         "command_sha256": LLM_LIVE_PREFLIGHT_COMMAND_SHA256,
-        "source": "doctor.llm_live",
+        "source": "doctor.require_capability",
         "missing": False,
     }
     assert data["cases"][0]["promotion_command_plan"][1] == {
@@ -331,9 +331,7 @@ def test_cases_command_human_candidate_next_step_shows_primary_detail(tmp_home):
     assert "package path or release asset name" in result.output
     assert "preflight_required: true" in result.output
     assert "preflight_blocker: Run the live LLM preflight before explore." in result.output
-    assert result.output.index("cliany-site doctor --llm-live --json") < result.output.index(
-        "cliany-site explore"
-    )
+    assert "cliany-site doctor --llm-live --require-capability generate_adapters --json" in result.output
     assert "preflight 通过后再执行:" in result.output
 
 
@@ -424,7 +422,7 @@ def test_cases_command_issue_template_json(tmp_home):
     )
     assert primary_task["next_step"] == "llm_live_preflight"
     assert primary_task["next_command"] == LLM_LIVE_PREFLIGHT_COMMAND
-    assert primary_task["next_command_source"] == "doctor.llm_live_preflight"
+    assert primary_task["next_command_source"] == "doctor.require_capability_preflight"
     assert primary_task["next_command_missing"] is False
     assert primary_task["task_command"].startswith('cliany-site explore "https://pypi.org"')
     assert primary_task["task_command_source"] == "commands.explore"
@@ -432,7 +430,7 @@ def test_cases_command_issue_template_json(tmp_home):
     assert primary_task["expected_adapter_package"] == ("pypi.org-<version>.cliany-adapter.tar.gz")
     assert primary_task["acceptance_criteria"].startswith("Attach the generated")
     assert primary_task["llm_live_preflight_required"] is True
-    assert primary_task["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
+    assert primary_task["llm_live_preflight_command"] == "cliany-site doctor --llm-live --require-capability generate_adapters --json"
     assert "E_LLM_UNAVAILABLE" in primary_task["llm_live_preflight_blocker_note"]
     assert primary_task["llm_live_preflight_evidence_fields"] == (LLM_LIVE_PREFLIGHT_EVIDENCE_FIELDS)
     assert primary_task["doctor_preflight_evidence_fields"] == (DOCTOR_PREFLIGHT_EVIDENCE_FIELDS)
@@ -442,7 +440,7 @@ def test_cases_command_issue_template_json(tmp_home):
     )
     assert primary_task["doctor_preflight_evidence_template_sha256"] == DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_SHA256
     assert primary_task["runbook"][0]["step"] == "llm_live_preflight"
-    assert primary_task["runbook"][0]["command"] == "cliany-site doctor --llm-live --json"
+    assert primary_task["runbook"][0]["command"] == "cliany-site doctor --llm-live --require-capability generate_adapters --json"
     assert primary_task["runbook"][1]["step"] == "adapter_package"
     assert primary_task["runbook"][2]["step"] == "acceptance"
     assert "## Scope: promote candidate case `pypi-project-search`" in template
@@ -450,12 +448,12 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "- Task: `adapter_package`" in template
     assert "- Status: `pending`" in template
     assert "- Next executable step: `llm_live_preflight`" in template
-    assert "- Next executable command: `cliany-site doctor --llm-live --json`" in template
+    assert "- Next executable command: `cliany-site doctor --llm-live --require-capability generate_adapters --json`" in template
     assert "- Task command after preflight: `cliany-site explore" in template
-    assert template.index("cliany-site doctor --llm-live --json") < template.index("cliany-site explore")
+    assert template.index("cliany-site doctor --llm-live --require-capability generate_adapters --json") < template.index("cliany-site explore")
     assert "- Expected adapter package: `pypi.org-<version>.cliany-adapter.tar.gz`" in template
     assert "## Primary Runbook" in template
-    assert "- `llm_live_preflight`: `cliany-site doctor --llm-live --json`" in template
+    assert "- `llm_live_preflight`: `cliany-site doctor --llm-live --require-capability generate_adapters --json`" in template
     assert (
         '- `adapter_package`: `cliany-site explore "https://pypi.org" '
         '"search Python packages for cliany-site and list project names" --json`' in template
@@ -467,7 +465,7 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "- all_declared: `true`" in template
     assert "## Promotion Command Plan" in template
     assert f"  - command_sha256: `{LLM_LIVE_PREFLIGHT_COMMAND_SHA256}`" in template
-    assert "  - source: `doctor.llm_live`" in template
+    assert "  - source: `doctor.require_capability`" in template
     assert "  - missing: `false`" in template
     assert (
         "  - command_sha256: "
@@ -475,7 +473,7 @@ def test_cases_command_issue_template_json(tmp_home):
     )
     assert "  - source: `commands.adapter`" in template
     assert "## LLM Preflight Gate" in template
-    assert "- Command: `cliany-site doctor --llm-live --json`" in template
+    assert "- Command: `cliany-site doctor --llm-live --require-capability generate_adapters --json`" in template
     assert f"- Command SHA-256: `{LLM_LIVE_PREFLIGHT_COMMAND_SHA256}`" in template
     assert "generate_adapters.ready=false" in template
     assert "llm_live reports warning/error" in template
@@ -499,8 +497,8 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "`summary.capabilities.run_browser_workflows.ready`" in template
     assert "`checks[cdp].action`" in template
     assert "## Doctor Preflight Evidence Template" in template
-    assert "- `summary.ready_for_explore`: `<paste from doctor --llm-live --json>`" in template
-    assert "- `checks[llm_live].details.error_code`: `<paste from doctor --llm-live --json>`" in template
+    assert "- `summary.ready_for_explore`: `<paste from doctor --llm-live --require-capability generate_adapters --json>`" in template
+    assert "- `checks[llm_live].details.error_code`: `<paste from doctor --llm-live --require-capability generate_adapters --json>`" in template
     assert "## Acceptance Criteria" in template
     assert "`adapter_package`: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in template
     assert "`metadata_validation`: Paste `python scripts/validate_cases.py" in template
@@ -671,7 +669,7 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["primary_next_task"] == bundle["primary_pending_task"]
     assert bundle["primary_next_task_step"] == "llm_live_preflight"
     assert bundle["primary_next_task_command"] == LLM_LIVE_PREFLIGHT_COMMAND
-    assert bundle["primary_next_task_command_source"] == "doctor.llm_live_preflight"
+    assert bundle["primary_next_task_command_source"] == "doctor.require_capability_preflight"
     assert bundle["primary_next_task_command_missing"] is False
     assert bundle["primary_next_task_handoff"] == bundle["llm_live_preflight_blocker_note"]
     assert bundle["primary_next_task_task_command"] == (
@@ -683,7 +681,7 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["primary_next_task_runbook"] == [
         {
             "step": "llm_live_preflight",
-            "command": "cliany-site doctor --llm-live --json",
+            "command": "cliany-site doctor --llm-live --require-capability generate_adapters --json",
             "required": True,
             "handoff": bundle["llm_live_preflight_blocker_note"],
         },
@@ -707,10 +705,10 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         },
     ]
     assert bundle["primary_next_task_runbook_first_step"] == "llm_live_preflight"
-    assert bundle["primary_next_task_runbook_first_command"] == "cliany-site doctor --llm-live --json"
+    assert bundle["primary_next_task_runbook_first_command"] == "cliany-site doctor --llm-live --require-capability generate_adapters --json"
     assert (
         bundle["primary_next_task_runbook_first_command_sha256"]
-        == "0ca644df288169289dd4dbc17aeacdc58b9898f05c0d4c5d304c17e33bdbcb96"
+        == "99b1e98311c14ad5d50d358b2e90bec3e8a92f53ef9fd033d76319cb6921f802"
     )
     assert bundle["primary_next_task_acceptance_criteria"] == (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name."
@@ -744,7 +742,7 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         "complete": False,
         "handoff": bundle["tasks"][0]["handoff"],
     }
-    assert bundle["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
+    assert bundle["llm_live_preflight_command"] == "cliany-site doctor --llm-live --require-capability generate_adapters --json"
     assert bundle["llm_live_preflight_command_sha256"] == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
     assert "generate_adapters.ready=false" in bundle["llm_live_preflight_blocker_note"]
     assert "llm_live reports warning/error" in bundle["llm_live_preflight_blocker_note"]
@@ -776,9 +774,9 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["promotion_command_plan"] == [
         {
             "task": "llm_live_preflight",
-            "command": "cliany-site doctor --llm-live --json",
+            "command": "cliany-site doctor --llm-live --require-capability generate_adapters --json",
             "command_sha256": LLM_LIVE_PREFLIGHT_COMMAND_SHA256,
-            "source": "doctor.llm_live",
+            "source": "doctor.require_capability",
             "missing": False,
         },
         {
@@ -814,7 +812,7 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["tasks"][0]["task"] == "adapter_package"
     assert bundle["tasks"][0]["expected_adapter_package"] == ("pypi.org-<version>.cliany-adapter.tar.gz")
     assert bundle["tasks"][0]["llm_live_preflight_required"] is True
-    assert bundle["tasks"][0]["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
+    assert bundle["tasks"][0]["llm_live_preflight_command"] == "cliany-site doctor --llm-live --require-capability generate_adapters --json"
     assert bundle["tasks"][0]["llm_live_preflight_command_sha256"] == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
     assert bundle["tasks"][0]["llm_live_preflight_blocker_note"] == bundle["llm_live_preflight_blocker_note"]
     assert bundle["tasks"][0]["llm_live_preflight_evidence_fields"] == bundle["llm_live_preflight_evidence_fields"]
@@ -904,6 +902,43 @@ def test_cases_command_evidence_bundle_accepts_doctor_json(tmp_home, tmp_path):
     assert "llm_live_status_warning" in bundle["doctor_preflight_state"]["reason_codes"]
     assert bundle["primary_next_task"]["doctor_preflight_state"] == bundle["doctor_preflight_state"]
     assert bundle["tasks"][0]["doctor_preflight_evidence_values"] == bundle["doctor_preflight_evidence_values"]
+
+
+def test_cases_command_evidence_bundle_accepts_strict_doctor_error(tmp_home, tmp_path):
+    doctor_json = _write_blocked_doctor_json(tmp_path)
+    payload = json.loads(doctor_json.read_text(encoding="utf-8"))
+    data = payload.pop("data")
+    payload.update(
+        {
+            "ok": False,
+            "data": None,
+            "error": {
+                "code": "E_LLM_UNAVAILABLE",
+                "message": "请求的能力尚未就绪: generate_adapters",
+                "details": data,
+            },
+        }
+    )
+    doctor_json.write_text(json.dumps(payload), encoding="utf-8")
+    result = CliRunner().invoke(
+        cli,
+        [
+            "--json",
+            "cases",
+            "--case-id",
+            "pypi-project-search",
+            "--evidence-bundle",
+            "--doctor-json",
+            str(doctor_json),
+        ],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    bundle = json.loads(result.output)["data"]["evidence_bundle"]
+    assert bundle["doctor_preflight_evidence_ok"] is True
+    assert bundle["doctor_preflight_state"]["status"] == "blocked"
+    assert bundle["doctor_preflight_evidence_values"]["checks[llm_live].details.error_code"] == "E_LLM_UNAVAILABLE"
 
 
 def test_cases_command_treats_null_status_code_as_present(tmp_home, tmp_path):
@@ -1055,7 +1090,7 @@ def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatc
     assert bundle["primary_next_task"] == bundle["primary_pending_task"]
     assert bundle["primary_next_task_step"] == "llm_live_preflight"
     assert bundle["primary_next_task_command"] == LLM_LIVE_PREFLIGHT_COMMAND
-    assert bundle["primary_next_task_command_source"] == "doctor.llm_live_preflight"
+    assert bundle["primary_next_task_command_source"] == "doctor.require_capability_preflight"
     assert bundle["primary_next_task_command_missing"] is False
     assert bundle["primary_next_task_handoff"] == bundle["llm_live_preflight_blocker_note"]
     assert bundle["primary_next_task_task_command"] == ""
@@ -1066,7 +1101,7 @@ def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatc
     )
     assert bundle["primary_next_task_runbook"][0] == {
         "step": "llm_live_preflight",
-        "command": "cliany-site doctor --llm-live --json",
+        "command": "cliany-site doctor --llm-live --require-capability generate_adapters --json",
         "required": True,
         "handoff": bundle["llm_live_preflight_blocker_note"],
     }
@@ -1117,12 +1152,12 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "Incomplete tasks: `3`" in result.output
     assert "Primary next task: `adapter_package`" in result.output
     assert "Primary next step: `llm_live_preflight`" in result.output
-    assert "Primary next command: `cliany-site doctor --llm-live --json`" in result.output
+    assert "Primary next command: `cliany-site doctor --llm-live --require-capability generate_adapters --json`" in result.output
     assert "Primary task command after preflight: `cliany-site explore" in result.output
     assert "Primary next handoff: Run the live LLM preflight before explore." in result.output
     assert "Primary task handoff: Run `cliany-site explore" in result.output
     assert "## Primary next runbook" in result.output
-    assert "`llm_live_preflight`: `cliany-site doctor --llm-live --json`" in result.output
+    assert "`llm_live_preflight`: `cliany-site doctor --llm-live --require-capability generate_adapters --json`" in result.output
     assert "`adapter_package`: `cliany-site explore" in result.output
     assert "Primary next acceptance: Attach the generated" in result.output
     assert "Primary incomplete task: `adapter_package`" in result.output
@@ -1200,7 +1235,7 @@ def test_cases_command_promotion_plan_json(tmp_home):
     assert plan["primary_issue_template_json_command"] == (
         "cliany-site cases --case-id pypi-project-search --issue-template --json"
     )
-    assert plan["llm_live_preflight_command"] == "cliany-site doctor --llm-live --json"
+    assert plan["llm_live_preflight_command"] == "cliany-site doctor --llm-live --require-capability generate_adapters --json"
     assert plan["llm_live_preflight_command_sha256"] == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
     assert plan["primary_llm_live_preflight_command"] == plan["llm_live_preflight_command"]
     assert plan["primary_llm_live_preflight_command_sha256"] == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
@@ -1216,7 +1251,7 @@ def test_cases_command_promotion_plan_json(tmp_home):
         "expected_adapter_package": "pypi.org-<version>.cliany-adapter.tar.gz",
         "next_step": "llm_live_preflight",
         "command": LLM_LIVE_PREFLIGHT_COMMAND,
-        "command_source": "doctor.llm_live_preflight",
+        "command_source": "doctor.require_capability_preflight",
         "command_missing": False,
         "handoff": plan["primary_handoff"],
         "task_command": (
@@ -1232,7 +1267,7 @@ def test_cases_command_promotion_plan_json(tmp_home):
         "issue_template_json_command": ("cliany-site cases --case-id pypi-project-search --issue-template --json"),
         "evidence_bundle_command": "cliany-site cases --case-id pypi-project-search --evidence-bundle",
         "evidence_bundle_json_command": ("cliany-site cases --case-id pypi-project-search --evidence-bundle --json"),
-        "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
+        "llm_live_preflight_command": "cliany-site doctor --llm-live --require-capability generate_adapters --json",
         "llm_live_preflight_command_sha256": LLM_LIVE_PREFLIGHT_COMMAND_SHA256,
         "llm_live_preflight_blocker_note": plan["llm_live_preflight_blocker_note"],
         "doctor_preflight_evidence_template_field_count": (DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE_FIELD_COUNT),
@@ -1289,12 +1324,12 @@ def test_cases_command_promotion_plan_human_outputs_queue(tmp_home):
 
     assert result.exit_code == 0
     assert "## Candidate promotion plan" in result.output
-    assert "- LLM live preflight: `cliany-site doctor --llm-live --json`" in result.output
+    assert "- LLM live preflight: `cliany-site doctor --llm-live --require-capability generate_adapters --json`" in result.output
     assert "LLM blocker handling: Run the live LLM preflight before explore" in result.output
     assert "E_LLM_UNAVAILABLE" in result.output
     assert "provider connection failure" in result.output
     assert "## Primary runbook" in result.output
-    assert "`llm_live_preflight`: `cliany-site doctor --llm-live --json`" in result.output
+    assert "`llm_live_preflight`: `cliany-site doctor --llm-live --require-capability generate_adapters --json`" in result.output
     assert "## Primary next item" in result.output
     assert "- Case: `pypi-project-search`" in result.output
     assert "- Task: `adapter_package`" in result.output

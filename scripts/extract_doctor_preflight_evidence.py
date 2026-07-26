@@ -146,6 +146,9 @@ def _build_preflight_state(
 
 
 def extract_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    error = payload.get("error")
+    if payload.get("ok") is False and isinstance(error, dict) and isinstance(error.get("details"), dict):
+        payload = {**payload, "data": error["details"]}
     selectors = dict(validate_cases.DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS)
     resolved_values = {
         field: _resolve_selector(payload, selector)

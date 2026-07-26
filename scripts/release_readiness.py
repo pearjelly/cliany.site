@@ -657,7 +657,7 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         ],
         "docs/candidate-promotion-runbook.md": [
             "Candidate Promotion Runbook",
-            "cliany-site doctor --llm-live --json",
+            "cliany-site doctor --llm-live --require-capability generate_adapters --json",
             "cliany-site explore",
             "adapter_package",
             "metadata_validation",

@@ -119,6 +119,30 @@ def test_extracts_doctor_preflight_evidence_from_named_checks(tmp_path):
     }
 
 
+def test_extracts_strict_doctor_error_details(tmp_path):
+    payload = _doctor_payload()
+    data = payload.pop("data")
+    payload.update(
+        {
+            "ok": False,
+            "data": None,
+            "error": {
+                "code": "E_LLM_UNAVAILABLE",
+                "message": "请求的能力尚未就绪: generate_adapters",
+                "details": data,
+            },
+        }
+    )
+    payload_path = tmp_path / "doctor-strict-error.json"
+    payload_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    evidence = extract_doctor_preflight_evidence.extract_file(payload_path)
+
+    assert evidence["ok"] is True
+    assert evidence["preflight_state"]["status"] == "blocked"
+    assert evidence["values"]["checks[llm_live].details.error_code"] == "E_LLM_UNAVAILABLE"
+
+
 def test_null_status_code_is_present_blocker_evidence(tmp_path):
     payload = _doctor_payload()
     payload["data"]["summary"]["llm_live_preflight"]["status_code"] = None

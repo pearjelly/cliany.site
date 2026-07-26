@@ -31,7 +31,9 @@ CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
 )
 PACKAGE_EXTENSION = ".cliany-adapter.tar.gz"
-LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
+LLM_LIVE_PREFLIGHT_COMMAND = (
+    "cliany-site doctor --llm-live --require-capability generate_adapters --json"
+)
 DOCTOR_PREFLIGHT_JSON_PATH = "/tmp/cliany-doctor-preflight.json"
 DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND = (
     "python scripts/extract_doctor_preflight_evidence.py "
@@ -748,7 +750,7 @@ def _doctor_preflight_evidence_template_lines() -> list[str]:
 
 
 def _doctor_preflight_evidence_template() -> dict[str, str]:
-    placeholder = "<paste from doctor --llm-live --json>"
+    placeholder = "<paste from doctor --llm-live --require-capability generate_adapters --json>"
     return {field: placeholder for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS}
 
 
@@ -934,6 +936,9 @@ def _load_doctor_preflight_evidence(path: Path) -> dict[str, Any]:
     if not isinstance(payload, dict):
         msg = f"{path} must contain a JSON object"
         raise ValueError(msg)
+    error = payload.get("error")
+    if payload.get("ok") is False and isinstance(error, dict) and isinstance(error.get("details"), dict):
+        payload = {**payload, "data": error["details"]}
     return _doctor_preflight_evidence_from_payload(payload, source_path=path)
 
 
@@ -3556,7 +3561,7 @@ def _candidate_promotion_command_plan(
         {
             "task": "llm_live_preflight",
             "command": LLM_LIVE_PREFLIGHT_COMMAND,
-            "source": "doctor.llm_live",
+            "source": "doctor.require_capability",
         },
         {
             "task": "adapter_package",
@@ -9248,7 +9253,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--doctor-json",
         type=Path,
-        help="Optional cliany-site doctor --llm-live --json output to embed in candidate issue artifacts.",
+        help=(
+            "Optional cliany-site doctor --llm-live --require-capability "
+            "generate_adapters --json output to embed in candidate issue artifacts."
+        ),
     )
     args = parser.parse_args(argv)
 

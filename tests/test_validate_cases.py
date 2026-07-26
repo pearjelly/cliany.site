@@ -16,7 +16,7 @@ sys.modules[SPEC.name] = validate_cases
 SPEC.loader.exec_module(validate_cases)
 
 DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE = {
-    field: "<paste from doctor --llm-live --json>"
+    field: "<paste from doctor --llm-live --require-capability generate_adapters --json>"
     for field in validate_cases.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
 }
 DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = {
@@ -402,9 +402,9 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     assert report.cases[0].to_dict()["promotion_command_plan"] == [
         {
             "task": "llm_live_preflight",
-            "command": "cliany-site doctor --llm-live --json",
+            "command": "cliany-site doctor --llm-live --require-capability generate_adapters --json",
             "command_sha256": LLM_LIVE_PREFLIGHT_COMMAND_SHA256,
-            "source": "doctor.llm_live",
+            "source": "doctor.require_capability",
             "missing": False,
         },
         {
@@ -484,7 +484,7 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 1",
         "expected_adapter_package": "demo.example.com-<version>.cliany-adapter.tar.gz",
         "llm_live_preflight_required": True,
-        "llm_live_preflight_command": "cliany-site doctor --llm-live --json",
+        "llm_live_preflight_command": "cliany-site doctor --llm-live --require-capability generate_adapters --json",
         "llm_live_preflight_command_sha256": LLM_LIVE_PREFLIGHT_COMMAND_SHA256,
         "llm_live_preflight_blocker_note": validate_cases.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
         "llm_live_preflight_evidence_fields": list(
@@ -567,7 +567,7 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     assert summary["primary_next_task_runbook"] == [
         {
             "step": "llm_live_preflight",
-            "command": "cliany-site doctor --llm-live --json",
+            "command": "cliany-site doctor --llm-live --require-capability generate_adapters --json",
             "required": True,
             "handoff": validate_cases.LLM_LIVE_PREFLIGHT_BLOCKER_NOTE,
         },
@@ -593,10 +593,10 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
     assert summary["primary_next_task_runbook_first_step"] == "llm_live_preflight"
     assert (
         summary["primary_next_task_runbook_first_command"]
-        == "cliany-site doctor --llm-live --json"
+        == "cliany-site doctor --llm-live --require-capability generate_adapters --json"
     )
     assert summary["primary_next_task_runbook_first_command_sha256"] == hashlib.sha256(
-        b"cliany-site doctor --llm-live --json"
+        b"cliany-site doctor --llm-live --require-capability generate_adapters --json"
     ).hexdigest()
     assert summary["llm_live_preflight_evidence_fields"] == [
         "summary.ready_for_explore",
@@ -1213,7 +1213,7 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "| `summary.llm_live_preflight` |" in text
     assert "| `checks[llm_live].details.error_code` |" in text
     assert "## Candidate Primary Runbook" in text
-    assert "| `llm_live_preflight` | `cliany-site doctor --llm-live --json` | `true` |" in text
+    assert "| `llm_live_preflight` | `cliany-site doctor --llm-live --require-capability generate_adapters --json` | `true` |" in text
     assert (
         "| `adapter_package` | No command. | `false` | "
         "No executable command declared for `adapter_package`; Generate the adapter package. |"
@@ -1228,7 +1228,7 @@ def test_cases_report_writes_markdown_report(tmp_path):
     ) in text
     assert "## Candidate Promotion Command Plan Summary" in text
     assert "| command_count | `4` |" in text
-    assert "- `llm_live_preflight`: `cliany-site doctor --llm-live --json`" in text
+    assert "- `llm_live_preflight`: `cliany-site doctor --llm-live --require-capability generate_adapters --json`" in text
     assert "| missing_command_count | `1` |" in text
     assert "| all_declared | `false` |" in text
     assert "| `candidate-case` | `adapter_package` |" in text
@@ -1258,7 +1258,7 @@ def test_cases_report_writes_markdown_report(tmp_path):
     )
     assert "- `online_smoke`: `cliany-site demo.example.com list-items --json`" in text
     assert "## LLM Preflight Gate" in text
-    assert "- Command: `cliany-site doctor --llm-live --json`" in text
+    assert "- Command: `cliany-site doctor --llm-live --require-capability generate_adapters --json`" in text
     assert "generate_adapters.ready=false" in text
     assert "llm_live reports warning/error" in text
     assert "E_LLM_UNAVAILABLE" in text

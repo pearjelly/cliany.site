@@ -7,6 +7,15 @@
 
 ## [Unreleased]
 
+## [0.16.278] - 2026-07-26
+
+### Added
+- `doctor --require-capability` can now make an explicitly requested runtime capability fail with a structured nonzero envelope, including the full doctor payload in `error.details` for later evidence review.
+
+### Fixed
+- Candidate adapter promotion now uses the strict `doctor --llm-live --require-capability generate_adapters --json` gate, so a live LLM warning such as `E_LLM_UNAVAILABLE` cannot be mistaken for a successful preflight by exit-code-based automation.
+- Candidate evidence bundles, planning artifacts, and the doctor evidence extractor now preserve blocker fields from strict doctor error envelopes instead of discarding them when top-level `ok=false`.
+
 ## [0.16.277] - 2026-07-25
 
 ### Added
@@ -2611,7 +2620,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.277...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.278...HEAD
+[0.16.278]: https://github.com/pearjelly/cliany.site/compare/v0.16.277...v0.16.278
 [0.16.277]: https://github.com/pearjelly/cliany.site/compare/v0.16.276...v0.16.277
 [0.16.276]: https://github.com/pearjelly/cliany.site/compare/v0.16.275...v0.16.276
 [0.16.275]: https://github.com/pearjelly/cliany.site/compare/v0.16.274...v0.16.275

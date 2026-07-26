@@ -313,8 +313,8 @@ def test_doctor_does_not_call_llm_live_by_default(tmp_home, no_llm, monkeypatch)
         "status": "not_run",
         "blocks_explore": False,
         "action": (
-            "Run `cliany-site doctor --llm-live --json` before long explore "
-            "or candidate adapter promotion."
+            "Run `cliany-site doctor --llm-live --require-capability generate_adapters --json` "
+            "before long explore or candidate adapter promotion."
         ),
     }
 
@@ -425,6 +425,67 @@ def test_doctor_llm_live_unavailable_blocks_explore_ready(tmp_home, no_llm, monk
         "status_code": 502,
         "phase": "llm_preflight",
     }
+
+
+def test_doctor_required_generate_capability_returns_live_error(tmp_home, no_llm, monkeypatch):
+    """Strict adapter-generation preflight must fail instead of returning a warning envelope."""
+    from cliany_site.errors import LlmUnavailableError
+
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    class FakeLLM:
+        pass
+
+    async def fake_invoke(_llm, _prompt, **_kwargs):
+        raise LlmUnavailableError("LLM upstream returned 502 Bad Gateway", status_code=502)
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("CLIANY_OPENAI_API_KEY", "test")
+    monkeypatch.setenv("CLIANY_OPENAI_BASE_URL", "https://example.com/v1")
+    monkeypatch.setattr("cliany_site.explorer.engine._get_llm", lambda: FakeLLM())
+    monkeypatch.setattr("cliany_site.explorer.engine._invoke_llm_with_retry", fake_invoke)
+
+    result = CliRunner().invoke(
+        cli,
+        [
+            "--json",
+            "doctor",
+            "--llm-live",
+            "--require-capability",
+            "generate_adapters",
+        ],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    assert payload["ok"] is False
+    assert payload["data"] is None
+    assert payload["error"]["code"] == "E_LLM_UNAVAILABLE"
+    assert payload["error"]["details"]["required_capability"] == "generate_adapters"
+    assert payload["error"]["details"]["required_capability_blockers"] == ["llm_live"]
+    assert payload["error"]["details"]["summary"]["capabilities"]["generate_adapters"]["ready"] is False
+
+
+def test_doctor_required_generate_capability_requires_live_check(tmp_home, no_llm):
+    """A strict generation gate cannot silently skip the real provider check."""
+    result = CliRunner().invoke(
+        cli,
+        ["--json", "doctor", "--require-capability", "generate_adapters"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    assert payload["ok"] is False
+    assert payload["error"]["code"] == "E_INVALID_PARAM"
+    assert "--llm-live" in payload["error"]["message"]
 
 
 def test_doctor_llm_live_connection_error_is_llm_unavailable(tmp_home, no_llm, monkeypatch):

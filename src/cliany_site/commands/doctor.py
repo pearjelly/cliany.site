@@ -75,6 +75,12 @@ _CHECK_ACTIONS: dict[str, dict[str, str]] = {
     },
 }
 
+_CAPABILITY_CHOICES = (
+    "manage_adapters",
+    "run_browser_workflows",
+    "generate_adapters",
+)
+
 
 def _action_for_check(check: dict[str, Any]) -> str:
     status = str(check.get("status", ""))
@@ -165,8 +171,8 @@ def _llm_live_preflight_summary(checks: list[dict[str, Any]]) -> dict[str, Any]:
         "status": "not_run",
         "blocks_explore": False,
         "action": (
-            "Run `cliany-site doctor --llm-live --json` before long explore "
-            "or candidate adapter promotion."
+            "Run `cliany-site doctor --llm-live --require-capability generate_adapters --json` "
+            "before long explore or candidate adapter promotion."
         ),
     }
 
@@ -301,6 +307,57 @@ def _doctor_payload(result: Envelope) -> dict[str, Any]:
     return {}
 
 
+def _required_capability_error_code(
+    checks: list[dict[str, Any]],
+    blockers: list[str],
+) -> str:
+    checks_by_name = {str(check.get("name")): check for check in checks}
+    for blocker in blockers:
+        details = checks_by_name.get(blocker, {}).get("details")
+        if isinstance(details, dict):
+            code = details.get("error_code")
+            if isinstance(code, str) and code.startswith("E_"):
+                return code
+    if "cdp" in blockers:
+        return ErrorCode.E_CDP_UNAVAILABLE
+    return ErrorCode.E_MISSING_CAPABILITY
+
+
+def _require_capability(result: Envelope, capability_name: str | None) -> Envelope:
+    if capability_name is None or not result.get("ok"):
+        return result
+
+    data = result.get("data")
+    if not isinstance(data, dict):
+        return result
+    summary = data.get("summary")
+    if not isinstance(summary, dict):
+        return result
+    capabilities = summary.get("capabilities")
+    if not isinstance(capabilities, dict):
+        return result
+    capability = capabilities.get(capability_name)
+    if not isinstance(capability, dict) or capability.get("ready") is True:
+        return result
+
+    blockers = capability.get("blockers")
+    blocker_names = [str(blocker) for blocker in blockers] if isinstance(blockers, list) else []
+    checks = data.get("checks")
+    check_items = [check for check in checks if isinstance(check, dict)] if isinstance(checks, list) else []
+    return err(
+        "doctor",
+        _required_capability_error_code(check_items, blocker_names),
+        f"请求的能力尚未就绪: {capability_name}",
+        hint=str(capability.get("next_step") or "先处理 doctor blockers 后重试。"),
+        details={
+            **data,
+            "required_capability": capability_name,
+            "required_capability_blockers": blocker_names,
+        },
+        source="builtin",
+    )
+
+
 def _print_doctor_human(result: Envelope) -> None:
     payload = _doctor_payload(result)
     summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
@@ -387,17 +444,34 @@ def _print_doctor_human(result: Envelope) -> None:
 @click.command("doctor")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出模式")
 @click.option("--llm-live", is_flag=True, default=False, help="实际调用一次 LLM provider，检查上游是否可用")
+@click.option(
+    "--require-capability",
+    type=click.Choice(_CAPABILITY_CHOICES),
+    default=None,
+    help="要求指定能力就绪；未就绪时返回非零退出码",
+)
 @click.pass_context
-def doctor(ctx: click.Context, json_mode: bool | None, llm_live: bool):
+def doctor(
+    ctx: click.Context,
+    json_mode: bool | None,
+    llm_live: bool,
+    require_capability: str | None,
+):
     """检查运行环境（CDP / LLM API key / 目录）"""
     root_ctx = ctx.find_root()
     root_obj = root_ctx.obj if isinstance(root_ctx.obj, dict) else {}
     effective_json_mode = json_mode if json_mode is not None else bool(root_obj.get("json_mode", False))
+    if require_capability == "generate_adapters" and not llm_live:
+        raise click.UsageError(
+            "--require-capability generate_adapters 需要同时指定 --llm-live",
+            ctx=ctx,
+        )
 
     from cliany_site.browser.cdp import cdp_from_context
 
     cdp_conn = cdp_from_context(ctx)
     result = asyncio.run(_run_checks(cdp_conn, llm_live=llm_live))
+    result = _require_capability(result, require_capability)
     if effective_json_mode:
         print_response(result, json_mode=True, exit_on_error=True)
         return

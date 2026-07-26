@@ -32,7 +32,9 @@ CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
     "python scripts/validate_cases.py "
     "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
 )
-LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --json"
+LLM_LIVE_PREFLIGHT_COMMAND = (
+    "cliany-site doctor --llm-live --require-capability generate_adapters --json"
+)
 DOCTOR_PREFLIGHT_JSON_PATH = "/tmp/cliany-doctor-preflight.json"
 DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND = (
     "python scripts/extract_doctor_preflight_evidence.py "
@@ -285,7 +287,7 @@ def _stable_json_sha256(value: Any) -> str:
 
 
 def _doctor_preflight_evidence_template() -> dict[str, str]:
-    placeholder = "<paste from doctor --llm-live --json>"
+    placeholder = "<paste from doctor --llm-live --require-capability generate_adapters --json>"
     return {field: placeholder for field in DOCTOR_PREFLIGHT_EVIDENCE_FIELDS}
 
 
@@ -1274,7 +1276,7 @@ def _candidate_promotion_command_plan(commands: list[str]) -> list[dict[str, Any
         {
             "task": "llm_live_preflight",
             "command": LLM_LIVE_PREFLIGHT_COMMAND,
-            "source": "doctor.llm_live",
+            "source": "doctor.require_capability",
         },
         {
             "task": "adapter_package",

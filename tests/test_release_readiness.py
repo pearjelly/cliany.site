@@ -504,7 +504,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
     )
     (repo / "docs" / "candidate-promotion-runbook.md").write_text(
         "# Candidate Promotion Runbook\n\n"
-        "cliany-site doctor --llm-live --json\n"
+        "cliany-site doctor --llm-live --require-capability generate_adapters --json\n"
         "cliany-site explore\n"
         "adapter_package\n"
         "metadata_validation\n"
@@ -1596,10 +1596,10 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
         "llm_live_preflight"
     )
     assert payload["case_promotion_evidence_primary_runbook_first_command"] == (
-        "cliany-site doctor --llm-live --json"
+        "cliany-site doctor --llm-live --require-capability generate_adapters --json"
     )
     assert payload["case_promotion_evidence_primary_runbook_first_command_sha256"] == (
-        release_readiness._stable_json_sha256("cliany-site doctor --llm-live --json")
+        release_readiness._stable_json_sha256("cliany-site doctor --llm-live --require-capability generate_adapters --json")
     )
     assert payload["case_promotion_llm_live_preflight_evidence_fields"] == llm_preflight_fields
     assert payload["case_promotion_llm_live_preflight_evidence_field_count"] == 9
@@ -1614,7 +1614,7 @@ def test_release_readiness_markdown_report_includes_candidate_promotions(tmp_pat
         "Generate demo.example.com-<version>.cliany-adapter.tar.gz. |"
     ) in text
     assert "## Candidate Primary Runbook" in text
-    assert "| `llm_live_preflight` | `cliany-site doctor --llm-live --json` | `true` |" in text
+    assert "| `llm_live_preflight` | `cliany-site doctor --llm-live --require-capability generate_adapters --json` | `true` |" in text
     assert (
         "| `adapter_package` | No command. | `false` | "
         "No executable command declared for `adapter_package`; "
@@ -2576,7 +2576,7 @@ def test_release_readiness_blocks_stale_candidate_promotion_runbook_contract(tmp
     repo = _init_repo(tmp_path, with_draft=True)
     (repo / "docs" / "candidate-promotion-runbook.md").write_text(
         "# Candidate Promotion Runbook\n\n"
-        "cliany-site doctor --llm-live --json\n"
+        "cliany-site doctor --llm-live --require-capability generate_adapters --json\n"
         "cliany-site explore\n"
         "adapter_package\n"
         "metadata_validation\n"

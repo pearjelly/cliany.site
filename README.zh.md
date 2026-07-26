@@ -129,7 +129,7 @@ pip install -e .
 cliany-site doctor --json
 
 # explore 前可选：真实调用一次 provider 做 live preflight
-cliany-site doctor --llm-live --json
+cliany-site doctor --llm-live --require-capability generate_adapters --json
 
 # 查看维护中的真实 demo 案例
 cliany-site cases --json
@@ -208,10 +208,10 @@ unset CLIANY_BROWSER_PROVIDER
 
 ```bash
 cliany-site doctor --json
-cliany-site doctor --llm-live --json
+cliany-site doctor --llm-live --require-capability generate_adapters --json
 ```
 
-默认 `doctor` 只检查本地配置、CDP、目录和 key，不会真实调用 LLM provider。准备运行耗时较长的 `explore` 前，可以追加 `--llm-live` 做一次真实 provider 预检；如果遇到网关、限流或服务不可用，会以 `llm_live` warning 返回 `details.error_code=E_LLM_UNAVAILABLE`。
+默认 `doctor` 只检查本地配置、CDP、目录和 key，不会真实调用 LLM provider。准备运行耗时较长的 `explore` 前，使用 `--llm-live --require-capability generate_adapters` 执行严格 provider 门禁；如果遇到网关、限流或服务不可用，会以非零结果返回 `E_LLM_UNAVAILABLE`，完整检查数据保留在 `error.details`。
 
 ## 使用示例
 
@@ -281,7 +281,7 @@ async with ClanySite() as cs:
 `--promotion-plan --json` 还会把 doctor template 漂移元数据同步到 `promotion_plan.primary_doctor_preflight_evidence_template_field_count`、`promotion_plan.primary_doctor_preflight_evidence_template_sha256`、`promotion_plan.primary_llm_live_preflight_command_sha256`、每个 candidate 的 `primary_doctor_preflight_evidence_template_sha256`，以及每个未完成 `task_queue[*].doctor_preflight_evidence_template_sha256` / `task_queue[*].llm_live_preflight_command_sha256`；只读取候选队列的机器人不用打开完整 evidence bundle，也能比对当前 doctor 证据契约。
 `scripts/validate_cases.py --json` 也会在 `promotion_evidence_summary.primary_next_task.doctor_preflight_evidence_template_sha256` 暴露同源漂移信号；`scripts/validate_cases.py --report` 会在 Candidate Promotion Evidence Summary 表格中渲染 `primary_doctor_preflight_evidence_template_field_count` 与 `primary_doctor_preflight_evidence_template_sha256`；纯文本 `scripts/validate_cases.py --strict` 也会打印 `promotion_evidence_primary_doctor_preflight_evidence_template_field_count`、`promotion_evidence_primary_doctor_preflight_evidence_template_sha256` 和 `promotion_evidence_primary_llm_live_preflight_command_sha256`，方便只保存 stdout 的验证日志直接比对。
 `doctor_preflight_state_fields` 契约固定包含 `preflight_state.status`、`preflight_state.ready_for_adapter_package`、`preflight_state.primary_reason`、`preflight_state.reason_codes` 和 `preflight_state.next_action`；`doctor_preflight_state_statuses` 只允许 `ready`、`blocked` 与 `missing_fields`，因此只看 README 的维护者也能判断应继续真实 `explore`，还是先把 blocker evidence 贴回 issue。带 `--doctor-json` 的 evidence bundle 还会分别输出 `doctor_preflight_evidence_missing_count` / `doctor_preflight_evidence_missing_fields` 与 `doctor_preflight_evidence_null_count` / `doctor_preflight_evidence_null_fields`：前者表示 selector 不存在，后者表示字段存在但值为 JSON `null`，连接级失败不会再与 schema 漂移混在一起。
-`--issue-template` 还会输出 `Doctor Preflight Evidence Template`，为每个 doctor preflight 字段提供可粘贴 `cliany-site doctor --llm-live --json` 结果的占位符，方便在 `E_LLM_UNAVAILABLE` 或 CDP blocker 时直接补齐 issue 证据。
+`--issue-template` 还会输出 `Doctor Preflight Evidence Template`，为每个 doctor preflight 字段提供可粘贴 `cliany-site doctor --llm-live --require-capability generate_adapters --json` 结果的占位符，方便在 `E_LLM_UNAVAILABLE` 或 CDP blocker 时直接补齐 issue 证据。
 
 ### SuiteCRM Demo (企业 CRM)
 ```bash

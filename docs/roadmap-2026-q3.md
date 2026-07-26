@@ -1,8 +1,8 @@
 # cliany-site 2026 Q3 路线图
 
 - **制定日期：** 2026-06-10
-- **校准日期：** 2026-07-25
-- **基线版本：** v0.16.277
+- **校准日期：** 2026-07-26
+- **基线版本：** v0.16.278
 - **目标周期：** 2026-06-10 ~ 2026-08-05
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -13,7 +13,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 已完成校准
 
-2026-06-10 的原始路线图以 v0.14.2 为基线；到 2026-07-25 已进入 v0.16.277 发布验证。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
+2026-06-10 的原始路线图以 v0.14.2 为基线；到 2026-07-26 已进入 v0.16.278 发布验证。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
 
 - 首次成功路径：README、README.zh、官网和 `doctor` 输出已经围绕 10 分钟路径、真实 demo、LLM live preflight 和可执行下一步重新组织。
 - 真实案例库：`cliany-site cases` 已成为案例发现、单案例展开、issue template、evidence bundle 和 promotion plan 的统一入口。
@@ -24,7 +24,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 这意味着 Q3 后续重点不再是「搭脚手架」，而是把已搭好的维护系统转换成用户可见的真实案例、可分发 adapter 资产和稳定集成路径。
 
-截至 2026-07-22，PyPI、npm 和 crates.io package-search 案例仍是 candidate，尚未晋级为 active；`cliany-site doctor --llm-live --json` 的 live LLM preflight 仍是生成 adapter package 与执行 online smoke 前必须保留的 blocker，而不是可由文档或离线证据替代的成功证明。
+截至 2026-07-22，PyPI、npm 和 crates.io package-search 案例仍是 candidate，尚未晋级为 active；`cliany-site doctor --llm-live --require-capability generate_adapters --json` 的 live LLM preflight 仍是生成 adapter package 与执行 online smoke 前必须保留的 blocker，而不是可由文档或离线证据替代的成功证明。
 
 ## 当前判断
 
@@ -125,7 +125,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 ## 近期执行队列
 
 1. 选择一个 candidate 作为首要晋级对象，优先 `pypi-project-search`，因为 Python 用户与 PyPI 发布路径更贴近。
-2. 运行 `cliany-site doctor --llm-live --json`，如果返回 `summary.llm_live_preflight.ready=false`、`E_LLM_UNAVAILABLE` provider connection failure 或 `generate_adapters.ready=false`，记录 blocker，不伪造 adapter package evidence。
+2. 运行 `cliany-site doctor --llm-live --require-capability generate_adapters --json`，如果返回 `summary.llm_live_preflight.ready=false`、`E_LLM_UNAVAILABLE` provider connection failure 或 `generate_adapters.ready=false`，记录 blocker，不伪造 adapter package evidence。
 3. 生成 candidate adapter 包后放入 `~/.cliany-site/packages`，运行 candidate package validation。
 4. 完成只读 online smoke，记录 JSON envelope 摘要和 `data.quality`；只有案例明确要求非空结果时才以 `row_count>0` 为验收条件，合法零匹配须由 `expects_nonempty=false` 明示。
 5. 将案例状态从 candidate 改为 active 前，同步 README、README.zh、官网、cases README 和公开路线图。

@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-07-25
-- **Current baseline:** v0.16.277
+- **Updated:** 2026-07-26
+- **Current baseline:** v0.16.278
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -21,7 +21,7 @@ The next focus is turning candidate real-world cases into verified active demos.
 
 As of 2026-07-22, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 
-As of v0.16.277, generated adapters can replay semantic dropdown selections and Enter-based submissions, while `explore` refuses to write a named data command until that command owns quality-checked extraction evidence. Candidate evidence, promotion-plan JSON, and generated public issue templates remain executable-first: `primary_command`, the queue command, and the issue's Primary Evidence Task point to `cliany-site doctor --llm-live --json` for `adapter_package`, while the later explore command is retained as `task_command`. This is a reliability and handoff improvement, not evidence that any candidate has passed live LLM, packaging, or online smoke validation.
+As of v0.16.278, candidate promotion has a strict capability gate alongside semantic action replay and data-command evidence checks. Candidate evidence, promotion-plan JSON, and generated public issue templates remain executable-first: `primary_command`, the queue command, and the issue's Primary Evidence Task point to `cliany-site doctor --llm-live --require-capability generate_adapters --json` for `adapter_package`; an unavailable live provider exits nonzero while preserving the diagnostic payload for blocker evidence. The later explore command remains `task_command`. This is a reliability and handoff improvement, not evidence that any candidate has passed live LLM, packaging, or online smoke validation.
 
 Planned outcomes:
 
@@ -65,5 +65,5 @@ Planned outcomes:
 
 - Read [CHANGELOG.md](../CHANGELOG.md) for version-by-version changes.
 - Run `cliany-site cases --json` to inspect maintained real-world cases.
-- Use `cliany-site doctor --json` before local runs, and `cliany-site doctor --llm-live --json` before LLM-backed exploration.
+- Use `cliany-site doctor --json` before local runs, and `cliany-site doctor --llm-live --require-capability generate_adapters --json` before LLM-backed exploration.
 - Follow GitHub Releases and PyPI for published versions.
