@@ -429,7 +429,8 @@ def inspect_adapter_package(
 ) -> dict[str, Any]:
     """校验 adapter 分发包并报告安装计划，不写入运行时状态。"""
     with _validated_adapter_package(pack_path) as (manifest, _tmp_path, package_sha256):
-        _adapter_dir, would_replace = _adapter_install_target(manifest, force=force)
+        cfg = get_config()
+        would_replace = (cfg.adapters_dir / manifest.domain).exists()
         return {
             "dry_run": True,
             "package_sha256": package_sha256,
@@ -438,6 +439,7 @@ def inspect_adapter_package(
             "files": sorted(manifest.files),
             "would_replace": would_replace,
             "would_create_backup": would_replace and force,
+            "requires_force": would_replace and not force,
         }
 
 

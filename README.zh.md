@@ -378,7 +378,8 @@ cliany-site market install https://publisher.example/releases/github.com-1.0.0.c
 
 # 成功的 dry-run 只校验包；在运行 verify <domain> 前，移除 --dry-run 完成安装。
 
-# 查看 dry_run、package_sha256、files、would_replace 和 would_create_backup 后再安装
+# 查看 dry_run、package_sha256、files、would_replace、would_create_backup 和 requires_force 后再安装
+# requires_force 为 true 时，dry-run 仍未写入；只有明确要替换已安装 adapter 时才添加 --force。
 cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz
 
 # 回滚

@@ -307,6 +307,7 @@ class TestRemoteAdapterCLI:
             "files": ["commands.py", "metadata.json"],
             "would_replace": False,
             "would_create_backup": False,
+            "requires_force": False,
         }
         assert response.read_calls > 0
         assert not (cfg.adapters_dir / "remote-dry-run.com").exists()
@@ -892,6 +893,7 @@ class TestInspectAdapterPackage:
             "files": ["commands.py", "metadata.json"],
             "would_replace": False,
             "would_create_backup": False,
+            "requires_force": False,
         }
         assert not (cfg.adapters_dir / "inspect-new.com").exists()
         assert not (cfg.home_dir / "backups").exists()
@@ -908,20 +910,22 @@ class TestInspectAdapterPackage:
 
         assert report["would_replace"] is True
         assert report["would_create_backup"] is True
+        assert report["requires_force"] is False
         assert (adapter_dir / "commands.py").read_bytes() == commands_before
         assert backups_after == []
 
-    def test_inspect_duplicate_without_force_raises_without_writing(self, tmp_path: Path) -> None:
+    def test_inspect_duplicate_without_force_reports_plan_without_writing(self, tmp_path: Path) -> None:
         cfg = _make_config(tmp_path)
         adapter_dir = _create_adapter(cfg.adapters_dir, "inspect-duplicate.com")
         commands_before = (adapter_dir / "commands.py").read_bytes()
         pack_path = _make_tarball(tmp_path / "packs", "inspect-duplicate.com")
 
-        with patch("cliany_site.marketplace.get_config", return_value=cfg), pytest.raises(
-            FileExistsError, match="已安装"
-        ):
-            inspect_adapter_package(pack_path)
+        with patch("cliany_site.marketplace.get_config", return_value=cfg):
+            report = inspect_adapter_package(pack_path)
 
+        assert report["would_replace"] is True
+        assert report["would_create_backup"] is False
+        assert report["requires_force"] is True
         assert (adapter_dir / "commands.py").read_bytes() == commands_before
         assert not (cfg.home_dir / "backups").exists()
 
@@ -1368,9 +1372,12 @@ class TestMarketCLI:
         assert data["data"]["version"] == "2.0.0"
         assert data["data"]["would_replace"] is False
         assert data["data"]["would_create_backup"] is False
+        assert data["data"]["requires_force"] is False
         assert not (cfg.adapters_dir / "cli-dry-run.com").exists()
 
-    def test_install_dry_run_duplicate_uses_install_failed_envelope(self, tmp_path: Path) -> None:
+    def test_install_dry_run_duplicate_returns_force_requirement_without_writing(
+        self, tmp_path: Path
+    ) -> None:
         cfg = _make_config(tmp_path)
         adapter_dir = _create_adapter(cfg.adapters_dir, "cli-dry-duplicate.com")
         commands_before = (adapter_dir / "commands.py").read_bytes()
@@ -1378,11 +1385,12 @@ class TestMarketCLI:
 
         result = self._invoke(["install", str(pack_path), "--dry-run", "--json"], cfg)
 
-        assert result.exit_code == 1
+        assert result.exit_code == 0
         data = json.loads(result.output)
-        assert data["success"] is False
-        assert data["error"]["code"] == "INSTALL_FAILED"
-        assert "--force" in data["error"]["fix"]
+        assert data["success"] is True
+        assert data["data"]["would_replace"] is True
+        assert data["data"]["would_create_backup"] is False
+        assert data["data"]["requires_force"] is True
         assert (adapter_dir / "commands.py").read_bytes() == commands_before
         assert not (cfg.home_dir / "backups").exists()
 

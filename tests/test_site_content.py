@@ -138,7 +138,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "E_EMPTY_RESULT" in docs
     assert "cliany-site market install &lt;package&gt; --dry-run --json" in index
     assert "--sha256 &lt;64-hex-sha256&gt;" in index
-    assert "<code>--dry-run</code> 成功只说明分发包可用，不会安装 adapter" in docs
+    assert "<code>requires_force=true</code> 的只读计划" in docs
     assert "website alias inspect" in index
     assert "PyPI version-specific publication audit" in index
     assert "10-Minute Success Path" in script
