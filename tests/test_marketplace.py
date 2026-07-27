@@ -315,6 +315,38 @@ class TestRemoteAdapterCLI:
         assert list(download_dir.iterdir()) == []
         opener.open.assert_called_once()
 
+    def test_remote_duplicate_dry_run_reports_force_requirement_without_writing(
+        self, tmp_path: Path
+    ) -> None:
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter(cfg.adapters_dir, "remote-dry-duplicate.com", version="1.0.0")
+        commands_before = (adapter_dir / "commands.py").read_bytes()
+        pack_path = _make_tarball(tmp_path / "packs", "remote-dry-duplicate.com", version="2.0.0")
+        archive = pack_path.read_bytes()
+        digest = hashlib.sha256(archive).hexdigest()
+        response = _FakeResponse(archive, content_length=len(archive))
+        opener = MagicMock()
+        opener.open.return_value = response
+        temp_patch, download_dir = _patch_download_temp_dir(tmp_path)
+
+        with patch("cliany_site.marketplace.urllib.request.build_opener", return_value=opener), temp_patch:
+            result = self._invoke(
+                ["install", "https://downloads.example.test/adapter.tar.gz", "--sha256", digest, "--dry-run", "--json"],
+                cfg,
+            )
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["success"] is True
+        assert data["data"]["would_replace"] is True
+        assert data["data"]["would_create_backup"] is False
+        assert data["data"]["requires_force"] is True
+        assert response.read_calls > 0
+        assert (adapter_dir / "commands.py").read_bytes() == commands_before
+        assert list_backups("remote-dry-duplicate.com") == []
+        assert list(download_dir.iterdir()) == []
+        opener.open.assert_called_once()
+
     def test_remote_install_uses_existing_local_install_path(self, tmp_path: Path) -> None:
         cfg = _make_config(tmp_path)
         pack_path = _make_tarball(tmp_path / "packs", "remote-install.com")
@@ -1306,7 +1338,8 @@ class TestMarketCLI:
 
     def test_install_duplicate_returns_force_hint(self, tmp_path: Path) -> None:
         cfg = _make_config(tmp_path)
-        _create_adapter(cfg.adapters_dir, "cli-dup.com")
+        adapter_dir = _create_adapter(cfg.adapters_dir, "cli-dup.com")
+        commands_before = (adapter_dir / "commands.py").read_bytes()
         pack_path = _make_tarball(tmp_path / "packs", "cli-dup.com")
 
         result = self._invoke(["install", str(pack_path), "--json"], cfg)
@@ -1314,6 +1347,8 @@ class TestMarketCLI:
         data = json.loads(result.output)
         assert data["error"]["code"] == "INSTALL_FAILED"
         assert "--force" in data["error"]["fix"]
+        assert (adapter_dir / "commands.py").read_bytes() == commands_before
+        assert not (cfg.home_dir / "backups").exists()
 
     def test_install_missing_package_uses_install_failed_envelope(self, tmp_path: Path) -> None:
         cfg = _make_config(tmp_path)
