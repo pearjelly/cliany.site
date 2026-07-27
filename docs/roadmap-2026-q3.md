@@ -2,7 +2,7 @@
 
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-07-27
-- **基线版本：** v0.16.279
+- **基线版本：** v0.16.280
 - **目标周期：** 2026-06-10 ~ 2026-08-05
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -13,13 +13,13 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 已完成校准
 
-2026-06-10 的原始路线图以 v0.14.2 为基线；到 2026-07-27 已进入 v0.16.279 发布验证。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
+2026-06-10 的原始路线图以 v0.14.2 为基线；到 2026-07-27 已进入 v0.16.280 发布验证。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
 
 - 首次成功路径：README、README.zh、官网和 `doctor` 输出已经围绕 10 分钟路径、真实 demo、LLM live preflight 和可执行下一步重新组织。
 - 真实案例库：`cliany-site cases` 已成为案例发现、单案例展开、issue template、evidence bundle 和 promotion plan 的统一入口。
 - 发布门禁：`release_readiness.py`、`check_release_cadence.py`、`check_release_publication.py` 已覆盖版本号、CHANGELOG、草案、CI/release workflow、远端 refs、tag 决策、每日发布上限、GitHub Release、PyPI 和 publication audit。
 - Candidate 晋级证据：candidate 案例已经具备 promotion command plan、acceptance criteria、LLM preflight blocker handoff、issue artifacts 和 machine-readable evidence summary。
-- Public issue freshness：`audit_candidate_issues.py` 会把开放 `case-proposal` candidate issue 与当前 template 比对，只有人工确认后才重写 stale body；这让 public issue 不会继续引导贡献者执行过期的 preflight 命令。
+- Public issue freshness：`audit_candidate_issues.py` 会把开放 `case-proposal` candidate issue 与当前 template 比对，并把不在 manifest 中的 title 报为 `unexpected`；只有人工确认且没有 `missing`、`duplicate`、`unexpected` 时才重写 stale body，让 public issue 不会继续引导贡献者执行过期或孤立的 preflight 命令。
 - 运行可靠性：`E_LLM_UNAVAILABLE`、结构化抽取质量、adapter 生成安全审计、Windows/Embodied CI 和离线案例验收已经进入默认维护面；list/search 命令可用 `expects_nonempty=false` 将合法零匹配保留为 `ok=true`，同时继续输出 `data.quality`，重新 explore 合并、打包和安装也会保留该声明。
 - Active demo 可达性：SuiteCRM、Jira、Confluence 和 Jenkins 的案例目录与双语 README 现在提供已验证的 GitHub Release v0.14.1 HTTPS asset 与 SHA-256；`doctor` 会从打包目录选择无需登录的 Jira active demo，按安装、verify、只读命令给出首次成功路径。当前版本验证隔离安装和静态完整性，不把第三方在线 replay 伪装成新鲜成功证据。
 

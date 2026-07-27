@@ -100,8 +100,11 @@ def fetch_open_issues(repo: str) -> list[dict[str, Any]]:
 def audit_candidate_issues(
     expectations: list[CandidateIssueExpectation],
     open_issues: list[dict[str, Any]],
+    *,
+    known_titles: set[str] | None = None,
 ) -> list[dict[str, Any]]:
     audits: list[dict[str, Any]] = []
+    known_titles = known_titles or {expectation.title for expectation in expectations}
     for expectation in expectations:
         matches = [issue for issue in open_issues if issue.get("title") == expectation.title]
         base = {
@@ -138,6 +141,23 @@ def audit_candidate_issues(
                 "actual_body_sha256": _sha256_text(body),
             }
         )
+
+    for issue in open_issues:
+        title = str(issue.get("title") or "")
+        if title in known_titles:
+            continue
+        body = str(issue.get("body") or "")
+        issue_number = issue.get("number")
+        audits.append(
+            {
+                "case_id": "unmatched_case_proposal_issue",
+                "status": "unexpected",
+                "actual_title": title,
+                "issue_numbers": [issue_number] if isinstance(issue_number, int) else [],
+                "issue_url": str(issue.get("url") or ""),
+                "actual_body_sha256": _sha256_text(body),
+            }
+        )
     return audits
 
 
@@ -158,12 +178,21 @@ def _report(
         for number in audit.get("issue_numbers", [])
         if isinstance(number, int)
     ]
+    unexpected_issue_numbers = [
+        number
+        for audit in audits
+        if audit.get("status") == "unexpected"
+        for number in audit.get("issue_numbers", [])
+        if isinstance(number, int)
+    ]
     return {
         "ok": all(audit.get("status") == "current" for audit in audits),
         "repo": repo,
-        "candidate_count": len(audits),
+        "candidate_count": sum(audit.get("status") != "unexpected" for audit in audits),
+        "unexpected_issue_count": len(unexpected_issue_numbers),
         "status_counts": status_counts,
         "stale_issue_numbers": stale_issue_numbers,
+        "unexpected_issue_numbers": unexpected_issue_numbers,
         "applied_issue_numbers": applied_issue_numbers or [],
         "issues": audits,
     }
@@ -195,7 +224,7 @@ def _print_human_report(report: dict[str, Any]) -> None:
         numbers = ", ".join(f"#{number}" for number in report["applied_issue_numbers"])
         print(f"Rewrote: {numbers}")
     if not report["ok"]:
-        print("Use --apply --confirm-rewrite only after reviewing stale issue bodies.")
+        print("Resolve missing, duplicate, or unexpected issues before applying stale-body rewrites.")
 
 
 def _print_error(message: str, *, json_mode: bool) -> None:
@@ -222,14 +251,24 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--apply requires --confirm-rewrite")
 
     try:
-        expectations = candidate_issue_expectations(args.case_ids)
-        audits = audit_candidate_issues(expectations, fetch_open_issues(args.repo))
+        all_expectations = candidate_issue_expectations()
+        expectations_by_case = {expectation.case_id: expectation for expectation in all_expectations}
+        selected_case_ids = args.case_ids or list(expectations_by_case)
+        unknown_case_ids = [case_id for case_id in selected_case_ids if case_id not in expectations_by_case]
+        if unknown_case_ids:
+            raise ValueError(f"unknown candidate case IDs: {', '.join(unknown_case_ids)}")
+        expectations = [expectations_by_case[case_id] for case_id in selected_case_ids]
+        audits = audit_candidate_issues(
+            expectations,
+            fetch_open_issues(args.repo),
+            known_titles={expectation.title for expectation in all_expectations},
+        )
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         _print_error(str(exc), json_mode=args.json)
         return 2
 
     applied_issue_numbers: list[int] = []
-    blocking_statuses = {"missing", "duplicate"}
+    blocking_statuses = {"missing", "duplicate", "unexpected"}
     if args.apply and not any(audit["status"] in blocking_statuses for audit in audits):
         expectations_by_case = {expectation.case_id: expectation for expectation in expectations}
         try:
@@ -239,7 +278,11 @@ def main(argv: list[str] | None = None) -> int:
                 issue_number = audit["issue_numbers"][0]
                 _rewrite_issue(args.repo, issue_number, expectations_by_case[audit["case_id"]].body)
                 applied_issue_numbers.append(issue_number)
-            audits = audit_candidate_issues(expectations, fetch_open_issues(args.repo))
+            audits = audit_candidate_issues(
+                expectations,
+                fetch_open_issues(args.repo),
+                known_titles={expectation.title for expectation in all_expectations},
+            )
         except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
             _print_error(str(exc), json_mode=args.json)
             return 2

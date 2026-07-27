@@ -107,7 +107,7 @@
 
       <main>
         <h1>cliany-site 文档</h1>
-        <p class="intro-meta">v0.16.279 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
+        <p class="intro-meta">v0.16.280 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
 
         <p>cliany-site 基于 LLM 和 Chrome CDP 协议，将任意网页操作自动化为可重复调用的 CLI 命令。核心流程：<strong>explore（探索）→ generate（生成适配器）→ run（执行）</strong>。</p>
 
@@ -279,7 +279,7 @@ cliany-site workflow validate workflow.yaml --json</code></pre>
         <p>如果已经保存 doctor JSON，可运行 <code>python scripts/plan_next_iteration.py --doctor-json /tmp/cliany-doctor-preflight.json --issues-dir /tmp/cliany-candidate-issues</code>。生成的 <code>issue-metadata.json</code> 和 candidate issue body 会直接带上当前 <code>doctor_preflight_state</code>、extracted values、source path，以及包含 <code>--doctor-json</code> 的 issue/evidence bundle commands，适合在 live LLM blocked 时生成 blocker-ready issue 草稿。</p>
         <p>如果维护工具只读取 promotion queue，可直接比对 <code>promotion_plan.primary_doctor_preflight_evidence_template_field_count</code>、<code>promotion_plan.primary_doctor_preflight_evidence_template_sha256</code>、<code>promotion_plan.primary_llm_live_preflight_command_sha256</code>、candidate <code>primary_doctor_preflight_evidence_template_sha256</code> 和 <code>task_queue[*].doctor_preflight_evidence_template_sha256</code> / <code>task_queue[*].llm_live_preflight_command_sha256</code>，无需展开完整 evidence bundle 也能发现 doctor 证据模板与 preflight 命令漂移。</p>
         <p>如果维护工具只读取 case validation，可从 <code>scripts/validate_cases.py --json</code> 的 <code>promotion_evidence_summary.primary_next_task.doctor_preflight_evidence_template_sha256</code>、<code>doctor_preflight_state_fields</code>、<code>doctor_preflight_state_statuses</code>，<code>scripts/validate_cases.py --report</code> 的 <code>primary_doctor_preflight_evidence_template_sha256</code>，或纯文本 <code>scripts/validate_cases.py --strict</code> stdout 的 <code>promotion_evidence_primary_doctor_preflight_evidence_template_sha256</code> / <code>promotion_evidence_primary_llm_live_preflight_command_sha256</code> 比对同一 doctor 模板、state contract 与 preflight 命令漂移。</p>
-        <p>公开 candidate issue 也应保持与当前 template 一致。先运行 <code>python scripts/audit_candidate_issues.py --repo pearjelly/cliany.site --json</code> 只读检查开放 <code>case-proposal</code> issue 的 title、body 与 SHA-256；只有审阅 <code>stale</code> 项后才运行 <code>python scripts/audit_candidate_issues.py --repo pearjelly/cliany.site --apply --confirm-rewrite --json</code>。工具不会创建、关闭 issue 或将 candidate 提前标记为 active。</p>
+        <p>公开 candidate issue 也应保持与当前 template 一致。先运行 <code>python scripts/audit_candidate_issues.py --repo pearjelly/cliany.site --json</code> 只读检查开放 <code>case-proposal</code> issue 的 title、body 与 SHA-256；不属于当前 manifest 的 title 会报告为 <code>unexpected</code>。只有审阅 <code>stale</code> 并先解决 <code>missing</code>、<code>duplicate</code>、<code>unexpected</code> 后才运行 <code>python scripts/audit_candidate_issues.py --repo pearjelly/cliany.site --apply --confirm-rewrite --json</code>。工具不会创建、关闭 issue 或将 candidate 提前标记为 active。</p>
 
         <h3>如何在服务器/Docker 中使用？</h3>
         <pre><code>cliany-site explore "https://github.com" "搜索仓库" \

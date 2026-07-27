@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+## [0.16.280] - 2026-07-27
+
+### Added
+- `scripts/audit_candidate_issues.py` now reports any open `case-proposal` issue whose title is not represented by the current candidate manifest as `unexpected`, including its number, title, URL, and body SHA-256.
+
+### Fixed
+- `--apply --confirm-rewrite` now refuses to rewrite stale issue bodies while `unexpected` issues exist, so a renamed or orphaned public handoff cannot be silently ignored.
+
 ## [0.16.279] - 2026-07-27
 
 ### Added
@@ -2628,7 +2636,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.279...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.280...HEAD
+[0.16.280]: https://github.com/pearjelly/cliany.site/compare/v0.16.279...v0.16.280
 [0.16.279]: https://github.com/pearjelly/cliany.site/compare/v0.16.278...v0.16.279
 [0.16.278]: https://github.com/pearjelly/cliany.site/compare/v0.16.277...v0.16.278
 [0.16.277]: https://github.com/pearjelly/cliany.site/compare/v0.16.276...v0.16.277
