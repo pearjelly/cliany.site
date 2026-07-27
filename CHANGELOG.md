@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+## [0.16.279] - 2026-07-27
+
+### Added
+- `scripts/audit_candidate_issues.py` compares every open `case-proposal` candidate issue against the current generated body, reports `current` / `stale` / `missing` / `duplicate` states with SHA-256 evidence, and only rewrites verified stale bodies after `--apply --confirm-rewrite`.
+
+### Fixed
+- Refreshed public candidate issues #14, #15, and #16 from the current template, so contributors now receive the strict `doctor --llm-live --require-capability generate_adapters --json` gate before any candidate `explore` command.
+
 ## [0.16.278] - 2026-07-26
 
 ### Added
@@ -2620,7 +2628,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.278...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.279...HEAD
+[0.16.279]: https://github.com/pearjelly/cliany.site/compare/v0.16.278...v0.16.279
 [0.16.278]: https://github.com/pearjelly/cliany.site/compare/v0.16.277...v0.16.278
 [0.16.277]: https://github.com/pearjelly/cliany.site/compare/v0.16.276...v0.16.277
 [0.16.276]: https://github.com/pearjelly/cliany.site/compare/v0.16.275...v0.16.276

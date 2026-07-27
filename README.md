@@ -278,6 +278,8 @@ The `doctor_preflight_state_fields` contract lists `preflight_state.status`, `pr
 Candidate promotion treats `summary.capabilities.run_browser_workflows.ready=false`, `summary.llm_live_preflight.ready=false`, `generate_adapters.ready=false`, or any `llm_live` warning/error such as `E_LLM_UNAVAILABLE` provider connection failures as blocker evidence; keep `adapter_package` pending or blocked instead of fabricating adapter package proof.
 When the live gate blocks promotion, save the doctor result with `cliany-site doctor --llm-live --require-capability generate_adapters --json > /tmp/cliany-doctor-preflight.json`, then run `cliany-site cases --case-id pypi-project-search --evidence-bundle --doctor-json /tmp/cliany-doctor-preflight.json --json` or `cliany-site cases --case-id pypi-project-search --issue-template --doctor-json /tmp/cliany-doctor-preflight.json`; the output includes `doctor_preflight_evidence_values`, `doctor_preflight_evidence_ok`, `doctor_preflight_evidence_missing_count`, `doctor_preflight_evidence_null_count`, `doctor_preflight_evidence_null_fields`, and `doctor_preflight_state` on the bundle and primary `adapter_package` task. A nullable field is present in doctor JSON with value `null`; a missing field has no matching selector, so automation can handle connection-level failures without conflating them with schema drift.
 
+To keep already-open candidate issues aligned with the current strict handoff, run `python scripts/audit_candidate_issues.py --repo pearjelly/cliany.site --json`. It is read-only by default; only use `--apply --confirm-rewrite` after reviewing reported `stale` bodies, and it will not create, close, or promote issues.
+
 ### SuiteCRM Demo (Enterprise CRM)
 ```bash
 # 1. Install adapter
