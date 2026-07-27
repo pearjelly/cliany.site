@@ -11956,12 +11956,10 @@ def test_v016280_release_draft_tracks_unexpected_candidate_issue_gate() -> None:
 
 def test_v016281_release_draft_tracks_human_unexpected_issue_handoff() -> None:
     text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.281]", 1)[0]
     release = text.split("## [0.16.281]", 1)[1].split("## [0.16.280]", 1)[0]
     draft = (ROOT / "docs" / "releases" / "v0.16.281-draft.md").read_text(encoding="utf-8")
     notes = (ROOT / "docs" / "releases" / "v0.16.281-github-release.md").read_text(encoding="utf-8")
 
-    assert unreleased.strip() == ""
     assert "## [0.16.281] - 2026-07-27" in text
     assert "actual title and URL" in release
     assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.281...HEAD" in text
@@ -11994,5 +11992,46 @@ def test_v016281_release_draft_tracks_human_unexpected_issue_handoff() -> None:
         "## Compatibility",
         "## Trust Boundaries",
         "E_LLM_UNAVAILABLE",
+    ]:
+        assert snippet in notes
+
+
+def test_v016282_release_draft_tracks_missing_explicit_adapter_contract() -> None:
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.281]", 1)[0]
+    draft = (ROOT / "docs" / "releases" / "v0.16.282-draft.md").read_text(encoding="utf-8")
+    notes = (ROOT / "docs" / "releases" / "v0.16.282-github-release.md").read_text(encoding="utf-8")
+
+    assert "ADAPTER_NOT_FOUND" in unreleased
+    assert "market install --dry-run" in unreleased
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.281...HEAD" in text
+
+    for snippet in [
+        "# v0.16.282 发布草案",
+        "**目标版本：** `0.16.282`",
+        "**提交范围：** `v0.16.281..HEAD`",
+        "**提交范围：** `v0.16.282..HEAD`",
+        "ADAPTER_NOT_FOUND",
+        "market install --dry-run",
+        "error.details.domain",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "llm_live_preflight_not_ready",
+        "release_readiness.py --strict --target-version 0.16.282 --remote",
+        "git tag v0.16.282",
+        "release_readiness.py --strict --release-tag v0.16.282 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.282",
+        "ADAPTER_NOT_FOUND",
+        "error.details.domain",
+        "## Compatibility",
+        "## Trust Boundaries",
+        "live LLM success",
     ]:
         assert snippet in notes

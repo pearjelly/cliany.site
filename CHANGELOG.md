@@ -7,6 +7,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- `cliany-site verify <domain>` now returns a nonzero `ADAPTER_NOT_FOUND` envelope when that explicitly requested adapter is absent, instead of incorrectly reporting a successful empty verification result. The error includes the requested domain and explains that `market install --dry-run` only preflights a package; remove `--dry-run` to install before verifying.
+
 ## [0.16.281] - 2026-07-27
 
 ### Fixed

@@ -26,6 +26,9 @@ def test_readmes_document_adapter_package_preflight() -> None:
         assert "https://publisher.example/releases/github.com-1.0.0.cliany-adapter.tar.gz" in text
         assert "--sha256 <64-hex-sha256> --dry-run --json" in text
         assert "[--sha256] [--force] [--dry-run] [--json]" in text
+        assert "Remove --dry-run to install before verify <domain>." in text or (
+            "移除 --dry-run 完成安装" in text
+        )
 
 
 def test_readmes_publish_copyable_active_demo_installs() -> None:
