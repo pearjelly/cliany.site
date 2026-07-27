@@ -283,7 +283,7 @@ async with ClanySite() as cs:
 `doctor_preflight_state_fields` 契约固定包含 `preflight_state.status`、`preflight_state.ready_for_adapter_package`、`preflight_state.primary_reason`、`preflight_state.reason_codes` 和 `preflight_state.next_action`；`doctor_preflight_state_statuses` 只允许 `ready`、`blocked` 与 `missing_fields`，因此只看 README 的维护者也能判断应继续真实 `explore`，还是先把 blocker evidence 贴回 issue。带 `--doctor-json` 的 evidence bundle 还会分别输出 `doctor_preflight_evidence_missing_count` / `doctor_preflight_evidence_missing_fields` 与 `doctor_preflight_evidence_null_count` / `doctor_preflight_evidence_null_fields`：前者表示 selector 不存在，后者表示字段存在但值为 JSON `null`，连接级失败不会再与 schema 漂移混在一起。
 `--issue-template` 还会输出 `Doctor Preflight Evidence Template`，为每个 doctor preflight 字段提供可粘贴 `cliany-site doctor --llm-live --require-capability generate_adapters --json` 结果的占位符，方便在 `E_LLM_UNAVAILABLE` 或 CDP blocker 时直接补齐 issue 证据。
 
-如需让已开放的 candidate issue 保持与当前严格交接一致，运行 `python scripts/audit_candidate_issues.py --repo pearjelly/cliany.site --json`。默认只读，会连同 body hash 报告 `current`、`stale`、`missing`、`duplicate` 与未被当前 manifest 识别的 `unexpected` issue；只有审阅 stale body 并先解决其余状态后才使用 `--apply --confirm-rewrite`，工具不会创建、关闭或提前晋级 issue。
+如需让已开放的 candidate issue 保持与当前严格交接一致，运行 `python scripts/audit_candidate_issues.py --repo pearjelly/cliany.site --json`。默认只读，会连同 body hash 报告 `current`、`stale`、`missing`、`duplicate` 与未被当前 manifest 识别的 `unexpected` issue；非 JSON 的人工报告还会直接给出 unexpected issue 的实际标题和 URL，维护者无需先解析 JSON 才能定位 blocker。只有审阅 stale body 并先解决其余状态后才使用 `--apply --confirm-rewrite`，工具不会创建、关闭或提前晋级 issue。
 
 ### SuiteCRM Demo (企业 CRM)
 ```bash

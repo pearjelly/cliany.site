@@ -69,6 +69,10 @@ def test_readmes_document_current_extract_quality_and_readiness():
         "README.md": "Generated `list-`, `search-`, `read-`, and `extract-` adapter commands",
         "README.zh.md": "生成的 `list-`、`search-`、`read-` 和 `extract-` adapter 命令",
     }
+    expected_unexpected_issue_terms = {
+        "README.md": "actual title and URL",
+        "README.zh.md": "实际标题和 URL",
+    }
     for filename in ("README.md", "README.zh.md"):
         text = (ROOT / filename).read_text(encoding="utf-8")
 
@@ -176,5 +180,6 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "./github.com.cliany-adapter.tar.gz" not in text
         assert expected_partial_terms[filename] in text
         assert expected_data_command_terms[filename] in text
+        assert expected_unexpected_issue_terms[filename] in text
         assert "extract` action" in text
         assert "not silently rewritten" in text or "不会静默改写" in text

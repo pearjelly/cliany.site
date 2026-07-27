@@ -7,6 +7,11 @@
 
 ## [Unreleased]
 
+## [0.16.281] - 2026-07-27
+
+### Fixed
+- The human-readable `scripts/audit_candidate_issues.py` report now prints an `unexpected` issue's actual title and URL, so maintainers can locate the blocking public handoff without parsing JSON first.
+
 ## [0.16.280] - 2026-07-27
 
 ### Added
@@ -2636,7 +2641,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.280...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.281...HEAD
+[0.16.281]: https://github.com/pearjelly/cliany.site/compare/v0.16.280...v0.16.281
 [0.16.280]: https://github.com/pearjelly/cliany.site/compare/v0.16.279...v0.16.280
 [0.16.279]: https://github.com/pearjelly/cliany.site/compare/v0.16.278...v0.16.279
 [0.16.278]: https://github.com/pearjelly/cliany.site/compare/v0.16.277...v0.16.278

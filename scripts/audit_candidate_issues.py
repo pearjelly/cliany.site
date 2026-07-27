@@ -219,7 +219,12 @@ def _print_human_report(report: dict[str, Any]) -> None:
     print(f"Candidate public issue audit: {report['repo']}")
     for audit in report["issues"]:
         issue_numbers = ", ".join(f"#{number}" for number in audit.get("issue_numbers", [])) or "(none)"
-        print(f"- {audit['case_id']}: {audit['status']} {issue_numbers}")
+        line = f"- {audit['case_id']}: {audit['status']} {issue_numbers}"
+        if audit.get("status") == "unexpected":
+            actual_title = str(audit.get("actual_title") or "(untitled)")
+            issue_url = str(audit.get("issue_url") or "(no URL)")
+            line += f": {actual_title} {issue_url}"
+        print(line)
     if report["applied_issue_numbers"]:
         numbers = ", ".join(f"#{number}" for number in report["applied_issue_numbers"])
         print(f"Rewrote: {numbers}")

@@ -84,6 +84,28 @@ def test_audit_reports_unexpected_case_proposal_issue_and_its_body_hash():
     assert report["unexpected_issue_numbers"] == [99]
 
 
+def test_human_report_prints_unexpected_issue_title_and_url(capsys):
+    expectation = _expectation()
+    audits = audit_candidate_issues.audit_candidate_issues(
+        [expectation],
+        [
+            {
+                "number": 99,
+                "title": "Old candidate handoff",
+                "body": "unmatched issue body",
+                "url": "https://example.test/99",
+            }
+        ],
+    )
+
+    audit_candidate_issues._print_human_report(
+        audit_candidate_issues._report("owner/repo", audits)
+    )
+
+    output = capsys.readouterr().out
+    assert "- unmatched_case_proposal_issue: unexpected #99: Old candidate handoff https://example.test/99" in output
+
+
 def test_scoped_audit_does_not_flag_other_known_candidate_titles_as_unexpected():
     selected = _expectation("pypi-project-search")
     other = _expectation("npm-package-search")
