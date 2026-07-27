@@ -376,6 +376,8 @@ cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapt
 # 预检或安装发布者提供的远程包（必须固定 SHA-256）
 cliany-site market install https://publisher.example/releases/github.com-1.0.0.cliany-adapter.tar.gz --sha256 <64-hex-sha256> --dry-run --json
 
+# 成功的 dry-run 只校验包；在运行 verify <domain> 前，移除 --dry-run 完成安装。
+
 # 查看 dry_run、package_sha256、files、would_replace 和 would_create_backup 后再安装
 cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz
 

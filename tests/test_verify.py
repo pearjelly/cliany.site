@@ -7,6 +7,7 @@ import pytest
 from click.testing import CliRunner
 
 from cliany_site.cli import cli
+from cliany_site.errors import ADAPTER_NOT_FOUND
 
 VALID_V3_METADATA = {
     "schema_version": 3,
@@ -57,13 +58,25 @@ def _write_manifest(adapter_dir, domain: str, *, manifest_domain: str | None = N
     (adapter_dir / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
 
 
-def test_verify_no_adapters(tmp_home, no_llm):
+def test_verify_missing_explicit_adapter_returns_not_found(tmp_home, no_llm):
     runner = CliRunner()
     result = runner.invoke(cli, ["verify", "--json", "nonexistent.com"])
+    assert result.exit_code == 1
+    data = json.loads(result.output)
+    assert data["ok"] is False
+    assert data["error"]["code"] == ADAPTER_NOT_FOUND
+    assert data["error"]["details"] == {"domain": "nonexistent.com"}
+    assert "--dry-run" in data["error"]["hint"]
+    assert "移除" in data["error"]["hint"]
+
+
+def test_verify_all_no_adapters_returns_empty_success(tmp_home, no_llm):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["verify", "--json"])
     assert result.exit_code == 0
     data = json.loads(result.output)
     assert data["ok"] is True
-    assert data["data"]["domain"] == "nonexistent.com"
+    assert data["data"]["domain"] == "all"
     assert data["data"]["results"] == []
 
 

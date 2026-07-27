@@ -371,6 +371,8 @@ cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapt
 # Preflight or install a publisher-provided remote package with a pinned digest
 cliany-site market install https://publisher.example/releases/github.com-1.0.0.cliany-adapter.tar.gz --sha256 <64-hex-sha256> --dry-run --json
 
+# A successful dry run only validates the package. Remove --dry-run to install before verify <domain>.
+
 # Install adapter after reviewing dry_run, package_sha256, files, would_replace, and would_create_backup
 cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz
 

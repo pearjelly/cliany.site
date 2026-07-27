@@ -10,7 +10,8 @@ from typing import Any, cast
 import click
 
 from cliany_site.config import get_config
-from cliany_site.envelope import ok
+from cliany_site.envelope import err, ok
+from cliany_site.errors import ADAPTER_NOT_FOUND
 from cliany_site.marketplace import MANIFEST_VERSION
 from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
 
@@ -255,6 +256,24 @@ def verify_cmd(
         adapter_dir = cfg.adapters_dir / domain
         if adapter_dir.exists():
             domains_to_verify = [domain]
+        else:
+            missing_envelope = err(
+                "verify",
+                ADAPTER_NOT_FOUND,
+                f"adapter '{domain}' 不存在",
+                hint=(
+                    "若刚使用 market install --dry-run 预检，请移除 --dry-run 后重新运行安装命令；"
+                    "或先运行 cliany-site explore <url> <workflow> 生成 adapter。"
+                ),
+                details={"domain": domain},
+                source="builtin",
+            )
+            if effective_json_mode:
+                click.echo(json.dumps(missing_envelope, ensure_ascii=False, indent=2))
+            else:
+                click.echo(f"✗ {missing_envelope['error']['message']}")
+                click.echo(missing_envelope["error"]["hint"])
+            ctx.exit(1)
     else:
         if cfg.adapters_dir.exists():
             domains_to_verify = sorted(
