@@ -218,14 +218,20 @@ def _demo_adapter_quickstart() -> dict[str, Any]:
             continue
 
         verify_command = f"cliany-site verify {adapter_domain} --json"
+        adapter_present = (get_config().adapters_dir / adapter_domain).exists()
+        recommended_commands = [verify_command, read_only_command]
+        if not adapter_present:
+            recommended_commands.insert(0, install_command)
         return {
             "label": "已发布 active demo adapter 快速路径",
             "case_id": case.get("id"),
             "case_status": "active",
             "commands": [install_command, verify_command, read_only_command],
+            "recommended_commands": recommended_commands,
             "install_command": install_command,
             "verify_command": verify_command,
             "read_only_command": read_only_command,
+            "adapter_present": adapter_present,
             "docs": case.get("docs"),
             "source_release": case.get("source_release"),
             "available": True,
@@ -281,10 +287,16 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
     if summary["must_fix"]:
         summary["recommended_next_step"] = "先处理必须修复项，然后重新运行 cliany-site doctor。"
     elif summary["ready_for_demo_adapters"]:
-        summary["recommended_next_step"] = (
-            "按 demo_adapter_quickstart.commands 依次安装已发布 active adapter、运行 verify，"
-            "再执行只读案例命令。"
-        )
+        if demo_adapter_quickstart["adapter_present"]:
+            summary["recommended_next_step"] = (
+                "已检测到 active demo 安装目标；按 demo_adapter_quickstart.recommended_commands "
+                "先运行 verify，再执行只读案例命令。"
+            )
+        else:
+            summary["recommended_next_step"] = (
+                "按 demo_adapter_quickstart.recommended_commands 依次安装已发布 active adapter、"
+                "运行 verify，再执行只读案例命令。"
+            )
     elif summary["ready_for_explore"]:
         summary["recommended_next_step"] = (
             "先运行 cliany-site cases 查看维护中的案例；准备好后可使用 explore 生成自己的命令。"
@@ -399,7 +411,7 @@ def _print_doctor_human(result: Envelope) -> None:
         demo_adapter_quickstart = (
             demo_adapter_quickstart if isinstance(demo_adapter_quickstart, dict) else {}
         )
-        demo_adapter_commands = demo_adapter_quickstart.get("commands")
+        demo_adapter_commands = demo_adapter_quickstart.get("recommended_commands")
         if (
             summary.get("ready_for_demo_adapters")
             and isinstance(demo_adapter_commands, list)

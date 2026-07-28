@@ -50,9 +50,9 @@ cliany-site doctor --json
 - `ready_for_existing_adapters`：当前环境是否可运行已有 adapter；和 human 输出的 `Existing adapter runtime ready` 一致。
 - `ready_for_demo_adapters`：当前是否真的有可用的已发布 active demo adapter asset；只有它为 `true` 时，才执行 demo 快速路径。
 - `case_catalog_quickstart`：可立即运行的案例目录命令；在获取到 adapter 包之前，先用它查看公开案例和各自的验证路径。
-- `demo_adapter_quickstart`：当 `available=true`、`deprecated=false` 时，`commands` 按顺序提供固定 HTTPS + SHA-256 安装、`verify` 和只读案例命令。它只会选择 `active`、无需登录的案例，不会把 candidate 当成可安装 demo。若 `deprecated=true` 或 `available=false`，不要执行其中的命令；读取 `replacement` 并改用 `case_catalog_quickstart`。
+- `demo_adapter_quickstart`：当 `available=true`、`deprecated=false` 时，兼容字段 `commands` 保留固定 HTTPS + SHA-256 安装、`verify` 和只读案例命令。实际执行 `recommended_commands`：`adapter_present=false` 时它包含安装、`verify` 和只读命令；同名安装目标已占用时 `adapter_present=true`，它从 `verify` 开始，不会重复安装或覆盖已有 adapter。占用目标不代表 adapter 健康，仍须先运行 `verify`；即使目标是损坏目录或普通文件，也先避免重复安装并让 `verify` 给出实际诊断。它只会选择 `active`、无需登录的案例，不会把 candidate 当成可安装 demo。若 `deprecated=true` 或 `available=false`，不要执行其中的命令；读取 `replacement` 并改用 `case_catalog_quickstart`。
 
-当 `ready_for_demo_adapters=true` 时，依次执行 `data.summary.demo_adapter_quickstart.commands` 中的三条命令：先安装并校验 archive，再运行 `verify`，最后执行只读案例命令。安装和静态校验成功只证明归档可用；第三方站点的实际返回仍以最后一条命令的 JSON envelope 为准。
+当 `ready_for_demo_adapters=true` 时，只按 `data.summary.demo_adapter_quickstart.recommended_commands` 的顺序执行：尚未安装时先安装并校验 archive，再运行 `verify`，最后执行只读案例命令；已检测到同名目录时从 `verify` 开始。安装和静态校验成功只证明归档可用；第三方站点的实际返回仍以最后一条命令的 JSON envelope 为准。
 
 ### 3. 查看维护中的案例
 

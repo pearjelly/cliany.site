@@ -120,7 +120,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "audit_candidate_issues.py" in docs
     assert "unexpected" in docs
     assert "实际 title 和 URL" in docs
-    assert "demo_adapter_quickstart.commands" in index
+    assert "demo_adapter_quickstart.recommended_commands" in index
     assert "ready_for_demo_adapters=true" in docs
     assert "pinned GitHub Release URL, SHA-256 install, verify, and read-only command" in script
     assert "package_sha256" in docs
@@ -145,7 +145,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "website alias inspect" in index
     assert "PyPI version-specific publication audit" in index
     assert "10-Minute Success Path" in script
-    assert "demo_adapter_quickstart.commands" in script
+    assert "demo_adapter_quickstart.recommended_commands" in script
     assert "cliany-site cases --case-id suitecrm-accounts" in docs
     assert "primary_next_task_acceptance_criteria" in script
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in script

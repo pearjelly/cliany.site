@@ -25,6 +25,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 - Dry-run 覆盖契约：同名 adapter 的 `market install --dry-run --json` 返回只读计划和 `requires_force=true`，而不是提前报错；调用方必须据此显式确认。真正不带 `--force` 的重复安装仍保持非零失败且不写入。
 - Dry-run 版本决策：覆盖计划同时返回 incoming `version` 与 `installed_version`；`installed_version=null` 时不能推断 adapter 不存在，仍以 `would_replace` 判断。系统不对版本做升级或降级裁决，也不会自动覆盖。
 - Active demo 可达性：SuiteCRM、Jira、Confluence 和 Jenkins 的案例目录与双语 README 现在提供已验证的 GitHub Release v0.14.1 HTTPS asset 与 SHA-256；`doctor` 会从打包目录选择无需登录的 Jira active demo，按安装、verify、只读命令给出首次成功路径。当前版本验证隔离安装和静态完整性，不把第三方在线 replay 伪装成新鲜成功证据。
+- 下一待发布可靠性切片：当 active demo 的安装目标已占用时，`doctor` 将保留兼容的静态三步 `commands`，但以 `recommended_commands` 先执行 `verify` 与只读命令；目标存在不被当作健康证明，也不会触发自动覆盖。该切片待下一个允许发布的窗口完成版本化验证。
 
 这意味着 Q3 后续重点不再是「搭脚手架」，而是把已搭好的维护系统转换成用户可见的真实案例、可分发 adapter 资产和稳定集成路径。
 

@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- `doctor --json` now adds `demo_adapter_quickstart.adapter_present` and `recommended_commands`. When the active demo install target is unoccupied, the recommendation remains install, verify, then the read-only command; when it is occupied, the recommendation starts with `verify` and never performs an automatic overwrite. The existing `commands` and `install_command` fields remain unchanged for compatibility.
+
 ## [0.16.284] - 2026-07-28
 
 ### Added

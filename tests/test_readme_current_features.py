@@ -57,6 +57,17 @@ def test_readmes_publish_copyable_active_demo_installs() -> None:
             assert sha256 in text
 
 
+def test_readmes_document_doctor_recommended_demo_commands() -> None:
+    expected_terms = {
+        "README.md": ("demo_adapter_quickstart.recommended_commands", "automatic overwrite"),
+        "README.zh.md": ("demo_adapter_quickstart.recommended_commands", "绝不会自动覆盖"),
+    }
+    for filename, terms in expected_terms.items():
+        text = (ROOT / filename).read_text(encoding="utf-8")
+        for term in terms:
+            assert term in text
+
+
 def test_readmes_document_current_extract_quality_and_readiness():
     expected_partial_terms = {
         "README.md": "partially missing required fields",

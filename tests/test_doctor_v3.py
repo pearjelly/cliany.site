@@ -17,7 +17,11 @@ ACTIVE_INSTALL_COMMAND = (
 ACTIVE_VERIFY_COMMAND = "cliany-site verify issues.apache.org --json"
 ACTIVE_READ_ONLY_COMMAND = "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json"
 ACTIVE_DEMO_RECOMMENDATION = (
-    "按 demo_adapter_quickstart.commands 依次安装已发布 active adapter、运行 verify，再执行只读案例命令。"
+    "按 demo_adapter_quickstart.recommended_commands 依次安装已发布 active adapter、运行 verify，再执行只读案例命令。"
+)
+ACTIVE_DEMO_ALREADY_INSTALLED_RECOMMENDATION = (
+    "已检测到 active demo 安装目标；按 demo_adapter_quickstart.recommended_commands "
+    "先运行 verify，再执行只读案例命令。"
 )
 
 
@@ -113,9 +117,15 @@ def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):
             ACTIVE_VERIFY_COMMAND,
             ACTIVE_READ_ONLY_COMMAND,
         ],
+        "recommended_commands": [
+            ACTIVE_INSTALL_COMMAND,
+            ACTIVE_VERIFY_COMMAND,
+            ACTIVE_READ_ONLY_COMMAND,
+        ],
         "install_command": ACTIVE_INSTALL_COMMAND,
         "verify_command": ACTIVE_VERIFY_COMMAND,
         "read_only_command": ACTIVE_READ_ONLY_COMMAND,
+        "adapter_present": False,
         "docs": "README.md#asf-jira-issue-tracker",
         "source_release": "v0.14.1",
         "available": True,
@@ -168,6 +178,55 @@ def test_doctor_human_output_groups_action_items(tmp_home, no_llm, monkeypatch):
     assert "建议处理:" in result.output
     assert "llm" in result.output
     assert "只安装/执行已有 adapter 可暂时忽略" in result.output
+
+
+def test_doctor_recommends_verify_first_for_existing_active_demo_adapter(tmp_home, no_llm, monkeypatch):
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    adapters_dir = tmp_home / ".cliany-site" / "adapters"
+    (adapters_dir / "issues.apache.org").mkdir(parents=True)
+
+    runner = CliRunner()
+    json_result = runner.invoke(cli, ["--json", "doctor"], catch_exceptions=False)
+    human_result = runner.invoke(cli, ["doctor"], catch_exceptions=False)
+
+    assert json_result.exit_code == 0
+    assert human_result.exit_code == 0
+    summary = json.loads(json_result.output)["data"]["summary"]
+    quickstart = summary["demo_adapter_quickstart"]
+    assert quickstart["adapter_present"] is True
+    assert summary["ready_for_demo_adapters"] is True
+    assert quickstart["commands"] == [
+        ACTIVE_INSTALL_COMMAND,
+        ACTIVE_VERIFY_COMMAND,
+        ACTIVE_READ_ONLY_COMMAND,
+    ]
+    assert quickstart["recommended_commands"] == [ACTIVE_VERIFY_COMMAND, ACTIVE_READ_ONLY_COMMAND]
+    assert summary["recommended_next_step"] == ACTIVE_DEMO_ALREADY_INSTALLED_RECOMMENDATION
+    assert f"下一步: {ACTIVE_DEMO_ALREADY_INSTALLED_RECOMMENDATION}" in human_result.output
+    assert ACTIVE_INSTALL_COMMAND not in human_result.output
+    assert ACTIVE_VERIFY_COMMAND in human_result.output
+    assert ACTIVE_READ_ONLY_COMMAND in human_result.output
+
+
+def test_demo_adapter_quickstart_avoids_install_for_an_occupied_target(tmp_home):
+    adapter_path = tmp_home / ".cliany-site" / "adapters" / "issues.apache.org"
+    adapter_path.parent.mkdir(parents=True)
+    adapter_path.write_text("not an adapter directory", encoding="utf-8")
+
+    quickstart = doctor_module._demo_adapter_quickstart()
+
+    assert quickstart["adapter_present"] is True
+    assert quickstart["recommended_commands"] == [
+        ACTIVE_VERIFY_COMMAND,
+        ACTIVE_READ_ONLY_COMMAND,
+    ]
 
 
 @pytest.mark.asyncio

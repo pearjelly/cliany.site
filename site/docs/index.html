@@ -133,12 +133,12 @@ export CLIANY_OPENAI_API_KEY="sk-..."</code></pre>
         <p><code>explore --json</code> 遇到 LLM 网关、限流或服务暂不可用时会返回 <code>E_LLM_UNAVAILABLE</code>，并在 <code>details.retryable</code>、<code>details.status_code</code> 和 <code>details.phase</code> 中给出可重试上下文；错误消息会清洗原始 HTML 网关页。</p>
 
         <h2 id="quickstart">10 分钟成功路径</h2>
-        <p>首次运行先确认 CLI 可用。若 doctor 报告已发布 active demo 已就绪，就按其三条固定命令安装、verify 并执行只读案例；否则先查看维护中的公开案例。不需要先配置 LLM key。准备好生成自己的命令时，再进入 <a href="#config">配置 LLM</a> 和 <a href="#explore">explore</a>。</p>
+        <p>首次运行先确认 CLI 可用。若 doctor 报告已发布 active demo 已就绪，就按推荐命令安装（仅在未安装时）、verify 并执行只读案例；否则先查看维护中的公开案例。不需要先配置 LLM key。准备好生成自己的命令时，再进入 <a href="#config">配置 LLM</a> 和 <a href="#explore">explore</a>。</p>
         <pre><code># 1. 查看 human 摘要和下一步
 cliany-site doctor
 
-# 2. 当 ready_for_demo_adapters=true 时，按 data.summary.demo_adapter_quickstart.commands 的顺序运行
-#    （固定 HTTPS + SHA-256 安装、verify、只读案例）；candidate 不会进入该路径
+# 2. 当 ready_for_demo_adapters=true 时，按 data.summary.demo_adapter_quickstart.recommended_commands 的顺序运行
+#    （只在未安装时固定 HTTPS + SHA-256 安装，然后 verify、只读案例）；candidate 不会进入该路径
 
 # 3. 否则查看维护中的公开案例和各自的验证路径
 cliany-site cases

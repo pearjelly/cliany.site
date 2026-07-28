@@ -19,7 +19,7 @@ const I18N = {
   'try.check.title': { zh: '检查就绪状态', en: 'Check readiness' },
   'try.check.body': { zh: '查看适合你当前机器的下一步建议。', en: 'Read the human-friendly next step for your machine.' },
   'try.cases.title': { zh: '选择维护中的案例', en: 'Choose a maintained example' },
-  'try.cases.body': { zh: '当 doctor 报告 ready_for_demo_adapters=true 时，按 demo_adapter_quickstart.commands 安装、verify 并执行只读 active demo；否则浏览公开案例及其验证路径。', en: 'When doctor reports ready_for_demo_adapters=true, follow demo_adapter_quickstart.commands to install, verify, and run a read-only active demo; otherwise browse public cases and their validation paths.' },
+  'try.cases.body': { zh: '当 doctor 报告 ready_for_demo_adapters=true 时，按 demo_adapter_quickstart.recommended_commands 安装（仅在未安装时）、verify 并执行只读 active demo；否则浏览公开案例及其验证路径。', en: 'When doctor reports ready_for_demo_adapters=true, follow demo_adapter_quickstart.recommended_commands: install only when absent, then verify and run a read-only active demo; otherwise browse public cases and their validation paths.' },
   'try.guide': { zh: '查看 10 分钟指南 →', en: 'Follow the 10-minute guide →' },
 
   'terminal.connecting': { zh: '✓ 正在连接 Chrome CDP...', en: '✓ Connecting to Chrome CDP...' },
