@@ -431,11 +431,13 @@ def inspect_adapter_package(
     with _validated_adapter_package(pack_path) as (manifest, _tmp_path, package_sha256):
         cfg = get_config()
         would_replace = (cfg.adapters_dir / manifest.domain).exists()
+        installed_version = _get_installed_version(manifest.domain) if would_replace else None
         return {
             "dry_run": True,
             "package_sha256": package_sha256,
             "domain": manifest.domain,
             "version": manifest.version,
+            "installed_version": installed_version or None,
             "files": sorted(manifest.files),
             "would_replace": would_replace,
             "would_create_backup": would_replace and force,

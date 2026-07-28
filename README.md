@@ -373,8 +373,8 @@ cliany-site market install https://publisher.example/releases/github.com-1.0.0.c
 
 # A successful dry run only validates the package. Remove --dry-run to install before verify <domain>.
 
-# Install adapter after reviewing dry_run, package_sha256, files, would_replace, would_create_backup, and requires_force
-# If requires_force is true, the dry run stayed read-only; use --force only when you intend to replace the installed adapter.
+# Install adapter after reviewing dry_run, package_sha256, version, installed_version, files, would_replace, would_create_backup, and requires_force
+# If requires_force is true, use would_replace to confirm presence and compare version with installed_version when available; the dry run stayed read-only, so use --force only when you intend to replace the installed adapter.
 cliany-site market install ~/.cliany-site/packages/github.com-1.0.0.cliany-adapter.tar.gz
 
 # Rollback

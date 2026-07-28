@@ -304,6 +304,7 @@ class TestRemoteAdapterCLI:
             "package_sha256": digest,
             "domain": "remote-dry-run.com",
             "version": "2.0.0",
+            "installed_version": None,
             "files": ["commands.py", "metadata.json"],
             "would_replace": False,
             "would_create_backup": False,
@@ -339,6 +340,7 @@ class TestRemoteAdapterCLI:
         data = json.loads(result.output)
         assert data["success"] is True
         assert data["data"]["would_replace"] is True
+        assert data["data"]["installed_version"] == "1.0.0"
         assert data["data"]["would_create_backup"] is False
         assert data["data"]["requires_force"] is True
         assert response.read_calls > 0
@@ -922,6 +924,7 @@ class TestInspectAdapterPackage:
             "package_sha256": _sha256_file(pack_path),
             "domain": "inspect-new.com",
             "version": "2.0.0",
+            "installed_version": None,
             "files": ["commands.py", "metadata.json"],
             "would_replace": False,
             "would_create_backup": False,
@@ -941,6 +944,7 @@ class TestInspectAdapterPackage:
             backups_after = list_backups("inspect-force.com")
 
         assert report["would_replace"] is True
+        assert report["installed_version"] == "1.0.0"
         assert report["would_create_backup"] is True
         assert report["requires_force"] is False
         assert (adapter_dir / "commands.py").read_bytes() == commands_before
@@ -956,9 +960,24 @@ class TestInspectAdapterPackage:
             report = inspect_adapter_package(pack_path)
 
         assert report["would_replace"] is True
+        assert report["installed_version"] == "0.1.0"
         assert report["would_create_backup"] is False
         assert report["requires_force"] is True
         assert (adapter_dir / "commands.py").read_bytes() == commands_before
+        assert not (cfg.home_dir / "backups").exists()
+
+    def test_inspect_duplicate_without_readable_version_reports_null(self, tmp_path: Path) -> None:
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter(cfg.adapters_dir, "inspect-unknown-version.com")
+        (adapter_dir / "metadata.json").write_text("{}", encoding="utf-8")
+        pack_path = _make_tarball(tmp_path / "packs", "inspect-unknown-version.com", version="2.0.0")
+
+        with patch("cliany_site.marketplace.get_config", return_value=cfg):
+            report = inspect_adapter_package(pack_path)
+
+        assert report["would_replace"] is True
+        assert report["installed_version"] is None
+        assert report["requires_force"] is True
         assert not (cfg.home_dir / "backups").exists()
 
     @pytest.mark.parametrize(
@@ -1407,6 +1426,7 @@ class TestMarketCLI:
         assert data["data"]["dry_run"] is True
         assert data["data"]["domain"] == "cli-dry-run.com"
         assert data["data"]["version"] == "2.0.0"
+        assert data["data"]["installed_version"] is None
         assert data["data"]["would_replace"] is False
         assert data["data"]["would_create_backup"] is False
         assert data["data"]["requires_force"] is False
@@ -1426,6 +1446,7 @@ class TestMarketCLI:
         data = json.loads(result.output)
         assert data["success"] is True
         assert data["data"]["would_replace"] is True
+        assert data["data"]["installed_version"] == "0.1.0"
         assert data["data"]["would_create_backup"] is False
         assert data["data"]["requires_force"] is True
         assert (adapter_dir / "commands.py").read_bytes() == commands_before

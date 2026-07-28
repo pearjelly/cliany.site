@@ -41,6 +41,8 @@ def test_adapter_lifecycle_doc_pins_package_contract():
         "cliany-site market publish",
         'cliany-site market publish github.com --version 1.0.0 --author "team" --json',
         "data.package_sha256",
+        "installed_version",
+        "requires_force",
         "完成归档的 64 字符小写十六进制 SHA-256 摘要",
         "cliany-site market install",
         "cliany-site market rollback",

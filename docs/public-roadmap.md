@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-07-28
-- **Current baseline:** v0.16.283
+- **Current baseline:** v0.16.284
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -21,7 +21,7 @@ The next focus is turning candidate real-world cases into verified active demos.
 
 As of 2026-07-22, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 
-As of v0.16.283, candidate promotion has a strict capability gate alongside semantic action replay and data-command evidence checks. Candidate evidence, promotion-plan JSON, and generated public issue templates remain executable-first: `primary_command`, the queue command, and the issue's Primary Evidence Task point to `cliany-site doctor --llm-live --require-capability generate_adapters --json` for `adapter_package`; an unavailable live provider exits nonzero while preserving the diagnostic payload for blocker evidence. `scripts/audit_candidate_issues.py` keeps already-open public candidate issues aligned with that current template through a read-only audit and an explicit reviewed rewrite; an unknown labeled issue is now an `unexpected` blocker rather than silently outside the report. The later explore command remains `task_command`. Explicit `cliany-site verify <domain> --json` now returns `ADAPTER_NOT_FOUND` rather than a successful empty result when that adapter is absent; a marketplace dry run remains only a package preflight, and a duplicate dry-run now returns `requires_force=true` as a read-only plan rather than installation permission. This is a reliability and handoff improvement, not evidence that any candidate has passed live LLM, packaging, or online smoke validation.
+As of v0.16.284, candidate promotion has a strict capability gate alongside semantic action replay and data-command evidence checks. Candidate evidence, promotion-plan JSON, and generated public issue templates remain executable-first: `primary_command`, the queue command, and the issue's Primary Evidence Task point to `cliany-site doctor --llm-live --require-capability generate_adapters --json` for `adapter_package`; an unavailable live provider exits nonzero while preserving the diagnostic payload for blocker evidence. `scripts/audit_candidate_issues.py` keeps already-open public candidate issues aligned with that current template through a read-only audit and an explicit reviewed rewrite; an unknown labeled issue is now an `unexpected` blocker rather than silently outside the report. The later explore command remains `task_command`. Explicit `cliany-site verify <domain> --json` now returns `ADAPTER_NOT_FOUND` rather than a successful empty result when that adapter is absent; a marketplace dry run remains only a package preflight, and a duplicate dry-run now returns its incoming `version`, `installed_version`, and `requires_force=true` as a read-only replacement plan rather than installation permission. `installed_version=null` is not an absence claim; `would_replace` remains the presence signal. This is a reliability and handoff improvement, not evidence that any candidate has passed live LLM, packaging, or online smoke validation.
 
 Planned outcomes:
 

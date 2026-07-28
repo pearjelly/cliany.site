@@ -35,7 +35,7 @@
    cliany-site check github.com --json
    ```
 
-   预检会报告 `dry_run`、`package_sha256`、`files`、`would_replace` 和 `would_create_backup`。它只在临时提取目录中校验本地包，不会写入 adapter 或 backup 运行时目录。
+   预检会报告 `dry_run`、`package_sha256`、incoming `version`、`installed_version`、`files`、`would_replace`、`would_create_backup` 和 `requires_force`。当 `would_replace=true` 时，先比较两个版本，再显式决定是否使用 `--force`；`installed_version=null` 只表示当前版本无法安全读取，不代表 adapter 不存在。它只在临时提取目录中校验本地包，不会写入 adapter 或 backup 运行时目录。
 
    对发布在可信来源的包，也可以使用直接 HTTPS URL。远程来源必须显式提供完成归档的 64 字符小写十六进制 SHA-256：将发布成功 JSON 中的 `data.package_sha256` 填入 `<64-hex-sha256>`；`--dry-run` 会校验下载后的完整归档，但不会保留下载缓存：
 

@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+## [0.16.284] - 2026-07-28
+
+### Added
+- `cliany-site market install <package> --dry-run --json` now reports `installed_version` next to the incoming package `version`. When `would_replace=true`, callers can review the installed version before explicitly choosing `--force`; `installed_version=null` means the current version is unavailable, so callers must continue to use `would_replace` for presence.
+
+### Changed
+- Local and fixed-SHA-256 remote dry-runs keep the same no-write replacement-plan contract. No version ordering or automatic upgrade/downgrade decision is introduced.
+
 ## [0.16.283] - 2026-07-28
 
 ### Changed
@@ -2655,7 +2663,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.283...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.284...HEAD
+[0.16.284]: https://github.com/pearjelly/cliany.site/compare/v0.16.283...v0.16.284
 [0.16.283]: https://github.com/pearjelly/cliany.site/compare/v0.16.282...v0.16.283
 [0.16.282]: https://github.com/pearjelly/cliany.site/compare/v0.16.281...v0.16.282
 [0.16.281]: https://github.com/pearjelly/cliany.site/compare/v0.16.280...v0.16.281

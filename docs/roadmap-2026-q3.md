@@ -2,7 +2,7 @@
 
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-07-28
-- **基线版本：** v0.16.283
+- **基线版本：** v0.16.284
 - **目标周期：** 2026-06-10 ~ 2026-08-05
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -13,7 +13,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 已完成校准
 
-2026-06-10 的原始路线图以 v0.14.2 为基线；到 2026-07-28 已进入 v0.16.283 发布验证。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
+2026-06-10 的原始路线图以 v0.14.2 为基线；到 2026-07-28 已进入 v0.16.284 发布验证。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
 
 - 首次成功路径：README、README.zh、官网和 `doctor` 输出已经围绕 10 分钟路径、真实 demo、LLM live preflight 和可执行下一步重新组织。
 - 真实案例库：`cliany-site cases` 已成为案例发现、单案例展开、issue template、evidence bundle 和 promotion plan 的统一入口。
@@ -23,6 +23,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 - 运行可靠性：`E_LLM_UNAVAILABLE`、结构化抽取质量、adapter 生成安全审计、Windows/Embodied CI 和离线案例验收已经进入默认维护面；list/search 命令可用 `expects_nonempty=false` 将合法零匹配保留为 `ok=true`，同时继续输出 `data.quality`，重新 explore 合并、打包和安装也会保留该声明。
 - 显式验证契约：`cliany-site verify <domain> --json` 在 adapter 未安装时返回非零 `ADAPTER_NOT_FOUND` 与 domain 详情；`market install --dry-run` 仍只预检包和安装计划，不会伪装为已安装。
 - Dry-run 覆盖契约：同名 adapter 的 `market install --dry-run --json` 返回只读计划和 `requires_force=true`，而不是提前报错；调用方必须据此显式确认。真正不带 `--force` 的重复安装仍保持非零失败且不写入。
+- Dry-run 版本决策：覆盖计划同时返回 incoming `version` 与 `installed_version`；`installed_version=null` 时不能推断 adapter 不存在，仍以 `would_replace` 判断。系统不对版本做升级或降级裁决，也不会自动覆盖。
 - Active demo 可达性：SuiteCRM、Jira、Confluence 和 Jenkins 的案例目录与双语 README 现在提供已验证的 GitHub Release v0.14.1 HTTPS asset 与 SHA-256；`doctor` 会从打包目录选择无需登录的 Jira active demo，按安装、verify、只读命令给出首次成功路径。当前版本验证隔离安装和静态完整性，不把第三方在线 replay 伪装成新鲜成功证据。
 
 这意味着 Q3 后续重点不再是「搭脚手架」，而是把已搭好的维护系统转换成用户可见的真实案例、可分发 adapter 资产和稳定集成路径。
