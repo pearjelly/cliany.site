@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.282] - 2026-07-28
+
 ### Fixed
 - `cliany-site verify <domain>` now returns a nonzero `ADAPTER_NOT_FOUND` envelope when that explicitly requested adapter is absent, instead of incorrectly reporting a successful empty verification result. The error includes the requested domain and explains that `market install --dry-run` only preflights a package; remove `--dry-run` to install before verifying.
 
@@ -2644,7 +2646,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.281...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.282...HEAD
+[0.16.282]: https://github.com/pearjelly/cliany.site/compare/v0.16.281...v0.16.282
 [0.16.281]: https://github.com/pearjelly/cliany.site/compare/v0.16.280...v0.16.281
 [0.16.280]: https://github.com/pearjelly/cliany.site/compare/v0.16.279...v0.16.280
 [0.16.279]: https://github.com/pearjelly/cliany.site/compare/v0.16.278...v0.16.279
