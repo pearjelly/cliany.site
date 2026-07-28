@@ -7,6 +7,15 @@
 
 ## [Unreleased]
 
+## [0.16.283] - 2026-07-28
+
+### Changed
+- `cliany-site market install <package> --dry-run --json` now returns a successful, read-only plan for an already installed adapter. The plan sets `requires_force=true` when a later real installation would need explicit `--force`; callers must inspect that field rather than treating exit code zero as permission to replace the adapter.
+
+### Fixed
+- A duplicate dry-run no longer raises `INSTALL_FAILED` before it can report the package hash, domain, version, and replacement plan. Remote fixed-SHA packages follow the same no-write contract.
+- A duplicate non-dry install without `--force` still returns nonzero `INSTALL_FAILED` before modifying adapter files or creating a backup.
+
 ## [0.16.282] - 2026-07-28
 
 ### Fixed
@@ -2646,7 +2655,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.282...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.283...HEAD
+[0.16.283]: https://github.com/pearjelly/cliany.site/compare/v0.16.282...v0.16.283
 [0.16.282]: https://github.com/pearjelly/cliany.site/compare/v0.16.281...v0.16.282
 [0.16.281]: https://github.com/pearjelly/cliany.site/compare/v0.16.280...v0.16.281
 [0.16.280]: https://github.com/pearjelly/cliany.site/compare/v0.16.279...v0.16.280

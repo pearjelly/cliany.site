@@ -1340,6 +1340,7 @@ class TestMarketCLI:
         cfg = _make_config(tmp_path)
         adapter_dir = _create_adapter(cfg.adapters_dir, "cli-dup.com")
         commands_before = (adapter_dir / "commands.py").read_bytes()
+        metadata_before = (adapter_dir / "metadata.json").read_bytes()
         pack_path = _make_tarball(tmp_path / "packs", "cli-dup.com")
 
         result = self._invoke(["install", str(pack_path), "--json"], cfg)
@@ -1348,6 +1349,7 @@ class TestMarketCLI:
         assert data["error"]["code"] == "INSTALL_FAILED"
         assert "--force" in data["error"]["fix"]
         assert (adapter_dir / "commands.py").read_bytes() == commands_before
+        assert (adapter_dir / "metadata.json").read_bytes() == metadata_before
         assert not (cfg.home_dir / "backups").exists()
 
     def test_install_missing_package_uses_install_failed_envelope(self, tmp_path: Path) -> None:
