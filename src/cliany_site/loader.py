@@ -71,7 +71,7 @@ def discover_adapters(include_legacy: bool = False) -> list[dict[str, Any]]:
     return adapters
 
 
-def _load_adapter_commands(commands_py: Path, domain: str) -> tuple[click.Group | None, str | None]:
+def load_adapter_from_path(commands_py: Path, domain: str) -> tuple[click.Group | None, str | None]:
     """加载 commands.py，并返回无法注册到根 CLI 时的诊断原因。"""
     if not commands_py.is_file():
         return None, "commands.py 必须是可加载的普通文件"
@@ -103,7 +103,7 @@ def _load_adapter_commands(commands_py: Path, domain: str) -> tuple[click.Group 
 def load_adapter_with_error(domain: str) -> tuple[click.Group | None, str | None]:
     """动态导入指定 domain 的 commands.py，并保留失败原因供校验命令使用。"""
     commands_py = get_config().adapters_dir / domain / "commands.py"
-    return _load_adapter_commands(commands_py, domain)
+    return load_adapter_from_path(commands_py, domain)
 
 
 def load_adapter(domain: str) -> click.Group | None:
@@ -192,7 +192,7 @@ class LazyAdapterRegistry:
         with self._lock:
             if domain not in self._cache:
                 commands_py = self._adapters_dir / domain / "commands.py"
-                cli_group, _reason = _load_adapter_commands(commands_py, domain)
+                cli_group, _reason = load_adapter_from_path(commands_py, domain)
                 if cli_group is None:
                     return None
                 self._cache[domain] = cli_group
