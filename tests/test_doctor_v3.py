@@ -161,26 +161,19 @@ def test_doctor_human_output_groups_action_items(tmp_home, no_llm, monkeypatch):
 
     assert result.exit_code == 0
     assert "cliany-site doctor" in result.output
-    assert "状态: 可继续" in result.output
-    assert "Existing adapter runtime ready: yes" in result.output
-    assert "Explore ready: no" in result.output
-    assert f"下一步: {ACTIVE_DEMO_RECOMMENDATION}" in result.output
-    assert "维护案例快速路径:" in result.output
-    assert "cliany-site cases" in result.output
-    assert "cliany-site cases --json" in result.output
-    assert "已发布 active demo 快速路径:" in result.output
-    assert ACTIVE_INSTALL_COMMAND in result.output
-    assert ACTIVE_STRICT_VERIFY_COMMAND in result.output
-    assert ACTIVE_READ_ONLY_COMMAND in result.output
-    assert "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz" not in result.output
-    assert "可用能力:" in result.output
-    assert "manage_adapters: yes" in result.output
-    assert "run_browser_workflows: yes" in result.output
-    assert "generate_adapters: no" in result.output
-    assert "blocked by: llm" in result.output
-    assert "建议处理:" in result.output
-    assert "llm" in result.output
+    assert "状态: 环境检查完成" in result.output
+    assert "现在可以：" in result.output
+    assert "安装、查看和校验已有 adapter" in result.output
+    assert "执行需要浏览器的已有 adapter 命令" in result.output
+    assert "暂时不能：" in result.output
+    assert "使用 explore 生成新 adapter" in result.output
+    assert "需要先处理：" in result.output
+    assert "LLM API 密钥" in result.output
     assert "只安装/执行已有 adapter 可暂时忽略" in result.output
+    assert "建议下一步：" in result.output
+    assert "cliany-site cases" in result.output
+    assert "Existing adapter runtime ready" not in result.output
+    assert "blocked by:" not in result.output
 
 
 def test_doctor_recommends_verify_first_for_existing_active_demo_adapter(tmp_home, no_llm, monkeypatch):
@@ -212,7 +205,9 @@ def test_doctor_recommends_verify_first_for_existing_active_demo_adapter(tmp_hom
     ]
     assert quickstart["recommended_commands"] == [ACTIVE_STRICT_VERIFY_COMMAND, ACTIVE_READ_ONLY_COMMAND]
     assert summary["recommended_next_step"] == ACTIVE_DEMO_ALREADY_INSTALLED_RECOMMENDATION
-    assert f"下一步: {ACTIVE_DEMO_ALREADY_INSTALLED_RECOMMENDATION}" in human_result.output
+    assert "建议下一步：" in human_result.output
+    assert f"先校验已安装案例：{ACTIVE_STRICT_VERIFY_COMMAND}" in human_result.output
+    assert f"校验通过后可执行：{ACTIVE_READ_ONLY_COMMAND}" in human_result.output
     assert ACTIVE_INSTALL_COMMAND not in human_result.output
     assert ACTIVE_STRICT_VERIFY_COMMAND in human_result.output
     assert ACTIVE_READ_ONLY_COMMAND in human_result.output
@@ -284,10 +279,11 @@ def test_doctor_human_output_exits_nonzero_for_must_fix(tmp_home, no_llm, monkey
     result = runner.invoke(cli, ["doctor"], catch_exceptions=False)
 
     assert result.exit_code == 1
-    assert "状态: 需要修复" in result.output
-    assert "下一步: 先处理必须修复项，然后重新运行 cliany-site doctor。" in result.output
-    assert "必须修复:" in result.output
-    assert "cdp" in result.output
+    assert "状态: 有阻塞项需要处理" in result.output
+    assert "建议下一步：" in result.output
+    assert "先完成“需要先处理”中的项目，然后重新运行：cliany-site doctor" in result.output
+    assert "需要先处理：" in result.output
+    assert "Chrome 浏览器连接" in result.output
     assert "CDP" in result.output
 
 
@@ -533,6 +529,39 @@ def test_doctor_required_generate_capability_returns_live_error(tmp_home, no_llm
     assert payload["error"]["details"]["required_capability"] == "generate_adapters"
     assert payload["error"]["details"]["required_capability_blockers"] == ["llm_live"]
     assert payload["error"]["details"]["summary"]["capabilities"]["generate_adapters"]["ready"] is False
+
+
+def test_doctor_human_live_preflight_explains_connection_failure(tmp_home, no_llm, monkeypatch):
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    class FailingLLM:
+        async def ainvoke(self, _prompt):
+            raise ConnectionError("Connection error.")
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("CLIANY_OPENAI_API_KEY", "test")
+    monkeypatch.setenv("CLIANY_OPENAI_BASE_URL", "https://example.com/v1")
+    monkeypatch.setattr("cliany_site.explorer.engine._get_llm", lambda: FailingLLM())
+
+    result = CliRunner().invoke(
+        cli,
+        ["doctor", "--llm-live", "--require-capability", "generate_adapters"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 1
+    assert "目标: 使用 explore 生成新 adapter" in result.output
+    assert "状态: 尚未就绪" in result.output
+    assert "LLM 服务连通性" in result.output
+    assert "无法连接 OpenAI 兼容服务。请检查网络和 CLIANY_OPENAI_BASE_URL 后重试。" in result.output
+    assert "处理完成后重新检查：cliany-site doctor --llm-live --require-capability generate_adapters" in result.output
+    assert '"checks"' not in result.output
 
 
 def test_doctor_required_generate_capability_requires_live_check(tmp_home, no_llm):
