@@ -59,8 +59,8 @@ def test_readmes_publish_copyable_active_demo_installs() -> None:
 
 def test_readmes_document_doctor_recommended_demo_commands() -> None:
     expected_terms = {
-        "README.md": ("demo_adapter_quickstart.recommended_commands", "verify --strict", "automatic overwrite"),
-        "README.zh.md": ("demo_adapter_quickstart.recommended_commands", "verify --strict", "绝不会自动覆盖"),
+        "README.md": ("demo_adapter_quickstart.recommended_commands", "verify --strict", "commands.py", "automatic overwrite"),
+        "README.zh.md": ("demo_adapter_quickstart.recommended_commands", "verify --strict", "commands.py", "绝不会自动覆盖"),
     }
     for filename, terms in expected_terms.items():
         text = (ROOT / filename).read_text(encoding="utf-8")

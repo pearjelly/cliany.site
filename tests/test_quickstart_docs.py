@@ -25,6 +25,7 @@ def test_quickstart_documents_the_release_agnostic_first_success_path():
         "deprecated=false",
         "verify",
         "verify --strict",
+        "commands.py",
         "非零退出",
         "active",
         "candidate",

@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.287] - 2026-07-29
+
+### Fixed
+
+- `cliany-site verify <domain> --strict --json` now rejects an adapter whose required `commands.py` is missing or not a loadable regular file. The doctor-guided `verify --strict` gate returns a `commands_missing` verdict under the existing `E_VERIFY_STATIC` contract, so sequential automation stops before invoking an unloadable adapter.
+
 ## [0.16.286] - 2026-07-29
 
 ### Added
@@ -2679,7 +2685,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.286...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.287...HEAD
+[0.16.287]: https://github.com/pearjelly/cliany.site/compare/v0.16.286...v0.16.287
 [0.16.286]: https://github.com/pearjelly/cliany.site/compare/v0.16.285...v0.16.286
 [0.16.285]: https://github.com/pearjelly/cliany.site/compare/v0.16.284...v0.16.285
 [0.16.284]: https://github.com/pearjelly/cliany.site/compare/v0.16.283...v0.16.284

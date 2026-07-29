@@ -108,6 +108,69 @@ def test_verify_strict_ok_adapter(tmp_home, no_llm, adapters_dir):
     assert data["data"]["results"][0]["verdict"] == "ok"
 
 
+@pytest.mark.parametrize(
+    ("domain", "make_commands_directory", "expected_issue"),
+    [
+        ("missing-commands.com", False, "commands.py 不存在"),
+        ("commands-directory.com", True, "commands.py 不是可加载的普通文件"),
+    ],
+)
+def test_verify_reports_unloadable_commands_file_without_breaking_default_diagnostics(
+    tmp_home,
+    no_llm,
+    adapters_dir,
+    domain,
+    make_commands_directory,
+    expected_issue,
+):
+    adapter_dir = _make_adapter(adapters_dir, domain, VALID_V3_METADATA | {"domain": domain})
+    commands_path = adapter_dir / "commands.py"
+    commands_path.unlink()
+    if make_commands_directory:
+        commands_path.mkdir()
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["verify", domain, "--json"])
+
+    assert result.exit_code == 0
+    data = json.loads(result.output)
+    assert data["ok"] is True
+    verified = data["data"]["results"][0]
+    assert verified["verdict"] == "commands_missing"
+    assert verified["issues"] == [expected_issue]
+
+
+@pytest.mark.parametrize(
+    ("domain", "make_commands_directory"),
+    [
+        ("missing-commands.com", False),
+        ("commands-directory.com", True),
+    ],
+)
+def test_verify_strict_rejects_unloadable_commands_file(
+    tmp_home,
+    no_llm,
+    adapters_dir,
+    domain,
+    make_commands_directory,
+):
+    adapter_dir = _make_adapter(adapters_dir, domain, VALID_V3_METADATA | {"domain": domain})
+    commands_path = adapter_dir / "commands.py"
+    commands_path.unlink()
+    if make_commands_directory:
+        commands_path.mkdir()
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["verify", domain, "--strict", "--json"])
+
+    assert result.exit_code == 1
+    data = json.loads(result.output)
+    assert data["ok"] is False
+    assert data["error"]["code"] == "E_VERIFY_STATIC"
+    verified = data["error"]["details"]["results"][0]
+    assert verified["verdict"] == "commands_missing"
+
+
 def test_verify_security_issue(tmp_home, no_llm, adapters_dir):
     _make_adapter(adapters_dir, "evil.com", VALID_V3_METADATA, UNSAFE_COMMANDS_PY)
     runner = CliRunner()

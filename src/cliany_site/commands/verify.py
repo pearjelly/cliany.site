@@ -169,13 +169,21 @@ def _verify_single(domain: str, schema: dict) -> dict:
             result["issues"] = [str(exc)]
             return result
 
-    # Step 3: AST 安全扫描
-    if commands_py.exists():
-        security_issues = _scan_security(commands_py)
-        if security_issues:
-            result["verdict"] = "security_issue"
-            result["issues"] = security_issues
-            return result
+    # Step 3: 生成命令必须可由 loader 作为普通文件读取。
+    if not commands_py.is_file():
+        result["verdict"] = "commands_missing"
+        if commands_py.exists():
+            result["issues"] = ["commands.py 不是可加载的普通文件"]
+        else:
+            result["issues"] = ["commands.py 不存在"]
+        return result
+
+    # Step 4: AST 安全扫描
+    security_issues = _scan_security(commands_py)
+    if security_issues:
+        result["verdict"] = "security_issue"
+        result["issues"] = security_issues
+        return result
 
     manifest_result = _verify_manifest(adapter_dir, domain)
     result["manifest"] = manifest_result
