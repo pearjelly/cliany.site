@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.286] - 2026-07-29
+
 ### Added
 
 - `cliany-site verify <domain> --strict --json` now returns a nonzero verification envelope when schema, security, manifest, legacy-adapter, or requested smoke validation fails. The diagnostic `results` stay available in `error.details`, so scripts can stop before running a dependent adapter command.
@@ -2677,7 +2679,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.285...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.286...HEAD
+[0.16.286]: https://github.com/pearjelly/cliany.site/compare/v0.16.285...v0.16.286
 [0.16.285]: https://github.com/pearjelly/cliany.site/compare/v0.16.284...v0.16.285
 [0.16.284]: https://github.com/pearjelly/cliany.site/compare/v0.16.283...v0.16.284
 [0.16.283]: https://github.com/pearjelly/cliany.site/compare/v0.16.282...v0.16.283
