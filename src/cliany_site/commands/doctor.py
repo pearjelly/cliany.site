@@ -82,6 +82,50 @@ _CAPABILITY_CHOICES = (
 )
 
 
+_CHECK_LABELS = {
+    "cdp": "Chrome 浏览器连接",
+    "llm": "LLM API 密钥",
+    "llm_provider": "LLM 服务商配置",
+    "llm_live": "LLM 服务连通性",
+    "openai_base_url": "OpenAI 兼容接口地址",
+    "dirs": "运行时目录",
+    "registry": "命令注册表",
+    "legacy_adapters": "旧版 adapter",
+    "agent_md": "项目说明文件",
+    "healed_pending": "待确认的自愈结果",
+    "provider": "浏览器 provider",
+}
+
+
+def _check_label(name: str) -> str:
+    return _CHECK_LABELS.get(name, name)
+
+
+def _human_action_for_check(check: dict[str, Any]) -> str:
+    """Translate the few upstream-facing diagnostics that users act on most."""
+    name = str(check.get("name") or "")
+    if name != "llm_live":
+        return str(check.get("action") or _action_for_check(check))
+
+    details = check.get("details")
+    if not isinstance(details, dict):
+        return str(check.get("action") or _action_for_check(check))
+
+    provider = str(details.get("provider") or "LLM")
+    provider_label = "OpenAI 兼容服务" if provider == "openai" else "Anthropic 服务"
+    status_code = details.get("status_code")
+    message = str(details.get("message") or "")
+    if isinstance(status_code, int):
+        return (
+            f"{provider_label} 暂时不可用（HTTP {status_code}）。请稍后重试；"
+            "若持续失败，请检查服务地址和账户状态。"
+        )
+    if "connection" in message.lower():
+        config_name = "CLIANY_OPENAI_BASE_URL" if provider == "openai" else "CLIANY_LLM_PROVIDER"
+        return f"无法连接 {provider_label}。请检查网络和 {config_name} 后重试。"
+    return str(check.get("action") or _action_for_check(check))
+
+
 def _action_for_check(check: dict[str, Any]) -> str:
     status = str(check.get("status", ""))
     name = str(check.get("name", ""))
@@ -375,84 +419,106 @@ def _require_capability(result: Envelope, capability_name: str | None) -> Envelo
 def _print_doctor_human(result: Envelope) -> None:
     payload = _doctor_payload(result)
     summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
-    ok_result = bool(result.get("ok"))
+    capabilities = summary.get("capabilities") if isinstance(summary.get("capabilities"), dict) else {}
+    checks = payload.get("checks") if isinstance(payload.get("checks"), list) else []
+    checks_by_name = {
+        str(check.get("name")): check
+        for check in checks
+        if isinstance(check, dict) and check.get("name")
+    }
+    required_capability = payload.get("required_capability")
+    required_capability = str(required_capability) if required_capability else None
+    required_blockers = payload.get("required_capability_blockers")
+    required_blockers = (
+        [str(blocker) for blocker in required_blockers]
+        if isinstance(required_blockers, list)
+        else []
+    )
 
     click.secho("cliany-site doctor", bold=True)
-    if ok_result:
-        click.secho("状态: 可继续", fg="green")
+    if required_capability:
+        requested = capabilities.get(required_capability)
+        label = requested.get("label") if isinstance(requested, dict) else required_capability
+        click.echo(f"目标: {label}")
+        click.secho("状态: 尚未就绪", fg="yellow")
+    elif result.get("ok"):
+        click.secho("状态: 环境检查完成", fg="green")
     else:
-        message = ""
-        error = result.get("error")
-        if isinstance(error, dict):
-            message = str(error.get("message") or "")
-        click.secho(f"状态: 需要修复 {message}".strip(), fg="red")
+        click.secho("状态: 有阻塞项需要处理", fg="red")
 
-    if summary:
-        adapter_runtime_ready = "yes" if summary.get("ready_for_existing_adapters") else "no"
-        explore_ready = "yes" if summary.get("ready_for_explore") else "no"
-        click.echo(f"Existing adapter runtime ready: {adapter_runtime_ready}")
-        click.echo(f"Explore ready: {explore_ready}")
-        recommended_next_step = summary.get("recommended_next_step")
-        if recommended_next_step:
-            click.echo(f"下一步: {recommended_next_step}")
-        case_catalog_quickstart = summary.get("case_catalog_quickstart")
-        case_catalog_quickstart = (
-            case_catalog_quickstart if isinstance(case_catalog_quickstart, dict) else {}
-        )
-        case_catalog_commands = case_catalog_quickstart.get("commands")
-        if (
-            summary.get("ready_for_existing_adapters")
-            and isinstance(case_catalog_commands, list)
-            and case_catalog_commands
-        ):
-            click.echo("\n维护案例快速路径:")
-            for command in case_catalog_commands:
-                click.echo(f"- {command}")
-
-        demo_adapter_quickstart = summary.get("demo_adapter_quickstart")
-        demo_adapter_quickstart = (
-            demo_adapter_quickstart if isinstance(demo_adapter_quickstart, dict) else {}
-        )
-        demo_adapter_commands = demo_adapter_quickstart.get("recommended_commands")
-        if (
-            summary.get("ready_for_demo_adapters")
-            and isinstance(demo_adapter_commands, list)
-            and demo_adapter_commands
-        ):
-            click.echo("\n已发布 active demo 快速路径:")
-            for command in demo_adapter_commands:
-                click.echo(f"- {command}")
-
-        capabilities = summary.get("capabilities") if isinstance(summary.get("capabilities"), dict) else {}
-        if capabilities:
-            click.echo("\n可用能力:")
-            for name, capability in capabilities.items():
-                if not isinstance(capability, dict):
-                    continue
-                status = "yes" if capability.get("ready") else "no"
-                label = capability.get("label") or name
-                blockers = capability.get("blockers")
-                suffix = ""
-                if isinstance(blockers, list) and blockers:
-                    suffix = f" (blocked by: {', '.join(str(item) for item in blockers)})"
-                click.echo(f"- {name}: {status} - {label}{suffix}")
-
-        labels = (
-            ("must_fix", "必须修复"),
-            ("should_fix", "建议处理"),
-            ("info", "诊断信息"),
-        )
-        for key, label in labels:
-            items = summary.get(key)
-            if not items:
-                continue
-            click.echo(f"\n{label}:")
-            for item in items:
-                name = item.get("name", "unknown")
-                action = item.get("action", "无需处理，仅供诊断参考。")
-                click.echo(f"- {name}: {action}")
-    else:
+    if not summary:
         click.echo("未生成诊断摘要，请使用 --json 查看原始检查结果。")
+        return
+
+    ready_capabilities: list[str] = []
+    unavailable_capabilities: list[str] = []
+    blockers: list[str] = []
+    for name, capability in capabilities.items():
+        if not isinstance(capability, dict):
+            continue
+        label = str(capability.get("label") or name)
+        if capability.get("ready"):
+            ready_capabilities.append(label)
+            continue
+        unavailable_capabilities.append(label)
+        capability_blockers = capability.get("blockers")
+        if isinstance(capability_blockers, list):
+            blockers.extend(str(blocker) for blocker in capability_blockers)
+
+    if required_capability:
+        blockers = required_blockers
+
+    if ready_capabilities:
+        click.echo("\n现在可以：")
+        for label in ready_capabilities:
+            click.echo(f"- ✓ {label}")
+
+    if unavailable_capabilities:
+        click.echo("\n暂时不能：")
+        for label in unavailable_capabilities:
+            click.echo(f"- · {label}")
+
+    unique_blockers = list(dict.fromkeys(blockers))
+    if unique_blockers:
+        click.secho("\n需要先处理：", fg="yellow", bold=True)
+        for name in unique_blockers:
+            check = checks_by_name.get(name)
+            if check is None:
+                continue
+            click.echo(f"- {_check_label(name)}：{_human_action_for_check(check)}")
+
+    nonblocking_items: list[dict[str, Any]] = []
+    for item in summary.get("should_fix", []):
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name") or "")
+        if name and name not in unique_blockers:
+            nonblocking_items.append(item)
+    if nonblocking_items:
+        click.echo("\n可选提示（不影响上述能力）：")
+        for item in nonblocking_items:
+            name = str(item.get("name") or "unknown")
+            check = checks_by_name.get(name, item)
+            click.echo(f"- {_check_label(name)}：{_human_action_for_check(check)}")
+
+    click.echo("\n建议下一步：")
+    if required_capability:
+        command = "cliany-site doctor --llm-live --require-capability " + required_capability
+        click.echo(f"- 处理完成后重新检查：{command}")
+    elif summary.get("ready_for_existing_adapters"):
+        demo_quickstart = summary.get("demo_adapter_quickstart")
+        demo_quickstart = demo_quickstart if isinstance(demo_quickstart, dict) else {}
+        demo_commands = demo_quickstart.get("recommended_commands")
+        if demo_quickstart.get("adapter_present") and isinstance(demo_commands, list) and demo_commands:
+            click.echo(f"- 先校验已安装案例：{demo_commands[0]}")
+            if len(demo_commands) > 1:
+                click.echo(f"- 校验通过后可执行：{demo_commands[1]}")
+        else:
+            click.echo("- 查看可直接运行的公开案例：cliany-site cases")
+        if summary.get("ready_for_explore"):
+            click.echo('- 创建自己的站点命令：cliany-site explore <url> "要完成的任务"')
+    else:
+        click.echo("- 先完成“需要先处理”中的项目，然后重新运行：cliany-site doctor")
 
 
 @click.command("doctor")
