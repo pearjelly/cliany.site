@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.285] - 2026-07-29
+
 ### Added
 
 - `doctor --json` now adds `demo_adapter_quickstart.adapter_present` and `recommended_commands`. When the active demo install target is unoccupied, the recommendation remains install, verify, then the read-only command; when it is occupied, the recommendation starts with `verify` and never performs an automatic overwrite. The existing `commands` and `install_command` fields remain unchanged for compatibility.
@@ -2667,7 +2669,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.284...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.285...HEAD
+[0.16.285]: https://github.com/pearjelly/cliany.site/compare/v0.16.284...v0.16.285
 [0.16.284]: https://github.com/pearjelly/cliany.site/compare/v0.16.283...v0.16.284
 [0.16.283]: https://github.com/pearjelly/cliany.site/compare/v0.16.282...v0.16.283
 [0.16.282]: https://github.com/pearjelly/cliany.site/compare/v0.16.281...v0.16.282
