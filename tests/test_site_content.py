@@ -121,8 +121,11 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "unexpected" in docs
     assert "实际 title 和 URL" in docs
     assert "demo_adapter_quickstart.recommended_commands" in index
+    assert "verify --strict" in index
+    assert "verify --strict" in docs
     assert "ready_for_demo_adapters=true" in docs
     assert "exposes <code>recommended_commands</code>" in script
+    assert "verify --strict" in script
     assert "package_sha256" in docs
     assert "64 个字符小写十六进制 SHA-256 摘要" in docs
     assert "pypi-project-search" in index

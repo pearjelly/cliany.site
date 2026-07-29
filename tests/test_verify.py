@@ -7,6 +7,7 @@ import pytest
 from click.testing import CliRunner
 
 from cliany_site.cli import cli
+from cliany_site.commands import verify as verify_module
 from cliany_site.errors import ADAPTER_NOT_FOUND
 
 VALID_V3_METADATA = {
@@ -95,6 +96,18 @@ def test_verify_ok_adapter(tmp_home, no_llm, adapters_dir):
     assert results[0]["manifest"]["status"] == "missing"
 
 
+def test_verify_strict_ok_adapter(tmp_home, no_llm, adapters_dir):
+    _make_adapter(adapters_dir, "test.com", VALID_V3_METADATA, SAFE_COMMANDS_PY)
+    runner = CliRunner()
+
+    result = runner.invoke(cli, ["verify", "test.com", "--strict", "--json"])
+
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.output)
+    assert data["ok"] is True
+    assert data["data"]["results"][0]["verdict"] == "ok"
+
+
 def test_verify_security_issue(tmp_home, no_llm, adapters_dir):
     _make_adapter(adapters_dir, "evil.com", VALID_V3_METADATA, UNSAFE_COMMANDS_PY)
     runner = CliRunner()
@@ -107,6 +120,20 @@ def test_verify_security_issue(tmp_home, no_llm, adapters_dir):
     assert results[0]["verdict"] == "security_issue"
     assert len(results[0]["issues"]) > 0
     assert any("eval(" in issue for issue in results[0]["issues"])
+
+
+def test_verify_strict_security_issue_returns_failure_envelope(tmp_home, no_llm, adapters_dir):
+    _make_adapter(adapters_dir, "evil.com", VALID_V3_METADATA, UNSAFE_COMMANDS_PY)
+    runner = CliRunner()
+
+    result = runner.invoke(cli, ["verify", "evil.com", "--strict", "--json"])
+
+    assert result.exit_code == 1
+    data = json.loads(result.output)
+    assert data["ok"] is False
+    assert data["error"]["code"] == "E_VERIFY_STATIC"
+    assert data["error"]["details"]["failed_domains"] == ["evil.com"]
+    assert data["error"]["details"]["results"][0]["verdict"] == "security_issue"
 
 
 def test_verify_market_manifest_ok(tmp_home, no_llm, adapters_dir):
@@ -174,6 +201,26 @@ def test_verify_manifest_hash_mismatch(tmp_home, no_llm, adapters_dir):
     assert any("文件哈希不匹配: metadata.json" in issue for issue in verified["issues"])
 
 
+def test_verify_strict_manifest_hash_mismatch_returns_failure_envelope(tmp_home, no_llm, adapters_dir):
+    adapter_dir = _make_adapter(
+        adapters_dir,
+        "hash-bad.com",
+        VALID_V3_METADATA | {"domain": "hash-bad.com"},
+    )
+    _write_manifest(adapter_dir, "hash-bad.com", bad_hash=True)
+    runner = CliRunner()
+
+    result = runner.invoke(cli, ["verify", "hash-bad.com", "--strict", "--json"])
+
+    assert result.exit_code == 1
+    data = json.loads(result.output)
+    assert data["ok"] is False
+    assert data["error"]["code"] == "E_VERIFY_STATIC"
+    verified = data["error"]["details"]["results"][0]
+    assert verified["verdict"] == "manifest_error"
+    assert any("文件哈希不匹配: metadata.json" in issue for issue in verified["issues"])
+
+
 def test_verify_manifest_domain_mismatch(tmp_home, no_llm, adapters_dir):
     adapter_dir = _make_adapter(adapters_dir, "domain-bad.com", VALID_V3_METADATA | {"domain": "domain-bad.com"})
     _write_manifest(adapter_dir, "domain-bad.com", manifest_domain="other.com")
@@ -198,6 +245,49 @@ def test_verify_legacy_adapter(tmp_home, no_llm, adapters_dir):
     results = data["data"]["results"]
     assert len(results) == 1
     assert results[0]["verdict"] == "legacy_adapter"
+
+
+def test_verify_strict_legacy_adapter_returns_failure_envelope(tmp_home, no_llm, adapters_dir):
+    _make_adapter(adapters_dir, "old.com", {"domain": "old.com", "commands": []}, SAFE_COMMANDS_PY)
+    runner = CliRunner()
+
+    result = runner.invoke(cli, ["verify", "old.com", "--strict", "--json"])
+
+    assert result.exit_code == 1
+    data = json.loads(result.output)
+    assert data["error"]["code"] == "E_VERIFY_STATIC"
+    assert data["error"]["details"]["results"][0]["verdict"] == "legacy_adapter"
+
+
+def test_verify_strict_schema_error_returns_failure_envelope(tmp_home, no_llm, adapters_dir):
+    invalid_metadata = {
+        "schema_version": 3,
+        "domain": "schema-bad.com",
+        "generated_at": "2024-01-01T00:00:00Z",
+        "generator_version": "1.0.0",
+    }
+    _make_adapter(adapters_dir, "schema-bad.com", invalid_metadata, SAFE_COMMANDS_PY)
+    runner = CliRunner()
+
+    result = runner.invoke(cli, ["verify", "schema-bad.com", "--strict", "--json"])
+
+    assert result.exit_code == 1
+    data = json.loads(result.output)
+    assert data["error"]["code"] == "E_VERIFY_STATIC"
+    assert data["error"]["details"]["results"][0]["verdict"] == "schema_error"
+
+
+def test_verify_strict_smoke_failure_returns_failure_envelope(tmp_home, no_llm, adapters_dir, monkeypatch):
+    _make_adapter(adapters_dir, "test.com", VALID_V3_METADATA, SAFE_COMMANDS_PY)
+    monkeypatch.setattr(verify_module, "_run_smoke", lambda _domain: False)
+    runner = CliRunner()
+
+    result = runner.invoke(cli, ["verify", "test.com", "--smoke", "--strict", "--json"])
+
+    assert result.exit_code == 1
+    data = json.loads(result.output)
+    assert data["error"]["code"] == "E_VERIFY_SMOKE"
+    assert data["error"]["details"]["results"][0]["verdict"] == "smoke_failed"
 
 
 def test_verify_all_adapters(tmp_home, no_llm, adapters_dir):

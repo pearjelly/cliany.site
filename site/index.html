@@ -468,7 +468,7 @@ cliany-site doctor --llm-live --json</code></pre>
             <div class="code-block-container">
               <pre class="code-block"><code># If doctor --json reports ready_for_demo_adapters=true,
 # run data.summary.demo_adapter_quickstart.recommended_commands in order
-# (install only when absent, then verify and run a read-only active demo)
+# (install only when absent, then verify --strict; run the read-only demo only after it succeeds)
 
 # Otherwise browse public cases and their current validation paths
 cliany-site cases

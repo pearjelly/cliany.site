@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+### Added
+
+- `cliany-site verify <domain> --strict --json` now returns a nonzero verification envelope when schema, security, manifest, legacy-adapter, or requested smoke validation fails. The diagnostic `results` stay available in `error.details`, so scripts can stop before running a dependent adapter command.
+
+### Changed
+
+- Doctor's active-demo `recommended_commands` now use `verify --strict`; the compatibility `verify_command` remains the diagnostic, exit-zero command while the new additive `strict_verify_command` is the automation gate.
+
 ## [0.16.285] - 2026-07-29
 
 ### Added

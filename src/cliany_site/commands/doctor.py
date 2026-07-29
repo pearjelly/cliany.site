@@ -218,8 +218,9 @@ def _demo_adapter_quickstart() -> dict[str, Any]:
             continue
 
         verify_command = f"cliany-site verify {adapter_domain} --json"
+        strict_verify_command = f"cliany-site verify {adapter_domain} --strict --json"
         adapter_present = (get_config().adapters_dir / adapter_domain).exists()
-        recommended_commands = [verify_command, read_only_command]
+        recommended_commands = [strict_verify_command, read_only_command]
         if not adapter_present:
             recommended_commands.insert(0, install_command)
         return {
@@ -230,6 +231,7 @@ def _demo_adapter_quickstart() -> dict[str, Any]:
             "recommended_commands": recommended_commands,
             "install_command": install_command,
             "verify_command": verify_command,
+            "strict_verify_command": strict_verify_command,
             "read_only_command": read_only_command,
             "adapter_present": adapter_present,
             "docs": case.get("docs"),
@@ -290,12 +292,12 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
         if demo_adapter_quickstart["adapter_present"]:
             summary["recommended_next_step"] = (
                 "已检测到 active demo 安装目标；按 demo_adapter_quickstart.recommended_commands "
-                "先运行 verify，再执行只读案例命令。"
+                "先运行严格 verify，再执行只读案例命令。"
             )
         else:
             summary["recommended_next_step"] = (
                 "按 demo_adapter_quickstart.recommended_commands 依次安装已发布 active adapter、"
-                "运行 verify，再执行只读案例命令。"
+                "运行严格 verify，再执行只读案例命令。"
             )
     elif summary["ready_for_explore"]:
         summary["recommended_next_step"] = (

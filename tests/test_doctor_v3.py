@@ -15,13 +15,15 @@ ACTIVE_INSTALL_COMMAND = (
     "--sha256 ad5867d361f372914c536fb59c8f26837af96ed407859cf69dc8464922f05319"
 )
 ACTIVE_VERIFY_COMMAND = "cliany-site verify issues.apache.org --json"
+ACTIVE_STRICT_VERIFY_COMMAND = "cliany-site verify issues.apache.org --strict --json"
 ACTIVE_READ_ONLY_COMMAND = "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json"
 ACTIVE_DEMO_RECOMMENDATION = (
-    "按 demo_adapter_quickstart.recommended_commands 依次安装已发布 active adapter、运行 verify，再执行只读案例命令。"
+    "按 demo_adapter_quickstart.recommended_commands 依次安装已发布 active adapter、"
+    "运行严格 verify，再执行只读案例命令。"
 )
 ACTIVE_DEMO_ALREADY_INSTALLED_RECOMMENDATION = (
     "已检测到 active demo 安装目标；按 demo_adapter_quickstart.recommended_commands "
-    "先运行 verify，再执行只读案例命令。"
+    "先运行严格 verify，再执行只读案例命令。"
 )
 
 
@@ -119,11 +121,12 @@ def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):
         ],
         "recommended_commands": [
             ACTIVE_INSTALL_COMMAND,
-            ACTIVE_VERIFY_COMMAND,
+            ACTIVE_STRICT_VERIFY_COMMAND,
             ACTIVE_READ_ONLY_COMMAND,
         ],
         "install_command": ACTIVE_INSTALL_COMMAND,
         "verify_command": ACTIVE_VERIFY_COMMAND,
+        "strict_verify_command": ACTIVE_STRICT_VERIFY_COMMAND,
         "read_only_command": ACTIVE_READ_ONLY_COMMAND,
         "adapter_present": False,
         "docs": "README.md#asf-jira-issue-tracker",
@@ -167,7 +170,7 @@ def test_doctor_human_output_groups_action_items(tmp_home, no_llm, monkeypatch):
     assert "cliany-site cases --json" in result.output
     assert "已发布 active demo 快速路径:" in result.output
     assert ACTIVE_INSTALL_COMMAND in result.output
-    assert ACTIVE_VERIFY_COMMAND in result.output
+    assert ACTIVE_STRICT_VERIFY_COMMAND in result.output
     assert ACTIVE_READ_ONLY_COMMAND in result.output
     assert "cliany-site market install ./issues.apache.org.cliany-adapter-v0.14.0.tar.gz" not in result.output
     assert "可用能力:" in result.output
@@ -207,11 +210,11 @@ def test_doctor_recommends_verify_first_for_existing_active_demo_adapter(tmp_hom
         ACTIVE_VERIFY_COMMAND,
         ACTIVE_READ_ONLY_COMMAND,
     ]
-    assert quickstart["recommended_commands"] == [ACTIVE_VERIFY_COMMAND, ACTIVE_READ_ONLY_COMMAND]
+    assert quickstart["recommended_commands"] == [ACTIVE_STRICT_VERIFY_COMMAND, ACTIVE_READ_ONLY_COMMAND]
     assert summary["recommended_next_step"] == ACTIVE_DEMO_ALREADY_INSTALLED_RECOMMENDATION
     assert f"下一步: {ACTIVE_DEMO_ALREADY_INSTALLED_RECOMMENDATION}" in human_result.output
     assert ACTIVE_INSTALL_COMMAND not in human_result.output
-    assert ACTIVE_VERIFY_COMMAND in human_result.output
+    assert ACTIVE_STRICT_VERIFY_COMMAND in human_result.output
     assert ACTIVE_READ_ONLY_COMMAND in human_result.output
 
 
@@ -224,7 +227,7 @@ def test_demo_adapter_quickstart_avoids_install_for_an_occupied_target(tmp_home)
 
     assert quickstart["adapter_present"] is True
     assert quickstart["recommended_commands"] == [
-        ACTIVE_VERIFY_COMMAND,
+        ACTIVE_STRICT_VERIFY_COMMAND,
         ACTIVE_READ_ONLY_COMMAND,
     ]
 

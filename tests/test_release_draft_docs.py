@@ -12176,3 +12176,45 @@ def test_v016285_release_draft_tracks_verify_first_demo_guidance() -> None:
         "live LLM success",
     ]:
         assert snippet in notes
+
+
+def test_v016286_release_draft_tracks_strict_demo_verification() -> None:
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    draft = (ROOT / "docs" / "releases" / "v0.16.286-draft.md").read_text(encoding="utf-8")
+    notes = (ROOT / "docs" / "releases" / "v0.16.286-github-release.md").read_text(encoding="utf-8")
+
+    assert "verify --strict" in text.split("## [0.16.285]", 1)[0]
+    assert "strict_verify_command" in text.split("## [0.16.285]", 1)[0]
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.285...HEAD" in text
+
+    for snippet in [
+        "# v0.16.286 发布草案",
+        "**目标版本：** `0.16.286`",
+        "**提交范围：** `v0.16.285..HEAD`",
+        "**提交范围：** `v0.16.286..HEAD`",
+        "verify --strict",
+        "E_VERIFY_STATIC",
+        "E_VERIFY_SMOKE",
+        "strict_verify_command",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "llm_live_preflight_not_ready",
+        "release_readiness.py --strict --target-version 0.16.286 --remote",
+        "git tag v0.16.286",
+        "release_readiness.py --strict --release-tag v0.16.286 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.286",
+        "verify --strict",
+        "E_VERIFY_STATIC",
+        "strict_verify_command",
+        "## Compatibility",
+        "## Trust Boundaries",
+        "live LLM success",
+    ]:
+        assert snippet in notes

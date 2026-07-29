@@ -24,6 +24,8 @@ def test_quickstart_documents_the_release_agnostic_first_success_path():
         "available=true",
         "deprecated=false",
         "verify",
+        "verify --strict",
+        "非零退出",
         "active",
         "candidate",
         "deprecated",

@@ -10,7 +10,7 @@ from typing import Any, cast
 import click
 
 from cliany_site.config import get_config
-from cliany_site.envelope import err, ok
+from cliany_site.envelope import Envelope, ErrorCode, err, ok
 from cliany_site.errors import ADAPTER_NOT_FOUND
 from cliany_site.marketplace import MANIFEST_VERSION
 from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
@@ -235,12 +235,20 @@ def _print_human(results: list[dict]) -> None:
 @click.command("verify")
 @click.argument("domain", required=False)
 @click.option("--smoke", "smoke", is_flag=True, default=False, help="附加 CDP 冒烟测试（需要 Chrome）")
+@click.option(
+    "--strict",
+    "strict",
+    is_flag=True,
+    default=False,
+    help="任一验证 verdict 非 ok 时返回失败信封和非零退出码",
+)
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出")
 @click.pass_context
 def verify_cmd(
     ctx: click.Context,
     domain: str | None,
     smoke: bool,
+    strict: bool,
     json_mode: bool | None,
 ) -> None:
     """静态检查 adapter 完整性（schema + 安全扫描），可选 CDP 冒烟"""
@@ -291,14 +299,27 @@ def verify_cmd(
                 r["issues"] = list(r.get("issues", [])) + ["CDP 冒烟测试失败"]
         results.append(r)
 
-    envelope = ok(
-        command="verify",
-        data={
-            "domain": domain or "all",
-            "results": results,
-        },
-        source="builtin",
-    )
+    payload = {
+        "domain": domain or "all",
+        "results": results,
+    }
+    failed_results = [result for result in results if result.get("verdict") != "ok"]
+    envelope: Envelope
+    if strict and failed_results:
+        all_smoke_failures = all(result.get("verdict") == "smoke_failed" for result in failed_results)
+        envelope = err(
+            "verify",
+            ErrorCode.E_VERIFY_SMOKE if all_smoke_failures else ErrorCode.E_VERIFY_STATIC,
+            "严格 adapter 验证未通过。",
+            hint="修复 results 中的 issues 后重新运行 verify；成功前不要执行后续 adapter 命令。",
+            details={
+                **payload,
+                "failed_domains": [str(result.get("domain", "")) for result in failed_results],
+            },
+            source="builtin",
+        )
+    else:
+        envelope = ok(command="verify", data=payload, source="builtin")
 
     if effective_json_mode:
         import json as _json
@@ -306,3 +327,11 @@ def verify_cmd(
         click.echo(_json.dumps(envelope, ensure_ascii=False, indent=2))
     else:
         _print_human(results)
+        if not envelope["ok"]:
+            error = envelope["error"]
+            click.echo(f"✗ {error['message']}")
+            if error["hint"]:
+                click.echo(error["hint"])
+
+    if not envelope["ok"]:
+        ctx.exit(1)
