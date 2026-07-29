@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.288] - 2026-07-29
+
+### Changed
+
+- The human-readable `cliany-site doctor` output now groups available capabilities, blockers, non-blocking notices, and the next command in Chinese. LLM connection and HTTP failures explain the affected service and configuration to check, while `--json` keeps its complete machine-readable envelope unchanged.
+
 ### Fixed
 
 - `cliany-site verify <domain> --strict --json` now verifies the same runtime registration contract as the adapter loader: after the existing file, security, and manifest checks, `commands.py` must successfully export a `click.Group` named `cli`. A syntactically valid module that cannot be registered now reports `commands_unloadable` through the existing nonzero `E_VERIFY_STATIC` gate, so doctor-guided sequential commands stop before Click reports an unknown adapter command.
@@ -2689,7 +2695,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.287...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.288...HEAD
+[0.16.288]: https://github.com/pearjelly/cliany.site/compare/v0.16.287...v0.16.288
 [0.16.287]: https://github.com/pearjelly/cliany.site/compare/v0.16.286...v0.16.287
 [0.16.286]: https://github.com/pearjelly/cliany.site/compare/v0.16.285...v0.16.286
 [0.16.285]: https://github.com/pearjelly/cliany.site/compare/v0.16.284...v0.16.285
