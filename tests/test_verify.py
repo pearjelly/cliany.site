@@ -24,6 +24,8 @@ UNSAFE_COMMANDS_PY = (
     "import click\n\n@click.group()\ndef cli():\n    eval('1+1')\n"
 )
 
+NON_GROUP_COMMANDS_PY = "import click\n\ncli = click.Command('not-a-group')\n"
+
 
 @pytest.fixture()
 def adapters_dir(tmp_home):
@@ -169,6 +171,29 @@ def test_verify_strict_rejects_unloadable_commands_file(
     assert data["error"]["code"] == "E_VERIFY_STATIC"
     verified = data["error"]["details"]["results"][0]
     assert verified["verdict"] == "commands_missing"
+
+
+def test_verify_strict_rejects_commands_that_runtime_cannot_register(tmp_home, no_llm, adapters_dir):
+    _make_adapter(
+        adapters_dir,
+        "non-group.com",
+        VALID_V3_METADATA | {"domain": "non-group.com"},
+        NON_GROUP_COMMANDS_PY,
+    )
+    runner = CliRunner()
+
+    diagnostic = runner.invoke(cli, ["verify", "non-group.com", "--json"])
+    strict = runner.invoke(cli, ["verify", "non-group.com", "--strict", "--json"])
+
+    assert diagnostic.exit_code == 0
+    diagnostic_result = json.loads(diagnostic.output)["data"]["results"][0]
+    assert diagnostic_result["verdict"] == "commands_unloadable"
+    assert diagnostic_result["issues"] == ["commands.py 必须导出 click.Group 类型的 cli"]
+
+    assert strict.exit_code == 1
+    strict_result = json.loads(strict.output)
+    assert strict_result["error"]["code"] == "E_VERIFY_STATIC"
+    assert strict_result["error"]["details"]["results"][0]["verdict"] == "commands_unloadable"
 
 
 def test_verify_security_issue(tmp_home, no_llm, adapters_dir):

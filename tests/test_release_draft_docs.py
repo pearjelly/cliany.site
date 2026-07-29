@@ -12223,3 +12223,47 @@ def test_v016287_release_draft_tracks_unloadable_commands_gate() -> None:
         "live LLM success",
     ]:
         assert snippet in notes
+
+
+def test_v016288_release_draft_tracks_runtime_loader_contract() -> None:
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.287]", 1)[0]
+    draft = (ROOT / "docs" / "releases" / "v0.16.288-draft.md").read_text(encoding="utf-8")
+    notes = (ROOT / "docs" / "releases" / "v0.16.288-github-release.md").read_text(encoding="utf-8")
+
+    assert "commands_unloadable" in unreleased
+    assert "click.Group" in unreleased
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.287...HEAD" in text
+
+    for snippet in [
+        "# v0.16.288 发布草案",
+        "**目标版本：** `0.16.288`",
+        "**提交范围：** `v0.16.287..HEAD`",
+        "**提交范围：** `v0.16.288..HEAD`",
+        "commands_unloadable",
+        "click.Group",
+        "E_VERIFY_STATIC",
+        "strict_verify_command",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "llm_live_preflight_not_ready",
+        "release_readiness.py --strict --target-version 0.16.288 --remote",
+        "git tag v0.16.288",
+        "release_readiness.py --strict --release-tag v0.16.288 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.288",
+        "commands_unloadable",
+        "click.Group",
+        "E_VERIFY_STATIC",
+        "recommended_commands",
+        "## Compatibility",
+        "## Trust Boundaries",
+        "live LLM success",
+    ]:
+        assert snippet in notes

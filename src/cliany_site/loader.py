@@ -71,13 +71,10 @@ def discover_adapters(include_legacy: bool = False) -> list[dict[str, Any]]:
     return adapters
 
 
-def load_adapter(domain: str) -> click.Group | None:
-    """动态导入指定 domain 的 commands.py，返回其 Click 命令组，失败返回 None"""
-    adapter_dir = get_config().adapters_dir / domain
-    commands_py = adapter_dir / "commands.py"
-
-    if not commands_py.exists():
-        return None
+def _load_adapter_commands(commands_py: Path, domain: str) -> tuple[click.Group | None, str | None]:
+    """加载 commands.py，并返回无法注册到根 CLI 时的诊断原因。"""
+    if not commands_py.is_file():
+        return None, "commands.py 必须是可加载的普通文件"
 
     module_name = f"cliany_site_adapters.{domain.replace('.', '_').replace('-', '_')}"
 
@@ -86,7 +83,7 @@ def load_adapter(domain: str) -> click.Group | None:
         sys.modules.pop(module_name, None)
         spec = importlib.util.spec_from_file_location(module_name, commands_py)
         if spec is None or spec.loader is None:
-            return None
+            return None, "commands.py 无法创建加载器"
         module = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = module
         assert spec.loader is not None
@@ -94,11 +91,25 @@ def load_adapter(domain: str) -> click.Group | None:
 
         cli_group = getattr(module, "cli", None)
         if not isinstance(cli_group, click.Group):
-            return None
-        return cli_group
-    except (ImportError, SyntaxError, OSError, json.JSONDecodeError) as exc:
+            sys.modules.pop(module_name, None)
+            return None, "commands.py 必须导出 click.Group 类型的 cli"
+        return cli_group, None
+    except Exception as exc:  # adapter module code can fail during import
+        sys.modules.pop(module_name, None)
         logger.warning("加载 adapter '%s' 失败: %s", domain, exc)
-        return None
+        return None, f"commands.py 加载失败 ({type(exc).__name__})"
+
+
+def load_adapter_with_error(domain: str) -> tuple[click.Group | None, str | None]:
+    """动态导入指定 domain 的 commands.py，并保留失败原因供校验命令使用。"""
+    commands_py = get_config().adapters_dir / domain / "commands.py"
+    return _load_adapter_commands(commands_py, domain)
+
+
+def load_adapter(domain: str) -> click.Group | None:
+    """动态导入指定 domain 的 commands.py，返回其 Click 命令组，失败返回 None。"""
+    cli_group, _reason = load_adapter_with_error(domain)
+    return cli_group
 
 
 def register_adapters(main_cli: click.Group) -> dict[str, Any]:
@@ -180,26 +191,11 @@ class LazyAdapterRegistry:
     def get(self, domain: str, cmd_name: str) -> click.Command | None:
         with self._lock:
             if domain not in self._cache:
-                adapter_dir = self._adapters_dir / domain
-                commands_py = adapter_dir / "commands.py"
-                if not commands_py.exists():
+                commands_py = self._adapters_dir / domain / "commands.py"
+                cli_group, _reason = _load_adapter_commands(commands_py, domain)
+                if cli_group is None:
                     return None
-                module_name = f"cliany_site_adapters.{domain.replace('.', '_').replace('-', '_')}"
-                try:
-                    sys.modules.pop(module_name, None)
-                    spec = importlib.util.spec_from_file_location(module_name, commands_py)
-                    if spec is None or spec.loader is None:
-                        return None
-                    module = importlib.util.module_from_spec(spec)
-                    sys.modules[module_name] = module
-                    spec.loader.exec_module(module)
-                    cli_group = getattr(module, "cli", None)
-                    if not isinstance(cli_group, click.Group):
-                        return None
-                    self._cache[domain] = cli_group
-                except (ImportError, SyntaxError, OSError, json.JSONDecodeError) as exc:
-                    logger.warning("加载 adapter '%s' 失败: %s", domain, exc)
-                    return None
+                self._cache[domain] = cli_group
             cli_group = self._cache.get(domain)
             if cli_group is None:
                 return None

@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `cliany-site verify <domain> --strict --json` now verifies the same runtime registration contract as the adapter loader: after the existing file, security, and manifest checks, `commands.py` must successfully export a `click.Group` named `cli`. A syntactically valid module that cannot be registered now reports `commands_unloadable` through the existing nonzero `E_VERIFY_STATIC` gate, so doctor-guided sequential commands stop before Click reports an unknown adapter command.
+
 ## [0.16.287] - 2026-07-29
 
 ### Fixed

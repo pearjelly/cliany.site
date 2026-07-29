@@ -12,6 +12,7 @@ import click
 from cliany_site.config import get_config
 from cliany_site.envelope import Envelope, ErrorCode, err, ok
 from cliany_site.errors import ADAPTER_NOT_FOUND
+from cliany_site.loader import load_adapter_with_error
 from cliany_site.marketplace import MANIFEST_VERSION
 from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
 
@@ -190,6 +191,13 @@ def _verify_single(domain: str, schema: dict) -> dict:
     if manifest_result["status"] == "error":
         result["verdict"] = "manifest_error"
         result["issues"] = manifest_result["issues"]
+        return result
+
+    # Step 6: 复用 runtime loader，确保严格 verify 成功后 cli 确实可注册。
+    _cli_group, load_error = load_adapter_with_error(domain)
+    if load_error:
+        result["verdict"] = "commands_unloadable"
+        result["issues"] = [load_error]
         return result
 
     return result

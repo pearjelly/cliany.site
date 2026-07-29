@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 import click
-import pytest
 from click.testing import CliRunner
 
 from cliany_site.cli import cli
@@ -24,13 +23,18 @@ _V2_METADATA = {
 _COMMANDS_PY = "import click\n\n@click.group()\ndef cli():\n    pass\n"
 
 
-def _make_adapter(adapters_dir: Path, domain: str, metadata: dict) -> Path:
+def _make_adapter(
+    adapters_dir: Path,
+    domain: str,
+    metadata: dict,
+    commands_py: str = _COMMANDS_PY,
+) -> Path:
     adapter_dir = adapters_dir / domain
     adapter_dir.mkdir(parents=True, exist_ok=True)
     (adapter_dir / "metadata.json").write_text(
         json.dumps(metadata), encoding="utf-8"
     )
-    (adapter_dir / "commands.py").write_text(_COMMANDS_PY, encoding="utf-8")
+    (adapter_dir / "commands.py").write_text(commands_py, encoding="utf-8")
     return adapter_dir
 
 
@@ -64,6 +68,28 @@ def test_register_adapters_ok_v2(tmp_home, no_llm):
 
     assert domain not in result["legacy_adapters"]
     assert domain in main_cli.commands
+
+
+def test_register_adapters_skips_command_module_without_click_group(tmp_home, no_llm):
+    from cliany_site.config import get_config
+    from cliany_site.loader import load_adapter_with_error, register_adapters
+
+    domain = "not-a-group.local"
+    adapters_dir = get_config().adapters_dir
+    _make_adapter(
+        adapters_dir,
+        domain,
+        _V2_METADATA | {"domain": domain},
+        "import click\n\ncli = click.Command('not-a-group')\n",
+    )
+
+    main_cli = click.Group("test")
+    register_adapters(main_cli)
+    loaded, reason = load_adapter_with_error(domain)
+
+    assert domain not in main_cli.commands
+    assert loaded is None
+    assert reason == "commands.py 必须导出 click.Group 类型的 cli"
 
 
 def test_list_legacy_returns_domain(tmp_home, no_llm):
