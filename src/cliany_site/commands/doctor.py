@@ -418,9 +418,14 @@ def _require_capability(result: Envelope, capability_name: str | None) -> Envelo
 
 def _print_doctor_human(result: Envelope) -> None:
     payload = _doctor_payload(result)
-    summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
-    capabilities = summary.get("capabilities") if isinstance(summary.get("capabilities"), dict) else {}
-    checks = payload.get("checks") if isinstance(payload.get("checks"), list) else []
+    summary_value = payload.get("summary")
+    summary: dict[str, Any] = summary_value if isinstance(summary_value, dict) else {}
+    capabilities_value = summary.get("capabilities")
+    capabilities: dict[str, Any] = (
+        capabilities_value if isinstance(capabilities_value, dict) else {}
+    )
+    checks_value = payload.get("checks")
+    checks: list[Any] = checks_value if isinstance(checks_value, list) else []
     checks_by_name = {
         str(check.get("name")): check
         for check in checks
