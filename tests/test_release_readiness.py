@@ -433,6 +433,17 @@ def _readme_content() -> str:
     )
 
 
+def _update_website_baseline(repo: Path, version: str) -> None:
+    expected_snippets = {
+        "site/index.html": ("Current baseline: v0.1.0", f"Current baseline: v{version}"),
+        "site/script.js": ("当前基线：v0.1.0", f"当前基线：v{version}"),
+        "site/docs/index.html": ("v0.1.0 · Python", f"v{version} · Python"),
+    }
+    for filename, (old, new) in expected_snippets.items():
+        path = repo / filename
+        path.write_text(path.read_text(encoding="utf-8").replace(old, new), encoding="utf-8")
+
+
 def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -577,6 +588,41 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "promotion_command_plan_summary_sha256\n",
         encoding="utf-8",
     )
+    (repo / "site" / "docs").mkdir(parents=True)
+    (repo / "site" / "index.html").write_text(
+        "10-Minute Success Path\n"
+        "Try it in three commands\n"
+        "Browse maintained cases before configuring an LLM\n"
+        "cliany-site cases\n"
+        "Real Demo Case Proposal\n"
+        "docs/weekly-maintainer-loop.md\n"
+        "next_actions\n"
+        "daily_release_resume_command\n"
+        "daily_release_resume_command_sha256\n"
+        "primary_next_task_runbook\n"
+        "case_promotion_evidence_primary_runbook_steps\n"
+        "required_labels\n"
+        "required_label_count\n"
+        "required_labels_sha256\n"
+        "Current baseline: v0.1.0\n",
+        encoding="utf-8",
+    )
+    (repo / "site" / "script.js").write_text(
+        "const baseline = '当前基线：v0.1.0';\n",
+        encoding="utf-8",
+    )
+    (repo / "site" / "docs" / "index.html").write_text(
+        "10 分钟成功路径\n"
+        "不需要先配置 LLM key\n"
+        "cliany-site cases\n"
+        "primary_next_task_runbook\n"
+        "case_promotion_evidence_primary_runbook_steps\n"
+        "required_labels\n"
+        "required_label_count\n"
+        "required_labels_sha256\n"
+        "v0.1.0 · Python\n",
+        encoding="utf-8",
+    )
     (repo / "scripts" / "extract_doctor_preflight_evidence.py").write_text(
         "#!/usr/bin/env python3\n"
         "\"\"\"Extract candidate-promotion doctor preflight evidence from doctor JSON.\"\"\"\n"
@@ -648,6 +694,9 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "docs/module-ownership.md",
         "docs/weekly-maintainer-loop.md",
         "scripts/extract_doctor_preflight_evidence.py",
+        "site/index.html",
+        "site/script.js",
+        "site/docs/index.html",
         "cases/manifest.json",
         "cases/examples/demo-case.json",
         ".github/workflows/ci.yml",
@@ -1981,7 +2030,7 @@ def test_release_readiness_blocks_incomplete_readme_entrypoint(tmp_path):
 
 def test_release_readiness_blocks_stale_website_quickstart(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
-    (repo / "site" / "docs").mkdir(parents=True)
+    (repo / "site" / "docs").mkdir(parents=True, exist_ok=True)
     (repo / "site" / "index.html").write_text("<h2>Quick Start</h2>\n", encoding="utf-8")
     (repo / "site" / "docs" / "index.html").write_text("<h2>5 分钟快速开始</h2>\n", encoding="utf-8")
 
@@ -1997,9 +2046,30 @@ def test_release_readiness_blocks_stale_website_quickstart(tmp_path):
     )
 
 
+def test_release_readiness_blocks_website_baseline_version_mismatch(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    for filename in ("site/index.html", "site/script.js", "site/docs/index.html"):
+        path = repo / filename
+        path.write_text(path.read_text(encoding="utf-8").replace("0.1.0", "0.0.9"), encoding="utf-8")
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert "open source metadata file missing snippet: site/index.html: Current baseline: v0.1.0" in (
+        report.project_metadata.issues
+    )
+    assert "open source metadata file missing snippet: site/script.js: 当前基线：v0.1.0" in (
+        report.project_metadata.issues
+    )
+    assert "open source metadata file missing snippet: site/docs/index.html: v0.1.0 · Python" in (
+        report.project_metadata.issues
+    )
+
+
 def test_release_readiness_blocks_stale_website_candidate_runbook_alias(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
-    (repo / "site" / "docs").mkdir(parents=True)
+    (repo / "site" / "docs").mkdir(parents=True, exist_ok=True)
     (repo / "site" / "index.html").write_text(
         "10-Minute Success Path\n"
         "issues.apache.org.cliany-adapter-v0.14.0.tar.gz\n"
@@ -2048,7 +2118,7 @@ def test_release_readiness_blocks_stale_website_candidate_runbook_alias(tmp_path
 
 def test_release_readiness_blocks_stale_public_issue_label_safety_contract(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
-    (repo / "site" / "docs").mkdir(parents=True)
+    (repo / "site" / "docs").mkdir(parents=True, exist_ok=True)
     (repo / "site" / "index.html").write_text(
         "10-Minute Success Path\n"
         "issues.apache.org.cliany-adapter-v0.14.0.tar.gz\n"
@@ -2742,12 +2812,21 @@ def test_release_readiness_allows_bumped_target_before_tag(tmp_path):
         'Changelog = "https://github.com/example/demo/blob/main/CHANGELOG.md"\n',
         encoding="utf-8",
     )
+    _update_website_baseline(repo, "0.1.1")
     draft = repo / "docs" / "releases" / "v0.1.1-draft.md"
     draft.write_text(
         draft.read_text(encoding="utf-8") + "\n**提交范围：** `v0.1.1..HEAD`\n",
         encoding="utf-8",
     )
-    _git(repo, "add", "pyproject.toml", "docs/releases/v0.1.1-draft.md")
+    _git(
+        repo,
+        "add",
+        "pyproject.toml",
+        "site/index.html",
+        "site/script.js",
+        "site/docs/index.html",
+        "docs/releases/v0.1.1-draft.md",
+    )
     _git(repo, "commit", "-m", "prepare release", env={
         "GIT_AUTHOR_NAME": "Test",
         "GIT_AUTHOR_EMAIL": "test@example.com",
@@ -2781,6 +2860,7 @@ def test_release_readiness_allows_finalized_target_changelog_before_tag(tmp_path
         'Changelog = "https://github.com/example/demo/blob/main/CHANGELOG.md"\n',
         encoding="utf-8",
     )
+    _update_website_baseline(repo, "0.1.1")
     (repo / "CHANGELOG.md").write_text(
         "# Changelog\n\n"
         "## [Unreleased]\n\n"
@@ -2796,7 +2876,16 @@ def test_release_readiness_allows_finalized_target_changelog_before_tag(tmp_path
         draft.read_text(encoding="utf-8") + "\n**提交范围：** `v0.1.1..HEAD`\n",
         encoding="utf-8",
     )
-    _git(repo, "add", "pyproject.toml", "CHANGELOG.md", "docs/releases/v0.1.1-draft.md")
+    _git(
+        repo,
+        "add",
+        "pyproject.toml",
+        "CHANGELOG.md",
+        "site/index.html",
+        "site/script.js",
+        "site/docs/index.html",
+        "docs/releases/v0.1.1-draft.md",
+    )
     _git(repo, "commit", "-m", "finalize release", env={
         "GIT_AUTHOR_NAME": "Test",
         "GIT_AUTHOR_EMAIL": "test@example.com",
@@ -2836,6 +2925,7 @@ def test_release_readiness_accepts_tagged_release_mode(tmp_path):
         'Changelog = "https://github.com/example/demo/blob/main/CHANGELOG.md"\n',
         encoding="utf-8",
     )
+    _update_website_baseline(repo, "0.1.1")
     (repo / "CHANGELOG.md").write_text(
         "# Changelog\n\n"
         "## [Unreleased]\n\n"
@@ -2846,7 +2936,15 @@ def test_release_readiness_accepts_tagged_release_mode(tmp_path):
         "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.1.1...HEAD\n",
         encoding="utf-8",
     )
-    _git(repo, "add", "pyproject.toml", "CHANGELOG.md")
+    _git(
+        repo,
+        "add",
+        "pyproject.toml",
+        "CHANGELOG.md",
+        "site/index.html",
+        "site/script.js",
+        "site/docs/index.html",
+    )
     env = {
         "GIT_AUTHOR_NAME": "Test",
         "GIT_AUTHOR_EMAIL": "test@example.com",

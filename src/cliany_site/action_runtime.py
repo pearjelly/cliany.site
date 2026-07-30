@@ -748,13 +748,35 @@ async def execute_action_steps(
                 elif action_type == "extract":
                     await asyncio.sleep(1.5)
 
-                    selector = str(action_data.get("selector", "")).strip()
+                    raw_selector = action_data.get("selector")
+                    selector = raw_selector.strip() if isinstance(raw_selector, str) else ""
                     extract_mode = str(action_data.get("extract_mode", "text")).strip()
                     fields = action_data.get("fields", {}) or {}
                     description = str(action_data.get("description", ""))
 
                     if not selector:
-                        logger.warning("extract 动作缺少 selector，跳过")
+                        message = "extract 动作缺少 selector"
+                        logger.warning(message)
+                        if extraction_results is not None:
+                            extraction_results.append(
+                                {
+                                    "ok": False,
+                                    "error": {
+                                        "code": ErrorCode.E_PARSE_FAILED,
+                                        "message": message,
+                                        "step_index": idx,
+                                        "selector": None,
+                                    },
+                                }
+                            )
+                        if not continue_on_error:
+                            raise ActionExecutionError(
+                                error_type="extract_failed",
+                                action_index=idx,
+                                action=action_data,
+                                message=f"提取步骤失败: {message}",
+                                suggestion="检查 selector 或页面结构是否变化",
+                            )
                     else:
                         data: dict[str, str] | list[Any] | Any
                         _eval_exc: Exception | None = None

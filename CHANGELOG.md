@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.289] - 2026-07-30
+
+### Fixed
+
+- Extract actions with a missing, empty, or whitespace-only `selector` now report a structured `E_PARSE_FAILED` result with the action index instead of being silently treated as successful. Default replay stops at that invalid action; `continue_on_error=true` keeps the explicit failed result for callers that intentionally collect partial output.
+- Release readiness now requires the current project version to appear in the website's English baseline, Chinese baseline, and documentation header. A stale website source now blocks strict readiness before a tag can be created.
+
 ## [0.16.288] - 2026-07-29
 
 ### Changed
@@ -2695,7 +2702,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.288...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.289...HEAD
+[0.16.289]: https://github.com/pearjelly/cliany.site/compare/v0.16.288...v0.16.289
 [0.16.288]: https://github.com/pearjelly/cliany.site/compare/v0.16.287...v0.16.288
 [0.16.287]: https://github.com/pearjelly/cliany.site/compare/v0.16.286...v0.16.287
 [0.16.286]: https://github.com/pearjelly/cliany.site/compare/v0.16.285...v0.16.286

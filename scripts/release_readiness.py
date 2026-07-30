@@ -567,6 +567,9 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         "docs/module-ownership.md",
         "docs/weekly-maintainer-loop.md",
         "scripts/extract_doctor_preflight_evidence.py",
+        "site/index.html",
+        "site/script.js",
+        "site/docs/index.html",
         ".github/PULL_REQUEST_TEMPLATE.md",
         ".github/ISSUE_TEMPLATE/bug_report.yml",
         ".github/ISSUE_TEMPLATE/feature_request.yml",
@@ -856,6 +859,10 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "promotion_command_plan_summary_sha256",
         ],
     }
+    project_version = str(project.get("version") or "")
+    template_snippets["site/index.html"].append(f"Current baseline: v{project_version}")
+    template_snippets["site/script.js"] = [f"当前基线：v{project_version}"]
+    template_snippets["site/docs/index.html"].append(f"v{project_version} · Python")
     forbidden_snippets = {
         "docs/quickstart-10min.md": ["issues.apache.org.cliany-adapter-v0.14.0.tar.gz"],
         "site/index.html": ["issues.apache.org.cliany-adapter-v0.14.0.tar.gz"],
