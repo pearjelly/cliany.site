@@ -12382,6 +12382,7 @@ def test_v016291_release_draft_tracks_server_root_option_docs() -> None:
         "cases/manifest.json",
         "search-extraction-gap",
         "live LLM preflight",
+        "llm_live_preflight_not_ready",
         "release_readiness.py --strict --target-version 0.16.291 --remote",
         "git tag v0.16.291",
         "release_readiness.py --strict --release-tag v0.16.291 --remote --remote-name origin",
