@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.292] - 2026-07-31
+
+### Fixed
+
+- The human-readable `cliany-site doctor` output now prints the same safe, copyable active-demo path that its JSON `recommended_commands` exposes when the demo target is not installed: published fixed-SHA install, `verify --strict`, then the read-only command. It still does not install, execute, or overwrite an adapter automatically; an occupied target continues to start at strict verification.
+
 ## [0.16.291] - 2026-07-31
 
 ### Fixed
@@ -2716,7 +2722,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.291...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.292...HEAD
+[0.16.292]: https://github.com/pearjelly/cliany.site/compare/v0.16.291...v0.16.292
 [0.16.291]: https://github.com/pearjelly/cliany.site/compare/v0.16.290...v0.16.291
 [0.16.290]: https://github.com/pearjelly/cliany.site/compare/v0.16.289...v0.16.290
 [0.16.289]: https://github.com/pearjelly/cliany.site/compare/v0.16.288...v0.16.289

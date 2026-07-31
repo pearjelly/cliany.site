@@ -171,7 +171,10 @@ def test_doctor_human_output_groups_action_items(tmp_home, no_llm, monkeypatch):
     assert "LLM API 密钥" in result.output
     assert "只安装/执行已有 adapter 可暂时忽略" in result.output
     assert "建议下一步：" in result.output
-    assert "cliany-site cases" in result.output
+    assert f"安装已发布案例：{ACTIVE_INSTALL_COMMAND}" in result.output
+    assert f"安装完成后严格校验：{ACTIVE_STRICT_VERIFY_COMMAND}" in result.output
+    assert f"校验通过后可执行：{ACTIVE_READ_ONLY_COMMAND}" in result.output
+    assert "查看可直接运行的公开案例：cliany-site cases" not in result.output
     assert "Existing adapter runtime ready" not in result.output
     assert "blocked by:" not in result.output
 

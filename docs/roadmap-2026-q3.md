@@ -2,7 +2,7 @@
 
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-07-31
-- **基线版本：** v0.16.291
+- **基线版本：** v0.16.292
 - **目标周期：** 2026-06-10 ~ 2026-08-05
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -29,6 +29,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 - Dry-run 版本决策：覆盖计划同时返回 incoming `version` 与 `installed_version`；`installed_version=null` 时不能推断 adapter 不存在，仍以 `would_replace` 判断。系统不对版本做升级或降级裁决，也不会自动覆盖。
 - Active demo 可达性：SuiteCRM、Jira、Confluence 和 Jenkins 的案例目录与双语 README 现在提供已验证的 GitHub Release v0.14.1 HTTPS asset 与 SHA-256；`doctor` 会从打包目录选择无需登录的 Jira active demo，按安装、verify --strict、只读命令给出首次成功路径。当前版本验证隔离安装和静态完整性，不把第三方在线 replay 伪装成新鲜成功证据。
 - Active demo 安全引导：当 active demo 的安装目标已占用时，`doctor` 保留兼容的静态三步 `commands`，但以 `recommended_commands` 先执行 `verify --strict` 与只读命令；严格验证会拦截缺失或不可加载的 `commands.py`，目标占用不被当作健康证明，也不会触发自动覆盖。
+- Active demo 人类引导：当 active demo 目标未安装时，普通 `cliany-site doctor` 也逐条打印已发布固定 SHA-256 安装、`verify --strict` 和只读命令；它只提供可复制引导，不会自动安装、执行或覆盖 adapter。
 
 这意味着 Q3 后续重点不再是「搭脚手架」，而是把已搭好的维护系统转换成用户可见的真实案例、可分发 adapter 资产和稳定集成路径。
 
