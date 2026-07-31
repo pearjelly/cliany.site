@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.291] - 2026-07-31
+
+### Fixed
+
+- The README and website docs now show `--headless` and `--cdp-url` as root CLI options before `explore`, matching the actual Click command contract. Server users get separate copyable commands for launching a headless Chrome process and for connecting to an existing remote CDP browser, instead of a combined invalid `explore` invocation.
+- The website's `explore` option reference now lists the real command options and no longer claims root browser settings are `explore` subcommand flags.
+
 ## [0.16.290] - 2026-07-31
 
 ### Fixed
@@ -2709,7 +2716,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.290...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.291...HEAD
+[0.16.291]: https://github.com/pearjelly/cliany.site/compare/v0.16.290...v0.16.291
 [0.16.290]: https://github.com/pearjelly/cliany.site/compare/v0.16.289...v0.16.290
 [0.16.289]: https://github.com/pearjelly/cliany.site/compare/v0.16.288...v0.16.289
 [0.16.288]: https://github.com/pearjelly/cliany.site/compare/v0.16.287...v0.16.288

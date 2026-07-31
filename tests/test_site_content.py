@@ -8,6 +8,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     docs = (ROOT / "site" / "docs" / "index.html").read_text(encoding="utf-8")
     script = (ROOT / "site" / "script.js").read_text(encoding="utf-8")
     styles = (ROOT / "site" / "style.css").read_text(encoding="utf-8")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
     assert "cliany-site doctor" in index
     assert "10-Minute Success Path" in index
@@ -103,8 +104,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in docs
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.290" in index
-    assert "当前基线：v0.16.290" in script
+    assert "Current baseline: v0.16.291" in index
+    assert "当前基线：v0.16.291" in script
     assert "ADAPTER_NOT_FOUND" in index
     assert "ADAPTER_NOT_FOUND" in script
     assert "marketplace dry run only preflights the package" in script
@@ -113,7 +114,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.290 · Python" in docs
+    assert "v0.16.291 · Python" in docs
     assert "installed_version" in docs
     assert "installed_version=null" in docs
     assert "would_replace" in docs
@@ -130,6 +131,19 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "E_PARSE_FAILED" in script
     assert "Generated adapter commands now preserve failed JSON envelopes and exit nonzero" in index
     assert "生成的 adapter 命令会保留失败 JSON envelope 并以非零状态退出" in script
+    assert "cliany-site [ROOT OPTIONS] explore" in docs
+    assert "--record / --no-record" in docs
+    assert 'cliany-site --headless explore "https://github.com" "搜索仓库" --json' in docs
+    assert 'cliany-site --cdp-url "ws://localhost:9222" explore "https://github.com" "搜索仓库" --json' in docs
+    assert 'cliany-site explore "https://github.com" "搜索仓库" \\\n+  --headless' not in docs
+    assert "--headless      无头模式（服务器/CI 环境）" not in docs
+    assert "--cdp-url &lt;ws://host:port&gt;" not in docs
+    assert "### Server and Docker Browser Setup" in readme
+    assert 'cliany-site --headless explore "https://github.com" "Search repositories" --json' in readme
+    assert (
+        'cliany-site --cdp-url "ws://chrome:9222" explore '
+        '"https://github.com" "Search repositories" --json' in readme
+    )
     assert "ready_for_demo_adapters=true" in docs
     assert "exposes <code>recommended_commands</code>" in script
     assert "verify --strict" in script

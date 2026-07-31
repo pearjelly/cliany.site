@@ -175,6 +175,20 @@ Also supports `.env` file configuration. Search order: `~/.config/cliany-site/.e
 
 If `explore --json` returns `E_LLM_UNAVAILABLE`, the LLM provider returned a retryable upstream outage such as `502 Bad Gateway`, rate limiting, provider connection failure, or service unavailable. The JSON envelope includes `details.retryable`, `details.status_code`, and `details.phase`; retry later or switch `CLIANY_LLM_PROVIDER` / `CLIANY_OPENAI_BASE_URL`. This does not mean the generated adapter or AXTree selector map is broken.
 
+### Server and Docker Browser Setup
+
+`--headless` and `--cdp-url` are root CLI options, so they must appear before `explore`.
+
+```bash
+# Let cliany-site launch Chrome in headless mode
+cliany-site --headless explore "https://github.com" "Search repositories" --json
+
+# Or reuse an already-running remote CDP browser
+cliany-site --cdp-url "ws://chrome:9222" explore "https://github.com" "Search repositories" --json
+```
+
+Choose the path that matches how Chrome is managed. With `--cdp-url`, cliany-site connects to that existing browser; `--headless` applies when cliany-site launches Chrome itself.
+
 ### Experimental: Obscura Browser Provider
 
 Obscura is a lightweight browser provider currently in **experimental** status. Chrome remains the default provider for exploration.
