@@ -1,8 +1,8 @@
 # cliany-site 2026 Q3 路线图
 
 - **制定日期：** 2026-06-10
-- **校准日期：** 2026-07-30
-- **基线版本：** v0.16.289
+- **校准日期：** 2026-07-31
+- **基线版本：** v0.16.290
 - **目标周期：** 2026-06-10 ~ 2026-08-05
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -22,6 +22,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 - Public issue freshness：`audit_candidate_issues.py` 会把开放 `case-proposal` candidate issue 与当前 template 比对，并把不在 manifest 中的 title 报为 `unexpected`；只有人工确认且没有 `missing`、`duplicate`、`unexpected` 时才重写 stale body，让 public issue 不会继续引导贡献者执行过期或孤立的 preflight 命令。
 - 运行可靠性：`E_LLM_UNAVAILABLE`、结构化抽取质量、adapter 生成安全审计、Windows/Embodied CI 和离线案例验收已经进入默认维护面；list/search 命令可用 `expects_nonempty=false` 将合法零匹配保留为 `ok=true`，同时继续输出 `data.quality`，重新 explore 合并、打包和安装也会保留该声明。
 - 抽取失败语义：缺失、空白或非字符串的 extract selector 现在会记录 `E_PARSE_FAILED` 和步骤索引；默认回放停止，显式 `continue_on_error` 保留失败结果而不伪造成功。
+- 生成 adapter 失败退出契约：新生成命令同样会拒绝无效 extract selector；当 JSON envelope 的 `ok=false` 时，写完结构化错误后以非零退出，避免 shell 或 CI 把真实回放失败当作成功。明确的 `expects_nonempty=false` 合法零结果仍保持成功。
 - 显式验证契约：`cliany-site verify <domain> --json` 在 adapter 未安装时返回非零 `ADAPTER_NOT_FOUND` 与 domain 详情；`market install --dry-run` 仍只预检包和安装计划，不会伪装为已安装。
 - Dry-run 覆盖契约：同名 adapter 的 `market install --dry-run --json` 返回只读计划和 `requires_force=true`，而不是提前报错；调用方必须据此显式确认。真正不带 `--force` 的重复安装仍保持非零失败且不写入。
 - Dry-run 版本决策：覆盖计划同时返回 incoming `version` 与 `installed_version`；`installed_version=null` 时不能推断 adapter 不存在，仍以 `would_replace` 判断。系统不对版本做升级或降级裁决，也不会自动覆盖。

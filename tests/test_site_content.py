@@ -103,8 +103,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in docs
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.289" in index
-    assert "当前基线：v0.16.289" in script
+    assert "Current baseline: v0.16.290" in index
+    assert "当前基线：v0.16.290" in script
     assert "ADAPTER_NOT_FOUND" in index
     assert "ADAPTER_NOT_FOUND" in script
     assert "marketplace dry run only preflights the package" in script
@@ -113,7 +113,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.289 · Python" in docs
+    assert "v0.16.290 · Python" in docs
     assert "installed_version" in docs
     assert "installed_version=null" in docs
     assert "would_replace" in docs
@@ -128,6 +128,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "click.Group" in script
     assert "E_PARSE_FAILED" in index
     assert "E_PARSE_FAILED" in script
+    assert "Generated adapter commands now preserve failed JSON envelopes and exit nonzero" in index
+    assert "生成的 adapter 命令会保留失败 JSON envelope 并以非零状态退出" in script
     assert "ready_for_demo_adapters=true" in docs
     assert "exposes <code>recommended_commands</code>" in script
     assert "verify --strict" in script

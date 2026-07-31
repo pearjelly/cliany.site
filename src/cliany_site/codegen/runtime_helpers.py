@@ -133,9 +133,17 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
 
     if action_type == "extract":
         args = ["browser", "extract"]
-        selector = step.get("selector")
-        if selector:
-            args.extend(["--selector", str(selector)])
+        raw_selector = step.get("selector")
+        selector = raw_selector.strip() if isinstance(raw_selector, str) else ""
+        if not selector:
+            return _err(
+                command="browser extract",
+                code=ErrorCode.E_PARSE_FAILED,
+                message="extract 动作缺少 selector",
+                details={"selector": None, "extract_mode": step.get("extract_mode") or "text"},
+                source="builtin",
+            )
+        args.extend(["--selector", selector])
         mode = step.get("extract_mode")
         if mode:
             args.extend(["--mode", str(mode)])

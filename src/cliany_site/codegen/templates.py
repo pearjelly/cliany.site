@@ -792,6 +792,8 @@ def {function_name}({function_signature}):
             "error": (failed or {{}}).get("error"),
             "meta": {{"source": "adapter"}},
         }}, ensure_ascii=False))
+        if failed is not None:
+            ctx.exit(1)
     elif failed is None:
         click.echo("\u2713 {command_name} \u5b8c\u6210")
     else:
@@ -819,6 +821,8 @@ def run_workflow(ctx: click.Context, json_mode: bool | None):
             "error": (failed or {}).get("error"),
             "meta": {"source": "adapter"},
         }, ensure_ascii=False))
+        if failed is not None:
+            ctx.exit(1)
     elif failed is None:
         click.echo("\u2713 run-workflow \u5b8c\u6210")
     else:

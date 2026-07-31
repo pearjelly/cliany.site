@@ -1,4 +1,5 @@
 from cliany_site.codegen import runtime_helpers
+from cliany_site.envelope import ErrorCode
 
 
 def test_execute_single_extract_step_passes_mode_and_fields(monkeypatch):
@@ -40,6 +41,29 @@ def test_execute_single_extract_step_passes_mode_and_fields(monkeypatch):
             '{"title": "h3", "url": "a@href"}',
         ]
     ]
+
+
+def test_execute_single_extract_step_rejects_missing_selector(monkeypatch):
+    calls: list[list[str]] = []
+
+    def fake_run_atom(command, session=None, heal_on_failure=False):  # noqa: ARG001
+        calls.append(command)
+        return {"ok": True, "command": "browser extract", "data": {}}
+
+    monkeypatch.setattr(runtime_helpers, "run_atom", fake_run_atom)
+
+    for selector in (None, "", "  "):
+        result = runtime_helpers._execute_single_step(
+            {"type": "extract", "selector": selector, "extract_mode": "list"},
+            "example.com",
+        )
+
+        assert result["ok"] is False
+        assert result["error"]["code"] == ErrorCode.E_PARSE_FAILED
+        assert result["error"]["message"] == "extract 动作缺少 selector"
+        assert result["error"]["details"] == {"selector": None, "extract_mode": "list"}
+
+    assert calls == []
 
 
 def test_summarize_extract_quality_matches_extract_results_after_navigation():

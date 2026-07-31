@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.290] - 2026-07-31
+
+### Fixed
+
+- Newly generated adapters now reject missing, empty, whitespace-only, or non-string extract selectors with `E_PARSE_FAILED` before invoking the browser extract command. This keeps generated replay aligned with the runtime selector contract instead of silently falling back to full-page extraction.
+- When a newly generated adapter returns a failed JSON envelope, it now exits nonzero after writing that envelope. Shell scripts and CI can no longer mistake `E_SELECTOR_NOT_FOUND`, `E_EMPTY_RESULT`, or another runtime failure for a successful command; the explicitly declared `expects_nonempty=false` empty-result path remains successful.
+
 ## [0.16.289] - 2026-07-30
 
 ### Fixed
@@ -2702,7 +2709,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.289...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.290...HEAD
+[0.16.290]: https://github.com/pearjelly/cliany.site/compare/v0.16.289...v0.16.290
 [0.16.289]: https://github.com/pearjelly/cliany.site/compare/v0.16.288...v0.16.289
 [0.16.288]: https://github.com/pearjelly/cliany.site/compare/v0.16.287...v0.16.288
 [0.16.287]: https://github.com/pearjelly/cliany.site/compare/v0.16.286...v0.16.287
