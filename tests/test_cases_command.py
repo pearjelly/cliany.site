@@ -333,6 +333,8 @@ def test_cases_command_human_candidate_next_step_shows_primary_detail(tmp_home):
     assert "preflight_blocker: Run the live LLM preflight before explore." in result.output
     assert "cliany-site doctor --llm-live --require-capability generate_adapters --json" in result.output
     assert "preflight 通过后再执行:" in result.output
+    assert "预期 adapter 命令（当前不可运行；需完成发布、安装和严格校验后再执行）:" in result.output
+    assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in result.output
 
 
 def test_cases_human_output_uses_primary_next_task(capsys):

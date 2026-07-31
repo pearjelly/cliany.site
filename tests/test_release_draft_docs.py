@@ -12445,3 +12445,43 @@ def test_v016292_release_draft_tracks_human_doctor_demo_guidance() -> None:
         "live LLM call",
     ]:
         assert snippet in notes
+
+
+def test_v016293_release_draft_tracks_candidate_command_boundary() -> None:
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    draft = (ROOT / "docs" / "releases" / "v0.16.293-draft.md").read_text(encoding="utf-8")
+    notes = (ROOT / "docs" / "releases" / "v0.16.293-github-release.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Human `cliany-site cases` output now marks" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.292...HEAD" in text
+
+    for snippet in [
+        "# v0.16.293 发布草案",
+        "**目标版本：** `0.16.293`",
+        "**提交范围：** `v0.16.292..HEAD`",
+        "**提交范围：** `v0.16.293..HEAD`",
+        "## 案例库映射",
+        "cases/README.md",
+        "当前不可运行",
+        "E_LLM_UNAVAILABLE",
+        "llm_live_preflight_not_ready",
+        "公开 candidate issues #14、#15、#16",
+        "release_readiness.py --strict --target-version 0.16.293 --remote",
+        "git tag v0.16.293",
+        "release_readiness.py --strict --release-tag v0.16.293 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.293",
+        "not runnable yet",
+        "verify --strict",
+        "## Compatibility",
+        "## Trust Boundaries",
+        "live LLM preflight",
+    ]:
+        assert snippet in notes

@@ -199,3 +199,14 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert expected_unexpected_issue_terms[filename] in text
         assert "extract` action" in text
         assert "not silently rewritten" in text or "不会静默改写" in text
+
+
+def test_readmes_keep_candidate_adapter_commands_out_of_active_demo_paths() -> None:
+    expected = {
+        "README.md": "it is never an active demo quick command.",
+        "README.zh.md": "绝不会把它当作 active demo 的快速命令。",
+    }
+    for filename, phrase in expected.items():
+        text = (ROOT / filename).read_text(encoding="utf-8")
+        assert phrase in text
+        assert "verify --strict" in text

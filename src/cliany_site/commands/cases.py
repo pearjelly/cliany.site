@@ -1821,9 +1821,15 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
             if next_task_command and next_task_command != next_command:
                 console.print("  preflight 通过后再执行:")
                 console.print(f"  {next_task_command}")
+            candidate_adapter_commands = _candidate_adapter_commands(case)
+            if candidate_adapter_commands:
+                console.print("  预期 adapter 命令（当前不可运行；需完成发布、安装和严格校验后再执行）:")
+                for command in candidate_adapter_commands:
+                    console.print(f"  {command}")
             if detail:
+                displayed_commands = {next_command, next_task_command, *candidate_adapter_commands}
                 for command in commands:
-                    if command not in {next_command, next_task_command}:
+                    if command not in displayed_commands:
                         console.print(f"  {command}")
             continue
         command_lines = commands if detail else commands[:1]

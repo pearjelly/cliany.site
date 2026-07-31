@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Human `cliany-site cases` output now marks a candidate's eventual adapter command as not runnable until its package has been published and installed and `verify --strict` has passed. Candidate promotion commands remain visible for handoff, but they cannot be mistaken for an active demo quick command.
+
 ## [0.16.292] - 2026-07-31
 
 ### Fixed

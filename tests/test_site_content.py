@@ -126,6 +126,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "verify --strict" in docs
     assert "会直接打印固定 SHA-256 安装" in docs
     assert "但不会替你执行它们" in docs
+    assert "会把未来的 adapter 命令标为“当前不可运行”" in docs
+    assert "不能当作 active demo 快速命令" in docs
     assert "commands.py" in docs
     assert "click.Group" in index
     assert "click.Group" in script
