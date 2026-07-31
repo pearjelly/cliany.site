@@ -137,16 +137,22 @@ export CLIANY_OPENAI_API_KEY="sk-..."</code></pre>
         <pre><code># 1. 查看 human 摘要和下一步
 cliany-site doctor
 
-# 2. 当 ready_for_demo_adapters=true 时，按 data.summary.demo_adapter_quickstart.recommended_commands 的顺序运行
-#    （只在未安装时固定 HTTPS + SHA-256 安装，然后 verify --strict；仅成功时执行只读案例）；candidate 不会进入该路径
+# 2. 复制上一步 human `doctor` 按顺序打印的命令
+#    未安装时是固定 HTTPS + SHA-256 安装、verify --strict、只读案例；
+#    已安装或占用时从 verify --strict 开始。普通输出不含 data.summary 字段。
 
-# 3. 否则查看维护中的公开案例和各自的验证路径
+# 3. 自动化脚本才运行 JSON 路径
+cliany-site doctor --json
+#    当 data.summary.ready_for_demo_adapters=true 时，按
+#    data.summary.demo_adapter_quickstart.recommended_commands 的顺序运行；candidate 不会进入该路径
+
+# 4. 否则查看维护中的公开案例和各自的验证路径
 cliany-site cases
 
-# 4. 脚本使用机器可读案例目录
+# 5. 脚本使用机器可读案例目录
 cliany-site cases --json
 
-# 4. 准备好后再配置 LLM 并生成自己的命令</code></pre>
+# 6. 准备好后再配置 LLM 并生成自己的命令</code></pre>
         <p>发布者也可以提供直接 HTTPS adapter 包；远程安装必须固定完成归档的 64 个字符小写十六进制 SHA-256，并会复用同一套包校验：</p>
         <pre><code>cliany-site market publish github.com --version 1.0.0 --json</code></pre>
         <p>发布成功 JSON 中的 <code>data.package_sha256</code> 是完成归档的 64 个字符小写十六进制 SHA-256 摘要；将该值填入发布者提供的通用 HTTPS 安装命令：</p>

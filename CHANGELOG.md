@@ -10,6 +10,7 @@
 ### Fixed
 
 - Human `cliany-site cases` output now marks a candidate's eventual adapter command as not runnable until its package has been published and installed and `verify --strict` has passed. Candidate promotion commands remain visible for handoff, but they cannot be mistaken for an active demo quick command.
+- The website and 10-minute guide now separate commands printed by ordinary `cliany-site doctor` from JSON-only `data.summary` fields. Human users copy the printed path; automation explicitly runs `cliany-site doctor --json` before reading `demo_adapter_quickstart.recommended_commands`.
 
 ## [0.16.292] - 2026-07-31
 

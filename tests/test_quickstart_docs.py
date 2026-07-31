@@ -37,6 +37,8 @@ def test_quickstart_documents_the_release_agnostic_first_success_path():
         "cases/examples/",
         "python scripts/validate_cases.py --strict",
         "contributor-starter.md",
+        "普通 `cliany-site doctor` 不会输出 `data.summary` 字段",
+        "cliany-site doctor --json",
     ]
     for snippet in required:
         assert snippet in text

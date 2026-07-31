@@ -126,6 +126,11 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "verify --strict" in docs
     assert "会直接打印固定 SHA-256 安装" in docs
     assert "但不会替你执行它们" in docs
+    human_step = "# 2. 复制上一步 human `doctor` 按顺序打印的命令"
+    automation_step = "# 3. 自动化脚本才运行 JSON 路径"
+    assert human_step in docs
+    assert automation_step in docs
+    assert docs.index(human_step) < docs.index(automation_step)
     assert "会把未来的 adapter 命令标为“当前不可运行”" in docs
     assert "不能当作 active demo 快速命令" in docs
     assert "commands.py" in docs

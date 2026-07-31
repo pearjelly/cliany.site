@@ -12455,6 +12455,7 @@ def test_v016293_release_draft_tracks_candidate_command_boundary() -> None:
     )
 
     assert "Human `cliany-site cases` output now marks" in text
+    assert "JSON-only `data.summary` fields" in text
     assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.292...HEAD" in text
 
     for snippet in [
@@ -12465,6 +12466,8 @@ def test_v016293_release_draft_tracks_candidate_command_boundary() -> None:
         "## 案例库映射",
         "cases/README.md",
         "当前不可运行",
+        "data.summary.demo_adapter_quickstart.recommended_commands",
+        "cliany-site doctor --json",
         "E_LLM_UNAVAILABLE",
         "llm_live_preflight_not_ready",
         "公开 candidate issues #14、#15、#16",
@@ -12480,6 +12483,7 @@ def test_v016293_release_draft_tracks_candidate_command_boundary() -> None:
         "# v0.16.293",
         "not runnable yet",
         "verify --strict",
+        "doctor --json",
         "## Compatibility",
         "## Trust Boundaries",
         "live LLM preflight",
