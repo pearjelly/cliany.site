@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.293] - 2026-08-01
+
 ### Fixed
 
 - Human `cliany-site cases` output now marks a candidate's eventual adapter command as not runnable until its package has been published and installed and `verify --strict` has passed. Candidate promotion commands remain visible for handoff, but they cannot be mistaken for an active demo quick command.
@@ -2727,7 +2729,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.292...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.293...HEAD
+[0.16.293]: https://github.com/pearjelly/cliany.site/compare/v0.16.292...v0.16.293
 [0.16.292]: https://github.com/pearjelly/cliany.site/compare/v0.16.291...v0.16.292
 [0.16.291]: https://github.com/pearjelly/cliany.site/compare/v0.16.290...v0.16.291
 [0.16.290]: https://github.com/pearjelly/cliany.site/compare/v0.16.289...v0.16.290
