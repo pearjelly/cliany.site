@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.294] - 2026-08-02
+
+### Fixed
+
+- Ordinary human `cliany-site doctor` output now asks users to run the live provider preflight before presenting an `explore` command. A locally valid key and CDP setup no longer looks like proof that the upstream LLM is reachable; a successful `--llm-live --require-capability generate_adapters` check remains the gate for generating a new adapter.
+
 ## [0.16.293] - 2026-08-01
 
 ### Fixed
@@ -2729,7 +2735,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.293...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.294...HEAD
+[0.16.294]: https://github.com/pearjelly/cliany.site/compare/v0.16.293...v0.16.294
 [0.16.293]: https://github.com/pearjelly/cliany.site/compare/v0.16.292...v0.16.293
 [0.16.292]: https://github.com/pearjelly/cliany.site/compare/v0.16.291...v0.16.292
 [0.16.291]: https://github.com/pearjelly/cliany.site/compare/v0.16.290...v0.16.291

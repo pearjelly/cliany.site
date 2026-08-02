@@ -34,7 +34,7 @@ cliany-site doctor
 
 摘要中的 `下一步` 会直接告诉你当前应该配置 LLM key，还是先修复必须项。
 
-普通 `cliany-site doctor` 不会输出 `data.summary` 字段；人类用户只需按它实际打印的命令顺序继续。只有自动化需要读取字段时，才显式运行 `cliany-site doctor --json`。
+普通 `cliany-site doctor` 不会输出 `data.summary` 字段，也不会真实调用 LLM provider；人类用户只需按它实际打印的命令顺序继续。即使本地配置让摘要显示可以生成 adapter，运行 `explore` 前仍先执行 live preflight。只有自动化需要读取字段时，才显式运行 `cliany-site doctor --json`。
 
 自动化脚本可以使用 JSON：
 
@@ -104,9 +104,12 @@ cliany-site 可以自动管理 Chrome，也可以连接你自己启动的 CDP：
   --user-data-dir="$HOME/.cliany-site/chrome-profile"
 ```
 
-### 3. 探索并生成 adapter
+### 3. 先执行 live preflight，再探索并生成 adapter
 
 ```bash
+# 真实调用 provider；未就绪时以非零结果停止，不要继续 explore
+cliany-site doctor --llm-live --require-capability generate_adapters --json
+
 cliany-site explore "https://github.com" "搜索 cliany.site 仓库并查看 README" --json
 cliany-site list --json
 ```

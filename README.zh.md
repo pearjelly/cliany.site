@@ -128,7 +128,7 @@ pip install -e .
 # 环境确认
 cliany-site doctor --json
 
-# explore 前可选：真实调用一次 provider 做 live preflight
+# explore 前：真实调用一次 provider 做 live preflight
 cliany-site doctor --llm-live --require-capability generate_adapters --json
 
 # 查看维护中的真实 demo 案例

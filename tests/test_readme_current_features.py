@@ -210,3 +210,16 @@ def test_readmes_keep_candidate_adapter_commands_out_of_active_demo_paths() -> N
         text = (ROOT / filename).read_text(encoding="utf-8")
         assert phrase in text
         assert "verify --strict" in text
+
+
+def test_readmes_require_a_live_preflight_before_explore() -> None:
+    expected = {
+        "README.md": "# Live provider preflight before explore",
+        "README.zh.md": "# explore 前：真实调用一次 provider 做 live preflight",
+    }
+    command = "cliany-site doctor --llm-live --require-capability generate_adapters --json"
+
+    for filename, heading in expected.items():
+        text = (ROOT / filename).read_text(encoding="utf-8")
+        assert heading in text
+        assert command in text

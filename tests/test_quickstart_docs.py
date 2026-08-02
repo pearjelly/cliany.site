@@ -38,6 +38,8 @@ def test_quickstart_documents_the_release_agnostic_first_success_path():
         "python scripts/validate_cases.py --strict",
         "contributor-starter.md",
         "普通 `cliany-site doctor` 不会输出 `data.summary` 字段",
+        "运行 `explore` 前仍先执行 live preflight",
+        "未就绪时以非零结果停止，不要继续 explore",
         "cliany-site doctor --json",
     ]
     for snippet in required:

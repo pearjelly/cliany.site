@@ -525,7 +525,14 @@ def _print_doctor_human(result: Envelope) -> None:
         else:
             click.echo("- 查看可直接运行的公开案例：cliany-site cases")
         if summary.get("ready_for_explore"):
-            click.echo('- 创建自己的站点命令：cliany-site explore <url> "要完成的任务"')
+            live_preflight = summary.get("llm_live_preflight")
+            if isinstance(live_preflight, dict) and live_preflight.get("checked") is False:
+                click.echo(
+                    "- 创建自己的站点命令前先做实时预检："
+                    "cliany-site doctor --llm-live --require-capability generate_adapters"
+                )
+            else:
+                click.echo('- 创建自己的站点命令：cliany-site explore <url> "要完成的任务"')
     else:
         click.echo("- 先完成“需要先处理”中的项目，然后重新运行：cliany-site doctor")
 

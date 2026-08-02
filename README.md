@@ -128,7 +128,7 @@ pip install -e .
 # Check environment
 cliany-site doctor --json
 
-# Optional live provider preflight before explore
+# Live provider preflight before explore
 cliany-site doctor --llm-live --require-capability generate_adapters --json
 
 # Discover maintained real demo cases

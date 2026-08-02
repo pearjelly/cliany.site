@@ -380,6 +380,31 @@ def test_doctor_does_not_call_llm_live_by_default(tmp_home, no_llm, monkeypatch)
     }
 
 
+def test_doctor_human_output_requires_live_preflight_before_explore(tmp_home, no_llm, monkeypatch):
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    async def fail_if_called(*_args, **_kwargs):
+        raise AssertionError("llm live preflight should be opt-in")
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.setenv("CLIANY_ANTHROPIC_API_KEY", "test")
+    monkeypatch.setattr("cliany_site.explorer.engine._invoke_llm_with_retry", fail_if_called)
+
+    result = CliRunner().invoke(cli, ["doctor"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert (
+        "创建自己的站点命令前先做实时预检："
+        "cliany-site doctor --llm-live --require-capability generate_adapters"
+    ) in result.output
+    assert '创建自己的站点命令：cliany-site explore <url> "要完成的任务"' not in result.output
+
+
 def test_doctor_llm_live_success_keeps_explore_ready(tmp_home, no_llm, monkeypatch):
     """doctor --llm-live 成功时输出 llm_live=ok。"""
     class MockCDP:
@@ -423,6 +448,12 @@ def test_doctor_llm_live_success_keeps_explore_ready(tmp_home, no_llm, monkeypat
         "retryable": False,
         "phase": "llm_preflight",
     }
+
+    human_result = runner.invoke(cli, ["doctor", "--llm-live"], catch_exceptions=False)
+
+    assert human_result.exit_code == 0
+    assert '创建自己的站点命令：cliany-site explore <url> "要完成的任务"' in human_result.output
+    assert "创建自己的站点命令前先做实时预检" not in human_result.output
 
 
 def test_doctor_llm_live_unavailable_blocks_explore_ready(tmp_home, no_llm, monkeypatch):
