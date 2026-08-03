@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.297] - 2026-08-03
+
+### Fixed
+
+- HTTP API documentation now shows the correct root-option placement for `serve`: users can start a headless Chrome process with `cliany-site --headless serve --port 8080`, or connect the service to an existing remote browser with `cliany-site --cdp-url "ws://chrome:9222" serve --port 8080`. The documented `GET /health` probe now makes service reachability explicit, and a CLI regression verifies that both root browser options reach `APIServer` unchanged.
+
 ## [0.16.296] - 2026-08-03
 
 ### Fixed
@@ -2748,7 +2754,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.296...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.297...HEAD
+[0.16.297]: https://github.com/pearjelly/cliany.site/compare/v0.16.296...v0.16.297
 [0.16.296]: https://github.com/pearjelly/cliany.site/compare/v0.16.295...v0.16.296
 [0.16.295]: https://github.com/pearjelly/cliany.site/compare/v0.16.294...v0.16.295
 [0.16.294]: https://github.com/pearjelly/cliany.site/compare/v0.16.293...v0.16.294

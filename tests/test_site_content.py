@@ -16,6 +16,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     script = (ROOT / "site" / "script.js").read_text(encoding="utf-8")
     styles = (ROOT / "site" / "style.css").read_text(encoding="utf-8")
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    readme_zh = (ROOT / "README.zh.md").read_text(encoding="utf-8")
 
     assert "cliany-site doctor" in index
     assert "10-Minute Success Path" in index
@@ -111,20 +112,23 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in docs
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.296" in index
-    assert "当前基线：v0.16.296" in script
+    assert "Current baseline: v0.16.297" in index
+    assert "当前基线：v0.16.297" in script
     assert "ADAPTER_NOT_FOUND" in index
     assert "ADAPTER_NOT_FOUND" in script
     assert "<code>404</code> 表示 adapter 或命令不存在" in docs
     assert "<code>503</code> 表示 Chrome 或 LLM 依赖暂不可用" in docs
     assert "params</code> 必须是对象" in docs
+    assert 'cliany-site --headless serve --port 8080' in docs
+    assert 'cliany-site --cdp-url "ws://chrome:9222" serve --port 8080' in docs
+    assert "GET /health" in docs
     assert "marketplace dry run only preflights the package" in script
     assert "64 个字符小写十六进制 SHA-256 摘要" in script
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in script
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.296 · Python" in docs
+    assert "v0.16.297 · Python" in docs
     assert "installed_version" in docs
     assert "installed_version=null" in docs
     assert "would_replace" in docs
@@ -165,6 +169,12 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
         'cliany-site --cdp-url "ws://chrome:9222" explore '
         '"https://github.com" "Search repositories" --json' in readme
     )
+    assert 'cliany-site --headless serve --port 8080' in readme
+    assert 'cliany-site --cdp-url "ws://chrome:9222" serve --port 8080' in readme
+    assert "curl -i http://localhost:8080/health" in readme
+    assert 'cliany-site --headless serve --port 8080' in readme_zh
+    assert 'cliany-site --cdp-url "ws://chrome:9222" serve --port 8080' in readme_zh
+    assert "curl -i http://localhost:8080/health" in readme_zh
     assert "ready_for_demo_adapters=true" in docs
     assert "exposes <code>recommended_commands</code>" in script
     assert "verify --strict" in script

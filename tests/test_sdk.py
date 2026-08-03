@@ -1022,6 +1022,25 @@ class TestServeCLI:
         assert result.exit_code == 0
         assert "HTTP API" in result.output or "绑定地址" in result.output
 
+    def test_serve_passes_root_browser_options_to_api_server(self):
+        from cliany_site.cli import cli
+
+        runner = __import__("click.testing", fromlist=["CliRunner"]).CliRunner()
+        with patch("cliany_site.server.APIServer") as server_class:
+            result = runner.invoke(
+                cli,
+                ["--headless", "--cdp-url", "ws://chrome:9222", "serve", "--host", "0.0.0.0", "--port", "8081"],
+            )
+
+        assert result.exit_code == 0, result.output
+        server_class.assert_called_once_with(
+            host="0.0.0.0",
+            port=8081,
+            cdp_url="ws://chrome:9222",
+            headless=True,
+        )
+        server_class.return_value.run.assert_called_once_with()
+
 
 # ═══════════════════════════════════════════════════════════
 # __init__.py 导出

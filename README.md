@@ -177,7 +177,7 @@ If `explore --json` returns `E_LLM_UNAVAILABLE`, the LLM provider returned a ret
 
 ### Server and Docker Browser Setup
 
-`--headless` and `--cdp-url` are root CLI options, so they must appear before `explore`.
+`--headless` and `--cdp-url` are root CLI options, so they must appear before the command they configure, including `explore` and `serve`.
 
 ```bash
 # Let cliany-site launch Chrome in headless mode
@@ -347,16 +347,25 @@ cliany-site builds.apache.org list-jobs --json
 ### HTTP API
 
 ```bash
-# Start service
+# Start a local API server with the default Chrome connection
 cliany-site serve --port 8080
 
+# Let cliany-site launch Chrome in headless mode
+cliany-site --headless serve --port 8080
+
+# Or reuse an already-running remote CDP browser
+cliany-site --cdp-url "ws://chrome:9222" serve --port 8080
+
 # Call API
+curl -i http://localhost:8080/health
 curl -i http://localhost:8080/doctor
 curl -i http://localhost:8080/adapters
 curl -X POST http://localhost:8080/explore \
   -H "Content-Type: application/json" \
   -d '{"url": "https://github.com", "workflow": "搜索仓库"}'
 ```
+
+`GET /health` confirms that the HTTP service is reachable. Choose exactly one browser path: `--headless` starts Chrome for this process, while `--cdp-url` connects to an existing remote Chrome. Do not place either option after `serve`.
 
 Mutating endpoints accept JSON objects only. `params` must be an object, and `force` / `dry_run` must be booleans, so strings such as `"false"` never turn on an overwrite by accident. Responses preserve the SDK envelope and use HTTP status codes: `400` for an invalid request, `404` for a missing adapter or command, `422` when a valid request cannot be completed, `503` for unavailable Chrome or LLM dependencies, and `500` for an unexpected server failure.
 

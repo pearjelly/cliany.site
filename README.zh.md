@@ -337,16 +337,25 @@ cliany-site builds.apache.org list-jobs --json
 ### HTTP API
 
 ```bash
-# 启动服务
+# 使用默认 Chrome 连接启动本地 API 服务
 cliany-site serve --port 8080
 
+# 让 cliany-site 为这个服务启动无头 Chrome
+cliany-site --headless serve --port 8080
+
+# 或复用已经运行的远程 CDP 浏览器
+cliany-site --cdp-url "ws://chrome:9222" serve --port 8080
+
 # 调用 API
+curl -i http://localhost:8080/health
 curl -i http://localhost:8080/doctor
 curl -i http://localhost:8080/adapters
 curl -X POST http://localhost:8080/explore \
   -H "Content-Type: application/json" \
   -d '{"url": "https://github.com", "workflow": "搜索仓库"}'
 ```
+
+`GET /health` 用于确认 HTTP 服务可访问。浏览器路径三选一：`--headless` 为当前服务启动 Chrome，`--cdp-url` 连接已有远程 Chrome；两者都是全局选项，不能写在 `serve` 之后。
 
 写操作端点只接受 JSON 对象。`params` 必须是对象，`force` / `dry_run` 必须是布尔值，因此字符串 `"false"` 不会意外开启覆盖。响应保留 SDK 信封，并使用 HTTP 状态码：`400` 表示请求无效，`404` 表示 adapter 或命令不存在，`422` 表示请求合法但无法完成，`503` 表示 Chrome 或 LLM 依赖暂不可用，`500` 表示意外的服务端失败。
 
