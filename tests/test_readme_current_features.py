@@ -177,6 +177,7 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "max_daily_releases" in text
         assert "daily_release_limit_ok" in text
         assert "daily_release_capacity_remaining" in text
+        assert "only by the cadence report" in text or "仅由" in text
         assert "daily_release_cap_blocked" in text
         assert "daily_release_resume_date" in text
         assert "case_promotion_evidence_primary_llm_live_preflight_required" in text
