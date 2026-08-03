@@ -68,3 +68,4 @@ def test_search_extraction_gap_fixture_reproduces_partial_quality():
     assert quality.row_count == 3
     assert "field is blank in 1/3 rows: url" in quality.issues
     assert "field is blank in 1/3 rows: snippet" in quality.issues
+    assert quality.to_dict()["field_blank_rows"] == {"url": [2], "snippet": [3]}

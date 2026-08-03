@@ -239,6 +239,7 @@ class TestBrowserExtract:
             assert data["error"]["code"] == "E_EMPTY_RESULT"
             assert data["error"]["details"]["quality"]["status"] == "partial"
             assert "field is blank in all rows: url" in data["error"]["details"]["quality"]["issues"]
+            assert data["error"]["details"]["quality"]["field_blank_rows"] == {"url": [1]}
 
 
 class TestBrowserEval:

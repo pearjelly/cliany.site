@@ -12,6 +12,7 @@ class ExtractQuality:
     issues: list[str]
     row_count: int | None = None
     field_names: list[str] | None = None
+    field_blank_rows: dict[str, list[int]] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = {
@@ -23,6 +24,8 @@ class ExtractQuality:
             data["row_count"] = self.row_count
         if self.field_names is not None:
             data["field_names"] = self.field_names
+        if self.field_blank_rows:
+            data["field_blank_rows"] = self.field_blank_rows
         return data
 
 
@@ -44,11 +47,24 @@ def _expected_fields(fields_map: Mapping[str, Any] | None) -> list[str]:
     return [str(field_name) for field_name in fields_map]
 
 
-def _finish(issues: list[str], *, row_count: int | None = None, field_names: list[str] | None = None) -> ExtractQuality:
+def _finish(
+    issues: list[str],
+    *,
+    row_count: int | None = None,
+    field_names: list[str] | None = None,
+    field_blank_rows: dict[str, list[int]] | None = None,
+) -> ExtractQuality:
     if not issues:
         return ExtractQuality(ok=True, status="ok", issues=[], row_count=row_count, field_names=field_names)
     status = "empty" if any(issue.startswith("empty") or issue.startswith("all ") for issue in issues) else "partial"
-    return ExtractQuality(ok=False, status=status, issues=issues, row_count=row_count, field_names=field_names)
+    return ExtractQuality(
+        ok=False,
+        status=status,
+        issues=issues,
+        row_count=row_count,
+        field_names=field_names,
+        field_blank_rows=field_blank_rows,
+    )
 
 
 def _evaluate_text(data: Any) -> ExtractQuality:
@@ -79,18 +95,27 @@ def _evaluate_dict_rows(rows: list[Mapping[str, Any]], expected: list[str]) -> E
     field_names = sorted({str(field) for row in rows for field in row})
     check_fields = expected or field_names
     issues: list[str] = []
+    field_blank_rows: dict[str, list[int]] = {}
 
     if all(_is_blank(row) for row in rows):
         issues.append("all rows are blank")
 
     for field in check_fields:
-        blank_count = sum(1 for row in rows if field not in row or _is_blank(row.get(field)))
+        blank_rows = [index + 1 for index, row in enumerate(rows) if field not in row or _is_blank(row.get(field))]
+        blank_count = len(blank_rows)
         if blank_count == len(rows):
             issues.append(f"field is blank in all rows: {field}")
         elif blank_count:
             issues.append(f"field is blank in {blank_count}/{len(rows)} rows: {field}")
+        if blank_rows:
+            field_blank_rows[field] = blank_rows
 
-    return _finish(issues, row_count=len(rows), field_names=field_names)
+    return _finish(
+        issues,
+        row_count=len(rows),
+        field_names=field_names,
+        field_blank_rows=field_blank_rows or None,
+    )
 
 
 def _evaluate_list(data: Any, expected: list[str]) -> ExtractQuality:

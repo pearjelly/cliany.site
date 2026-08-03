@@ -23,6 +23,7 @@ def test_list_extract_quality_accepts_complete_field_rows():
     assert quality.status == "ok"
     assert quality.row_count == 2
     assert quality.field_names == ["title", "url"]
+    assert "field_blank_rows" not in quality.to_dict()
 
 
 def test_list_extract_quality_flags_blank_expected_fields():
@@ -39,6 +40,7 @@ def test_list_extract_quality_flags_blank_expected_fields():
     assert quality.status == "partial"
     assert "field is blank in 1/2 rows: title" in quality.issues
     assert "field is blank in all rows: url" in quality.issues
+    assert quality.to_dict()["field_blank_rows"] == {"title": [2], "url": [1, 2]}
 
 
 def test_table_extract_quality_flags_all_blank_rows():

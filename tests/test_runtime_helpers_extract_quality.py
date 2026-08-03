@@ -90,3 +90,31 @@ def test_summarize_extract_quality_matches_extract_results_after_navigation():
     assert quality["status"] == "empty"
     assert quality["extracts"][0]["step_index"] == 0
     assert "field is blank in all rows: title" in quality["extracts"][0]["issues"]
+    assert quality["extracts"][0]["field_blank_rows"] == {"title": [1], "url": [1]}
+
+
+def test_summarize_extract_quality_propagates_partial_field_blank_rows():
+    results = [
+        {
+            "ok": True,
+            "command": "browser extract",
+            "data": {
+                "content": [
+                    {"title": "Alpha", "url": "https://example.com/alpha"},
+                    {"title": "Beta", "url": ""},
+                ]
+            },
+        }
+    ]
+    action_steps = [
+        {
+            "type": "extract",
+            "extract_mode": "list",
+            "fields": {"title": "h3", "url": "a@href"},
+        }
+    ]
+
+    quality = runtime_helpers.summarize_extract_quality(results, action_steps)
+
+    assert quality["status"] == "partial"
+    assert quality["extracts"][0]["field_blank_rows"] == {"url": [2]}
