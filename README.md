@@ -273,12 +273,26 @@ cliany-site replay github.com --step
 ### Python SDK
 
 ```python
+import asyncio
+
 from cliany_site.sdk import ClanySite
 
-async with ClanySite() as cs:
-    result = await cs.explore("https://github.com", "搜索仓库")
-    adapters = await cs.list_adapters()
+
+async def main():
+    async with ClanySite() as cs:
+        result = await cs.list_adapters()
+
+    if not result["success"]:
+        error = result["error"] or {}
+        raise RuntimeError(f"{error.get('code')}: {error.get('message')}")
+
+    print(result["data"]["adapters"])
+
+
+asyncio.run(main())
 ```
+
+SDK methods return the standard `{success, data, error}` envelope. Run the strict live-provider preflight before calling `explore`; configured credentials alone are not evidence that adapter generation is available.
 
 ## Try Real Demos
 
@@ -337,12 +351,14 @@ cliany-site builds.apache.org list-jobs --json
 cliany-site serve --port 8080
 
 # Call API
-curl http://localhost:8080/doctor
-curl http://localhost:8080/adapters
+curl -i http://localhost:8080/doctor
+curl -i http://localhost:8080/adapters
 curl -X POST http://localhost:8080/explore \
   -H "Content-Type: application/json" \
   -d '{"url": "https://github.com", "workflow": "搜索仓库"}'
 ```
+
+Mutating endpoints accept JSON objects only. `params` must be an object, and `force` / `dry_run` must be booleans, so strings such as `"false"` never turn on an overwrite by accident. Responses preserve the SDK envelope and use HTTP status codes: `400` for an invalid request, `404` for a missing adapter or command, `422` when a valid request cannot be completed, `503` for unavailable Chrome or LLM dependencies, and `500` for an unexpected server failure.
 
 ### YAML Workflow Orchestration
 

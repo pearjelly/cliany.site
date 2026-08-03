@@ -3,6 +3,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_sdk_examples_include_an_async_entrypoint():
+    for path in (ROOT / "README.md", ROOT / "README.zh.md", ROOT / "site" / "docs" / "index.html"):
+        text = path.read_text(encoding="utf-8")
+        assert "async def main():" in text
+        assert "asyncio.run(main())" in text
+
+
 def test_site_quickstart_matches_v0150_ten_minute_success_path():
     index = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
     docs = (ROOT / "site" / "docs" / "index.html").read_text(encoding="utf-8")
@@ -104,17 +111,20 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in docs
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.295" in index
-    assert "当前基线：v0.16.295" in script
+    assert "Current baseline: v0.16.296" in index
+    assert "当前基线：v0.16.296" in script
     assert "ADAPTER_NOT_FOUND" in index
     assert "ADAPTER_NOT_FOUND" in script
+    assert "<code>404</code> 表示 adapter 或命令不存在" in docs
+    assert "<code>503</code> 表示 Chrome 或 LLM 依赖暂不可用" in docs
+    assert "params</code> 必须是对象" in docs
     assert "marketplace dry run only preflights the package" in script
     assert "64 个字符小写十六进制 SHA-256 摘要" in script
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in script
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.295 · Python" in docs
+    assert "v0.16.296 · Python" in docs
     assert "installed_version" in docs
     assert "installed_version=null" in docs
     assert "would_replace" in docs

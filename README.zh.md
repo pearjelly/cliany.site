@@ -265,12 +265,26 @@ cliany-site replay github.com --step
 ### Python SDK
 
 ```python
+import asyncio
+
 from cliany_site.sdk import ClanySite
 
-async with ClanySite() as cs:
-    result = await cs.explore("https://github.com", "搜索仓库")
-    adapters = await cs.list_adapters()
+
+async def main():
+    async with ClanySite() as cs:
+        result = await cs.list_adapters()
+
+    if not result["success"]:
+        error = result["error"] or {}
+        raise RuntimeError(f"{error.get('code')}: {error.get('message')}")
+
+    print(result["data"]["adapters"])
+
+
+asyncio.run(main())
 ```
+
+SDK 方法统一返回 `{success, data, error}` 信封。调用 `explore` 前先通过严格的 live provider 预检；仅有配置过的凭据并不能证明 adapter 生成当前可用。
 
 ## 体验真实演示
 
@@ -327,12 +341,14 @@ cliany-site builds.apache.org list-jobs --json
 cliany-site serve --port 8080
 
 # 调用 API
-curl http://localhost:8080/doctor
-curl http://localhost:8080/adapters
+curl -i http://localhost:8080/doctor
+curl -i http://localhost:8080/adapters
 curl -X POST http://localhost:8080/explore \
   -H "Content-Type: application/json" \
   -d '{"url": "https://github.com", "workflow": "搜索仓库"}'
 ```
+
+写操作端点只接受 JSON 对象。`params` 必须是对象，`force` / `dry_run` 必须是布尔值，因此字符串 `"false"` 不会意外开启覆盖。响应保留 SDK 信封，并使用 HTTP 状态码：`400` 表示请求无效，`404` 表示 adapter 或命令不存在，`422` 表示请求合法但无法完成，`503` 表示 Chrome 或 LLM 依赖暂不可用，`500` 表示意外的服务端失败。
 
 ### YAML 工作流编排
 

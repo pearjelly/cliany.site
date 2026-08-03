@@ -801,6 +801,67 @@ class TestAPIServer:
             assert resp.status == 400
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("endpoint", ["/explore", "/execute", "/login"])
+    async def test_mutating_endpoints_reject_non_object_json(self, endpoint):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.post(endpoint, json=["not", "an", "object"])
+            assert resp.status == 400
+            data = await resp.json()
+            assert data["error"]["code"] == "BAD_REQUEST"
+            assert "对象" in data["error"]["message"]
+
+    @pytest.mark.asyncio
+    async def test_execute_rejects_non_object_params_without_calling_sdk(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        mock_sdk = AsyncMock()
+        server._sdk = mock_sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.post(
+                "/execute",
+                json={"domain": "test.com", "command": "search", "params": ["query", "cliany"]},
+            )
+            assert resp.status == 400
+            data = await resp.json()
+            assert data["error"]["code"] == "BAD_REQUEST"
+            assert "params" in data["error"]["message"]
+        mock_sdk.execute.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_explore_rejects_non_boolean_force_without_calling_sdk(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        mock_sdk = AsyncMock()
+        server._sdk = mock_sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.post(
+                "/explore",
+                json={"url": "https://test.com", "workflow": "搜索", "force": "false"},
+            )
+            assert resp.status == 400
+            data = await resp.json()
+            assert data["error"]["code"] == "BAD_REQUEST"
+            assert "force" in data["error"]["message"]
+        mock_sdk.explore.assert_not_awaited()
+
+    @pytest.mark.asyncio
     async def test_execute_success(self, tmp_path):
         from aiohttp.test_utils import TestClient, TestServer
 
@@ -817,6 +878,54 @@ class TestAPIServer:
             assert resp.status == 200
             data = await resp.json()
             assert data["success"] is True
+
+    @pytest.mark.asyncio
+    async def test_execute_missing_adapter_is_not_found(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        mock_sdk = AsyncMock()
+        mock_sdk.execute = AsyncMock(
+            return_value={
+                "success": False,
+                "data": None,
+                "error": {"code": "ADAPTER_NOT_FOUND", "message": "未找到 adapter"},
+            }
+        )
+        server._sdk = mock_sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.post("/execute", json={"domain": "missing.example", "command": "search"})
+            assert resp.status == 404
+            data = await resp.json()
+            assert data["error"]["code"] == "ADAPTER_NOT_FOUND"
+
+    @pytest.mark.asyncio
+    async def test_explore_unavailable_provider_returns_service_unavailable(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        mock_sdk = AsyncMock()
+        mock_sdk.explore = AsyncMock(
+            return_value={
+                "success": False,
+                "data": None,
+                "error": {"code": "E_LLM_UNAVAILABLE", "message": "provider unavailable"},
+            }
+        )
+        server._sdk = mock_sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.post("/explore", json={"url": "https://test.com", "workflow": "搜索"})
+            assert resp.status == 503
+            data = await resp.json()
+            assert data["error"]["code"] == "E_LLM_UNAVAILABLE"
 
     @pytest.mark.asyncio
     async def test_login_success(self):

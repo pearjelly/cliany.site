@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.296] - 2026-08-03
+
+### Fixed
+
+- HTTP API mutation endpoints now reject non-object JSON bodies and invalid `params`, `force`, and `dry_run` types with `400` instead of leaking client mistakes as server failures. SDK error envelopes are retained while missing adapters/commands return `404`, unprocessable workflow outcomes return `422`, and unavailable Chrome or LLM dependencies return `503`.
+- The SDK examples in both READMEs now have a complete `asyncio.run(main())` entrypoint and demonstrate handling the standard `{success, data, error}` envelope before accessing data.
+
 ## [0.16.295] - 2026-08-03
 
 ### Fixed
@@ -2741,7 +2748,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.295...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.296...HEAD
+[0.16.296]: https://github.com/pearjelly/cliany.site/compare/v0.16.295...v0.16.296
 [0.16.295]: https://github.com/pearjelly/cliany.site/compare/v0.16.294...v0.16.295
 [0.16.294]: https://github.com/pearjelly/cliany.site/compare/v0.16.293...v0.16.294
 [0.16.293]: https://github.com/pearjelly/cliany.site/compare/v0.16.292...v0.16.293

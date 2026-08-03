@@ -22,14 +22,26 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
+from cliany_site.response import error_response
 from cliany_site.sdk import ClanySite
 
 if TYPE_CHECKING:
     from aiohttp.web import Application, Request, Response
 
 logger = logging.getLogger(__name__)
+
+
+_NOT_FOUND_ERROR_CODES = frozenset({"ADAPTER_NOT_FOUND", "COMMAND_NOT_FOUND"})
+_BAD_REQUEST_ERROR_CODES = frozenset({"BAD_REQUEST", "E_INVALID_PARAM", "INVALID_URL"})
+_UNPROCESSABLE_ERROR_CODES = frozenset(
+    {"NO_COOKIES", "E_EMPTY_RESULT", "E_PARSE_FAILED", "E_VERIFY_STATIC", "E_VERIFY_SMOKE"}
+)
+_UNAVAILABLE_ERROR_CODES = frozenset(
+    {"CDP_UNAVAILABLE", "LLM_UNAVAILABLE", "E_CDP_UNAVAILABLE", "E_LLM_UNAVAILABLE"}
+)
 
 
 class APIServer:
@@ -75,6 +87,39 @@ class APIServer:
 
         return web.json_response(data, status=status)
 
+    @staticmethod
+    def _result_status(result: Mapping[str, Any]) -> int:
+        """Map a standard SDK error envelope to an HTTP status code."""
+        if result.get("success") is True:
+            return 200
+
+        error = result.get("error")
+        code = error.get("code") if isinstance(error, Mapping) else None
+        if code in _NOT_FOUND_ERROR_CODES:
+            return 404
+        if code in _BAD_REQUEST_ERROR_CODES:
+            return 400
+        if code in _UNPROCESSABLE_ERROR_CODES:
+            return 422
+        if code in _UNAVAILABLE_ERROR_CODES:
+            return 503
+        return 500
+
+    @staticmethod
+    def _bad_request(message: str) -> dict[str, Any]:
+        return error_response("BAD_REQUEST", message)
+
+    @classmethod
+    async def _read_json_object(cls, request: Request) -> tuple[dict[str, Any] | None, Response | None]:
+        try:
+            body = await request.json()
+        except (json.JSONDecodeError, ValueError):
+            return None, cls._json_response(cls._bad_request("无效的 JSON 请求体"), status=400)
+
+        if not isinstance(body, dict):
+            return None, cls._json_response(cls._bad_request("JSON 请求体必须是对象"), status=400)
+        return body, None
+
     async def _handle_health(self, _request: Request) -> Response:
         return self._json_response({"status": "ok"})
 
@@ -91,80 +136,57 @@ class APIServer:
         return self._json_response(result)
 
     async def _handle_explore(self, request: Request) -> Response:
-        try:
-            body = await request.json()
-        except (json.JSONDecodeError, ValueError):
-            return self._json_response(
-                {"success": False, "data": None, "error": {"code": "BAD_REQUEST", "message": "无效的 JSON 请求体"}},
-                status=400,
-            )
+        body, error_response = await self._read_json_object(request)
+        if error_response is not None:
+            return error_response
+        assert body is not None
 
         url = body.get("url")
         workflow = body.get("workflow") or body.get("workflow_description")
         if not url or not workflow:
-            return self._json_response(
-                {
-                    "success": False,
-                    "data": None,
-                    "error": {"code": "BAD_REQUEST", "message": "缺少 url 或 workflow 字段"},
-                },
-                status=400,
-            )
+            return self._json_response(self._bad_request("缺少 url 或 workflow 字段"), status=400)
 
-        force = bool(body.get("force", False))
+        force = body.get("force", False)
+        if not isinstance(force, bool):
+            return self._json_response(self._bad_request("force 字段必须是布尔值"), status=400)
         sdk = await self._get_sdk()
         result = await sdk.explore(url, workflow, force=force)
-        status = 200 if result.get("success") else 500
-        return self._json_response(result, status=status)
+        return self._json_response(result, status=self._result_status(result))
 
     async def _handle_execute(self, request: Request) -> Response:
-        try:
-            body = await request.json()
-        except (json.JSONDecodeError, ValueError):
-            return self._json_response(
-                {"success": False, "data": None, "error": {"code": "BAD_REQUEST", "message": "无效的 JSON 请求体"}},
-                status=400,
-            )
+        body, error_response = await self._read_json_object(request)
+        if error_response is not None:
+            return error_response
+        assert body is not None
 
         domain = body.get("domain")
         command = body.get("command")
         if not domain or not command:
-            return self._json_response(
-                {
-                    "success": False,
-                    "data": None,
-                    "error": {"code": "BAD_REQUEST", "message": "缺少 domain 或 command 字段"},
-                },
-                status=400,
-            )
+            return self._json_response(self._bad_request("缺少 domain 或 command 字段"), status=400)
 
         params = body.get("params")
-        dry_run = bool(body.get("dry_run", False))
+        if params is not None and not isinstance(params, dict):
+            return self._json_response(self._bad_request("params 字段必须是 JSON 对象"), status=400)
+        dry_run = body.get("dry_run", False)
+        if not isinstance(dry_run, bool):
+            return self._json_response(self._bad_request("dry_run 字段必须是布尔值"), status=400)
         sdk = await self._get_sdk()
         result = await sdk.execute(domain, command, params=params, dry_run=dry_run)
-        status = 200 if result.get("success") else 500
-        return self._json_response(result, status=status)
+        return self._json_response(result, status=self._result_status(result))
 
     async def _handle_login(self, request: Request) -> Response:
-        try:
-            body = await request.json()
-        except (json.JSONDecodeError, ValueError):
-            return self._json_response(
-                {"success": False, "data": None, "error": {"code": "BAD_REQUEST", "message": "无效的 JSON 请求体"}},
-                status=400,
-            )
+        body, error_response = await self._read_json_object(request)
+        if error_response is not None:
+            return error_response
+        assert body is not None
 
         url = body.get("url")
         if not url:
-            return self._json_response(
-                {"success": False, "data": None, "error": {"code": "BAD_REQUEST", "message": "缺少 url 字段"}},
-                status=400,
-            )
+            return self._json_response(self._bad_request("缺少 url 字段"), status=400)
 
         sdk = await self._get_sdk()
         result = await sdk.login(url)
-        status = 200 if result.get("success") else 500
-        return self._json_response(result, status=status)
+        return self._json_response(result, status=self._result_status(result))
 
     def run(self) -> None:
         from aiohttp import web
