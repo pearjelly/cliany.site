@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.295] - 2026-08-03
+
+### Fixed
+
+- Ordinary human `cliany-site doctor --llm-live` output now prints the strict `--require-capability generate_adapters` retry command when a live provider preflight fails. Users keep their existing-adapter path, but get a copyable gate to rerun after repairing the provider instead of being left without a safe route back to `explore`.
+
 ## [0.16.294] - 2026-08-02
 
 ### Fixed
@@ -2735,7 +2741,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.294...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.295...HEAD
+[0.16.295]: https://github.com/pearjelly/cliany.site/compare/v0.16.294...v0.16.295
 [0.16.294]: https://github.com/pearjelly/cliany.site/compare/v0.16.293...v0.16.294
 [0.16.293]: https://github.com/pearjelly/cliany.site/compare/v0.16.292...v0.16.293
 [0.16.292]: https://github.com/pearjelly/cliany.site/compare/v0.16.291...v0.16.292

@@ -107,7 +107,7 @@
 
       <main>
         <h1>cliany-site 文档</h1>
-        <p class="intro-meta">v0.16.294 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
+        <p class="intro-meta">v0.16.295 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
 
         <p>cliany-site 基于 LLM 和 Chrome CDP 协议，将任意网页操作自动化为可重复调用的 CLI 命令。核心流程：<strong>explore（探索）→ generate（生成适配器）→ run（执行）</strong>。</p>
 
@@ -153,7 +153,7 @@ cliany-site cases
 cliany-site cases --json
 
 # 6. 准备好后再配置 LLM 并生成自己的命令</code></pre>
-        <p>普通 <code>doctor</code> 只检查本地配置，不会真实调用 LLM provider。即使摘要显示可以生成 adapter，运行 <code>explore</code> 前仍先执行 live preflight；未就绪时它会以非零结果停止：</p>
+        <p>普通 <code>doctor</code> 只检查本地配置，不会真实调用 LLM provider。即使摘要显示可以生成 adapter，运行 <code>explore</code> 前仍先执行 live preflight；未就绪时它会以非零结果停止，修复 provider 配置或连接后重跑同一命令：</p>
         <pre><code>cliany-site doctor --llm-live --require-capability generate_adapters --json</code></pre>
         <p>发布者也可以提供直接 HTTPS adapter 包；远程安装必须固定完成归档的 64 个字符小写十六进制 SHA-256，并会复用同一套包校验：</p>
         <pre><code>cliany-site market publish github.com --version 1.0.0 --json</code></pre>

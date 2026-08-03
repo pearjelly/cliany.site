@@ -107,7 +107,7 @@ cliany-site 可以自动管理 Chrome，也可以连接你自己启动的 CDP：
 ### 3. 先执行 live preflight，再探索并生成 adapter
 
 ```bash
-# 真实调用 provider；未就绪时以非零结果停止，不要继续 explore
+# 真实调用 provider；未就绪时以非零结果停止，修复后重跑同一命令，不要继续 explore
 cliany-site doctor --llm-live --require-capability generate_adapters --json
 
 cliany-site explore "https://github.com" "搜索 cliany.site 仓库并查看 README" --json

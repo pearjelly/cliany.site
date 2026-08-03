@@ -211,7 +211,7 @@ cliany-site doctor --json
 cliany-site doctor --llm-live --require-capability generate_adapters --json
 ```
 
-默认 `doctor` 只检查本地配置、CDP、目录和 key，不会真实调用 LLM provider。准备运行耗时较长的 `explore` 前，使用 `--llm-live --require-capability generate_adapters` 执行严格 provider 门禁；如果遇到网关、限流或服务不可用，会以非零结果返回 `E_LLM_UNAVAILABLE`，完整检查数据保留在 `error.details`。
+默认 `doctor` 只检查本地配置、CDP、目录和 key，不会真实调用 LLM provider。准备运行耗时较长的 `explore` 前，使用 `--llm-live --require-capability generate_adapters` 执行严格 provider 门禁；如果遇到网关、限流或服务不可用，会以非零结果返回 `E_LLM_UNAVAILABLE`，完整检查数据保留在 `error.details`。修复 provider 问题后，必须重跑同一条严格命令，确认成功后才进入 `explore`。
 
 ## 使用示例
 

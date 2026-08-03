@@ -598,6 +598,36 @@ def test_doctor_human_live_preflight_explains_connection_failure(tmp_home, no_ll
     assert '"checks"' not in result.output
 
 
+def test_doctor_human_live_preflight_failure_offers_strict_retry(tmp_home, no_llm, monkeypatch):
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    class FailingLLM:
+        async def ainvoke(self, _prompt):
+            raise ConnectionError("Connection error.")
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("CLIANY_OPENAI_API_KEY", "test")
+    monkeypatch.setenv("CLIANY_OPENAI_BASE_URL", "https://example.com/v1")
+    monkeypatch.setattr("cliany_site.explorer.engine._get_llm", lambda: FailingLLM())
+
+    result = CliRunner().invoke(cli, ["doctor", "--llm-live"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert "LLM 服务连通性" in result.output
+    assert "建议下一步：" in result.output
+    assert (
+        "修复后重新执行严格预检："
+        "cliany-site doctor --llm-live --require-capability generate_adapters"
+    ) in result.output
+    assert '创建自己的站点命令：cliany-site explore <url> "要完成的任务"' not in result.output
+
+
 def test_doctor_required_generate_capability_requires_live_check(tmp_home, no_llm):
     """A strict generation gate cannot silently skip the real provider check."""
     result = CliRunner().invoke(

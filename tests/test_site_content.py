@@ -104,8 +104,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in docs
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.294" in index
-    assert "当前基线：v0.16.294" in script
+    assert "Current baseline: v0.16.295" in index
+    assert "当前基线：v0.16.295" in script
     assert "ADAPTER_NOT_FOUND" in index
     assert "ADAPTER_NOT_FOUND" in script
     assert "marketplace dry run only preflights the package" in script
@@ -114,7 +114,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.294 · Python" in docs
+    assert "v0.16.295 · Python" in docs
     assert "installed_version" in docs
     assert "installed_version=null" in docs
     assert "would_replace" in docs
@@ -133,7 +133,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert docs.index(human_step) < docs.index(automation_step)
     assert "会把未来的 adapter 命令标为“当前不可运行”" in docs
     assert "不能当作 active demo 快速命令" in docs
-    assert "普通 <code>doctor</code> 只检查本地配置，不会真实调用 LLM provider" in docs
+    assert "修复 provider 配置或连接后重跑同一命令" in docs
     assert "cliany-site doctor --llm-live --require-capability generate_adapters --json" in docs
     assert "commands.py" in docs
     assert "click.Group" in index

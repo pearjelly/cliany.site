@@ -1,8 +1,8 @@
 # cliany-site 2026 Q3 路线图
 
 - **制定日期：** 2026-06-10
-- **校准日期：** 2026-08-02
-- **基线版本：** v0.16.294
+- **校准日期：** 2026-08-03
+- **基线版本：** v0.16.295
 - **目标周期：** 2026-06-10 ~ 2026-08-05
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -32,6 +32,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 - Active demo 人类引导：当 active demo 目标未安装时，普通 `cliany-site doctor` 也逐条打印已发布固定 SHA-256 安装、`verify --strict` 和只读命令；它只提供可复制引导，不会自动安装、执行或覆盖 adapter。
 - Candidate 命令边界：人类 `cliany-site cases` 输出会把 candidate 的 future adapter 命令标为当前不可运行；只有完成发布、安装和 `verify --strict` 后才是可执行命令。官网和 10 分钟路径也明确区分普通 `doctor` 的人类输出与 `doctor --json` 的自动化字段。
 - Live provider 边界：普通人类 `cliany-site doctor` 现在先要求显式 `--llm-live --require-capability generate_adapters` 预检，成功后才显示 `explore`；默认检查绝不把本地配置当作 provider 已可用的证明。
+- Live provider 恢复路径：显式 `doctor --llm-live` 已失败时，人类输出会保留已有 adapter 的安全路径，并打印相同的严格预检命令；修复 provider 后必须通过该 gate 才能回到 `explore`。
 
 这意味着 Q3 后续重点不再是「搭脚手架」，而是把已搭好的维护系统转换成用户可见的真实案例、可分发 adapter 资产和稳定集成路径。
 
