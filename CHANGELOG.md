@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- `GET /health` now returns the `cliany-site` service name and installed package version alongside its liveness status. This lets deployers distinguish the running package from their expected release without treating a reachability probe as evidence that Chrome/CDP or an LLM provider is ready; use `GET /doctor` for those diagnostics.
+
 ## [0.16.297] - 2026-08-03
 
 ### Fixed

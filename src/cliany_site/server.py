@@ -20,6 +20,7 @@
 
 from __future__ import annotations
 
+import importlib.metadata as metadata
 import json
 import logging
 from collections.abc import Mapping
@@ -42,6 +43,13 @@ _UNPROCESSABLE_ERROR_CODES = frozenset(
 _UNAVAILABLE_ERROR_CODES = frozenset(
     {"CDP_UNAVAILABLE", "LLM_UNAVAILABLE", "E_CDP_UNAVAILABLE", "E_LLM_UNAVAILABLE"}
 )
+
+
+def _installed_version() -> str:
+    try:
+        return metadata.version("cliany-site")
+    except metadata.PackageNotFoundError:
+        return "unknown"
 
 
 class APIServer:
@@ -121,7 +129,13 @@ class APIServer:
         return body, None
 
     async def _handle_health(self, _request: Request) -> Response:
-        return self._json_response({"status": "ok"})
+        return self._json_response(
+            {
+                "status": "ok",
+                "service": "cliany-site",
+                "version": _installed_version(),
+            }
+        )
 
     async def _handle_doctor(self, _request: Request) -> Response:
         sdk = await self._get_sdk()

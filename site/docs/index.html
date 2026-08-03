@@ -242,7 +242,7 @@ cliany-site --cdp-url "ws://chrome:9222" serve --port 8080</code></pre>
         <p><code>--headless</code> 和 <code>--cdp-url</code> 都是根选项，必须写在 <code>serve</code> 之前。每次只选一条浏览器路径：前者为当前服务启动 Chrome，后者连接已有远程 Chrome。</p>
         <table>
           <tr><th>端点</th><th>方法</th><th>说明</th></tr>
-          <tr><td><code>GET /health</code></td><td>GET</td><td>确认 HTTP 服务可访问</td></tr>
+          <tr><td><code>GET /health</code></td><td>GET</td><td>确认服务可访问并返回已安装版本</td></tr>
           <tr><td><code>GET /doctor</code></td><td>GET</td><td>环境检查</td></tr>
           <tr><td><code>GET /adapters</code></td><td>GET</td><td>列出适配器</td></tr>
           <tr><td><code>POST /explore</code></td><td>POST</td><td>探索工作流</td></tr>
@@ -250,10 +250,11 @@ cliany-site --cdp-url "ws://chrome:9222" serve --port 8080</code></pre>
           <tr><td><code>POST /login</code></td><td>POST</td><td>捕获 Session</td></tr>
         </table>
         <pre><code>curl -i http://localhost:8080/health
+# {"status":"ok","service":"cliany-site","version":"&lt;installed-version&gt;"}
 curl -X POST http://localhost:8080/explore \
   -H "Content-Type: application/json" \
   -d '{"url": "https://github.com", "workflow": "搜索仓库"}'</code></pre>
-        <p>写操作端点只接受 JSON 对象。<code>params</code> 必须是对象，<code>force</code> / <code>dry_run</code> 必须是布尔值。响应保留 SDK 信封：<code>400</code> 表示请求无效，<code>404</code> 表示 adapter 或命令不存在，<code>422</code> 表示请求合法但无法完成，<code>503</code> 表示 Chrome 或 LLM 依赖暂不可用，<code>500</code> 表示意外服务端失败。</p>
+        <p><code>GET /health</code> 是 liveness probe：它确认 HTTP 服务可访问，并返回服务名和已安装版本；它不代表 Chrome/CDP 或 LLM provider 已就绪，请使用 <code>GET /doctor</code> 查看这些诊断。写操作端点只接受 JSON 对象。<code>params</code> 必须是对象，<code>force</code> / <code>dry_run</code> 必须是布尔值。响应保留 SDK 信封：<code>400</code> 表示请求无效，<code>404</code> 表示 adapter 或命令不存在，<code>422</code> 表示请求合法但无法完成，<code>503</code> 表示 Chrome 或 LLM 依赖暂不可用，<code>500</code> 表示意外服务端失败。</p>
 
         <h2 id="workflow">YAML 工作流编排</h2>
         <pre><code># workflow.yaml

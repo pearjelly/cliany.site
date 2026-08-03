@@ -122,6 +122,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert 'cliany-site --headless serve --port 8080' in docs
     assert 'cliany-site --cdp-url "ws://chrome:9222" serve --port 8080' in docs
     assert "GET /health" in docs
+    assert '"service":"cliany-site"' in docs
+    assert "liveness probe" in docs
     assert "marketplace dry run only preflights the package" in script
     assert "64 个字符小写十六进制 SHA-256 摘要" in script
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in script
@@ -172,9 +174,11 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert 'cliany-site --headless serve --port 8080' in readme
     assert 'cliany-site --cdp-url "ws://chrome:9222" serve --port 8080' in readme
     assert "curl -i http://localhost:8080/health" in readme
+    assert '"service":"cliany-site"' in readme
     assert 'cliany-site --headless serve --port 8080' in readme_zh
     assert 'cliany-site --cdp-url "ws://chrome:9222" serve --port 8080' in readme_zh
     assert "curl -i http://localhost:8080/health" in readme_zh
+    assert '"service":"cliany-site"' in readme_zh
     assert "ready_for_demo_adapters=true" in docs
     assert "exposes <code>recommended_commands</code>" in script
     assert "verify --strict" in script

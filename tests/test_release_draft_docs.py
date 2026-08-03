@@ -12658,3 +12658,45 @@ def test_v016297_release_draft_tracks_http_api_browser_startup() -> None:
         "live LLM provider",
     ]:
         assert snippet in notes
+
+
+def test_v016298_release_draft_tracks_versioned_health_probe() -> None:
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    unreleased = text.split("## [Unreleased]", 1)[1].split("## [0.16.297]", 1)[0]
+    draft = (ROOT / "docs" / "releases" / "v0.16.298-draft.md").read_text(encoding="utf-8")
+    notes = (ROOT / "docs" / "releases" / "v0.16.298-github-release.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "GET /health` now returns the `cliany-site` service name" in unreleased
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.297...HEAD" in text
+
+    for snippet in [
+        "# v0.16.298 发布草案",
+        "**目标版本：** `0.16.298`",
+        "**提交范围：** `v0.16.297..HEAD`",
+        "**提交范围：** `v0.16.298..HEAD`",
+        "GET /health",
+        "service=\"cliany-site\"",
+        "version",
+        "liveness probe",
+        "E_LLM_UNAVAILABLE",
+        "llm_live_preflight_not_ready",
+        "不运行 candidate `explore`",
+        "release_readiness.py --strict --target-version 0.16.298 --remote",
+        "git tag v0.16.298",
+        "release_readiness.py --strict --release-tag v0.16.298 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.298",
+        "GET /health",
+        "version=\"unknown\"",
+        "## Compatibility",
+        "## Trust Boundaries",
+        "live LLM provider",
+    ]:
+        assert snippet in notes

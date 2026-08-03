@@ -358,6 +358,7 @@ cliany-site --cdp-url "ws://chrome:9222" serve --port 8080
 
 # Call API
 curl -i http://localhost:8080/health
+# {"status":"ok","service":"cliany-site","version":"<installed-version>"}
 curl -i http://localhost:8080/doctor
 curl -i http://localhost:8080/adapters
 curl -X POST http://localhost:8080/explore \
@@ -365,7 +366,7 @@ curl -X POST http://localhost:8080/explore \
   -d '{"url": "https://github.com", "workflow": "搜索仓库"}'
 ```
 
-`GET /health` confirms that the HTTP service is reachable. Choose exactly one browser path: `--headless` starts Chrome for this process, while `--cdp-url` connects to an existing remote Chrome. Do not place either option after `serve`.
+`GET /health` confirms that the HTTP service is reachable and returns its service name plus installed package version. It is a liveness probe, not proof that CDP or an LLM provider is ready; use `GET /doctor` for those diagnostics. Choose exactly one browser path: `--headless` starts Chrome for this process, while `--cdp-url` connects to an existing remote Chrome. Do not place either option after `serve`.
 
 Mutating endpoints accept JSON objects only. `params` must be an object, and `force` / `dry_run` must be booleans, so strings such as `"false"` never turn on an overwrite by accident. Responses preserve the SDK envelope and use HTTP status codes: `400` for an invalid request, `404` for a missing adapter or command, `422` when a valid request cannot be completed, `503` for unavailable Chrome or LLM dependencies, and `500` for an unexpected server failure.
 

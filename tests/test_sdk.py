@@ -692,11 +692,36 @@ class TestAPIServer:
         server = APIServer()
         app = server._build_app()
 
-        async with TestClient(TestServer(app)) as client:
-            resp = await client.get("/health")
-            assert resp.status == 200
-            data = await resp.json()
-            assert data["status"] == "ok"
+        with patch("cliany_site.server.metadata.version", return_value="0.16.297"):
+            async with TestClient(TestServer(app)) as client:
+                resp = await client.get("/health")
+                assert resp.status == 200
+                data = await resp.json()
+
+        assert data == {
+            "status": "ok",
+            "service": "cliany-site",
+            "version": "0.16.297",
+        }
+
+    @pytest.mark.asyncio
+    async def test_health_endpoint_handles_missing_distribution_metadata(self):
+        from importlib.metadata import PackageNotFoundError
+
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        app = server._build_app()
+
+        with patch("cliany_site.server.metadata.version", side_effect=PackageNotFoundError):
+            async with TestClient(TestServer(app)) as client:
+                resp = await client.get("/health")
+                assert resp.status == 200
+                data = await resp.json()
+
+        assert data["version"] == "unknown"
 
     @pytest.mark.asyncio
     async def test_adapters_endpoint(self, tmp_path):
