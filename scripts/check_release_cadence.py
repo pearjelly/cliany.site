@@ -42,6 +42,10 @@ class CadenceReport:
     changelog_ok: bool
     dirty: bool
 
+    @property
+    def daily_release_capacity_remaining(self) -> int:
+        return max(self.max_daily_releases - self.release_count_today, 0)
+
     def to_dict(self) -> dict[str, Any]:
         next_actions = _next_action_lines(self)
         return {
@@ -59,6 +63,7 @@ class CadenceReport:
             "release_count_today": self.release_count_today,
             "max_daily_releases": self.max_daily_releases,
             "daily_release_limit_ok": self.daily_release_limit_ok,
+            "daily_release_capacity_remaining": self.daily_release_capacity_remaining,
             "commits_since_latest_tag": self.commits_since_latest_tag,
             "changelog_unreleased_has_content": self.changelog_unreleased_has_content,
             "changelog_unreleased_compare_ok": self.changelog_unreleased_compare_ok,
@@ -236,6 +241,7 @@ def _print_text(report: CadenceReport) -> None:
         f"{', '.join(report.release_tags_today)}"
     )
     print(f"daily_release_limit_ok: {report.daily_release_limit_ok}")
+    print(f"daily_release_capacity_remaining: {report.daily_release_capacity_remaining}")
     print(f"commits_since_latest_tag: {report.commits_since_latest_tag}")
     print(f"changelog_unreleased_has_content: {report.changelog_unreleased_has_content}")
     print(f"changelog_unreleased_compare_ok: {report.changelog_unreleased_compare_ok}")
@@ -262,12 +268,19 @@ def _next_action_lines(report: CadenceReport) -> list[str]:
             f"`{missing_days}` more unique commit days this week; current commit days are "
             f"`{report.commit_day_count}/{report.min_commit_days}`."
         )
-    if not report.daily_release_limit_ok:
-        actions.append(
-            "Pause release tagging until the next day; today's release tags are "
-            f"`{report.release_count_today}/{report.max_daily_releases}`: "
-            f"`{', '.join(report.release_tags_today)}`."
-        )
+    if report.daily_release_capacity_remaining == 0:
+        if report.daily_release_limit_ok:
+            actions.append(
+                "Pause release tagging until the next day; today's release capacity is exhausted at "
+                f"`{report.release_count_today}/{report.max_daily_releases}`: "
+                f"`{', '.join(report.release_tags_today)}`."
+            )
+        else:
+            actions.append(
+                "Pause release tagging until the next day; today's release tags are "
+                f"`{report.release_count_today}/{report.max_daily_releases}`: "
+                f"`{', '.join(report.release_tags_today)}`."
+            )
     if not report.tag_matches_version:
         actions.append(
             f"Align the latest tag `{report.latest_tag or '(none)'}` with pyproject version `{report.version}` "

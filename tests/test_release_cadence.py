@@ -78,6 +78,7 @@ def test_release_cadence_report_passes_with_three_commit_days(tmp_path):
     assert report.release_count_today == 0
     assert report.max_daily_releases == 3
     assert report.daily_release_limit_ok is True
+    assert report.daily_release_capacity_remaining == 3
     assert report.commits_since_latest_tag == 2
     assert report.changelog_unreleased_has_content is True
     assert report.changelog_unreleased_compare_ok is True
@@ -106,12 +107,40 @@ def test_release_cadence_blocks_more_than_three_release_tags_per_day(tmp_path):
     assert report.release_count_today == 4
     assert report.max_daily_releases == 3
     assert report.daily_release_limit_ok is False
+    assert report.daily_release_capacity_remaining == 0
     assert report.to_dict()["release_count_today"] == 4
     assert report.to_dict()["daily_release_limit_ok"] is False
+    assert report.to_dict()["daily_release_capacity_remaining"] == 0
     assert (
         "Pause release tagging until the next day; today's release tags are "
         "`4/3`: `v0.1.1, v0.1.2, v0.1.3, v0.1.4`."
     ) in report.to_dict()["next_actions"]
+
+
+def test_release_cadence_reports_no_next_release_capacity_at_daily_cap(tmp_path, capsys):
+    repo = _init_repo(tmp_path)
+    for index in range(1, 4):
+        _commit(repo, f"release-{index}.txt", str(index), "2026-06-10")
+        _git(repo, "tag", f"v0.1.{index}")
+
+    report = release_cadence.build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+    payload = report.to_dict()
+
+    assert report.daily_release_limit_ok is True
+    assert report.daily_release_capacity_remaining == 0
+    assert payload["daily_release_limit_ok"] is True
+    assert payload["daily_release_capacity_remaining"] == 0
+    assert payload["primary_next_action"] == (
+        "Pause release tagging until the next day; today's release capacity is exhausted at "
+        "`3/3`: `v0.1.1, v0.1.2, v0.1.3`."
+    )
+
+    release_cadence._print_text(report)
+
+    output = capsys.readouterr().out
+    assert "daily_release_limit_ok: True" in output
+    assert "daily_release_capacity_remaining: 0" in output
+    assert "Pause release tagging until the next day; today's release capacity is exhausted" in output
 
 
 def test_release_cadence_report_warns_when_week_has_too_few_days(tmp_path):
