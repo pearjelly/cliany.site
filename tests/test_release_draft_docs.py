@@ -12876,6 +12876,8 @@ def test_v016303_release_draft_prepares_sdk_static_adapter_errors() -> None:
         "**提交范围：** `v0.16.303..HEAD`",
         "E_VERIFY_STATIC",
         "commands_unloadable",
+        "security_issue",
+        "E_INVALID_PARAM",
         "cliany-site verify <domain> --strict --json",
         "HTTP `POST /execute`",
         "422",
@@ -12893,6 +12895,7 @@ def test_v016303_release_draft_prepares_sdk_static_adapter_errors() -> None:
     for snippet in [
         "# v0.16.303",
         "E_VERIFY_STATIC",
+        "security_issue",
         "HTTP `422`",
         "## Compatibility",
         "## Trust Boundaries",

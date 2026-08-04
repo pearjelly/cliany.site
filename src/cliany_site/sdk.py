@@ -226,8 +226,16 @@ class ClanySite:
         Returns:
             标准信封格式
         """
-        from cliany_site.action_runtime import execute_action_steps
-        from cliany_site.session import load_session
+        from cliany_site.marketplace import validate_adapter_domain
+
+        try:
+            validate_adapter_domain(domain)
+        except ValueError:
+            return error_response(
+                "E_INVALID_PARAM",
+                "domain 必须是单个安全 adapter 目录名。",
+                "请传入已安装 adapter 的域名，例如 github.com。",
+            )
 
         cfg = get_config()
         metadata_path = cfg.adapters_dir / domain / "metadata.json"
@@ -238,6 +246,7 @@ class ClanySite:
                 "请先运行 explore 生成 adapter",
             )
 
+        from cliany_site.commands.verify import _scan_security
         from cliany_site.loader import load_adapter_from_path
         from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
 
@@ -256,9 +265,16 @@ class ClanySite:
                     "reason": "commands.py 不是可加载的普通文件" if commands_py.exists() else "commands.py 不存在",
                 }
             else:
-                _group, load_error = load_adapter_from_path(commands_py, domain)
-                if load_error is not None:
-                    diagnostic = {"verdict": "commands_unloadable", "reason": load_error}
+                security_issues = _scan_security(commands_py)
+                if security_issues:
+                    diagnostic = {
+                        "verdict": "security_issue",
+                        "reason": "; ".join(security_issues),
+                    }
+                else:
+                    _group, load_error = load_adapter_from_path(commands_py, domain)
+                    if load_error is not None:
+                        diagnostic = {"verdict": "commands_unloadable", "reason": load_error}
         if diagnostic is not None:
             return error_response(
                 "E_VERIFY_STATIC",
@@ -266,6 +282,9 @@ class ClanySite:
                 f"运行 cliany-site verify {domain} --strict --json 查看并修复静态校验失败。",
                 details={"domain": domain, **diagnostic},
             )
+
+        from cliany_site.action_runtime import execute_action_steps
+        from cliany_site.session import load_session
 
         try:
             metadata = json.loads(metadata_path.read_text(encoding="utf-8"))

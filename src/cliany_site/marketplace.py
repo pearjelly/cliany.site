@@ -388,19 +388,34 @@ def _validated_adapter_package(
         yield manifest, tmp_path, package_sha256
 
 
-def _validate_manifest_domain(domain: str) -> None:
-    """Keep manifest domains as single safe adapter directory names."""
+def validate_adapter_domain(domain: str) -> None:
+    """Keep adapter domains as single safe adapter directory names."""
+    if not isinstance(domain, str):
+        msg = "adapter domain 必须是字符串"
+        raise ValueError(msg)
+
     windows_path = PureWindowsPath(domain)
     if (
-        domain in {".", ".."}
+        not domain
+        or domain in {".", ".."}
         or Path(domain).is_absolute()
         or bool(windows_path.drive or windows_path.root)
         or "/" in domain
         or "\\" in domain
         or ":" in domain
+        or "\x00" in domain
     ):
-        msg = f"manifest.json 的 domain 包含不安全路径: {domain}"
+        msg = f"adapter domain 包含不安全路径: {domain}"
         raise ValueError(msg)
+
+
+def _validate_manifest_domain(domain: str) -> None:
+    """Validate a manifest domain while preserving its user-facing context."""
+    try:
+        validate_adapter_domain(domain)
+    except ValueError as exc:
+        msg = f"manifest.json 的 domain 包含不安全路径: {domain}"
+        raise ValueError(msg) from exc
 
 
 def _adapter_install_target(
