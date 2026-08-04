@@ -2,7 +2,7 @@
 
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-08-04
-- **基线版本：** v0.16.298
+- **基线版本：** v0.16.299
 - **目标周期：** 2026-06-10 ~ 2026-08-05
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -21,6 +21,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 - Candidate 晋级证据：candidate 案例已经具备 promotion command plan、acceptance criteria、LLM preflight blocker handoff、issue artifacts 和 machine-readable evidence summary。
 - Public issue freshness：`audit_candidate_issues.py` 会把开放 `case-proposal` candidate issue 与当前 template 比对，并把不在 manifest 中的 title 报为 `unexpected`；只有人工确认且没有 `missing`、`duplicate`、`unexpected` 时才重写 stale body，让 public issue 不会继续引导贡献者执行过期或孤立的 preflight 命令。
 - 运行可靠性：`E_LLM_UNAVAILABLE`、结构化抽取质量、adapter 生成安全审计、Windows/Embodied CI 和离线案例验收已经进入默认维护面；list/search 命令可用 `expects_nonempty=false` 将合法零匹配保留为 `ok=true`，同时继续输出 `data.quality`，重新 explore 合并、打包和安装也会保留该声明。
+- 结构化抽取诊断：失败的对象行质量报告现在可选输出 `data.quality.field_blank_rows`，按字段给出 1 起始结果行号，帮助用户定位字段映射或页面内容问题；该字段不改变成功结果或原有 partial/empty gate。
 - 抽取失败语义：缺失、空白或非字符串的 extract selector 现在会记录 `E_PARSE_FAILED` 和步骤索引；默认回放停止，显式 `continue_on_error` 保留失败结果而不伪造成功。
 - 生成 adapter 失败退出契约：新生成命令同样会拒绝无效 extract selector；当 JSON envelope 的 `ok=false` 时，写完结构化错误后以非零退出，避免 shell 或 CI 把真实回放失败当作成功。明确的 `expects_nonempty=false` 合法零结果仍保持成功。
 - 远程运行文档：README 与官网现在将 `--headless`、`--cdp-url` 标为根选项，并分别给出“由 CLI 启动无头 Chrome”和“连接既有远程 CDP 浏览器”的可复制命令，避免把它们误写成 `explore` 子选项。

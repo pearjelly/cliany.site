@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.299] - 2026-08-04
+
 ### Added
 
 - Failed structured list and table extraction quality reports now include optional `data.quality.field_blank_rows`, mapping each missing or blank field to its 1-based result row numbers. Existing issues, quality gates, and successful extraction responses are unchanged, so users can identify the affected result item before correcting a field map or reviewing page content.
@@ -2764,7 +2766,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.298...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.299...HEAD
+[0.16.299]: https://github.com/pearjelly/cliany.site/compare/v0.16.298...v0.16.299
 [0.16.298]: https://github.com/pearjelly/cliany.site/compare/v0.16.297...v0.16.298
 [0.16.297]: https://github.com/pearjelly/cliany.site/compare/v0.16.296...v0.16.297
 [0.16.296]: https://github.com/pearjelly/cliany.site/compare/v0.16.295...v0.16.296
