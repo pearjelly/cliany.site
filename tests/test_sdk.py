@@ -310,16 +310,30 @@ class TestSDKVerify:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         "domain",
-        ["", ".", "..", "../outside", "..\\outside", "/tmp/outside", "C:\\outside"],
+        [
+            "",
+            ".",
+            "..",
+            "../outside",
+            "..\\outside",
+            "/tmp/outside",
+            "C:\\outside",
+            "bad\x00name",
+            7,
+        ],
     )
     async def test_verify_rejects_unsafe_adapter_directory_names(self, domain):
         from cliany_site.sdk import ClanySite
 
-        with patch("cliany_site.commands.verify._verify_single") as verify_single:
+        with (
+            patch("cliany_site.sdk.get_config") as get_config,
+            patch("cliany_site.commands.verify._verify_single") as verify_single,
+        ):
             result = await ClanySite().verify(domain)
 
         assert result["success"] is False
         assert result["error"]["code"] == "E_INVALID_PARAM"
+        get_config.assert_not_called()
         verify_single.assert_not_called()
 
     @pytest.mark.asyncio
@@ -351,6 +365,61 @@ class TestSDKVerify:
             ],
             "failed_domains": ["broken.example"],
         }
+        ensure_browser.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_verify_rejects_security_issue_before_importing_adapter(self, tmp_path):
+        from cliany_site.sdk import ClanySite
+
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter_with_actions(tmp_path, "unsafe.example")
+        imported_marker = tmp_path / "commands-imported"
+        (adapter_dir / "commands.py").write_text(
+            "from pathlib import Path\n"
+            f"Path({str(imported_marker)!r}).write_text('imported')\n"
+            "import os\n"
+            "os.system('true')\n",
+            encoding="utf-8",
+        )
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.commands.verify.get_config", return_value=cfg),
+            patch("cliany_site.commands.verify.load_adapter_from_path") as load_adapter,
+            patch.object(ClanySite, "_ensure_browser_session", new_callable=AsyncMock) as ensure_browser,
+        ):
+            result = await ClanySite().verify("unsafe.example")
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_VERIFY_STATIC"
+        verified = result["error"]["details"]["results"][0]
+        assert verified["verdict"] == "security_issue"
+        assert any("os.system(" in issue for issue in verified["issues"])
+        assert not imported_marker.exists()
+        load_adapter.assert_not_called()
+        ensure_browser.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_verify_rejects_non_utf8_commands_before_browser(self, tmp_path):
+        from cliany_site.sdk import ClanySite
+
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter_with_actions(tmp_path, "non-utf8.example")
+        (adapter_dir / "commands.py").write_bytes(b"\xff\xfe")
+
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.commands.verify.get_config", return_value=cfg),
+            patch("cliany_site.commands.verify.load_adapter_from_path") as load_adapter,
+            patch.object(ClanySite, "_ensure_browser_session", new_callable=AsyncMock) as ensure_browser,
+        ):
+            result = await ClanySite().verify("non-utf8.example")
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_VERIFY_STATIC"
+        verified = result["error"]["details"]["results"][0]
+        assert verified["verdict"] == "security_issue"
+        assert verified["issues"] == ["commands.py 无法按 UTF-8 读取"]
+        load_adapter.assert_not_called()
         ensure_browser.assert_not_awaited()
 
 
@@ -1064,6 +1133,32 @@ class TestAPIServer:
             data = await resp.json()
 
         assert data["error"]["code"] == "E_INVALID_PARAM"
+
+    @pytest.mark.asyncio
+    async def test_verify_endpoint_maps_non_utf8_commands_to_unprocessable(self, tmp_path):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.sdk import ClanySite
+        from cliany_site.server import APIServer
+
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter_with_actions(tmp_path, "non-utf8.example")
+        (adapter_dir / "commands.py").write_bytes(b"\xff\xfe")
+        server = APIServer()
+        server._sdk = ClanySite()
+        app = server._build_app()
+
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.commands.verify.get_config", return_value=cfg),
+        ):
+            async with TestClient(TestServer(app)) as client:
+                resp = await client.get("/verify", params={"domain": "non-utf8.example"})
+                assert resp.status == 422
+                data = await resp.json()
+
+        assert data["error"]["code"] == "E_VERIFY_STATIC"
+        assert data["error"]["details"]["results"][0]["verdict"] == "security_issue"
 
     @pytest.mark.asyncio
     async def test_doctor_endpoint(self, tmp_path):
