@@ -12861,3 +12861,42 @@ def test_v016302_release_draft_prepares_safe_active_case_guidance() -> None:
         "candidate adapter package",
     ]:
         assert snippet in notes
+
+
+def test_v016303_release_draft_prepares_sdk_static_adapter_errors() -> None:
+    draft = (ROOT / "docs" / "releases" / "v0.16.303-draft.md").read_text(encoding="utf-8")
+    notes = (ROOT / "docs" / "releases" / "v0.16.303-github-release.md").read_text(
+        encoding="utf-8"
+    )
+
+    for snippet in [
+        "# v0.16.303 发布草案",
+        "**目标版本：** `0.16.303`",
+        "**提交范围：** `v0.16.302..HEAD`",
+        "**提交范围：** `v0.16.303..HEAD`",
+        "E_VERIFY_STATIC",
+        "commands_unloadable",
+        "cliany-site verify <domain> --strict --json",
+        "HTTP `POST /execute`",
+        "422",
+        "E_LLM_UNAVAILABLE",
+        "llm_live_preflight_not_ready",
+        "不运行 candidate `explore`",
+        "release_readiness.py --strict --target-version 0.16.303 --remote",
+        "git tag v0.16.303",
+        "release_readiness.py --strict --release-tag v0.16.303 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.303",
+        "E_VERIFY_STATIC",
+        "HTTP `422`",
+        "## Compatibility",
+        "## Trust Boundaries",
+        "candidate adapter package",
+        "live LLM provider",
+    ]:
+        assert snippet in notes
