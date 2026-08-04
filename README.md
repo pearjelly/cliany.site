@@ -280,19 +280,19 @@ from cliany_site.sdk import ClanySite
 
 async def main():
     async with ClanySite() as cs:
-        result = await cs.list_adapters()
+        result = await cs.verify("github.com")
 
     if not result["success"]:
         error = result["error"] or {}
         raise RuntimeError(f"{error.get('code')}: {error.get('message')}")
 
-    print(result["data"]["adapters"])
+    print(result["data"]["results"][0])
 
 
 asyncio.run(main())
 ```
 
-SDK methods return the standard `{success, data, error}` envelope. Run the strict live-provider preflight before calling `explore`; configured credentials alone are not evidence that adapter generation is available.
+SDK methods return the standard `{success, data, error}` envelope. `verify(domain)` performs the same strict static checks as `cliany-site verify <domain> --strict`: metadata, generated module safety, manifest integrity, and whether `commands.py` actually exports a loadable Click group. It does not open Chrome or contact an LLM. It returns `ADAPTER_NOT_FOUND` for an absent adapter and `E_VERIFY_STATIC` with `data.results`-compatible diagnostics when verification fails. Run the strict live-provider preflight before calling `explore`; configured credentials alone are not evidence that adapter generation is available.
 
 ## Try Real Demos
 
@@ -367,6 +367,7 @@ curl -i http://localhost:8080/health
 # {"status":"ok","service":"cliany-site","version":"<installed-version>"}
 curl -i http://localhost:8080/doctor
 curl -i http://localhost:8080/adapters
+curl -i "http://localhost:8080/verify?domain=github.com"
 curl -X POST http://localhost:8080/explore \
   -H "Content-Type: application/json" \
   -d '{"url": "https://github.com", "workflow": "搜索仓库"}'
@@ -374,7 +375,7 @@ curl -X POST http://localhost:8080/explore \
 
 `GET /health` confirms that the HTTP service is reachable and returns its service name plus installed package version. It is a liveness probe, not proof that CDP or an LLM provider is ready; use `GET /doctor` for those diagnostics. Choose exactly one browser path: `--headless` starts Chrome for this process, while `--cdp-url` connects to an existing remote Chrome. Do not place either option after `serve`.
 
-Mutating endpoints accept JSON objects only. `params` must be an object, and `force` / `dry_run` must be booleans, so strings such as `"false"` never turn on an overwrite by accident. Before browser startup, `POST /execute` checks the requested adapter directory and its local static contract. An invalid directory name returns `E_INVALID_PARAM` / `400`; an installed adapter with unsafe, missing, unreadable, or unloadable files returns `E_VERIFY_STATIC` / `422` and should be repaired with `cliany-site verify <domain> --strict --json`. This local preflight does not prove Chrome, LLM, or third-party workflow readiness. Other responses preserve the SDK envelope: `404` for a missing adapter or command, `503` for unavailable Chrome or LLM dependencies, and `500` for an unexpected server failure.
+`GET /verify` requires one safe `domain` query parameter and runs the strict static adapter checks without connecting to Chrome or an LLM. Invalid directory names return `E_INVALID_PARAM` / `400`; missing adapters return `404`; and an installed adapter with unsafe, missing, unreadable, or unloadable files returns `E_VERIFY_STATIC` / `422` with the `cliany-site verify <domain> --strict --json` repair path. `POST /execute` applies the same local static contract before browser startup. This does not prove Chrome, LLM, or third-party workflow readiness. Mutating endpoints accept JSON objects only: `params` must be an object, and `force` / `dry_run` must be booleans, so strings such as `"false"` never turn on an overwrite. Other responses preserve the SDK envelope: `503` for unavailable Chrome or LLM dependencies, and `500` for an unexpected server failure.
 
 ### YAML Workflow Orchestration
 

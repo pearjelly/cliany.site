@@ -482,6 +482,17 @@ class ClanySite:
 
     async def verify(self, domain: str) -> dict[str, Any]:
         """严格静态验证一个已安装 adapter，不连接浏览器。"""
+        from cliany_site.marketplace import validate_adapter_domain
+
+        try:
+            validate_adapter_domain(domain)
+        except (TypeError, ValueError):
+            return error_response(
+                "E_INVALID_PARAM",
+                "domain 必须是单个安全 adapter 目录名。",
+                "请传入已安装 adapter 的域名，例如 github.com。",
+            )
+
         from cliany_site.commands.verify import _load_schema, _verify_single
 
         cfg = get_config()

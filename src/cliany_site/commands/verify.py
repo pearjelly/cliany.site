@@ -13,7 +13,7 @@ from cliany_site.config import get_config
 from cliany_site.envelope import Envelope, ErrorCode, err, ok
 from cliany_site.errors import ADAPTER_NOT_FOUND
 from cliany_site.loader import load_adapter_from_path
-from cliany_site.marketplace import MANIFEST_VERSION
+from cliany_site.marketplace import MANIFEST_VERSION, validate_adapter_domain
 from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
 
 logger = logging.getLogger(__name__)
@@ -278,7 +278,24 @@ def verify_cmd(
     schema = _load_schema()
 
     domains_to_verify: list[str] = []
-    if domain:
+    if domain is not None:
+        try:
+            validate_adapter_domain(domain)
+        except (TypeError, ValueError):
+            invalid_envelope = err(
+                "verify",
+                ErrorCode.E_INVALID_PARAM,
+                "domain 必须是单个安全 adapter 目录名。",
+                hint="请传入已安装 adapter 的域名，例如 github.com。",
+                source="builtin",
+            )
+            if effective_json_mode:
+                click.echo(json.dumps(invalid_envelope, ensure_ascii=False, indent=2))
+            else:
+                click.echo(f"✗ {invalid_envelope['error']['message']}")
+                click.echo(invalid_envelope["error"]["hint"])
+            ctx.exit(1)
+
         adapter_dir = cfg.adapters_dir / domain
         if adapter_dir.exists():
             domains_to_verify = [domain]

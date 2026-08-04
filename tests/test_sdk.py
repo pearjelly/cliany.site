@@ -308,6 +308,21 @@ class TestSDKVerify:
         assert result["error"]["details"] == {"domain": "missing.example"}
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "domain",
+        ["", ".", "..", "../outside", "..\\outside", "/tmp/outside", "C:\\outside"],
+    )
+    async def test_verify_rejects_unsafe_adapter_directory_names(self, domain):
+        from cliany_site.sdk import ClanySite
+
+        with patch("cliany_site.commands.verify._verify_single") as verify_single:
+            result = await ClanySite().verify(domain)
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_INVALID_PARAM"
+        verify_single.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_verify_static_failure_keeps_cli_results_contract(self, tmp_path):
         from cliany_site.sdk import ClanySite
 
@@ -1030,6 +1045,25 @@ class TestAPIServer:
 
         assert data["error"]["code"] == "ADAPTER_NOT_FOUND"
         assert data["error"]["details"] == {"domain": "missing.example"}
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("domain", ["../outside", "C:\\outside"])
+    async def test_verify_endpoint_rejects_unsafe_adapter_directory_names(self, domain):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.sdk import ClanySite
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        server._sdk = ClanySite()
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.get("/verify", params={"domain": domain})
+            assert resp.status == 400
+            data = await resp.json()
+
+        assert data["error"]["code"] == "E_INVALID_PARAM"
 
     @pytest.mark.asyncio
     async def test_doctor_endpoint(self, tmp_path):

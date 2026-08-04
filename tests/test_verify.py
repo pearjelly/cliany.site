@@ -73,6 +73,17 @@ def test_verify_missing_explicit_adapter_returns_not_found(tmp_home, no_llm):
     assert "移除" in data["error"]["hint"]
 
 
+@pytest.mark.parametrize("domain", ["", ".", "..", "../outside", "..\\outside", "/tmp/outside", "C:\\outside"])
+def test_verify_rejects_unsafe_adapter_directory_names(tmp_home, no_llm, domain):
+    runner = CliRunner()
+    result = runner.invoke(cli, ["verify", "--json", domain])
+
+    assert result.exit_code == 1
+    data = json.loads(result.output)
+    assert data["ok"] is False
+    assert data["error"]["code"] == "E_INVALID_PARAM"
+
+
 def test_verify_all_no_adapters_returns_empty_success(tmp_home, no_llm):
     runner = CliRunner()
     result = runner.invoke(cli, ["verify", "--json"])

@@ -124,6 +124,13 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert 'cliany-site --headless serve --port 8080' in docs
     assert 'cliany-site --cdp-url "ws://chrome:9222" serve --port 8080' in docs
     assert "GET /health" in docs
+    assert "GET /verify?domain=&lt;domain&gt;" in docs
+    assert "await cs.verify(\"github.com\")" in docs
+    assert "await cs.verify(\"github.com\")" in readme
+    assert "await cs.verify(\"github.com\")" in readme_zh
+    assert "GET /verify" in readme
+    assert "GET /verify" in readme_zh
+    assert "静态 adapter 检查，不会连接 Chrome 或 LLM" in docs
     assert '"service":"cliany-site"' in docs
     assert "liveness probe" in docs
     assert "marketplace dry run only preflights the package" in script

@@ -218,16 +218,16 @@ import asyncio
 
 async def main():
     async with ClanySite() as cs:
-        result = await cs.list_adapters()
+        result = await cs.verify("github.com")
 
     if not result["success"]:
         error = result["error"] or {}
         raise RuntimeError(f"{error.get('code')}: {error.get('message')}")
 
-    print(result["data"]["adapters"])
+    print(result["data"]["results"][0])
 
 asyncio.run(main())</code></pre>
-        <p>SDK 方法统一返回 <code>{success, data, error}</code> 信封。<code>execute</code> 会在启动浏览器前校验 adapter 的目录名、metadata 与 <code>commands.py</code> 静态契约；本地静态失败返回 <code>E_VERIFY_STATIC</code>，请先运行 <code>cliany-site verify &lt;domain&gt; --strict --json</code>，这不代表 Chrome、LLM 或第三方站点已经可用。调用 <code>explore</code> 前先通过严格的 live provider 预检；仅有配置过的凭据不代表 adapter 生成当前可用。</p>
+        <p>SDK 方法统一返回 <code>{success, data, error}</code> 信封。<code>verify(domain)</code> 与 <code>cliany-site verify &lt;domain&gt; --strict</code> 使用相同的静态检查：安全目录名、metadata、生成模块安全、manifest 完整性，以及 <code>commands.py</code> 是否真正导出可加载的 Click group；它不会连接 Chrome 或 LLM。未安装 adapter 返回 <code>ADAPTER_NOT_FOUND</code>，静态校验失败返回带 <code>results</code> 诊断的 <code>E_VERIFY_STATIC</code>。<code>execute</code> 在启动浏览器前使用同一套本地静态契约。调用 <code>explore</code> 前仍需先通过严格的 live provider 预检；仅有配置过的凭据不代表 adapter 生成当前可用。</p>
 
         <h2 id="api">HTTP API</h2>
         <p>启动本地 REST API 服务：</p>
@@ -245,16 +245,18 @@ cliany-site --cdp-url "ws://chrome:9222" serve --port 8080</code></pre>
           <tr><td><code>GET /health</code></td><td>GET</td><td>确认服务可访问并返回已安装版本</td></tr>
           <tr><td><code>GET /doctor</code></td><td>GET</td><td>环境检查</td></tr>
           <tr><td><code>GET /adapters</code></td><td>GET</td><td>列出适配器</td></tr>
+          <tr><td><code>GET /verify?domain=&lt;domain&gt;</code></td><td>GET</td><td>严格静态验证已安装 adapter，不连接 Chrome</td></tr>
           <tr><td><code>POST /explore</code></td><td>POST</td><td>探索工作流</td></tr>
           <tr><td><code>POST /execute</code></td><td>POST</td><td>执行适配器命令</td></tr>
           <tr><td><code>POST /login</code></td><td>POST</td><td>捕获 Session</td></tr>
         </table>
         <pre><code>curl -i http://localhost:8080/health
 # {"status":"ok","service":"cliany-site","version":"&lt;installed-version&gt;"}
+curl -i "http://localhost:8080/verify?domain=github.com"
 curl -X POST http://localhost:8080/explore \
   -H "Content-Type: application/json" \
   -d '{"url": "https://github.com", "workflow": "搜索仓库"}'</code></pre>
-        <p><code>GET /health</code> 是 liveness probe：它确认 HTTP 服务可访问，并返回服务名和已安装版本；它不代表 Chrome/CDP 或 LLM provider 已就绪，请使用 <code>GET /doctor</code> 查看这些诊断。写操作端点只接受 JSON 对象。<code>params</code> 必须是对象，<code>force</code> / <code>dry_run</code> 必须是布尔值。<code>POST /execute</code> 会先校验 adapter 的本地静态契约，因而无效目录名返回 <code>400</code>，已安装但不可安全加载的 adapter 返回 <code>E_VERIFY_STATIC</code> / <code>422</code>，不会先启动浏览器。其他响应保留 SDK 信封：<code>404</code> 表示 adapter 或命令不存在，<code>503</code> 表示 Chrome 或 LLM 依赖暂不可用，<code>500</code> 表示意外服务端失败。</p>
+        <p><code>GET /health</code> 是 liveness probe：它确认 HTTP 服务可访问，并返回服务名和已安装版本；它不代表 Chrome/CDP 或 LLM provider 已就绪，请使用 <code>GET /doctor</code> 查看这些诊断。<code>GET /verify</code> 必须提供安全的 <code>domain</code> 查询参数，只运行静态 adapter 检查，不会连接 Chrome 或 LLM；无效目录名返回 <code>E_INVALID_PARAM</code> / <code>400</code>，已安装但不可安全加载的 adapter 返回 <code>E_VERIFY_STATIC</code> / <code>422</code>。<code>POST /execute</code> 在启动浏览器前使用同一套本地静态契约。其他响应保留 SDK 信封：<code>404</code> 表示 adapter 或命令不存在，<code>503</code> 表示 Chrome 或 LLM 依赖暂不可用，<code>500</code> 表示意外服务端失败。写操作端点只接受 JSON 对象；<code>params</code> 必须是对象，<code>force</code> / <code>dry_run</code> 必须是布尔值。</p>
 
         <h2 id="workflow">YAML 工作流编排</h2>
         <pre><code># workflow.yaml
