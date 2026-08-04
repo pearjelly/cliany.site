@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.298] - 2026-08-04
+
 ### Added
 
 - `GET /health` now returns the `cliany-site` service name and installed package version alongside its liveness status. This lets deployers distinguish the running package from their expected release without treating a reachability probe as evidence that Chrome/CDP or an LLM provider is ready; use `GET /doctor` for those diagnostics.
@@ -2758,7 +2760,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.297...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.298...HEAD
+[0.16.298]: https://github.com/pearjelly/cliany.site/compare/v0.16.297...v0.16.298
 [0.16.297]: https://github.com/pearjelly/cliany.site/compare/v0.16.296...v0.16.297
 [0.16.296]: https://github.com/pearjelly/cliany.site/compare/v0.16.295...v0.16.296
 [0.16.295]: https://github.com/pearjelly/cliany.site/compare/v0.16.294...v0.16.295
