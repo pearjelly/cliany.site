@@ -224,6 +224,25 @@ def test_verify_strict_security_issue_returns_failure_envelope(tmp_home, no_llm,
     assert data["error"]["details"]["results"][0]["verdict"] == "security_issue"
 
 
+def test_verify_rejects_non_utf8_commands_as_security_issue(tmp_home, no_llm, adapters_dir):
+    adapter_dir = _make_adapter(
+        adapters_dir,
+        "non-utf8.com",
+        VALID_V3_METADATA | {"domain": "non-utf8.com"},
+    )
+    (adapter_dir / "commands.py").write_bytes(b"\xff\xfe")
+    runner = CliRunner()
+
+    result = runner.invoke(cli, ["verify", "non-utf8.com", "--strict", "--json"])
+
+    assert result.exit_code == 1
+    data = json.loads(result.output)
+    assert data["ok"] is False
+    verified = data["error"]["details"]["results"][0]
+    assert verified["verdict"] == "security_issue"
+    assert verified["issues"] == ["commands.py 无法按 UTF-8 读取"]
+
+
 def test_verify_market_manifest_ok(tmp_home, no_llm, adapters_dir):
     adapter_dir = _make_adapter(adapters_dir, "market-ok.com", VALID_V3_METADATA | {"domain": "market-ok.com"})
     _write_manifest(adapter_dir, "market-ok.com")

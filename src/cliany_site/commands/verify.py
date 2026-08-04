@@ -38,6 +38,8 @@ def _scan_security(commands_py: Path) -> list[str]:
         source = commands_py.read_text(encoding="utf-8")
     except OSError:
         return issues
+    except UnicodeDecodeError:
+        return ["commands.py 无法按 UTF-8 读取"]
 
     for lineno, line in enumerate(source.splitlines(), 1):
         for pattern in BANNED_PATTERNS:
