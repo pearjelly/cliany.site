@@ -5,6 +5,6 @@ try:
 except PackageNotFoundError:
     __version__ = "0+unknown"
 
-from cliany_site.sdk import ClanySite, doctor, execute, explore, list_adapters, login
+from cliany_site.sdk import ClanySite, doctor, execute, explore, list_adapters, login, verify
 
-__all__ = ["__version__", "ClanySite", "explore", "execute", "login", "doctor", "list_adapters"]
+__all__ = ["__version__", "ClanySite", "explore", "execute", "login", "doctor", "list_adapters", "verify"]

@@ -6,10 +6,11 @@
 用法示例::
 
     # 同步便捷函数
-    from cliany_site.sdk import explore, execute, doctor, list_adapters
+    from cliany_site.sdk import doctor, execute, explore, list_adapters, verify
 
     result = doctor()
     adapters = list_adapters()
+    verification = verify("github.com")
 
     # 异步上下文管理器
     from cliany_site.sdk import ClanySite
@@ -17,6 +18,7 @@
     async with ClanySite() as cs:
         result = await cs.explore("https://github.com", "搜索仓库")
         adapters = await cs.list_adapters()
+        verification = await cs.verify("github.com")
 """
 
 from __future__ import annotations
@@ -476,6 +478,36 @@ class ClanySite:
             }
         )
 
+    # ── verify ───────────────────────────────────────────
+
+    async def verify(self, domain: str) -> dict[str, Any]:
+        """严格静态验证一个已安装 adapter，不连接浏览器。"""
+        from cliany_site.commands.verify import _load_schema, _verify_single
+
+        cfg = get_config()
+        if not (cfg.adapters_dir / domain).exists():
+            return error_response(
+                "ADAPTER_NOT_FOUND",
+                f"adapter '{domain}' 不存在",
+                "请先运行 explore 生成 adapter，或安装已发布的 adapter 包。",
+                details={"domain": domain},
+            )
+
+        result = _verify_single(domain, _load_schema())
+        if result.get("verdict") != "ok":
+            return error_response(
+                "E_VERIFY_STATIC",
+                "严格 adapter 验证未通过。",
+                f"修复问题后重新运行 cliany-site verify {domain} --strict --json。",
+                details={
+                    "domain": domain,
+                    "results": [result],
+                    "failed_domains": [domain],
+                },
+            )
+
+        return success_response({"domain": domain, "results": [result]})
+
     # ── save_session ─────────────────────────────────────
 
     async def save_session(self, domain: str) -> dict[str, Any]:
@@ -693,5 +725,15 @@ def list_adapters(detail: bool = False) -> dict[str, Any]:
     async def _inner() -> dict[str, Any]:
         async with ClanySite() as cs:
             return await cs.list_adapters(detail=detail)
+
+    return _run_async(_inner())
+
+
+def verify(domain: str) -> dict[str, Any]:
+    """同步版: 严格静态验证一个已安装 adapter，不连接浏览器。"""
+
+    async def _inner() -> dict[str, Any]:
+        async with ClanySite() as cs:
+            return await cs.verify(domain)
 
     return _run_async(_inner())

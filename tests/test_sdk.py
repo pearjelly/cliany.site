@@ -272,6 +272,96 @@ class TestSDKListAdapters:
 
 
 # ═══════════════════════════════════════════════════════════
+# SDK — verify
+# ═══════════════════════════════════════════════════════════
+
+
+class TestSDKVerify:
+    @pytest.mark.asyncio
+    async def test_verify_valid_adapter_without_starting_browser(self, tmp_path):
+        from cliany_site.sdk import ClanySite
+
+        cfg = _make_config(tmp_path)
+        _create_adapter_with_actions(tmp_path)
+
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.commands.verify.get_config", return_value=cfg),
+            patch.object(ClanySite, "_ensure_browser_session", new_callable=AsyncMock) as ensure_browser,
+        ):
+            result = await ClanySite().verify("test.com")
+
+        assert result["success"] is True
+        assert result["data"]["results"][0]["verdict"] == "ok"
+        ensure_browser.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_verify_missing_adapter_is_not_found(self, tmp_path):
+        from cliany_site.sdk import ClanySite
+
+        cfg = _make_config(tmp_path)
+        with patch("cliany_site.sdk.get_config", return_value=cfg):
+            result = await ClanySite().verify("missing.example")
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "ADAPTER_NOT_FOUND"
+        assert result["error"]["details"] == {"domain": "missing.example"}
+
+    @pytest.mark.asyncio
+    async def test_verify_static_failure_keeps_cli_results_contract(self, tmp_path):
+        from cliany_site.sdk import ClanySite
+
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter_with_actions(tmp_path, "broken.example")
+        (adapter_dir / "commands.py").unlink()
+
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.commands.verify.get_config", return_value=cfg),
+            patch.object(ClanySite, "_ensure_browser_session", new_callable=AsyncMock) as ensure_browser,
+        ):
+            result = await ClanySite().verify("broken.example")
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_VERIFY_STATIC"
+        assert result["error"]["details"] == {
+            "domain": "broken.example",
+            "results": [
+                {
+                    "domain": "broken.example",
+                    "verdict": "commands_missing",
+                    "issues": ["commands.py 不存在"],
+                    "smoke": None,
+                }
+            ],
+            "failed_domains": ["broken.example"],
+        }
+        ensure_browser.assert_not_awaited()
+
+
+# ═══════════════════════════════════════════════════════════
+# SDK — 同步 verify 便捷函数
+# ═══════════════════════════════════════════════════════════
+
+
+class TestSDKVerifySync:
+    def test_verify_sync(self, tmp_path):
+        from cliany_site.sdk import verify
+
+        cfg = _make_config(tmp_path)
+        _create_adapter_with_actions(tmp_path)
+
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.commands.verify.get_config", return_value=cfg),
+        ):
+            result = verify("test.com")
+
+        assert result["success"] is True
+        assert result["data"]["results"][0]["verdict"] == "ok"
+
+
+# ═══════════════════════════════════════════════════════════
 # SDK — execute
 # ═══════════════════════════════════════════════════════════
 
@@ -877,6 +967,71 @@ class TestAPIServer:
                 assert data["success"] is True
 
     @pytest.mark.asyncio
+    async def test_verify_endpoint_requires_domain_without_calling_sdk(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        mock_sdk = AsyncMock()
+        server._sdk = mock_sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.get("/verify")
+            assert resp.status == 400
+            data = await resp.json()
+            assert data["error"]["code"] == "BAD_REQUEST"
+        mock_sdk.verify.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_verify_endpoint_returns_real_static_failure(self, tmp_path):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.sdk import ClanySite
+        from cliany_site.server import APIServer
+
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter_with_actions(tmp_path, "broken.example")
+        (adapter_dir / "commands.py").unlink()
+        server = APIServer()
+        server._sdk = ClanySite()
+        app = server._build_app()
+
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.commands.verify.get_config", return_value=cfg),
+        ):
+            async with TestClient(TestServer(app)) as client:
+                resp = await client.get("/verify?domain=broken.example")
+                assert resp.status == 422
+                data = await resp.json()
+
+        assert data["error"]["code"] == "E_VERIFY_STATIC"
+        assert data["error"]["details"]["results"][0]["verdict"] == "commands_missing"
+
+    @pytest.mark.asyncio
+    async def test_verify_endpoint_returns_not_found_for_missing_adapter(self, tmp_path):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.sdk import ClanySite
+        from cliany_site.server import APIServer
+
+        cfg = _make_config(tmp_path)
+        server = APIServer()
+        server._sdk = ClanySite()
+        app = server._build_app()
+
+        with patch("cliany_site.sdk.get_config", return_value=cfg):
+            async with TestClient(TestServer(app)) as client:
+                resp = await client.get("/verify?domain=missing.example")
+                assert resp.status == 404
+                data = await resp.json()
+
+        assert data["error"]["code"] == "ADAPTER_NOT_FOUND"
+        assert data["error"]["details"] == {"domain": "missing.example"}
+
+    @pytest.mark.asyncio
     async def test_doctor_endpoint(self, tmp_path):
         from aiohttp.test_utils import TestClient, TestServer
 
@@ -1283,7 +1438,7 @@ class TestServeCLI:
 
 class TestPackageExports:
     def test_public_api_importable(self):
-        from cliany_site import ClanySite, doctor, execute, explore, list_adapters, login
+        from cliany_site import ClanySite, doctor, execute, explore, list_adapters, login, verify
 
         assert ClanySite is not None
         assert callable(explore)
@@ -1291,6 +1446,7 @@ class TestPackageExports:
         assert callable(login)
         assert callable(doctor)
         assert callable(list_adapters)
+        assert callable(verify)
 
     def test_package_version_matches_installed_distribution(self):
         from importlib.metadata import version

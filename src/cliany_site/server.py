@@ -13,6 +13,7 @@
     GET  /health          — 健康检查
     GET  /doctor          — 环境诊断
     GET  /adapters        — 列出已安装 adapter
+    GET  /verify          — 严格静态验证一个 adapter
     POST /explore         — 探索工作流
     POST /execute         — 执行 adapter 命令
     POST /login           — 捕获 Session
@@ -78,6 +79,7 @@ class APIServer:
         app.router.add_get("/health", self._handle_health)
         app.router.add_get("/doctor", self._handle_doctor)
         app.router.add_get("/adapters", self._handle_list_adapters)
+        app.router.add_get("/verify", self._handle_verify)
         app.router.add_post("/explore", self._handle_explore)
         app.router.add_post("/execute", self._handle_execute)
         app.router.add_post("/login", self._handle_login)
@@ -148,6 +150,14 @@ class APIServer:
         sdk = await self._get_sdk()
         result = await sdk.list_adapters(detail=detail)
         return self._json_response(result)
+
+    async def _handle_verify(self, request: Request) -> Response:
+        domain = request.query.get("domain")
+        if not domain:
+            return self._json_response(self._bad_request("缺少 domain 查询参数"), status=400)
+        sdk = await self._get_sdk()
+        result = await sdk.verify(domain)
+        return self._json_response(result, status=self._result_status(result))
 
     async def _handle_explore(self, request: Request) -> Response:
         body, error_response = await self._read_json_object(request)
