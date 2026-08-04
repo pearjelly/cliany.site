@@ -89,6 +89,10 @@ def test_readmes_document_current_extract_quality_and_readiness():
         "README.md": "actual title and URL",
         "README.zh.md": "实际标题和 URL",
     }
+    expected_blank_row_terms = {
+        "README.md": "data.quality.field_blank_rows",
+        "README.zh.md": "data.quality.field_blank_rows",
+    }
     for filename in ("README.md", "README.zh.md"):
         text = (ROOT / filename).read_text(encoding="utf-8")
 
@@ -197,6 +201,7 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert expected_partial_terms[filename] in text
         assert expected_data_command_terms[filename] in text
         assert expected_unexpected_issue_terms[filename] in text
+        assert expected_blank_row_terms[filename] in text
         assert "extract` action" in text
         assert "not silently rewritten" in text or "不会静默改写" in text
 

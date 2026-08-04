@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Failed structured list and table extraction quality reports now include optional `data.quality.field_blank_rows`, mapping each missing or blank field to its 1-based result row numbers. Existing issues, quality gates, and successful extraction responses are unchanged, so users can identify the affected result item before correcting a field map or reviewing page content.
+
 ## [0.16.298] - 2026-08-04
 
 ### Added

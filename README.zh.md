@@ -247,7 +247,7 @@ cliany-site browser extract \
   --json
 ```
 
-结构化抽取响应会包含 `data.quality`。生成的 `list-`、`search-`、`read-` 和 `extract-` adapter 命令，以及包含 `extract` action 的任何命令，都会以这份摘要兑现读取语义。它们的 `expects_nonempty` 默认值为 `true`：零条数据、关键字段缺失和 partial 行都会返回 `E_EMPTY_RESULT`。只有零匹配本来就是合法结果时，命令才可声明 `expects_nonempty=false`；此时零匹配返回 `ok=true`，但仍保留 `data.quality` 作为机器可读的行数和数据质量信号。对某个命令重新运行 `explore` 会把该规则应用到新生成的代码，但不会静默改写已安装的旧 adapter。即使允许零匹配，关键字段缺失和关键字段部分缺失的 partial 结果仍然失败，让自动化能够区分“命令执行了”“预期没有匹配数据”和“数据需要复核”。
+结构化抽取响应会包含 `data.quality`。生成的 `list-`、`search-`、`read-` 和 `extract-` adapter 命令，以及包含 `extract` action 的任何命令，都会以这份摘要兑现读取语义。它们的 `expects_nonempty` 默认值为 `true`：零条数据、关键字段缺失和 partial 行都会返回 `E_EMPTY_RESULT`。只有零匹配本来就是合法结果时，命令才可声明 `expects_nonempty=false`；此时零匹配返回 `ok=true`，但仍保留 `data.quality` 作为机器可读的行数和数据质量信号。失败的结构化对象行还会在 `data.quality.field_blank_rows` 中按字段列出受影响的 1 起始行号，让用户无需猜测即可定位字段映射或页面内容问题。对某个命令重新运行 `explore` 会把该规则应用到新生成的代码，但不会静默改写已安装的旧 adapter。即使允许零匹配，关键字段缺失和关键字段部分缺失的 partial 结果仍然失败，让自动化能够区分“命令执行了”“预期没有匹配数据”和“数据需要复核”。
 
 ### 会话式探索（v0.8）
 
