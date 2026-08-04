@@ -30,13 +30,13 @@
 
 ## Active Demo Downloads
 
-四个 `active` 案例的首条 `commands` 已是可复制的 GitHub Release v0.14.1 HTTPS 安装命令，并固定对应 archive 的 SHA-256。先用下面命令查看并复制该案例的完整安装和 replay 路径；需要无写入预检时，在安装命令末尾追加 `--dry-run --json`。
+四个 `active` 案例的首条 `commands` 已是可复制的 GitHub Release v0.14.1 HTTPS 安装命令，并固定对应 archive 的 SHA-256。首次安装时用下面命令查看安全首跑路径：输出会按「固定 SHA-256 安装、`verify --strict`、仅在案例声明登录时登录、只读命令」的顺序展示。需要无写入预检时，在安装命令末尾追加 `--dry-run --json`。
 
 ```bash
-cliany-site cases --case-id suitecrm-accounts
+cliany-site cases --status active
 ```
 
-这些历史 demo asset 已验证可以被当前 `market install` 读取，但本目录不把第三方站点的实时可用性或在线 replay 结果当作永久承诺。
+这只是首次安装指南，不会安装、登录或执行命令；已存在同名 adapter 时，直接运行 `cliany-site verify <adapter_domain> --strict --json`，通过后再按案例需要登录或执行只读命令，不要把占用目录当作健康证明。`doctor` 仍可诊断环境，但不会按指定 case 选择快速路径。历史 demo asset 已验证可以被当前 `market install` 读取，但本目录不把第三方站点的实时可用性或在线 replay 结果当作永久承诺。
 
 ## Candidate Cases
 

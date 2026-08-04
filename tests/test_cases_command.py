@@ -5,7 +5,7 @@ from pathlib import Path
 from click.testing import CliRunner
 
 from cliany_site.cli import cli
-from cliany_site.commands.cases import _print_human_cases
+from cliany_site.commands.cases import _active_case_quickstart_commands, _print_human_cases
 
 DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = [
     "summary.ready_for_explore",
@@ -317,6 +317,86 @@ def test_cases_command_human_output_shows_first_commands(tmp_home):
     assert "cliany-site cases" in result.output
     assert "suitecrm-accounts" in result.output
     assert "cliany-site market install" in result.output
+    assert "首次安装后依次执行（严格校验通过后再运行只读命令）:" in result.output
+    suitecrm_verify = "cliany-site verify demo.suiteondemand.com --strict --json"
+    suitecrm_login = "cliany-site login https://demo.suiteondemand.com/"
+    suitecrm_read_only = "cliany-site demo.suiteondemand.com list-accounts --limit 5 --json"
+    assert suitecrm_verify in result.output
+    assert suitecrm_login in result.output
+    assert suitecrm_read_only in result.output
+    assert "cliany-site verify issues.apache.org --strict --json" in result.output
+
+
+def test_active_case_quickstart_requires_strict_verify_before_optional_login():
+    commands = _active_case_quickstart_commands(
+        {
+            "status": "active",
+            "adapter_domain": "example.com",
+            "commands": [
+                "cliany-site market install https://example.com/example.cliany-adapter.tar.gz --sha256 " + "a" * 64,
+                "cliany-site login https://example.com/",
+                "cliany-site example.com list-items --json",
+            ],
+        }
+    )
+
+    assert commands == [
+        "cliany-site market install https://example.com/example.cliany-adapter.tar.gz --sha256 " + "a" * 64,
+        "cliany-site verify example.com --strict --json",
+        "cliany-site login https://example.com/",
+        "cliany-site example.com list-items --json",
+    ]
+
+
+def test_active_case_quickstart_requires_a_fixed_sha256_install():
+    commands = _active_case_quickstart_commands(
+        {
+            "status": "active",
+            "adapter_domain": "example.com",
+            "commands": [
+                "cliany-site market install https://example.com/example.cliany-adapter.tar.gz",
+                "cliany-site example.com list-items --json",
+            ],
+        }
+    )
+
+    assert commands == []
+
+
+def test_active_case_quickstart_accepts_uppercase_equals_sha256_syntax():
+    commands = _active_case_quickstart_commands(
+        {
+            "status": "active",
+            "adapter_domain": "example.com",
+            "commands": [
+                "cliany-site market install https://example.com/example.cliany-adapter.tar.gz "
+                "--sha256=" + "A" * 64,
+                "cliany-site example.com list-items --json",
+            ],
+        }
+    )
+
+    assert commands[1:] == [
+        "cliany-site verify example.com --strict --json",
+        "cliany-site example.com list-items --json",
+    ]
+
+
+def test_active_case_quickstart_rejects_shell_control_tokens():
+    commands = _active_case_quickstart_commands(
+        {
+            "status": "active",
+            "adapter_domain": "example.com",
+            "commands": [
+                "cliany-site market install https://example.com/example.cliany-adapter.tar.gz --sha256 "
+                + "a" * 64
+                + " && echo unsafe",
+                "cliany-site example.com list-items --json",
+            ],
+        }
+    )
+
+    assert commands == []
 
 
 def test_cases_command_human_candidate_next_step_shows_primary_detail(tmp_home):

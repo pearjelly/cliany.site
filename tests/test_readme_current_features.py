@@ -57,6 +57,29 @@ def test_readmes_publish_copyable_active_demo_installs() -> None:
             assert sha256 in text
 
 
+def test_readmes_show_strict_verify_between_active_install_and_replay() -> None:
+    expected = {
+        "README.md": (
+            "cliany-site cases --status active",
+            "cliany-site verify demo.suiteondemand.com --strict --json",
+            "cliany-site verify issues.apache.org --strict --json",
+            "cliany-site verify cwiki.apache.org --strict --json",
+            "cliany-site verify builds.apache.org --strict --json",
+        ),
+        "README.zh.md": (
+            "cliany-site cases --status active",
+            "cliany-site verify demo.suiteondemand.com --strict --json",
+            "cliany-site verify issues.apache.org --strict --json",
+            "cliany-site verify cwiki.apache.org --strict --json",
+            "cliany-site verify builds.apache.org --strict --json",
+        ),
+    }
+    for filename, commands in expected.items():
+        text = (ROOT / filename).read_text(encoding="utf-8")
+        for command in commands:
+            assert command in text
+
+
 def test_readmes_document_doctor_recommended_demo_commands() -> None:
     expected_terms = {
         "README.md": ("demo_adapter_quickstart.recommended_commands", "verify --strict", "commands.py", "automatic overwrite"),

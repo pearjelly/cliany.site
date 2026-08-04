@@ -353,6 +353,33 @@ def test_cases_report_accepts_release_asset_install_command(tmp_path):
     assert report.ok is True
 
 
+def test_cases_report_accepts_uppercase_equals_sha256_active_install(tmp_path):
+    case = _case(domain="demo.example.com")
+    case["commands"][0] = (
+        "cliany-site market install https://github.com/example/project/releases/download/v0.1.0/"
+        "demo.example.com-0.1.0.cliany-adapter.tar.gz --sha256=" + "A" * 64
+    )
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is True
+
+
+def test_cases_report_rejects_active_remote_install_with_shell_control_token(tmp_path):
+    case = _case(domain="demo.example.com")
+    case["commands"][0] = (
+        "cliany-site market install https://github.com/example/project/releases/download/v0.1.0/"
+        "demo.example.com-0.1.0.cliany-adapter.tar.gz --sha256 " + "a" * 64 + " && echo unsafe"
+    )
+    _write_cases(tmp_path, [case])
+
+    report = validate_cases.build_report(tmp_path)
+
+    assert report.ok is False
+    assert "active remote install must be one fixed-SHA256 market install command" in report.cases[0].issues
+
+
 def test_cases_report_rejects_adapter_command_domain_mismatch(tmp_path):
     case = _case(domain="demo.example.com")
     case["commands"][1] = "cliany-site other.example.com list-items --json"

@@ -21,7 +21,7 @@ cliany-site doctor
 cliany-site cases
 ```
 
-`doctor` 会给出适合人的下一步建议；`cases` 会列出维护中的公开案例及其当前验证路径，让你在配置 LLM 前先了解真实案例。想查看案例，请继续阅读 [10 分钟成功路径](docs/quickstart-10min.md)；准备自动化自己的站点时，再配置 Chrome/CDP 与 LLM。
+`doctor` 会给出适合人的下一步建议；`cases` 会列出维护中的公开案例及其当前验证路径，让你在配置 LLM 前先了解真实案例。`cliany-site cases --status active` 会按「固定 SHA 安装、`verify --strict`、仅在案例声明登录时登录、只读命令」给出安全首跑顺序。想查看案例，请继续阅读 [10 分钟成功路径](docs/quickstart-10min.md)；准备自动化自己的站点时，再配置 Chrome/CDP 与 LLM。
 
 ### 告诉我们结果
 
@@ -306,28 +306,34 @@ candidate 的 human 输出会把未来 adapter 命令标记为“当前不可运
 # 1. 安装适配器
 cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/demo.suiteondemand.com-0.14.1.cliany-adapter.tar.gz --sha256 1671dd92d3828cecb1f04f41eefceb7bdc727d0dee1f35d4f14ca360432ced31
 
-# 2. 登录 (会打开浏览器 — 请使用 https://demo.suiteondemand.com/ 提供的 demo 账号)
+# 2. 在登录或回放前严格校验已安装的 adapter
+cliany-site verify demo.suiteondemand.com --strict --json
+
+# 3. 登录 (会打开浏览器 — 请使用 https://demo.suiteondemand.com/ 提供的 demo 账号)
 cliany-site login https://demo.suiteondemand.com/
 
-# 3. 查询账户 (登录后无需开启浏览器)
+# 4. 查询账户 (登录后无需开启浏览器)
 cliany-site demo.suiteondemand.com list-accounts --limit 5 --json
 ```
 
 ### ASF Jira (任务追踪)
 ```bash
 cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/issues.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 ad5867d361f372914c536fb59c8f26837af96ed407859cf69dc8464922f05319
+cliany-site verify issues.apache.org --strict --json
 cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json
 ```
 
 ### ASF Confluence (Wiki)
 ```bash
 cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/cwiki.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa
+cliany-site verify cwiki.apache.org --strict --json
 cliany-site cwiki.apache.org search-pages --space SPARK --query "release" --json
 ```
 
 ### ASF Jenkins (构建状态)
 ```bash
 cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/builds.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 b09710acbabfb5465a6e04b5b140a4ffa4aa24795a2b4ada60eeabbddddea0c2
+cliany-site verify builds.apache.org --strict --json
 cliany-site builds.apache.org list-jobs --json
 ```
 

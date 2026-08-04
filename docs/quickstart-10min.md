@@ -59,10 +59,10 @@ cliany-site doctor --json
 ### 3. 查看维护中的案例
 
 ```bash
-cliany-site cases
+cliany-site cases --status active
 ```
 
-这个命令会列出维护中的公开案例、状态和各案例当前的验证路径。先选择一个你关心的案例；需要机器可读输出时，可使用：
+这个命令会列出维护中的公开案例、状态和各案例当前的验证路径。human 输出会按「固定 SHA-256 安装、`verify --strict`、仅在案例声明登录时登录、只读命令」展示安全首跑顺序；它只给出指导，不会自动执行这些命令。已存在同名 adapter 时，直接运行 `cliany-site verify <adapter_domain> --strict --json`，不要重复安装或把占用目录当作健康证明。`doctor` 可诊断环境，但不会按指定 case 选择快速路径。先选择一个你关心的案例；需要机器可读输出时，可使用：
 
 ```bash
 cliany-site cases --json
@@ -70,7 +70,7 @@ cliany-site cases --json
 
 预期结果：
 
-- 终端会显示案例库及每个案例的首条命令。
+- 终端会显示案例库和 active 案例的安全首跑顺序。
 - `--json` 输出是 `{ok, data, error, meta}` JSON envelope；`ok=true` 时，`data` 中包含案例和验证信息。
 - 以当前 `cases` 输出为准，不要从历史文档复制旧的发布归档文件名。
 

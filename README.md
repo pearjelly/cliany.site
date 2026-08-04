@@ -21,7 +21,7 @@ cliany-site doctor
 cliany-site cases
 ```
 
-`doctor` gives you a human-readable next step. `cases` lists maintained public cases and their current verification paths, so you can understand a real example before configuring an LLM. Follow the [10-minute success path](docs/quickstart-10min.md) to review a case, or configure Chrome/CDP and an LLM when you are ready to generate a command for your own site.
+`doctor` gives you a human-readable next step. `cases` lists maintained public cases and their current verification paths, so you can understand a real example before configuring an LLM. `cliany-site cases --status active` renders a safe first-run order: fixed-SHA install, `verify --strict`, case-declared login only when needed, then the read-only command. Follow the [10-minute success path](docs/quickstart-10min.md) to review a case, or configure Chrome/CDP and an LLM when you are ready to generate a command for your own site.
 
 ### Tell us what happened
 
@@ -316,28 +316,34 @@ To keep already-open candidate issues aligned with the current strict handoff, r
 # 1. Install adapter
 cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/demo.suiteondemand.com-0.14.1.cliany-adapter.tar.gz --sha256 1671dd92d3828cecb1f04f41eefceb7bdc727d0dee1f35d4f14ca360432ced31
 
-# 2. Login (opens browser — use demo account from https://demo.suiteondemand.com/)
+# 2. Strictly verify the installed adapter before login or replay
+cliany-site verify demo.suiteondemand.com --strict --json
+
+# 3. Login (opens browser — use demo account from https://demo.suiteondemand.com/)
 cliany-site login https://demo.suiteondemand.com/
 
-# 3. Query accounts (no browser needed after login)
+# 4. Query accounts (no browser needed after login)
 cliany-site demo.suiteondemand.com list-accounts --limit 5 --json
 ```
 
 ### ASF Jira (Issue Tracker)
 ```bash
 cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/issues.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 ad5867d361f372914c536fb59c8f26837af96ed407859cf69dc8464922f05319
+cliany-site verify issues.apache.org --strict --json
 cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json
 ```
 
 ### ASF Confluence (Wiki)
 ```bash
 cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/cwiki.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa
+cliany-site verify cwiki.apache.org --strict --json
 cliany-site cwiki.apache.org search-pages --space SPARK --query "release" --json
 ```
 
 ### ASF Jenkins (Build Status)
 ```bash
 cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/builds.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 b09710acbabfb5465a6e04b5b140a4ffa4aa24795a2b4ada60eeabbddddea0c2
+cliany-site verify builds.apache.org --strict --json
 cliany-site builds.apache.org list-jobs --json
 ```
 

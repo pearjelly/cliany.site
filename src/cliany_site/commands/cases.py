@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import shlex
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -108,6 +109,9 @@ DOCTOR_PREFLIGHT_STATE_FIELDS = (
 )
 DOCTOR_PREFLIGHT_STATE_STATUSES = ("ready", "blocked", "missing_fields")
 NAMED_LIST_SELECTOR_RE = re.compile(r'^(?P<field>\w+)\[name="(?P<name>[^"]+)"\]$')
+FIXED_SHA256_RE = re.compile(r"[a-fA-F0-9]{64}")
+ACTIVE_INSTALL_OPTION_FLAGS = {"--force", "--dry-run", "--json"}
+SHELL_CONTROL_TOKENS = (";", "&", "|", "`", "$", "\n", "\r")
 MISSING_DOCTOR_SELECTOR_VALUE = object()
 READY_PREFLIGHT_NEXT_ACTION = (
     "Run the candidate explore command, then package the adapter and attach the package path or release asset name."
@@ -1729,6 +1733,66 @@ def _candidate_next_command(case: dict[str, Any]) -> str:
     return str(case.get("next_command") or LLM_LIVE_PREFLIGHT_COMMAND)
 
 
+def _is_fixed_sha256_active_install(command: str) -> bool:
+    if any(token in command for token in SHELL_CONTROL_TOKENS):
+        return False
+    try:
+        parts = shlex.split(command)
+    except ValueError:
+        return False
+    if len(parts) < 5 or parts[:3] != ["cliany-site", "market", "install"] or not parts[3].startswith("https://"):
+        return False
+
+    sha256_values: list[str] = []
+    index = 4
+    while index < len(parts):
+        part = parts[index]
+        if part == "--sha256":
+            index += 1
+            if index >= len(parts):
+                return False
+            sha256_values.append(parts[index])
+        elif part.startswith("--sha256="):
+            sha256_values.append(part.removeprefix("--sha256="))
+        elif part not in ACTIVE_INSTALL_OPTION_FLAGS:
+            return False
+        index += 1
+
+    return len(sha256_values) == 1 and bool(FIXED_SHA256_RE.fullmatch(sha256_values[0]))
+
+
+def _active_case_quickstart_commands(case: dict[str, Any]) -> list[str]:
+    if case.get("status") != "active":
+        return []
+
+    raw_commands = case.get("commands")
+    command_strings = [str(command) for command in raw_commands] if isinstance(raw_commands, list) else []
+    adapter_domain = str(case.get("adapter_domain") or "")
+    install_command = next(
+        (command for command in command_strings if command.startswith("cliany-site market install https://")),
+        "",
+    )
+    read_only_command = next(
+        (command for command in command_strings if command.startswith(f"cliany-site {adapter_domain} ")),
+        "",
+    )
+    if (
+        not install_command
+        or not _is_fixed_sha256_active_install(install_command)
+        or not adapter_domain
+        or not read_only_command
+    ):
+        return []
+
+    login_commands = [command for command in command_strings if command.startswith("cliany-site login ")]
+    return [
+        install_command,
+        f"cliany-site verify {adapter_domain} --strict --json",
+        *login_commands,
+        read_only_command,
+    ]
+
+
 def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
     from rich.console import Console
     from rich.table import Table
@@ -1762,12 +1826,16 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
     for case in cases:
         commands = case.get("commands") if isinstance(case.get("commands"), list) else []
         next_command = _candidate_next_command(case)
+        active_quickstart_commands = _active_case_quickstart_commands(case)
+        first_command = next_command or (
+            active_quickstart_commands[0] if active_quickstart_commands else (str(commands[0]) if commands else "-")
+        )
         table.add_row(
             str(case.get("id") or ""),
             str(case.get("status") or ""),
             str(case.get("category") or ""),
             str(case.get("adapter_domain") or "-"),
-            next_command or (str(commands[0]) if commands else "-"),
+            first_command,
         )
     console.print(table)
 
@@ -1832,6 +1900,14 @@ def _print_human_cases(data: dict[str, Any], *, detail: bool) -> None:
                     if command not in displayed_commands:
                         console.print(f"  {command}")
             continue
+        active_quickstart_commands = _active_case_quickstart_commands(case)
+        if active_quickstart_commands:
+            console.print("  首次安装后依次执行（严格校验通过后再运行只读命令）:")
+            for command in active_quickstart_commands:
+                console.print(f"  {command}", soft_wrap=True)
+            continue
+        if case.get("status") == "active" and commands:
+            console.print("  active 案例命令不完整；不显示安全首跑路径，请检查 cases/manifest.json:")
         command_lines = commands if detail else commands[:1]
         for command in command_lines:
             console.print(f"  {command}")

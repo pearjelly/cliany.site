@@ -18,6 +18,9 @@ from urllib.parse import unquote
 ROOT = Path(__file__).resolve().parents[1]
 ALLOWED_STATUSES = {"active", "candidate", "degraded", "known-gap", "retired"}
 INSTALL_RE = re.compile(r"^cliany-site market install (?P<path>\S+)")
+FIXED_SHA256_RE = re.compile(r"[a-fA-F0-9]{64}")
+ACTIVE_INSTALL_OPTION_FLAGS = {"--force", "--dry-run", "--json"}
+SHELL_CONTROL_TOKENS = (";", "&", "|", "`", "$", "\n", "\r")
 REQUIRED_PACKAGE_FILES = {"commands.py", "metadata.json"}
 PACKAGE_EXTENSION = ".cliany-adapter.tar.gz"
 PROMOTION_FIELDS = ("adapter_package", "metadata_validation", "online_smoke")
@@ -241,6 +244,34 @@ def _install_package_name(case: dict[str, Any]) -> str | None:
         if match:
             return Path(match.group("path")).name
     return None
+
+
+def _is_fixed_sha256_active_install(command: str) -> bool:
+    if any(token in command for token in SHELL_CONTROL_TOKENS):
+        return False
+    try:
+        parts = shlex.split(command)
+    except ValueError:
+        return False
+    if len(parts) < 5 or parts[:3] != ["cliany-site", "market", "install"] or not parts[3].startswith("https://"):
+        return False
+
+    sha256_values: list[str] = []
+    index = 4
+    while index < len(parts):
+        part = parts[index]
+        if part == "--sha256":
+            index += 1
+            if index >= len(parts):
+                return False
+            sha256_values.append(parts[index])
+        elif part.startswith("--sha256="):
+            sha256_values.append(part.removeprefix("--sha256="))
+        elif part not in ACTIVE_INSTALL_OPTION_FLAGS:
+            return False
+        index += 1
+
+    return len(sha256_values) == 1 and bool(FIXED_SHA256_RE.fullmatch(sha256_values[0]))
 
 
 def _matches_adapter_package_domain(package_name: str, adapter_domain: str) -> bool:
@@ -733,6 +764,12 @@ def _check_case(
             check.issues.append("active case requires commands")
         if not example_output:
             check.issues.append("active case requires example_output")
+        for command in commands:
+            command_text = str(command)
+            if command_text.startswith("cliany-site market install https://") and not _is_fixed_sha256_active_install(
+                command_text
+            ):
+                check.issues.append("active remote install must be one fixed-SHA256 market install command")
         for command in commands:
             if not str(command).startswith("cliany-site "):
                 check.issues.append(f"command must start with cliany-site: {command}")
