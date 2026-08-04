@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-08-04
-- **Current baseline:** v0.16.299
+- **Current baseline:** v0.16.300
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -18,6 +18,8 @@ cliany-site turns real browser workflows into reusable CLI commands. The Q3 road
 ## Near Term: 2026-07-29 to 2026-08-05
 
 The next focus is turning candidate real-world cases into verified active demos.
+
+As of v0.16.300, the cadence report exposes `daily_release_capacity_remaining` separately from `daily_release_limit_ok`: an exactly full `3/3` day still has a valid current count but zero capacity for a new tag, and its next action says to wait until tomorrow. This makes the daily cap decision explicit for maintainers and release automation.
 
 As of 2026-07-29, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 

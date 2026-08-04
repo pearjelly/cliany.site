@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.300] - 2026-08-04
+
+### Added
+
+- `scripts/check_release_cadence.py --json` now reports `daily_release_capacity_remaining` separately from `daily_release_limit_ok`. At the exact daily cap, the count remains valid while capacity is `0` and the next action explicitly defers new tags until the next day, preventing release automation from treating an equal count as permission to create a fourth tag.
+
 ## [0.16.299] - 2026-08-04
 
 ### Added
@@ -2766,7 +2772,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.299...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.300...HEAD
+[0.16.300]: https://github.com/pearjelly/cliany.site/compare/v0.16.299...v0.16.300
 [0.16.299]: https://github.com/pearjelly/cliany.site/compare/v0.16.298...v0.16.299
 [0.16.298]: https://github.com/pearjelly/cliany.site/compare/v0.16.297...v0.16.298
 [0.16.297]: https://github.com/pearjelly/cliany.site/compare/v0.16.296...v0.16.297
