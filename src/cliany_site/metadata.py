@@ -21,6 +21,9 @@ def load_metadata(source: str | Path | dict) -> dict:
         except (json.JSONDecodeError, OSError) as e:
             raise MetadataParseError(f"Failed to parse metadata.json: {e}") from e
 
+    if not isinstance(metadata, dict):
+        raise MetadataParseError("metadata.json 必须是 JSON object")
+
     schema_version = metadata.get("schema_version")
     if schema_version is None or schema_version in (1, 2, "1", "2", ""):
         raise LegacyMetadataError(f"Legacy metadata schema version: {schema_version}")
@@ -29,4 +32,3 @@ def load_metadata(source: str | Path | dict) -> dict:
         raise MetadataParseError(f"Unsupported schema version: {schema_version}")
 
     return cast(dict[str, Any], metadata)
-

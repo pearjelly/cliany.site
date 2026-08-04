@@ -118,6 +118,20 @@ def test_legacy_v1_skipped(tmp_path):
     assert domain not in discovered
 
 
+def test_non_object_metadata_skipped(tmp_path):
+    from cliany_site.loader import LazyAdapterRegistry
+
+    adapters_dir = tmp_path / "adapters"
+    domain = "bad-metadata.local"
+    adapter_dir = adapters_dir / domain
+    adapter_dir.mkdir(parents=True)
+    (adapter_dir / "metadata.json").write_text("[]", encoding="utf-8")
+
+    registry = LazyAdapterRegistry(adapters_dir)
+
+    assert registry.discover() == {}
+
+
 def test_discover_caches_result(tmp_path):
     from cliany_site.loader import LazyAdapterRegistry
 

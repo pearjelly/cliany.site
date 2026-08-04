@@ -218,6 +218,111 @@ class TestRootJsonErrorEnvelope:
         assert data["error"]["code"] == "E_INVALID_PARAM"
         assert "success" not in data
 
+    def test_unloadable_adapter_uses_static_verification_error(self, tmp_home, no_llm):
+        """存在但无法注册的 adapter 必须返回可执行的静态校验提示。"""
+        from cliany_site.config import get_config
+        from cliany_site.loader import register_adapters
+
+        domain = "not-a-group.local"
+        adapter_dir = get_config().adapters_dir / domain
+        adapter_dir.mkdir(parents=True)
+        (adapter_dir / "metadata.json").write_text(
+            json.dumps({"schema_version": 3, "domain": domain, "commands": []}),
+            encoding="utf-8",
+        )
+        (adapter_dir / "commands.py").write_text(
+            "import click\n\ncli = click.Command('not-a-group')\n",
+            encoding="utf-8",
+        )
+
+        previous_errors = dict(getattr(cli, "_adapter_load_errors", {}))
+        try:
+            registration = register_adapters(cli)
+            cli.set_adapter_load_errors(registration["adapter_load_errors"])
+
+            runner = CliRunner()
+            json_result = runner.invoke(cli, ["--json", domain, "search"])
+            assert json_result.exit_code == 1
+            data = json.loads(json_result.output)
+            assert data["ok"] is False
+            assert data["error"]["code"] == "E_VERIFY_STATIC"
+            assert data["error"]["details"] == {
+                "domain": domain,
+                "verdict": "commands_unloadable",
+                "reason": "commands.py 必须导出 click.Group 类型的 cli",
+            }
+            assert data["error"]["hint"] == (
+                f"运行 cliany-site verify {domain} --strict --json 查看并修复静态校验失败。"
+            )
+
+            human_result = runner.invoke(cli, [domain, "search"])
+            assert human_result.exit_code == 1
+            assert "E_VERIFY_STATIC" in human_result.output
+            assert f"verify {domain} --strict --json" in human_result.output
+        finally:
+            cli.set_adapter_load_errors(previous_errors)
+
+    def test_adapter_missing_commands_uses_static_verification_error(self, tmp_home, no_llm):
+        """存在 metadata 但缺失 commands.py 的 adapter 必须保留 commands_missing verdict。"""
+        from cliany_site.config import get_config
+        from cliany_site.loader import register_adapters
+
+        domain = "missing-commands.local"
+        adapter_dir = get_config().adapters_dir / domain
+        adapter_dir.mkdir(parents=True)
+        (adapter_dir / "metadata.json").write_text(
+            json.dumps({"schema_version": 3, "domain": domain, "commands": []}),
+            encoding="utf-8",
+        )
+
+        previous_errors = dict(getattr(cli, "_adapter_load_errors", {}))
+        try:
+            registration = register_adapters(cli)
+            cli.set_adapter_load_errors(registration["adapter_load_errors"])
+
+            result = CliRunner().invoke(cli, ["--json", domain, "search"])
+            assert result.exit_code == 1
+            data = json.loads(result.output)
+            assert data["error"]["code"] == "E_VERIFY_STATIC"
+            assert data["error"]["details"] == {
+                "domain": domain,
+                "verdict": "commands_missing",
+                "reason": "commands.py 不存在",
+            }
+        finally:
+            cli.set_adapter_load_errors(previous_errors)
+
+    def test_schema_rejected_adapter_uses_static_verification_error(self, tmp_home, no_llm):
+        """非对象 metadata 不得阻断 CLI 启动，且必须返回可定位的静态错误。"""
+        from cliany_site.config import get_config
+        from cliany_site.loader import register_adapters
+
+        domain = "bad-metadata.local"
+        adapter_dir = get_config().adapters_dir / domain
+        adapter_dir.mkdir(parents=True)
+        (adapter_dir / "metadata.json").write_text("[]", encoding="utf-8")
+        (adapter_dir / "commands.py").write_text(
+            "import click\n\n@click.group()\ndef cli():\n    pass\n",
+            encoding="utf-8",
+        )
+
+        previous_errors = dict(getattr(cli, "_adapter_load_errors", {}))
+        try:
+            registration = register_adapters(cli)
+            cli.set_adapter_load_errors(registration["adapter_load_errors"])
+
+            result = CliRunner().invoke(cli, ["--json", domain, "search"])
+            assert result.exit_code == 1
+            data = json.loads(result.output)
+            assert data["error"]["code"] == "E_VERIFY_STATIC"
+            assert data["error"]["details"] == {
+                "domain": domain,
+                "verdict": "schema_error",
+                "reason": "metadata.json 必须是 JSON object",
+            }
+        finally:
+            cli.set_adapter_load_errors(previous_errors)
+
     def test_invalid_option_error_code_is_e_invalid_param(self):
         """UsageError 的 code 必须是 E_INVALID_PARAM"""
         runner = CliRunner()

@@ -84,12 +84,42 @@ def test_register_adapters_skips_command_module_without_click_group(tmp_home, no
     )
 
     main_cli = click.Group("test")
-    register_adapters(main_cli)
+    result = register_adapters(main_cli)
     loaded, reason = load_adapter_with_error(domain)
 
     assert domain not in main_cli.commands
     assert loaded is None
     assert reason == "commands.py 必须导出 click.Group 类型的 cli"
+    assert result["adapter_load_errors"] == {
+        domain: {
+            "verdict": "commands_unloadable",
+            "reason": "commands.py 必须导出 click.Group 类型的 cli",
+        }
+    }
+
+
+def test_register_adapters_reports_unsupported_metadata_schema(tmp_home, no_llm):
+    from cliany_site.config import get_config
+    from cliany_site.loader import register_adapters
+
+    domain = "unsupported-schema.local"
+    adapters_dir = get_config().adapters_dir
+    _make_adapter(
+        adapters_dir,
+        domain,
+        _V2_METADATA | {"domain": domain, "schema_version": 4},
+    )
+
+    main_cli = click.Group("test")
+    result = register_adapters(main_cli)
+
+    assert domain not in main_cli.commands
+    assert result["adapter_load_errors"] == {
+        domain: {
+            "verdict": "schema_error",
+            "reason": "Unsupported schema version: 4",
+        }
+    }
 
 
 def test_list_legacy_returns_domain(tmp_home, no_llm):

@@ -8,7 +8,7 @@ import sys
 import tempfile
 import threading
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, TypedDict, cast
 
 import click
 import portalocker
@@ -23,6 +23,11 @@ from cliany_site.metadata import (  # type: ignore[reportUnknownVariableType]  #
 )
 
 logger = logging.getLogger(__name__)
+
+
+class AdapterLoadDiagnostic(TypedDict):
+    verdict: str
+    reason: str
 
 
 def discover_adapters(include_legacy: bool = False) -> list[dict[str, Any]]:
@@ -47,7 +52,9 @@ def discover_adapters(include_legacy: bool = False) -> list[dict[str, Any]]:
         metadata_path = adapter_dir / "metadata.json"
         if metadata_path.exists():
             with contextlib.suppress(json.JSONDecodeError, OSError):
-                metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+                parsed_metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+                if isinstance(parsed_metadata, dict):
+                    metadata = parsed_metadata
 
         schema_version: Any = metadata.get("schema_version", "")
         needs_migration: bool = schema_version != METADATA_SCHEMA_VERSION
@@ -112,9 +119,45 @@ def load_adapter(domain: str) -> click.Group | None:
     return cli_group
 
 
+def _adapter_load_diagnostics() -> dict[str, AdapterLoadDiagnostic]:
+    """Find installed adapters that cannot pass the loader's static prerequisites."""
+    adapters_dir = get_config().adapters_dir
+    diagnostics: dict[str, AdapterLoadDiagnostic] = {}
+    if not adapters_dir.exists():
+        return diagnostics
+
+    for adapter_dir in sorted(adapters_dir.iterdir()):
+        if not adapter_dir.is_dir():
+            continue
+        metadata_path = adapter_dir / "metadata.json"
+        if not metadata_path.exists():
+            continue
+        try:
+            load_metadata(metadata_path)
+        except LegacyMetadataError:
+            continue
+        except MetadataParseError as exc:
+            diagnostics[adapter_dir.name] = {
+                "verdict": "schema_error",
+                "reason": str(exc),
+            }
+            continue
+
+        commands_py = adapter_dir / "commands.py"
+        if commands_py.is_file():
+            continue
+        diagnostics[adapter_dir.name] = {
+            "verdict": "commands_missing",
+            "reason": "commands.py 不是可加载的普通文件" if commands_py.exists() else "commands.py 不存在",
+        }
+
+    return diagnostics
+
+
 def register_adapters(main_cli: click.Group) -> dict[str, Any]:
-    """将所有已安装 adapter 的命令组注册到主 CLI，返回含 legacy_adapters 的结果字典"""
+    """注册 adapter，并保留未加载 current-schema adapter 的用户诊断。"""
     legacy_adapters: list[str] = []
+    adapter_load_errors = _adapter_load_diagnostics()
 
     for adapter_info in discover_adapters(include_legacy=True):
         domain = adapter_info["domain"]
@@ -134,13 +177,25 @@ def register_adapters(main_cli: click.Group) -> dict[str, Any]:
             continue
 
         try:
-            group = load_adapter(domain)
+            group, load_error = load_adapter_with_error(domain)
             if group is not None:
                 group.name = domain
                 main_cli.add_command(group, name=domain)
                 logger.debug("已注册 adapter: %s", domain)
+            elif load_error:
+                adapter_load_errors.setdefault(
+                    domain,
+                    {
+                        "verdict": "commands_unloadable",
+                        "reason": load_error,
+                    },
+                )
         except (ImportError, SyntaxError, OSError) as exc:
             logger.warning("注册 adapter '%s' 失败: %s", domain, exc)
+            adapter_load_errors[domain] = {
+                "verdict": "commands_unloadable",
+                "reason": f"commands.py 加载失败 ({type(exc).__name__})",
+            }
 
     if legacy_adapters:
         n = len(legacy_adapters)
@@ -149,7 +204,10 @@ def register_adapters(main_cli: click.Group) -> dict[str, Any]:
             file=sys.stderr,
         )
 
-    return {"legacy_adapters": legacy_adapters}
+    return {
+        "legacy_adapters": legacy_adapters,
+        "adapter_load_errors": adapter_load_errors,
+    }
 
 
 class LazyAdapterRegistry:
@@ -177,9 +235,12 @@ class LazyAdapterRegistry:
                 if not metadata_path.exists():
                     continue
                 try:
-                    metadata: dict[str, Any] = json.loads(metadata_path.read_text(encoding="utf-8"))
+                    parsed_metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
                 except (json.JSONDecodeError, OSError):
                     continue
+                if not isinstance(parsed_metadata, dict):
+                    continue
+                metadata: dict[str, Any] = parsed_metadata
                 if metadata.get("schema_version") != METADATA_SCHEMA_VERSION:
                     continue
                 self._discovered[adapter_dir.name] = metadata

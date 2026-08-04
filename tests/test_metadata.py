@@ -39,6 +39,14 @@ class TestLoadMetadata:
         with pytest.raises(MetadataParseError):
             load_metadata(metadata_path)
 
+    def test_non_object_json_raises_parse_error(self, tmp_path):
+        """metadata 必须是 JSON object，不能是数组或标量。"""
+        metadata_path = tmp_path / "metadata.json"
+        metadata_path.write_text("[]", encoding="utf-8")
+
+        with pytest.raises(MetadataParseError, match="JSON object"):
+            load_metadata(metadata_path)
+
     def test_missing_file_raises_parse_error(self, tmp_path):
         """文件不存在 → 抛 MetadataParseError"""
         metadata_path = tmp_path / "nonexistent.json"

@@ -40,7 +40,27 @@ def _is_json_mode(args: list[str] | None) -> bool:
     return "--json" in argv
 
 
+class AdapterStaticVerificationError(click.ClickException):
+    def __init__(self, domain: str, diagnostic: dict[str, str]) -> None:
+        self.domain = domain
+        self.diagnostic = diagnostic
+        super().__init__(f"适配器 '{domain}' 无法加载：{diagnostic['reason']}")
+
+
 def _build_click_error(exc: click.ClickException) -> Envelope:
+    if isinstance(exc, AdapterStaticVerificationError):
+        return envelope_err(
+            command=f"cliany-site {exc.domain}",
+            code=ErrorCode.E_VERIFY_STATIC,
+            message=str(exc),
+            hint=f"运行 cliany-site verify {exc.domain} --strict --json 查看并修复静态校验失败。",
+            details={
+                "domain": exc.domain,
+                "verdict": exc.diagnostic["verdict"],
+                "reason": exc.diagnostic["reason"],
+            },
+        )
+
     message = str(exc)
     ctx = getattr(exc, "ctx", None)
     command = ctx.command_path if ctx is not None else "cli"
@@ -68,13 +88,28 @@ def _render_error(exc: Exception, json_mode: bool) -> None:
         print_response(response, json_mode=True, exit_on_error=False)
         return
 
-    if isinstance(exc, click.ClickException):
+    if isinstance(exc, AdapterStaticVerificationError):
+        print_response(_build_click_error(exc), json_mode=False, exit_on_error=False)
+    elif isinstance(exc, click.ClickException):
         exc.show(file=sys.stderr)
     else:
         click.echo(f"Error: {exc}", err=True)
 
 
 class SafeGroup(click.Group):
+    def set_adapter_load_errors(self, errors: dict[str, dict[str, str]]) -> None:
+        self._adapter_load_errors = {domain: dict(diagnostic) for domain, diagnostic in errors.items()}
+
+    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
+        command = super().get_command(ctx, cmd_name)
+        if command is not None:
+            return command
+
+        diagnostic = getattr(self, "_adapter_load_errors", {}).get(cmd_name)
+        if diagnostic is not None:
+            raise AdapterStaticVerificationError(cmd_name, diagnostic)
+        return None
+
     def invoke(self, ctx: click.Context) -> object:
         args = [*ctx._protected_args, *ctx.args]
         option_args = args[2:]
@@ -252,7 +287,8 @@ cli.add_command(adapter_group)
 
 from cliany_site.loader import register_adapters
 
-register_adapters(cli)
+adapter_registration = register_adapters(cli)
+cli.set_adapter_load_errors(adapter_registration["adapter_load_errors"])
 
 from cliany_site.commands.migrate import migrate_cmd
 
