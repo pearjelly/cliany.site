@@ -12903,3 +12903,40 @@ def test_v016303_release_draft_prepares_sdk_static_adapter_errors() -> None:
         "live LLM provider",
     ]:
         assert snippet in notes
+
+
+def test_v016304_release_draft_prepares_sdk_verify_contract() -> None:
+    draft = (ROOT / "docs" / "releases" / "v0.16.304-draft.md").read_text(encoding="utf-8")
+    notes = (ROOT / "docs" / "releases" / "v0.16.304-github-release.md").read_text(
+        encoding="utf-8"
+    )
+
+    for snippet in [
+        "# v0.16.304 发布草案",
+        "**目标版本：** `0.16.304`",
+        "**提交范围：** `v0.16.303..HEAD`",
+        "**提交范围：** `v0.16.304..HEAD`",
+        "ClanySite.verify(domain)",
+        "GET /verify?domain=<domain>",
+        "E_INVALID_PARAM",
+        "llm_live_preflight_not_ready",
+        "不运行 candidate `explore`",
+        "release_readiness.py --strict --target-version 0.16.304 --remote",
+        "git tag v0.16.304",
+        "release_readiness.py --strict --release-tag v0.16.304 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.304",
+        "ClanySite.verify(domain)",
+        "GET /verify?domain=<domain>",
+        "E_INVALID_PARAM",
+        "## Compatibility",
+        "## Trust Boundaries",
+        "live LLM provider",
+        "only verify adapters that are already installed and trusted",
+    ]:
+        assert snippet in notes
