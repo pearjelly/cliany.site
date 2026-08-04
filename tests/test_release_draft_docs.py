@@ -12788,3 +12788,39 @@ def test_v016300_release_draft_tracks_daily_release_capacity() -> None:
         "live LLM provider",
     ]:
         assert snippet in notes
+
+
+def test_v016301_release_draft_prepares_unloadable_adapter_diagnostics() -> None:
+    draft = (ROOT / "docs" / "releases" / "v0.16.301-draft.md").read_text(encoding="utf-8")
+    notes = (ROOT / "docs" / "releases" / "v0.16.301-github-release.md").read_text(
+        encoding="utf-8"
+    )
+
+    for snippet in [
+        "# v0.16.301 发布草案",
+        "**目标版本：** `0.16.301`",
+        "**提交范围：** `v0.16.300..HEAD`",
+        "**提交范围：** `v0.16.301..HEAD`",
+        "E_VERIFY_STATIC",
+        "commands_missing",
+        "commands_unloadable",
+        "llm_live_preflight_not_ready",
+        "不运行 candidate `explore`",
+        "release_readiness.py --strict --target-version 0.16.301 --remote",
+        "git tag v0.16.301",
+        "release_readiness.py --strict --release-tag v0.16.301 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.301",
+        "E_VERIFY_STATIC",
+        "cliany-site verify <domain> --strict --json",
+        "## Compatibility",
+        "## Trust Boundaries",
+        "live LLM provider",
+        "candidate adapter package",
+    ]:
+        assert snippet in notes
