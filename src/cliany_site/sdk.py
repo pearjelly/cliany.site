@@ -238,6 +238,35 @@ class ClanySite:
                 "请先运行 explore 生成 adapter",
             )
 
+        from cliany_site.loader import load_adapter_from_path
+        from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
+
+        diagnostic: dict[str, str] | None = None
+        try:
+            load_metadata(metadata_path)
+        except LegacyMetadataError:
+            pass
+        except MetadataParseError as exc:
+            diagnostic = {"verdict": "schema_error", "reason": str(exc)}
+        else:
+            commands_py = metadata_path.parent / "commands.py"
+            if not commands_py.is_file():
+                diagnostic = {
+                    "verdict": "commands_missing",
+                    "reason": "commands.py 不是可加载的普通文件" if commands_py.exists() else "commands.py 不存在",
+                }
+            else:
+                _group, load_error = load_adapter_from_path(commands_py, domain)
+                if load_error is not None:
+                    diagnostic = {"verdict": "commands_unloadable", "reason": load_error}
+        if diagnostic is not None:
+            return error_response(
+                "E_VERIFY_STATIC",
+                f"适配器 '{domain}' 无法加载：{diagnostic['reason']}",
+                f"运行 cliany-site verify {domain} --strict --json 查看并修复静态校验失败。",
+                details={"domain": domain, **diagnostic},
+            )
+
         try:
             metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError) as e:

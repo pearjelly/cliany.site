@@ -31,7 +31,10 @@ def _create_adapter_with_actions(tmp_path: Path, domain: str = "test.com") -> Pa
     adapter_dir.mkdir(parents=True, exist_ok=True)
 
     commands_py = adapter_dir / "commands.py"
-    commands_py.write_text("import click\n", encoding="utf-8")
+    commands_py.write_text(
+        "import click\n\n@click.group()\ndef cli():\n    pass\n",
+        encoding="utf-8",
+    )
 
     metadata = {
         "schema_version": 3,
@@ -297,6 +300,55 @@ class TestSDKExecute:
             result = await cs.execute("test.com", "nonexistent")
             assert result["success"] is False
             assert "COMMAND_NOT_FOUND" in result["error"]["code"]
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("commands_source", "metadata_source", "verdict", "reason"),
+        [
+            (None, '{"schema_version": 3}', "commands_missing", "commands.py 不存在"),
+            (
+                "import click\n",
+                '{"schema_version": 3}',
+                "commands_unloadable",
+                "commands.py 必须导出 click.Group 类型的 cli",
+            ),
+            ("import click\n", "[]", "schema_error", "metadata.json 必须是 JSON object"),
+        ],
+    )
+    async def test_execute_rejects_static_adapter_failures_before_browser(
+        self,
+        tmp_path,
+        commands_source,
+        metadata_source,
+        verdict,
+        reason,
+    ):
+        from cliany_site.sdk import ClanySite
+
+        cfg = _make_config(tmp_path)
+        adapter_dir = cfg.adapters_dir / "broken.example"
+        adapter_dir.mkdir()
+        if commands_source is not None:
+            (adapter_dir / "commands.py").write_text(commands_source, encoding="utf-8")
+        (adapter_dir / "metadata.json").write_text(metadata_source, encoding="utf-8")
+
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch.object(ClanySite, "_ensure_browser_session", new_callable=AsyncMock) as ensure_browser,
+            patch("cliany_site.action_runtime.execute_action_steps", new_callable=AsyncMock) as execute_steps,
+        ):
+            result = await ClanySite().execute("broken.example", "search")
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_VERIFY_STATIC"
+        assert result["error"]["details"] == {
+            "domain": "broken.example",
+            "verdict": verdict,
+            "reason": reason,
+        }
+        assert "cliany-site verify broken.example --strict --json" in result["error"]["fix"]
+        ensure_browser.assert_not_awaited()
+        execute_steps.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_execute_success(self, tmp_path):
@@ -927,6 +979,34 @@ class TestAPIServer:
             assert resp.status == 404
             data = await resp.json()
             assert data["error"]["code"] == "ADAPTER_NOT_FOUND"
+
+    @pytest.mark.asyncio
+    async def test_execute_static_adapter_failure_is_unprocessable(self, tmp_path):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.sdk import ClanySite
+        from cliany_site.server import APIServer
+
+        cfg = _make_config(tmp_path)
+        adapter_dir = cfg.adapters_dir / "broken.example"
+        adapter_dir.mkdir()
+        (adapter_dir / "metadata.json").write_text('{"schema_version": 3}', encoding="utf-8")
+        server = APIServer()
+        server._sdk = ClanySite()
+        app = server._build_app()
+
+        with patch("cliany_site.sdk.get_config", return_value=cfg):
+            async with TestClient(TestServer(app)) as client:
+                resp = await client.post("/execute", json={"domain": "broken.example", "command": "search"})
+                assert resp.status == 422
+                data = await resp.json()
+
+        assert data["error"]["code"] == "E_VERIFY_STATIC"
+        assert data["error"]["details"] == {
+            "domain": "broken.example",
+            "verdict": "commands_missing",
+            "reason": "commands.py 不存在",
+        }
 
     @pytest.mark.asyncio
     async def test_explore_unavailable_provider_returns_service_unavailable(self):
