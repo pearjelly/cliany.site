@@ -12718,6 +12718,7 @@ def test_v016299_release_draft_tracks_blank_result_rows() -> None:
     for snippet in [
         "# v0.16.299 发布草案",
         "**目标版本：** `0.16.299`",
+        "**提交范围：** `v0.16.298..HEAD`",
         "**提交范围：** `v0.16.299..HEAD`",
         "data.quality.field_blank_rows",
         "1-based",
