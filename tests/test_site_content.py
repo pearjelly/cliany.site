@@ -112,8 +112,10 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in docs
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.300" in index
-    assert "当前基线：v0.16.300" in script
+    assert "Current baseline: v0.16.301" in index
+    assert "当前基线：v0.16.301" in script
+    assert "E_VERIFY_STATIC" in index
+    assert "E_VERIFY_STATIC" in script
     assert "ADAPTER_NOT_FOUND" in index
     assert "ADAPTER_NOT_FOUND" in script
     assert "<code>404</code> 表示 adapter 或命令不存在" in docs
@@ -130,7 +132,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.300 · Python" in docs
+    assert "v0.16.301 · Python" in docs
     assert "daily_release_capacity_remaining" in script
     assert "installed_version" in docs
     assert "installed_version=null" in docs

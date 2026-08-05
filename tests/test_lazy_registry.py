@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 
 import click
-import pytest
 
 _V3_METADATA = {
     "schema_version": 3,

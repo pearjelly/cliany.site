@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.301] - 2026-08-05
+
+### Fixed
+
+- The root CLI now recognizes a discovered current-schema adapter that cannot be registered and returns actionable `E_VERIFY_STATIC` details (`schema_error`, `commands_missing`, or `commands_unloadable`) instead of a generic unknown-command error. The response directs people and automation to `cliany-site verify <domain> --strict --json` before any browser or LLM work.
+
 ## [0.16.300] - 2026-08-04
 
 ### Added
@@ -2772,7 +2778,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.300...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.301...HEAD
+[0.16.301]: https://github.com/pearjelly/cliany.site/compare/v0.16.300...v0.16.301
 [0.16.300]: https://github.com/pearjelly/cliany.site/compare/v0.16.299...v0.16.300
 [0.16.299]: https://github.com/pearjelly/cliany.site/compare/v0.16.298...v0.16.299
 [0.16.298]: https://github.com/pearjelly/cliany.site/compare/v0.16.297...v0.16.298

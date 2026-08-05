@@ -1,8 +1,8 @@
 # cliany-site 2026 Q3 路线图
 
 - **制定日期：** 2026-06-10
-- **校准日期：** 2026-08-04
-- **基线版本：** v0.16.300
+- **校准日期：** 2026-08-05
+- **基线版本：** v0.16.301
 - **目标周期：** 2026-06-10 ~ 2026-08-05
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -35,6 +35,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 - Live provider 边界：普通人类 `cliany-site doctor` 现在先要求显式 `--llm-live --require-capability generate_adapters` 预检，成功后才显示 `explore`；默认检查绝不把本地配置当作 provider 已可用的证明。
 - Live provider 恢复路径：显式 `doctor --llm-live` 已失败时，人类输出会保留已有 adapter 的安全路径，并打印相同的严格预检命令；修复 provider 后必须通过该 gate 才能回到 `explore`。
 - SDK/API 集成边界：HTTP API 写操作现在拒绝非对象 JSON 与错误的 `params`、`force`、`dry_run` 类型，并将缺失 adapter/command、无法处理的工作流结果和暂不可用的 Chrome/LLM 分别映射为 `404`、`422`、`503`，同时保留 SDK JSON envelope。
+- 根 CLI 静态诊断：发现的 current-schema adapter 若因 metadata、`commands.py` 缺失或加载失败而不能注册，根命令会返回带 `schema_error`、`commands_missing` 或 `commands_unloadable` verdict 的 `E_VERIFY_STATIC`，并引导先运行 `verify <domain> --strict --json`；这只说明本地静态状态，不替代浏览器、第三方网站或 live LLM 成功证据。
 
 这意味着 Q3 后续重点不再是「搭脚手架」，而是把已搭好的维护系统转换成用户可见的真实案例、可分发 adapter 资产和稳定集成路径。
 

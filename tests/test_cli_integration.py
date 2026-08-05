@@ -337,8 +337,6 @@ class TestListLegacyFiltering:
 
     def test_list_json_hides_legacy_by_default(self, tmp_home, no_llm):
         """list --json 不应返回 loader 会跳过的 legacy adapter"""
-        from pathlib import Path
-
         adapters_dir = tmp_home / ".cliany-site" / "adapters"
         legacy_dir = adapters_dir / "old.local"
         legacy_dir.mkdir(parents=True)
@@ -361,8 +359,6 @@ class TestListLegacyFiltering:
 
     def test_list_legacy_flag_shows_legacy(self, tmp_home, no_llm):
         """list --legacy --json 应能看到 legacy adapter"""
-        from pathlib import Path
-
         adapters_dir = tmp_home / ".cliany-site" / "adapters"
         legacy_dir = adapters_dir / "old.local"
         legacy_dir.mkdir(parents=True)

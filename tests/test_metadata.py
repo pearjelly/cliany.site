@@ -1,7 +1,7 @@
 import json
 import pathlib
+
 import pytest
-import tempfile
 
 from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
 
