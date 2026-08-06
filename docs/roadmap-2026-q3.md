@@ -2,7 +2,7 @@
 
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-08-06
-- **基线版本：** v0.16.303
+- **基线版本：** v0.16.304
 - **目标周期：** 2026-06-10 ~ 2026-08-05
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -38,6 +38,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 - 根 CLI 静态诊断：发现的 current-schema adapter 若因 metadata、`commands.py` 缺失或加载失败而不能注册，根命令会返回带 `schema_error`、`commands_missing` 或 `commands_unloadable` verdict 的 `E_VERIFY_STATIC`，并引导先运行 `verify <domain> --strict --json`；这只说明本地静态状态，不替代浏览器、第三方网站或 live LLM 成功证据。
 - Active case 首跑引导：人类 `cliany-site cases --status active` 现在按固定 SHA-256 HTTPS 安装、`verify --strict`、仅案例声明的登录、只读命令输出每个 active case 的顺序；它只给出可审阅指引，不会自动安装、登录、执行或覆盖，也不把目录占用当作健康证据。
 - SDK/API 静态前置诊断：`ClanySite.execute()` 与 `POST /execute` 现在会在启动浏览器前拒绝不安全的 adapter 目录名、错误 metadata、缺失/不可加载/禁止模式/非 UTF-8 的 `commands.py`；参数错误保持 `E_INVALID_PARAM` / HTTP `400`，静态 adapter 错误保持 `E_VERIFY_STATIC` / HTTP `422`，不把本地诊断当作浏览器、LLM 或第三方工作流成功。
+- SDK/API 预检入口：Python 可通过异步 `ClanySite.verify(domain)` 或同步 `verify(domain)`，服务可通过 `GET /verify?domain=<domain>` 获得与 CLI `verify --strict` 对齐的本地诊断，而不先启动浏览器或联系 LLM。该入口保持无效输入 `400`、未安装 adapter `404`、静态失败 `422` 的边界，并在导入 `commands.py` 前执行禁止模式和 UTF-8 检查。
 
 这意味着 Q3 后续重点不再是「搭脚手架」，而是把已搭好的维护系统转换成用户可见的真实案例、可分发 adapter 资产和稳定集成路径。
 

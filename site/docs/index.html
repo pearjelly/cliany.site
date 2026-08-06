@@ -107,7 +107,7 @@
 
       <main>
         <h1>cliany-site 文档</h1>
-        <p class="intro-meta">v0.16.303 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
+        <p class="intro-meta">v0.16.304 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
 
         <p>cliany-site 基于 LLM 和 Chrome CDP 协议，将任意网页操作自动化为可重复调用的 CLI 命令。核心流程：<strong>explore（探索）→ generate（生成适配器）→ run（执行）</strong>。</p>
 
@@ -256,7 +256,7 @@ curl -i "http://localhost:8080/verify?domain=github.com"
 curl -X POST http://localhost:8080/explore \
   -H "Content-Type: application/json" \
   -d '{"url": "https://github.com", "workflow": "搜索仓库"}'</code></pre>
-        <p><code>GET /health</code> 是 liveness probe：它确认 HTTP 服务可访问，并返回服务名和已安装版本；它不代表 Chrome/CDP 或 LLM provider 已就绪，请使用 <code>GET /doctor</code> 查看这些诊断。<code>GET /verify</code> 必须提供安全的 <code>domain</code> 查询参数，只运行静态 adapter 检查，不会连接 Chrome 或 LLM；无效目录名返回 <code>E_INVALID_PARAM</code> / <code>400</code>，已安装但不可安全加载的 adapter 返回 <code>E_VERIFY_STATIC</code> / <code>422</code>。<code>POST /execute</code> 在启动浏览器前使用同一套本地静态契约。其他响应保留 SDK 信封：<code>404</code> 表示 adapter 或命令不存在，<code>503</code> 表示 Chrome 或 LLM 依赖暂不可用，<code>500</code> 表示意外服务端失败。写操作端点只接受 JSON 对象；<code>params</code> 必须是对象，<code>force</code> / <code>dry_run</code> 必须是布尔值。</p>
+        <p><code>GET /health</code> 是 liveness probe：它确认 HTTP 服务可访问，并返回服务名和已安装版本；它不代表 Chrome/CDP 或 LLM provider 已就绪，请使用 <code>GET /doctor</code> 查看这些诊断。<code>GET /verify</code> 必须提供安全的 <code>domain</code> 查询参数，只运行静态 adapter 检查，不会连接 Chrome 或 LLM；无效目录名返回 <code>E_INVALID_PARAM</code> / <code>400</code>，已安装但不可安全加载的 adapter 返回 <code>E_VERIFY_STATIC</code> / <code>422</code>。<code>POST /execute</code> 在启动浏览器前使用同一套本地静态契约，不会先启动浏览器。其他响应保留 SDK 信封：<code>404</code> 表示 adapter 或命令不存在，<code>503</code> 表示 Chrome 或 LLM 依赖暂不可用，<code>500</code> 表示意外服务端失败。写操作端点只接受 JSON 对象；<code>params</code> 必须是对象，<code>force</code> / <code>dry_run</code> 必须是布尔值。</p>
 
         <h2 id="workflow">YAML 工作流编排</h2>
         <pre><code># workflow.yaml

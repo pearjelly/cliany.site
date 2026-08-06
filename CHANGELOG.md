@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.304] - 2026-08-06
+
+### Added
+
+- Python integrations can now call asynchronous `ClanySite.verify(domain)` or synchronous `verify(domain)`, and HTTP integrations can call `GET /verify?domain=<domain>`. They reuse strict adapter checks without starting a browser or contacting an LLM: invalid directory input maps to `E_INVALID_PARAM` / HTTP `400`, absent adapters to `404`, and static adapter failures to `E_VERIFY_STATIC` / `422` with the same diagnostic results and repair path as CLI `verify --strict`.
+
 ## [0.16.303] - 2026-08-06
 
 ### Fixed
@@ -2790,7 +2796,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.303...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.304...HEAD
+[0.16.304]: https://github.com/pearjelly/cliany.site/compare/v0.16.303...v0.16.304
 [0.16.303]: https://github.com/pearjelly/cliany.site/compare/v0.16.302...v0.16.303
 [0.16.302]: https://github.com/pearjelly/cliany.site/compare/v0.16.301...v0.16.302
 [0.16.301]: https://github.com/pearjelly/cliany.site/compare/v0.16.300...v0.16.301
