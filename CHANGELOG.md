@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.302] - 2026-08-06
+
+### Added
+
+- Human `cliany-site cases --status active` now prints each maintained active case's safe first-run order: fixed-SHA HTTPS installation, `verify --strict`, declared login only when needed, then the declared read-only command. The command only presents guidance; it never installs, logs in, executes an adapter command, overwrites an adapter, or treats an occupied target as healthy.
+
 ## [0.16.301] - 2026-08-05
 
 ### Fixed
@@ -2778,7 +2784,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.301...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.302...HEAD
+[0.16.302]: https://github.com/pearjelly/cliany.site/compare/v0.16.301...v0.16.302
 [0.16.301]: https://github.com/pearjelly/cliany.site/compare/v0.16.300...v0.16.301
 [0.16.300]: https://github.com/pearjelly/cliany.site/compare/v0.16.299...v0.16.300
 [0.16.299]: https://github.com/pearjelly/cliany.site/compare/v0.16.298...v0.16.299

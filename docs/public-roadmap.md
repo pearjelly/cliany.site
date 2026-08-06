@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-08-05
-- **Current baseline:** v0.16.301
+- **Updated:** 2026-08-06
+- **Current baseline:** v0.16.302
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -22,6 +22,8 @@ The next focus is turning candidate real-world cases into verified active demos.
 As of v0.16.300, the cadence report exposes `daily_release_capacity_remaining` separately from `daily_release_limit_ok`: an exactly full `3/3` day still has a valid current count but zero capacity for a new tag, and its next action says to wait until tomorrow. This makes the daily cap decision explicit for maintainers and release automation.
 
 As of v0.16.301, invoking a discovered current-schema adapter that cannot register no longer looks like an unknown command. The root CLI returns structured `E_VERIFY_STATIC` details and points to `cliany-site verify <domain> --strict --json`; this is a local static diagnosis, not proof that a browser, site workflow, or LLM provider is ready.
+
+As of v0.16.302, `cliany-site cases --status active` gives each maintained active case a human-readable first-run order: fixed-SHA HTTPS installation, strict verification, only the login declared by that case, and then its declared read-only command. It is guidance only: it does not install, log in, execute, overwrite, or turn an occupied directory into health evidence.
 
 As of 2026-07-29, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 
