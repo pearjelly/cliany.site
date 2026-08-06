@@ -30,6 +30,14 @@ class AdapterLoadDiagnostic(TypedDict):
     reason: str
 
 
+def adapter_path_security_issues(adapter_dir: Path, filenames: tuple[str, ...] = ()) -> list[str]:
+    """在读取 adapter 自有文件前返回符号链接安全问题。"""
+    if adapter_dir.is_symlink():
+        return ["adapter 目录不能是符号链接"]
+
+    return [f"{filename} 不能是符号链接" for filename in filenames if (adapter_dir / filename).is_symlink()]
+
+
 def discover_adapters(include_legacy: bool = False) -> list[dict[str, Any]]:
     """扫描 ~/.cliany-site/adapters/ 目录，返回已安装的 adapter 信息。
 
@@ -41,20 +49,22 @@ def discover_adapters(include_legacy: bool = False) -> list[dict[str, Any]]:
         return adapters
 
     for adapter_dir in sorted(adapters_dir.iterdir()):
-        if not adapter_dir.is_dir():
+        if not adapter_dir.is_dir() or adapter_dir.is_symlink():
             continue
         commands_py = adapter_dir / "commands.py"
-        if not commands_py.exists():
+        metadata_path = adapter_dir / "metadata.json"
+        if not commands_py.is_file() or commands_py.is_symlink() or metadata_path.is_symlink():
             continue
 
         domain = adapter_dir.name
         metadata: dict[str, Any] = {}
-        metadata_path = adapter_dir / "metadata.json"
-        if metadata_path.exists():
+        if metadata_path.is_file():
             with contextlib.suppress(json.JSONDecodeError, OSError):
                 parsed_metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
                 if isinstance(parsed_metadata, dict):
                     metadata = parsed_metadata
+        elif metadata_path.exists():
+            continue
 
         schema_version: Any = metadata.get("schema_version", "")
         needs_migration: bool = schema_version != METADATA_SCHEMA_VERSION
@@ -80,6 +90,9 @@ def discover_adapters(include_legacy: bool = False) -> list[dict[str, Any]]:
 
 def load_adapter_from_path(commands_py: Path, domain: str) -> tuple[click.Group | None, str | None]:
     """加载 commands.py，并返回无法注册到根 CLI 时的诊断原因。"""
+    path_issues = adapter_path_security_issues(commands_py.parent, (commands_py.name,))
+    if path_issues:
+        return None, path_issues[0]
     if not commands_py.is_file():
         return None, "commands.py 必须是可加载的普通文件"
 
@@ -128,6 +141,13 @@ def _adapter_load_diagnostics() -> dict[str, AdapterLoadDiagnostic]:
 
     for adapter_dir in sorted(adapters_dir.iterdir()):
         if not adapter_dir.is_dir():
+            continue
+        path_issues = adapter_path_security_issues(adapter_dir, ("metadata.json", "commands.py"))
+        if path_issues:
+            diagnostics[adapter_dir.name] = {
+                "verdict": "security_issue",
+                "reason": "; ".join(path_issues),
+            }
             continue
         metadata_path = adapter_dir / "metadata.json"
         if not metadata_path.exists():
@@ -229,10 +249,16 @@ class LazyAdapterRegistry:
             if not self._adapters_dir.exists():
                 return self._discovered
             for adapter_dir in self._adapters_dir.iterdir():
-                if not adapter_dir.is_dir():
+                if not adapter_dir.is_dir() or adapter_dir.is_symlink():
                     continue
                 metadata_path = adapter_dir / "metadata.json"
-                if not metadata_path.exists():
+                commands_py = adapter_dir / "commands.py"
+                if (
+                    not metadata_path.is_file()
+                    or metadata_path.is_symlink()
+                    or not commands_py.is_file()
+                    or commands_py.is_symlink()
+                ):
                     continue
                 try:
                     parsed_metadata = json.loads(metadata_path.read_text(encoding="utf-8"))

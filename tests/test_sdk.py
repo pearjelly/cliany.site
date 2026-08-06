@@ -422,6 +422,33 @@ class TestSDKVerify:
         load_adapter.assert_not_called()
         ensure_browser.assert_not_awaited()
 
+    @pytest.mark.asyncio
+    async def test_verify_rejects_symlinked_commands_before_browser(self, tmp_path):
+        from cliany_site.sdk import ClanySite
+
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter_with_actions(tmp_path, "linked.example")
+        outside_commands = tmp_path / "outside-commands.py"
+        outside_commands.write_text("import click\n", encoding="utf-8")
+        (adapter_dir / "commands.py").unlink()
+        (adapter_dir / "commands.py").symlink_to(outside_commands)
+
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.commands.verify.get_config", return_value=cfg),
+            patch("cliany_site.commands.verify.load_adapter_from_path") as load_adapter,
+            patch.object(ClanySite, "_ensure_browser_session", new_callable=AsyncMock) as ensure_browser,
+        ):
+            result = await ClanySite().verify("linked.example")
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_VERIFY_STATIC"
+        verified = result["error"]["details"]["results"][0]
+        assert verified["verdict"] == "security_issue"
+        assert verified["issues"] == ["commands.py 不能是符号链接"]
+        load_adapter.assert_not_called()
+        ensure_browser.assert_not_awaited()
+
 
 # ═══════════════════════════════════════════════════════════
 # SDK — 同步 verify 便捷函数
@@ -600,6 +627,34 @@ class TestSDKExecute:
             "domain": "non-utf8.example",
             "verdict": "security_issue",
             "reason": "commands.py 无法按 UTF-8 读取",
+        }
+        load_adapter.assert_not_called()
+        ensure_browser.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_execute_rejects_symlinked_commands_before_browser(self, tmp_path):
+        from cliany_site.sdk import ClanySite
+
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter_with_actions(tmp_path, "linked.example")
+        outside_commands = tmp_path / "outside-commands.py"
+        outside_commands.write_text("import click\n", encoding="utf-8")
+        (adapter_dir / "commands.py").unlink()
+        (adapter_dir / "commands.py").symlink_to(outside_commands)
+
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.loader.load_adapter_from_path") as load_adapter,
+            patch.object(ClanySite, "_ensure_browser_session", new_callable=AsyncMock) as ensure_browser,
+        ):
+            result = await ClanySite().execute("linked.example", "search")
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_VERIFY_STATIC"
+        assert result["error"]["details"] == {
+            "domain": "linked.example",
+            "verdict": "security_issue",
+            "reason": "commands.py 不能是符号链接",
         }
         load_adapter.assert_not_called()
         ensure_browser.assert_not_awaited()
@@ -1161,6 +1216,37 @@ class TestAPIServer:
         assert data["error"]["details"]["results"][0]["verdict"] == "security_issue"
 
     @pytest.mark.asyncio
+    async def test_verify_endpoint_maps_symlinked_commands_to_unprocessable(self, tmp_path):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.sdk import ClanySite
+        from cliany_site.server import APIServer
+
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter_with_actions(tmp_path, "linked.example")
+        outside_commands = tmp_path / "outside-commands.py"
+        outside_commands.write_text("import click\n", encoding="utf-8")
+        (adapter_dir / "commands.py").unlink()
+        (adapter_dir / "commands.py").symlink_to(outside_commands)
+        server = APIServer()
+        server._sdk = ClanySite()
+        app = server._build_app()
+
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.commands.verify.get_config", return_value=cfg),
+        ):
+            async with TestClient(TestServer(app)) as client:
+                resp = await client.get("/verify", params={"domain": "linked.example"})
+                assert resp.status == 422
+                data = await resp.json()
+
+        assert data["error"]["code"] == "E_VERIFY_STATIC"
+        verified = data["error"]["details"]["results"][0]
+        assert verified["verdict"] == "security_issue"
+        assert verified["issues"] == ["commands.py 不能是符号链接"]
+
+    @pytest.mark.asyncio
     async def test_doctor_endpoint(self, tmp_path):
         from aiohttp.test_utils import TestClient, TestServer
 
@@ -1420,6 +1506,38 @@ class TestAPIServer:
 
         assert data["error"]["code"] == "E_VERIFY_STATIC"
         assert data["error"]["details"]["verdict"] == "security_issue"
+
+    @pytest.mark.asyncio
+    async def test_execute_endpoint_maps_symlinked_commands_to_unprocessable(self, tmp_path):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.sdk import ClanySite
+        from cliany_site.server import APIServer
+
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter_with_actions(tmp_path, "linked.example")
+        outside_commands = tmp_path / "outside-commands.py"
+        outside_commands.write_text("import click\n", encoding="utf-8")
+        (adapter_dir / "commands.py").unlink()
+        (adapter_dir / "commands.py").symlink_to(outside_commands)
+        server = APIServer()
+        server._sdk = ClanySite()
+        app = server._build_app()
+
+        with patch("cliany_site.sdk.get_config", return_value=cfg):
+            async with TestClient(TestServer(app)) as client:
+                resp = await client.post(
+                    "/execute", json={"domain": "linked.example", "command": "search"}
+                )
+                assert resp.status == 422
+                data = await resp.json()
+
+        assert data["error"]["code"] == "E_VERIFY_STATIC"
+        assert data["error"]["details"] == {
+            "domain": "linked.example",
+            "verdict": "security_issue",
+            "reason": "commands.py 不能是符号链接",
+        }
 
     @pytest.mark.asyncio
     async def test_explore_unavailable_provider_returns_service_unavailable(self):

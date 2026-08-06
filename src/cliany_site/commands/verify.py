@@ -12,7 +12,7 @@ import click
 from cliany_site.config import get_config
 from cliany_site.envelope import Envelope, ErrorCode, err, ok
 from cliany_site.errors import ADAPTER_NOT_FOUND
-from cliany_site.loader import load_adapter_from_path
+from cliany_site.loader import adapter_path_security_issues, load_adapter_from_path
 from cliany_site.marketplace import MANIFEST_VERSION, validate_adapter_domain
 from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
 
@@ -58,6 +58,13 @@ def _sha256_file(path: Path) -> str:
 
 def _verify_manifest(adapter_dir: Path, domain: str) -> dict[str, Any]:
     manifest_path = adapter_dir / "manifest.json"
+    path_issues = adapter_path_security_issues(adapter_dir, ("manifest.json",))
+    if path_issues:
+        return {
+            "status": "error",
+            "issues": path_issues,
+            "action": "请重新安装可信 adapter 包，或在来源环境重新运行 cliany-site market publish <domain> 后再安装。",
+        }
     if not manifest_path.exists():
         return {
             "status": "missing",
@@ -113,6 +120,9 @@ def _verify_manifest(adapter_dir: Path, domain: str) -> dict[str, Any]:
             continue
 
         file_path = adapter_dir / filename
+        if file_path.is_symlink():
+            issues.append(f"已安装 adapter 的声明文件不能是符号链接: {filename}")
+            continue
         if not file_path.is_file():
             issues.append(f"已安装 adapter 缺少声明文件: {filename}")
             continue
@@ -145,7 +155,14 @@ def _verify_single(domain: str, schema: dict) -> dict:
 
     result: dict = {"domain": domain, "verdict": "ok", "issues": [], "smoke": None}
 
-    # Step 1: 加载 metadata（检测旧版/解析失败）
+    # Step 1: 在读取任何 adapter-owned file 前拒绝符号链接。
+    path_issues = adapter_path_security_issues(adapter_dir, ("metadata.json", "commands.py", "manifest.json"))
+    if path_issues:
+        result["verdict"] = "security_issue"
+        result["issues"] = path_issues
+        return result
+
+    # Step 2: 加载 metadata（检测旧版/解析失败）
     try:
         metadata = load_metadata(metadata_path)
     except LegacyMetadataError as exc:
@@ -157,7 +174,7 @@ def _verify_single(domain: str, schema: dict) -> dict:
         result["issues"] = [str(exc)]
         return result
 
-    # Step 2: jsonschema 完整验证
+    # Step 3: jsonschema 完整验证
     if schema:
         try:
             import jsonschema as _jsonschema
@@ -172,7 +189,7 @@ def _verify_single(domain: str, schema: dict) -> dict:
             result["issues"] = [str(exc)]
             return result
 
-    # Step 3: 生成命令必须可由 loader 作为普通文件读取。
+    # Step 4: 生成命令必须可由 loader 作为普通文件读取。
     if not commands_py.is_file():
         result["verdict"] = "commands_missing"
         if commands_py.exists():
@@ -181,7 +198,7 @@ def _verify_single(domain: str, schema: dict) -> dict:
             result["issues"] = ["commands.py 不存在"]
         return result
 
-    # Step 4: AST 安全扫描
+    # Step 5: AST 安全扫描
     security_issues = _scan_security(commands_py)
     if security_issues:
         result["verdict"] = "security_issue"
@@ -195,7 +212,7 @@ def _verify_single(domain: str, schema: dict) -> dict:
         result["issues"] = manifest_result["issues"]
         return result
 
-    # Step 6: 复用 runtime loader，确保严格 verify 成功后 cli 确实可注册。
+    # Step 7: 复用 runtime loader，确保严格 verify 成功后 cli 确实可注册。
     _cli_group, load_error = load_adapter_from_path(commands_py, domain)
     if load_error:
         result["verdict"] = "commands_unloadable"

@@ -254,6 +254,65 @@ def test_verify_rejects_non_utf8_commands_as_security_issue(tmp_home, no_llm, ad
     assert verified["issues"] == ["commands.py 无法按 UTF-8 读取"]
 
 
+@pytest.mark.parametrize("filename", ["metadata.json", "commands.py", "manifest.json"])
+def test_verify_rejects_core_file_symlinks_before_reading(tmp_home, no_llm, adapters_dir, filename):
+    domain = f"linked-{filename.replace('.', '-')}.com"
+    adapter_dir = _make_adapter(adapters_dir, domain, VALID_V3_METADATA | {"domain": domain})
+    linked_file = adapter_dir / filename
+    outside_file = tmp_home / f"outside-{filename}"
+    outside_file.write_text("outside adapter file", encoding="utf-8")
+    linked_file.unlink(missing_ok=True)
+    linked_file.symlink_to(outside_file)
+
+    result = CliRunner().invoke(cli, ["verify", domain, "--strict", "--json"])
+
+    assert result.exit_code == 1
+    data = json.loads(result.output)
+    assert data["error"]["code"] == "E_VERIFY_STATIC"
+    verified = data["error"]["details"]["results"][0]
+    assert verified["verdict"] == "security_issue"
+    assert verified["issues"] == [f"{filename} 不能是符号链接"]
+
+
+def test_verify_rejects_symlinked_adapter_directory_before_reading(tmp_home, no_llm, adapters_dir):
+    domain = "linked-directory.com"
+    outside_adapter = tmp_home / "outside-adapter"
+    _make_adapter(outside_adapter.parent, outside_adapter.name, VALID_V3_METADATA | {"domain": domain})
+    (adapters_dir / domain).symlink_to(outside_adapter, target_is_directory=True)
+
+    result = CliRunner().invoke(cli, ["verify", domain, "--strict", "--json"])
+
+    assert result.exit_code == 1
+    data = json.loads(result.output)
+    assert data["error"]["code"] == "E_VERIFY_STATIC"
+    verified = data["error"]["details"]["results"][0]
+    assert verified["verdict"] == "security_issue"
+    assert verified["issues"] == ["adapter 目录不能是符号链接"]
+
+
+def test_verify_manifest_rejects_symlinked_declared_file_before_hashing(tmp_home, no_llm, adapters_dir):
+    domain = "linked-manifest-file.com"
+    adapter_dir = _make_adapter(adapters_dir, domain, VALID_V3_METADATA | {"domain": domain})
+    _write_manifest(adapter_dir, domain)
+    manifest_path = adapter_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["files"].append("notes.txt")
+    manifest["file_hashes"]["notes.txt"] = "0" * 64
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    outside_file = tmp_home / "outside-notes.txt"
+    outside_file.write_text("outside adapter file", encoding="utf-8")
+    (adapter_dir / "notes.txt").symlink_to(outside_file)
+
+    result = CliRunner().invoke(cli, ["verify", domain, "--strict", "--json"])
+
+    assert result.exit_code == 1
+    data = json.loads(result.output)
+    assert data["error"]["code"] == "E_VERIFY_STATIC"
+    verified = data["error"]["details"]["results"][0]
+    assert verified["verdict"] == "manifest_error"
+    assert verified["issues"] == ["已安装 adapter 的声明文件不能是符号链接: notes.txt"]
+
+
 def test_verify_market_manifest_ok(tmp_home, no_llm, adapters_dir):
     adapter_dir = _make_adapter(adapters_dir, "market-ok.com", VALID_V3_METADATA | {"domain": "market-ok.com"})
     _write_manifest(adapter_dir, "market-ok.com")

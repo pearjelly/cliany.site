@@ -12944,3 +12944,45 @@ def test_v016304_release_draft_prepares_sdk_verify_contract() -> None:
         "only verify adapters that are already installed and trusted",
     ]:
         assert snippet in notes
+
+
+def test_v016305_release_draft_prepares_symlink_adapter_boundary() -> None:
+    draft = (ROOT / "docs" / "releases" / "v0.16.305-draft.md").read_text(encoding="utf-8")
+    notes = (ROOT / "docs" / "releases" / "v0.16.305-github-release.md").read_text(
+        encoding="utf-8"
+    )
+
+    for snippet in [
+        "# v0.16.305 发布草案",
+        "**目标版本：** `0.16.305`",
+        "**提交范围：** `v0.16.304..HEAD`",
+        "**提交范围：** `v0.16.305..HEAD`",
+        "符号链接",
+        "security_issue",
+        "E_VERIFY_STATIC",
+        "ClanySite.verify(domain)",
+        "GET /verify?domain=<domain>",
+        "POST /execute",
+        "llm_live_preflight_not_ready",
+        "不运行 candidate `explore`",
+        "release_readiness.py --strict --target-version 0.16.305 --remote",
+        "git tag v0.16.305",
+        "release_readiness.py --strict --release-tag v0.16.305 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.305",
+        "symbolic link",
+        "security_issue",
+        "E_VERIFY_STATIC",
+        "GET /verify",
+        "POST /execute",
+        "## Compatibility",
+        "## Trust Boundaries",
+        "candidate adapter package",
+        "live LLM provider",
+    ]:
+        assert snippet in notes

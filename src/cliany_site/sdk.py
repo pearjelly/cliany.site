@@ -249,34 +249,40 @@ class ClanySite:
             )
 
         from cliany_site.commands.verify import _scan_security
-        from cliany_site.loader import load_adapter_from_path
+        from cliany_site.loader import adapter_path_security_issues, load_adapter_from_path
         from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
 
         diagnostic: dict[str, str] | None = None
-        try:
-            load_metadata(metadata_path)
-        except LegacyMetadataError:
-            pass
-        except MetadataParseError as exc:
-            diagnostic = {"verdict": "schema_error", "reason": str(exc)}
+        path_issues = adapter_path_security_issues(
+            metadata_path.parent, ("metadata.json", "commands.py")
+        )
+        if path_issues:
+            diagnostic = {"verdict": "security_issue", "reason": "; ".join(path_issues)}
         else:
-            commands_py = metadata_path.parent / "commands.py"
-            if not commands_py.is_file():
-                diagnostic = {
-                    "verdict": "commands_missing",
-                    "reason": "commands.py 不是可加载的普通文件" if commands_py.exists() else "commands.py 不存在",
-                }
+            try:
+                load_metadata(metadata_path)
+            except LegacyMetadataError:
+                pass
+            except MetadataParseError as exc:
+                diagnostic = {"verdict": "schema_error", "reason": str(exc)}
             else:
-                security_issues = _scan_security(commands_py)
-                if security_issues:
+                commands_py = metadata_path.parent / "commands.py"
+                if not commands_py.is_file():
                     diagnostic = {
-                        "verdict": "security_issue",
-                        "reason": "; ".join(security_issues),
+                        "verdict": "commands_missing",
+                        "reason": "commands.py 不是可加载的普通文件" if commands_py.exists() else "commands.py 不存在",
                     }
                 else:
-                    _group, load_error = load_adapter_from_path(commands_py, domain)
-                    if load_error is not None:
-                        diagnostic = {"verdict": "commands_unloadable", "reason": load_error}
+                    security_issues = _scan_security(commands_py)
+                    if security_issues:
+                        diagnostic = {
+                            "verdict": "security_issue",
+                            "reason": "; ".join(security_issues),
+                        }
+                    else:
+                        _group, load_error = load_adapter_from_path(commands_py, domain)
+                        if load_error is not None:
+                            diagnostic = {"verdict": "commands_unloadable", "reason": load_error}
         if diagnostic is not None:
             return error_response(
                 "E_VERIFY_STATIC",
