@@ -364,7 +364,7 @@ curl -X POST http://localhost:8080/explore \
 
 `GET /health` 用于确认 HTTP 服务可访问，并返回服务名和已安装包版本。它只是 liveness probe，不代表 CDP 或 LLM provider 已就绪；这些诊断请使用 `GET /doctor`。浏览器路径三选一：`--headless` 为当前服务启动 Chrome，`--cdp-url` 连接已有远程 Chrome；两者都是全局选项，不能写在 `serve` 之后。
 
-写操作端点只接受 JSON 对象。`params` 必须是对象，`force` / `dry_run` 必须是布尔值，因此字符串 `"false"` 不会意外开启覆盖。响应保留 SDK 信封，并使用 HTTP 状态码：`400` 表示请求无效，`404` 表示 adapter 或命令不存在，`422` 表示请求合法但无法完成，`503` 表示 Chrome 或 LLM 依赖暂不可用，`500` 表示意外的服务端失败。
+写操作端点只接受 JSON 对象。`params` 必须是对象，`force` / `dry_run` 必须是布尔值，因此字符串 `"false"` 不会意外开启覆盖。启动浏览器前，`POST /execute` 会检查请求的 adapter 目录及其本地静态契约：无效目录名返回 `E_INVALID_PARAM` / `400`；已安装但不安全、缺失、无法读取或无法加载的 adapter 返回 `E_VERIFY_STATIC` / `422`，应先运行 `cliany-site verify <domain> --strict --json` 修复。这个本地预检不代表 Chrome、LLM 或第三方工作流已经就绪。其他响应保留 SDK 信封：`404` 表示 adapter 或命令不存在，`503` 表示 Chrome 或 LLM 依赖暂不可用，`500` 表示意外的服务端失败。
 
 ### YAML 工作流编排
 

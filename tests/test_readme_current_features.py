@@ -91,6 +91,17 @@ def test_readmes_document_doctor_recommended_demo_commands() -> None:
             assert term in text
 
 
+def test_readmes_document_execute_static_preflight_contract() -> None:
+    expected = {
+        "README.md": ("POST /execute", "E_INVALID_PARAM", "E_VERIFY_STATIC", "Before browser startup"),
+        "README.zh.md": ("POST /execute", "E_INVALID_PARAM", "E_VERIFY_STATIC", "启动浏览器前"),
+    }
+    for filename, terms in expected.items():
+        text = (ROOT / filename).read_text(encoding="utf-8")
+        for term in terms:
+            assert term in text
+
+
 def test_readmes_document_current_extract_quality_and_readiness():
     expected_partial_terms = {
         "README.md": "partially missing required fields",

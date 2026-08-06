@@ -374,7 +374,7 @@ curl -X POST http://localhost:8080/explore \
 
 `GET /health` confirms that the HTTP service is reachable and returns its service name plus installed package version. It is a liveness probe, not proof that CDP or an LLM provider is ready; use `GET /doctor` for those diagnostics. Choose exactly one browser path: `--headless` starts Chrome for this process, while `--cdp-url` connects to an existing remote Chrome. Do not place either option after `serve`.
 
-Mutating endpoints accept JSON objects only. `params` must be an object, and `force` / `dry_run` must be booleans, so strings such as `"false"` never turn on an overwrite by accident. Responses preserve the SDK envelope and use HTTP status codes: `400` for an invalid request, `404` for a missing adapter or command, `422` when a valid request cannot be completed, `503` for unavailable Chrome or LLM dependencies, and `500` for an unexpected server failure.
+Mutating endpoints accept JSON objects only. `params` must be an object, and `force` / `dry_run` must be booleans, so strings such as `"false"` never turn on an overwrite by accident. Before browser startup, `POST /execute` checks the requested adapter directory and its local static contract. An invalid directory name returns `E_INVALID_PARAM` / `400`; an installed adapter with unsafe, missing, unreadable, or unloadable files returns `E_VERIFY_STATIC` / `422` and should be repaired with `cliany-site verify <domain> --strict --json`. This local preflight does not prove Chrome, LLM, or third-party workflow readiness. Other responses preserve the SDK envelope: `404` for a missing adapter or command, `503` for unavailable Chrome or LLM dependencies, and `500` for an unexpected server failure.
 
 ### YAML Workflow Orchestration
 

@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.303] - 2026-08-06
+
+### Fixed
+
+- `ClanySite.execute()` and HTTP `POST /execute` now validate an installed current-schema adapter before browser startup. Unsafe adapter directory names return `E_INVALID_PARAM` / HTTP `400`; malformed metadata, missing or unloadable `commands.py`, banned module patterns, and non-UTF-8 modules return `E_VERIFY_STATIC` / HTTP `422` with a strict `verify` repair path. Browser, session, and action replay remain untouched until that local preflight succeeds.
+
 ## [0.16.302] - 2026-08-06
 
 ### Added
@@ -2784,7 +2790,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.302...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.303...HEAD
+[0.16.303]: https://github.com/pearjelly/cliany.site/compare/v0.16.302...v0.16.303
 [0.16.302]: https://github.com/pearjelly/cliany.site/compare/v0.16.301...v0.16.302
 [0.16.301]: https://github.com/pearjelly/cliany.site/compare/v0.16.300...v0.16.301
 [0.16.300]: https://github.com/pearjelly/cliany.site/compare/v0.16.299...v0.16.300
