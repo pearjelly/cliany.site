@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.307] - 2026-08-07
+
+### Fixed
+
+- Direct root CLI adapter dispatch now validates a present manifest and every declared file hash before importing `commands.py`. A mismatch returns the same local `E_VERIFY_STATIC` / `manifest_error` repair path as strict verification and SDK/API execution.
+
 ## [0.16.306] - 2026-08-07
 
 ### Fixed
@@ -2808,7 +2814,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.306...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.307...HEAD
+[0.16.307]: https://github.com/pearjelly/cliany.site/compare/v0.16.306...v0.16.307
 [0.16.306]: https://github.com/pearjelly/cliany.site/compare/v0.16.305...v0.16.306
 [0.16.305]: https://github.com/pearjelly/cliany.site/compare/v0.16.304...v0.16.305
 [0.16.304]: https://github.com/pearjelly/cliany.site/compare/v0.16.303...v0.16.304

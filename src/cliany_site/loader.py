@@ -92,13 +92,28 @@ def discover_adapters(include_legacy: bool = False) -> list[dict[str, Any]]:
     return adapters
 
 
-def load_adapter_from_path(commands_py: Path, domain: str) -> tuple[click.Group | None, str | None]:
-    """加载 commands.py，并返回无法注册到根 CLI 时的诊断原因。"""
+def load_adapter_with_diagnostic(
+    commands_py: Path, domain: str
+) -> tuple[click.Group | None, AdapterLoadDiagnostic | None]:
+    """在导入前验证 adapter，并返回结构化的加载诊断。"""
     path_issues = adapter_path_security_issues(commands_py.parent, (commands_py.name,))
     if path_issues:
-        return None, path_issues[0]
+        return None, {"verdict": "security_issue", "reason": path_issues[0]}
     if not commands_py.is_file():
-        return None, "commands.py 必须是可加载的普通文件"
+        return None, {
+            "verdict": "commands_missing",
+            "reason": "commands.py 必须是可加载的普通文件",
+        }
+
+    # 已存在的 marketplace manifest 属于已安装 adapter 的边界，必须先于 commands.py 导入验证。
+    from cliany_site.commands.verify import _verify_manifest
+
+    manifest_result = _verify_manifest(commands_py.parent, domain)
+    if manifest_result["status"] == "error":
+        return None, {
+            "verdict": "manifest_error",
+            "reason": "; ".join(manifest_result["issues"]),
+        }
 
     module_name = f"cliany_site_adapters.{domain.replace('.', '_').replace('-', '_')}"
 
@@ -107,7 +122,7 @@ def load_adapter_from_path(commands_py: Path, domain: str) -> tuple[click.Group 
         sys.modules.pop(module_name, None)
         spec = importlib.util.spec_from_file_location(module_name, commands_py)
         if spec is None or spec.loader is None:
-            return None, "commands.py 无法创建加载器"
+            return None, {"verdict": "commands_unloadable", "reason": "commands.py 无法创建加载器"}
         module = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = module
         assert spec.loader is not None
@@ -116,12 +131,24 @@ def load_adapter_from_path(commands_py: Path, domain: str) -> tuple[click.Group 
         cli_group = getattr(module, "cli", None)
         if not isinstance(cli_group, click.Group):
             sys.modules.pop(module_name, None)
-            return None, "commands.py 必须导出 click.Group 类型的 cli"
+            return None, {
+                "verdict": "commands_unloadable",
+                "reason": "commands.py 必须导出 click.Group 类型的 cli",
+            }
         return cli_group, None
     except Exception as exc:  # adapter module code can fail during import
         sys.modules.pop(module_name, None)
         logger.warning("加载 adapter '%s' 失败: %s", domain, exc)
-        return None, f"commands.py 加载失败 ({type(exc).__name__})"
+        return None, {
+            "verdict": "commands_unloadable",
+            "reason": f"commands.py 加载失败 ({type(exc).__name__})",
+        }
+
+
+def load_adapter_from_path(commands_py: Path, domain: str) -> tuple[click.Group | None, str | None]:
+    """加载 commands.py，并返回无法注册到根 CLI 时的诊断原因。"""
+    cli_group, diagnostic = load_adapter_with_diagnostic(commands_py, domain)
+    return cli_group, diagnostic["reason"] if diagnostic is not None else None
 
 
 def load_adapter_with_error(domain: str) -> tuple[click.Group | None, str | None]:
@@ -203,19 +230,15 @@ def register_adapters(main_cli: click.Group) -> dict[str, Any]:
             continue
 
         try:
-            group, load_error = load_adapter_with_error(domain)
+            group, load_diagnostic = load_adapter_with_diagnostic(
+                get_config().adapters_dir / domain / "commands.py", domain
+            )
             if group is not None:
                 group.name = domain
                 main_cli.add_command(group, name=domain)
                 logger.debug("已注册 adapter: %s", domain)
-            elif load_error:
-                adapter_load_errors.setdefault(
-                    domain,
-                    {
-                        "verdict": "commands_unloadable",
-                        "reason": load_error,
-                    },
-                )
+            elif load_diagnostic:
+                adapter_load_errors.setdefault(domain, load_diagnostic)
         except (ImportError, SyntaxError, OSError) as exc:
             logger.warning("注册 adapter '%s' 失败: %s", domain, exc)
             adapter_load_errors[domain] = {

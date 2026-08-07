@@ -375,6 +375,58 @@ class TestRootJsonErrorEnvelope:
         finally:
             cli.set_adapter_load_errors(previous_errors)
 
+    def test_manifest_hash_mismatch_uses_static_verification_error_before_importing(
+        self, tmp_home, no_llm
+    ):
+        """根 CLI 必须在导入命令前拒绝已篡改的 manifest 声明文件。"""
+        from cliany_site.config import get_config
+        from cliany_site.loader import register_adapters
+
+        domain = "hash-mismatch.local"
+        adapter_dir = get_config().adapters_dir / domain
+        adapter_dir.mkdir(parents=True)
+        (adapter_dir / "metadata.json").write_text(
+            json.dumps({"schema_version": 3, "domain": domain, "commands": []}),
+            encoding="utf-8",
+        )
+        imported_marker = tmp_home / "commands-imported"
+        (adapter_dir / "commands.py").write_text(
+            "from pathlib import Path\n"
+            f"Path({str(imported_marker)!r}).write_text('imported')\n"
+            "import click\n\n@click.group()\ndef cli():\n    pass\n",
+            encoding="utf-8",
+        )
+        (adapter_dir / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "manifest_version": "1",
+                    "domain": domain,
+                    "files": ["commands.py", "metadata.json"],
+                    "file_hashes": {"commands.py": "0" * 64, "metadata.json": "0" * 64},
+                }
+            ),
+            encoding="utf-8",
+        )
+
+        previous_errors = dict(getattr(cli, "_adapter_load_errors", {}))
+        try:
+            registration = register_adapters(cli)
+            cli.set_adapter_load_errors(registration["adapter_load_errors"])
+
+            result = CliRunner().invoke(cli, ["--json", domain, "search"])
+
+            assert result.exit_code == 1
+            data = json.loads(result.output)
+            assert data["error"]["code"] == "E_VERIFY_STATIC"
+            assert data["error"]["details"] == {
+                "domain": domain,
+                "verdict": "manifest_error",
+                "reason": "文件哈希不匹配: commands.py; 文件哈希不匹配: metadata.json",
+            }
+            assert not imported_marker.exists()
+        finally:
+            cli.set_adapter_load_errors(previous_errors)
+
     def test_schema_rejected_adapter_uses_static_verification_error(self, tmp_home, no_llm):
         """非对象 metadata 不得阻断 CLI 启动，且必须返回可定位的静态错误。"""
         from cliany_site.config import get_config
