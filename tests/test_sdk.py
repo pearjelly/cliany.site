@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -56,6 +57,29 @@ def _create_adapter_with_actions(tmp_path: Path, domain: str = "test.com") -> Pa
     metadata_path = adapter_dir / "metadata.json"
     metadata_path.write_text(json.dumps(metadata, ensure_ascii=False), encoding="utf-8")
     return adapter_dir
+
+
+def _write_manifest(adapter_dir: Path, domain: str, extra_files: dict[str, Path] | None = None) -> None:
+    files = ["commands.py", "metadata.json"]
+    file_hashes = {
+        filename: hashlib.sha256((adapter_dir / filename).read_bytes()).hexdigest()
+        for filename in files
+    }
+    for filename, source_path in (extra_files or {}).items():
+        files.append(filename)
+        file_hashes[filename] = hashlib.sha256(source_path.read_bytes()).hexdigest()
+    (adapter_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "manifest_version": "1",
+                "domain": domain,
+                "version": "1.0.0",
+                "files": files,
+                "file_hashes": file_hashes,
+            }
+        ),
+        encoding="utf-8",
+    )
 
 
 # ═══════════════════════════════════════════════════════════
@@ -655,6 +679,62 @@ class TestSDKExecute:
             "domain": "linked.example",
             "verdict": "security_issue",
             "reason": "commands.py 不能是符号链接",
+        }
+        load_adapter.assert_not_called()
+        ensure_browser.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_execute_rejects_symlinked_manifest_before_browser(self, tmp_path):
+        from cliany_site.sdk import ClanySite
+
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter_with_actions(tmp_path, "linked-manifest.example")
+        outside_manifest = tmp_path / "outside-manifest.json"
+        outside_manifest.write_text("{}", encoding="utf-8")
+        (adapter_dir / "manifest.json").symlink_to(outside_manifest)
+
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.loader.load_adapter_from_path") as load_adapter,
+            patch.object(ClanySite, "_ensure_browser_session", new_callable=AsyncMock) as ensure_browser,
+        ):
+            result = await ClanySite().execute("linked-manifest.example", "search")
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_VERIFY_STATIC"
+        assert result["error"]["details"] == {
+            "domain": "linked-manifest.example",
+            "verdict": "security_issue",
+            "reason": "manifest.json 不能是符号链接",
+        }
+        load_adapter.assert_not_called()
+        ensure_browser.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_execute_rejects_symlinked_manifest_declared_file_before_browser(self, tmp_path):
+        from cliany_site.sdk import ClanySite
+
+        cfg = _make_config(tmp_path)
+        domain = "linked-declared-file.example"
+        adapter_dir = _create_adapter_with_actions(tmp_path, domain)
+        outside_notes = tmp_path / "outside-notes.txt"
+        outside_notes.write_text("outside adapter file", encoding="utf-8")
+        (adapter_dir / "notes.txt").symlink_to(outside_notes)
+        _write_manifest(adapter_dir, domain, {"notes.txt": outside_notes})
+
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.loader.load_adapter_from_path") as load_adapter,
+            patch.object(ClanySite, "_ensure_browser_session", new_callable=AsyncMock) as ensure_browser,
+        ):
+            result = await ClanySite().execute(domain, "search")
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_VERIFY_STATIC"
+        assert result["error"]["details"] == {
+            "domain": domain,
+            "verdict": "manifest_error",
+            "reason": "已安装 adapter 的声明文件不能是符号链接: notes.txt",
         }
         load_adapter.assert_not_called()
         ensure_browser.assert_not_awaited()
@@ -1537,6 +1617,37 @@ class TestAPIServer:
             "domain": "linked.example",
             "verdict": "security_issue",
             "reason": "commands.py 不能是符号链接",
+        }
+
+    @pytest.mark.asyncio
+    async def test_execute_endpoint_maps_symlinked_manifest_to_unprocessable(self, tmp_path):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.sdk import ClanySite
+        from cliany_site.server import APIServer
+
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter_with_actions(tmp_path, "linked-manifest.example")
+        outside_manifest = tmp_path / "outside-manifest.json"
+        outside_manifest.write_text("{}", encoding="utf-8")
+        (adapter_dir / "manifest.json").symlink_to(outside_manifest)
+        server = APIServer()
+        server._sdk = ClanySite()
+        app = server._build_app()
+
+        with patch("cliany_site.sdk.get_config", return_value=cfg):
+            async with TestClient(TestServer(app)) as client:
+                resp = await client.post(
+                    "/execute", json={"domain": "linked-manifest.example", "command": "search"}
+                )
+                assert resp.status == 422
+                data = await resp.json()
+
+        assert data["error"]["code"] == "E_VERIFY_STATIC"
+        assert data["error"]["details"] == {
+            "domain": "linked-manifest.example",
+            "verdict": "security_issue",
+            "reason": "manifest.json 不能是符号链接",
         }
 
     @pytest.mark.asyncio

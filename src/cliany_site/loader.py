@@ -53,7 +53,11 @@ def discover_adapters(include_legacy: bool = False) -> list[dict[str, Any]]:
             continue
         commands_py = adapter_dir / "commands.py"
         metadata_path = adapter_dir / "metadata.json"
-        if not commands_py.is_file() or commands_py.is_symlink() or metadata_path.is_symlink():
+        if adapter_path_security_issues(
+            adapter_dir, ("commands.py", "metadata.json", "manifest.json")
+        ):
+            continue
+        if not commands_py.is_file():
             continue
 
         domain = adapter_dir.name
@@ -142,7 +146,9 @@ def _adapter_load_diagnostics() -> dict[str, AdapterLoadDiagnostic]:
     for adapter_dir in sorted(adapters_dir.iterdir()):
         if not adapter_dir.is_dir():
             continue
-        path_issues = adapter_path_security_issues(adapter_dir, ("metadata.json", "commands.py"))
+        path_issues = adapter_path_security_issues(
+            adapter_dir, ("metadata.json", "commands.py", "manifest.json")
+        )
         if path_issues:
             diagnostics[adapter_dir.name] = {
                 "verdict": "security_issue",
@@ -253,12 +259,9 @@ class LazyAdapterRegistry:
                     continue
                 metadata_path = adapter_dir / "metadata.json"
                 commands_py = adapter_dir / "commands.py"
-                if (
-                    not metadata_path.is_file()
-                    or metadata_path.is_symlink()
-                    or not commands_py.is_file()
-                    or commands_py.is_symlink()
-                ):
+                if adapter_path_security_issues(
+                    adapter_dir, ("metadata.json", "commands.py", "manifest.json")
+                ) or not metadata_path.is_file() or not commands_py.is_file():
                     continue
                 try:
                     parsed_metadata = json.loads(metadata_path.read_text(encoding="utf-8"))

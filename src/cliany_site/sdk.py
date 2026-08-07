@@ -248,13 +248,13 @@ class ClanySite:
                 "请先运行 explore 生成 adapter",
             )
 
-        from cliany_site.commands.verify import _scan_security
+        from cliany_site.commands.verify import _scan_security, _verify_manifest
         from cliany_site.loader import adapter_path_security_issues, load_adapter_from_path
         from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
 
         diagnostic: dict[str, str] | None = None
         path_issues = adapter_path_security_issues(
-            metadata_path.parent, ("metadata.json", "commands.py")
+            metadata_path.parent, ("metadata.json", "commands.py", "manifest.json")
         )
         if path_issues:
             diagnostic = {"verdict": "security_issue", "reason": "; ".join(path_issues)}
@@ -280,9 +280,16 @@ class ClanySite:
                             "reason": "; ".join(security_issues),
                         }
                     else:
-                        _group, load_error = load_adapter_from_path(commands_py, domain)
-                        if load_error is not None:
-                            diagnostic = {"verdict": "commands_unloadable", "reason": load_error}
+                        manifest_result = _verify_manifest(metadata_path.parent, domain)
+                        if manifest_result["status"] == "error":
+                            diagnostic = {
+                                "verdict": "manifest_error",
+                                "reason": "; ".join(manifest_result["issues"]),
+                            }
+                        else:
+                            _group, load_error = load_adapter_from_path(commands_py, domain)
+                            if load_error is not None:
+                                diagnostic = {"verdict": "commands_unloadable", "reason": load_error}
         if diagnostic is not None:
             return error_response(
                 "E_VERIFY_STATIC",

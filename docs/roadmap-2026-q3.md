@@ -2,7 +2,7 @@
 
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-08-07
-- **基线版本：** v0.16.305
+- **基线版本：** v0.16.306
 - **目标周期：** 2026-06-10 ~ 2026-08-05
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -39,7 +39,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 - Active case 首跑引导：人类 `cliany-site cases --status active` 现在按固定 SHA-256 HTTPS 安装、`verify --strict`、仅案例声明的登录、只读命令输出每个 active case 的顺序；它只给出可审阅指引，不会自动安装、登录、执行或覆盖，也不把目录占用当作健康证据。
 - SDK/API 静态前置诊断：`ClanySite.execute()` 与 `POST /execute` 现在会在启动浏览器前拒绝不安全的 adapter 目录名、错误 metadata、缺失/不可加载/禁止模式/非 UTF-8 的 `commands.py`；参数错误保持 `E_INVALID_PARAM` / HTTP `400`，静态 adapter 错误保持 `E_VERIFY_STATIC` / HTTP `422`，不把本地诊断当作浏览器、LLM 或第三方工作流成功。
 - SDK/API 预检入口：Python 可通过异步 `ClanySite.verify(domain)` 或同步 `verify(domain)`，服务可通过 `GET /verify?domain=<domain>` 获得与 CLI `verify --strict` 对齐的本地诊断，而不先启动浏览器或联系 LLM。该入口保持无效输入 `400`、未安装 adapter `404`、静态失败 `422` 的边界，并在导入 `commands.py` 前执行禁止模式和 UTF-8 检查。
-- Adapter 文件边界：严格 verify、根 CLI 和 SDK/API 的运行前预检会在读取或导入前拒绝符号链接 adapter 目录、核心文件和 manifest 声明文件，以 `security_issue` / `E_VERIFY_STATIC` 明确本地安装需重装，不把目录外内容误作已验证 adapter。
+- Adapter 文件边界：严格 verify、根 CLI 和 SDK/API 的运行前预检会在读取或导入前拒绝符号链接 adapter 目录、核心文件和 manifest 声明文件，以 `security_issue` / `E_VERIFY_STATIC` 明确本地安装需重装，不把目录外内容误作已验证 adapter。`execute` 与 `POST /execute` 在启动浏览器前也复用 manifest 完整性检查，拒绝声明文件符号链接和哈希不匹配。
 
 这意味着 Q3 后续重点不再是「搭脚手架」，而是把已搭好的维护系统转换成用户可见的真实案例、可分发 adapter 资产和稳定集成路径。
 

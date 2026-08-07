@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-08-07
-- **Current baseline:** v0.16.305
+- **Current baseline:** v0.16.306
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -30,6 +30,8 @@ As of v0.16.303, SDK and HTTP callers get the same local adapter preflight befor
 As of v0.16.304, integrations can perform that same bounded check directly through asynchronous `ClanySite.verify(domain)`, synchronous `verify(domain)`, or `GET /verify?domain=<domain>`. These endpoints provide the CLI's static diagnostics before browser work, preserving `400` for invalid input, `404` for an absent adapter, and `422` for a failed local adapter verification; they do not establish workflow, LLM, or third-party availability.
 
 As of v0.16.305, the installed adapter is also a bounded local trust surface: root CLI registration, strict verification, SDK verification/execution, and HTTP verification/execution reject symbolic-link adapter directories and core files before reading or importing them. The same `security_issue` / `E_VERIFY_STATIC` repair signal remains local-only and does not claim browser, workflow, or provider readiness.
+
+As of v0.16.306, root CLI registration also rejects a symbolic-link manifest before importing commands. SDK `execute` and `POST /execute` check a present manifest and its declared file hashes before browser startup, so a local manifest failure remains a static `E_VERIFY_STATIC` / HTTP `422` repair path rather than a browser, workflow, or provider result.
 
 As of 2026-07-29, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 

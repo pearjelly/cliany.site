@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.306] - 2026-08-07
+
+### Fixed
+
+- Root CLI registration now rejects a symbolic-link `manifest.json` before importing adapter commands. SDK `execute` and HTTP `POST /execute` now also run manifest integrity checks before browser startup, rejecting symbolic-link manifest files or declared files and hash mismatches as `E_VERIFY_STATIC` / HTTP `422`.
+
 ## [0.16.305] - 2026-08-07
 
 ### Fixed
@@ -2802,7 +2808,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.305...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.306...HEAD
+[0.16.306]: https://github.com/pearjelly/cliany.site/compare/v0.16.305...v0.16.306
 [0.16.305]: https://github.com/pearjelly/cliany.site/compare/v0.16.304...v0.16.305
 [0.16.304]: https://github.com/pearjelly/cliany.site/compare/v0.16.303...v0.16.304
 [0.16.303]: https://github.com/pearjelly/cliany.site/compare/v0.16.302...v0.16.303

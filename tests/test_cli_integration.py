@@ -333,6 +333,48 @@ class TestRootJsonErrorEnvelope:
         finally:
             cli.set_adapter_load_errors(previous_errors)
 
+    def test_symlinked_manifest_uses_static_verification_error_before_importing(self, tmp_home, no_llm):
+        """根 CLI 不得在 manifest 路径离开 adapter 目录后导入命令。"""
+        from cliany_site.config import get_config
+        from cliany_site.loader import register_adapters
+
+        domain = "linked-manifest.local"
+        adapter_dir = get_config().adapters_dir / domain
+        adapter_dir.mkdir(parents=True)
+        (adapter_dir / "metadata.json").write_text(
+            json.dumps({"schema_version": 3, "domain": domain, "commands": []}),
+            encoding="utf-8",
+        )
+        imported_marker = tmp_home / "commands-imported"
+        (adapter_dir / "commands.py").write_text(
+            "from pathlib import Path\n"
+            f"Path({str(imported_marker)!r}).write_text('imported')\n"
+            "import click\n\n@click.group()\ndef cli():\n    pass\n",
+            encoding="utf-8",
+        )
+        outside_manifest = tmp_home / "outside-manifest.json"
+        outside_manifest.write_text("{}", encoding="utf-8")
+        (adapter_dir / "manifest.json").symlink_to(outside_manifest)
+
+        previous_errors = dict(getattr(cli, "_adapter_load_errors", {}))
+        try:
+            registration = register_adapters(cli)
+            cli.set_adapter_load_errors(registration["adapter_load_errors"])
+
+            result = CliRunner().invoke(cli, ["--json", domain, "search"])
+
+            assert result.exit_code == 1
+            data = json.loads(result.output)
+            assert data["error"]["code"] == "E_VERIFY_STATIC"
+            assert data["error"]["details"] == {
+                "domain": domain,
+                "verdict": "security_issue",
+                "reason": "manifest.json 不能是符号链接",
+            }
+            assert not imported_marker.exists()
+        finally:
+            cli.set_adapter_load_errors(previous_errors)
+
     def test_schema_rejected_adapter_uses_static_verification_error(self, tmp_home, no_llm):
         """非对象 metadata 不得阻断 CLI 启动，且必须返回可定位的静态错误。"""
         from cliany_site.config import get_config
