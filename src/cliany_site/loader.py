@@ -106,7 +106,14 @@ def load_adapter_with_diagnostic(
         }
 
     # 已存在的 marketplace manifest 属于已安装 adapter 的边界，必须先于 commands.py 导入验证。
-    from cliany_site.commands.verify import _verify_manifest
+    from cliany_site.commands.verify import _scan_security, _verify_manifest
+
+    security_issues = _scan_security(commands_py)
+    if security_issues:
+        return None, {
+            "verdict": "security_issue",
+            "reason": "; ".join(security_issues),
+        }
 
     manifest_result = _verify_manifest(commands_py.parent, domain)
     if manifest_result["status"] == "error":

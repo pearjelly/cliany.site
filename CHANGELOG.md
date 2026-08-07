@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Direct root CLI adapter dispatch now applies the same generated-module source scan as strict verification and SDK/API execution before importing `commands.py`. Banned patterns and non-UTF-8 modules return local `E_VERIFY_STATIC` / `security_issue` diagnostics without importing adapter code.
+
 ## [0.16.307] - 2026-08-07
 
 ### Fixed

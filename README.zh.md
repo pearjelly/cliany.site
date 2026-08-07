@@ -284,7 +284,7 @@ async def main():
 asyncio.run(main())
 ```
 
-SDK 方法统一返回 `{success, data, error}` 信封。`verify(domain)` 与 `cliany-site verify <domain> --strict` 使用相同的严格静态检查：metadata、生成模块安全、manifest 完整性，以及 `commands.py` 是否真正导出可加载的 Click group；它不会连接 Chrome 或 LLM。adapter 目录、`metadata.json`、`commands.py`、manifest 或 manifest 声明文件若为符号链接，会在读取内容或导入模块前以 `security_issue` 拒绝。存在 manifest 时，根 CLI 直接执行 adapter 命令也会在导入 `commands.py` 前校验每个声明文件的哈希；失配返回 `E_VERIFY_STATIC` / `manifest_error`。未安装 adapter 返回 `ADAPTER_NOT_FOUND`，静态校验失败返回带 `data.results` 兼容诊断的 `E_VERIFY_STATIC`。调用 `explore` 前仍需先通过严格的 live provider 预检；仅有配置过的凭据并不能证明 adapter 生成当前可用。
+SDK 方法统一返回 `{success, data, error}` 信封。`verify(domain)` 与 `cliany-site verify <domain> --strict` 使用相同的严格静态检查：metadata、生成模块安全、manifest 完整性，以及 `commands.py` 是否真正导出可加载的 Click group；它不会连接 Chrome 或 LLM。adapter 目录、`metadata.json`、`commands.py`、manifest 或 manifest 声明文件若为符号链接，会在读取内容或导入模块前以 `security_issue` 拒绝。根 CLI 直接执行 adapter 命令也会在导入 `commands.py` 前运行生成模块源码扫描：禁用模式和非 UTF-8 模块返回 `E_VERIFY_STATIC` / `security_issue`。存在 manifest 时，它还会校验每个声明文件的哈希；失配返回 `E_VERIFY_STATIC` / `manifest_error`。未安装 adapter 返回 `ADAPTER_NOT_FOUND`，静态校验失败返回带 `data.results` 兼容诊断的 `E_VERIFY_STATIC`。调用 `explore` 前仍需先通过严格的 live provider 预检；仅有配置过的凭据并不能证明 adapter 生成当前可用。
 
 ## 体验真实演示
 

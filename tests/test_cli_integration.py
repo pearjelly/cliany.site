@@ -427,6 +427,81 @@ class TestRootJsonErrorEnvelope:
         finally:
             cli.set_adapter_load_errors(previous_errors)
 
+    def test_unsafe_commands_use_static_verification_error_before_importing(
+        self, tmp_home, no_llm
+    ):
+        """根 CLI 不得导入包含禁用模式的 adapter 代码。"""
+        from cliany_site.config import get_config
+        from cliany_site.loader import register_adapters
+
+        domain = "unsafe-commands.local"
+        adapter_dir = get_config().adapters_dir / domain
+        adapter_dir.mkdir(parents=True)
+        (adapter_dir / "metadata.json").write_text(
+            json.dumps({"schema_version": 3, "domain": domain, "commands": []}),
+            encoding="utf-8",
+        )
+        imported_marker = tmp_home / "commands-imported"
+        (adapter_dir / "commands.py").write_text(
+            "from pathlib import Path\n"
+            f"Path({str(imported_marker)!r}).write_text('imported')\n"
+            "import os\n"
+            "os.system('true')\n"
+            "import click\n\n@click.group()\ndef cli():\n    pass\n",
+            encoding="utf-8",
+        )
+
+        previous_errors = dict(getattr(cli, "_adapter_load_errors", {}))
+        try:
+            registration = register_adapters(cli)
+            cli.set_adapter_load_errors(registration["adapter_load_errors"])
+
+            result = CliRunner().invoke(cli, ["--json", domain, "search"])
+
+            assert result.exit_code == 1
+            data = json.loads(result.output)
+            assert data["error"]["code"] == "E_VERIFY_STATIC"
+            assert data["error"]["details"] == {
+                "domain": domain,
+                "verdict": "security_issue",
+                "reason": "第 4 行包含禁用模式: 'os.system('",
+            }
+            assert not imported_marker.exists()
+        finally:
+            cli.set_adapter_load_errors(previous_errors)
+
+    def test_non_utf8_commands_use_static_verification_error_before_importing(self, tmp_home, no_llm):
+        """根 CLI 不得导入无法按 UTF-8 读取的 adapter 模块。"""
+        from cliany_site.config import get_config
+        from cliany_site.loader import register_adapters
+
+        domain = "non-utf8.local"
+        adapter_dir = get_config().adapters_dir / domain
+        adapter_dir.mkdir(parents=True)
+        (adapter_dir / "metadata.json").write_text(
+            json.dumps({"schema_version": 3, "domain": domain, "commands": []}),
+            encoding="utf-8",
+        )
+        (adapter_dir / "commands.py").write_bytes(b"\xff\xfe")
+
+        previous_errors = dict(getattr(cli, "_adapter_load_errors", {}))
+        try:
+            registration = register_adapters(cli)
+            cli.set_adapter_load_errors(registration["adapter_load_errors"])
+
+            result = CliRunner().invoke(cli, ["--json", domain, "search"])
+
+            assert result.exit_code == 1
+            data = json.loads(result.output)
+            assert data["error"]["code"] == "E_VERIFY_STATIC"
+            assert data["error"]["details"] == {
+                "domain": domain,
+                "verdict": "security_issue",
+                "reason": "commands.py 无法按 UTF-8 读取",
+            }
+        finally:
+            cli.set_adapter_load_errors(previous_errors)
+
     def test_schema_rejected_adapter_uses_static_verification_error(self, tmp_home, no_llm):
         """非对象 metadata 不得阻断 CLI 启动，且必须返回可定位的静态错误。"""
         from cliany_site.config import get_config
