@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.305] - 2026-08-07
+
+### Fixed
+
+- Strict adapter verification and runtime preflight now reject a symbolic-link adapter directory, `metadata.json`, `commands.py`, or `manifest.json` before reading or importing adapter-owned content. Manifest-declared files must also be ordinary files. Root CLI, SDK `verify`/`execute`, and HTTP `GET /verify` / `POST /execute` retain `security_issue` / `E_VERIFY_STATIC`; HTTP static failures remain `422` and do not start a browser.
+
 ## [0.16.304] - 2026-08-06
 
 ### Added
@@ -2796,7 +2802,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.304...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.305...HEAD
+[0.16.305]: https://github.com/pearjelly/cliany.site/compare/v0.16.304...v0.16.305
 [0.16.304]: https://github.com/pearjelly/cliany.site/compare/v0.16.303...v0.16.304
 [0.16.303]: https://github.com/pearjelly/cliany.site/compare/v0.16.302...v0.16.303
 [0.16.302]: https://github.com/pearjelly/cliany.site/compare/v0.16.301...v0.16.302
