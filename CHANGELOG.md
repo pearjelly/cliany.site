@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.308] - 2026-08-08
+
 ### Fixed
 
 - Direct root CLI adapter dispatch now applies the same generated-module source scan as strict verification and SDK/API execution before importing `commands.py`. Banned patterns and non-UTF-8 modules return local `E_VERIFY_STATIC` / `security_issue` diagnostics without importing adapter code.
@@ -2818,7 +2820,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.307...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.308...HEAD
+[0.16.308]: https://github.com/pearjelly/cliany.site/compare/v0.16.307...v0.16.308
 [0.16.307]: https://github.com/pearjelly/cliany.site/compare/v0.16.306...v0.16.307
 [0.16.306]: https://github.com/pearjelly/cliany.site/compare/v0.16.305...v0.16.306
 [0.16.305]: https://github.com/pearjelly/cliany.site/compare/v0.16.304...v0.16.305
