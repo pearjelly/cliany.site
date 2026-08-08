@@ -311,12 +311,18 @@ def test_doctor_recommends_explore_when_llm_and_cdp_are_ready(tmp_home, no_llm, 
     assert summary["ready_for_existing_adapters"] is True
     assert summary["ready_for_demo_adapters"] is True
     assert summary["ready_for_explore"] is True
+    assert summary["ready_for_live_explore"] is False
     assert summary["recommended_next_step"] == ACTIVE_DEMO_RECOMMENDATION
     capabilities = summary["capabilities"]
     assert capabilities["manage_adapters"]["ready"] is True
     assert capabilities["run_browser_workflows"]["ready"] is True
     assert capabilities["generate_adapters"]["ready"] is True
     assert capabilities["generate_adapters"]["blockers"] == []
+    assert capabilities["generate_adapters"]["live_preflight_required"] is True
+    assert capabilities["generate_adapters"]["ready_for_live_explore"] is False
+    assert capabilities["generate_adapters"]["live_preflight_command"] == (
+        "cliany-site doctor --llm-live --require-capability generate_adapters --json"
+    )
     assert summary["demo_adapter_quickstart"]["available"] is True
     assert summary["demo_adapter_quickstart"]["deprecated"] is False
     assert summary["demo_adapter_quickstart"]["case_status"] == "active"
@@ -368,11 +374,12 @@ def test_doctor_does_not_call_llm_live_by_default(tmp_home, no_llm, monkeypatch)
     assert "llm_live" not in {check["name"] for check in checks}
     summary = data["data"]["summary"]
     assert summary["ready_for_explore"] is True
+    assert summary["ready_for_live_explore"] is False
     assert summary["llm_live_preflight"] == {
         "checked": False,
         "ready": None,
         "status": "not_run",
-        "blocks_explore": False,
+        "blocks_explore": True,
         "action": (
             "Run `cliany-site doctor --llm-live --require-capability generate_adapters --json` "
             "before long explore or candidate adapter promotion."
@@ -437,7 +444,9 @@ def test_doctor_llm_live_success_keeps_explore_ready(tmp_home, no_llm, monkeypat
     assert live_check["details"]["phase"] == "llm_preflight"
     summary = data["data"]["summary"]
     assert summary["ready_for_explore"] is True
+    assert summary["ready_for_live_explore"] is True
     assert summary["capabilities"]["generate_adapters"]["ready"] is True
+    assert summary["capabilities"]["generate_adapters"]["ready_for_live_explore"] is True
     assert summary["llm_live_preflight"] == {
         "checked": True,
         "ready": True,
@@ -501,6 +510,7 @@ def test_doctor_llm_live_unavailable_blocks_explore_ready(tmp_home, no_llm, monk
     assert summary["ready_for_existing_adapters"] is True
     assert summary["ready_for_demo_adapters"] is True
     assert summary["ready_for_explore"] is False
+    assert summary["ready_for_live_explore"] is False
     assert any(item["name"] == "llm_live" for item in summary["should_fix"])
     assert summary["capabilities"]["generate_adapters"]["ready"] is False
     assert summary["capabilities"]["generate_adapters"]["blockers"] == ["llm_live"]

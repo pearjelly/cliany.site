@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.309] - 2026-08-08
+
+### Added
+
+- `doctor --json` now exposes `summary.ready_for_live_explore` and matching `capabilities.generate_adapters.ready_for_live_explore`. They are true only after an explicit successful live provider preflight; the existing `ready_for_explore` remains a local configuration signal for compatibility.
+
 ## [0.16.308] - 2026-08-08
 
 ### Fixed
@@ -2820,7 +2826,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.308...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.309...HEAD
+[0.16.309]: https://github.com/pearjelly/cliany.site/compare/v0.16.308...v0.16.309
 [0.16.308]: https://github.com/pearjelly/cliany.site/compare/v0.16.307...v0.16.308
 [0.16.307]: https://github.com/pearjelly/cliany.site/compare/v0.16.306...v0.16.307
 [0.16.306]: https://github.com/pearjelly/cliany.site/compare/v0.16.305...v0.16.306

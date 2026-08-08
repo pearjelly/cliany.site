@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-08-08
-- **Current baseline:** v0.16.308
+- **Current baseline:** v0.16.309
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -36,6 +36,8 @@ As of v0.16.306, root CLI registration also rejects a symbolic-link manifest bef
 As of v0.16.307, direct root CLI adapter dispatch also checks a present manifest's declared file hashes before importing `commands.py`. A mismatch is a local `manifest_error` / `E_VERIFY_STATIC` repair path, so all adapter execution surfaces use the same installed-file boundary without claiming browser, workflow, or provider readiness.
 
 As of v0.16.308, direct root CLI adapter dispatch also runs the generated-module source scan before importing `commands.py`. Banned patterns and non-UTF-8 modules now return the same local `security_issue` / `E_VERIFY_STATIC` repair path used by strict verification and SDK/API execution; this remains local-only evidence.
+
+As of v0.16.309, `doctor --json` separates local configuration from a real provider result: `ready_for_explore` remains the compatibility signal for local prerequisites, while `ready_for_live_explore` becomes true only after `doctor --llm-live --require-capability generate_adapters --json` succeeds. Automation can therefore stop before a real `explore` when the provider has not been tested or is unavailable.
 
 As of 2026-07-29, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 

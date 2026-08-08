@@ -81,6 +81,10 @@ _CAPABILITY_CHOICES = (
     "generate_adapters",
 )
 
+_LIVE_EXPLORE_PREFLIGHT_COMMAND = (
+    "cliany-site doctor --llm-live --require-capability generate_adapters --json"
+)
+
 
 _CHECK_LABELS = {
     "cdp": "Chrome 浏览器连接",
@@ -213,9 +217,9 @@ def _llm_live_preflight_summary(checks: list[dict[str, Any]]) -> dict[str, Any]:
         "checked": False,
         "ready": None,
         "status": "not_run",
-        "blocks_explore": False,
+        "blocks_explore": True,
         "action": (
-            "Run `cliany-site doctor --llm-live --require-capability generate_adapters --json` "
+            f"Run `{_LIVE_EXPLORE_PREFLIGHT_COMMAND}` "
             "before long explore or candidate adapter promotion."
         ),
     }
@@ -322,8 +326,13 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
     summary["ready_for_explore"] = not summary["must_fix"] and not any(
         item["name"] in {"llm", "llm_live"} for item in summary["should_fix"]
     )
-    summary["capabilities"] = _build_capabilities(checks)
     summary["llm_live_preflight"] = _llm_live_preflight_summary(checks)
+    summary["ready_for_live_explore"] = summary["llm_live_preflight"]["ready"] is True
+    summary["capabilities"] = _build_capabilities(checks)
+    generate_adapters = summary["capabilities"]["generate_adapters"]
+    generate_adapters["live_preflight_required"] = True
+    generate_adapters["live_preflight_command"] = _LIVE_EXPLORE_PREFLIGHT_COMMAND
+    generate_adapters["ready_for_live_explore"] = summary["ready_for_live_explore"]
     demo_adapter_quickstart = _demo_adapter_quickstart()
     summary["demo_adapter_quickstart"] = demo_adapter_quickstart
     summary["ready_for_demo_adapters"] = bool(demo_adapter_quickstart["available"]) and bool(

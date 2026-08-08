@@ -219,7 +219,7 @@ cliany-site doctor --json
 cliany-site doctor --llm-live --require-capability generate_adapters --json
 ```
 
-By default, `doctor` checks local configuration, CDP, directories, and keys without calling the LLM provider. Before a longer `explore`, use `--llm-live --require-capability generate_adapters` for a strict provider gate; retryable gateway, rate-limit, provider connection, or service outages return nonzero with `E_LLM_UNAVAILABLE`, while preserving the full checks in `error.details`. Fix the provider issue and rerun that same strict command before `explore`.
+By default, `doctor` checks local configuration, CDP, directories, and keys without calling the LLM provider. `data.summary.ready_for_explore` remains a local configuration signal; automation must require `data.summary.ready_for_live_explore=true` (or the equivalent `data.summary.capabilities.generate_adapters.ready_for_live_explore=true`) before a real `explore`. Before a longer `explore`, use `--llm-live --require-capability generate_adapters` for a strict provider gate; retryable gateway, rate-limit, provider connection, or service outages return nonzero with `E_LLM_UNAVAILABLE`, while preserving the full checks in `error.details`. Fix the provider issue and rerun that same strict command before `explore`.
 
 ## Usage Examples
 

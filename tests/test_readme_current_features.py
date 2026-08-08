@@ -264,6 +264,7 @@ def test_readmes_require_a_live_preflight_before_explore() -> None:
         text = (ROOT / filename).read_text(encoding="utf-8")
         assert heading in text
         assert command in text
+        assert "ready_for_live_explore" in text
         assert "rerun that same strict command before `explore`" in text or (
             "必须重跑同一条严格命令" in text
         )
