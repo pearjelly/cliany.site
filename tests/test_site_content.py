@@ -112,12 +112,16 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in docs
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.310" in index
-    assert "当前基线：v0.16.310" in script
+    assert "Current baseline: v0.16.311" in index
+    assert "当前基线：v0.16.311" in script
     assert "source-safety scan" in index
     assert "源码安全扫描" in script
     assert "ready_for_live_explore=true" in index
     assert "ready_for_live_explore=true" in script
+    assert "local_blockers" in index
+    assert "local_blockers" in script
+    assert "live_blockers=[&quot;llm_live&quot;]" in index
+    assert "live_blockers=[&quot;llm_live&quot;]" in script
     assert "E_VERIFY_STATIC" in index
     assert "E_VERIFY_STATIC" in script
     assert "ADAPTER_NOT_FOUND" in index
@@ -143,7 +147,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.310 · Python" in docs
+    assert "v0.16.311 · Python" in docs
     assert "daily_release_capacity_remaining" in script
     assert "installed_version" in docs
     assert "installed_version=null" in docs
@@ -164,7 +168,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert docs.index(human_step) < docs.index(automation_step)
     assert "会把未来的 adapter 命令标为“当前不可运行”" in docs
     assert "不能当作 active demo 快速命令" in docs
-    assert "修复 provider 配置或连接后重跑同一命令" in docs
+    assert "provider 预检失败时" in docs
+    assert "local_ready=true" in docs
     assert "cliany-site doctor --llm-live --require-capability generate_adapters --json" in docs
     assert "ready_for_live_explore" in docs
     assert "commands.py" in docs

@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-08-08
-- **Current baseline:** v0.16.310
+- **Current baseline:** v0.16.311
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -40,6 +40,8 @@ As of v0.16.308, direct root CLI adapter dispatch also runs the generated-module
 As of v0.16.309, `doctor --json` separates local configuration from a real provider result: `ready_for_explore` remains the compatibility signal for local prerequisites, while `ready_for_live_explore` becomes true only after `doctor --llm-live --require-capability generate_adapters --json` succeeds. Automation can therefore stop before a real `explore` when the provider has not been tested or is unavailable.
 
 As of v0.16.310, the nested `generate_adapters` capability makes that distinction actionable without changing its established local `ready` field: `local_ready` names the local result, while `live_blockers` identifies an omitted or failed live preflight and `next_step` gives the strict preflight command. This prevents a locally configured machine from presenting an untested provider as the next runnable `explore` step.
+
+As of v0.16.311, `local_ready` and `local_blockers` exclude the `llm_live` result. A retryable provider outage can now truthfully report that local prerequisites remain ready while overall generation is blocked by `live_blockers=["llm_live"]`; the strict retry command remains the next step.
 
 As of 2026-07-29, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 

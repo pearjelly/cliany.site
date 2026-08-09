@@ -47,7 +47,7 @@ cliany-site doctor --json
 - `must_fix`：先处理，否则关键路径不可用。
 - `should_fix`：建议处理；例如没有 LLM key 时仍可先查看维护中的案例。
 - `info`：诊断信息，通常无需动作。
-- `capabilities`：按 `manage_adapters`、`run_browser_workflows`、`generate_adapters` 展示当前可用路径和 blockers。生成 adapter 时，`local_ready` 只表示本地前提，`live_blockers` 与 `ready_for_live_explore` 才表示真实 provider 门禁；未做 live preflight 时按 `next_step` 先运行严格命令。
+- `capabilities`：按 `manage_adapters`、`run_browser_workflows`、`generate_adapters` 展示当前可用路径和 blockers。生成 adapter 时，`local_ready` / `local_blockers` 只表示本地前提，`live_blockers` 与 `ready_for_live_explore` 才表示真实 provider 门禁；provider 失败不会把已满足的本地前提改成未就绪，仍按 `next_step` 重跑严格命令。
 - `recommended_next_step`：和 human 输出中的 `下一步` 一致，可用于脚本判断后续引导。
 - `ready_for_existing_adapters`：当前环境是否可运行已有 adapter；和 human 输出的 `Existing adapter runtime ready` 一致。
 - `ready_for_demo_adapters`：当前是否真的有可用的已发布 active demo adapter asset；只有它为 `true` 时，才执行 demo 快速路径。

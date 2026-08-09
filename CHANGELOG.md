@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.311] - 2026-08-10
+
+### Fixed
+
+- `doctor --json` now computes `capabilities.generate_adapters.local_ready` from `local_blockers`, excluding `llm_live`. A failed live provider preflight therefore keeps truthful local readiness while overall `ready` remains false, `live_blockers` identifies the provider failure, and `next_step` gives the strict retry command.
+
 ## [0.16.310] - 2026-08-09
 
 ### Added
@@ -2832,7 +2838,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.310...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.311...HEAD
+[0.16.311]: https://github.com/pearjelly/cliany.site/compare/v0.16.310...v0.16.311
 [0.16.310]: https://github.com/pearjelly/cliany.site/compare/v0.16.309...v0.16.310
 [0.16.309]: https://github.com/pearjelly/cliany.site/compare/v0.16.308...v0.16.309
 [0.16.308]: https://github.com/pearjelly/cliany.site/compare/v0.16.307...v0.16.308
