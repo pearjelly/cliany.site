@@ -318,6 +318,7 @@ def test_doctor_recommends_explore_when_llm_and_cdp_are_ready(tmp_home, no_llm, 
     assert capabilities["run_browser_workflows"]["ready"] is True
     assert capabilities["generate_adapters"]["ready"] is True
     assert capabilities["generate_adapters"]["blockers"] == []
+    assert capabilities["generate_adapters"]["local_blockers"] == []
     assert capabilities["generate_adapters"]["local_ready"] is True
     assert capabilities["generate_adapters"]["live_preflight_required"] is True
     assert capabilities["generate_adapters"]["ready_for_live_explore"] is False
@@ -452,6 +453,7 @@ def test_doctor_llm_live_success_keeps_explore_ready(tmp_home, no_llm, monkeypat
     assert summary["ready_for_explore"] is True
     assert summary["ready_for_live_explore"] is True
     assert summary["capabilities"]["generate_adapters"]["ready"] is True
+    assert summary["capabilities"]["generate_adapters"]["local_blockers"] == []
     assert summary["capabilities"]["generate_adapters"]["local_ready"] is True
     assert summary["capabilities"]["generate_adapters"]["ready_for_live_explore"] is True
     assert summary["capabilities"]["generate_adapters"]["live_blockers"] == []
@@ -522,8 +524,13 @@ def test_doctor_llm_live_unavailable_blocks_explore_ready(tmp_home, no_llm, monk
     assert any(item["name"] == "llm_live" for item in summary["should_fix"])
     assert summary["capabilities"]["generate_adapters"]["ready"] is False
     assert summary["capabilities"]["generate_adapters"]["blockers"] == ["llm_live"]
-    assert summary["capabilities"]["generate_adapters"]["local_ready"] is False
+    assert summary["capabilities"]["generate_adapters"]["local_blockers"] == []
+    assert summary["capabilities"]["generate_adapters"]["local_ready"] is True
     assert summary["capabilities"]["generate_adapters"]["live_blockers"] == ["llm_live"]
+    assert summary["capabilities"]["generate_adapters"]["next_step"] == (
+        "先运行 cliany-site doctor --llm-live --require-capability generate_adapters --json；"
+        "通过后再运行 cliany-site explore。"
+    )
     assert summary["llm_live_preflight"] == {
         "checked": True,
         "ready": False,

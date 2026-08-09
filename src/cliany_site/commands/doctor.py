@@ -330,7 +330,10 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
     summary["ready_for_live_explore"] = summary["llm_live_preflight"]["ready"] is True
     summary["capabilities"] = _build_capabilities(checks)
     generate_adapters = summary["capabilities"]["generate_adapters"]
-    generate_adapters["local_ready"] = generate_adapters["ready"]
+    generate_adapters["local_blockers"] = [
+        blocker for blocker in generate_adapters["blockers"] if blocker != "llm_live"
+    ]
+    generate_adapters["local_ready"] = not generate_adapters["local_blockers"]
     generate_adapters["live_preflight_required"] = True
     generate_adapters["live_preflight_command"] = _LIVE_EXPLORE_PREFLIGHT_COMMAND
     generate_adapters["ready_for_live_explore"] = summary["ready_for_live_explore"]
