@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.310] - 2026-08-09
+
+### Added
+
+- `doctor --json` now distinguishes the local `generate_adapters.ready` result from live provider evidence inside the capability itself: `local_ready` preserves the local result, `live_blockers` reports a missing or failed live preflight, and a locally ready but untested provider receives the exact strict preflight command as `next_step` before `explore`.
+
 ## [0.16.309] - 2026-08-08
 
 ### Added
@@ -2826,7 +2832,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.309...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.310...HEAD
+[0.16.310]: https://github.com/pearjelly/cliany.site/compare/v0.16.309...v0.16.310
 [0.16.309]: https://github.com/pearjelly/cliany.site/compare/v0.16.308...v0.16.309
 [0.16.308]: https://github.com/pearjelly/cliany.site/compare/v0.16.307...v0.16.308
 [0.16.307]: https://github.com/pearjelly/cliany.site/compare/v0.16.306...v0.16.307
