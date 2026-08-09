@@ -211,7 +211,7 @@ cliany-site doctor --json
 cliany-site doctor --llm-live --require-capability generate_adapters --json
 ```
 
-默认 `doctor` 只检查本地配置、CDP、目录和 key，不会真实调用 LLM provider。`data.summary.ready_for_explore` 仍只表示本地配置可用；自动化必须读取 `data.summary.ready_for_live_explore=true`（或等价的 `data.summary.capabilities.generate_adapters.ready_for_live_explore=true`）才可放行真实 `explore`。准备运行耗时较长的 `explore` 前，使用 `--llm-live --require-capability generate_adapters` 执行严格 provider 门禁；如果遇到网关、限流或服务不可用，会以非零结果返回 `E_LLM_UNAVAILABLE`，完整检查数据保留在 `error.details`。修复 provider 问题后，必须重跑同一条严格命令，确认成功后才进入 `explore`。
+默认 `doctor` 只检查本地配置、CDP、目录和 key，不会真实调用 LLM provider。`data.summary.ready_for_explore` 与 `data.summary.capabilities.generate_adapters.local_ready` 仍只表示本地配置可用；自动化必须读取 `data.summary.ready_for_live_explore=true`（或等价的 `data.summary.capabilities.generate_adapters.ready_for_live_explore=true`）才可放行真实 `explore`。本地前提通过但还没有实际测试 provider 时，`generate_adapters.live_blockers` 会给出 `llm_live_preflight`，`next_step` 会给出可直接执行的严格命令。准备运行耗时较长的 `explore` 前，使用 `--llm-live --require-capability generate_adapters` 执行严格 provider 门禁；如果遇到网关、限流或服务不可用，会以非零结果返回 `E_LLM_UNAVAILABLE`，完整检查数据保留在 `error.details`。修复 provider 问题后，必须重跑同一条严格命令，确认成功后才进入 `explore`。
 
 ## 使用示例
 

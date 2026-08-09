@@ -330,9 +330,20 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
     summary["ready_for_live_explore"] = summary["llm_live_preflight"]["ready"] is True
     summary["capabilities"] = _build_capabilities(checks)
     generate_adapters = summary["capabilities"]["generate_adapters"]
+    generate_adapters["local_ready"] = generate_adapters["ready"]
     generate_adapters["live_preflight_required"] = True
     generate_adapters["live_preflight_command"] = _LIVE_EXPLORE_PREFLIGHT_COMMAND
     generate_adapters["ready_for_live_explore"] = summary["ready_for_live_explore"]
+    if summary["ready_for_live_explore"]:
+        generate_adapters["live_blockers"] = []
+    elif summary["llm_live_preflight"]["checked"]:
+        generate_adapters["live_blockers"] = ["llm_live"]
+    else:
+        generate_adapters["live_blockers"] = ["llm_live_preflight"]
+    if generate_adapters["local_ready"] and not summary["ready_for_live_explore"]:
+        generate_adapters["next_step"] = (
+            "先运行 " + _LIVE_EXPLORE_PREFLIGHT_COMMAND + "；通过后再运行 cliany-site explore。"
+        )
     demo_adapter_quickstart = _demo_adapter_quickstart()
     summary["demo_adapter_quickstart"] = demo_adapter_quickstart
     summary["ready_for_demo_adapters"] = bool(demo_adapter_quickstart["available"]) and bool(
