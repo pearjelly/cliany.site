@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.312] - 2026-08-11
+
 ### Added
 
 - Candidate doctor preflight evidence now includes `generate_adapters.local_ready` and `local_blockers` across evidence bundles, issue templates, the standalone extractor, case validation, and next-iteration artifacts. Maintainers can show that local prerequisites are healthy while a live provider remains blocked without treating local readiness as permission to run candidate `explore`.
@@ -2842,7 +2844,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.311...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.312...HEAD
+[0.16.312]: https://github.com/pearjelly/cliany.site/compare/v0.16.311...v0.16.312
 [0.16.311]: https://github.com/pearjelly/cliany.site/compare/v0.16.310...v0.16.311
 [0.16.310]: https://github.com/pearjelly/cliany.site/compare/v0.16.309...v0.16.310
 [0.16.309]: https://github.com/pearjelly/cliany.site/compare/v0.16.308...v0.16.309
