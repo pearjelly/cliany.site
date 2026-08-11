@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- The website English maintainer translation now uses a quote-safe JavaScript string delimiter, so apostrophes such as `manifest's` no longer stop `site/script.js` from parsing and leave the production homepage body blank. Site regression coverage locks the executable translation form.
+
 ## [0.16.312] - 2026-08-11
 
 ### Added

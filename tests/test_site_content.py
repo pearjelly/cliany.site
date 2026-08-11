@@ -116,6 +116,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "1-3 releases/day loop" in index
     assert "Current baseline: v0.16.312" in index
     assert "当前基线：v0.16.312" in script
+    assert 'en: "Current baseline: v0.16.312.' in script
+    assert "en: 'Current baseline: v0.16.312." not in script
     assert "source-safety scan" in index
     assert "源码安全扫描" in script
     assert "ready_for_live_explore=true" in index

@@ -11210,6 +11210,25 @@ def test_v016312_release_draft_tracks_local_candidate_evidence() -> None:
         assert snippet in text
 
 
+def test_v016313_release_draft_tracks_website_script_recovery() -> None:
+    text = (ROOT / "docs" / "releases" / "v0.16.313-draft.md").read_text(
+        encoding="utf-8"
+    )
+
+    required = [
+        "SyntaxError: Unexpected identifier 's'",
+        "manifest's",
+        "node --check site/script.js",
+        "Current baseline: v0.16.313",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "不声称 live LLM",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
 def test_v016260_release_draft_describes_projected_daily_cap_blocker():
     text = (ROOT / "docs" / "releases" / "v0.16.260-draft.md").read_text(
         encoding="utf-8"
