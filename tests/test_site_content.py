@@ -48,6 +48,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "doctor_preflight_evidence_template" in index
     assert "doctor_preflight_evidence_template_field_count" in index
     assert "doctor_preflight_evidence_template_sha256" in index
+    assert "summary.capabilities.generate_adapters.local_ready" in docs
+    assert "summary.capabilities.generate_adapters.local_blockers" in docs
     assert "doctor_preflight_state_fields" in index
     assert "doctor_preflight_state_statuses" in index
     assert "preflight_state.status" in index

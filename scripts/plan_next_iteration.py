@@ -62,7 +62,9 @@ DOCTOR_PREFLIGHT_BLOCKER_COMMENT = (
     "Doctor preflight is blocking candidate promotion. Paste the doctor JSON fields "
     "`summary.ready_for_explore`, `summary.llm_live_preflight`, "
     "`summary.capabilities.run_browser_workflows.ready`, "
-    "`summary.capabilities.generate_adapters.ready`, `checks[cdp].status`, "
+    "`summary.capabilities.generate_adapters.ready`, "
+    "`summary.capabilities.generate_adapters.local_ready`, "
+    "`summary.capabilities.generate_adapters.local_blockers`, `checks[cdp].status`, "
     "`checks[cdp].action`, `checks[llm_live].status`, "
     "`checks[llm_live].details.error_code`, `checks[llm_live].details.retryable`, "
     "`checks[llm_live].details.status_code`, `checks[llm_live].details.phase`, "
@@ -88,6 +90,8 @@ DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = (
     "summary.llm_live_preflight",
     "summary.capabilities.run_browser_workflows.ready",
     "summary.capabilities.generate_adapters.ready",
+    "summary.capabilities.generate_adapters.local_ready",
+    "summary.capabilities.generate_adapters.local_blockers",
     "checks[cdp].status",
     "checks[cdp].action",
     "checks[llm_live].status",
@@ -107,6 +111,14 @@ DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = (
     (
         "summary.capabilities.generate_adapters.ready",
         "data.summary.capabilities.generate_adapters.ready",
+    ),
+    (
+        "summary.capabilities.generate_adapters.local_ready",
+        "data.summary.capabilities.generate_adapters.local_ready",
+    ),
+    (
+        "summary.capabilities.generate_adapters.local_blockers",
+        "data.summary.capabilities.generate_adapters.local_blockers",
     ),
     ("checks[cdp].status", 'data.checks[name="cdp"].status'),
     ("checks[cdp].action", 'data.checks[name="cdp"].action'),

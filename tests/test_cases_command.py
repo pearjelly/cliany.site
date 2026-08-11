@@ -12,6 +12,8 @@ DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = [
     "summary.llm_live_preflight",
     "summary.capabilities.run_browser_workflows.ready",
     "summary.capabilities.generate_adapters.ready",
+    "summary.capabilities.generate_adapters.local_ready",
+    "summary.capabilities.generate_adapters.local_blockers",
     "checks[cdp].status",
     "checks[cdp].action",
     "checks[llm_live].status",
@@ -126,7 +128,11 @@ def _write_blocked_doctor_json(tmp_path: Path) -> Path:
                         },
                         "capabilities": {
                             "run_browser_workflows": {"ready": True},
-                            "generate_adapters": {"ready": False},
+                            "generate_adapters": {
+                                "ready": False,
+                                "local_ready": True,
+                                "local_blockers": [],
+                            },
                         },
                     },
                 },

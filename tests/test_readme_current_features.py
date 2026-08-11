@@ -182,6 +182,8 @@ def test_readmes_document_current_extract_quality_and_readiness():
         assert "doctor_preflight_evidence_template" in text
         assert "doctor_preflight_evidence_template_field_count" in text
         assert "doctor_preflight_evidence_template_sha256" in text
+        assert "summary.capabilities.generate_adapters.local_ready" in text
+        assert "summary.capabilities.generate_adapters.local_blockers" in text
         assert "doctor_preflight_state_fields" in text
         assert "doctor_preflight_state_statuses" in text
         assert "preflight_state.status" in text

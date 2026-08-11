@@ -56,6 +56,8 @@ DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = (
     "summary.llm_live_preflight",
     "summary.capabilities.run_browser_workflows.ready",
     "summary.capabilities.generate_adapters.ready",
+    "summary.capabilities.generate_adapters.local_ready",
+    "summary.capabilities.generate_adapters.local_blockers",
     "checks[cdp].status",
     "checks[cdp].action",
     "checks[llm_live].status",
@@ -75,6 +77,14 @@ DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = (
     (
         "summary.capabilities.generate_adapters.ready",
         "data.summary.capabilities.generate_adapters.ready",
+    ),
+    (
+        "summary.capabilities.generate_adapters.local_ready",
+        "data.summary.capabilities.generate_adapters.local_ready",
+    ),
+    (
+        "summary.capabilities.generate_adapters.local_blockers",
+        "data.summary.capabilities.generate_adapters.local_blockers",
     ),
     ("checks[cdp].status", 'data.checks[name="cdp"].status'),
     ("checks[cdp].action", 'data.checks[name="cdp"].action'),

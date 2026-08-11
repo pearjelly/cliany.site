@@ -311,6 +311,8 @@ When the live gate blocks promotion, save the doctor result with `cliany-site do
 
 To keep already-open candidate issues aligned with the current strict handoff, run `python scripts/audit_candidate_issues.py --repo pearjelly/cliany.site --json`. It is read-only by default and reports `current`, `stale`, `missing`, `duplicate`, and unexpected labeled issue states with body hashes. The human-readable report also prints an unexpected issue's actual title and URL so the blocker can be located without parsing JSON. Only use `--apply --confirm-rewrite` after reviewing stale bodies and resolving missing, duplicate, or unexpected issues; it will not create, close, or promote issues.
 
+The doctor evidence contract includes `summary.capabilities.generate_adapters.local_ready` and `summary.capabilities.generate_adapters.local_blockers`. These fields show whether local prerequisites remain healthy when the live provider is blocked; they do not replace `summary.llm_live_preflight.ready=true` as the gate for candidate `explore`.
+
 ### SuiteCRM Demo (Enterprise CRM)
 ```bash
 # 1. Install adapter

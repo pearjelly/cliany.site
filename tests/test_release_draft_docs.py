@@ -11187,6 +11187,28 @@ def test_v016254_release_draft_tracks_planner_issue_template_handoff():
         assert snippet in text
 
 
+def test_v016312_release_draft_tracks_local_candidate_evidence() -> None:
+    text = (ROOT / "docs" / "releases" / "v0.16.312-draft.md").read_text(
+        encoding="utf-8"
+    )
+
+    required = [
+        "summary.capabilities.generate_adapters.local_ready",
+        "summary.capabilities.generate_adapters.local_blockers",
+        "14 个字段",
+        "template SHA-256",
+        "local_ready=true",
+        "local_blockers=[]",
+        'live_blockers=["llm_live"]',
+        "E_LLM_UNAVAILABLE",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
 def test_v016260_release_draft_describes_projected_daily_cap_blocker():
     text = (ROOT / "docs" / "releases" / "v0.16.260-draft.md").read_text(
         encoding="utf-8"

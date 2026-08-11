@@ -59,7 +59,12 @@ python scripts/extract_doctor_preflight_evidence.py /tmp/cliany-doctor-preflight
 
 - `summary.ready_for_explore`
 - `summary.llm_live_preflight`
+- `summary.capabilities.run_browser_workflows.ready`
 - `summary.capabilities.generate_adapters.ready`
+- `summary.capabilities.generate_adapters.local_ready`
+- `summary.capabilities.generate_adapters.local_blockers`
+- `checks[cdp].status`
+- `checks[cdp].action`
 - `checks[llm_live].status`
 - `checks[llm_live].details.error_code`
 - `checks[llm_live].details.retryable`
@@ -68,6 +73,8 @@ python scripts/extract_doctor_preflight_evidence.py /tmp/cliany-doctor-preflight
 - `checks[llm_live].details.message`
 
 `cliany-site cases --doctor-json` 会按 `doctor_preflight_evidence_selectors` 从 doctor JSON 的 `data.checks[name="..."]` 列表中提取这些字段，并把 `doctor_preflight_evidence_values`、`doctor_preflight_evidence_ok`、`doctor_preflight_evidence_missing_count`、`doctor_preflight_evidence_null_count`、`doctor_preflight_evidence_null_fields` 和 `doctor_preflight_state` 附加到 evidence bundle、primary `adapter_package` task 或 issue body。`doctor_preflight_state_fields` 固定为 `preflight_state.status`、`preflight_state.ready_for_adapter_package`、`preflight_state.primary_reason`、`preflight_state.reason_codes` 和 `preflight_state.next_action`；`doctor_preflight_state_statuses` 固定为 `ready`、`blocked`、`missing_fields`。只有 `preflight_state.status=ready` 且 `preflight_state.ready_for_adapter_package=true` 时，才继续真实 `explore`；`blocked` 或 `missing_fields` 时先把 state、reason codes 和 doctor evidence 贴回 issue。`scripts/plan_next_iteration.py --doctor-json ... --issues-dir ...` 会把同一份 evidence 写进批量 candidate issue artifacts 的 `issue-metadata.json` 和 issue body，并让 issue/evidence bundle commands 保留 `--doctor-json <path>`，适合 live LLM 仍 blocked 时生成 blocker-ready issue 草稿。`scripts/extract_doctor_preflight_evidence.py` 仍可作为低层备用；它会输出 `values`、`missing_fields`、`null_fields`、`selectors_sha256` 和 `values_sha256`，加 `--markdown` 可生成直接粘贴到 candidate issue 的 blocker evidence 表格。`null_fields` 表示 selector 已解析且值为 JSON `null`；如果 `missing_count>0`，则先贴回真正缺失的字段和原始 doctor JSON 摘要，不继续运行真实 `explore`。
+
+`local_ready` 与 `local_blockers` 只描述本地前提；它们不能替代 `summary.llm_live_preflight.ready=true`，但能让 blocker evidence 明确区分本地配置问题与 provider 故障。
 
 ## Step 2: Generate Adapter Package Evidence
 

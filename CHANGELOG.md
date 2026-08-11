@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Candidate doctor preflight evidence now includes `generate_adapters.local_ready` and `local_blockers` across evidence bundles, issue templates, the standalone extractor, case validation, and next-iteration artifacts. Maintainers can show that local prerequisites are healthy while a live provider remains blocked without treating local readiness as permission to run candidate `explore`.
+
 ## [0.16.311] - 2026-08-10
 
 ### Fixed

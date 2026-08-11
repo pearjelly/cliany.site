@@ -21,7 +21,11 @@ def _doctor_payload() -> dict:
                 "ready_for_explore": False,
                 "capabilities": {
                     "run_browser_workflows": {"ready": True},
-                    "generate_adapters": {"ready": False},
+                    "generate_adapters": {
+                        "ready": False,
+                        "local_ready": True,
+                        "local_blockers": [],
+                    },
                 },
                 "llm_live_preflight": {
                     "ready": False,
@@ -77,7 +81,7 @@ def test_extracts_doctor_preflight_evidence_from_named_checks(tmp_path):
     evidence = extract_doctor_preflight_evidence.extract_file(payload_path)
 
     assert evidence["ok"] is True
-    assert evidence["field_count"] == 12
+    assert evidence["field_count"] == 14
     assert evidence["missing_count"] == 0
     assert evidence["values"]["summary.ready_for_explore"] is False
     assert evidence["values"]["summary.llm_live_preflight"] == {
@@ -88,6 +92,8 @@ def test_extracts_doctor_preflight_evidence_from_named_checks(tmp_path):
     }
     assert evidence["values"]["summary.capabilities.run_browser_workflows.ready"] is True
     assert evidence["values"]["summary.capabilities.generate_adapters.ready"] is False
+    assert evidence["values"]["summary.capabilities.generate_adapters.local_ready"] is True
+    assert evidence["values"]["summary.capabilities.generate_adapters.local_blockers"] == []
     assert evidence["values"]["checks[cdp].status"] == "ok"
     assert evidence["values"]["checks[llm_live].status"] == "warning"
     assert evidence["values"]["checks[llm_live].details.error_code"] == (
@@ -252,6 +258,8 @@ def test_cli_outputs_markdown_blocker_comment(tmp_path, capsys):
     assert "| `summary.ready_for_explore` | `false` |" in text
     assert "| `summary.llm_live_preflight` | `{'ready': False" in text
     assert "| `summary.capabilities.generate_adapters.ready` | `false` |" in text
+    assert "| `summary.capabilities.generate_adapters.local_ready` | `true` |" in text
+    assert "| `summary.capabilities.generate_adapters.local_blockers` | `[]` |" in text
     assert "| `checks[llm_live].details.error_code` | `E_LLM_UNAVAILABLE` |" in text
     assert "| `checks[llm_live].details.status_code` | `502` |" in text
     assert (

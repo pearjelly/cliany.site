@@ -38,7 +38,9 @@ DOCTOR_PREFLIGHT_BLOCKER_COMMENT = (
     "Doctor preflight is blocking candidate promotion. Paste the doctor JSON fields "
     "`summary.ready_for_explore`, `summary.llm_live_preflight`, "
     "`summary.capabilities.run_browser_workflows.ready`, "
-    "`summary.capabilities.generate_adapters.ready`, `checks[cdp].status`, "
+    "`summary.capabilities.generate_adapters.ready`, "
+    "`summary.capabilities.generate_adapters.local_ready`, "
+    "`summary.capabilities.generate_adapters.local_blockers`, `checks[cdp].status`, "
     "`checks[cdp].action`, `checks[llm_live].status`, "
     "`checks[llm_live].details.error_code`, `checks[llm_live].details.retryable`, "
     "`checks[llm_live].details.status_code`, `checks[llm_live].details.phase`, "
@@ -53,6 +55,8 @@ DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = [
     "summary.llm_live_preflight",
     "summary.capabilities.run_browser_workflows.ready",
     "summary.capabilities.generate_adapters.ready",
+    "summary.capabilities.generate_adapters.local_ready",
+    "summary.capabilities.generate_adapters.local_blockers",
     "checks[cdp].status",
     "checks[cdp].action",
     "checks[llm_live].status",
@@ -74,6 +78,12 @@ DOCTOR_PREFLIGHT_EVIDENCE_SELECTORS = {
     ),
     "summary.capabilities.generate_adapters.ready": (
         "data.summary.capabilities.generate_adapters.ready"
+    ),
+    "summary.capabilities.generate_adapters.local_ready": (
+        "data.summary.capabilities.generate_adapters.local_ready"
+    ),
+    "summary.capabilities.generate_adapters.local_blockers": (
+        "data.summary.capabilities.generate_adapters.local_blockers"
     ),
     "checks[cdp].status": 'data.checks[name="cdp"].status',
     "checks[cdp].action": 'data.checks[name="cdp"].action',
@@ -183,7 +193,11 @@ def _write_blocked_doctor_json(tmp_path: Path) -> Path:
                         },
                         "capabilities": {
                             "run_browser_workflows": {"ready": True},
-                            "generate_adapters": {"ready": False},
+                            "generate_adapters": {
+                                "ready": False,
+                                "local_ready": True,
+                                "local_blockers": [],
+                            },
                         },
                     },
                 },
@@ -2353,6 +2367,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- `summary.llm_live_preflight`\n"
             "- `summary.capabilities.run_browser_workflows.ready`\n"
             "- `summary.capabilities.generate_adapters.ready`\n"
+            "- `summary.capabilities.generate_adapters.local_ready`\n"
+            "- `summary.capabilities.generate_adapters.local_blockers`\n"
             "- `checks[cdp].status`\n"
             "- `checks[cdp].action`\n"
             "- `checks[llm_live].status`\n"
@@ -2367,6 +2383,10 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- `summary.capabilities.run_browser_workflows.ready`: "
             "`<paste from doctor --llm-live --require-capability generate_adapters --json>`\n"
             "- `summary.capabilities.generate_adapters.ready`: "
+            "`<paste from doctor --llm-live --require-capability generate_adapters --json>`\n"
+            "- `summary.capabilities.generate_adapters.local_ready`: "
+            "`<paste from doctor --llm-live --require-capability generate_adapters --json>`\n"
+            "- `summary.capabilities.generate_adapters.local_blockers`: "
             "`<paste from doctor --llm-live --require-capability generate_adapters --json>`\n"
             "- `checks[cdp].status`: `<paste from doctor --llm-live --require-capability generate_adapters --json>`\n"
             "- `checks[cdp].action`: `<paste from doctor --llm-live --require-capability generate_adapters --json>`\n"
@@ -5611,7 +5631,9 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "`checks[llm_live].details.phase`, `checks[llm_live].details.message` | "
         "`summary.ready_for_explore`, `summary.llm_live_preflight`, "
         "`summary.capabilities.run_browser_workflows.ready`, "
-        "`summary.capabilities.generate_adapters.ready`, `checks[cdp].status`, "
+        "`summary.capabilities.generate_adapters.ready`, "
+        "`summary.capabilities.generate_adapters.local_ready`, "
+        "`summary.capabilities.generate_adapters.local_blockers`, `checks[cdp].status`, "
         "`checks[cdp].action`, `checks[llm_live].status`, "
         "`checks[llm_live].details.error_code`, `checks[llm_live].details.retryable`, "
         "`checks[llm_live].details.status_code`, `checks[llm_live].details.phase`, "

@@ -15,6 +15,8 @@ def test_candidate_promotion_runbook_documents_doctor_state_contract():
         "preflight_state.primary_reason",
         "preflight_state.reason_codes",
         "preflight_state.next_action",
+        "summary.capabilities.generate_adapters.local_ready",
+        "summary.capabilities.generate_adapters.local_blockers",
         "ready",
         "blocked",
         "missing_fields",

@@ -35,6 +35,8 @@ def test_good_first_issues_doc_has_issue_drafting_checklist():
         "cliany-site cases --case-id <id> --evidence-bundle --json",
         "primary_next_task",
         "doctor_preflight_evidence_fields",
+        "summary.capabilities.generate_adapters.local_ready",
+        "summary.capabilities.generate_adapters.local_blockers",
         "doctor_preflight_state_fields",
         "doctor_preflight_state_statuses",
         "preflight_state.status",
