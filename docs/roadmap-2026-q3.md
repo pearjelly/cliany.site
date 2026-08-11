@@ -2,7 +2,7 @@
 
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-08-08
-- **基线版本：** v0.16.312
+- **基线版本：** v0.16.313
 - **目标周期：** 2026-06-10 ~ 2026-08-05
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)

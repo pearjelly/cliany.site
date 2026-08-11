@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.313] - 2026-08-11
+
 ### Fixed
 
 - The website English maintainer translation now uses a quote-safe JavaScript string delimiter, so apostrophes such as `manifest's` no longer stop `site/script.js` from parsing and leave the production homepage body blank. Site regression coverage locks the executable translation form.
@@ -2848,7 +2850,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.312...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.313...HEAD
+[0.16.313]: https://github.com/pearjelly/cliany.site/compare/v0.16.312...v0.16.313
 [0.16.312]: https://github.com/pearjelly/cliany.site/compare/v0.16.311...v0.16.312
 [0.16.311]: https://github.com/pearjelly/cliany.site/compare/v0.16.310...v0.16.311
 [0.16.310]: https://github.com/pearjelly/cliany.site/compare/v0.16.309...v0.16.310
