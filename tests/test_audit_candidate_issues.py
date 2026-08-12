@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -18,6 +19,51 @@ def _expectation(case_id: str = "pypi-project-search"):
         title=f"Promote candidate case `{case_id}` toward active",
         body="current issue body",
     )
+
+
+def _write_blocked_doctor_json(tmp_path: Path) -> Path:
+    path = tmp_path / "doctor.json"
+    path.write_text(
+        json.dumps(
+            {
+                "ok": True,
+                "data": {
+                    "checks": [
+                        {
+                            "name": "cdp",
+                            "status": "ok",
+                            "action": "Chrome/CDP is available.",
+                        },
+                        {
+                            "name": "llm_live",
+                            "status": "warning",
+                            "details": {
+                                "error_code": "E_LLM_UNAVAILABLE",
+                                "retryable": True,
+                                "status_code": 502,
+                                "phase": "llm_preflight",
+                                "message": "LLM upstream unavailable.",
+                            },
+                        }
+                    ],
+                    "summary": {
+                        "ready_for_explore": False,
+                        "llm_live_preflight": {"ready": False, "status": "warning"},
+                        "capabilities": {
+                            "run_browser_workflows": {"ready": True},
+                            "generate_adapters": {
+                                "ready": False,
+                                "local_ready": True,
+                                "local_blockers": [],
+                            }
+                        },
+                    },
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    return path
 
 
 def test_audit_reports_current_candidate_issue_contract():
@@ -125,6 +171,84 @@ def test_candidate_expectations_use_the_strict_live_preflight_contract():
     assert len(expectations) == 1
     assert expectations[0].title == "Promote candidate case `pypi-project-search` toward active"
     assert "cliany-site doctor --llm-live --require-capability generate_adapters --json" in expectations[0].body
+
+
+def test_candidate_expectations_can_render_saved_doctor_preflight_evidence(tmp_path):
+    doctor_json = _write_blocked_doctor_json(tmp_path)
+    evidence = audit_candidate_issues.cases_command._load_doctor_preflight_evidence(doctor_json)
+
+    expectations = audit_candidate_issues.candidate_issue_expectations(
+        ["pypi-project-search"],
+        doctor_preflight_evidence=evidence,
+    )
+
+    assert f"- source_path: `{doctor_json}`" in expectations[0].body
+    assert "- Current execution gate: `blocked`" in expectations[0].body
+    assert "| `checks[llm_live].details.error_code` | `E_LLM_UNAVAILABLE` |" in expectations[0].body
+
+
+def test_report_includes_saved_doctor_evidence_identity(tmp_path):
+    doctor_json = _write_blocked_doctor_json(tmp_path)
+    evidence = audit_candidate_issues.cases_command._load_doctor_preflight_evidence(doctor_json)
+    expectation = _expectation()
+    audits = audit_candidate_issues.audit_candidate_issues(
+        [expectation],
+        [{"number": 14, "title": expectation.title, "body": expectation.body, "url": "https://example.test/14"}],
+    )
+
+    report = audit_candidate_issues._report(
+        "owner/repo",
+        audits,
+        doctor_preflight_evidence=evidence,
+    )
+
+    assert report["doctor_preflight_evidence"]["source_path"] == str(doctor_json)
+    assert report["doctor_preflight_evidence"]["state_status"] == "blocked"
+    assert report["doctor_preflight_evidence"]["ready_for_adapter_package"] is False
+    assert len(report["doctor_preflight_evidence"]["values_sha256"]) == 64
+
+
+def test_main_uses_doctor_json_for_expectations_and_report(monkeypatch, tmp_path, capsys):
+    doctor_json = _write_blocked_doctor_json(tmp_path)
+    captured = {}
+
+    def fake_expectations(_case_ids=None, *, doctor_preflight_evidence=None):
+        captured["evidence"] = doctor_preflight_evidence
+        return [_expectation()]
+
+    monkeypatch.setattr(audit_candidate_issues, "candidate_issue_expectations", fake_expectations)
+    monkeypatch.setattr(
+        audit_candidate_issues,
+        "fetch_open_issues",
+        lambda _repo: [
+            {
+                "number": 14,
+                "title": _expectation().title,
+                "body": _expectation().body,
+                "url": "https://example.test/14",
+            }
+        ],
+    )
+
+    exit_code = audit_candidate_issues.main(
+        ["--repo", "owner/repo", "--doctor-json", str(doctor_json), "--json"]
+    )
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 0
+    assert captured["evidence"]["doctor_preflight_state"]["status"] == "blocked"
+    assert payload["doctor_preflight_evidence"]["source_path"] == str(doctor_json)
+
+
+def test_main_reports_invalid_doctor_json_as_an_input_error(tmp_path, capsys):
+    missing_path = tmp_path / "missing-doctor.json"
+
+    exit_code = audit_candidate_issues.main(["--doctor-json", str(missing_path), "--json"])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 2
+    assert payload["ok"] is False
+    assert str(missing_path) in payload["error"]
 
 
 def test_apply_rechecks_after_rewriting_stale_issue(monkeypatch):

@@ -113,6 +113,10 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "pypi.org-&lt;version&gt;.cliany-adapter.tar.gz" in docs
     assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in docs
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
+    assert (
+        "audit_candidate_issues.py --repo pearjelly/cliany.site "
+        "--doctor-json /tmp/cliany-doctor-preflight.json"
+    ) in docs
     assert "1-3 releases/day loop" in index
     assert "Current baseline: v0.16.316" in index
     assert "当前基线：v0.16.316" in script

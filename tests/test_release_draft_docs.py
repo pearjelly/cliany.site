@@ -11336,6 +11336,53 @@ def test_v016316_release_notes_are_workflow_ready_without_live_claims() -> None:
     assert "does not create candidate adapter packages" in notes
 
 
+def test_v016317_release_draft_prepares_doctor_backed_candidate_issue_audit() -> None:
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    draft = (ROOT / "docs" / "releases" / "v0.16.317-draft.md").read_text(
+        encoding="utf-8"
+    )
+    notes = (
+        ROOT / "docs" / "releases" / "v0.16.317-github-release.md"
+    ).read_text(encoding="utf-8")
+
+    unreleased = changelog.split("## [Unreleased]", 1)[1].split("## [0.16.316]", 1)[0]
+    assert "audit" in unreleased
+    assert "--doctor-json" in unreleased
+    assert "## [0.16.317]" not in changelog
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.316...HEAD" in changelog
+    for snippet in [
+        "# v0.16.317 发布草案",
+        "**目标版本：** `0.16.317`",
+        "**提交范围：** `v0.16.316..HEAD`",
+        "**提交范围：** `v0.16.317..HEAD`",
+        "audit_candidate_issues.py",
+        "--doctor-json",
+        "values_sha256",
+        "E_LLM_UNAVAILABLE",
+        "search-extraction-gap",
+        "不创建、关闭 issue",
+        "不运行 candidate `explore`",
+        "release_readiness.py --strict --target-version 0.16.317 --remote",
+        "git tag v0.16.317",
+        "release_readiness.py --strict --release-tag v0.16.317 --remote --remote-name origin",
+        "vercel inspect www.cliany.site --wait --timeout 90s",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.317",
+        "--doctor-json",
+        "values SHA-256",
+        "--apply --confirm-rewrite",
+        "## Compatibility",
+        "## Trust Boundaries",
+        "does not create, close, or promote",
+        "live LLM provider",
+    ]:
+        assert snippet in notes
+
+
 def test_v016260_release_draft_describes_projected_daily_cap_blocker():
     text = (ROOT / "docs" / "releases" / "v0.16.260-draft.md").read_text(
         encoding="utf-8"

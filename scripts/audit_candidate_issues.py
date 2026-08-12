@@ -8,6 +8,7 @@ import json
 import subprocess
 import tempfile
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from cliany_site.commands import cases as cases_command
@@ -36,7 +37,11 @@ def _issue_title(case_id: str) -> str:
     return f"{ISSUE_TITLE_PREFIX}{case_id}{ISSUE_TITLE_SUFFIX}"
 
 
-def candidate_issue_expectations(case_ids: list[str] | None = None) -> list[CandidateIssueExpectation]:
+def candidate_issue_expectations(
+    case_ids: list[str] | None = None,
+    *,
+    doctor_preflight_evidence: dict[str, Any] | None = None,
+) -> list[CandidateIssueExpectation]:
     catalog_cases, source_path, _checked_paths = cases_command._load_cases_manifest()
     if source_path is None:
         raise ValueError("cases/manifest.json is unavailable")
@@ -55,7 +60,10 @@ def candidate_issue_expectations(case_ids: list[str] | None = None) -> list[Cand
         CandidateIssueExpectation(
             case_id=case_id,
             title=_issue_title(case_id),
-            body=cases_command._candidate_issue_template(candidates[case_id]),
+            body=cases_command._candidate_issue_template(
+                candidates[case_id],
+                doctor_preflight_evidence=doctor_preflight_evidence,
+            ),
         )
         for case_id in selected_ids
     ]
@@ -166,6 +174,7 @@ def _report(
     audits: list[dict[str, Any]],
     *,
     applied_issue_numbers: list[int] | None = None,
+    doctor_preflight_evidence: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     status_counts: dict[str, int] = {}
     for audit in audits:
@@ -185,7 +194,7 @@ def _report(
         for number in audit.get("issue_numbers", [])
         if isinstance(number, int)
     ]
-    return {
+    report = {
         "ok": all(audit.get("status") == "current" for audit in audits),
         "repo": repo,
         "candidate_count": sum(audit.get("status") != "unexpected" for audit in audits),
@@ -196,6 +205,20 @@ def _report(
         "applied_issue_numbers": applied_issue_numbers or [],
         "issues": audits,
     }
+    if doctor_preflight_evidence is not None:
+        state = doctor_preflight_evidence.get("doctor_preflight_state")
+        state = state if isinstance(state, dict) else {}
+        report["doctor_preflight_evidence"] = {
+            "source_path": str(
+                doctor_preflight_evidence.get("doctor_preflight_evidence_source_path") or ""
+            ),
+            "values_sha256": str(
+                doctor_preflight_evidence.get("doctor_preflight_evidence_values_sha256") or ""
+            ),
+            "state_status": str(state.get("status") or ""),
+            "ready_for_adapter_package": state.get("ready_for_adapter_package"),
+        }
+    return report
 
 
 def _rewrite_issue(repo: str, issue_number: int, body: str) -> None:
@@ -243,6 +266,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", default=DEFAULT_REPO, help="GitHub repository in owner/name form")
     parser.add_argument("--case-id", action="append", dest="case_ids", help="Limit the audit to one candidate case ID")
+    parser.add_argument(
+        "--doctor-json",
+        type=Path,
+        help=(
+            "Use saved cliany-site doctor --llm-live --require-capability "
+            "generate_adapters --json evidence when rendering expected issue bodies"
+        ),
+    )
     parser.add_argument("--apply", action="store_true", help="Rewrite only stale issue bodies")
     parser.add_argument(
         "--confirm-rewrite",
@@ -256,7 +287,16 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--apply requires --confirm-rewrite")
 
     try:
-        all_expectations = candidate_issue_expectations()
+        doctor_preflight_evidence = (
+            cases_command._load_doctor_preflight_evidence(args.doctor_json)
+            if args.doctor_json is not None
+            else None
+        )
+        all_expectations = (
+            candidate_issue_expectations(doctor_preflight_evidence=doctor_preflight_evidence)
+            if doctor_preflight_evidence is not None
+            else candidate_issue_expectations()
+        )
         expectations_by_case = {expectation.case_id: expectation for expectation in all_expectations}
         selected_case_ids = args.case_ids or list(expectations_by_case)
         unknown_case_ids = [case_id for case_id in selected_case_ids if case_id not in expectations_by_case]
@@ -292,7 +332,12 @@ def main(argv: list[str] | None = None) -> int:
             _print_error(str(exc), json_mode=args.json)
             return 2
 
-    report = _report(args.repo, audits, applied_issue_numbers=applied_issue_numbers)
+    report = _report(
+        args.repo,
+        audits,
+        applied_issue_numbers=applied_issue_numbers,
+        doctor_preflight_evidence=doctor_preflight_evidence,
+    )
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
     else:

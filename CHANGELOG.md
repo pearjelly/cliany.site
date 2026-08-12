@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Candidate public issue audits can now consume a saved strict doctor JSON file with `--doctor-json`, render the expected body from the same extracted preflight evidence, and report the evidence source, values hash, gate status, and adapter-package runnable state. Existing audits remain read-only by default; a public body still requires explicit `--apply --confirm-rewrite` after review.
+
 ## [0.16.316] - 2026-08-12
 
 ### Fixed
