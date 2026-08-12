@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.315] - 2026-08-12
+
+### Added
+
+- Candidate issue templates that receive a doctor JSON evidence file now put the current execution gate, adapter-package runnable state, blocker reason, and required next action before any executable command. The machine-readable primary task exposes matching flat aliases, including strict doctor error envelopes whose diagnostic payload lives in `error.details`.
+
 ## [0.16.314] - 2026-08-12
 
 ### Added
@@ -2856,7 +2862,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.314...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.315...HEAD
+[0.16.315]: https://github.com/pearjelly/cliany.site/compare/v0.16.314...v0.16.315
 [0.16.314]: https://github.com/pearjelly/cliany.site/compare/v0.16.313...v0.16.314
 [0.16.313]: https://github.com/pearjelly/cliany.site/compare/v0.16.312...v0.16.313
 [0.16.312]: https://github.com/pearjelly/cliany.site/compare/v0.16.311...v0.16.312

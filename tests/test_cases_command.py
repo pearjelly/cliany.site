@@ -1113,8 +1113,59 @@ def test_cases_command_issue_template_accepts_doctor_json(tmp_home, tmp_path):
     data = payload["data"]
     assert "## Doctor Preflight Evidence" in data["issue_template"]
     assert f"- source_path: `{doctor_json}`" in data["issue_template"]
+    assert "- Current execution gate: `blocked`" in data["issue_template"]
+    assert "- Adapter package runnable: `false`" in data["issue_template"]
+    assert "- Gate reason: Live LLM preflight is warning." in data["issue_template"]
+    assert (
+        "- Gate next action: Attach the doctor preflight evidence to the candidate "
+        "issue and do not run candidate explore until live preflight is ready."
+    ) in data["issue_template"]
     assert "| `checks[llm_live].details.error_code` | `E_LLM_UNAVAILABLE` |" in data["issue_template"]
     assert data["issue_template_primary_task"]["doctor_preflight_state"]["status"] == "blocked"
+    assert data["issue_template_primary_task"]["doctor_preflight_state_status"] == "blocked"
+    assert data["issue_template_primary_task"]["doctor_preflight_ready_for_adapter_package"] is False
+    assert data["issue_template_primary_task"]["doctor_preflight_primary_reason"] == (
+        "Live LLM preflight is warning."
+    )
+
+
+def test_cases_command_issue_template_accepts_strict_doctor_error(tmp_home, tmp_path):
+    doctor_json = _write_blocked_doctor_json(tmp_path)
+    payload = json.loads(doctor_json.read_text(encoding="utf-8"))
+    data = payload.pop("data")
+    payload.update(
+        {
+            "ok": False,
+            "data": None,
+            "error": {
+                "code": "E_LLM_UNAVAILABLE",
+                "message": "请求的能力尚未就绪: generate_adapters",
+                "details": data,
+            },
+        }
+    )
+    doctor_json.write_text(json.dumps(payload), encoding="utf-8")
+    result = CliRunner().invoke(
+        cli,
+        [
+            "--json",
+            "cases",
+            "--case-id",
+            "pypi-project-search",
+            "--issue-template",
+            "--doctor-json",
+            str(doctor_json),
+        ],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    issue_template = json.loads(result.output)["data"]["issue_template"]
+    assert "- Current execution gate: `blocked`" in issue_template
+    assert "- Adapter package runnable: `false`" in issue_template
+    assert issue_template.index("- Current execution gate: `blocked`") < issue_template.index(
+        "- Next executable command:"
+    )
 
 
 def test_cases_command_evidence_bundle_splits_blocked_tasks(tmp_home, monkeypatch):

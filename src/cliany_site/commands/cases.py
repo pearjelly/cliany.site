@@ -584,6 +584,16 @@ def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[st
         **_doctor_preflight_evidence_template_aliases(doctor_preflight_evidence_template),
         **_doctor_preflight_state_contract(required=bool(primary.get("llm_live_preflight_required"))),
         "doctor_preflight_state": doctor_preflight_state,
+        "doctor_preflight_state_status": str(doctor_preflight_state.get("status") or ""),
+        "doctor_preflight_ready_for_adapter_package": doctor_preflight_state.get(
+            "ready_for_adapter_package"
+        ),
+        "doctor_preflight_primary_reason": str(
+            doctor_preflight_state.get("primary_reason") or ""
+        ),
+        "doctor_preflight_next_action": str(
+            doctor_preflight_state.get("next_action") or ""
+        ),
         "doctor_preflight_evidence_values": doctor_preflight_evidence_values,
         "doctor_preflight_evidence_ok": primary.get("doctor_preflight_evidence_ok"),
         "doctor_preflight_evidence_missing_count": primary.get("doctor_preflight_evidence_missing_count"),
@@ -632,10 +642,34 @@ def _candidate_issue_template(
         current_evidence = primary_task.get("evidence") or "Not attached yet."
         next_action = primary_task.get("next_action") or "No next action declared."
         acceptance_criteria = primary_task.get("acceptance_criteria") or ""
+        doctor_preflight_state = primary_task.get("doctor_preflight_state")
+        doctor_preflight_state = (
+            doctor_preflight_state
+            if isinstance(doctor_preflight_state, dict)
+            else {}
+        )
+        preflight_summary_lines: list[str] = []
+        if doctor_preflight_state:
+            preflight_summary_lines = [
+                f"- Current execution gate: `{doctor_preflight_state.get('status', '-')}`",
+                (
+                    "- Adapter package runnable: "
+                    f"`{str(bool(doctor_preflight_state.get('ready_for_adapter_package'))).lower()}`"
+                ),
+                (
+                    "- Gate reason: "
+                    f"{doctor_preflight_state.get('primary_reason', 'Not declared.')}"
+                ),
+                (
+                    "- Gate next action: "
+                    f"{doctor_preflight_state.get('next_action', 'Not declared.')}"
+                ),
+            ]
         lines.extend(
             [
                 f"- Task: `{primary_task['task']}`",
                 f"- Status: `{primary_task['status']}`",
+                *preflight_summary_lines,
                 f"- Current evidence: {current_evidence}",
                 f"- Next executable step: `{primary_task.get('next_step') or '-'}`",
                 f"- Next executable command: `{primary_task.get('next_command') or 'Not declared.'}`",
