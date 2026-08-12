@@ -11272,6 +11272,7 @@ def test_v016314_changelog_and_release_docs_are_finalized() -> None:
         "v0.16.313...v0.16.314"
     ) in changelog
     assert "**提交范围：** `v0.16.314..HEAD`" in draft
+    assert "**提交范围：** `v0.16.313..HEAD`" in draft
     assert "node --check site/script.js" in notes
     assert "Trust boundaries" in notes
 
