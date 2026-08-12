@@ -129,6 +129,15 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
+  website-javascript:
+    name: Website JavaScript Syntax
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Validate website JavaScript
+        run: node --check site/script.js
+
   case-catalog:
     name: Case Catalog Validation
     steps:
@@ -195,6 +204,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Validate website JavaScript
+        run: node --check site/script.js
       - run: |
           __RELEASE_PREFLIGHT_COMMAND__
         env:
@@ -1895,6 +1909,25 @@ def test_release_readiness_blocks_missing_ci_extract_gate(tmp_path):
     assert any("extract-quality:" in issue for issue in report.ci.issues)
 
 
+def test_release_readiness_blocks_missing_ci_website_javascript_gate(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    ci_workflow = _ci_workflow().replace(
+        "        run: node --check site/script.js\n",
+        "        run: echo skipped\n",
+        1,
+    )
+    (repo / ".github" / "workflows" / "ci.yml").write_text(
+        ci_workflow, encoding="utf-8"
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "CI release gates validation failed" in report.blockers
+    assert report.ci.ok is False
+    assert any("node --check site/script.js" in issue for issue in report.ci.issues)
+
+
 def test_release_readiness_blocks_ci_workflow_without_node24_actions_opt_in(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     ci_workflow = _ci_workflow().replace(
@@ -1940,6 +1973,28 @@ def test_release_readiness_blocks_release_workflow_without_node24_actions_opt_in
     assert "release workflow validation failed" in report.blockers
     assert report.release_workflow.ok is False
     assert any("FORCE_JAVASCRIPT_ACTIONS_TO_NODE24" in issue for issue in report.release_workflow.issues)
+
+
+def test_release_readiness_blocks_release_without_website_javascript_gate(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    release_workflow = _release_workflow().replace(
+        "        run: node --check site/script.js\n",
+        "        run: echo skipped\n",
+        1,
+    )
+    (repo / ".github" / "workflows" / "release.yml").write_text(
+        release_workflow, encoding="utf-8"
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "release workflow validation failed" in report.blockers
+    assert report.release_workflow.ok is False
+    assert any(
+        "node --check site/script.js" in issue
+        for issue in report.release_workflow.issues
+    )
 
 
 def test_release_readiness_blocks_missing_project_description(tmp_path):

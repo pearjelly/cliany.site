@@ -11230,6 +11230,28 @@ def test_v016313_release_draft_tracks_website_script_recovery() -> None:
         assert snippet in text
 
 
+def test_v016314_release_draft_tracks_website_javascript_gates() -> None:
+    text = (ROOT / "docs" / "releases" / "v0.16.314-draft.md").read_text(
+        encoding="utf-8"
+    )
+
+    required = [
+        "Website JavaScript Syntax",
+        "node --check site/script.js",
+        "Release Preflight",
+        "actions/setup-node@v4",
+        "llm_live_preflight_not_ready",
+        "local_ready=true",
+        "local_blockers=[]",
+        "cases/README.md",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "不声称 candidate package",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
 def test_v016260_release_draft_describes_projected_daily_cap_blocker():
     text = (ROOT / "docs" / "releases" / "v0.16.260-draft.md").read_text(
         encoding="utf-8"

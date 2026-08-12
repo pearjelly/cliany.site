@@ -16,6 +16,17 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
+  website-javascript:
+    name: Website JavaScript Syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Validate website JavaScript
+        run: node --check site/script.js
+
   lint:
     name: Lint (ruff)
     runs-on: ubuntu-latest

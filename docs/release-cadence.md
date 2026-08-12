@@ -21,7 +21,7 @@
    如果 `commit_cadence.release_count_today >= commit_cadence.max_daily_releases` 或 `daily_release_limit_ok=false`，当天停止 tag 发布。
 2. 选择能当天验证的最小切片，并在 `docs/releases/vX.Y.Z-draft.md` 写清用户价值、风险、验证命令和剩余阻塞。
 3. 完成 `pyproject.toml`、CHANGELOG 的目标版本标题与 compare links、受影响的 README/官网入口和已审阅的 GitHub Release Notes；运行相关测试、`uv build` 与 `twine check`，提交后确保工作树干净。target-mode 接受项目版本已经 bump、上一版 tag 仍为 latest 的最终 CHANGELOG 状态；创建 tag 后必须改用 `--release-tag` 做严格校验。
-4. 在最终 HEAD 运行 `python scripts/release_readiness.py --strict --target-version X.Y.Z --remote --remote-name origin` 和 `python scripts/validate_cases.py --strict`，并补充相关 `pytest` 或 `qa/*.sh`。
+4. 在最终 HEAD 运行 `node --check site/script.js`、`python scripts/release_readiness.py --strict --target-version X.Y.Z --remote --remote-name origin` 和 `python scripts/validate_cases.py --strict`，并补充相关 `pytest` 或 `qa/*.sh`。master CI 与 tag Release Preflight 会重复网站 JavaScript 语法检查。
 5. 推送 `master`，等待 GitHub CI 与 Embodied CI 都成功；任一失败都不创建 tag。
 6. 仅在两项 CI 成功后创建本地 `vX.Y.Z` tag，运行 `python scripts/release_readiness.py --strict --release-tag vX.Y.Z --remote --remote-name origin`，只在该 gate 通过后推送 tag。
 7. 等待 `.github/workflows/release.yml` 更新 GitHub Release 和 PyPI；随后用 `gh release edit vX.Y.Z --repo pearjelly/cliany.site --notes-file docs/releases/vX.Y.Z-github-release.md` 写入已审阅的用户可读 Release Notes，再用 `gh release view vX.Y.Z --repo pearjelly/cliany.site --json body` 确认 body 不是只有自动生成的 `Full Changelog` compare 链接。
@@ -57,6 +57,7 @@
 - [ ] `CHANGELOG.md` 底部 `[Unreleased]` compare 链接从最新 tag 指向 `HEAD`。
 - [ ] `pyproject.toml` 版本号与 tag 一致。
 - [ ] README/README.zh/官网中受影响的版本文案同步。
+- [ ] `node --check site/script.js` 通过，且 CI 与 Release Preflight 的网站 JavaScript 语法门禁仍在。
 - [ ] 在干净 release-base 上先运行 `python scripts/release_readiness.py --strict --target-version X.Y.Z --remote --remote-name origin`。
 - [ ] 推送 `master` 后确认 GitHub CI 与 Embodied CI 都成功，再创建本地 tag。
 - [ ] 创建本地 tag 后运行 `python scripts/release_readiness.py --strict --release-tag vX.Y.Z --remote --remote-name origin`；通过后才推送 tag。

@@ -465,6 +465,12 @@ def _build_ci_report(root: Path) -> CiReport:
 
     text = path.read_text(encoding="utf-8")
     required_snippets = [
+        "website-javascript:",
+        "Website JavaScript Syntax",
+        "actions/setup-node@v4",
+        'node-version: "24"',
+        "Validate website JavaScript",
+        "node --check site/script.js",
         "case-catalog:",
         "Case Catalog Validation",
         NODE24_ACTIONS_ENV_SNIPPET,
@@ -511,6 +517,10 @@ def _build_release_workflow_report(root: Path) -> ReleaseWorkflowReport:
         "release-preflight:",
         "Release Preflight",
         "fetch-depth: 0",
+        "actions/setup-node@v4",
+        'node-version: "24"',
+        "Validate website JavaScript",
+        "node --check site/script.js",
         RELEASE_PREFLIGHT_COMMAND,
         "release-readiness-report",
         "needs: release-preflight",

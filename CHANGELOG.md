@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- CI now runs a dedicated `Website JavaScript Syntax` gate with `node --check site/script.js`, and the tag Release Preflight repeats the same check. Strict release readiness verifies both guards remain present, so an invalid production translation or other static script syntax error blocks master and tag publication before Vercel deployment.
+
 ## [0.16.313] - 2026-08-11
 
 ### Fixed
