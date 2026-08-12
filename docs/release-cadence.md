@@ -24,7 +24,7 @@
 4. 在最终 HEAD 运行 `node --check site/script.js`、`python scripts/release_readiness.py --strict --target-version X.Y.Z --remote --remote-name origin` 和 `python scripts/validate_cases.py --strict`，并补充相关 `pytest` 或 `qa/*.sh`。master CI 与 tag Release Preflight 会重复网站 JavaScript 语法检查。
 5. 推送 `master`，等待 GitHub CI 与 Embodied CI 都成功；任一失败都不创建 tag。
 6. 仅在两项 CI 成功后创建本地 `vX.Y.Z` tag，运行 `python scripts/release_readiness.py --strict --release-tag vX.Y.Z --remote --remote-name origin`，只在该 gate 通过后推送 tag。
-7. 等待 `.github/workflows/release.yml` 更新 GitHub Release 和 PyPI；随后用 `gh release edit vX.Y.Z --repo pearjelly/cliany.site --notes-file docs/releases/vX.Y.Z-github-release.md` 写入已审阅的用户可读 Release Notes，再用 `gh release view vX.Y.Z --repo pearjelly/cliany.site --json body` 确认 body 不是只有自动生成的 `Full Changelog` compare 链接。
+7. 等待 `.github/workflows/release.yml` 使用仓库中已审阅的 `docs/releases/vX.Y.Z-github-release.md` 创建 GitHub Release 并发布 PyPI；再用 `gh release view vX.Y.Z --repo pearjelly/cliany.site --json body` 确认 body 不是只有自动生成的 `Full Changelog` compare 链接。严格 readiness 会在 tag 前检查该文件的版本标题和用户可读正文。
 8. 对官网有影响时按 `AGENTS.md` 的 Vercel 步骤在 `site/` 部署并 inspect；最后运行 `python scripts/check_release_publication.py --strict --remote --distribution --json`。
 
 ## 周节奏

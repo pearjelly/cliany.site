@@ -122,6 +122,15 @@ python scripts/release_readiness.py --strict
 """
 
 
+def _github_release_notes(target_version: str) -> str:
+    return f"""# v{target_version}
+
+## What Changed
+
+- Reviewed release notes for users.
+"""
+
+
 def _ci_workflow() -> str:
     return """name: CI
 
@@ -234,7 +243,10 @@ jobs:
     name: GitHub Release
     needs: build
     steps:
-      - run: gh release create "${{ github.ref_name }}" dist/* --generate-notes
+      - uses: actions/checkout@v4
+      - run: >
+          gh release create "${{ github.ref_name }}" dist/*
+          --notes-file "docs/releases/${{ github.ref_name }}-github-release.md"
 
   pypi-publish:
     name: Publish to PyPI
@@ -688,6 +700,10 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
             _release_draft("0.1.1", "0.1.0"),
             encoding="utf-8",
         )
+        (repo / "docs" / "releases" / "v0.1.1-github-release.md").write_text(
+            _github_release_notes("0.1.1"),
+            encoding="utf-8",
+        )
     _git(
         repo,
         "add",
@@ -722,7 +738,12 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         ".github/ISSUE_TEMPLATE/config.yml",
     )
     if with_draft:
-        _git(repo, "add", "docs/releases/v0.1.1-draft.md")
+        _git(
+            repo,
+            "add",
+            "docs/releases/v0.1.1-draft.md",
+            "docs/releases/v0.1.1-github-release.md",
+        )
     env = {
         "GIT_AUTHOR_NAME": "Test",
         "GIT_AUTHOR_EMAIL": "test@example.com",
@@ -1851,6 +1872,48 @@ def test_release_readiness_blocks_missing_release_draft(tmp_path):
     assert "release draft validation failed" in report.blockers
     assert report.draft.ok is False
     assert report.draft.issues == ["release draft is missing"]
+
+
+def test_release_readiness_blocks_missing_reviewed_github_release_notes(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    (repo / "docs" / "releases" / "v0.1.1-github-release.md").unlink()
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "release draft validation failed" in report.blockers
+    assert report.draft.issues == ["reviewed GitHub Release notes are missing"]
+
+
+def test_release_readiness_blocks_reviewed_github_release_notes_without_content(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    notes_path = repo / "docs" / "releases" / "v0.1.1-github-release.md"
+    notes_path.write_text("# v0.1.1\n", encoding="utf-8")
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert report.draft.issues == [
+        "GitHub Release notes must include reviewed user-facing content"
+    ]
+
+
+def test_release_readiness_blocks_release_workflow_with_generated_notes(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    release_workflow = _release_workflow().replace(
+        '--notes-file "docs/releases/${{ github.ref_name }}-github-release.md"',
+        "--generate-notes",
+    )
+    (repo / ".github" / "workflows" / "release.yml").write_text(
+        release_workflow, encoding="utf-8"
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "release workflow validation failed" in report.blockers
+    assert "release workflow missing snippet: --notes-file" in report.release_workflow.issues
+    assert "release workflow must not generate compare-only GitHub Release notes" in report.release_workflow.issues
 
 
 def test_release_readiness_blocks_stale_doctor_preflight_reason_code_draft(tmp_path):

@@ -68,6 +68,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: dist
@@ -75,7 +76,11 @@ jobs:
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "${{ github.ref_name }}" dist/* --repo "${{ github.repository }}" --generate-notes
+        run: >
+          gh release create "${{ github.ref_name }}" dist/*
+          --repo "${{ github.repository }}"
+          --title "${{ github.ref_name }}"
+          --notes-file "docs/releases/${{ github.ref_name }}-github-release.md"
 
   pypi-publish:
     name: Publish to PyPI

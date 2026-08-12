@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.316] - 2026-08-12
+
+### Fixed
+
+- The tag Release workflow now creates GitHub Releases from the reviewed, versioned `docs/releases/vX.Y.Z-github-release.md` file instead of generating a compare-only body. Strict readiness requires that file before tagging, checks its version heading and user-facing content, and rejects workflows that reintroduce `--generate-notes`, so the publication audit no longer has to repair a known release-note gap after PyPI publication.
+
 ## [0.16.315] - 2026-08-12
 
 ### Added
@@ -2862,7 +2868,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.315...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.316...HEAD
+[0.16.316]: https://github.com/pearjelly/cliany.site/compare/v0.16.315...v0.16.316
 [0.16.315]: https://github.com/pearjelly/cliany.site/compare/v0.16.314...v0.16.315
 [0.16.314]: https://github.com/pearjelly/cliany.site/compare/v0.16.313...v0.16.314
 [0.16.313]: https://github.com/pearjelly/cliany.site/compare/v0.16.312...v0.16.313

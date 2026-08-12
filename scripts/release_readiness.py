@@ -427,6 +427,10 @@ def _draft_path(root: Path, target_version: str) -> Path:
     return root / "docs" / "releases" / f"v{target_version}-draft.md"
 
 
+def _github_release_notes_path(root: Path, target_version: str) -> Path:
+    return root / "docs" / "releases" / f"v{target_version}-github-release.md"
+
+
 def _build_draft_report(root: Path, current_version: str, target_version: str) -> DraftReport:
     path = _draft_path(root, target_version)
     issues: list[str] = []
@@ -452,6 +456,17 @@ def _build_draft_report(root: Path, current_version: str, target_version: str) -
     for snippet in required_snippets:
         if snippet not in text:
             issues.append(f"release draft missing snippet: {snippet}")
+
+    notes_path = _github_release_notes_path(root, target_version)
+    if not notes_path.exists():
+        issues.append("reviewed GitHub Release notes are missing")
+    else:
+        notes = notes_path.read_text(encoding="utf-8").strip()
+        expected_heading = f"# v{target_version}"
+        if not notes.startswith(expected_heading):
+            issues.append(f"GitHub Release notes missing heading: {expected_heading}")
+        elif not notes.removeprefix(expected_heading).strip():
+            issues.append("GitHub Release notes must include reviewed user-facing content")
 
     return DraftReport(ok=not issues, path=str(path), target_version=target_version, issues=issues)
 
@@ -531,6 +546,8 @@ def _build_release_workflow_report(root: Path) -> ReleaseWorkflowReport:
         "actions/upload-artifact@v4",
         "GitHub Release",
         "gh release create",
+        "--notes-file",
+        'docs/releases/${{ github.ref_name }}-github-release.md',
         "Publish to PyPI",
         "name: pypi",
         "https://pypi.org/p/cliany-site",
@@ -539,6 +556,8 @@ def _build_release_workflow_report(root: Path) -> ReleaseWorkflowReport:
     for snippet in required_snippets:
         if snippet not in text:
             issues.append(f"release workflow missing snippet: {snippet}")
+    if "--generate-notes" in text:
+        issues.append("release workflow must not generate compare-only GitHub Release notes")
 
     return ReleaseWorkflowReport(ok=not issues, path=str(path), issues=issues)
 
