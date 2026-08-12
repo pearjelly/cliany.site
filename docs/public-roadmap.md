@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-08-08
-- **Current baseline:** v0.16.313
+- **Updated:** 2026-08-12
+- **Current baseline:** v0.16.314
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -47,7 +47,7 @@ As of v0.16.312, candidate doctor evidence bundles, issue templates, the standal
 
 As of v0.16.313, the production website's English maintainer translation uses a quote-safe JavaScript delimiter. Apostrophes no longer stop `site/script.js` from parsing and leave the homepage body blank; site regression, `node --check`, and production browser inspection guard the recovery.
 
-The next release promotes that incident check into the release system: master CI gets a dedicated website JavaScript syntax job, tag preflight repeats it, and strict readiness verifies both commands remain present. This moves a production white-screen failure from post-deploy discovery to pre-publication blocking.
+As of v0.16.314, that incident check is part of the release system: master CI has a dedicated website JavaScript syntax job, tag preflight repeats it, and strict readiness verifies both commands remain present. This moves a production white-screen failure from post-deploy discovery to pre-publication blocking.
 
 As of 2026-07-29, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 
