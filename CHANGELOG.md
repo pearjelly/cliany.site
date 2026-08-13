@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Planner-generated candidate issue artifacts now distinguish attached doctor preflight evidence from still-pending adapter package evidence. Blocked provider evidence shows the recovery-and-rerun handoff without making candidate `explore` runnable.
+
 ## [0.16.319] - 2026-08-13
 
 ### Changed

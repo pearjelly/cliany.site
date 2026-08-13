@@ -161,6 +161,18 @@ BLOCKED_PREFLIGHT_NEXT_ACTION = (
     "Attach the doctor preflight evidence to the candidate issue and do "
     "not run candidate explore until live preflight is ready."
 )
+BLOCKED_PREFLIGHT_EVIDENCE_ATTACHED_NEXT_ACTION = (
+    "Doctor preflight evidence is attached; wait for provider recovery, then rerun the strict "
+    "live preflight, and do not run candidate explore until it is ready."
+)
+MISSING_PREFLIGHT_EVIDENCE_ATTACHED_NEXT_ACTION = (
+    "Doctor preflight evidence is attached but incomplete; attach the missing fields before "
+    "continuing candidate promotion."
+)
+READY_PREFLIGHT_EVIDENCE_ATTACHED_NEXT_ACTION = (
+    "Doctor preflight evidence is ready; run the candidate explore command and attach the package "
+    "path or release asset name."
+)
 MISSING_PREFLIGHT_FIELDS_NEXT_ACTION = (
     "Attach the missing field list and original doctor JSON summary before continuing candidate promotion."
 )
@@ -899,6 +911,24 @@ def _doctor_preflight_state_from_values(
         "reason_codes": [],
         "next_action": READY_PREFLIGHT_NEXT_ACTION,
     }
+
+
+def _doctor_preflight_public_next_action(
+    state: dict[str, Any],
+    *,
+    evidence_attached: bool,
+) -> str:
+    next_action = str(state.get("next_action") or "Not declared.")
+    if not evidence_attached:
+        return next_action
+    status = str(state.get("status") or "")
+    if status == "blocked":
+        return BLOCKED_PREFLIGHT_EVIDENCE_ATTACHED_NEXT_ACTION
+    if status == "missing_fields":
+        return MISSING_PREFLIGHT_EVIDENCE_ATTACHED_NEXT_ACTION
+    if status == "ready":
+        return READY_PREFLIGHT_EVIDENCE_ATTACHED_NEXT_ACTION
+    return next_action
 
 
 def _doctor_preflight_evidence_from_payload(
@@ -3838,6 +3868,17 @@ def _candidate_issue_body(
         primary_acceptance = CANDIDATE_PROMOTION_ACCEPTANCE_CRITERIA.get(
             str(primary_task.get("task") or ""), ""
         )
+        doctor_preflight_state = primary_task.get("doctor_preflight_state")
+        doctor_preflight_state = (
+            doctor_preflight_state
+            if isinstance(doctor_preflight_state, dict)
+            else {}
+        )
+        doctor_preflight_evidence_attached = bool(doctor_preflight_evidence)
+        doctor_preflight_public_next_action = _doctor_preflight_public_next_action(
+            doctor_preflight_state,
+            evidence_attached=doctor_preflight_evidence_attached,
+        )
         primary_priority_lines: list[str] = []
         if primary_task.get("priority_rank") is not None:
             primary_priority_lines.append(f"- Priority rank: `{primary_task['priority_rank']}`")
@@ -3845,15 +3886,44 @@ def _candidate_issue_body(
             primary_priority_lines.append(
                 f"- Priority reason: {primary_task['priority_reason']}"
             )
+        preflight_summary_lines: list[str] = []
+        if doctor_preflight_state:
+            preflight_summary_lines = [
+                f"- Current execution gate: `{doctor_preflight_state.get('status', '-')}`",
+                (
+                    "- Adapter package runnable: "
+                    f"`{str(bool(doctor_preflight_state.get('ready_for_adapter_package'))).lower()}`"
+                ),
+                f"- Gate reason: {doctor_preflight_state.get('primary_reason', 'Not declared.')}",
+                f"- Gate next action: {doctor_preflight_public_next_action}",
+            ]
         primary_task_lines = [
             f"- Task: `{primary_task['task']}`",
             f"- Status: `{primary_task['status']}`",
             *primary_priority_lines,
-            f"- Current evidence: {primary_evidence}",
+            *preflight_summary_lines,
+            (
+                f"- {'Current package evidence' if doctor_preflight_evidence_attached else 'Current evidence'}: "
+                f"{primary_evidence}"
+            ),
+            *(
+                [
+                    (
+                        "- Doctor preflight evidence: Attached "
+                        f"(values_sha256: `{doctor_preflight_evidence.get('doctor_preflight_evidence_values_sha256')}`)"
+                    )
+                ]
+                if doctor_preflight_evidence_attached
+                else []
+            ),
             f"- Next action: {primary_next_action}",
             f"- Acceptance criteria: {primary_acceptance}",
             f"- Expected adapter package: `{expected_adapter_package or '-'}`",
         ]
+        if doctor_preflight_evidence_attached and doctor_preflight_state:
+            primary_task_lines.append(
+                f"- Next executable handoff: {doctor_preflight_public_next_action}"
+            )
     else:
         primary_task_lines = ["- All promotion tasks already have complete evidence."]
     primary_runbook_lines = _candidate_primary_runbook_markdown(

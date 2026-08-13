@@ -7499,6 +7499,16 @@ def test_plan_cli_issue_files_accept_doctor_json(tmp_path, monkeypatch, capsys):
     assert "- `checks[llm_live].details.error_code`: `E_LLM_UNAVAILABLE`" in body
     assert str(doctor_json) not in body
     assert f"- values_sha256: `{primary['doctor_preflight_evidence_values_sha256']}`" in body
+    assert "- Current package evidence: Not attached yet." in body
+    assert "- Doctor preflight evidence: Attached (values_sha256: `" in body
+    assert (
+        "- Gate next action: Doctor preflight evidence is attached; wait for provider recovery, "
+        "then rerun the strict live preflight, and do not run candidate explore until it is ready."
+    ) in body
+    assert (
+        "- Next executable handoff: Doctor preflight evidence is attached; wait for provider recovery, "
+        "then rerun the strict live preflight, and do not run candidate explore until it is ready."
+    ) in body
     assert "--doctor-json <saved-doctor-json>" in body
 
 
