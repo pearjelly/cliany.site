@@ -767,7 +767,7 @@ def _candidate_issue_template(
             [
                 "",
                 "## Doctor Preflight Evidence",
-                (f"- source_path: `{doctor_preflight_evidence.get('doctor_preflight_evidence_source_path')}`"),
+                (f"- values_sha256: `{doctor_preflight_evidence.get('doctor_preflight_evidence_values_sha256')}`"),
                 f"- null_count: `{doctor_preflight_evidence.get('doctor_preflight_evidence_null_count')}`",
                 f"- preflight_status: `{state.get('status', '-')}`",
                 (f"- ready_for_adapter_package: `{str(bool(state.get('ready_for_adapter_package'))).lower()}`"),

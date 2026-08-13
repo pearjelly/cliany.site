@@ -3509,9 +3509,15 @@ def _candidate_promotion_primary_task(evidence: dict[str, Any]) -> dict[str, Any
     return dict(primary)
 
 
-def _doctor_json_arg(doctor_preflight_evidence: dict[str, Any] | None) -> str:
+def _doctor_json_arg(
+    doctor_preflight_evidence: dict[str, Any] | None,
+    *,
+    redact_source_path: bool = False,
+) -> str:
     if not doctor_preflight_evidence:
         return ""
+    if redact_source_path:
+        return " --doctor-json <saved-doctor-json>"
     source_path = str(doctor_preflight_evidence.get("doctor_preflight_evidence_source_path") or "")
     return f" --doctor-json {shlex.quote(source_path)}" if source_path else ""
 
@@ -3520,38 +3526,52 @@ def _candidate_evidence_bundle_command(
     case_id: str,
     *,
     doctor_preflight_evidence: dict[str, Any] | None = None,
+    redact_source_path: bool = False,
 ) -> str:
-    return f"cliany-site cases --case-id {case_id} --evidence-bundle{_doctor_json_arg(doctor_preflight_evidence)}"
+    return (
+        f"cliany-site cases --case-id {case_id} --evidence-bundle"
+        f"{_doctor_json_arg(doctor_preflight_evidence, redact_source_path=redact_source_path)}"
+    )
 
 
 def _candidate_evidence_bundle_json_command(
     case_id: str,
     *,
     doctor_preflight_evidence: dict[str, Any] | None = None,
+    redact_source_path: bool = False,
 ) -> str:
-    return (
-        f"{_candidate_evidence_bundle_command(case_id, doctor_preflight_evidence=doctor_preflight_evidence)} "
-        "--json"
+    command = _candidate_evidence_bundle_command(
+        case_id,
+        doctor_preflight_evidence=doctor_preflight_evidence,
+        redact_source_path=redact_source_path,
     )
+    return f"{command} --json"
 
 
 def _candidate_issue_template_command(
     case_id: str,
     *,
     doctor_preflight_evidence: dict[str, Any] | None = None,
+    redact_source_path: bool = False,
 ) -> str:
-    return f"cliany-site cases --case-id {case_id} --issue-template{_doctor_json_arg(doctor_preflight_evidence)}"
+    return (
+        f"cliany-site cases --case-id {case_id} --issue-template"
+        f"{_doctor_json_arg(doctor_preflight_evidence, redact_source_path=redact_source_path)}"
+    )
 
 
 def _candidate_issue_template_json_command(
     case_id: str,
     *,
     doctor_preflight_evidence: dict[str, Any] | None = None,
+    redact_source_path: bool = False,
 ) -> str:
-    return (
-        f"{_candidate_issue_template_command(case_id, doctor_preflight_evidence=doctor_preflight_evidence)} "
-        "--json"
+    command = _candidate_issue_template_command(
+        case_id,
+        doctor_preflight_evidence=doctor_preflight_evidence,
+        redact_source_path=redact_source_path,
     )
+    return f"{command} --json"
 
 
 def _candidate_issue_title(case_id: str) -> str:
@@ -3843,10 +3863,12 @@ def _candidate_issue_body(
     evidence_bundle_command = _candidate_evidence_bundle_command(
         case_id,
         doctor_preflight_evidence=doctor_preflight_evidence,
+        redact_source_path=True,
     )
     evidence_bundle_json_command = _candidate_evidence_bundle_json_command(
         case_id,
         doctor_preflight_evidence=doctor_preflight_evidence,
+        redact_source_path=True,
     )
     current_doctor_preflight_section: list[str] = []
     if doctor_preflight_evidence:
@@ -3856,7 +3878,7 @@ def _candidate_issue_body(
         values = values if isinstance(values, dict) else {}
         current_doctor_preflight_section = [
             "## Current Doctor Preflight State",
-            f"- source_path: `{doctor_preflight_evidence.get('doctor_preflight_evidence_source_path')}`",
+            f"- values_sha256: `{doctor_preflight_evidence.get('doctor_preflight_evidence_values_sha256')}`",
             f"- ok: `{str(bool(doctor_preflight_evidence.get('doctor_preflight_evidence_ok'))).lower()}`",
             f"- missing_count: `{doctor_preflight_evidence.get('doctor_preflight_evidence_missing_count')}`",
             f"- null_count: `{doctor_preflight_evidence.get('doctor_preflight_evidence_null_count')}`",

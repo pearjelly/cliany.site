@@ -182,7 +182,11 @@ def test_candidate_expectations_can_render_saved_doctor_preflight_evidence(tmp_p
         doctor_preflight_evidence=evidence,
     )
 
-    assert f"- source_path: `{doctor_json}`" in expectations[0].body
+    assert str(doctor_json) not in expectations[0].body
+    assert (
+        f"- values_sha256: `{evidence['doctor_preflight_evidence_values_sha256']}`"
+        in expectations[0].body
+    )
     assert "- Current execution gate: `blocked`" in expectations[0].body
     assert "| `checks[llm_live].details.error_code` | `E_LLM_UNAVAILABLE` |" in expectations[0].body
 

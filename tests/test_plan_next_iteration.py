@@ -7497,7 +7497,9 @@ def test_plan_cli_issue_files_accept_doctor_json(tmp_path, monkeypatch, capsys):
     assert "- status: `blocked`" in body
     assert "- primary_reason: Live LLM preflight is warning." in body
     assert "- `checks[llm_live].details.error_code`: `E_LLM_UNAVAILABLE`" in body
-    assert f"- source_path: `{doctor_json}`" in body
+    assert str(doctor_json) not in body
+    assert f"- values_sha256: `{primary['doctor_preflight_evidence_values_sha256']}`" in body
+    assert "--doctor-json <saved-doctor-json>" in body
 
 
 def test_plan_accepts_strict_doctor_error_details(tmp_path):

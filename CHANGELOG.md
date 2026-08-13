@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Doctor-backed candidate issue bodies and planner-generated public issue drafts now replace the local doctor JSON path with the extracted values SHA-256. Local JSON audits and reviewed metadata retain the source path for traceability, while public handoffs keep the gate state, evidence fields, and a `<saved-doctor-json>` command placeholder without exposing a maintainer filesystem path.
+
 ## [0.16.317] - 2026-08-13
 
 ### Added

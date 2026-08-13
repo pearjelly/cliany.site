@@ -1112,7 +1112,8 @@ def test_cases_command_issue_template_accepts_doctor_json(tmp_home, tmp_path):
     payload = json.loads(result.output)
     data = payload["data"]
     assert "## Doctor Preflight Evidence" in data["issue_template"]
-    assert f"- source_path: `{doctor_json}`" in data["issue_template"]
+    assert str(doctor_json) not in data["issue_template"]
+    assert "- values_sha256: `" in data["issue_template"]
     assert "- Current execution gate: `blocked`" in data["issue_template"]
     assert "- Adapter package runnable: `false`" in data["issue_template"]
     assert "- Gate reason: Live LLM preflight is warning." in data["issue_template"]

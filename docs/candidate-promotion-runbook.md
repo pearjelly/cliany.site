@@ -192,7 +192,7 @@ python scripts/plan_next_iteration.py --target-version 0.16.260 --remote --docto
 CLIANY_CREATE_ISSUES_ACK_REVIEW=1
 ```
 
-公开 issue 已创建时，`audit_candidate_issues.py --doctor-json` 会用同一份 extracted doctor evidence 渲染期望正文，而不是把没有 evidence 的占位模板当作当前 handoff。JSON report 中的 `doctor_preflight_evidence.source_path`、`values_sha256`、`state_status` 和 `ready_for_adapter_package` 可用于确认审计使用的是哪份证据。默认审计和该带证据的变体都是只读；只有逐项审阅 `stale`，并先解决 `missing`、`duplicate`、`unexpected` 后，才能显式执行 `--doctor-json /tmp/cliany-doctor-preflight.json --apply --confirm-rewrite`。该操作仍只改写已匹配的 stale body，不创建、关闭 issue，也不晋级 candidate。
+公开 issue 已创建时，`audit_candidate_issues.py --doctor-json` 会用同一份 extracted doctor evidence 渲染期望正文，而不是把没有 evidence 的占位模板当作当前 handoff。JSON report 中的 `doctor_preflight_evidence.source_path`、`values_sha256`、`state_status` 和 `ready_for_adapter_package` 可用于确认审计使用的是哪份证据；生成的公开 issue body 只携带 `values_sha256`、gate state 和抽取字段，不携带本地 source path。默认审计和该带证据的变体都是只读；只有逐项审阅 `stale`，并先解决 `missing`、`duplicate`、`unexpected` 后，才能显式执行 `--doctor-json /tmp/cliany-doctor-preflight.json --apply --confirm-rewrite`。该操作仍只改写已匹配的 stale body，不创建、关闭 issue，也不晋级 candidate。
 
 ## Non-goals
 
