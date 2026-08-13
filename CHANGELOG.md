@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.317] - 2026-08-13
+
 ### Added
 
 - Candidate public issue audits can now consume a saved strict doctor JSON file with `--doctor-json`, render the expected body from the same extracted preflight evidence, and report the evidence source, values hash, gate status, and adapter-package runnable state. Existing audits remain read-only by default; a public body still requires explicit `--apply --confirm-rewrite` after review.
@@ -2872,7 +2874,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.316...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD
+[0.16.317]: https://github.com/pearjelly/cliany.site/compare/v0.16.316...v0.16.317
 [0.16.316]: https://github.com/pearjelly/cliany.site/compare/v0.16.315...v0.16.316
 [0.16.315]: https://github.com/pearjelly/cliany.site/compare/v0.16.314...v0.16.315
 [0.16.314]: https://github.com/pearjelly/cliany.site/compare/v0.16.313...v0.16.314
