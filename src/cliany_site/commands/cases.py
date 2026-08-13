@@ -130,6 +130,18 @@ BLOCKED_PREFLIGHT_NEXT_ACTION = (
     "Attach the doctor preflight evidence to the candidate issue and do "
     "not run candidate explore until live preflight is ready."
 )
+BLOCKED_PREFLIGHT_EVIDENCE_ATTACHED_NEXT_ACTION = (
+    "Doctor preflight evidence is attached; wait for provider recovery, then rerun the strict "
+    "live preflight, and do not run candidate explore until it is ready."
+)
+MISSING_PREFLIGHT_EVIDENCE_ATTACHED_NEXT_ACTION = (
+    "Doctor preflight evidence is attached but incomplete; attach the missing fields before "
+    "continuing candidate promotion."
+)
+READY_PREFLIGHT_EVIDENCE_ATTACHED_NEXT_ACTION = (
+    "Doctor preflight evidence is ready; run the candidate explore command and attach the package "
+    "path or release asset name."
+)
 MISSING_PREFLIGHT_FIELDS_NEXT_ACTION = (
     "Attach the missing field list and original doctor JSON summary before continuing candidate promotion."
 )
@@ -535,6 +547,24 @@ def _llm_live_preflight_command_sha256(command: str) -> str:
     return _sha256_text(command) if command else ""
 
 
+def _doctor_preflight_public_next_action(
+    state: dict[str, Any],
+    *,
+    evidence_attached: bool,
+) -> str:
+    next_action = str(state.get("next_action") or "Not declared.")
+    if not evidence_attached:
+        return next_action
+    status = str(state.get("status") or "")
+    if status == "blocked":
+        return BLOCKED_PREFLIGHT_EVIDENCE_ATTACHED_NEXT_ACTION
+    if status == "missing_fields":
+        return MISSING_PREFLIGHT_EVIDENCE_ATTACHED_NEXT_ACTION
+    if status == "ready":
+        return READY_PREFLIGHT_EVIDENCE_ATTACHED_NEXT_ACTION
+    return next_action
+
+
 def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[str, Any]:
     primary = bundle.get("primary_next_task")
     if not isinstance(primary, dict) or not primary.get("task"):
@@ -547,6 +577,7 @@ def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[st
     doctor_preflight_evidence_values = (
         dict(doctor_preflight_evidence_values) if isinstance(doctor_preflight_evidence_values, dict) else {}
     )
+    doctor_preflight_evidence_attached = "doctor_preflight_evidence_ok" in primary
     return {
         "task": str(primary.get("task") or ""),
         "status": str(primary.get("status") or "pending"),
@@ -594,7 +625,15 @@ def _candidate_issue_primary_task_from_bundle(bundle: dict[str, Any]) -> dict[st
         "doctor_preflight_next_action": str(
             doctor_preflight_state.get("next_action") or ""
         ),
+        "doctor_preflight_public_next_action": _doctor_preflight_public_next_action(
+            doctor_preflight_state,
+            evidence_attached=doctor_preflight_evidence_attached,
+        ),
         "doctor_preflight_evidence_values": doctor_preflight_evidence_values,
+        "doctor_preflight_evidence_attached": doctor_preflight_evidence_attached,
+        "doctor_preflight_evidence_values_sha256": str(
+            primary.get("doctor_preflight_evidence_values_sha256") or ""
+        ),
         "doctor_preflight_evidence_ok": primary.get("doctor_preflight_evidence_ok"),
         "doctor_preflight_evidence_missing_count": primary.get("doctor_preflight_evidence_missing_count"),
         "doctor_preflight_evidence_null_count": primary.get("doctor_preflight_evidence_null_count"),
@@ -648,6 +687,12 @@ def _candidate_issue_template(
             if isinstance(doctor_preflight_state, dict)
             else {}
         )
+        doctor_preflight_evidence_attached = bool(primary_task.get("doctor_preflight_evidence_attached"))
+        doctor_preflight_public_next_action = str(
+            primary_task.get("doctor_preflight_public_next_action")
+            or doctor_preflight_state.get("next_action")
+            or "Not declared."
+        )
         preflight_summary_lines: list[str] = []
         if doctor_preflight_state:
             preflight_summary_lines = [
@@ -662,7 +707,7 @@ def _candidate_issue_template(
                 ),
                 (
                     "- Gate next action: "
-                    f"{doctor_preflight_state.get('next_action', 'Not declared.')}"
+                    f"{doctor_preflight_public_next_action}"
                 ),
             ]
         lines.extend(
@@ -670,7 +715,20 @@ def _candidate_issue_template(
                 f"- Task: `{primary_task['task']}`",
                 f"- Status: `{primary_task['status']}`",
                 *preflight_summary_lines,
-                f"- Current evidence: {current_evidence}",
+                (
+                    f"- {'Current package evidence' if doctor_preflight_evidence_attached else 'Current evidence'}: "
+                    f"{current_evidence}"
+                ),
+                *(
+                    [
+                        (
+                            "- Doctor preflight evidence: Attached "
+                            f"(values_sha256: `{primary_task.get('doctor_preflight_evidence_values_sha256')}`)"
+                        )
+                    ]
+                    if doctor_preflight_evidence_attached
+                    else []
+                ),
                 f"- Next executable step: `{primary_task.get('next_step') or '-'}`",
                 f"- Next executable command: `{primary_task.get('next_command') or 'Not declared.'}`",
                 f"- Acceptance criteria: {acceptance_criteria}",
@@ -681,7 +739,10 @@ def _candidate_issue_template(
         if task_command and task_command != primary_task.get("next_command"):
             lines.append(f"- Task command after preflight: `{task_command}`")
         if primary_task.get("next_handoff"):
-            lines.append(f"- Next executable handoff: {primary_task['next_handoff']}")
+            next_handoff = primary_task["next_handoff"]
+            if doctor_preflight_evidence_attached and doctor_preflight_state:
+                next_handoff = doctor_preflight_public_next_action
+            lines.append(f"- Next executable handoff: {next_handoff}")
         if primary_task.get("task_handoff") and primary_task.get("task_handoff") != primary_task.get("next_handoff"):
             lines.append(f"- Task handoff: {primary_task['task_handoff']}")
         lines.append(f"- Next action: {next_action}")

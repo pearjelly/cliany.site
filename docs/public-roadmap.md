@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-08-12
-- **Current baseline:** v0.16.316
+- **Updated:** 2026-08-13
+- **Current baseline:** v0.16.318
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -50,6 +50,10 @@ As of v0.16.313, the production website's English maintainer translation uses a 
 As of v0.16.315, that incident check is part of the release system: master CI has a dedicated website JavaScript syntax job, tag preflight repeats it, and strict readiness verifies both commands remain present. This moves a production white-screen failure from post-deploy discovery to pre-publication blocking.
 
 As of v0.16.316, the tag workflow creates each GitHub Release from its reviewed versioned notes file. Strict readiness checks that file's version heading and user-facing content before a tag is pushed, and rejects a workflow that falls back to generated compare-only notes. This keeps GitHub Release and PyPI publication aligned without a post-publication note repair.
+
+As of v0.16.318, public candidate issue bodies retain the doctor evidence values hash and gate state without exposing a maintainer's local source path. When a saved preflight is attached, the handoff separates unfinished package evidence from the provider gate and tells contributors to rerun the strict preflight after provider recovery; it never treats blocked evidence as permission to explore.
+
+As of v0.16.319, candidate issue handoffs make that evidence boundary explicit in both human Markdown and machine-readable primary-task fields, so a public blocker issue no longer says that all evidence is absent when the doctor preflight has already been attached.
 
 As of 2026-07-29, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 

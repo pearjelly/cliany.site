@@ -1114,12 +1114,17 @@ def test_cases_command_issue_template_accepts_doctor_json(tmp_home, tmp_path):
     assert "## Doctor Preflight Evidence" in data["issue_template"]
     assert str(doctor_json) not in data["issue_template"]
     assert "- values_sha256: `" in data["issue_template"]
+    assert "- Current package evidence: Not attached yet." in data["issue_template"]
+    assert "- Doctor preflight evidence: Attached (values_sha256: `" in data["issue_template"]
     assert "- Current execution gate: `blocked`" in data["issue_template"]
     assert "- Adapter package runnable: `false`" in data["issue_template"]
     assert "- Gate reason: Live LLM preflight is warning." in data["issue_template"]
     assert (
-        "- Gate next action: Attach the doctor preflight evidence to the candidate "
-        "issue and do not run candidate explore until live preflight is ready."
+        "- Gate next action: Doctor preflight evidence is attached; wait for provider recovery, then rerun the strict "
+        "live preflight, and do not run candidate explore until it is ready."
+    ) in data["issue_template"]
+    assert (
+        "- Next executable handoff: Doctor preflight evidence is attached; wait for provider recovery"
     ) in data["issue_template"]
     assert "| `checks[llm_live].details.error_code` | `E_LLM_UNAVAILABLE` |" in data["issue_template"]
     assert data["issue_template_primary_task"]["doctor_preflight_state"]["status"] == "blocked"
@@ -1127,6 +1132,11 @@ def test_cases_command_issue_template_accepts_doctor_json(tmp_home, tmp_path):
     assert data["issue_template_primary_task"]["doctor_preflight_ready_for_adapter_package"] is False
     assert data["issue_template_primary_task"]["doctor_preflight_primary_reason"] == (
         "Live LLM preflight is warning."
+    )
+    assert data["issue_template_primary_task"]["doctor_preflight_evidence_attached"] is True
+    assert len(data["issue_template_primary_task"]["doctor_preflight_evidence_values_sha256"]) == 64
+    assert data["issue_template_primary_task"]["doctor_preflight_public_next_action"].startswith(
+        "Doctor preflight evidence is attached; wait for provider recovery"
     )
 
 

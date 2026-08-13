@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Candidate issue templates now distinguish unfinished adapter package evidence from an attached doctor preflight. When the saved preflight is blocked by a provider outage, human and machine-readable handoffs tell maintainers to wait for recovery and rerun the strict preflight without making candidate `explore` runnable.
+
 ## [0.16.318] - 2026-08-13
 
 ### Fixed
