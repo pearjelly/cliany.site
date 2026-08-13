@@ -11265,7 +11265,7 @@ def test_v016314_changelog_and_release_docs_are_finalized() -> None:
     assert "Website JavaScript Syntax" in changelog
     assert (
         "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/"
-        "v0.16.317...HEAD"
+        "v0.16.318...HEAD"
     ) in changelog
     assert (
         "[0.16.314]: https://github.com/pearjelly/cliany.site/compare/"
@@ -11306,7 +11306,7 @@ def test_v016315_release_notes_describe_handoff_without_live_claims() -> None:
 
     assert "## [0.16.315] - 2026-08-12" in changelog
     assert "adapter-package runnable state" in changelog
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in changelog
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in changelog
     assert "[0.16.315]: https://github.com/pearjelly/cliany.site/compare/v0.16.314...v0.16.315" in changelog
     assert "issue_template_primary_task" in notes
     assert "error.details" in notes
@@ -11325,7 +11325,7 @@ def test_v016316_release_notes_are_workflow_ready_without_live_claims() -> None:
 
     assert "## [0.16.316] - 2026-08-12" in changelog
     assert "reviewed, versioned" in changelog
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in changelog
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in changelog
     assert "[0.16.316]: https://github.com/pearjelly/cliany.site/compare/v0.16.315...v0.16.316" in changelog
     assert "docs/releases/vX.Y.Z-github-release.md" in draft
     assert "--generate-notes" in draft
@@ -11379,6 +11379,45 @@ def test_v016317_release_draft_prepares_doctor_backed_candidate_issue_audit() ->
         "## Trust Boundaries",
         "does not create, close, or promote",
         "live LLM provider",
+    ]:
+        assert snippet in notes
+
+
+def test_v016318_release_draft_redacts_public_doctor_paths() -> None:
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    draft = (ROOT / "docs" / "releases" / "v0.16.318-draft.md").read_text(
+        encoding="utf-8"
+    )
+    notes = (
+        ROOT / "docs" / "releases" / "v0.16.318-github-release.md"
+    ).read_text(encoding="utf-8")
+    release_entry = changelog.split("## [0.16.318]", 1)[1].split("## [0.16.317]", 1)[0]
+
+    assert "values SHA-256" in release_entry
+    assert "<saved-doctor-json>" in release_entry
+    assert "## [0.16.318] - 2026-08-13" in changelog
+    assert "[0.16.318]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...v0.16.318" in changelog
+    for snippet in [
+        "# v0.16.318 发布草案",
+        "**目标版本：** `0.16.318`",
+        "**提交范围：** `v0.16.317..HEAD`",
+        "**提交范围：** `v0.16.318..HEAD`",
+        "<saved-doctor-json>",
+        "E_LLM_UNAVAILABLE",
+        "release_readiness.py --strict --target-version 0.16.318 --remote",
+        "git tag v0.16.318",
+        "release_readiness.py --strict --release-tag v0.16.318 --remote --remote-name origin",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.318",
+        "values_sha256",
+        "<saved-doctor-json>",
+        "## Trust Boundaries",
+        "does not create, close, or promote",
+        "E_LLM_UNAVAILABLE",
     ]:
         assert snippet in notes
 
@@ -11516,7 +11555,7 @@ def test_v016264_changelog_is_finalized() -> None:
     assert "direct HTTPS adapter package URL" in text.split("## [0.16.264]", 1)[1].split("## [0.16.263]", 1)[0]
     assert "INSTALL_FAILED" in text.split("## [0.16.264]", 1)[1].split("## [0.16.263]", 1)[0]
     assert "## [0.16.263] - 2026-07-15" in text
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.264]: https://github.com/pearjelly/cliany.site/compare/v0.16.263...v0.16.264" in text
     assert "[0.16.263]: https://github.com/pearjelly/cliany.site/compare/v0.16.262...v0.16.263" in text
 
@@ -11550,7 +11589,7 @@ def test_v016269_changelog_is_finalized() -> None:
     assert "ready_for_existing_adapters" in release
     assert "ready_for_demo_adapters" in release
     assert "published demo adapter asset" in release
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.269]: https://github.com/pearjelly/cliany.site/compare/v0.16.268...v0.16.269" in text
 
 
@@ -11886,7 +11925,7 @@ def test_v016272_changelog_is_finalized() -> None:
     assert "## [0.16.272] - 2026-07-23" in text
     assert "GitHub Release v0.14.1 HTTPS adapter URLs" in release
     assert "<domain>-<version>.cliany-adapter.tar.gz" in release
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.272]: https://github.com/pearjelly/cliany.site/compare/v0.16.271...v0.16.272" in text
 
 
@@ -11898,7 +11937,7 @@ def test_v016271_changelog_is_finalized() -> None:
     assert "expects_nonempty=false" in release
     assert "schema-v3 metadata" in release
     assert "packaging and installation" in release
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
 
 
 def test_v016274_changelog_is_finalized() -> None:
@@ -11910,7 +11949,7 @@ def test_v016274_changelog_is_finalized() -> None:
     assert "contains no `extract` action" in release
     assert "expects_nonempty=false" in release
     assert "## [0.16.273] - 2026-07-23" in text
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.274]: https://github.com/pearjelly/cliany.site/compare/v0.16.273...v0.16.274" in text
     assert "[0.16.273]: https://github.com/pearjelly/cliany.site/compare/v0.16.272...v0.16.273" in text
     assert "[0.16.271]: https://github.com/pearjelly/cliany.site/compare/v0.16.270...v0.16.271" in text
@@ -11933,7 +11972,7 @@ def test_v016275_changelog_and_release_docs_are_finalized() -> None:
     assert "## What Changed" in notes
     assert "## Trust Boundaries" in notes
     assert "No live LLM" in notes
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.275]: https://github.com/pearjelly/cliany.site/compare/v0.16.274...v0.16.275" in text
 
 
@@ -11953,7 +11992,7 @@ def test_v016276_changelog_and_release_docs_are_finalized() -> None:
     assert "## What Changed" in notes
     assert "## Trust Boundaries" in notes
     assert "No live LLM" in notes
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.276]: https://github.com/pearjelly/cliany.site/compare/v0.16.275...v0.16.276" in text
 
 
@@ -11973,7 +12012,7 @@ def test_v016277_changelog_and_release_docs_are_finalized() -> None:
     ]:
         assert snippet in release
 
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.277]: https://github.com/pearjelly/cliany.site/compare/v0.16.276...v0.16.277" in text
 
 
@@ -12029,7 +12068,7 @@ def test_v016278_release_draft_tracks_strict_preflight_gate() -> None:
     assert "## [0.16.278] - 2026-07-26" in text
     assert "doctor --require-capability" in release
     assert "E_LLM_UNAVAILABLE" in release
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.278]: https://github.com/pearjelly/cliany.site/compare/v0.16.277...v0.16.278" in text
 
     for snippet in [
@@ -12074,7 +12113,7 @@ def test_v016279_release_draft_tracks_candidate_issue_contract_audit() -> None:
     assert "## [0.16.279] - 2026-07-27" in text
     assert "audit_candidate_issues.py" in release
     assert "#14, #15, and #16" in release
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.279]: https://github.com/pearjelly/cliany.site/compare/v0.16.278...v0.16.279" in text
 
     for snippet in [
@@ -12115,7 +12154,7 @@ def test_v016280_release_draft_tracks_unexpected_candidate_issue_gate() -> None:
     assert "## [0.16.280] - 2026-07-27" in text
     assert "unexpected" in release
     assert "--apply --confirm-rewrite" in release
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.280]: https://github.com/pearjelly/cliany.site/compare/v0.16.279...v0.16.280" in text
 
     for snippet in [
@@ -12158,7 +12197,7 @@ def test_v016281_release_draft_tracks_human_unexpected_issue_handoff() -> None:
 
     assert "## [0.16.281] - 2026-07-27" in text
     assert "actual title and URL" in release
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.281]: https://github.com/pearjelly/cliany.site/compare/v0.16.280...v0.16.281" in text
 
     for snippet in [
@@ -12200,7 +12239,7 @@ def test_v016282_release_draft_tracks_missing_explicit_adapter_contract() -> Non
 
     assert "ADAPTER_NOT_FOUND" in released
     assert "market install --dry-run" in released
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.282]: https://github.com/pearjelly/cliany.site/compare/v0.16.281...v0.16.282" in text
 
     for snippet in [
@@ -12243,7 +12282,7 @@ def test_v016283_release_draft_tracks_duplicate_dry_run_plan_contract() -> None:
     assert "## [0.16.283] - 2026-07-28" in text
     assert "requires_force=true" in released
     assert "INSTALL_FAILED" in released
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.283]: https://github.com/pearjelly/cliany.site/compare/v0.16.282...v0.16.283" in text
 
     for snippet in [
@@ -12289,7 +12328,7 @@ def test_v016284_release_draft_tracks_installed_version_plan_contract() -> None:
     assert "## [0.16.284] - 2026-07-28" in text
     assert "installed_version" in released
     assert "would_replace" in released
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.284]: https://github.com/pearjelly/cliany.site/compare/v0.16.283...v0.16.284" in text
 
     for snippet in [
@@ -12337,7 +12376,7 @@ def test_v016285_release_draft_tracks_verify_first_demo_guidance() -> None:
     assert "## [0.16.285] - 2026-07-29" in text
     assert "recommended_commands" in released
     assert "adapter_present" in released
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.285]: https://github.com/pearjelly/cliany.site/compare/v0.16.284...v0.16.285" in text
 
     for snippet in [
@@ -12383,7 +12422,7 @@ def test_v016287_release_draft_tracks_unloadable_commands_gate() -> None:
     assert "## [0.16.287] - 2026-07-29" in text
     assert "verify --strict" in released
     assert "commands_missing" in released
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.287]: https://github.com/pearjelly/cliany.site/compare/v0.16.286...v0.16.287" in text
 
     for snippet in [
@@ -12429,7 +12468,7 @@ def test_v016288_release_draft_tracks_runtime_loader_contract() -> None:
 
     assert "commands_unloadable" in unreleased
     assert "click.Group" in unreleased
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
 
     for snippet in [
         "# v0.16.288 发布草案",
@@ -12473,7 +12512,7 @@ def test_v016289_release_draft_tracks_explicit_failure_gates() -> None:
 
     assert "E_PARSE_FAILED" in release_entry
     assert "website" in release_entry
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
 
     for snippet in [
         "# v0.16.289 发布草案",
@@ -12517,7 +12556,7 @@ def test_v016290_release_draft_tracks_generated_adapter_failure_exit() -> None:
 
     assert "E_PARSE_FAILED" in release_entry
     assert "exits nonzero" in release_entry
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
 
     for snippet in [
         "# v0.16.290 发布草案",
@@ -12563,7 +12602,7 @@ def test_v016291_release_draft_tracks_server_root_option_docs() -> None:
 
     assert "--headless" in release_entry
     assert "--cdp-url" in release_entry
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
 
     for snippet in [
         "# v0.16.291 发布草案",
@@ -12608,7 +12647,7 @@ def test_v016292_release_draft_tracks_human_doctor_demo_guidance() -> None:
     )
 
     assert "human-readable `cliany-site doctor`" in release_entry
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
 
     for snippet in [
         "# v0.16.292 发布草案",
@@ -12654,7 +12693,7 @@ def test_v016293_release_draft_tracks_candidate_command_boundary() -> None:
     assert "## [0.16.293] - 2026-08-01" in text
     assert "Human `cliany-site cases` output now marks" in release_entry
     assert "JSON-only `data.summary` fields" in release_entry
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.293]: https://github.com/pearjelly/cliany.site/compare/v0.16.292...v0.16.293" in text
 
     for snippet in [
@@ -12699,7 +12738,7 @@ def test_v016294_release_draft_tracks_human_live_preflight_boundary() -> None:
 
     assert "Ordinary human `cliany-site doctor` output" in text
     assert "E_LLM_UNAVAILABLE" in draft
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
 
     for snippet in [
         "# v0.16.294 发布草案",
@@ -12738,7 +12777,7 @@ def test_v016295_release_draft_tracks_live_preflight_retry_guidance() -> None:
     )
 
     assert "Ordinary human `cliany-site doctor --llm-live` output" in text
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
 
     for snippet in [
         "# v0.16.295 发布草案",
@@ -12777,7 +12816,7 @@ def test_v016296_release_draft_tracks_http_api_error_contract() -> None:
     )
 
     assert "HTTP API mutation endpoints now reject non-object JSON bodies" in text
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
 
     for snippet in [
         "# v0.16.296 发布草案",
@@ -12821,7 +12860,7 @@ def test_v016297_release_draft_tracks_http_api_browser_startup() -> None:
     )
 
     assert "HTTP API documentation now shows the correct root-option placement for `serve`" in release_entry
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.297]: https://github.com/pearjelly/cliany.site/compare/v0.16.296...v0.16.297" in text
 
     for snippet in [
@@ -12865,7 +12904,7 @@ def test_v016298_release_draft_tracks_versioned_health_probe() -> None:
     )
 
     assert "GET /health` now returns the `cliany-site` service name" in release_entry
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.298]: https://github.com/pearjelly/cliany.site/compare/v0.16.297...v0.16.298" in text
 
     for snippet in [
@@ -12908,7 +12947,7 @@ def test_v016299_release_draft_tracks_blank_result_rows() -> None:
     )
 
     assert "data.quality.field_blank_rows" in release_entry
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.299]: https://github.com/pearjelly/cliany.site/compare/v0.16.298...v0.16.299" in text
 
     for snippet in [
@@ -12950,7 +12989,7 @@ def test_v016300_release_draft_tracks_daily_release_capacity() -> None:
     )
 
     assert "daily_release_capacity_remaining" in release_entry
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD" in text
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD" in text
     assert "[0.16.300]: https://github.com/pearjelly/cliany.site/compare/v0.16.299...v0.16.300" in text
 
     for snippet in [

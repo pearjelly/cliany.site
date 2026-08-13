@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.318] - 2026-08-13
+
 ### Fixed
 
 - Doctor-backed candidate issue bodies and planner-generated public issue drafts now replace the local doctor JSON path with the extracted values SHA-256. Local JSON audits and reviewed metadata retain the source path for traceability, while public handoffs keep the gate state, evidence fields, and a `<saved-doctor-json>` command placeholder without exposing a maintainer filesystem path.
@@ -2878,7 +2880,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD
+[0.16.318]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...v0.16.318
 [0.16.317]: https://github.com/pearjelly/cliany.site/compare/v0.16.316...v0.16.317
 [0.16.316]: https://github.com/pearjelly/cliany.site/compare/v0.16.315...v0.16.316
 [0.16.315]: https://github.com/pearjelly/cliany.site/compare/v0.16.314...v0.16.315
