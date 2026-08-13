@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.319] - 2026-08-13
+
 ### Changed
 
 - Candidate issue templates now distinguish unfinished adapter package evidence from an attached doctor preflight. When the saved preflight is blocked by a provider outage, human and machine-readable handoffs tell maintainers to wait for recovery and rerun the strict preflight without making candidate `explore` runnable.
@@ -2884,7 +2886,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.319...HEAD
+[0.16.319]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...v0.16.319
 [0.16.318]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...v0.16.318
 [0.16.317]: https://github.com/pearjelly/cliany.site/compare/v0.16.316...v0.16.317
 [0.16.316]: https://github.com/pearjelly/cliany.site/compare/v0.16.315...v0.16.316
