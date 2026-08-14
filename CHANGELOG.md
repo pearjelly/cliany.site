@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.322] - 2026-08-14
+
+### Changed
+
+- Dependabot 现在将 GitHub Actions 升级合并为一个可审阅提案，并移除配置中已过期的 action 版本清单；维护者可以用单个变更审阅 workflow major 更新，避免重复或相互矛盾的升级分支。
+
 ## [0.16.321] - 2026-08-14
 
 ### Changed
@@ -2898,7 +2904,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.321...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.322...HEAD
+[0.16.322]: https://github.com/pearjelly/cliany.site/compare/v0.16.321...v0.16.322
 [0.16.321]: https://github.com/pearjelly/cliany.site/compare/v0.16.320...v0.16.321
 [0.16.320]: https://github.com/pearjelly/cliany.site/compare/v0.16.319...v0.16.320
 [0.16.319]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...v0.16.319
