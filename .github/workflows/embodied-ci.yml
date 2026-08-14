@@ -23,7 +23,7 @@ jobs:
     env:
       CLIANY_QA_OFFLINE: "1"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
