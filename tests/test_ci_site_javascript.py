@@ -11,7 +11,7 @@ def test_ci_blocks_invalid_website_javascript() -> None:
     required = [
         "website-javascript:",
         "Website JavaScript Syntax",
-        "actions/setup-node@v4",
+        "actions/setup-node@v7",
         'node-version: "24"',
         "Validate website JavaScript",
         "node --check site/script.js",
@@ -28,7 +28,7 @@ def test_release_preflight_rechecks_website_javascript() -> None:
     required = [
         "release-preflight:",
         "Release Preflight",
-        "actions/setup-node@v4",
+        "actions/setup-node@v7",
         'node-version: "24"',
         "Validate website JavaScript",
         "node --check site/script.js",
