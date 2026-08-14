@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.321] - 2026-08-14
+
+### Changed
+
+- GitHub Actions workflows now use the reviewed Dependabot major updates for checkout, Python and uv setup, artifact upload/download, and the Node 24-compatible runtime path. Fresh CI and release checks still remain the authority for this maintenance change.
+
 ## [0.16.320] - 2026-08-14
 
 ### Fixed
@@ -2892,7 +2898,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.320...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.321...HEAD
+[0.16.321]: https://github.com/pearjelly/cliany.site/compare/v0.16.320...v0.16.321
 [0.16.320]: https://github.com/pearjelly/cliany.site/compare/v0.16.319...v0.16.320
 [0.16.319]: https://github.com/pearjelly/cliany.site/compare/v0.16.318...v0.16.319
 [0.16.318]: https://github.com/pearjelly/cliany.site/compare/v0.16.317...v0.16.318

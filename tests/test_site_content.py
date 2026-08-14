@@ -118,10 +118,10 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
         "--doctor-json /tmp/cliany-doctor-preflight.json"
     ) in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.320" in index
-    assert "当前基线：v0.16.320" in script
-    assert 'en: "Current baseline: v0.16.320.' in script
-    assert "en: 'Current baseline: v0.16.320." not in script
+    assert "Current baseline: v0.16.321" in index
+    assert "当前基线：v0.16.321" in script
+    assert 'en: "Current baseline: v0.16.321.' in script
+    assert "en: 'Current baseline: v0.16.321." not in script
     assert "adapter package is runnable" in index
     assert "adapter package 是否可运行" in script
     assert "source-safety scan" in index
@@ -157,7 +157,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.320 · Python" in docs
+    assert "v0.16.321 · Python" in docs
     assert "daily_release_capacity_remaining" in script
     assert "installed_version" in docs
     assert "installed_version=null" in docs

@@ -155,7 +155,7 @@ jobs:
           pytest tests/test_validate_cases.py tests/test_cases_manifest.py -q --no-cov
         env:
           CLIANY_QA_OFFLINE: "1"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: case-catalog-report
           path: case-catalog-report.md
@@ -170,7 +170,7 @@ jobs:
           python scripts/release_readiness.py --json --report release-readiness-report.md
         env:
           CLIANY_QA_OFFLINE: "1"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-readiness-report
           path: release-readiness-report.md
@@ -222,7 +222,7 @@ jobs:
           __RELEASE_PREFLIGHT_COMMAND__
         env:
           CLIANY_QA_OFFLINE: "1"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-readiness-report
           path: release-readiness-report.md
@@ -234,7 +234,7 @@ jobs:
       - run: rm -rf dist
       - run: uv build
       - run: uvx twine check dist/*
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/

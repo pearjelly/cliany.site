@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-08-13
-- **Current baseline:** v0.16.318
+- **Updated:** 2026-08-14
+- **Current baseline:** v0.16.321
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -54,6 +54,10 @@ As of v0.16.316, the tag workflow creates each GitHub Release from its reviewed 
 As of v0.16.318, public candidate issue bodies retain the doctor evidence values hash and gate state without exposing a maintainer's local source path. When a saved preflight is attached, the handoff separates unfinished package evidence from the provider gate and tells contributors to rerun the strict preflight after provider recovery; it never treats blocked evidence as permission to explore.
 
 As of v0.16.319, candidate issue handoffs make that evidence boundary explicit in both human Markdown and machine-readable primary-task fields, so a public blocker issue no longer says that all evidence is absent when the doctor preflight has already been attached.
+
+As of v0.16.320, planner-generated candidate issue artifacts distinguish attached doctor preflight evidence from still-pending adapter package evidence, including a recovery-and-rerun handoff when the provider is unavailable. This keeps a saved blocker report useful without making candidate exploration runnable.
+
+As of v0.16.321, the repository's CI, release, and dependency-verification workflows use the reviewed checkout, Python, uv, and artifact action updates from Dependabot. The maintenance change is validated by fresh repository CI and release preflight evidence; it does not establish browser, LLM, adapter-package, or third-party workflow readiness.
 
 As of 2026-07-29, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 

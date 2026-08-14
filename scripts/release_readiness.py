@@ -543,7 +543,7 @@ def _build_release_workflow_report(root: Path) -> ReleaseWorkflowReport:
         "rm -rf dist",
         "uv build",
         "uvx twine check dist/*",
-        "actions/upload-artifact@v4",
+        "actions/upload-artifact@v7",
         "GitHub Release",
         "gh release create",
         "--notes-file",
