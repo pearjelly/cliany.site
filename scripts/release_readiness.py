@@ -482,7 +482,7 @@ def _build_ci_report(root: Path) -> CiReport:
     required_snippets = [
         "website-javascript:",
         "Website JavaScript Syntax",
-        "actions/setup-node@v4",
+        "actions/setup-node@v7",
         'node-version: "24"',
         "Validate website JavaScript",
         "node --check site/script.js",
@@ -532,7 +532,7 @@ def _build_release_workflow_report(root: Path) -> ReleaseWorkflowReport:
         "release-preflight:",
         "Release Preflight",
         "fetch-depth: 0",
-        "actions/setup-node@v4",
+        "actions/setup-node@v7",
         'node-version: "24"',
         "Validate website JavaScript",
         "node --check site/script.js",

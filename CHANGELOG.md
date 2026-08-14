@@ -11,7 +11,7 @@
 
 ### Changed
 
-- GitHub Actions workflows now use the reviewed Dependabot major updates for checkout, Python and uv setup, artifact upload/download, and the Node 24-compatible runtime path. Fresh CI and release checks still remain the authority for this maintenance change.
+- GitHub Actions workflows now use the reviewed major updates for checkout, Node setup, Python and uv setup, and artifact upload/download. Fresh CI and release checks still remain the authority for this maintenance change.
 
 ## [0.16.320] - 2026-08-14
 

@@ -57,7 +57,7 @@ As of v0.16.319, candidate issue handoffs make that evidence boundary explicit i
 
 As of v0.16.320, planner-generated candidate issue artifacts distinguish attached doctor preflight evidence from still-pending adapter package evidence, including a recovery-and-rerun handoff when the provider is unavailable. This keeps a saved blocker report useful without making candidate exploration runnable.
 
-As of v0.16.321, the repository's CI, release, and dependency-verification workflows use the reviewed checkout, Python, uv, and artifact action updates from Dependabot. The maintenance change is validated by fresh repository CI and release preflight evidence; it does not establish browser, LLM, adapter-package, or third-party workflow readiness.
+As of v0.16.321, the repository's CI, release, and dependency-verification workflows use the reviewed checkout, Node, Python, uv, and artifact action updates. The maintenance change is validated by fresh repository CI and release preflight evidence; it does not establish browser, LLM, adapter-package, or third-party workflow readiness.
 
 As of 2026-07-29, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 
