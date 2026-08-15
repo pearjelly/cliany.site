@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.323] - 2026-08-15
+
+### Changed
+
+- 严格 release readiness 现在要求 CI 与 tag Release Preflight 使用已审阅的 `actions/setup-python@v7`；这把 Dependabot 合并的 action major 更新固化为发布前门禁，不改变 CLI、adapter、SDK、HTTP API 或 workflow job 顺序。
+
 ## [0.16.322] - 2026-08-14
 
 ### Changed
@@ -2904,7 +2910,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.322...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.323...HEAD
+[0.16.323]: https://github.com/pearjelly/cliany.site/compare/v0.16.322...v0.16.323
 [0.16.322]: https://github.com/pearjelly/cliany.site/compare/v0.16.321...v0.16.322
 [0.16.321]: https://github.com/pearjelly/cliany.site/compare/v0.16.320...v0.16.321
 [0.16.320]: https://github.com/pearjelly/cliany.site/compare/v0.16.319...v0.16.320

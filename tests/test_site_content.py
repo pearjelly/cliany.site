@@ -118,12 +118,14 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
         "--doctor-json /tmp/cliany-doctor-preflight.json"
     ) in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.322" in index
+    assert "Current baseline: v0.16.323" in index
     assert "Dependabot now groups GitHub Actions upgrades" in index
-    assert "当前基线：v0.16.322" in script
+    assert "actions/setup-python@v7" in index
+    assert "当前基线：v0.16.323" in script
     assert "Dependabot 现在将 GitHub Actions 升级合并为一个可审阅提案" in script
-    assert 'en: "Current baseline: v0.16.322.' in script
-    assert "en: 'Current baseline: v0.16.322." not in script
+    assert "actions/setup-python@v7" in script
+    assert 'en: "Current baseline: v0.16.323.' in script
+    assert "en: 'Current baseline: v0.16.323." not in script
     assert "adapter package is runnable" in index
     assert "adapter package 是否可运行" in script
     assert "source-safety scan" in index
@@ -159,7 +161,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.322 · Python" in docs
+    assert "v0.16.323 · Python" in docs
     assert "daily_release_capacity_remaining" in script
     assert "installed_version" in docs
     assert "installed_version=null" in docs

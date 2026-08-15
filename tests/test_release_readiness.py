@@ -166,6 +166,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
       - run: |
           python scripts/release_readiness.py --json --report release-readiness-report.md
         env:
@@ -213,6 +216,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
       - uses: actions/setup-node@v7
         with:
           node-version: "24"
@@ -2007,6 +2013,18 @@ def test_release_readiness_blocks_ci_workflow_without_node24_actions_opt_in(tmp_
     assert any("FORCE_JAVASCRIPT_ACTIONS_TO_NODE24" in issue for issue in report.ci.issues)
 
 
+def test_release_readiness_blocks_ci_workflow_without_setup_python_v7(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    ci_workflow = _ci_workflow().replace("actions/setup-python@v7", "actions/setup-python@v6")
+    (repo / ".github" / "workflows" / "ci.yml").write_text(ci_workflow, encoding="utf-8")
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert report.ci.ok is False
+    assert any("actions/setup-python@v7" in issue for issue in report.ci.issues)
+
+
 def test_release_readiness_blocks_missing_release_workflow_pypi_publish(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     (repo / ".github" / "workflows" / "release.yml").write_text(
@@ -2036,6 +2054,24 @@ def test_release_readiness_blocks_release_workflow_without_node24_actions_opt_in
     assert "release workflow validation failed" in report.blockers
     assert report.release_workflow.ok is False
     assert any("FORCE_JAVASCRIPT_ACTIONS_TO_NODE24" in issue for issue in report.release_workflow.issues)
+
+
+def test_release_readiness_blocks_release_workflow_without_setup_python_v7(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    release_workflow = _release_workflow().replace(
+        "actions/setup-python@v7", "actions/setup-python@v6"
+    )
+    (repo / ".github" / "workflows" / "release.yml").write_text(
+        release_workflow, encoding="utf-8"
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert report.release_workflow.ok is False
+    assert any(
+        "actions/setup-python@v7" in issue for issue in report.release_workflow.issues
+    )
 
 
 def test_release_readiness_blocks_release_without_website_javascript_gate(tmp_path):
