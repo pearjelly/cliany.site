@@ -74,6 +74,8 @@ cliany-site cases --json
 - `--json` 输出是 `{ok, data, error, meta}` JSON envelope；`ok=true` 时，`data` 中包含案例和验证信息。
 - 以当前 `cases` 输出为准，不要从历史文档复制旧的发布归档文件名。
 
+维护者在 2026-08-16 真实复核了 `issues.apache.org` active demo：`cliany-site verify issues.apache.org --strict --json` 返回静态 verdict `ok`，随后 `cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json` 返回 5 条只读结果。完整的日期化输出和边界说明见 [active demo evidence snapshot](user-evidence/2026-08-16-issues-apache-spark.md)；它不代表 candidate adapter package、live LLM 或第三方服务的持续可用性。
+
 ## 路径 B：生成自己的站点命令
 
 这条路径会调用 LLM 并连接 Chrome/CDP，适合在路径 A 跑通后继续。

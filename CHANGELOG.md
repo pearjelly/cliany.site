@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.324] - 2026-08-16
+
+### Added
+
+- 增加 `issues.apache.org` active demo 的日期化 maintainer evidence snapshot：记录真实的 strict static verify 与 Apache Spark 只读查询命令、结果和边界声明，帮助用户复核首个可运行路径，而不把快照包装成 candidate package、live LLM 或持续的第三方可用性证明。
+- quickstart、公开路线图和官网现在链接这份证据快照，并明确结果是捕获时点的数据；候选案例仍须通过真实 live LLM preflight 才能晋级。
+
 ## [0.16.323] - 2026-08-15
 
 ### Changed
@@ -2910,7 +2917,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.323...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.324...HEAD
+[0.16.324]: https://github.com/pearjelly/cliany.site/compare/v0.16.323...v0.16.324
 [0.16.323]: https://github.com/pearjelly/cliany.site/compare/v0.16.322...v0.16.323
 [0.16.322]: https://github.com/pearjelly/cliany.site/compare/v0.16.321...v0.16.322
 [0.16.321]: https://github.com/pearjelly/cliany.site/compare/v0.16.320...v0.16.321

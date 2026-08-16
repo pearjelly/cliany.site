@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-08-15
-- **Current baseline:** v0.16.323
+- **Updated:** 2026-08-16
+- **Current baseline:** v0.16.324
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -62,6 +62,8 @@ As of v0.16.321, the repository's CI, release, and dependency-verification workf
 As of v0.16.322, Dependabot groups GitHub Actions upgrades into one reviewable proposal and no longer carries a stale action-version inventory in its configuration comment. This reduces duplicate dependency branches while preserving the existing CI, release, and live-LLM evidence gates; it does not establish browser, adapter-package, or third-party workflow readiness.
 
 As of v0.16.323, strict release readiness requires the reviewed `actions/setup-python@v7` major in both master CI and tag Release Preflight. This keeps the merged Dependabot action update enforced before publication without changing runtime behavior or establishing browser, adapter-package, live-LLM, or third-party workflow readiness.
+
+As of v0.16.324, the public quickstart links a dated maintainer evidence snapshot for the installed `issues.apache.org` active demo: strict static verification passed, and the declared read-only Apache Spark query returned five results. The snapshot preserves the commands, observed output, and evidence boundary; it is not candidate package, live LLM, online smoke, or current third-party availability evidence.
 
 As of 2026-07-29, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 
