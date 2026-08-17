@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.325] - 2026-08-17
+
 ### Added
 
 - 增加 `scripts/capture_active_demo_evidence.py`，按 `cases/manifest.json` 中指定的 active case 依次运行严格静态校验和只读 JSON 命令；只有前者返回成功 envelope 才会执行后者，失败会保留原始结果并以非零状态结束。
