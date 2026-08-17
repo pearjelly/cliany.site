@@ -18,7 +18,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     readme_zh = (ROOT / "README.zh.md").read_text(encoding="utf-8")
     evidence = (
-        ROOT / "docs" / "user-evidence" / "2026-08-16-issues-apache-spark.md"
+        ROOT / "docs" / "user-evidence" / "2026-08-17-issues-apache-spark.md"
     ).read_text(encoding="utf-8")
 
     assert "cliany-site doctor" in index
@@ -32,8 +32,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "cliany-site verify issues.apache.org --json" not in docs
     assert "cliany-site verify issues.apache.org --strict --json" in docs
     assert "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json" in docs
-    assert "2026-08-16" in index
-    assert "2026-08-16" in docs
+    assert "2026-08-17" in index
+    assert "2026-08-17" in docs
     assert "cliany-site verify issues.apache.org --strict --json" in evidence
     assert "cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json" in evidence
     assert "It does not prove that the adapter is a downloadable release asset" in evidence
@@ -127,14 +127,14 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
         "--doctor-json /tmp/cliany-doctor-preflight.json"
     ) in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.324" in index
+    assert "Current baseline: v0.16.325" in index
     assert "Dependabot now groups GitHub Actions upgrades" in index
     assert "actions/setup-python@v7" in index
-    assert "当前基线：v0.16.324" in script
+    assert "当前基线：v0.16.325" in script
     assert "Dependabot 现在将 GitHub Actions 升级合并为一个可审阅提案" in script
     assert "actions/setup-python@v7" in script
-    assert 'en: "Current baseline: v0.16.324.' in script
-    assert "en: 'Current baseline: v0.16.324." not in script
+    assert 'en: "Current baseline: v0.16.325.' in script
+    assert "en: 'Current baseline: v0.16.325." not in script
     assert "adapter package is runnable" in index
     assert "adapter package 是否可运行" in script
     assert "source-safety scan" in index
@@ -170,7 +170,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.324 · Python" in docs
+    assert "v0.16.325 · Python" in docs
+    assert "scripts/capture_active_demo_evidence.py" in docs
     assert "daily_release_capacity_remaining" in script
     assert "installed_version" in docs
     assert "installed_version=null" in docs

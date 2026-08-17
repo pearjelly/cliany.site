@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-08-16
-- **Current baseline:** v0.16.324
+- **Updated:** 2026-08-17
+- **Current baseline:** v0.16.325
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -64,6 +64,8 @@ As of v0.16.322, Dependabot groups GitHub Actions upgrades into one reviewable p
 As of v0.16.323, strict release readiness requires the reviewed `actions/setup-python@v7` major in both master CI and tag Release Preflight. This keeps the merged Dependabot action update enforced before publication without changing runtime behavior or establishing browser, adapter-package, live-LLM, or third-party workflow readiness.
 
 As of v0.16.324, the public quickstart links a dated maintainer evidence snapshot for the installed `issues.apache.org` active demo: strict static verification passed, and the declared read-only Apache Spark query returned five results. The snapshot preserves the commands, observed output, and evidence boundary; it is not candidate package, live LLM, online smoke, or current third-party availability evidence.
+
+As of v0.16.325, maintainers can run `scripts/capture_active_demo_evidence.py` for a named active case to produce the same dated snapshot format. It derives the strict verify command and declared read-only JSON command from `cases/manifest.json`, runs the latter only after a successful static envelope, and records a failed or skipped path as nonzero evidence rather than silently publishing a success claim. The helper is a capture workflow, not a claim that the third-party service or candidate promotion gate is continuously available.
 
 As of 2026-07-29, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 

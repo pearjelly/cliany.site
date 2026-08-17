@@ -84,6 +84,17 @@ Candidate promotion 的 issue template、evidence bundle、promotion plan、case
 
 `plan_next_iteration.py` 还会输出结构化 `commit_cadence`，保留 `status`、`commit_days`、`commit_day_count`、`min_commit_days`、`missing_commit_days`、`next_actions` 和 `summary`。Markdown report 会在指标表展示 `commit_cadence_status`、`commit_cadence_missing_commit_days` 和 `commit_cadence_summary`；candidate issue artifacts 的 `artifact-manifest.json` 会保留完整 `commit_cadence`，`publication-handoff.json` 和 artifacts `README.md` 的 `Publication Handoff` 会展示 `commit_cadence_status`、`commit_cadence_missing_commit_days` 和 `commit_cadence_primary_next_action`，artifacts `README.md` 还会单独输出 `Commit Cadence` 小节和 `Commit Cadence Next Actions`，`artifact_bundle_summary` 会展示 `commit_cadence_commit_day_count`、`commit_cadence_min_commit_days`、`commit_cadence_missing_commit_days`、`commit_cadence_next_action_count`、`commit_cadence_primary_next_action`、`commit_cadence_commit_days_sha256` 和 `commit_cadence_next_actions_sha256`。只读计划摘要、handoff 或 README 的维护者可以直接判断本周还差几个独立提交日。
 
+维护者需要记录 active demo 的真实用户证据时，使用受限的捕获器而不是手工复制命令输出：
+
+```bash
+uv run --extra dev --frozen python scripts/capture_active_demo_evidence.py \
+  --case-id apache-jira-issues \
+  --output docs/user-evidence/$(date +%Y-%m-%d)-issues-apache-spark.md \
+  --json
+```
+
+它只接受 `active` case，先运行 `verify --strict --json`，只有统一 envelope 的 `ok=true` 后才运行 manifest 声明的只读命令；现有 adapter 的只读命令若使用兼容的 `success=true` envelope 也会被保留。任何静态校验或只读命令失败都会写出原始结果并返回非零，不会生成“成功”证据。
+
 `artifact_bundle_summary` 也会输出 `publication_tag_publish_decision_key_count`、`publication_tag_publish_decision_sha256`、key preview/tail/boundary hash、`publication_tag_publish_decision_status`、`publication_tag_can_push`、`publication_tag_required_action_sha256` 和 `publication_target_tag_release_gate_*` 摘要字段。只读取整包摘要的维护工具可以先展示 tag 是否可推、是否需要人工决策、目标 tag 是否仍被 readiness blocker 挡住，并检测 `publication_tag_publish_decision` 对象是否漂移。
 
 `candidate_issue_gate.evidence` 也会带上 `publication_tag_decision_status`、`publication_tag_can_push` 和 `publication_tag_required_action`，artifacts `README.md` 的 `Publication Handoff` 会展示 `gate_evidence_tag_decision`、`gate_evidence_tag_can_push` 和 `gate_evidence_tag_required_action`。只读取 candidate gate 的工具可以直接解释为什么当前不能创建候选 issue。

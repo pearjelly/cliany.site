@@ -7,6 +7,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- 增加 `scripts/capture_active_demo_evidence.py`，按 `cases/manifest.json` 中指定的 active case 依次运行严格静态校验和只读 JSON 命令；只有前者返回成功 envelope 才会执行后者，失败会保留原始结果并以非零状态结束。
+- quickstart、维护者循环、公开路线图和官网现在说明如何生成受边界约束的日期化 active demo evidence snapshot；本轮真实复核仍不代表 candidate package、live LLM 或第三方服务持续可用。
+
 ## [0.16.324] - 2026-08-16
 
 ### Added
