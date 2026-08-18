@@ -180,3 +180,50 @@ def test_required_capability_preserves_structured_cdp_failure(tmp_home, no_llm, 
     assert "llm_live" in blockers
     assert details["summary"]["capabilities"]["generate_adapters"]["local_ready"] is False
     assert any(check["name"] == "cdp" and check["status"] == "fail" for check in details["checks"])
+
+
+def test_required_capability_reports_missing_llm_key(tmp_home, no_llm, monkeypatch):
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    for name in (
+        "CLIANY_ANTHROPIC_API_KEY",
+        "CLIANY_OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "anthropic")
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "--json",
+            "doctor",
+            "--llm-live",
+            "--require-capability",
+            "generate_adapters",
+        ],
+        catch_exceptions=True,
+    )
+
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    assert payload["error"]["code"] == "E_LLM_DISABLED"
+    details = payload["error"]["details"]
+    assert details["required_capability"] == "generate_adapters"
+    live_check = next(check for check in details["checks"] if check["name"] == "llm_live")
+    assert live_check["details"] == {
+        "provider": "anthropic",
+        "error_code": "E_LLM_DISABLED",
+        "skipped": True,
+        "reason": "missing_llm_key",
+        "retryable": False,
+        "phase": "llm_preflight",
+    }

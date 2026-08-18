@@ -618,8 +618,11 @@ async def _run_llm_live_check(has_llm: bool, provider: str) -> dict[str, Any]:
             "duration_ms": 0,
             "details": {
                 "provider": provider,
+                "error_code": ErrorCode.E_LLM_DISABLED,
                 "skipped": True,
                 "reason": "missing_llm_key",
+                "retryable": False,
+                "phase": "llm_preflight",
             },
         }
 

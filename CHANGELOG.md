@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.327] - 2026-08-18
+
+### Fixed
+
+- `doctor --llm-live --require-capability generate_adapters --json` now returns the existing `E_LLM_DISABLED` code when no LLM key is configured, while preserving the full `checks` / `summary` diagnostics in `error.details`.
+- README、quickstart、公开路线图和官网说明缺少 key 与 provider 上游不可用是两条不同的修复路径；candidate 晋级门禁和 live LLM 要求不变。
+
 ## [0.16.326] - 2026-08-18
 
 ### Fixed
@@ -2931,7 +2938,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.326...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.327...HEAD
+[0.16.327]: https://github.com/pearjelly/cliany.site/compare/v0.16.326...v0.16.327
 [0.16.326]: https://github.com/pearjelly/cliany.site/compare/v0.16.325...v0.16.326
 [0.16.325]: https://github.com/pearjelly/cliany.site/compare/v0.16.324...v0.16.325
 [0.16.324]: https://github.com/pearjelly/cliany.site/compare/v0.16.323...v0.16.324
