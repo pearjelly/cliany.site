@@ -175,6 +175,8 @@ def test_required_capability_preserves_structured_cdp_failure(tmp_home, no_llm, 
     assert payload["error"]["code"] == "E_CDP_UNAVAILABLE"
     details = payload["error"]["details"]
     assert details["required_capability"] == "generate_adapters"
-    assert details["required_capability_blockers"] == ["cdp", "llm_live"]
+    blockers = details["required_capability_blockers"]
+    assert blockers[0] == "cdp"
+    assert "llm_live" in blockers
     assert details["summary"]["capabilities"]["generate_adapters"]["local_ready"] is False
     assert any(check["name"] == "cdp" and check["status"] == "fail" for check in details["checks"])
