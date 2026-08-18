@@ -393,6 +393,8 @@ def _required_capability_error_code(
     blockers: list[str],
 ) -> str:
     checks_by_name = {str(check.get("name")): check for check in checks}
+    if "cdp" in blockers and checks_by_name.get("cdp", {}).get("status") == "fail":
+        return ErrorCode.E_CDP_UNAVAILABLE
     for blocker in blockers:
         details = checks_by_name.get(blocker, {}).get("details")
         if isinstance(details, dict):
@@ -405,10 +407,12 @@ def _required_capability_error_code(
 
 
 def _require_capability(result: Envelope, capability_name: str | None) -> Envelope:
-    if capability_name is None or not result.get("ok"):
+    if capability_name is None:
         return result
 
     data = result.get("data")
+    if not isinstance(data, dict):
+        data = _doctor_payload(result)
     if not isinstance(data, dict):
         return result
     summary = data.get("summary")

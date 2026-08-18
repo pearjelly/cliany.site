@@ -1,5 +1,5 @@
 import json
-import pytest
+
 from click.testing import CliRunner
 
 from cliany_site.cli import cli
@@ -145,3 +145,36 @@ def test_doctor_output_is_envelope(tmp_home, no_llm, monkeypatch):
         assert "status" in check
         assert "duration_ms" in check
         assert check["status"] in ["ok", "fail", "warning"]
+
+
+def test_required_capability_preserves_structured_cdp_failure(tmp_home, no_llm, monkeypatch):
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return False
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "--json",
+            "doctor",
+            "--llm-live",
+            "--require-capability",
+            "generate_adapters",
+        ],
+        catch_exceptions=True,
+    )
+
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    assert payload["error"]["code"] == "E_CDP_UNAVAILABLE"
+    details = payload["error"]["details"]
+    assert details["required_capability"] == "generate_adapters"
+    assert details["required_capability_blockers"] == ["cdp", "llm_live"]
+    assert details["summary"]["capabilities"]["generate_adapters"]["local_ready"] is False
+    assert any(check["name"] == "cdp" and check["status"] == "fail" for check in details["checks"])

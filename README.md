@@ -156,6 +156,8 @@ cliany-site verify github.com --json
 cliany-site --json --explain
 ```
 
+`--require-capability` 在门禁失败时会把完整 `checks` / `summary` 保留在 `error.details`，并返回首个硬阻塞项的稳定错误码，例如缺少 Chrome/CDP 时为 `E_CDP_UNAVAILABLE`；自动化可以修复正确依赖后重试，不必解析通用 `E_UNKNOWN`。
+
 ### Configuration
 
 ```bash

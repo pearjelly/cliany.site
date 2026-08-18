@@ -42,6 +42,14 @@ cliany-site doctor
 cliany-site doctor --json
 ```
 
+需要能力门禁时运行：
+
+```bash
+cliany-site doctor --llm-live --require-capability generate_adapters --json
+```
+
+如果本机没有 Chrome/CDP，命令会以 `E_CDP_UNAVAILABLE` 退出；provider 不可用时会保留对应的 `E_LLM_UNAVAILABLE`。两者都会把完整 `checks`、`summary` 和 blockers 放在 `error.details`，方便脚本先修复阻塞项再重试，不会把通用 `E_UNKNOWN` 当成可执行信号。
+
 重点看 `data.summary`：
 
 - `must_fix`：先处理，否则关键路径不可用。

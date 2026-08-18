@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.326] - 2026-08-18
+
+### Fixed
+
+- `doctor --llm-live --require-capability` 现在会在底层检查失败时保留完整 `checks` / `summary` 诊断，并返回首个硬阻塞项的稳定错误码（例如无 Chrome/CDP 时为 `E_CDP_UNAVAILABLE`），避免自动化把通用 `E_UNKNOWN` 当成可执行能力信号。
+- quickstart、公开路线图和官网基线同步说明能力门禁的错误码与 `error.details` 修复路径；本轮不改变 adapter、SDK、HTTP API 或候选案例晋级门禁。
+
 ## [0.16.325] - 2026-08-17
 
 ### Added
@@ -2924,7 +2931,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.325...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.326...HEAD
+[0.16.326]: https://github.com/pearjelly/cliany.site/compare/v0.16.325...v0.16.326
 [0.16.325]: https://github.com/pearjelly/cliany.site/compare/v0.16.324...v0.16.325
 [0.16.324]: https://github.com/pearjelly/cliany.site/compare/v0.16.323...v0.16.324
 [0.16.323]: https://github.com/pearjelly/cliany.site/compare/v0.16.322...v0.16.323
