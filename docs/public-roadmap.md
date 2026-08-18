@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-08-18
-- **Current baseline:** v0.16.327
+- **Current baseline:** v0.16.328
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -70,6 +70,8 @@ As of v0.16.325, maintainers can run `scripts/capture_active_demo_evidence.py` f
 As of v0.16.326, `doctor --llm-live --require-capability <capability> --json` preserves the full failed check summary in `error.details` and returns a stable error code for the first hard blocker, such as `E_CDP_UNAVAILABLE`. Automation can now distinguish a missing browser from a provider outage and retry the correct repair path instead of interpreting a generic `E_UNKNOWN` as an actionable capability result.
 
 As of v0.16.327, the same capability gate reports `E_LLM_DISABLED` when the local machine has no LLM key, while retaining `E_LLM_UNAVAILABLE` for a failed provider preflight. Both paths preserve the full checks and summary in `error.details`, so automation can distinguish configuration repair from an upstream retry without weakening the live-LLM gate.
+
+As of v0.16.328, human `doctor --llm-live --require-capability generate_adapters` output names the missing-key configuration repair when the strict gate returns `E_LLM_DISABLED`, instead of presenting it as an upstream outage. `E_LLM_UNAVAILABLE` remains the retry path for provider connectivity; JSON details and the live-LLM gate are unchanged.
 
 As of 2026-07-29, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 

@@ -625,6 +625,36 @@ def test_doctor_human_live_preflight_explains_connection_failure(tmp_home, no_ll
     assert '"checks"' not in result.output
 
 
+def test_doctor_human_live_preflight_explains_missing_key(tmp_home, no_llm, monkeypatch):
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    for name in (
+        "CLIANY_ANTHROPIC_API_KEY",
+        "CLIANY_OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "anthropic")
+
+    result = CliRunner().invoke(
+        cli,
+        ["doctor", "--llm-live", "--require-capability", "generate_adapters"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 1
+    assert "E_LLM_DISABLED：未配置 LLM key。" in result.output
+    assert "LLM 上游暂不可用" not in result.output
+    assert "处理完成后重新检查：cliany-site doctor --llm-live --require-capability generate_adapters" in result.output
+
+
 def test_doctor_human_live_preflight_failure_offers_strict_retry(tmp_home, no_llm, monkeypatch):
     class MockCDP:
         def __init__(self, cdp_url=None, headless=None):

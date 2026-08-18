@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.328] - 2026-08-18
+
+### Fixed
+
+- 普通 `doctor --llm-live --require-capability generate_adapters` 现在会把缺少 LLM key 的 `E_LLM_DISABLED` 解释为配置修复，而不是误导为 provider 上游不可用；`E_LLM_UNAVAILABLE` 仍表示可重试的上游连接路径。
+- JSON `error.details`、严格 live-LLM 门禁、candidate 晋级要求和成功路径不变；README、quickstart、路线图与官网同步了两条修复路径。
+
 ## [0.16.327] - 2026-08-18
 
 ### Fixed
@@ -2938,7 +2945,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.327...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.328...HEAD
+[0.16.328]: https://github.com/pearjelly/cliany.site/compare/v0.16.327...v0.16.328
 [0.16.327]: https://github.com/pearjelly/cliany.site/compare/v0.16.326...v0.16.327
 [0.16.326]: https://github.com/pearjelly/cliany.site/compare/v0.16.325...v0.16.326
 [0.16.325]: https://github.com/pearjelly/cliany.site/compare/v0.16.324...v0.16.325

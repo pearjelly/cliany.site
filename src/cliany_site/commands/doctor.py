@@ -117,6 +117,12 @@ def _human_action_for_check(check: dict[str, Any]) -> str:
 
     provider = str(details.get("provider") or "LLM")
     provider_label = "OpenAI 兼容服务" if provider == "openai" else "Anthropic 服务"
+    error_code = str(details.get("error_code") or "")
+    if error_code == ErrorCode.E_LLM_DISABLED or details.get("reason") == "missing_llm_key":
+        return (
+            "E_LLM_DISABLED：未配置 LLM key。请设置 CLIANY_ANTHROPIC_API_KEY 或 "
+            "CLIANY_OPENAI_API_KEY 后重试；仅安装或执行已有 adapter 可暂时忽略。"
+        )
     status_code = details.get("status_code")
     message = str(details.get("message") or "")
     if isinstance(status_code, int):
