@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-08-18
-- **Current baseline:** v0.16.328
+- **Updated:** 2026-08-19
+- **Current baseline:** v0.16.329
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -19,7 +19,7 @@ cliany-site turns real browser workflows into reusable CLI commands. The Q3 road
 
 The next focus is turning candidate real-world cases into verified active demos.
 
-As of v0.16.300, the cadence report exposes `daily_release_capacity_remaining` separately from `daily_release_limit_ok`: an exactly full `3/3` day still has a valid current count but zero capacity for a new tag, and its next action says to wait until tomorrow. This makes the daily cap decision explicit for maintainers and release automation.
+As of v0.16.329, public candidate issue rewrites protect attached Doctor Preflight Evidence: an explicit `--apply --confirm-rewrite` without the current `--doctor-json` now stops with `doctor_json_required_before_rewrite` instead of erasing a traceable values hash. The default audit remains read-only, and the guarded rewrite path still requires current evidence.
 
 As of v0.16.301, invoking a discovered current-schema adapter that cannot register no longer looks like an unknown command. The root CLI returns structured `E_VERIFY_STATIC` details and points to `cliany-site verify <domain> --strict --json`; this is a local static diagnosis, not proof that a browser, site workflow, or LLM provider is ready.
 
@@ -72,6 +72,8 @@ As of v0.16.326, `doctor --llm-live --require-capability <capability> --json` pr
 As of v0.16.327, the same capability gate reports `E_LLM_DISABLED` when the local machine has no LLM key, while retaining `E_LLM_UNAVAILABLE` for a failed provider preflight. Both paths preserve the full checks and summary in `error.details`, so automation can distinguish configuration repair from an upstream retry without weakening the live-LLM gate.
 
 As of v0.16.328, human `doctor --llm-live --require-capability generate_adapters` output names the missing-key configuration repair when the strict gate returns `E_LLM_DISABLED`, instead of presenting it as an upstream outage. `E_LLM_UNAVAILABLE` remains the retry path for provider connectivity; JSON details and the live-LLM gate are unchanged.
+
+The next candidate slice protects an open issue body that already contains a Doctor Preflight Evidence snapshot: an explicit rewrite without the current `--doctor-json` will stop with `doctor_json_required_before_rewrite` instead of replacing real blocker evidence with a placeholder template. This is an issue-audit safety boundary only; it does not create, close, or promote candidate issues.
 
 As of 2026-07-29, the PyPI, npm, and crates.io package-search cases remain candidates. A live LLM preflight is still required before adapter packaging and online smoke work can count as promotion evidence.
 

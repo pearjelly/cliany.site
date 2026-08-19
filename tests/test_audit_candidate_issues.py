@@ -277,6 +277,45 @@ def test_apply_rechecks_after_rewriting_stale_issue(monkeypatch):
     assert rewrites == [("owner/repo", 14, expectation.body)]
 
 
+def test_apply_refuses_to_erase_attached_doctor_evidence_without_doctor_json(monkeypatch, capsys):
+    expectation = _expectation()
+    attached_evidence_body = "\n".join(
+        [
+            "## Doctor Preflight Evidence",
+            "- values_sha256: `" + ("a" * 64) + "`",
+        ]
+    )
+    rewrites = []
+
+    monkeypatch.setattr(audit_candidate_issues, "candidate_issue_expectations", lambda _case_ids=None: [expectation])
+    monkeypatch.setattr(
+        audit_candidate_issues,
+        "fetch_open_issues",
+        lambda _repo: [
+            {
+                "number": 14,
+                "title": expectation.title,
+                "body": attached_evidence_body,
+                "url": "https://example.test/14",
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        audit_candidate_issues,
+        "_rewrite_issue",
+        lambda repo, number, body: rewrites.append((repo, number, body)),
+    )
+
+    exit_code = audit_candidate_issues.main(["--repo", "owner/repo", "--apply", "--confirm-rewrite", "--json"])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 1
+    assert rewrites == []
+    assert payload["error"] == "doctor_json_required_before_rewrite"
+    assert payload["doctor_json_required_issue_numbers"] == [14]
+    assert payload["issues"][0]["attached_doctor_preflight_evidence"] is True
+
+
 def test_apply_does_not_rewrite_when_issue_title_is_ambiguous(monkeypatch):
     expectation = _expectation()
     rewrites = []

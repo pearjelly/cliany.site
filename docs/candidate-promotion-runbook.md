@@ -194,6 +194,8 @@ CLIANY_CREATE_ISSUES_ACK_REVIEW=1
 
 公开 issue 已创建时，`audit_candidate_issues.py --doctor-json` 会用同一份 extracted doctor evidence 渲染期望正文，而不是把没有 evidence 的占位模板当作当前 handoff。JSON report 中的 `doctor_preflight_evidence.source_path`、`values_sha256`、`state_status` 和 `ready_for_adapter_package` 可用于确认审计使用的是哪份证据；生成的公开 issue body 只携带 `values_sha256`、gate state 和抽取字段，不携带本地 source path。预检证据已附加时，Primary Evidence Task 会明确区分仍未完成的 package evidence，并把 provider 阻塞的下一步写成“恢复后重跑严格 preflight”，不会让贡献者误以为可以执行 candidate explore。默认审计和该带证据的变体都是只读；只有逐项审阅 `stale`，并先解决 `missing`、`duplicate`、`unexpected` 后，才能显式执行 `--doctor-json /tmp/cliany-doctor-preflight.json --apply --confirm-rewrite`。该操作仍只改写已匹配的 stale body，不创建、关闭 issue，也不晋级 candidate。
 
+如果 stale 正文已经包含 `## Doctor Preflight Evidence` 和 64 位 `values_sha256`，不带 `--doctor-json` 的 `--apply` 会返回 `doctor_json_required_before_rewrite`，并列出受保护的 issue 编号；这样不会用无证据的占位模板覆盖真实 blocker 快照。带当前 doctor JSON 的显式重写仍只改写已匹配的 stale body，不创建、关闭 issue，也不晋级 candidate。
+
 ## Non-goals
 
 - 不在 PR 默认检查中依赖真实 LLM key。

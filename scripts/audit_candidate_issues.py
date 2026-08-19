@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -16,6 +17,8 @@ from cliany_site.commands import cases as cases_command
 DEFAULT_REPO = "pearjelly/cliany.site"
 ISSUE_TITLE_PREFIX = "Promote candidate case `"
 ISSUE_TITLE_SUFFIX = "` toward active"
+DOCTOR_PREFLIGHT_EVIDENCE_HEADER = "## Doctor Preflight Evidence"
+DOCTOR_PREFLIGHT_VALUES_SHA256_RE = re.compile(r"(?m)^- values_sha256: `([0-9a-f]{64})`$")
 
 
 @dataclass(frozen=True)
@@ -31,6 +34,10 @@ class CandidateIssueExpectation:
 
 def _sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _has_attached_doctor_preflight_evidence(body: str) -> bool:
+    return DOCTOR_PREFLIGHT_EVIDENCE_HEADER in body and bool(DOCTOR_PREFLIGHT_VALUES_SHA256_RE.search(body))
 
 
 def _issue_title(case_id: str) -> str:
@@ -147,6 +154,7 @@ def audit_candidate_issues(
                 "issue_numbers": [issue_number] if isinstance(issue_number, int) else [],
                 "issue_url": str(issue.get("url") or ""),
                 "actual_body_sha256": _sha256_text(body),
+                "attached_doctor_preflight_evidence": _has_attached_doctor_preflight_evidence(body),
             }
         )
 
@@ -194,6 +202,13 @@ def _report(
         for number in audit.get("issue_numbers", [])
         if isinstance(number, int)
     ]
+    doctor_json_required_issue_numbers = [
+        number
+        for audit in audits
+        if audit.get("status") == "stale" and audit.get("attached_doctor_preflight_evidence") is True
+        for number in audit.get("issue_numbers", [])
+        if isinstance(number, int)
+    ]
     report = {
         "ok": all(audit.get("status") == "current" for audit in audits),
         "repo": repo,
@@ -202,6 +217,7 @@ def _report(
         "status_counts": status_counts,
         "stale_issue_numbers": stale_issue_numbers,
         "unexpected_issue_numbers": unexpected_issue_numbers,
+        "doctor_json_required_issue_numbers": doctor_json_required_issue_numbers,
         "applied_issue_numbers": applied_issue_numbers or [],
         "issues": audits,
     }
@@ -253,6 +269,12 @@ def _print_human_report(report: dict[str, Any]) -> None:
         print(f"Rewrote: {numbers}")
     if not report["ok"]:
         print("Resolve missing, duplicate, or unexpected issues before applying stale-body rewrites.")
+    if report.get("doctor_json_required_issue_numbers"):
+        numbers = ", ".join(f"#{number}" for number in report["doctor_json_required_issue_numbers"])
+        print(
+            f"Refused to rewrite {numbers}: attached Doctor Preflight Evidence requires "
+            "--doctor-json with the current saved preflight."
+        )
 
 
 def _print_error(message: str, *, json_mode: bool) -> None:
@@ -315,6 +337,20 @@ def main(argv: list[str] | None = None) -> int:
     applied_issue_numbers: list[int] = []
     blocking_statuses = {"missing", "duplicate", "unexpected"}
     if args.apply and not any(audit["status"] in blocking_statuses for audit in audits):
+        report = _report(args.repo, audits, doctor_preflight_evidence=doctor_preflight_evidence)
+        if args.doctor_json is None and report["doctor_json_required_issue_numbers"]:
+            report["ok"] = False
+            report["error"] = "doctor_json_required_before_rewrite"
+            report["next_action"] = (
+                "Rerun with the current saved cliany-site doctor --llm-live "
+                "--require-capability generate_adapters --json output and "
+                "--doctor-json <path> before --apply --confirm-rewrite."
+            )
+            if args.json:
+                print(json.dumps(report, ensure_ascii=False, indent=2))
+            else:
+                _print_human_report(report)
+            return 1
         expectations_by_case = {expectation.case_id: expectation for expectation in expectations}
         try:
             for audit in audits:

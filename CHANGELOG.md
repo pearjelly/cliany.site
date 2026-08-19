@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.329] - 2026-08-19
+
+### Fixed
+
+- 带 Doctor Preflight Evidence 的公开 candidate issue 在没有当前 `--doctor-json` 时拒绝显式重写，避免用占位模板覆盖可追溯的真实门禁证据；带当前证据的只读审计和显式重写流程保持不变。
+
 ## [0.16.328] - 2026-08-18
 
 ### Fixed
@@ -2945,7 +2951,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.328...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.329...HEAD
+[0.16.329]: https://github.com/pearjelly/cliany.site/compare/v0.16.328...v0.16.329
 [0.16.328]: https://github.com/pearjelly/cliany.site/compare/v0.16.327...v0.16.328
 [0.16.327]: https://github.com/pearjelly/cliany.site/compare/v0.16.326...v0.16.327
 [0.16.326]: https://github.com/pearjelly/cliany.site/compare/v0.16.325...v0.16.326
