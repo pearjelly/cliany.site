@@ -19,6 +19,28 @@ ISSUE_TITLE_PREFIX = "Promote candidate case `"
 ISSUE_TITLE_SUFFIX = "` toward active"
 DOCTOR_PREFLIGHT_EVIDENCE_HEADER = "## Doctor Preflight Evidence"
 DOCTOR_PREFLIGHT_VALUES_SHA256_RE = re.compile(r"(?m)^- values_sha256: `([0-9a-f]{64})`$")
+GITHUB_UNAVAILABLE_CODE = "E_GITHUB_UNAVAILABLE"
+
+
+class GitHubUnavailableError(RuntimeError):
+    """The GitHub API could not be read, so issue state is not auditable."""
+
+    code = GITHUB_UNAVAILABLE_CODE
+    retryable = True
+
+
+def _is_github_transport_error(message: str) -> bool:
+    normalized = message.lower()
+    return any(
+        marker in normalized
+        for marker in (
+            "error connecting to api.github.com",
+            "check your internet connection",
+            "network is unreachable",
+            "connection refused",
+            "could not resolve host",
+        )
+    )
 
 
 @dataclass(frozen=True)
@@ -85,6 +107,8 @@ def _run_gh(arguments: list[str]) -> str:
     )
     if completed.returncode != 0:
         message = completed.stderr.strip() or completed.stdout.strip() or "gh command failed"
+        if _is_github_transport_error(message):
+            raise GitHubUnavailableError(message)
         raise RuntimeError(message)
     return completed.stdout
 
@@ -277,11 +301,29 @@ def _print_human_report(report: dict[str, Any]) -> None:
         )
 
 
-def _print_error(message: str, *, json_mode: bool) -> None:
+def _print_error(
+    message: str,
+    *,
+    json_mode: bool,
+    code: str | None = None,
+    retryable: bool = False,
+) -> None:
     if json_mode:
-        print(json.dumps({"ok": False, "error": message}, ensure_ascii=False, indent=2))
+        error: str | dict[str, Any] = message
+        if code is not None:
+            error = {
+                "code": code,
+                "message": message,
+                "retryable": retryable,
+                "next_action": (
+                    "检查 GitHub API/网络后重试；未成功读取远端 issue 时不要将其判为 missing，"
+                    "也不要执行 --apply。"
+                ),
+            }
+        print(json.dumps({"ok": False, "error": error}, ensure_ascii=False, indent=2))
     else:
-        print(f"Candidate public issue audit failed: {message}")
+        prefix = f" [{code}, retryable]" if code is not None and retryable else ""
+        print(f"Candidate public issue audit failed{prefix}: {message}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -330,6 +372,9 @@ def main(argv: list[str] | None = None) -> int:
             fetch_open_issues(args.repo),
             known_titles={expectation.title for expectation in all_expectations},
         )
+    except GitHubUnavailableError as exc:
+        _print_error(str(exc), json_mode=args.json, code=exc.code, retryable=exc.retryable)
+        return 2
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         _print_error(str(exc), json_mode=args.json)
         return 2
@@ -364,6 +409,9 @@ def main(argv: list[str] | None = None) -> int:
                 fetch_open_issues(args.repo),
                 known_titles={expectation.title for expectation in all_expectations},
             )
+        except GitHubUnavailableError as exc:
+            _print_error(str(exc), json_mode=args.json, code=exc.code, retryable=exc.retryable)
+            return 2
         except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
             _print_error(str(exc), json_mode=args.json)
             return 2

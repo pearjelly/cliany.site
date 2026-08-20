@@ -1,7 +1,10 @@
 import importlib.util
 import json
+import subprocess
 import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "audit_candidate_issues.py"
@@ -253,6 +256,54 @@ def test_main_reports_invalid_doctor_json_as_an_input_error(tmp_path, capsys):
     assert exit_code == 2
     assert payload["ok"] is False
     assert str(missing_path) in payload["error"]
+
+
+def test_run_gh_classifies_github_api_transport_failure(monkeypatch):
+    completed = subprocess.CompletedProcess(
+        args=["gh"],
+        returncode=1,
+        stdout="",
+        stderr="error connecting to api.github.com\ncheck your internet connection",
+    )
+    monkeypatch.setattr(audit_candidate_issues.subprocess, "run", lambda *args, **kwargs: completed)
+
+    with pytest.raises(audit_candidate_issues.GitHubUnavailableError) as exc_info:
+        audit_candidate_issues._run_gh(["issue", "list"])
+
+    assert exc_info.value.code == "E_GITHUB_UNAVAILABLE"
+    assert exc_info.value.retryable is True
+
+
+def test_main_reports_github_api_transport_failure_without_issue_states(monkeypatch, capsys):
+    monkeypatch.setattr(
+        audit_candidate_issues,
+        "candidate_issue_expectations",
+        lambda _case_ids=None: [_expectation()],
+    )
+    monkeypatch.setattr(
+        audit_candidate_issues,
+        "fetch_open_issues",
+        lambda _repo: (_ for _ in ()).throw(
+            audit_candidate_issues.GitHubUnavailableError(
+                "error connecting to api.github.com"
+            )
+        ),
+    )
+
+    exit_code = audit_candidate_issues.main(["--repo", "owner/repo", "--json"])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 2
+    assert payload["ok"] is False
+    assert payload["error"] == {
+        "code": "E_GITHUB_UNAVAILABLE",
+        "message": "error connecting to api.github.com",
+        "retryable": True,
+        "next_action": (
+            "检查 GitHub API/网络后重试；未成功读取远端 issue 时不要将其判为 missing，"
+            "也不要执行 --apply。"
+        ),
+    }
 
 
 def test_apply_rechecks_after_rewriting_stale_issue(monkeypatch):

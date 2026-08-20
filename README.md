@@ -316,6 +316,8 @@ To keep already-open candidate issues aligned with the current strict handoff, r
 
 If a stale public candidate issue already contains a Doctor Preflight Evidence snapshot, `audit_candidate_issues.py --apply --confirm-rewrite` refuses to replace it without the current `--doctor-json`; the JSON report returns `doctor_json_required_before_rewrite` and lists the protected issue numbers. This prevents a no-evidence placeholder template from erasing a real blocker snapshot.
 
+If the GitHub API or network is unavailable while auditing, the JSON result returns retryable `E_GITHUB_UNAVAILABLE` with a retry action. Treat that as “remote issue state not read”, not as `missing`; do not run `--apply` until a later read succeeds.
+
 The doctor evidence contract includes `summary.capabilities.generate_adapters.local_ready` and `summary.capabilities.generate_adapters.local_blockers`. These fields show whether local prerequisites remain healthy when the live provider is blocked; they do not replace `summary.llm_live_preflight.ready=true` as the gate for candidate `explore`.
 
 ### SuiteCRM Demo (Enterprise CRM)

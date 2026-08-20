@@ -301,6 +301,8 @@ candidate 的 human 输出会把未来 adapter 命令标记为“当前不可运
 
 如需让已开放的 candidate issue 保持与当前严格交接一致，运行 `python scripts/audit_candidate_issues.py --repo pearjelly/cliany.site --json`。默认只读，会连同 body hash 报告 `current`、`stale`、`missing`、`duplicate` 与未被当前 manifest 识别的 `unexpected` issue；非 JSON 的人工报告还会直接给出 unexpected issue 的实际标题和 URL，维护者无需先解析 JSON 才能定位 blocker。只有审阅 stale body 并先解决其余状态后才使用 `--apply --confirm-rewrite`，工具不会创建、关闭或提前晋级 issue。
 
+如果审计期间 GitHub API 或网络不可用，JSON 结果会返回可重试的 `E_GITHUB_UNAVAILABLE` 和下一步动作。此时只能说明尚未读取远端 issue 状态，不能把它判为 `missing`，也不要运行 `--apply`；待远端读取成功后再审计。
+
 Doctor evidence 契约包含 `summary.capabilities.generate_adapters.local_ready` 和 `summary.capabilities.generate_adapters.local_blockers`。它们能在 live provider 被阻塞时说明本地前提是否健康，但不能替代 candidate `explore` 所需的 `summary.llm_live_preflight.ready=true` 门禁。
 
 ### SuiteCRM Demo (企业 CRM)

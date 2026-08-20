@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.330] - 2026-08-20
+
+### Fixed
+
+- `scripts/audit_candidate_issues.py` 现在会把 GitHub API/网络不可用明确报告为可重试的 `E_GITHUB_UNAVAILABLE`，并保留“尚未读取 issue 状态”的下一步；维护者不会把远端读取失败误判为 `missing`，也不会在此状态下执行 `--apply`。
+- 默认 issue 审计、candidate 状态、Doctor evidence 和公网 issue 内容均保持不变；本轮只改进远端故障的诊断边界。
+
 ## [0.16.329] - 2026-08-19
 
 ### Fixed
@@ -2951,7 +2958,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.329...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.330...HEAD
+[0.16.330]: https://github.com/pearjelly/cliany.site/compare/v0.16.329...v0.16.330
 [0.16.329]: https://github.com/pearjelly/cliany.site/compare/v0.16.328...v0.16.329
 [0.16.328]: https://github.com/pearjelly/cliany.site/compare/v0.16.327...v0.16.328
 [0.16.327]: https://github.com/pearjelly/cliany.site/compare/v0.16.326...v0.16.327

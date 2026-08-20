@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-08-19
-- **Current baseline:** v0.16.329
+- **Updated:** 2026-08-20
+- **Current baseline:** v0.16.330
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -20,6 +20,8 @@ cliany-site turns real browser workflows into reusable CLI commands. The Q3 road
 The next focus is turning candidate real-world cases into verified active demos.
 
 As of v0.16.329, public candidate issue rewrites protect attached Doctor Preflight Evidence: an explicit `--apply --confirm-rewrite` without the current `--doctor-json` now stops with `doctor_json_required_before_rewrite` instead of erasing a traceable values hash. The default audit remains read-only, and the guarded rewrite path still requires current evidence.
+
+As of v0.16.330, a GitHub API or network transport failure during the candidate issue audit is reported as retryable `E_GITHUB_UNAVAILABLE`; the audit does not synthesize `missing` issue states or permit an apply path until remote issue state can be read.
 
 As of v0.16.301, invoking a discovered current-schema adapter that cannot register no longer looks like an unknown command. The root CLI returns structured `E_VERIFY_STATIC` details and points to `cliany-site verify <domain> --strict --json`; this is a local static diagnosis, not proof that a browser, site workflow, or LLM provider is ready.
 
