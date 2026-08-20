@@ -309,6 +309,44 @@ def test_run_gh_classifies_graphql_eof_as_github_unavailable(monkeypatch):
     assert exc_info.value.retryable is True
 
 
+@pytest.mark.parametrize(
+    "stderr",
+    [
+        "HTTP 500: Internal Server Error",
+        "HTTP 502: Bad Gateway",
+        "HTTP 503: Service Unavailable",
+        "HTTP 504: Gateway Timeout",
+    ],
+)
+def test_run_gh_classifies_github_http_5xx_as_unavailable(monkeypatch, stderr):
+    completed = subprocess.CompletedProcess(
+        args=["gh"],
+        returncode=1,
+        stdout="",
+        stderr=stderr,
+    )
+    monkeypatch.setattr(audit_candidate_issues.subprocess, "run", lambda *args, **kwargs: completed)
+
+    with pytest.raises(audit_candidate_issues.GitHubUnavailableError) as exc_info:
+        audit_candidate_issues._run_gh(["issue", "list"])
+
+    assert exc_info.value.code == "E_GITHUB_UNAVAILABLE"
+    assert exc_info.value.retryable is True
+
+
+def test_run_gh_does_not_classify_auth_failure_as_unavailable(monkeypatch):
+    completed = subprocess.CompletedProcess(
+        args=["gh"],
+        returncode=1,
+        stdout="",
+        stderr="HTTP 401: Bad credentials",
+    )
+    monkeypatch.setattr(audit_candidate_issues.subprocess, "run", lambda *args, **kwargs: completed)
+
+    with pytest.raises(RuntimeError, match="HTTP 401: Bad credentials"):
+        audit_candidate_issues._run_gh(["issue", "list"])
+
+
 def test_main_reports_github_api_transport_failure_without_issue_states(monkeypatch, capsys):
     monkeypatch.setattr(
         audit_candidate_issues,

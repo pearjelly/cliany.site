@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Candidate issue audit now classifies explicit GitHub HTTP 500/502/503/504 gateway failures as retryable `E_GITHUB_UNAVAILABLE`, keeping remote-read failures out of `missing` state and the `--apply` path.
+
 ## [0.16.332] - 2026-08-20
 
 ### Fixed

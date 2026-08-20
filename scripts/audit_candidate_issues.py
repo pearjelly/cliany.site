@@ -41,6 +41,14 @@ def _is_github_transport_error(message: str) -> bool:
             "could not resolve host",
             'api.github.com/graphql": eof',
             "unexpected eof",
+            "http 500",
+            "http 502",
+            "http 503",
+            "http 504",
+            "500 internal server error",
+            "502 bad gateway",
+            "503 service unavailable",
+            "504 gateway timeout",
         )
     )
 

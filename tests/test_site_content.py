@@ -184,8 +184,10 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "实际 title 和 URL" in docs
     assert "issue_template_command" in index
     assert "GraphQL" in index
+    assert "HTTP <code>500/502/503/504</code>" in index
     assert "issue_template_command" in script
     assert "GraphQL" in script
+    assert "HTTP <code>500/502/503/504</code>" in script
     assert "不会创建公网 issue" in script
     assert "demo_adapter_quickstart.recommended_commands" in index
     assert "verify --strict" in index

@@ -215,6 +215,10 @@ const I18N = {
     zh: 'GitHub GraphQL 返回 <code>EOF</code> 时，审计现在会报告可重试的 <code>E_GITHUB_UNAVAILABLE</code>，不会把远端读取失败变成 <code>missing</code>。',
     en: 'A GitHub GraphQL <code>EOF</code> is now reported as retryable <code>E_GITHUB_UNAVAILABLE</code>, so a lost remote read never becomes <code>missing</code>.'
   },
+  'qs.maintainer.issueAuditHttp5xx': {
+    zh: 'GitHub 返回 HTTP <code>500/502/503/504</code> 时，审计会报告可重试的 <code>E_GITHUB_UNAVAILABLE</code>；远端状态未读到前不会进入 <code>missing</code> 或 <code>--apply</code>。',
+    en: 'GitHub HTTP <code>500/502/503/504</code> responses are retryable <code>E_GITHUB_UNAVAILABLE</code>; the audit never enters <code>missing</code> or <code>--apply</code> before remote state is read.'
+  },
 
   'obscura.title': { zh: '实验性功能：Obscura Browser Provider', en: 'Experimental: Obscura Browser Provider' },
   'obscura.desc': { zh: 'Obscura 是一个轻量级的浏览器替代方案，目前处于实验阶段。Chrome 仍然是默认 provider。', en: 'Obscura is a lightweight alternative to Chrome, currently in experimental status. Chrome remains the default provider.' },

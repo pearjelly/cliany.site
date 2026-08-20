@@ -521,6 +521,7 @@ cliany-site explore "https://github.com" "search repos" --json</code></pre>
                 <li data-i18n="qs.maintainer.issueAuditNetwork">If the GitHub API or network is unavailable, the audit returns retryable <code>E_GITHUB_UNAVAILABLE</code>; this is not <code>missing</code>, so do not run <code>--apply</code> until remote state is readable.</li>
                 <li data-i18n="qs.maintainer.issueAuditMissing">A <code>missing</code> candidate issue now includes an exact <code>issue_template_command</code> for a reviewable body; the audit remains read-only and never creates a public issue.</li>
                 <li data-i18n="qs.maintainer.issueAuditGraphqlEof">A GitHub GraphQL <code>EOF</code> is now reported as retryable <code>E_GITHUB_UNAVAILABLE</code>, so the audit never turns a lost remote read into <code>missing</code>.</li>
+                <li data-i18n="qs.maintainer.issueAuditHttp5xx">GitHub HTTP <code>500/502/503/504</code> responses are retryable <code>E_GITHUB_UNAVAILABLE</code>; the audit never enters <code>missing</code> or <code>--apply</code> before remote state is read.</li>
             </ul>
         </div>
         
