@@ -106,6 +106,25 @@ def test_audit_reports_stale_missing_and_duplicate_contracts():
     assert report["status_counts"] == {"stale": 1, "missing": 1, "duplicate": 1}
 
 
+def test_missing_issue_exposes_manual_template_handoff(capsys):
+    expectation = _expectation("npm-package-search")
+
+    audits = audit_candidate_issues.audit_candidate_issues([expectation], [])
+
+    assert audits[0]["status"] == "missing"
+    command = "cliany-site cases --case-id npm-package-search --issue-template --json"
+    assert audits[0]["issue_template_command"] == command
+    assert "this audit never creates issues" in audits[0]["next_action"]
+
+    audit_candidate_issues._print_human_report(
+        audit_candidate_issues._report("owner/repo", audits)
+    )
+
+    output = capsys.readouterr().out
+    assert f"review template with {command}" in output
+    assert "audit never creates issues" in output
+
+
 def test_audit_reports_unexpected_case_proposal_issue_and_its_body_hash():
     expectation = _expectation()
     unexpected = {

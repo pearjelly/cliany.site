@@ -66,6 +66,17 @@ def _issue_title(case_id: str) -> str:
     return f"{ISSUE_TITLE_PREFIX}{case_id}{ISSUE_TITLE_SUFFIX}"
 
 
+def _missing_issue_handoff(case_id: str) -> dict[str, str]:
+    command = f"cliany-site cases --case-id {case_id} --issue-template --json"
+    return {
+        "issue_template_command": command,
+        "next_action": (
+            f"Review the generated template with `{command}` and create the issue manually; "
+            "this audit never creates issues."
+        ),
+    }
+
+
 def candidate_issue_expectations(
     case_ids: list[str] | None = None,
     *,
@@ -152,7 +163,14 @@ def audit_candidate_issues(
             "expected_body_sha256": expectation.body_sha256,
         }
         if not matches:
-            audits.append({**base, "status": "missing", "issue_numbers": []})
+            audits.append(
+                {
+                    **base,
+                    "status": "missing",
+                    "issue_numbers": [],
+                    **_missing_issue_handoff(expectation.case_id),
+                }
+            )
             continue
         if len(matches) > 1:
             audits.append(
@@ -283,6 +301,8 @@ def _print_human_report(report: dict[str, Any]) -> None:
     for audit in report["issues"]:
         issue_numbers = ", ".join(f"#{number}" for number in audit.get("issue_numbers", [])) or "(none)"
         line = f"- {audit['case_id']}: {audit['status']} {issue_numbers}"
+        if audit.get("status") == "missing":
+            line += f": review template with {audit['issue_template_command']} (audit never creates issues)"
         if audit.get("status") == "unexpected":
             actual_title = str(audit.get("actual_title") or "(untitled)")
             issue_url = str(audit.get("issue_url") or "(no URL)")

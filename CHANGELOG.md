@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.331] - 2026-08-20
+
+### Changed
+
+- `scripts/audit_candidate_issues.py` 现在为真实 `missing` candidate issue 输出精确的 `issue_template_command` 和人工审阅下一步；人类报告也直接显示该命令，但审计始终只读，不会自动创建公网 issue。
+
 ## [0.16.330] - 2026-08-20
 
 ### Fixed
@@ -2958,7 +2964,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.330...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.331...HEAD
+[0.16.331]: https://github.com/pearjelly/cliany.site/compare/v0.16.330...v0.16.331
 [0.16.330]: https://github.com/pearjelly/cliany.site/compare/v0.16.329...v0.16.330
 [0.16.329]: https://github.com/pearjelly/cliany.site/compare/v0.16.328...v0.16.329
 [0.16.328]: https://github.com/pearjelly/cliany.site/compare/v0.16.327...v0.16.328

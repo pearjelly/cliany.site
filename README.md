@@ -320,6 +320,8 @@ If the GitHub API or network is unavailable while auditing, the JSON result retu
 
 The doctor evidence contract includes `summary.capabilities.generate_adapters.local_ready` and `summary.capabilities.generate_adapters.local_blockers`. These fields show whether local prerequisites remain healthy when the live provider is blocked; they do not replace `summary.llm_live_preflight.ready=true` as the gate for candidate `explore`.
 
+When the audit reports a `missing` candidate issue, read its `issue_template_command` (for example `cliany-site cases --case-id pypi-project-search --issue-template --json`) and review the generated body before creating anything. The audit only supplies the handoff; it never creates a public issue.
+
 ### SuiteCRM Demo (Enterprise CRM)
 ```bash
 # 1. Install adapter
