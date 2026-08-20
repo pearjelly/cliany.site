@@ -34,6 +34,8 @@ python scripts/release_readiness.py --report /tmp/cliany-release-readiness.md
 
 当 `audit_candidate_issues.py --json` 报告 `missing` candidate 时，条目会带上 `issue_template_command` 和手工下一步。先运行该命令生成可审阅正文，再由维护者决定是否创建 issue；审计工具始终只读，不会自动创建公网 issue。
 
+GitHub GraphQL 返回 `EOF` 时同样按可重试的 `E_GITHUB_UNAVAILABLE` 处理；先等待 API 恢复并重新读取 issue 状态，不要把连接失败判为 `missing` 或执行 `--apply`。
+
 正式检查 demo adapter 包资产时，把同一组 `--packages-dir ~/.cliany-site/packages --require-packages` 参数传给 `plan_next_iteration.py`；计划器会把这些参数透传给 release readiness，并写入 validation commands 和 issue artifacts 复现命令。
 需要给 candidate 案例补 adapter package evidence 时，再运行 `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`，它会按 `adapter_domain-<version>.cliany-adapter.tar.gz` 约定校验候选包，而不改变默认 release gate 的 candidate 包检查范围。
 

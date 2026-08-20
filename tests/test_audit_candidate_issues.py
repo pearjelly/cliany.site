@@ -293,6 +293,22 @@ def test_run_gh_classifies_github_api_transport_failure(monkeypatch):
     assert exc_info.value.retryable is True
 
 
+def test_run_gh_classifies_graphql_eof_as_github_unavailable(monkeypatch):
+    completed = subprocess.CompletedProcess(
+        args=["gh"],
+        returncode=1,
+        stdout="",
+        stderr='Post "https://api.github.com/graphql": EOF',
+    )
+    monkeypatch.setattr(audit_candidate_issues.subprocess, "run", lambda *args, **kwargs: completed)
+
+    with pytest.raises(audit_candidate_issues.GitHubUnavailableError) as exc_info:
+        audit_candidate_issues._run_gh(["issue", "list"])
+
+    assert exc_info.value.code == "E_GITHUB_UNAVAILABLE"
+    assert exc_info.value.retryable is True
+
+
 def test_main_reports_github_api_transport_failure_without_issue_states(monkeypatch, capsys):
     monkeypatch.setattr(
         audit_candidate_issues,

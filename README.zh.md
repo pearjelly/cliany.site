@@ -307,6 +307,8 @@ Doctor evidence 契约包含 `summary.capabilities.generate_adapters.local_ready
 
 当审计报告某个 candidate issue 为 `missing` 时，读取条目中的 `issue_template_command`（例如 `cliany-site cases --case-id pypi-project-search --issue-template --json`），审阅生成的正文后再决定是否手工创建；审计只提供交接，不会创建公网 issue。
 
+如果 GitHub GraphQL 请求以 `EOF` 结束，审计会返回可重试的 `E_GITHUB_UNAVAILABLE`，不会合成 issue 状态；等待远端 API 恢复后重试，远端 issue 列表未成功读取时不要执行修改。
+
 ### SuiteCRM Demo (企业 CRM)
 ```bash
 # 1. 安装适配器

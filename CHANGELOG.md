@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.332] - 2026-08-20
+
+### Fixed
+
+- candidate issue 审计现在会把 GitHub GraphQL 返回的 `EOF` 传输失败归类为可重试的 `E_GITHUB_UNAVAILABLE`，避免把远端状态读取故障误报成普通审计错误或 `missing`。
+
 ## [0.16.331] - 2026-08-20
 
 ### Changed
@@ -2964,7 +2970,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.331...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.332...HEAD
+[0.16.332]: https://github.com/pearjelly/cliany.site/compare/v0.16.331...v0.16.332
 [0.16.331]: https://github.com/pearjelly/cliany.site/compare/v0.16.330...v0.16.331
 [0.16.330]: https://github.com/pearjelly/cliany.site/compare/v0.16.329...v0.16.330
 [0.16.329]: https://github.com/pearjelly/cliany.site/compare/v0.16.328...v0.16.329

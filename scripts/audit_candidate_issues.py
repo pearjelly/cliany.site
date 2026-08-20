@@ -39,6 +39,8 @@ def _is_github_transport_error(message: str) -> bool:
             "network is unreachable",
             "connection refused",
             "could not resolve host",
+            'api.github.com/graphql": eof',
+            "unexpected eof",
         )
     )
 

@@ -322,6 +322,8 @@ The doctor evidence contract includes `summary.capabilities.generate_adapters.lo
 
 When the audit reports a `missing` candidate issue, read its `issue_template_command` (for example `cliany-site cases --case-id pypi-project-search --issue-template --json`) and review the generated body before creating anything. The audit only supplies the handoff; it never creates a public issue.
 
+If the GitHub GraphQL request ends with an `EOF`, the audit reports retryable `E_GITHUB_UNAVAILABLE` rather than synthesizing issue state. Wait for the remote API and rerun; do not apply changes while the issue list was not read.
+
 ### SuiteCRM Demo (Enterprise CRM)
 ```bash
 # 1. Install adapter

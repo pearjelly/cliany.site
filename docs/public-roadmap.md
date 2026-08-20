@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-08-20
-- **Current baseline:** v0.16.331
+- **Current baseline:** v0.16.332
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -24,6 +24,8 @@ As of v0.16.329, public candidate issue rewrites protect attached Doctor Preflig
 As of v0.16.330, a GitHub API or network transport failure during the candidate issue audit is reported as retryable `E_GITHUB_UNAVAILABLE`; the audit does not synthesize `missing` issue states or permit an apply path until remote issue state can be read.
 
 As of v0.16.331, a genuinely `missing` candidate issue carries an exact `issue_template_command` and a manual-review next action in JSON and human output. The audit remains read-only and never creates a public issue, so maintainers can move from detection to a reviewable handoff without mistaking automation for authorization.
+
+As of v0.16.332, a GitHub GraphQL `EOF` transport failure is also reported as retryable `E_GITHUB_UNAVAILABLE`, keeping the no-false-`missing` boundary intact when the CLI loses the API connection before issue state is returned.
 
 As of v0.16.301, invoking a discovered current-schema adapter that cannot register no longer looks like an unknown command. The root CLI returns structured `E_VERIFY_STATIC` details and points to `cliany-site verify <domain> --strict --json`; this is a local static diagnosis, not proof that a browser, site workflow, or LLM provider is ready.
 
