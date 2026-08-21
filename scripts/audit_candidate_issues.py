@@ -28,6 +28,10 @@ class GitHubUnavailableError(RuntimeError):
     code = GITHUB_UNAVAILABLE_CODE
     retryable = True
 
+    def __init__(self, message: str, *, retry_after: str | None = None) -> None:
+        super().__init__(message)
+        self.retry_after = retry_after
+
 
 def _is_github_transport_error(message: str) -> bool:
     normalized = message.lower()
@@ -56,6 +60,32 @@ def _is_github_transport_error(message: str) -> bool:
             "504 gateway timeout",
         )
     )
+
+
+_RATE_LIMIT_RETRY_HINT_PATTERNS = (
+    re.compile(
+        r"\bretry[- ]after\s*[:=]?\s*(?P<value>\d+(?:\.\d+)?\s*(?:seconds?|minutes?|hours?)?)",
+        flags=re.IGNORECASE,
+    ),
+    re.compile(
+        r"\bretry\s+(?:in|after)\s+(?P<value>\d+(?:\.\d+)?\s*(?:seconds?|minutes?|hours?)?)",
+        flags=re.IGNORECASE,
+    ),
+    re.compile(
+        r"\brate\s*limit\s+reset(?:s)?\s+(?:at|on)\s+(?P<value>[^,.;\n]+)",
+        flags=re.IGNORECASE,
+    ),
+)
+
+
+def _extract_rate_limit_retry_hint(message: str) -> str | None:
+    if not re.search(r"rate\s*limit|too\s+many\s+requests|retry[- ]after|\b429\b", message, flags=re.IGNORECASE):
+        return None
+    for pattern in _RATE_LIMIT_RETRY_HINT_PATTERNS:
+        match = pattern.search(message)
+        if match:
+            return match.group("value").strip()
+    return None
 
 
 @dataclass(frozen=True)
@@ -134,7 +164,10 @@ def _run_gh(arguments: list[str]) -> str:
     if completed.returncode != 0:
         message = completed.stderr.strip() or completed.stdout.strip() or "gh command failed"
         if _is_github_transport_error(message):
-            raise GitHubUnavailableError(message)
+            raise GitHubUnavailableError(
+                message,
+                retry_after=_extract_rate_limit_retry_hint(message),
+            )
         raise RuntimeError(message)
     return completed.stdout
 
@@ -342,6 +375,7 @@ def _print_error(
     json_mode: bool,
     code: str | None = None,
     retryable: bool = False,
+    retry_after: str | None = None,
 ) -> None:
     if json_mode:
         error: str | dict[str, Any] = message
@@ -355,10 +389,14 @@ def _print_error(
                     "也不要执行 --apply。"
                 ),
             }
+            if retry_after is not None:
+                error["retry_after"] = retry_after
+                error["next_action"] += f" GitHub 提示可在 {retry_after} 后重试。"
         print(json.dumps({"ok": False, "error": error}, ensure_ascii=False, indent=2))
     else:
         prefix = f" [{code}, retryable]" if code is not None and retryable else ""
-        print(f"Candidate public issue audit failed{prefix}: {message}")
+        retry_hint = f" Next retry hint: {retry_after}." if retry_after is not None else ""
+        print(f"Candidate public issue audit failed{prefix}: {message}{retry_hint}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -408,7 +446,13 @@ def main(argv: list[str] | None = None) -> int:
             known_titles={expectation.title for expectation in all_expectations},
         )
     except GitHubUnavailableError as exc:
-        _print_error(str(exc), json_mode=args.json, code=exc.code, retryable=exc.retryable)
+        _print_error(
+            str(exc),
+            json_mode=args.json,
+            code=exc.code,
+            retryable=exc.retryable,
+            retry_after=exc.retry_after,
+        )
         return 2
     except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
         _print_error(str(exc), json_mode=args.json)
@@ -445,7 +489,13 @@ def main(argv: list[str] | None = None) -> int:
                 known_titles={expectation.title for expectation in all_expectations},
             )
         except GitHubUnavailableError as exc:
-            _print_error(str(exc), json_mode=args.json, code=exc.code, retryable=exc.retryable)
+            _print_error(
+                str(exc),
+                json_mode=args.json,
+                code=exc.code,
+                retryable=exc.retryable,
+                retry_after=exc.retry_after,
+            )
             return 2
         except (OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
             _print_error(str(exc), json_mode=args.json)

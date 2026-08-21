@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.335] - 2026-08-21
+
+### Added
+
+- Candidate issue audit now preserves a GitHub rate-limit retry hint, such as `Retry-After` seconds or a rate-limit reset timestamp, inside the retryable `E_GITHUB_UNAVAILABLE` error without turning remote-read failure into `missing` or allowing `--apply`.
+
 ## [0.16.334] - 2026-08-21
 
 ### Fixed
@@ -2982,7 +2988,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.334...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.335...HEAD
+[0.16.335]: https://github.com/pearjelly/cliany.site/compare/v0.16.334...v0.16.335
 [0.16.334]: https://github.com/pearjelly/cliany.site/compare/v0.16.333...v0.16.334
 [0.16.333]: https://github.com/pearjelly/cliany.site/compare/v0.16.332...v0.16.333
 [0.16.332]: https://github.com/pearjelly/cliany.site/compare/v0.16.331...v0.16.332

@@ -359,6 +359,28 @@ def test_run_gh_classifies_github_rate_limits_as_unavailable(monkeypatch, stderr
     assert exc_info.value.retryable is True
 
 
+@pytest.mark.parametrize(
+    "stderr, expected_retry_after",
+    [
+        ("HTTP 429: Too Many Requests; Retry-After: 60", "60"),
+        ("API rate limit exceeded; rate limit reset at 2026-08-21T10:00:00Z", "2026-08-21T10:00:00Z"),
+    ],
+)
+def test_run_gh_preserves_github_rate_limit_retry_hint(monkeypatch, stderr, expected_retry_after):
+    completed = subprocess.CompletedProcess(
+        args=["gh"],
+        returncode=1,
+        stdout="",
+        stderr=stderr,
+    )
+    monkeypatch.setattr(audit_candidate_issues.subprocess, "run", lambda *args, **kwargs: completed)
+
+    with pytest.raises(audit_candidate_issues.GitHubUnavailableError) as exc_info:
+        audit_candidate_issues._run_gh(["issue", "list"])
+
+    assert exc_info.value.retry_after == expected_retry_after
+
+
 def test_run_gh_does_not_classify_auth_failure_as_unavailable(monkeypatch):
     completed = subprocess.CompletedProcess(
         args=["gh"],
@@ -415,6 +437,33 @@ def test_main_reports_github_api_transport_failure_without_issue_states(monkeypa
             "也不要执行 --apply。"
         ),
     }
+
+
+def test_main_reports_rate_limit_retry_hint_without_issue_states(monkeypatch, capsys):
+    monkeypatch.setattr(
+        audit_candidate_issues,
+        "candidate_issue_expectations",
+        lambda _case_ids=None: [_expectation()],
+    )
+    monkeypatch.setattr(
+        audit_candidate_issues,
+        "fetch_open_issues",
+        lambda _repo: (_ for _ in ()).throw(
+            audit_candidate_issues.GitHubUnavailableError(
+                "HTTP 429: Too Many Requests",
+                retry_after="60",
+            )
+        ),
+    )
+
+    exit_code = audit_candidate_issues.main(["--repo", "owner/repo", "--json"])
+
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 2
+    assert payload["ok"] is False
+    assert payload["error"]["code"] == "E_GITHUB_UNAVAILABLE"
+    assert payload["error"]["retry_after"] == "60"
+    assert "60" in payload["error"]["next_action"]
 
 
 def test_apply_rechecks_after_rewriting_stale_issue(monkeypatch):
