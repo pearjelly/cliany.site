@@ -211,7 +211,7 @@ cliany-site doctor --json
 cliany-site doctor --llm-live --require-capability generate_adapters --json
 ```
 
-默认 `doctor` 只检查本地配置、CDP、目录和 key，不会真实调用 LLM provider。`data.summary.ready_for_explore` 与 `data.summary.capabilities.generate_adapters.local_ready` 仍只表示本地配置可用；`local_blockers` 只解释这些本地前提，`live_blockers` 独立描述未运行或失败的 provider 预检。自动化必须读取 `data.summary.ready_for_live_explore=true`（或等价 capability 字段）才可放行真实 `explore`。因此 provider 出现可重试故障时，可以同时看到 `local_ready=true`、整体 `ready=false` 和 `live_blockers=["llm_live"]`；`next_step` 会给出严格重试命令。准备运行耗时较长的 `explore` 前，使用 `--llm-live --require-capability generate_adapters` 执行严格 provider 门禁；服务不可用会以非零结果返回 `E_LLM_UNAVAILABLE`，完整检查数据保留在 `error.details`。
+默认 `doctor` 只检查本地配置、CDP、目录和 key，不会真实调用 LLM provider。`data.summary.ready_for_explore` 与 `data.summary.capabilities.generate_adapters.local_ready` 仍只表示本地配置可用；`local_blockers` 只解释这些本地前提，`live_blockers` 独立描述未运行或失败的 provider 预检。自动化必须读取 `data.summary.ready_for_live_explore=true`（或等价 capability 字段）才可放行真实 `explore`。因此 provider 出现可重试故障时，可以同时看到 `local_ready=true`、整体 `ready=false` 和 `live_blockers=["llm_live"]`；`next_step` 会给出严格重试命令。准备运行耗时较长的 `explore` 前，使用 `--llm-live --require-capability generate_adapters` 执行严格 provider 门禁；服务不可用会以非零结果返回 `E_LLM_UNAVAILABLE`，完整检查数据保留在 `error.details`。普通 `doctor --json` 在硬检查失败时也返回稳定错误码，例如 CDP 不可用时为 `E_CDP_UNAVAILABLE`，不会退回通用 `E_UNKNOWN`。
 
 ## 使用示例
 

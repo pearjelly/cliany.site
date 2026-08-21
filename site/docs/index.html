@@ -168,7 +168,7 @@ cliany-site cases --json
         <p>检查 Chrome CDP 连通性、LLM Key 有效性、目录结构。</p>
         <pre><code>cliany-site doctor [--json] [--llm-live]</code></pre>
         <p>准备运行 <code>explore</code> 时，使用 <code>cliany-site doctor --llm-live --require-capability generate_adapters --json</code> 做一次真实 provider 预检；只有它成功，才继续生成新 adapter。没有 key 会返回 <code>E_LLM_DISABLED</code>，上游连接失败会返回 <code>E_LLM_UNAVAILABLE</code>，两者都保留 <code>error.details</code>。</p>
-        <p>能力门禁失败时，JSON 会在 <code>error.details</code> 保留完整 <code>checks</code> / <code>summary</code>；缺少 Chrome/CDP 返回 <code>E_CDP_UNAVAILABLE</code>，没有 LLM key 返回 <code>E_LLM_DISABLED</code>，provider 上游不可用则保留 <code>E_LLM_UNAVAILABLE</code>，方便自动化修复正确依赖或稍后重试。普通 <code>doctor --llm-live</code> 也会把缺少 key 指向配置修复，把上游错误指向重试。</p>
+        <p>能力门禁失败时，JSON 会在 <code>error.details</code> 保留完整 <code>checks</code> / <code>summary</code>；缺少 Chrome/CDP 返回 <code>E_CDP_UNAVAILABLE</code>，没有 LLM key 返回 <code>E_LLM_DISABLED</code>，provider 上游不可用则保留 <code>E_LLM_UNAVAILABLE</code>，方便自动化修复正确依赖或稍后重试。普通 <code>doctor --json</code> 在硬检查失败时也返回同一套稳定错误码，不会退回通用 <code>E_UNKNOWN</code>。普通 <code>doctor --llm-live</code> 也会把缺少 key 指向配置修复，把上游错误指向重试。</p>
         <p>返回示例：</p>
         <pre><code>{"success": true, "data": {"cdp": true, "llm": true, "adapters_dir": true}}</code></pre>
 

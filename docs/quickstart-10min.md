@@ -48,7 +48,7 @@ cliany-site doctor --json
 cliany-site doctor --llm-live --require-capability generate_adapters --json
 ```
 
-如果本机没有 Chrome/CDP，命令会以 `E_CDP_UNAVAILABLE` 退出；没有 LLM key 时会以 `E_LLM_DISABLED` 退出；provider 上游不可用时会保留对应的 `E_LLM_UNAVAILABLE`。这些路径都会把完整 `checks`、`summary` 和 blockers 放在 `error.details`，方便脚本先修复正确依赖再重试，不会把通用 `E_UNKNOWN` 当成可执行信号。human `doctor --llm-live` 也会把 `E_LLM_DISABLED` 指向 key 配置，把 `E_LLM_UNAVAILABLE` 指向网络或 provider 重试。
+如果本机没有 Chrome/CDP，命令会以 `E_CDP_UNAVAILABLE` 退出；没有 LLM key 时会以 `E_LLM_DISABLED` 退出；provider 上游不可用时会保留对应的 `E_LLM_UNAVAILABLE`。这些路径都会把完整 `checks`、`summary` 和 blockers 放在 `error.details`，方便脚本先修复正确依赖再重试，不会把通用 `E_UNKNOWN` 当成可执行信号；普通 `doctor --json` 在 Chrome/CDP 等硬检查失败时也使用同一套稳定错误码。human `doctor --llm-live` 也会把 `E_LLM_DISABLED` 指向 key 配置，把 `E_LLM_UNAVAILABLE` 指向网络或 provider 重试。
 
 重点看 `data.summary`：
 

@@ -156,7 +156,7 @@ cliany-site verify github.com --json
 cliany-site --json --explain
 ```
 
-`--require-capability` 在门禁失败时会把完整 `checks` / `summary` 保留在 `error.details`，并返回首个硬阻塞项的稳定错误码，例如缺少 Chrome/CDP 时为 `E_CDP_UNAVAILABLE`、没有 LLM key 时为 `E_LLM_DISABLED`；自动化可以修复正确依赖后重试，不必解析通用 `E_UNKNOWN`。普通 `doctor --llm-live` 输出也会把 `E_LLM_DISABLED` 解释为“先配置 key”，把 `E_LLM_UNAVAILABLE` 留给上游重试，避免把两条修复路径混淆。
+`--require-capability` 在门禁失败时会把完整 `checks` / `summary` 保留在 `error.details`，并返回首个硬阻塞项的稳定错误码，例如缺少 Chrome/CDP 时为 `E_CDP_UNAVAILABLE`、没有 LLM key 时为 `E_LLM_DISABLED`；普通 `doctor --json` 在硬检查失败时也使用同一套稳定错误码。自动化可以修复正确依赖后重试，不必解析通用 `E_UNKNOWN`。普通 `doctor --llm-live` 输出也会把 `E_LLM_DISABLED` 解释为“先配置 key”，把 `E_LLM_UNAVAILABLE` 留给上游重试，避免把两条修复路径混淆。
 
 ### Configuration
 
@@ -221,7 +221,7 @@ cliany-site doctor --json
 cliany-site doctor --llm-live --require-capability generate_adapters --json
 ```
 
-By default, `doctor` checks local configuration, CDP, directories, and keys without calling the LLM provider. `data.summary.ready_for_explore` and `data.summary.capabilities.generate_adapters.local_ready` remain local configuration signals; `local_blockers` explains only those local prerequisites, while `live_blockers` separately reports an omitted or failed provider preflight. Automation must require `data.summary.ready_for_live_explore=true` (or the equivalent capability field) before a real `explore`. A retryable provider failure can therefore leave `local_ready=true` while overall `ready=false` and `live_blockers=["llm_live"]`. The capability's `next_step` gives the exact strict retry command. Before a longer `explore`, use `--llm-live --require-capability generate_adapters` for a strict provider gate; a missing key returns nonzero with `E_LLM_DISABLED`, an upstream outage returns `E_LLM_UNAVAILABLE`, and both preserve the full checks in `error.details`. Human output names the missing-key configuration fix separately from an upstream retry.
+By default, `doctor` checks local configuration, CDP, directories, and keys without calling the LLM provider. `data.summary.ready_for_explore` and `data.summary.capabilities.generate_adapters.local_ready` remain local configuration signals; `local_blockers` explains only those local prerequisites, while `live_blockers` separately reports an omitted or failed provider preflight. Automation must require `data.summary.ready_for_live_explore=true` (or the equivalent capability field) before a real `explore`. A retryable provider failure can therefore leave `local_ready=true` while overall `ready=false` and `live_blockers=["llm_live"]`. The capability's `next_step` gives the exact strict retry command. Before a longer `explore`, use `--llm-live --require-capability generate_adapters` for a strict provider gate; a missing key returns nonzero with `E_LLM_DISABLED`, an upstream outage returns `E_LLM_UNAVAILABLE`, and both preserve the full checks in `error.details`. Ordinary `doctor --json` also returns a stable code such as `E_CDP_UNAVAILABLE` when a hard check fails, instead of collapsing the diagnostic into `E_UNKNOWN`. Human output names the missing-key configuration fix separately from an upstream retry.
 
 ## Usage Examples
 

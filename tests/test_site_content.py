@@ -145,6 +145,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "local_blockers" in index
     assert "E_LLM_DISABLED" in docs
     assert "普通 <code>doctor --llm-live</code> 也会把缺少 key 指向配置修复" in docs
+    assert "普通 <code>doctor --json</code> 在硬检查失败时也返回同一套稳定错误码" in docs
     assert "local_blockers" in script
     assert "live_blockers=[&quot;llm_live&quot;]" in index
     assert "live_blockers=[&quot;llm_live&quot;]" in script
