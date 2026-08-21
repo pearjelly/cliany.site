@@ -887,8 +887,13 @@ async def _run_checks(cdp_conn: Any = None, *, llm_live: bool = False) -> Envelo
     summary = _enrich_checks(checks)
     failed = [c["name"] for c in checks if c["status"] == "fail"]
     if failed:
-        return err("doctor", ErrorCode.E_UNKNOWN, f"检查失败: {', '.join(failed)}",
-                   details={"checks": checks, "summary": summary}, source="builtin")
+        return err(
+            "doctor",
+            _required_capability_error_code(checks, failed),
+            f"检查失败: {', '.join(failed)}",
+            details={"checks": checks, "summary": summary},
+            source="builtin",
+        )
 
     python_ver = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
     try:

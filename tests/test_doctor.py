@@ -182,6 +182,27 @@ def test_required_capability_preserves_structured_cdp_failure(tmp_home, no_llm, 
     assert any(check["name"] == "cdp" and check["status"] == "fail" for check in details["checks"])
 
 
+def test_doctor_reports_cdp_failure_without_required_capability(tmp_home, no_llm, monkeypatch):
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return False
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+
+    runner = CliRunner()
+    result = runner.invoke(cli, ["--json", "doctor"], catch_exceptions=True)
+
+    assert result.exit_code == 1
+    payload = json.loads(result.output)
+    assert payload["error"]["code"] == "E_CDP_UNAVAILABLE"
+    details = payload["error"]["details"]
+    assert details["summary"]["ready_for_existing_adapters"] is False
+    assert any(check["name"] == "cdp" and check["status"] == "fail" for check in details["checks"])
+
+
 def test_required_capability_reports_missing_llm_key(tmp_home, no_llm, monkeypatch):
     class MockCDP:
         def __init__(self, cdp_url=None, headless=None):

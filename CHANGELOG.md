@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- 普通 `doctor --json` 在 Chrome/CDP 等硬阻塞检查失败时现在返回对应稳定错误码（例如 `E_CDP_UNAVAILABLE`），不再把可修复的环境故障统一包装成 `E_UNKNOWN`；完整 `checks` / `summary` 诊断仍保留在 `error.details`。
+
 ## [0.16.335] - 2026-08-21
 
 ### Added
