@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.333] - 2026-08-21
+
 ### Fixed
 
 - Candidate issue audit now classifies explicit GitHub HTTP 500/502/503/504 gateway failures as retryable `E_GITHUB_UNAVAILABLE`, keeping remote-read failures out of `missing` state and the `--apply` path.
@@ -2974,7 +2976,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.332...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.333...HEAD
+[0.16.333]: https://github.com/pearjelly/cliany.site/compare/v0.16.332...v0.16.333
 [0.16.332]: https://github.com/pearjelly/cliany.site/compare/v0.16.331...v0.16.332
 [0.16.331]: https://github.com/pearjelly/cliany.site/compare/v0.16.330...v0.16.331
 [0.16.330]: https://github.com/pearjelly/cliany.site/compare/v0.16.329...v0.16.330
