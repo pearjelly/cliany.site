@@ -334,6 +334,31 @@ def test_run_gh_classifies_github_http_5xx_as_unavailable(monkeypatch, stderr):
     assert exc_info.value.retryable is True
 
 
+@pytest.mark.parametrize(
+    "stderr",
+    [
+        "HTTP 429: Too Many Requests",
+        "HTTP 403: rate limit exceeded",
+        "API rate limit exceeded for user ID 123",
+        "You have exceeded a secondary rate limit",
+    ],
+)
+def test_run_gh_classifies_github_rate_limits_as_unavailable(monkeypatch, stderr):
+    completed = subprocess.CompletedProcess(
+        args=["gh"],
+        returncode=1,
+        stdout="",
+        stderr=stderr,
+    )
+    monkeypatch.setattr(audit_candidate_issues.subprocess, "run", lambda *args, **kwargs: completed)
+
+    with pytest.raises(audit_candidate_issues.GitHubUnavailableError) as exc_info:
+        audit_candidate_issues._run_gh(["issue", "list"])
+
+    assert exc_info.value.code == "E_GITHUB_UNAVAILABLE"
+    assert exc_info.value.retryable is True
+
+
 def test_run_gh_does_not_classify_auth_failure_as_unavailable(monkeypatch):
     completed = subprocess.CompletedProcess(
         args=["gh"],
@@ -344,6 +369,19 @@ def test_run_gh_does_not_classify_auth_failure_as_unavailable(monkeypatch):
     monkeypatch.setattr(audit_candidate_issues.subprocess, "run", lambda *args, **kwargs: completed)
 
     with pytest.raises(RuntimeError, match="HTTP 401: Bad credentials"):
+        audit_candidate_issues._run_gh(["issue", "list"])
+
+
+def test_run_gh_does_not_classify_ordinary_permission_failure_as_unavailable(monkeypatch):
+    completed = subprocess.CompletedProcess(
+        args=["gh"],
+        returncode=1,
+        stdout="",
+        stderr="HTTP 403: Resource not accessible by integration",
+    )
+    monkeypatch.setattr(audit_candidate_issues.subprocess, "run", lambda *args, **kwargs: completed)
+
+    with pytest.raises(RuntimeError, match="Resource not accessible by integration"):
         audit_candidate_issues._run_gh(["issue", "list"])
 
 

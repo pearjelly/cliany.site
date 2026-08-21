@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.334] - 2026-08-21
+
+### Fixed
+
+- Candidate issue audit now classifies GitHub rate-limit responses, including HTTP 429, rate-limit 403 messages, and secondary rate limits, as retryable `E_GITHUB_UNAVAILABLE`; ordinary permission failures remain ordinary errors and remote-read failures stay out of `missing` and `--apply`.
+
 ## [0.16.333] - 2026-08-21
 
 ### Fixed
@@ -2976,7 +2982,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.333...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.334...HEAD
+[0.16.334]: https://github.com/pearjelly/cliany.site/compare/v0.16.333...v0.16.334
 [0.16.333]: https://github.com/pearjelly/cliany.site/compare/v0.16.332...v0.16.333
 [0.16.332]: https://github.com/pearjelly/cliany.site/compare/v0.16.331...v0.16.332
 [0.16.331]: https://github.com/pearjelly/cliany.site/compare/v0.16.330...v0.16.331
