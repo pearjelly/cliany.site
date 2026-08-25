@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.336] - 2026-08-24
+
 ### Fixed
 
 - 普通 `doctor --json` 在 Chrome/CDP 等硬阻塞检查失败时现在返回对应稳定错误码（例如 `E_CDP_UNAVAILABLE`），不再把可修复的环境故障统一包装成 `E_UNKNOWN`；完整 `checks` / `summary` 诊断仍保留在 `error.details`。
@@ -2992,7 +2994,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.335...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.336...HEAD
+[0.16.336]: https://github.com/pearjelly/cliany.site/compare/v0.16.335...v0.16.336
 [0.16.335]: https://github.com/pearjelly/cliany.site/compare/v0.16.334...v0.16.335
 [0.16.334]: https://github.com/pearjelly/cliany.site/compare/v0.16.333...v0.16.334
 [0.16.333]: https://github.com/pearjelly/cliany.site/compare/v0.16.332...v0.16.333
