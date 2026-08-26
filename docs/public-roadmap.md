@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-08-26
-- **Current baseline:** v0.16.336
+- **Current baseline:** v0.16.337
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -34,6 +34,8 @@ As of v0.16.334, GitHub rate-limit responses, including HTTP 429, rate-limit 403
 As of v0.16.335, when a GitHub rate-limit response includes `Retry-After` or a reset timestamp, the read-only audit preserves that retry hint in the structured error so maintainers know when to retry without changing the missing/`--apply` boundary.
 
 As of v0.16.336, ordinary `doctor --json` returns an existing stable error code, such as `E_CDP_UNAVAILABLE`, for a hard Chrome/CDP environment blocker instead of collapsing it into `E_UNKNOWN`; the complete `checks` and `summary` remain in `error.details` for repair guidance and automation.
+
+As of v0.16.337, strict release readiness checks that both roadmap views declare the package's exact version before a tag can be created. This keeps contributor-facing plans and the published package aligned; it does not establish browser, LLM, candidate adapter, or third-party workflow readiness.
 
 As of v0.16.301, invoking a discovered current-schema adapter that cannot register no longer looks like an unknown command. The root CLI returns structured `E_VERIFY_STATIC` details and points to `cliany-site verify <domain> --strict --json`; this is a local static diagnosis, not proof that a browser, site workflow, or LLM provider is ready.
 
