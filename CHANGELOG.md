@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.337] - 2026-08-26
+
 ### Fixed
 
 - Strict release readiness now requires both the public roadmap and the maintainer Q3 roadmap to declare the exact package baseline, so a stale roadmap blocks a tag before CI rather than leaving contributors with conflicting release context.
@@ -3000,6 +3002,7 @@
 - 修正 QA 测试断言与实际 API 对齐
 
 [Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.336...HEAD
+[0.16.337]: https://github.com/pearjelly/cliany.site/compare/v0.16.336...v0.16.337
 [0.16.336]: https://github.com/pearjelly/cliany.site/compare/v0.16.335...v0.16.336
 [0.16.335]: https://github.com/pearjelly/cliany.site/compare/v0.16.334...v0.16.335
 [0.16.334]: https://github.com/pearjelly/cliany.site/compare/v0.16.333...v0.16.334
