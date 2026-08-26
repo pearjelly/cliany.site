@@ -3001,7 +3001,7 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.336...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.337...HEAD
 [0.16.337]: https://github.com/pearjelly/cliany.site/compare/v0.16.336...v0.16.337
 [0.16.336]: https://github.com/pearjelly/cliany.site/compare/v0.16.335...v0.16.336
 [0.16.335]: https://github.com/pearjelly/cliany.site/compare/v0.16.334...v0.16.335
