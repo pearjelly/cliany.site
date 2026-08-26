@@ -1,6 +1,6 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-08-24
+- **Updated:** 2026-08-26
 - **Current baseline:** v0.16.336
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 

@@ -596,6 +596,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         "docs/good-first-issues.md",
         "docs/candidate-promotion-runbook.md",
         "docs/module-ownership.md",
+        "docs/roadmap-2026-q3.md",
+        "docs/public-roadmap.md",
         "docs/weekly-maintainer-loop.md",
         "scripts/extract_doctor_preflight_evidence.py",
         "site/index.html",
@@ -894,6 +896,14 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
     template_snippets["site/index.html"].append(f"Current baseline: v{project_version}")
     template_snippets["site/script.js"] = [f"当前基线：v{project_version}"]
     template_snippets["site/docs/index.html"].append(f"v{project_version} · Python")
+    template_snippets["docs/roadmap-2026-q3.md"].append(
+        f"**基线版本：** v{project_version}"
+    )
+    template_snippets["docs/public-roadmap.md"] = [
+        "Maintainer roadmap:",
+        "roadmap-2026-q3.md",
+        f"**Current baseline:** v{project_version}",
+    ]
     forbidden_snippets = {
         "docs/quickstart-10min.md": ["issues.apache.org.cliany-adapter-v0.14.0.tar.gz"],
         "site/index.html": ["issues.apache.org.cliany-adapter-v0.14.0.tar.gz"],

@@ -1,9 +1,9 @@
 # cliany-site 2026 Q3 路线图
 
 - **制定日期：** 2026-06-10
-- **校准日期：** 2026-08-12
-- **基线版本：** v0.16.316
-- **目标周期：** 2026-06-10 ~ 2026-08-05
+- **校准日期：** 2026-08-26
+- **基线版本：** v0.16.336
+- **目标周期：** 滚动维护（2026-08-26 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
 
@@ -13,7 +13,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 已完成校准
 
-2026-06-10 的原始路线图以 v0.14.2 为基线；到 2026-07-29 已进入 v0.16.287 发布验证。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
+2026-06-10 的原始路线图以 v0.14.2 为基线；当前公开基线为 v0.16.336。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
 
 - 首次成功路径：README、README.zh、官网和 `doctor` 输出已经围绕 10 分钟路径、真实 demo、LLM live preflight 和可执行下一步重新组织。
 - 真实案例库：`cliany-site cases` 已成为案例发现、单案例展开、issue template、evidence bundle 和 promotion plan 的统一入口。
@@ -45,7 +45,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 这意味着 Q3 后续重点不再是「搭脚手架」，而是把已搭好的维护系统转换成用户可见的真实案例、可分发 adapter 资产和稳定集成路径。
 
-截至 2026-07-22，PyPI、npm 和 crates.io package-search 案例仍是 candidate，尚未晋级为 active；`cliany-site doctor --llm-live --require-capability generate_adapters --json` 的 live LLM preflight 仍是生成 adapter package 与执行 online smoke 前必须保留的 blocker，而不是可由文档或离线证据替代的成功证明。
+截至 2026-08-26，案例目录为 8 total、4 active、3 candidate、1 known-gap；PyPI、npm 和 crates.io package-search 仍是 candidate，九项 adapter package、metadata validation、online smoke 证据均未完成。最近一次真实 `cliany-site doctor --llm-live --require-capability generate_adapters --json` 返回可重试的 `E_LLM_UNAVAILABLE`，因此 live LLM preflight 仍是生成 adapter package 与执行 online smoke 前必须保留的 blocker，而不是可由文档或离线证据替代的成功证明。
 
 ## 当前判断
 
@@ -59,14 +59,14 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 北极星指标
 
-| 指标 | 2026-07-01 基线 | 2026-08-05 目标 |
+| 指标 | 2026-07-01 基线 | 2026-08-26 起的滚动目标 |
 |------|------------------|------------------|
 | 新用户首次成功路径 | 文档路径已成型，仍需更多真实资产支撑 | 10 分钟内完成安装、doctor、真实 demo replay，并知道下一步是否需要 LLM |
 | 真实案例资产 | 4 个 active，3 个 candidate，1 个 known gap | 至少 8 个可验证案例；candidate 晋级证据和 release asset 可追溯 |
 | adapter 可维护性 | metadata/package 校验和安全审计已进入门禁 | demo adapter 有 release asset、安装验证、回归报告和失败修复建议 |
 | 探索/抽取可靠性 | LLM outage 和抽取质量已有结构化信号 | 常见失败能定位到 provider、页面状态、selector、字段质量或能力边界 |
 | 集成可用性 | CLI 主路径强，SDK/API/headless 示例偏弱 | SDK、HTTP API、headless/remote CDP 均有可复制最小示例 |
-| 发布节奏 | v0.16.257，GitHub Release / PyPI / 官网发布流程已跑通，PyPI latest 缓存滞后可由版本专属 endpoint 复核，官网 alias 由 `vercel inspect www.cliany.site` 复核，primary adapter handoff command aliases 与 doctor preflight evidence state 已进入维护者路径 | 每天 1~3 个可验证版本；每周至少 3 天有提交；发布后 publication audit 为绿 |
+| 发布节奏 | v0.16.336，GitHub Release / PyPI / 官网发布流程已跑通，PyPI latest 缓存滞后可由版本专属 endpoint 复核，官网 alias 由 `vercel inspect www.cliany.site` 复核，primary adapter handoff command aliases 与 doctor preflight evidence state 已进入维护者路径 | 每天 1~3 个可验证版本；每周至少 3 天有提交；发布后 publication audit 为绿 |
 
 ## 双视图维护规则
 
@@ -131,9 +131,11 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 - Docker/headless/remote CDP 路径重新验证，并记录不支持或实验性边界。
 - Obscura 继续标注为实验性 provider；除非真实成功率明显提升，不新增 provider。
 
-## 阶段计划
+## 阶段归档
 
 > 版本号是方向锚点，不再假设每周只对应一个 minor。每日仍按 1~3 个可验证版本发布；达到每日上限后只做下一版准备。
+
+下表保留原始阶段的完成记录；2026-08-26 起的执行以本文件的五条产品主线、近期执行队列和每周维护者循环为准，不再把已经结束的日期当作当前承诺。
 
 | 周期 | 主题 | 主要交付 | 验收标准 |
 |------|------|----------|----------|

@@ -465,11 +465,13 @@ def _readme_content() -> str:
     )
 
 
-def _update_website_baseline(repo: Path, version: str) -> None:
+def _update_published_baselines(repo: Path, version: str) -> None:
     expected_snippets = {
         "site/index.html": ("Current baseline: v0.1.0", f"Current baseline: v{version}"),
         "site/script.js": ("当前基线：v0.1.0", f"当前基线：v{version}"),
         "site/docs/index.html": ("v0.1.0 · Python", f"v{version} · Python"),
+        "docs/roadmap-2026-q3.md": ("**基线版本：** v0.1.0", f"**基线版本：** v{version}"),
+        "docs/public-roadmap.md": ("**Current baseline:** v0.1.0", f"**Current baseline:** v{version}"),
     }
     for filename, (old, new) in expected_snippets.items():
         path = repo / filename
@@ -519,7 +521,15 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
     (repo / "README.md").write_text(_readme_content(), encoding="utf-8")
     (repo / "README.zh.md").write_text(_readme_content(), encoding="utf-8")
     (repo / "docs" / "roadmap-2026-q3.md").write_text(
-        "# Roadmap\n\n[每周维护者循环](weekly-maintainer-loop.md)\n",
+        "# Roadmap\n\n"
+        "**基线版本：** v0.1.0\n\n"
+        "[每周维护者循环](weekly-maintainer-loop.md)\n",
+        encoding="utf-8",
+    )
+    (repo / "docs" / "public-roadmap.md").write_text(
+        "# Public Roadmap\n\n"
+        "**Current baseline:** v0.1.0\n"
+        "**Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)\n",
         encoding="utf-8",
     )
     (repo / "docs" / "release-cadence.md").write_text(
@@ -723,6 +733,7 @@ def _init_repo(tmp_path: Path, *, with_draft: bool) -> Path:
         "README.md",
         "README.zh.md",
         "docs/roadmap-2026-q3.md",
+        "docs/public-roadmap.md",
         "docs/release-cadence.md",
         "docs/contributor-starter.md",
         "docs/good-first-issues.md",
@@ -2221,6 +2232,26 @@ def test_release_readiness_blocks_website_baseline_version_mismatch(tmp_path):
     )
 
 
+def test_release_readiness_blocks_roadmap_baseline_version_mismatch(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    for filename in ("docs/roadmap-2026-q3.md", "docs/public-roadmap.md"):
+        path = repo / filename
+        path.write_text(path.read_text(encoding="utf-8").replace("0.1.0", "0.0.9"), encoding="utf-8")
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert "project metadata validation failed" in report.blockers
+    assert (
+        "open source metadata file missing snippet: "
+        "docs/roadmap-2026-q3.md: **基线版本：** v0.1.0"
+    ) in report.project_metadata.issues
+    assert (
+        "open source metadata file missing snippet: "
+        "docs/public-roadmap.md: **Current baseline:** v0.1.0"
+    ) in report.project_metadata.issues
+
+
 def test_release_readiness_blocks_stale_website_candidate_runbook_alias(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     (repo / "site" / "docs").mkdir(parents=True, exist_ok=True)
@@ -2966,7 +2997,7 @@ def test_release_readiness_allows_bumped_target_before_tag(tmp_path):
         'Changelog = "https://github.com/example/demo/blob/main/CHANGELOG.md"\n',
         encoding="utf-8",
     )
-    _update_website_baseline(repo, "0.1.1")
+    _update_published_baselines(repo, "0.1.1")
     draft = repo / "docs" / "releases" / "v0.1.1-draft.md"
     draft.write_text(
         draft.read_text(encoding="utf-8") + "\n**提交范围：** `v0.1.1..HEAD`\n",
@@ -2979,6 +3010,8 @@ def test_release_readiness_allows_bumped_target_before_tag(tmp_path):
         "site/index.html",
         "site/script.js",
         "site/docs/index.html",
+        "docs/roadmap-2026-q3.md",
+        "docs/public-roadmap.md",
         "docs/releases/v0.1.1-draft.md",
     )
     _git(repo, "commit", "-m", "prepare release", env={
@@ -3014,7 +3047,7 @@ def test_release_readiness_allows_finalized_target_changelog_before_tag(tmp_path
         'Changelog = "https://github.com/example/demo/blob/main/CHANGELOG.md"\n',
         encoding="utf-8",
     )
-    _update_website_baseline(repo, "0.1.1")
+    _update_published_baselines(repo, "0.1.1")
     (repo / "CHANGELOG.md").write_text(
         "# Changelog\n\n"
         "## [Unreleased]\n\n"
@@ -3038,6 +3071,8 @@ def test_release_readiness_allows_finalized_target_changelog_before_tag(tmp_path
         "site/index.html",
         "site/script.js",
         "site/docs/index.html",
+        "docs/roadmap-2026-q3.md",
+        "docs/public-roadmap.md",
         "docs/releases/v0.1.1-draft.md",
     )
     _git(repo, "commit", "-m", "finalize release", env={
@@ -3079,7 +3114,7 @@ def test_release_readiness_accepts_tagged_release_mode(tmp_path):
         'Changelog = "https://github.com/example/demo/blob/main/CHANGELOG.md"\n',
         encoding="utf-8",
     )
-    _update_website_baseline(repo, "0.1.1")
+    _update_published_baselines(repo, "0.1.1")
     (repo / "CHANGELOG.md").write_text(
         "# Changelog\n\n"
         "## [Unreleased]\n\n"
@@ -3098,6 +3133,8 @@ def test_release_readiness_accepts_tagged_release_mode(tmp_path):
         "site/index.html",
         "site/script.js",
         "site/docs/index.html",
+        "docs/roadmap-2026-q3.md",
+        "docs/public-roadmap.md",
     )
     env = {
         "GIT_AUTHOR_NAME": "Test",
