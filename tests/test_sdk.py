@@ -171,7 +171,7 @@ class TestSDKDoctor:
         cfg = _make_config(tmp_path)
 
         with (
-            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.commands.doctor.get_config", return_value=cfg),
             patch("cliany_site.explorer.engine._load_dotenv"),
             patch("cliany_site.explorer.engine._normalize_openai_base_url", return_value=None),
             patch.dict(
@@ -190,8 +190,10 @@ class TestSDKDoctor:
 
             result = await cs.doctor()
             assert result["success"] is True
-            assert result["data"]["cdp"] == "ok"
-            assert result["data"]["llm"] == "ok"
+            checks = {item["name"]: item for item in result["data"]["checks"]}
+            assert checks["cdp"]["status"] == "ok"
+            assert checks["llm"]["status"] == "ok"
+            assert result["data"]["summary"]["ready_for_existing_adapters"] is True
 
     @pytest.mark.asyncio
     async def test_doctor_cdp_fail(self, tmp_path):
@@ -200,7 +202,7 @@ class TestSDKDoctor:
         cfg = _make_config(tmp_path)
 
         with (
-            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.commands.doctor.get_config", return_value=cfg),
             patch("cliany_site.explorer.engine._load_dotenv"),
             patch("cliany_site.explorer.engine._normalize_openai_base_url", return_value=None),
             patch.dict("os.environ", {"CLIANY_ANTHROPIC_API_KEY": "test-key"}, clear=False),
@@ -212,7 +214,10 @@ class TestSDKDoctor:
 
             result = await cs.doctor()
             assert result["success"] is False
-            assert "cdp" in result["error"]["message"]
+            assert result["error"]["code"] == "E_CDP_UNAVAILABLE"
+            assert result["error"]["details"] == result["data"]
+            checks = {item["name"]: item for item in result["data"]["checks"]}
+            assert checks["cdp"]["status"] == "fail"
 
     @pytest.mark.asyncio
     async def test_doctor_no_llm_key(self, tmp_path):
@@ -225,10 +230,12 @@ class TestSDKDoctor:
             "CLIANY_OPENAI_API_KEY": "",
             "ANTHROPIC_API_KEY": "",
             "OPENAI_API_KEY": "",
+            "CLIANY_LLM_PROVIDER": "anthropic",
+            "CLIANY_OPENAI_BASE_URL": "",
         }
 
         with (
-            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.commands.doctor.get_config", return_value=cfg),
             patch("cliany_site.explorer.engine._load_dotenv"),
             patch("cliany_site.explorer.engine._normalize_openai_base_url", return_value=None),
             patch.dict("os.environ", env_clear, clear=False),
@@ -239,8 +246,49 @@ class TestSDKDoctor:
             cs._cdp = mock_cdp
 
             result = await cs.doctor()
-            assert result["success"] is False
-            assert "llm" in result["error"]["message"]
+            assert result["success"] is True
+            checks = {item["name"]: item for item in result["data"]["checks"]}
+            assert checks["llm"]["status"] == "warning"
+            assert result["data"]["summary"]["ready_for_existing_adapters"] is True
+            assert result["data"]["summary"]["ready_for_explore"] is False
+
+    @pytest.mark.asyncio
+    async def test_doctor_reuses_cli_checks_and_custom_port(self):
+        from cliany_site.sdk import ClanySite
+
+        cdp = object()
+        diagnostics = {"checks": [], "summary": {"capabilities": {}}}
+        result = {"ok": True, "data": diagnostics, "error": None}
+
+        with (
+            patch(
+                "cliany_site.commands.doctor._run_checks",
+                new_callable=AsyncMock,
+                return_value=result,
+            ) as run_checks,
+            patch(
+                "cliany_site.commands.doctor._require_capability",
+                side_effect=lambda value, _capability: value,
+            ),
+        ):
+            cs = ClanySite(port=9333)
+            cs._cdp = cdp
+            response = await cs.doctor(
+                llm_live=True,
+                require_capability="manage_adapters",
+            )
+
+        run_checks.assert_awaited_once_with(cdp, llm_live=True, port=9333)
+        assert response == {"success": True, "data": diagnostics, "error": None}
+
+    @pytest.mark.asyncio
+    async def test_doctor_rejects_live_capability_without_preflight(self):
+        from cliany_site.sdk import ClanySite
+
+        result = await ClanySite().doctor(require_capability="generate_adapters")
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_INVALID_PARAM"
 
 
 # ═══════════════════════════════════════════════════════════
@@ -1082,7 +1130,7 @@ class TestSyncFunctions:
         cfg = _make_config(tmp_path)
 
         with (
-            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch("cliany_site.commands.doctor.get_config", return_value=cfg),
             patch("cliany_site.explorer.engine._load_dotenv"),
             patch("cliany_site.explorer.engine._normalize_openai_base_url", return_value=None),
             patch.dict(
@@ -1332,26 +1380,67 @@ class TestAPIServer:
 
         from cliany_site.server import APIServer
 
-        cfg = _make_config(tmp_path)
+        server = APIServer()
+        sdk = AsyncMock()
+        sdk.doctor.return_value = {"success": True, "data": {"checks": []}, "error": None}
+        server._sdk = sdk
+        app = server._build_app()
 
-        with (
-            patch("cliany_site.sdk.get_config", return_value=cfg),
-            patch("cliany_site.explorer.engine._load_dotenv"),
-            patch("cliany_site.explorer.engine._normalize_openai_base_url", return_value=None),
-            patch.dict("os.environ", {"CLIANY_ANTHROPIC_API_KEY": "key"}),
-        ):
-            server = APIServer()
-            mock_cdp = AsyncMock()
-            mock_cdp.check_available = AsyncMock(return_value=True)
-            mock_sdk = MagicMock()
-            mock_sdk._cdp = mock_cdp
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.get("/doctor")
+            data = await resp.json()
 
-            app = server._build_app()
+        assert resp.status == 200
+        assert data["success"] is True
+        sdk.doctor.assert_awaited_once_with(llm_live=False, require_capability=None)
 
-            async with TestClient(TestServer(app)) as client:
-                resp = await client.get("/doctor")
-                data = await resp.json()
-                assert isinstance(data, dict)
+    @pytest.mark.asyncio
+    async def test_doctor_endpoint_forwards_live_preflight_and_status(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        sdk = AsyncMock()
+        sdk.doctor.return_value = {
+            "success": False,
+            "data": {"checks": [], "summary": {}},
+            "error": {"code": "E_LLM_UNAVAILABLE", "message": "provider unavailable"},
+        }
+        server._sdk = sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.get(
+                "/doctor?llm_live=true&require_capability=generate_adapters"
+            )
+            data = await resp.json()
+
+        assert resp.status == 503
+        assert data["error"]["code"] == "E_LLM_UNAVAILABLE"
+        sdk.doctor.assert_awaited_once_with(
+            llm_live=True,
+            require_capability="generate_adapters",
+        )
+
+    @pytest.mark.asyncio
+    async def test_doctor_endpoint_rejects_invalid_live_query(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        sdk = AsyncMock()
+        server._sdk = sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.get("/doctor?llm_live=maybe")
+            data = await resp.json()
+
+        assert resp.status == 400
+        assert data["error"]["code"] == "BAD_REQUEST"
+        sdk.doctor.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_explore_missing_fields(self):

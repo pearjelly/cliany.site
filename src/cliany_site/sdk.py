@@ -411,60 +411,60 @@ class ClanySite:
 
     # ── doctor ───────────────────────────────────────────
 
-    async def doctor(self) -> dict[str, Any]:
-        """检查运行环境（CDP / LLM / 目录）。
+    async def doctor(
+        self,
+        *,
+        llm_live: bool = False,
+        require_capability: str | None = None,
+    ) -> dict[str, Any]:
+        """检查运行环境，并复用 CLI 的结构化诊断契约。
+
+        默认只检查本地配置。显式传入 ``llm_live=True`` 才会调用一次
+        provider；``generate_adapters`` capability 同样要求 live preflight。
 
         Returns:
-            标准信封格式，data 中包含各项检查结果
+            兼容 SDK ``success/data/error`` 信封；失败时的 checks/summary
+            同时保留在 ``data`` 和 ``error.details``。
         """
-        import os
-
-        from cliany_site.explorer.engine import _load_dotenv, _normalize_openai_base_url
-
-        _load_dotenv()
-
-        checks: dict[str, Any] = {}
-        cfg = get_config()
-
-        try:
-            cdp = await self._ensure_cdp()
-            port = self._port or cfg.cdp_port
-            checks["cdp"] = "ok" if await cdp.check_available(port) else "fail"
-        except (OSError, RuntimeError, TimeoutError):
-            checks["cdp"] = "fail"
-
-        has_llm = bool(
-            os.environ.get("CLIANY_ANTHROPIC_API_KEY")
-            or os.environ.get("CLIANY_OPENAI_API_KEY")
-            or os.environ.get("ANTHROPIC_API_KEY")
-            or os.environ.get("OPENAI_API_KEY")
+        from cliany_site.commands.doctor import (
+            _CAPABILITY_CHOICES,
+            _require_capability,
+            _run_checks,
         )
-        checks["llm"] = "ok" if has_llm else "fail"
+        from cliany_site.envelope import ErrorCode
 
-        provider = os.environ.get("CLIANY_LLM_PROVIDER", "anthropic").lower()
-        checks["llm_provider"] = "ok" if provider in {"anthropic", "openai"} else "fail"
-
-        if provider == "openai":
-            base_url = os.environ.get("CLIANY_OPENAI_BASE_URL")
-            try:
-                normalized = _normalize_openai_base_url(base_url)
-                checks["openai_base_url"] = "ok" if (normalized or not base_url) else "fail"
-            except (ValueError, TypeError):
-                checks["openai_base_url"] = "fail"
-
-        checks["adapters_dir"] = "ok" if cfg.adapters_dir.exists() else "fail"
-        checks["sessions_dir"] = "ok" if cfg.sessions_dir.exists() else "fail"
-        checks["config"] = cfg.to_dict()
-
-        failed = [k for k, v in checks.items() if v == "fail"]
-        if failed:
+        if require_capability is not None and require_capability not in _CAPABILITY_CHOICES:
             return error_response(
-                "DOCTOR_ISSUES",
-                f"以下检查项失败: {', '.join(failed)}",
-                "请检查 Chrome CDP 和 LLM API key",
-            ) | {"data": checks}
+                ErrorCode.E_INVALID_PARAM,
+                "require_capability 必须是已支持的 doctor capability。",
+                "请选择 manage_adapters、run_browser_workflows 或 generate_adapters。",
+            )
+        if require_capability == "generate_adapters" and not llm_live:
+            return error_response(
+                ErrorCode.E_INVALID_PARAM,
+                "require_capability=generate_adapters 需要 llm_live=True。",
+                "请显式启用 live preflight 后重试。",
+            )
 
-        return success_response(checks)
+        cdp = await self._ensure_cdp()
+        result = await _run_checks(cdp, llm_live=llm_live, port=self._port)
+        result = _require_capability(result, require_capability)
+        if result.get("ok") is True:
+            data = result.get("data")
+            return success_response(data if isinstance(data, dict) else {})
+
+        error = result.get("error")
+        error_data: dict[str, Any] = dict(error) if isinstance(error, dict) else {}
+        details = error_data.get("details")
+        diagnostics = details if isinstance(details, dict) else {}
+        response = error_response(
+            str(error_data.get("code") or ErrorCode.E_UNKNOWN),
+            str(error_data.get("message") or "doctor 诊断失败。"),
+            str(error_data["hint"]) if isinstance(error_data.get("hint"), str) else None,
+            details=diagnostics,
+        )
+        response["data"] = diagnostics
+        return response
 
     # ── list_adapters ────────────────────────────────────
 
@@ -722,8 +722,13 @@ def doctor(
     *,
     cdp_url: str | None = None,
     headless: bool | None = None,
+    llm_live: bool = False,
+    require_capability: str | None = None,
 ) -> dict[str, Any]:
     """同步版: 检查运行环境。
+
+    默认不调用 LLM provider；传入 ``llm_live=True`` 才会执行 live
+    preflight。``generate_adapters`` capability 需要该 preflight。
 
     Returns:
         标准信封格式
@@ -731,7 +736,10 @@ def doctor(
 
     async def _inner() -> dict[str, Any]:
         async with ClanySite(cdp_url=cdp_url, headless=headless) as cs:
-            return await cs.doctor()
+            return await cs.doctor(
+                llm_live=llm_live,
+                require_capability=require_capability,
+            )
 
     return _run_async(_inner())
 

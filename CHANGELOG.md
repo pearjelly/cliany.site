@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.338] - 2026-08-27
+
+### Changed
+
+- Python SDK `doctor()` and HTTP `GET /doctor` now reuse the CLI's structured `checks` / `summary` diagnostics and stable hard-blocker error codes. Their default path remains local-only; `llm_live=true` is explicit, and a requested capability follows the same live-preflight gate as the CLI.
+
 ## [0.16.337] - 2026-08-26
 
 ### Fixed
@@ -3001,7 +3007,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.337...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.338...HEAD
+[0.16.338]: https://github.com/pearjelly/cliany.site/compare/v0.16.337...v0.16.338
 [0.16.337]: https://github.com/pearjelly/cliany.site/compare/v0.16.336...v0.16.337
 [0.16.336]: https://github.com/pearjelly/cliany.site/compare/v0.16.335...v0.16.336
 [0.16.335]: https://github.com/pearjelly/cliany.site/compare/v0.16.334...v0.16.335

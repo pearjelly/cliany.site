@@ -128,14 +128,14 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
         "--doctor-json /tmp/cliany-doctor-preflight.json"
     ) in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.337" in index
+    assert "Current baseline: v0.16.338" in index
     assert "Dependabot now groups GitHub Actions upgrades" in index
     assert "actions/setup-python@v7" in index
-    assert "当前基线：v0.16.337" in script
+    assert "当前基线：v0.16.338" in script
     assert "Dependabot 现在将 GitHub Actions 升级合并为一个可审阅提案" in script
     assert "actions/setup-python@v7" in script
-    assert 'en: "Current baseline: v0.16.337.' in script
-    assert "en: 'Current baseline: v0.16.337." not in script
+    assert 'en: "Current baseline: v0.16.338.' in script
+    assert "en: 'Current baseline: v0.16.338." not in script
     assert "adapter package is runnable" in index
     assert "adapter package 是否可运行" in script
     assert "source-safety scan" in index
@@ -159,12 +159,22 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert 'cliany-site --headless serve --port 8080' in docs
     assert 'cliany-site --cdp-url "ws://chrome:9222" serve --port 8080' in docs
     assert "GET /health" in docs
+    assert "doctor(llm_live=True, require_capability=\"generate_adapters\")" in docs
+    assert "llm_live=true" in docs
+    assert "require_capability=generate_adapters" in docs
     assert "GET /verify?domain=&lt;domain&gt;" in docs
     assert "await cs.verify(\"github.com\")" in docs
     assert "await cs.verify(\"github.com\")" in readme
     assert "await cs.verify(\"github.com\")" in readme_zh
     assert "GET /verify" in readme
     assert "GET /verify" in readme_zh
+    assert "doctor(llm_live=True, require_capability=\"generate_adapters\")" in readme
+    assert "doctor(llm_live=True, require_capability=\"generate_adapters\")" in readme_zh
+    assert "llm_live=true&require_capability=generate_adapters" in readme
+    assert "llm_live=true&require_capability=generate_adapters" in readme_zh
+    assert "doctor()</code> 现在复用 CLI 的结构化" in docs
+    assert "Python SDK and GET /doctor now reuse the CLI structured checks" in index
+    assert "Python SDK 与 GET /doctor 现在复用 CLI 的结构化 checks" in script
     assert "静态 adapter 检查，不会连接 Chrome 或 LLM" in docs
     assert '"service":"cliany-site"' in docs
     assert "liveness probe" in docs
@@ -174,7 +184,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.337 · Python" in docs
+    assert "v0.16.338 · Python" in docs
     assert "路线图版本滞后会在创建 tag 前阻断发布" in docs
     assert "scripts/capture_active_demo_evidence.py" in docs
     assert "daily_release_capacity_remaining" in script

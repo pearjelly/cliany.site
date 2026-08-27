@@ -42,7 +42,13 @@ _UNPROCESSABLE_ERROR_CODES = frozenset(
     {"NO_COOKIES", "E_EMPTY_RESULT", "E_PARSE_FAILED", "E_VERIFY_STATIC", "E_VERIFY_SMOKE"}
 )
 _UNAVAILABLE_ERROR_CODES = frozenset(
-    {"CDP_UNAVAILABLE", "LLM_UNAVAILABLE", "E_CDP_UNAVAILABLE", "E_LLM_UNAVAILABLE"}
+    {
+        "CDP_UNAVAILABLE",
+        "LLM_UNAVAILABLE",
+        "E_CDP_UNAVAILABLE",
+        "E_LLM_UNAVAILABLE",
+        "E_MISSING_CAPABILITY",
+    }
 )
 
 
@@ -119,6 +125,18 @@ class APIServer:
     def _bad_request(message: str) -> dict[str, Any]:
         return error_response("BAD_REQUEST", message)
 
+    @staticmethod
+    def _query_bool(request: Request, name: str) -> bool | None:
+        value = request.query.get(name)
+        if value is None:
+            return False
+        normalized = value.lower()
+        if normalized in {"1", "true", "yes"}:
+            return True
+        if normalized in {"0", "false", "no"}:
+            return False
+        return None
+
     @classmethod
     async def _read_json_object(cls, request: Request) -> tuple[dict[str, Any] | None, Response | None]:
         try:
@@ -139,11 +157,20 @@ class APIServer:
             }
         )
 
-    async def _handle_doctor(self, _request: Request) -> Response:
+    async def _handle_doctor(self, request: Request) -> Response:
+        llm_live = self._query_bool(request, "llm_live")
+        if llm_live is None:
+            return self._json_response(
+                self._bad_request("llm_live 查询参数必须是布尔值"),
+                status=400,
+            )
+        require_capability = request.query.get("require_capability")
         sdk = await self._get_sdk()
-        result = await sdk.doctor()
-        status = 200 if result.get("success") else 503
-        return self._json_response(result, status=status)
+        result = await sdk.doctor(
+            llm_live=llm_live,
+            require_capability=require_capability,
+        )
+        return self._json_response(result, status=self._result_status(result))
 
     async def _handle_list_adapters(self, request: Request) -> Response:
         detail = request.query.get("detail", "").lower() in ("1", "true", "yes")

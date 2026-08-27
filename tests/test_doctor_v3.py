@@ -38,6 +38,7 @@ def test_doctor_has_schema_version(tmp_home, no_llm, monkeypatch):
 
     monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
     monkeypatch.setenv("CLIANY_ANTHROPIC_API_KEY", "test")
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "anthropic")
     monkeypatch.setattr("cliany_site.commands.doctor.Path.cwd", lambda: tmp_home)
 
     runner = CliRunner()
@@ -264,6 +265,28 @@ async def test_doctor_cdp_failure_includes_must_fix_summary(tmp_home, no_llm, mo
     cdp_check = next(c for c in details["checks"] if c["name"] == "cdp")
     assert cdp_check["severity"] == "must_fix"
     assert "CDP" in cdp_check["action"]
+
+
+@pytest.mark.asyncio
+async def test_doctor_checks_custom_sdk_port(tmp_home, no_llm, monkeypatch):
+    class PortAwareCDP:
+        def __init__(self):
+            self.port: int | None = None
+
+        async def check_available(self, port: int | None = None):
+            self.port = port
+            return True
+
+    monkeypatch.setenv("CLIANY_ANTHROPIC_API_KEY", "test")
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "anthropic")
+    (tmp_home / ".cliany-site" / "adapters").mkdir(parents=True)
+    (tmp_home / ".cliany-site" / "sessions").mkdir(parents=True)
+    cdp = PortAwareCDP()
+
+    result = await _run_checks(cdp, port=9333)
+
+    assert result["ok"] is True
+    assert cdp.port == 9333
 
 
 def test_doctor_human_output_exits_nonzero_for_must_fix(tmp_home, no_llm, monkeypatch):

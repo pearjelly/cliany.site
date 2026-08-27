@@ -687,7 +687,12 @@ async def _run_llm_live_check(has_llm: bool, provider: str) -> dict[str, Any]:
         }
 
 
-async def _run_checks(cdp_conn: Any = None, *, llm_live: bool = False) -> Envelope:
+async def _run_checks(
+    cdp_conn: Any = None,
+    *,
+    llm_live: bool = False,
+    port: int | None = None,
+) -> Envelope:
     from cliany_site.browser.cdp import CDPConnection
     from cliany_site.explorer.engine import _load_dotenv, _normalize_openai_base_url
 
@@ -697,7 +702,11 @@ async def _run_checks(cdp_conn: Any = None, *, llm_live: bool = False) -> Envelo
 
     try:
         cdp = cdp_conn if cdp_conn is not None else CDPConnection()
-        cdp_available = await cdp.check_available()
+        cdp_available = (
+            await cdp.check_available(port)
+            if port is not None
+            else await cdp.check_available()
+        )
         checks.append({
             "name": "cdp",
             "status": "ok" if cdp_available else "fail",
