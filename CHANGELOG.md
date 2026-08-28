@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.339] - 2026-08-28
+
+### Fixed
+
+- Newly generated adapter commands now make root `--sandbox` effective before any atom command starts. The shared validator recognizes recorded `type` actions, checks the initial URL plus all recorded actions, and returns `E_SANDBOX_VIOLATION` rather than opening Chrome for a cross-domain or dangerous action.
+- `ClanySite.execute(..., sandbox=True)` and HTTP `POST /execute` now provide the same parameter-resolved preflight before browser startup. Invalid `sandbox` input remains a request error and a sandbox violation maps to HTTP `422`.
+
 ## [0.16.338] - 2026-08-27
 
 ### Changed
@@ -3007,7 +3014,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.338...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.339...HEAD
+[0.16.339]: https://github.com/pearjelly/cliany.site/compare/v0.16.338...v0.16.339
 [0.16.338]: https://github.com/pearjelly/cliany.site/compare/v0.16.337...v0.16.338
 [0.16.337]: https://github.com/pearjelly/cliany.site/compare/v0.16.336...v0.16.337
 [0.16.336]: https://github.com/pearjelly/cliany.site/compare/v0.16.335...v0.16.336

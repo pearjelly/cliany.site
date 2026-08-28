@@ -1,11 +1,10 @@
 # 自动生成 — DO NOT EDIT
-# pyright: reportMissingImports=false
 # 来源 URL: http://test.local/
 # 工作流: 搜索站内内容
 
 import json
 import click
-from cliany_site.codegen.runtime_helpers import execute_steps_via_atoms, diagnose_if_enabled
+from cliany_site.codegen.runtime_helpers import execute_steps_via_atoms, summarize_extract_quality, diagnose_if_enabled
 from cliany_site.envelope import ok, err, ErrorCode
 from cliany_site.action_runtime import substitute_parameters
 
@@ -45,15 +44,24 @@ def search(ctx: click.Context, json_mode: bool | None, query):
     # - [2] submit: 提交当前表单 | 提交搜索表单
     action_steps = substitute_parameters(action_steps, {'query': query})
     action_steps.extend(action_steps)
-    results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)
+    root_ctx = ctx.find_root()
+    root_obj = root_ctx.obj if isinstance(root_ctx.obj, dict) else {}
+    sandbox_enabled = bool(root_obj.get("sandbox", False))
+    if sandbox_enabled:
+        results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN, sandbox=True)
+    else:
+        results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)
     failed = next((r for r in results if not r.get("ok")), None)
+    quality = summarize_extract_quality(results, action_steps)
     if _resolve_json_mode(json_mode):
         click.echo(json.dumps({
             "ok": failed is None,
-            "data": {"results": results, "command": "search", "args": {'query': query}},
+            "data": {"results": results, "quality": quality, "command": "search", "args": {'query': query}, "expects_nonempty": True},
             "error": (failed or {}).get("error"),
             "meta": {"source": "adapter"},
         }, ensure_ascii=False))
+        if failed is not None:
+            ctx.exit(1)
     elif failed is None:
         click.echo("✓ search 完成")
     else:

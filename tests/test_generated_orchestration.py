@@ -61,7 +61,9 @@ class TestGeneratedNoCdpImport:
     def test_execute_steps_via_atoms_called(self):
         gen = AdapterGenerator(domain="example.com")
         code = gen.generate(_simple_result(), "example.com")
-        assert "execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)" in code
+        assert 'sandbox_enabled = bool(root_obj.get("sandbox", False))' in code
+        assert "execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN, sandbox=True)" in code
+        assert "results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)" in code
 
     def test_generated_json_payload_includes_quality_summary(self):
         gen = AdapterGenerator(domain="example.com")

@@ -47,3 +47,21 @@ def test_execute_steps_routes_submit_without_a_target_to_enter(monkeypatch):
     )
 
     assert calls == [["browser", "submit"]]
+
+
+def test_execute_steps_sandbox_blocks_cross_domain_before_atoms(monkeypatch):
+    def unexpected_atom(*_args, **_kwargs):
+        raise AssertionError("sandbox preflight must run before atoms")
+
+    monkeypatch.setattr(runtime_helpers, "run_atom", unexpected_atom)
+
+    results = runtime_helpers.execute_steps_via_atoms(
+        [{"type": "navigate", "url": "https://evil.example/path"}],
+        source_url="https://example.test",
+        domain="example.test",
+        sandbox=True,
+    )
+
+    assert results[0]["ok"] is False
+    assert results[0]["error"]["code"] == "E_SANDBOX_VIOLATION"
+    assert results[0]["error"]["details"]["action"] == "navigate"

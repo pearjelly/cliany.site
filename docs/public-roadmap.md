@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-08-27
-- **Current baseline:** v0.16.338
+- **Updated:** 2026-08-28
+- **Current baseline:** v0.16.339
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -38,6 +38,8 @@ As of v0.16.336, ordinary `doctor --json` returns an existing stable error code,
 As of v0.16.337, strict release readiness checks that both roadmap views declare the package's exact version before a tag can be created. This keeps contributor-facing plans and the published package aligned; it does not establish browser, LLM, candidate adapter, or third-party workflow readiness.
 
 As of v0.16.338, Python SDK `doctor()` and HTTP `GET /doctor` reuse the CLI's structured checks, summary, and stable hard-blocker diagnostics. Default calls remain local-only; an explicit live preflight and requested capability follow the existing provider gate, so this does not establish live LLM, candidate adapter, browser, or third-party workflow readiness.
+
+As of v0.16.339, newly generated adapter commands make root `--sandbox` effective before any atom command starts. SDK `execute(..., sandbox=True)` and HTTP `POST /execute` use the same parameter-resolved local policy, returning `E_SANDBOX_VIOLATION` / `422` for a rejected action before Chrome starts. This does not establish Chrome, LLM, candidate adapter, or third-party workflow readiness.
 
 As of v0.16.301, invoking a discovered current-schema adapter that cannot register no longer looks like an unknown command. The root CLI returns structured `E_VERIFY_STATIC` details and points to `cliany-site verify <domain> --strict --json`; this is a local static diagnosis, not proof that a browser, site workflow, or LLM provider is ready.
 

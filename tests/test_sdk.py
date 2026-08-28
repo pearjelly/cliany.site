@@ -852,6 +852,28 @@ class TestSDKExecute:
             assert call_kwargs.kwargs.get("dry_run") is True
 
     @pytest.mark.asyncio
+    async def test_execute_sandbox_blocks_cross_domain_before_browser(self, tmp_path):
+        from cliany_site.sdk import ClanySite
+
+        cfg = _make_config(tmp_path)
+        adapter_dir = _create_adapter_with_actions(tmp_path)
+        metadata_path = adapter_dir / "metadata.json"
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        metadata["command_defs"][0]["actions"][0]["url"] = "https://evil.example/path"
+        metadata_path.write_text(json.dumps(metadata), encoding="utf-8")
+
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch.object(ClanySite, "_ensure_browser_session", new_callable=AsyncMock) as ensure_browser,
+        ):
+            result = await ClanySite().execute("test.com", "search", sandbox=True)
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_SANDBOX_VIOLATION"
+        assert result["error"]["details"]["action"] == "navigate"
+        ensure_browser.assert_not_awaited()
+
+    @pytest.mark.asyncio
     async def test_execute_failure(self, tmp_path):
         from cliany_site.sdk import ClanySite
 
@@ -1574,6 +1596,59 @@ class TestAPIServer:
             assert resp.status == 200
             data = await resp.json()
             assert data["success"] is True
+        mock_sdk.execute.assert_awaited_once_with(
+            "test.com", "search", params=None, dry_run=False, sandbox=False
+        )
+
+    @pytest.mark.asyncio
+    async def test_execute_rejects_non_boolean_sandbox_without_calling_sdk(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        mock_sdk = AsyncMock()
+        server._sdk = mock_sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.post(
+                "/execute", json={"domain": "test.com", "command": "search", "sandbox": "true"}
+            )
+            assert resp.status == 400
+            data = await resp.json()
+            assert data["error"]["code"] == "BAD_REQUEST"
+            assert "sandbox" in data["error"]["message"]
+        mock_sdk.execute.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_execute_sandbox_violation_is_unprocessable(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        mock_sdk = AsyncMock()
+        mock_sdk.execute = AsyncMock(
+            return_value={
+                "success": False,
+                "data": None,
+                "error": {"code": "E_SANDBOX_VIOLATION", "message": "沙箱阻止执行"},
+            }
+        )
+        server._sdk = mock_sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.post(
+                "/execute", json={"domain": "test.com", "command": "search", "sandbox": True}
+            )
+            assert resp.status == 422
+            data = await resp.json()
+            assert data["error"]["code"] == "E_SANDBOX_VIOLATION"
+        mock_sdk.execute.assert_awaited_once_with(
+            "test.com", "search", params=None, dry_run=False, sandbox=True
+        )
 
     @pytest.mark.asyncio
     async def test_execute_missing_adapter_is_not_found(self):

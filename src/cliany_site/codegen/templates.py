@@ -782,7 +782,13 @@ def render_command_block_v2(
 def {function_name}({function_signature}):
     """{description}"""
 {execution_blocks}
-    results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)
+    root_ctx = ctx.find_root()
+    root_obj = root_ctx.obj if isinstance(root_ctx.obj, dict) else {{}}
+    sandbox_enabled = bool(root_obj.get("sandbox", False))
+    if sandbox_enabled:
+        results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN, sandbox=True)
+    else:
+        results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)
     failed = next((r for r in results if not r.get("ok")), None)
     quality = summarize_extract_quality(results, action_steps)
 {empty_result_check}    if _resolve_json_mode(json_mode):
@@ -811,7 +817,13 @@ def render_empty_command_block_v2() -> str:
 def run_workflow(ctx: click.Context, json_mode: bool | None):
     """执行默认工作流"""
     action_steps = []
-    results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)
+    root_ctx = ctx.find_root()
+    root_obj = root_ctx.obj if isinstance(root_ctx.obj, dict) else {}
+    sandbox_enabled = bool(root_obj.get("sandbox", False))
+    if sandbox_enabled:
+        results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN, sandbox=True)
+    else:
+        results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)
     failed = next((r for r in results if not r.get("ok")), None)
     quality = summarize_extract_quality(results, action_steps)
     if _resolve_json_mode(json_mode):

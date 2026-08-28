@@ -189,6 +189,11 @@ class TestValidateAction:
         with pytest.raises(SandboxViolation):
             validate_action({"action": "navigate", "url": "https://evil.com"}, policy)
 
+    def test_runtime_type_navigate_cross_domain_blocked(self) -> None:
+        policy = SandboxPolicy.from_domain("github.com")
+        with pytest.raises(SandboxViolation):
+            validate_action({"type": "navigate", "url": "https://evil.com"}, policy)
+
     def test_evaluate_js_blocked(self) -> None:
         policy = SandboxPolicy.from_domain("test.com")
         with pytest.raises(SandboxViolation, match="JavaScript"):

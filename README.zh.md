@@ -60,7 +60,7 @@ cliany-site cases
 - **YAML 工作流编排** — 声明式多步骤工作流，步骤间数据传递 + 条件判断 + 重试策略
 - **数据驱动批量执行** — CSV/JSON 批量参数，并发控制，汇总报告
 - **Session 加密存储** — Fernet 对称加密 + 系统 Keychain 密钥管理
-- **沙箱执行模式** — `--sandbox` 限制跨域导航和危险操作；当前优先作用于 CLI adapter 执行路径
+- **沙箱执行模式** — `--sandbox` 会在 atom 执行前预检新生成 adapter 的动作；SDK 与 HTTP 调用方也可显式使用同一条本地边界
 - **生成代码安全审计** — AST 静态分析检测 eval/exec/os.system 等危险模式
 
 ### 生态集成
@@ -350,6 +350,10 @@ cliany-site builds.apache.org list-jobs --json
 
 ### HTTP API
 
+#### 沙箱预检
+
+新生成 adapter 的命令会在任何 atom 子命令启动前兑现根 `--sandbox`。SDK 可调用 `execute(domain, command, sandbox=True)`，HTTP `POST /execute` 接受布尔字段 `sandbox`。参数替换后的动作会在 Chrome 启动前做本地检查；跨域导航、危险 URL scheme、JavaScript 执行或下载返回 `E_SANDBOX_VIOLATION` / `422`。这条本地结果不代表 Chrome、LLM 或第三方工作流已就绪。
+
 ```bash
 # 使用默认 Chrome 连接启动本地 API 服务
 cliany-site serve --port 8080
@@ -487,7 +491,7 @@ cliany-site/src/cliany_site/
 ## 安全特性
 
 - **Session 加密**：Fernet 对称加密，密钥存入系统 Keychain（macOS Keychain / Linux Secret Service），无 Keychain 时降级为文件密钥
-- **沙箱模式**：`--sandbox` 限制 navigate 同域、禁止 `javascript:` / `file://` / `data:` URL、禁止文件下载；本轮闭环优先覆盖 CLI adapter 执行路径
+- **沙箱模式**：对新生成 adapter，根 `--sandbox` 会在 atom 执行前预检初始 URL 与录制动作。SDK `execute(..., sandbox=True)` 和 HTTP `POST /execute` 的 `"sandbox": true` 使用相同边界；违反策略会在 Chrome 启动前返回 `E_SANDBOX_VIOLATION`
 - **代码审计**：codegen 输出自动 AST 扫描，检测 `eval` / `exec` / `os.system` / `subprocess` 等危险调用
 
 ## 路线图 / Roadmap

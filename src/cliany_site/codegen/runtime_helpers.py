@@ -52,7 +52,34 @@ def execute_steps_via_atoms(
     action_steps: list[dict[str, Any]],
     source_url: str,
     domain: str,
+    *,
+    sandbox: bool = False,
 ) -> list[Envelope]:
+    if sandbox:
+        from cliany_site.envelope import ErrorCode
+        from cliany_site.envelope import err as _err
+        from cliany_site.sandbox import SandboxPolicy, validate_action_steps
+
+        policy = SandboxPolicy.from_domain(domain)
+        source_violations = (
+            validate_action_steps([{"type": "navigate", "url": source_url}], policy)
+            if source_url
+            else []
+        )
+        violations = source_violations or validate_action_steps(action_steps, policy)
+        if violations:
+            first = violations[0]
+            return [
+                _err(
+                    command=f"adapter {domain}",
+                    code=ErrorCode.E_SANDBOX_VIOLATION,
+                    message=f"沙箱阻止执行: 第 {first['index']} 步 {first['action'] or 'unknown'}",
+                    hint=first.get("error") or "关闭 --sandbox 或重新 explore 以调整动作路径",
+                    details={"domain": domain, **first},
+                    source="adapter",
+                )
+            ]
+
     results: list[Envelope] = []
 
     if source_url:

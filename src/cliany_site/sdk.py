@@ -216,6 +216,7 @@ class ClanySite:
         *,
         params: dict[str, Any] | None = None,
         dry_run: bool = False,
+        sandbox: bool = False,
     ) -> dict[str, Any]:
         """执行指定域名 adapter 中的命令。
 
@@ -224,6 +225,7 @@ class ClanySite:
             command: 命令名称（如 ``search``）
             params: 命令参数字典
             dry_run: 是否仅验证而不真正执行
+            sandbox: 是否在连接浏览器前限制跨域导航和危险操作
 
         Returns:
             标准信封格式
@@ -327,6 +329,22 @@ class ClanySite:
                 EXECUTION_FAILED,
                 f"命令 '{command}' 没有录制的操作步骤",
             )
+
+        from cliany_site.action_runtime import substitute_parameters
+
+        effective_actions = substitute_parameters(actions_data, params or {})
+        if sandbox:
+            from cliany_site.sandbox import SandboxPolicy, validate_action_steps
+
+            violations = validate_action_steps(effective_actions, SandboxPolicy.from_domain(domain))
+            if violations:
+                first = violations[0]
+                return error_response(
+                    "E_SANDBOX_VIOLATION",
+                    f"沙箱阻止执行: 第 {first['index']} 步 {first['action'] or 'unknown'}",
+                    first.get("error") or "关闭 sandbox 或重新 explore 以调整动作路径",
+                    details={"domain": domain, **first},
+                )
 
         browser_session = await self._ensure_browser_session()
 

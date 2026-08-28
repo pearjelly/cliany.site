@@ -1,9 +1,9 @@
 # cliany-site 2026 Q3 路线图
 
 - **制定日期：** 2026-06-10
-- **校准日期：** 2026-08-27
-- **基线版本：** v0.16.338
-- **目标周期：** 滚动维护（2026-08-27 起）
+- **校准日期：** 2026-08-28
+- **基线版本：** v0.16.339
+- **目标周期：** 滚动维护（2026-08-28 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
 
@@ -13,7 +13,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 已完成校准
 
-2026-06-10 的原始路线图以 v0.14.2 为基线；当前公开基线为 v0.16.338。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
+2026-06-10 的原始路线图以 v0.14.2 为基线；当前公开基线为 v0.16.339。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
 
 - 首次成功路径：README、README.zh、官网和 `doctor` 输出已经围绕 10 分钟路径、真实 demo、LLM live preflight 和可执行下一步重新组织。
 - 真实案例库：`cliany-site cases` 已成为案例发现、单案例展开、issue template、evidence bundle 和 promotion plan 的统一入口。
@@ -40,6 +40,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 - Active case 首跑引导：人类 `cliany-site cases --status active` 现在按固定 SHA-256 HTTPS 安装、`verify --strict`、仅案例声明的登录、只读命令输出每个 active case 的顺序；它只给出可审阅指引，不会自动安装、登录、执行或覆盖，也不把目录占用当作健康证据。
 - SDK/API 静态前置诊断：`ClanySite.execute()` 与 `POST /execute` 现在会在启动浏览器前拒绝不安全的 adapter 目录名、错误 metadata、缺失/不可加载/禁止模式/非 UTF-8 的 `commands.py`；参数错误保持 `E_INVALID_PARAM` / HTTP `400`，静态 adapter 错误保持 `E_VERIFY_STATIC` / HTTP `422`，不把本地诊断当作浏览器、LLM 或第三方工作流成功。
 - SDK/API 预检入口：Python 可通过异步 `ClanySite.verify(domain)` 或同步 `verify(domain)`，服务可通过 `GET /verify?domain=<domain>` 获得与 CLI `verify --strict` 对齐的本地诊断，而不先启动浏览器或联系 LLM。该入口保持无效输入 `400`、未安装 adapter `404`、静态失败 `422` 的边界，并在导入 `commands.py` 前执行禁止模式和 UTF-8 检查。
+- Sandbox 执行边界：新生成 adapter 的根 `--sandbox` 会在 atom 子命令开始前预检初始 URL 与录制动作；SDK `execute(..., sandbox=True)` 和 HTTP `POST /execute` 使用相同的参数替换后策略。违反策略返回本地 `E_SANDBOX_VIOLATION` / HTTP `422`，不启动 Chrome，也不构成页面、LLM 或第三方成功证据。
 - Adapter 文件边界：严格 verify、根 CLI 和 SDK/API 的运行前预检会在读取或导入前拒绝符号链接 adapter 目录、核心文件和 manifest 声明文件，以 `security_issue` / `E_VERIFY_STATIC` 明确本地安装需重装，不把目录外内容误作已验证 adapter。根 CLI、`execute` 与 `POST /execute` 也会在导入命令或启动浏览器前执行同一生成模块源码扫描，拒绝禁用模式和非 UTF-8 内容；存在 manifest 时再复用 manifest 完整性检查，拒绝声明文件符号链接和哈希不匹配。
 - Live explore 机器门禁：`doctor --json` 保留 `ready_for_explore` 的本地配置兼容语义，同时新增 `ready_for_live_explore` 与 `capabilities.generate_adapters.ready_for_live_explore`。只有严格 `--llm-live --require-capability generate_adapters` 成功后它们才为真，自动化不会把配置存在或 CDP 可用误作 provider 已连通。
 
@@ -66,7 +67,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 | adapter 可维护性 | metadata/package 校验和安全审计已进入门禁 | demo adapter 有 release asset、安装验证、回归报告和失败修复建议 |
 | 探索/抽取可靠性 | LLM outage 和抽取质量已有结构化信号 | 常见失败能定位到 provider、页面状态、selector、字段质量或能力边界 |
 | 集成可用性 | CLI 主路径强，SDK/API/headless 示例偏弱 | SDK、HTTP API、headless/remote CDP 均有可复制最小示例 |
-| 发布节奏 | v0.16.338，GitHub Release / PyPI / 官网发布流程已跑通，PyPI latest 缓存滞后可由版本专属 endpoint 复核，官网 alias 由 `vercel inspect www.cliany.site` 复核，primary adapter handoff command aliases 与 doctor preflight evidence state 已进入维护者路径 | 每天 1~3 个可验证版本；每周至少 3 天有提交；发布后 publication audit 为绿 |
+| 发布节奏 | v0.16.339，GitHub Release / PyPI / 官网发布流程已跑通，PyPI latest 缓存滞后可由版本专属 endpoint 复核，官网 alias 由 `vercel inspect www.cliany.site` 复核，primary adapter handoff command aliases 与 doctor preflight evidence state 已进入维护者路径 | 每天 1~3 个可验证版本；每周至少 3 天有提交；发布后 publication audit 为绿 |
 
 ## 双视图维护规则
 

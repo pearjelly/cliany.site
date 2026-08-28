@@ -60,7 +60,7 @@ cliany-site cases
 - **YAML Workflow Orchestration** — Declarative multi-step workflows with data passing, conditional logic, and retry strategies.
 - **Data-Driven Batch Execution** — CSV/JSON batch parameters with concurrency control and summary reports.
 - **Encrypted Session Storage** — Fernet symmetric encryption with system Keychain integration for key management.
-- **Sandbox Execution Mode** — `--sandbox` limits cross-origin navigation and dangerous operations, currently prioritized for CLI adapter paths.
+- **Sandbox Execution Mode** — `--sandbox` preflights generated adapter actions before atom execution; SDK and HTTP callers can opt in to the same local boundary.
 - **Generated Code Security Audit** — AST static analysis detects dangerous patterns like eval/exec/os.system.
 
 ### Ecosystem Integration
@@ -365,6 +365,10 @@ cliany-site builds.apache.org list-jobs --json
 
 ### HTTP API
 
+#### Sandbox preflight
+
+Newly generated adapter commands honor root `--sandbox` before any atom command starts. SDK callers can use `execute(domain, command, sandbox=True)`, while `POST /execute` accepts a boolean `sandbox` field. The parameter-resolved action list is checked locally before Chrome starts. Cross-domain navigation, dangerous URL schemes, JavaScript execution, and downloads return `E_SANDBOX_VIOLATION` / `422`; this local result does not prove Chrome, LLM, or third-party workflow readiness.
+
 ```bash
 # Start a local API server with the default Chrome connection
 cliany-site serve --port 8080
@@ -503,7 +507,7 @@ cliany-site/src/cliany_site/
 ## Security Features
 
 - **Session Encryption**: Fernet symmetric encryption with keys stored in system Keychain (macOS Keychain / Linux Secret Service); falls back to file keys if Keychain is unavailable.
-- **Sandbox Mode**: `--sandbox` limits navigation to the same origin, forbids `javascript:` / `file://` / `data:` URLs, and prevents file downloads.
+- **Sandbox Mode**: For newly generated adapters, root `--sandbox` preflights the initial URL and recorded actions before atom execution. SDK `execute(..., sandbox=True)` and HTTP `POST /execute` with `"sandbox": true` use the same boundary; violations return `E_SANDBOX_VIOLATION` before Chrome starts.
 - **Code Audit**: Automatic AST scanning of codegen output to detect dangerous calls like `eval` / `exec`.
 
 ## Roadmap

@@ -77,7 +77,7 @@ def validate_action(action: dict[str, Any], policy: SandboxPolicy) -> None:
     if not policy.enabled:
         return
 
-    action_type = str(action.get("action", "")).lower()
+    action_type = str(action.get("type") or action.get("action") or "").lower()
 
     if action_type == "navigate":
         url = str(action.get("url", ""))
@@ -101,7 +101,8 @@ def validate_action_steps(
         try:
             validate_action(step, policy)
         except SandboxViolation as exc:
-            violations.append({"index": str(i), "action": str(step.get("action", "")), "error": str(exc)})
+            action_type = str(step.get("type") or step.get("action") or "")
+            violations.append({"index": str(i), "action": action_type, "error": str(exc)})
     return violations
 
 

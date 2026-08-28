@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 _NOT_FOUND_ERROR_CODES = frozenset({"ADAPTER_NOT_FOUND", "COMMAND_NOT_FOUND"})
 _BAD_REQUEST_ERROR_CODES = frozenset({"BAD_REQUEST", "E_INVALID_PARAM", "INVALID_URL"})
 _UNPROCESSABLE_ERROR_CODES = frozenset(
-    {"NO_COOKIES", "E_EMPTY_RESULT", "E_PARSE_FAILED", "E_VERIFY_STATIC", "E_VERIFY_SMOKE"}
+    {"NO_COOKIES", "E_EMPTY_RESULT", "E_PARSE_FAILED", "E_VERIFY_STATIC", "E_VERIFY_SMOKE", "E_SANDBOX_VIOLATION"}
 )
 _UNAVAILABLE_ERROR_CODES = frozenset(
     {
@@ -221,8 +221,11 @@ class APIServer:
         dry_run = body.get("dry_run", False)
         if not isinstance(dry_run, bool):
             return self._json_response(self._bad_request("dry_run 字段必须是布尔值"), status=400)
+        sandbox = body.get("sandbox", False)
+        if not isinstance(sandbox, bool):
+            return self._json_response(self._bad_request("sandbox 字段必须是布尔值"), status=400)
         sdk = await self._get_sdk()
-        result = await sdk.execute(domain, command, params=params, dry_run=dry_run)
+        result = await sdk.execute(domain, command, params=params, dry_run=dry_run, sandbox=sandbox)
         return self._json_response(result, status=self._result_status(result))
 
     async def _handle_login(self, request: Request) -> Response:
