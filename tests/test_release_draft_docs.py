@@ -13375,3 +13375,40 @@ def test_v016338_release_draft_prepares_sdk_and_http_doctor_contract() -> None:
         "live LLM success",
     ]:
         assert snippet in notes
+
+
+def test_v016342_release_draft_prepares_strict_adapters_detail_query() -> None:
+    draft = (ROOT / "docs" / "releases" / "v0.16.342-draft.md").read_text(
+        encoding="utf-8"
+    )
+    notes = (ROOT / "docs" / "releases" / "v0.16.342-github-release.md").read_text(
+        encoding="utf-8"
+    )
+
+    for snippet in [
+        "# v0.16.342 发布草案",
+        "**目标版本：** `0.16.342`",
+        "**提交范围：** `v0.16.341..HEAD`",
+        "**提交范围：** `v0.16.342..HEAD`",
+        "GET /adapters?detail=",
+        "BAD_REQUEST",
+        "E_LLM_UNAVAILABLE",
+        "不运行 candidate `explore`",
+        "release_readiness.py --strict --target-version 0.16.342 --remote",
+        "git tag v0.16.342",
+        "release_readiness.py --strict --release-tag v0.16.342 --remote --remote-name origin",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.342",
+        "GET /adapters?detail=",
+        "BAD_REQUEST",
+        "HTTP `400`",
+        "## Compatibility",
+        "## Trust Boundaries",
+        "candidate adapter package",
+        "live LLM",
+    ]:
+        assert snippet in notes

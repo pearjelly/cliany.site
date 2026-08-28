@@ -1900,6 +1900,46 @@ class TestAPIServer:
                 assert isinstance(data["data"]["adapters"], list)
 
     @pytest.mark.asyncio
+    async def test_adapters_endpoint_rejects_invalid_detail_query_without_calling_sdk(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        sdk = AsyncMock()
+        server._sdk = sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.get("/adapters?detail=maybe")
+            data = await resp.json()
+
+        assert resp.status == 400
+        assert data["error"]["code"] == "BAD_REQUEST"
+        sdk.list_adapters.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("detail", ["false", "0", "no"])
+    async def test_adapters_endpoint_accepts_false_detail_aliases(self, detail):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        sdk = AsyncMock()
+        sdk.list_adapters.return_value = {"success": True, "data": {"adapters": []}, "error": None}
+        server._sdk = sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.get(f"/adapters?detail={detail}")
+            data = await resp.json()
+
+        assert resp.status == 200
+        assert data["success"] is True
+        sdk.list_adapters.assert_awaited_once_with(detail=False)
+
+    @pytest.mark.asyncio
     async def test_cleanup(self):
         from cliany_site.server import APIServer
 

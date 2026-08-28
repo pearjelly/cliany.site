@@ -173,7 +173,12 @@ class APIServer:
         return self._json_response(result, status=self._result_status(result))
 
     async def _handle_list_adapters(self, request: Request) -> Response:
-        detail = request.query.get("detail", "").lower() in ("1", "true", "yes")
+        detail = self._query_bool(request, "detail")
+        if detail is None:
+            return self._json_response(
+                self._bad_request("detail 查询参数必须是布尔值"),
+                status=400,
+            )
         sdk = await self._get_sdk()
         result = await sdk.list_adapters(detail=detail)
         return self._json_response(result)

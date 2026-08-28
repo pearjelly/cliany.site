@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `GET /adapters?detail=` now validates the same boolean spellings as `GET /doctor?llm_live=`. Invalid values return `BAD_REQUEST` / HTTP `400` instead of silently returning the compact adapter list.
+
 ## [0.16.341] - 2026-08-28
 
 ### Fixed

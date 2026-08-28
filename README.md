@@ -386,13 +386,15 @@ curl -i http://localhost:8080/doctor
 # Optional live provider preflight for automation before explore
 curl -i "http://localhost:8080/doctor?llm_live=true&require_capability=generate_adapters"
 curl -i http://localhost:8080/adapters
+# Include adapter metadata when it is needed by an integration
+curl -i "http://localhost:8080/adapters?detail=true"
 curl -i "http://localhost:8080/verify?domain=github.com"
 curl -X POST http://localhost:8080/explore \
   -H "Content-Type: application/json" \
   -d '{"url": "https://github.com", "workflow": "搜索仓库"}'
 ```
 
-`GET /health` confirms that the HTTP service is reachable and returns its service name plus installed package version. It is a liveness probe, not proof that CDP or an LLM provider is ready; `GET /doctor` returns the same structured checks, summary, stable hard-blocker codes, and repair guidance as the CLI. It does not contact the provider unless `llm_live=true` is explicit; `require_capability=generate_adapters` requires that flag. Invalid boolean input returns `400`, while unavailable Chrome, LLM, or a required capability returns `503`. Choose exactly one browser path: `--headless` starts Chrome for this process, while `--cdp-url` connects to an existing remote Chrome. Do not place either option after `serve`.
+`GET /health` confirms that the HTTP service is reachable and returns its service name plus installed package version. It is a liveness probe, not proof that CDP or an LLM provider is ready; `GET /doctor` returns the same structured checks, summary, stable hard-blocker codes, and repair guidance as the CLI. It does not contact the provider unless `llm_live=true` is explicit; `require_capability=generate_adapters` requires that flag. `GET /adapters?detail=true` includes adapter metadata. Both `llm_live` and `detail` accept only `true`/`false`, `1`/`0`, or `yes`/`no`; invalid boolean input returns `400` instead of silently changing the response shape. Unavailable Chrome, LLM, or a required capability returns `503`. Choose exactly one browser path: `--headless` starts Chrome for this process, while `--cdp-url` connects to an existing remote Chrome. Do not place either option after `serve`.
 
 `GET /verify` requires one safe `domain` query parameter and runs the strict static adapter checks without connecting to Chrome or an LLM. Invalid directory names return `E_INVALID_PARAM` / `400`; missing adapters return `404`; and an installed adapter with unsafe, missing, unreadable, unloadable, or symbolic-link core files returns `E_VERIFY_STATIC` / `422` with the `cliany-site verify <domain> --strict --json` repair path. Before browser startup, `POST /execute` applies the same local static contract: it rejects a symbolic-link adapter directory, metadata, command module, or manifest before reading or importing it, and a present manifest must have ordinary declared files with matching hashes. This does not prove Chrome, LLM, or third-party workflow readiness. Mutating endpoints accept JSON objects only: `params` must be an object, and `force` / `dry_run` must be booleans, so strings such as `"false"` never turn on an overwrite. Other responses preserve the SDK envelope: `503` for unavailable Chrome or LLM dependencies, and `500` for an unexpected server failure.
 

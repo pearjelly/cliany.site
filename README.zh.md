@@ -371,13 +371,15 @@ curl -i http://localhost:8080/doctor
 # 自动化在 explore 前可显式运行 live provider 预检
 curl -i "http://localhost:8080/doctor?llm_live=true&require_capability=generate_adapters"
 curl -i http://localhost:8080/adapters
+# 集成需要 adapter 元数据时显式请求 detail
+curl -i "http://localhost:8080/adapters?detail=true"
 curl -i "http://localhost:8080/verify?domain=github.com"
 curl -X POST http://localhost:8080/explore \
   -H "Content-Type: application/json" \
   -d '{"url": "https://github.com", "workflow": "搜索仓库"}'
 ```
 
-`GET /health` 用于确认 HTTP 服务可访问，并返回服务名和已安装包版本。它只是 liveness probe，不代表 CDP 或 LLM provider 已就绪；`GET /doctor` 会返回与 CLI 相同的结构化 checks、summary、稳定硬阻塞错误码和修复建议。默认不会联系 provider，只有显式 `llm_live=true` 才会调用；`require_capability=generate_adapters` 必须同时使用该参数。非法布尔值返回 `400`，Chrome、LLM 或指定能力暂不可用时返回 `503`。浏览器路径三选一：`--headless` 为当前服务启动 Chrome，`--cdp-url` 连接已有远程 Chrome；两者都是全局选项，不能写在 `serve` 之后。
+`GET /health` 用于确认 HTTP 服务可访问，并返回服务名和已安装包版本。它只是 liveness probe，不代表 CDP 或 LLM provider 已就绪；`GET /doctor` 会返回与 CLI 相同的结构化 checks、summary、稳定硬阻塞错误码和修复建议。默认不会联系 provider，只有显式 `llm_live=true` 才会调用；`require_capability=generate_adapters` 必须同时使用该参数。`GET /adapters?detail=true` 会返回 adapter 元数据。`llm_live` 与 `detail` 只接受 `true`/`false`、`1`/`0` 或 `yes`/`no`；非法布尔值返回 `400`，不会静默改变响应形状。Chrome、LLM 或指定能力暂不可用时返回 `503`。浏览器路径三选一：`--headless` 为当前服务启动 Chrome，`--cdp-url` 连接已有远程 Chrome；两者都是全局选项，不能写在 `serve` 之后。
 
 `GET /verify` 必须提供一个安全的 `domain` 查询参数，并且只运行严格静态 adapter 检查，不会连接 Chrome 或 LLM。无效目录名返回 `E_INVALID_PARAM` / `400`；不存在的 adapter 返回 `404`；已安装但不安全、缺失、无法读取、无法加载或核心文件为符号链接的 adapter 返回 `E_VERIFY_STATIC` / `422`，应先运行 `cliany-site verify <domain> --strict --json` 修复。`POST /execute` 在启动浏览器前使用同一套本地静态契约：它会在读取或导入前拒绝符号链接 adapter 目录、metadata、命令模块或 manifest；若 manifest 存在，其声明文件必须是普通文件且哈希匹配。这不代表 Chrome、LLM 或第三方工作流已经就绪。写操作端点只接受 JSON 对象：`params` 必须是对象，`force` / `dry_run` 必须是布尔值，因此字符串 `"false"` 不会意外开启覆盖。其他响应保留 SDK 信封：`503` 表示 Chrome 或 LLM 依赖暂不可用，`500` 表示意外的服务端失败。
 

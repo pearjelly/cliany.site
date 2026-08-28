@@ -246,7 +246,7 @@ cliany-site --cdp-url "ws://chrome:9222" serve --port 8080</code></pre>
           <tr><th>端点</th><th>方法</th><th>说明</th></tr>
           <tr><td><code>GET /health</code></td><td>GET</td><td>确认服务可访问并返回已安装版本</td></tr>
           <tr><td><code>GET /doctor</code></td><td>GET</td><td>与 CLI 对齐的结构化环境诊断；可显式执行 live preflight</td></tr>
-          <tr><td><code>GET /adapters</code></td><td>GET</td><td>列出适配器</td></tr>
+          <tr><td><code>GET /adapters?detail=true</code></td><td>GET</td><td>列出适配器；可显式包含元数据</td></tr>
           <tr><td><code>GET /verify?domain=&lt;domain&gt;</code></td><td>GET</td><td>严格静态验证已安装 adapter，不连接 Chrome</td></tr>
           <tr><td><code>POST /explore</code></td><td>POST</td><td>探索工作流</td></tr>
           <tr><td><code>POST /execute</code></td><td>POST</td><td>执行适配器命令</td></tr>
@@ -256,11 +256,12 @@ cliany-site --cdp-url "ws://chrome:9222" serve --port 8080</code></pre>
 # {"status":"ok","service":"cliany-site","version":"&lt;installed-version&gt;"}
 curl -i http://localhost:8080/doctor
 curl -i "http://localhost:8080/doctor?llm_live=true&amp;require_capability=generate_adapters"
+curl -i "http://localhost:8080/adapters?detail=true"
 curl -i "http://localhost:8080/verify?domain=github.com"
 curl -X POST http://localhost:8080/explore \
   -H "Content-Type: application/json" \
   -d '{"url": "https://github.com", "workflow": "搜索仓库"}'</code></pre>
-        <p><code>GET /health</code> 是 liveness probe：它确认 HTTP 服务可访问，并返回服务名和已安装版本；它不代表 Chrome/CDP 或 LLM provider 已就绪，请使用 <code>GET /doctor</code> 查看这些诊断。该端点返回与 CLI 一致的 <code>checks</code>、<code>summary</code>、稳定硬阻塞错误码和修复建议；默认不会调用 provider，只有显式 <code>llm_live=true</code> 才会执行 live preflight，<code>require_capability=generate_adapters</code> 必须同时使用它。非法布尔值返回 <code>400</code>，Chrome、LLM 或指定能力暂不可用时返回 <code>503</code>。<code>GET /verify</code> 必须提供安全的 <code>domain</code> 查询参数，只运行静态 adapter 检查，不会连接 Chrome 或 LLM；无效目录名返回 <code>E_INVALID_PARAM</code> / <code>400</code>，已安装但不可安全加载或核心文件为符号链接的 adapter 返回 <code>E_VERIFY_STATIC</code> / <code>422</code>。<code>POST /execute</code> 在启动浏览器前使用同一套本地静态契约：它会在读取或导入前拒绝符号链接目录、metadata、命令模块或 manifest；若 manifest 存在，其声明文件必须是普通文件且哈希匹配，不会先启动浏览器。其他响应保留 SDK 信封：<code>404</code> 表示 adapter 或命令不存在，<code>503</code> 表示 Chrome 或 LLM 依赖暂不可用，<code>500</code> 表示意外服务端失败。写操作端点只接受 JSON 对象；<code>params</code> 必须是对象，<code>force</code> / <code>dry_run</code> 必须是布尔值。</p>
+        <p><code>GET /health</code> 是 liveness probe：它确认 HTTP 服务可访问，并返回服务名和已安装版本；它不代表 Chrome/CDP 或 LLM provider 已就绪，请使用 <code>GET /doctor</code> 查看这些诊断。<code>GET /adapters?detail=true</code> 可显式请求 adapter 元数据。<code>llm_live</code> 与 <code>detail</code> 只接受 <code>true</code>/<code>false</code>、<code>1</code>/<code>0</code> 或 <code>yes</code>/<code>no</code>；非法布尔值返回 <code>400</code>，不会静默改变响应形状。该端点返回与 CLI 一致的 <code>checks</code>、<code>summary</code>、稳定硬阻塞错误码和修复建议；默认不会调用 provider，只有显式 <code>llm_live=true</code> 才会执行 live preflight，<code>require_capability=generate_adapters</code> 必须同时使用它。Chrome、LLM 或指定能力暂不可用时返回 <code>503</code>。<code>GET /verify</code> 必须提供安全的 <code>domain</code> 查询参数，只运行静态 adapter 检查，不会连接 Chrome 或 LLM；无效目录名返回 <code>E_INVALID_PARAM</code> / <code>400</code>，已安装但不可安全加载或核心文件为符号链接的 adapter 返回 <code>E_VERIFY_STATIC</code> / <code>422</code>。<code>POST /execute</code> 在启动浏览器前使用同一套本地静态契约：它会在读取或导入前拒绝符号链接目录、metadata、命令模块或 manifest；若 manifest 存在，其声明文件必须是普通文件且哈希匹配，不会先启动浏览器。其他响应保留 SDK 信封：<code>404</code> 表示 adapter 或命令不存在，<code>503</code> 表示 Chrome 或 LLM 依赖暂不可用，<code>500</code> 表示意外服务端失败。写操作端点只接受 JSON 对象；<code>params</code> 必须是对象，<code>force</code> / <code>dry_run</code> 必须是布尔值。</p>
 
         <p><code>POST /execute</code> 的可选布尔字段 <code>sandbox</code> 会在 Chrome 启动前预检完成参数替换的动作。新生成 adapter 的根 <code>--sandbox</code> 使用相同策略；跨域导航、危险 URL scheme、JavaScript 执行或下载返回 <code>E_SANDBOX_VIOLATION</code> / <code>422</code>。这条本地策略结果不表示 Chrome、LLM 或第三方工作流已成功。</p>
 
