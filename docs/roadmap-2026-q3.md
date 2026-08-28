@@ -2,7 +2,7 @@
 
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-08-28
-- **基线版本：** v0.16.340
+- **基线版本：** v0.16.341
 - **目标周期：** 滚动维护（2026-08-28 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -13,12 +13,13 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 已完成校准
 
-2026-06-10 的原始路线图以 v0.14.2 为基线；当前公开基线为 v0.16.340。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
+2026-06-10 的原始路线图以 v0.14.2 为基线；当前公开基线为 v0.16.341。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
 
 - 首次成功路径：README、README.zh、官网和 `doctor` 输出已经围绕 10 分钟路径、真实 demo、LLM live preflight 和可执行下一步重新组织。
 - 真实案例库：`cliany-site cases` 已成为案例发现、单案例展开、issue template、evidence bundle 和 promotion plan 的统一入口。
 - 发布门禁：`release_readiness.py`、`check_release_cadence.py`、`check_release_publication.py` 已覆盖版本号、CHANGELOG、草案、CI/release workflow、远端 refs、tag 决策、每日发布上限、GitHub Release、PyPI 和 publication audit。
 - Publication audit 传输恢复：严格审计会有限重试短暂的 Git remote 或 GitHub/PyPI JSON 传输失败；持续失败和 HTTP 响应仍然是阻断证据，绝不会被重试包装成已发布。
+- 官网运行可靠性：首页和文档页改用显式系统字体栈，不再向 Google Fonts 发起运行时请求；第三方字体网络失败不再产生控制台错误或影响渲染。
 - Release notes 可靠性：tag workflow 直接使用仓库中已审阅的版本化 GitHub Release Notes；readiness 会在 tag 前检查版本标题、用户可读正文并拒绝自动 compare-only notes，避免 PyPI 发布后才发现 GitHub Release 需要人工修复。
 - Candidate 晋级证据：candidate 案例已经具备 promotion command plan、acceptance criteria、LLM preflight blocker handoff、issue artifacts 和 machine-readable evidence summary。
 - Public issue freshness：`audit_candidate_issues.py` 会把开放 `case-proposal` candidate issue 与当前 template 比对，并把不在 manifest 中的 title 报为 `unexpected`；只有人工确认且没有 `missing`、`duplicate`、`unexpected` 时才重写 stale body，让 public issue 不会继续引导贡献者执行过期或孤立的 preflight 命令。
@@ -68,7 +69,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 | adapter 可维护性 | metadata/package 校验和安全审计已进入门禁 | demo adapter 有 release asset、安装验证、回归报告和失败修复建议 |
 | 探索/抽取可靠性 | LLM outage 和抽取质量已有结构化信号 | 常见失败能定位到 provider、页面状态、selector、字段质量或能力边界 |
 | 集成可用性 | CLI 主路径强，SDK/API/headless 示例偏弱 | SDK、HTTP API、headless/remote CDP 均有可复制最小示例 |
-| 发布节奏 | v0.16.340，GitHub Release / PyPI / 官网发布流程已跑通，PyPI latest 缓存滞后可由版本专属 endpoint 复核，官网 alias 由 `vercel inspect www.cliany.site` 复核，短暂远端传输失败有有限重试而持续失败仍阻断，primary adapter handoff command aliases 与 doctor preflight evidence state 已进入维护者路径 | 每天 1~3 个可验证版本；每周至少 3 天有提交；发布后 publication audit 为绿 |
+| 发布节奏 | v0.16.341，GitHub Release / PyPI / 官网发布流程已跑通，PyPI latest 缓存滞后可由版本专属 endpoint 复核，官网 alias 由 `vercel inspect www.cliany.site` 复核，短暂远端传输失败有有限重试而持续失败仍阻断，首页与文档无 Google Fonts 运行时依赖，primary adapter handoff command aliases 与 doctor preflight evidence state 已进入维护者路径 | 每天 1~3 个可验证版本；每周至少 3 天有提交；发布后 publication audit 为绿 |
 
 ## 双视图维护规则
 
