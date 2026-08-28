@@ -10,17 +10,22 @@ import re
 import shlex
 import subprocess
 import sys
+import time
 import tomllib
+import urllib.error
 import urllib.parse
 import urllib.request
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar
 
 ROOT = Path(__file__).resolve().parents[1]
 _COMPARE_ONLY_RELEASE_NOTES = re.compile(
     r"^\*\*Full Changelog\*\*:\s*https://github\.com/[^/\s]+/[^/\s]+/compare/\S+\s*$"
 )
+_NETWORK_RETRY_DELAYS = (0.25, 0.5)
+T = TypeVar("T")
 
 
 @dataclass(frozen=True)
@@ -137,6 +142,19 @@ def _run_git(args: list[str], cwd: Path) -> str:
     return subprocess.check_output(["git", *args], cwd=cwd, text=True, stderr=subprocess.DEVNULL).strip()
 
 
+def _retry_transient_network(operation: Callable[[], T]) -> T:
+    for _attempt, delay in enumerate((*_NETWORK_RETRY_DELAYS, None), start=1):
+        try:
+            return operation()
+        except urllib.error.HTTPError:
+            raise
+        except (subprocess.CalledProcessError, urllib.error.URLError):
+            if delay is None:
+                raise
+            time.sleep(delay)
+    raise AssertionError("unreachable")
+
+
 def _optional_git(args: list[str], cwd: Path) -> str | None:
     try:
         return _run_git(args, cwd)
@@ -179,7 +197,7 @@ def _remote_from_upstream(upstream: str | None, fallback: str) -> str:
 
 def _ls_remote_ref(root: Path, remote: str, ref: str) -> tuple[str | None, str | None]:
     try:
-        output = _run_git(["ls-remote", remote, ref], root)
+        output = _retry_transient_network(lambda: _run_git(["ls-remote", remote, ref], root))
     except subprocess.CalledProcessError:
         return None, f"Remote ref check failed for `{ref}` on `{remote}`."
     if not output:
@@ -197,15 +215,18 @@ def _worktree_status(root: Path) -> list[str]:
 
 
 def _fetch_json(url: str) -> Any:
-    request = urllib.request.Request(
-        url,
-        headers={
-            "Accept": "application/json",
-            "User-Agent": "cliany-site-release-audit",
-        },
-    )
-    with urllib.request.urlopen(request, timeout=10) as response:
-        return json.loads(response.read().decode("utf-8"))
+    def fetch() -> Any:
+        request = urllib.request.Request(
+            url,
+            headers={
+                "Accept": "application/json",
+                "User-Agent": "cliany-site-release-audit",
+            },
+        )
+        with urllib.request.urlopen(request, timeout=10) as response:
+            return json.loads(response.read().decode("utf-8"))
+
+    return _retry_transient_network(fetch)
 
 
 def _project_metadata(root: Path) -> dict[str, Any]:

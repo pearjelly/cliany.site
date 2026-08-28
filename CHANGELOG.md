@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.340] - 2026-08-28
+
+### Fixed
+
+- Strict publication audit now retries two short-lived Git remote or JSON transport failures before reporting a blocker. Persistent remote failures and HTTP responses still remain blocking audit evidence, so retries cannot turn an unavailable publication into a successful release.
+
 ## [0.16.339] - 2026-08-28
 
 ### Fixed
@@ -3014,7 +3020,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.339...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.340...HEAD
+[0.16.340]: https://github.com/pearjelly/cliany.site/compare/v0.16.339...v0.16.340
 [0.16.339]: https://github.com/pearjelly/cliany.site/compare/v0.16.338...v0.16.339
 [0.16.338]: https://github.com/pearjelly/cliany.site/compare/v0.16.337...v0.16.338
 [0.16.337]: https://github.com/pearjelly/cliany.site/compare/v0.16.336...v0.16.337

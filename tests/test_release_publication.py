@@ -2,7 +2,10 @@ import importlib.util
 import json
 import subprocess
 import sys
+import urllib.error
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "check_release_publication.py"
@@ -376,6 +379,7 @@ def test_release_publication_remote_check_reports_missing_remote_tag(tmp_path):
 def test_release_publication_remote_check_failure_is_not_missing_refs(tmp_path, monkeypatch):
     repo = _init_repo_with_origin(tmp_path)
     original_run_git = release_publication._run_git
+    monkeypatch.setattr(release_publication, "_NETWORK_RETRY_DELAYS", (0, 0))
 
     def flaky_run_git(args: list[str], cwd: Path) -> str:
         if args and args[0] == "ls-remote":
@@ -413,6 +417,73 @@ def test_release_publication_remote_check_failure_is_not_missing_refs(tmp_path, 
         "Remote ref check failed; rerun with `--remote` after network access is available."
     ]
     assert payload["publish_commands"] == ["python scripts/check_release_publication.py --remote --json"]
+
+
+def test_release_publication_retries_transient_remote_ref_failure(tmp_path, monkeypatch):
+    repo = _init_repo_with_origin(tmp_path)
+    original_run_git = release_publication._run_git
+    attempts = 0
+
+    def flaky_run_git(args: list[str], cwd: Path) -> str:
+        nonlocal attempts
+        if args == ["ls-remote", "origin", "refs/heads/master"] and attempts == 0:
+            attempts += 1
+            raise subprocess.CalledProcessError(128, ["git", *args])
+        return original_run_git(args, cwd)
+
+    monkeypatch.setattr(release_publication, "_NETWORK_RETRY_DELAYS", (0, 0))
+    monkeypatch.setattr(release_publication, "_run_git", flaky_run_git)
+
+    report = release_publication.build_report(repo, remote_check=True)
+
+    assert report.ok is True
+    assert report.remote_check_ok is True
+    assert report.remote_branch_head == report.local_head
+    assert attempts == 1
+
+
+def test_fetch_json_retries_transient_url_error(monkeypatch):
+    attempts = 0
+
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            return False
+
+        def read(self):
+            return b'{"ok": true}'
+
+    def flaky_urlopen(request, timeout):
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise urllib.error.URLError("temporary EOF")
+        return Response()
+
+    monkeypatch.setattr(release_publication, "_NETWORK_RETRY_DELAYS", (0, 0))
+    monkeypatch.setattr(release_publication.urllib.request, "urlopen", flaky_urlopen)
+
+    assert release_publication._fetch_json("https://example.test/release.json") == {"ok": True}
+    assert attempts == 2
+
+
+def test_fetch_json_does_not_retry_http_error(monkeypatch):
+    attempts = 0
+
+    def unavailable_urlopen(request, timeout):
+        nonlocal attempts
+        attempts += 1
+        raise urllib.error.HTTPError(request.full_url, 503, "unavailable", {}, None)
+
+    monkeypatch.setattr(release_publication, "_NETWORK_RETRY_DELAYS", (0, 0))
+    monkeypatch.setattr(release_publication.urllib.request, "urlopen", unavailable_urlopen)
+
+    with pytest.raises(urllib.error.HTTPError):
+        release_publication._fetch_json("https://example.test/release.json")
+
+    assert attempts == 1
 
 
 def test_release_publication_text_output_includes_next_actions(tmp_path, capsys):
