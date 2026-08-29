@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.342] - 2026-08-29
+
 ### Fixed
 
 - `GET /adapters?detail=` now validates the same boolean spellings as `GET /doctor?llm_live=`. Invalid values return `BAD_REQUEST` / HTTP `400` instead of silently returning the compact adapter list.
@@ -3030,7 +3032,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.341...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.342...HEAD
+[0.16.342]: https://github.com/pearjelly/cliany.site/compare/v0.16.341...v0.16.342
 [0.16.341]: https://github.com/pearjelly/cliany.site/compare/v0.16.340...v0.16.341
 [0.16.340]: https://github.com/pearjelly/cliany.site/compare/v0.16.339...v0.16.340
 [0.16.339]: https://github.com/pearjelly/cliany.site/compare/v0.16.338...v0.16.339
