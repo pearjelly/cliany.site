@@ -1465,6 +1465,25 @@ class TestAPIServer:
         sdk.doctor.assert_not_awaited()
 
     @pytest.mark.asyncio
+    async def test_doctor_endpoint_rejects_duplicate_live_query(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        sdk = AsyncMock()
+        server._sdk = sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.get("/doctor?llm_live=true&llm_live=false")
+            data = await resp.json()
+
+        assert resp.status == 400
+        assert data["error"]["code"] == "BAD_REQUEST"
+        sdk.doctor.assert_not_awaited()
+
+    @pytest.mark.asyncio
     async def test_explore_missing_fields(self):
         from aiohttp.test_utils import TestClient, TestServer
 
@@ -1912,6 +1931,25 @@ class TestAPIServer:
 
         async with TestClient(TestServer(app)) as client:
             resp = await client.get("/adapters?detail=maybe")
+            data = await resp.json()
+
+        assert resp.status == 400
+        assert data["error"]["code"] == "BAD_REQUEST"
+        sdk.list_adapters.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_adapters_endpoint_rejects_duplicate_detail_query_without_calling_sdk(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        sdk = AsyncMock()
+        server._sdk = sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.get("/adapters?detail=true&detail=false")
             data = await resp.json()
 
         assert resp.status == 400

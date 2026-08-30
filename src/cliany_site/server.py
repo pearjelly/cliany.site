@@ -127,9 +127,12 @@ class APIServer:
 
     @staticmethod
     def _query_bool(request: Request, name: str) -> bool | None:
-        value = request.query.get(name)
-        if value is None:
+        values = request.query.getall(name, [])
+        if not values:
             return False
+        if len(values) != 1:
+            return None
+        value = values[0]
         normalized = value.lower()
         if normalized in {"1", "true", "yes"}:
             return True
@@ -161,7 +164,7 @@ class APIServer:
         llm_live = self._query_bool(request, "llm_live")
         if llm_live is None:
             return self._json_response(
-                self._bad_request("llm_live 查询参数必须是布尔值"),
+                self._bad_request("llm_live 查询参数只能提供一次且必须是布尔值"),
                 status=400,
             )
         require_capability = request.query.get("require_capability")
@@ -176,7 +179,7 @@ class APIServer:
         detail = self._query_bool(request, "detail")
         if detail is None:
             return self._json_response(
-                self._bad_request("detail 查询参数必须是布尔值"),
+                self._bad_request("detail 查询参数只能提供一次且必须是布尔值"),
                 status=400,
             )
         sdk = await self._get_sdk()

@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-08-29
-- **Current baseline:** v0.16.342
+- **Updated:** 2026-08-30
+- **Current baseline:** v0.16.343
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -46,6 +46,8 @@ As of v0.16.340, strict publication audit retries two short-lived Git remote or 
 As of v0.16.341, the public site and documentation use explicit local system font stacks instead of requesting Google Fonts at runtime. This removes a third-party font request from the first visit; it does not establish browser, LLM, candidate adapter, or third-party workflow readiness.
 
 As of v0.16.342, `GET /adapters?detail=` shares the API's strict boolean parsing with `GET /doctor?llm_live=`. Valid `true`/`false`, `1`/`0`, and `yes`/`no` spellings remain compatible; an invalid value returns `BAD_REQUEST` / HTTP `400` instead of silently falling back to the compact adapter list.
+
+As of v0.16.343, each of those boolean query keys may occur at most once. Repeated keys, including conflicting pairs such as `?detail=true&detail=false`, return `BAD_REQUEST` / HTTP `400` rather than leaving a client dependent on query-string ordering.
 
 As of v0.16.301, invoking a discovered current-schema adapter that cannot register no longer looks like an unknown command. The root CLI returns structured `E_VERIFY_STATIC` details and points to `cliany-site verify <domain> --strict --json`; this is a local static diagnosis, not proof that a browser, site workflow, or LLM provider is ready.
 
