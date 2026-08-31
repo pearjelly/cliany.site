@@ -140,6 +140,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "重复 <code>require_capability</code> 与 <code>domain</code> 键也返回" in script
     assert "POST /explore、POST /execute 与 POST /login 现在要求必填文本字段为非空字符串" in script
     assert "HTTP 写端点会以 <code>BAD_REQUEST</code>/400 拒绝未知 JSON 字段" in script
+    assert "POST /explore and POST /login reject non-http(s)" in index
+    assert "POST /explore</code> 与 <code>POST /login</code> 会在 SDK 或浏览器工作前" in script
     assert "Dependabot 现在将 GitHub Actions 升级合并为一个可审阅提案" in script
     assert "actions/setup-python@v7" in script
     assert 'en: "Current baseline: v0.16.346.' in script
@@ -167,6 +169,9 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "必填 <code>url</code>、<code>workflow</code>、<code>domain</code> 与 <code>command</code> 必须是非空字符串" in docs
     assert "不会让畸形 JSON 变成意外服务端错误" in docs
     assert "写操作端点只接受已声明字段，未知字段会在进入 SDK 前返回" in docs
+    assert "不含空白、带 host 的 <code>http</code> 或 <code>https</code> URL" in docs
+    assert "an `http` or `https` URL with a host and no whitespace" in readme
+    assert "不含空白、带 host 的 `http` 或 `https` URL" in readme_zh
     assert 'cliany-site --headless serve --port 8080' in docs
     assert 'cliany-site --cdp-url "ws://chrome:9222" serve --port 8080' in docs
     assert "GET /health" in docs

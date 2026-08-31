@@ -1763,6 +1763,40 @@ class TestAPIServer:
         mock_sdk.login.assert_not_awaited()
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("endpoint", "payload", "method_name"),
+        [
+            ("/explore", {"url": "file:///tmp/private", "workflow": "搜索"}, "explore"),
+            ("/explore", {"url": "https://example.com path", "workflow": "搜索"}, "explore"),
+            ("/explore", {"url": "https:///missing-host", "workflow": "搜索"}, "explore"),
+            ("/explore", {"url": "https://example.com:invalid", "workflow": "搜索"}, "explore"),
+            ("/login", {"url": "javascript:alert(1)"}, "login"),
+            ("/login", {"url": "ftp://example.com"}, "login"),
+            ("/login", {"url": "https:///missing-host"}, "login"),
+        ],
+    )
+    async def test_mutating_url_endpoints_reject_non_http_urls_without_calling_sdk(
+        self, endpoint, payload, method_name
+    ):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        mock_sdk = AsyncMock()
+        server._sdk = mock_sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.post(endpoint, json=payload)
+            data = await resp.json()
+
+        assert resp.status == 400
+        assert data["error"]["code"] == "BAD_REQUEST"
+        assert "http" in data["error"]["message"]
+        getattr(mock_sdk, method_name).assert_not_awaited()
+
+    @pytest.mark.asyncio
     async def test_execute_success(self, tmp_path):
         from aiohttp.test_utils import TestClient, TestServer
 

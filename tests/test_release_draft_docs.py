@@ -13572,3 +13572,41 @@ def test_v016346_release_draft_rejects_unknown_write_fields() -> None:
         "live LLM success",
     ]:
         assert snippet in notes
+
+
+def test_v016347_release_draft_rejects_invalid_http_write_urls() -> None:
+    draft = (ROOT / "docs" / "releases" / "v0.16.347-draft.md").read_text(
+        encoding="utf-8"
+    )
+    notes = (ROOT / "docs" / "releases" / "v0.16.347-github-release.md").read_text(
+        encoding="utf-8"
+    )
+
+    for snippet in [
+        "# v0.16.347 发布草案",
+        "**目标版本：** `0.16.347`",
+        "**提交范围：** `v0.16.346..HEAD`",
+        "**提交范围：** `v0.16.347..HEAD`",
+        "POST /explore",
+        "POST /login",
+        "http",
+        "https",
+        "E_LLM_UNAVAILABLE",
+        "cases/manifest.json",
+        "search-extraction-gap",
+        "release_readiness.py --strict --target-version 0.16.347 --remote",
+        "git tag v0.16.347",
+        "release_readiness.py --strict --release-tag v0.16.347 --remote --remote-name origin",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.347",
+        "POST /explore",
+        "POST /login",
+        "whitespace-free",
+        "BAD_REQUEST",
+        "does not establish Chrome availability",
+    ]:
+        assert snippet in notes

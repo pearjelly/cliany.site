@@ -195,6 +195,10 @@ const I18N = {
     zh: 'HTTP 写端点会以 <code>BAD_REQUEST</code>/400 拒绝未知 JSON 字段，客户端拼错字段不会被静默忽略。',
     en: 'HTTP write endpoints reject unknown JSON fields with <code>BAD_REQUEST</code>/400, so a misspelled client field is never silently ignored.'
   },
+  'qs.maintainer.httpUrl': {
+    zh: '<code>POST /explore</code> 与 <code>POST /login</code> 会在 SDK 或浏览器工作前以 <code>BAD_REQUEST</code>/400 拒绝非 HTTP(S)、缺失 host 或含空白的 URL。',
+    en: '<code>POST /explore</code> and <code>POST /login</code> reject non-HTTP(S), hostless, or whitespace-containing URLs with <code>BAD_REQUEST</code>/400 before SDK or browser work begins.'
+  },
   'qs.maintainer.loop': {
     zh: '选择下一块发布切片时，从 <code>docs/weekly-maintainer-loop.md</code> 开始。',
     en: 'Start from <code>docs/weekly-maintainer-loop.md</code> when choosing the next release slice.'

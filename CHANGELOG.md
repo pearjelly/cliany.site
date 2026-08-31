@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `POST /explore` and `POST /login` now reject URL values that are not whitespace-free `http` or `https` URLs with a host before SDK or browser work starts. Invalid schemes, missing hosts, and malformed URLs return `BAD_REQUEST` / HTTP `400`.
+
 ## [0.16.346] - 2026-08-31
 
 ### Fixed

@@ -26,6 +26,7 @@ import json
 import logging
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlparse
 
 from cliany_site.response import error_response
 from cliany_site.sdk import ClanySite
@@ -133,6 +134,19 @@ class APIServer:
         return value
 
     @staticmethod
+    def _http_url(value: str) -> bool:
+        if any(char.isspace() for char in value):
+            return False
+        try:
+            parsed = urlparse(value)
+            if parsed.scheme.lower() not in {"http", "https"} or not parsed.hostname:
+                return False
+            _ = parsed.port
+            return True
+        except ValueError:
+            return False
+
+    @staticmethod
     def _unexpected_fields(body: Mapping[str, Any], allowed: frozenset[str]) -> list[str]:
         return sorted(set(body) - allowed)
 
@@ -238,6 +252,10 @@ class APIServer:
             workflow = self._required_string(body, "workflow_description")
         if url is None or workflow is None:
             return self._json_response(self._bad_request("缺少 url 或 workflow 字段"), status=400)
+        if not self._http_url(url):
+            return self._json_response(
+                self._bad_request("url 字段必须是带 host 的 http 或 https URL"), status=400
+            )
 
         force = body.get("force", False)
         if not isinstance(force, bool):
@@ -293,6 +311,10 @@ class APIServer:
         url = self._required_string(body, "url")
         if url is None:
             return self._json_response(self._bad_request("缺少 url 字段"), status=400)
+        if not self._http_url(url):
+            return self._json_response(
+                self._bad_request("url 字段必须是带 host 的 http 或 https URL"), status=400
+            )
 
         sdk = await self._get_sdk()
         result = await sdk.login(url)
