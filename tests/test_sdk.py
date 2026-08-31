@@ -1639,6 +1639,92 @@ class TestAPIServer:
         mock_sdk.explore.assert_not_awaited()
 
     @pytest.mark.asyncio
+    async def test_explore_endpoint_accepts_workflow_description_when_workflow_is_absent(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        mock_sdk = AsyncMock()
+        mock_sdk.explore.return_value = {"success": True, "data": {}, "error": None}
+        server._sdk = mock_sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.post(
+                "/explore",
+                json={"url": "https://test.com", "workflow_description": "搜索"},
+            )
+            data = await resp.json()
+
+        assert resp.status == 200
+        assert data["success"] is True
+        mock_sdk.explore.assert_awaited_once_with("https://test.com", "搜索", force=False)
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("payload", "method_name"),
+        [
+            ({"url": ["https://test.com"], "workflow": "搜索"}, "explore"),
+            ({"url": "https://test.com", "workflow": {"name": "搜索"}}, "explore"),
+            ({"url": "   ", "workflow": "搜索"}, "explore"),
+            ({"url": "https://test.com", "workflow": "   "}, "explore"),
+            (
+                {
+                    "url": "https://test.com",
+                    "workflow": ["搜索"],
+                    "workflow_description": "不得静默回退",
+                },
+                "explore",
+            ),
+            ({"domain": ["test.com"], "command": "search"}, "execute"),
+            ({"domain": "test.com", "command": ["search"]}, "execute"),
+            ({"domain": "   ", "command": "search"}, "execute"),
+            ({"domain": "test.com", "command": "   "}, "execute"),
+        ],
+    )
+    async def test_mutating_endpoints_reject_non_string_required_fields_without_calling_sdk(
+        self, payload, method_name
+    ):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        mock_sdk = AsyncMock()
+        server._sdk = mock_sdk
+        app = server._build_app()
+        endpoint = "/explore" if method_name == "explore" else "/execute"
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.post(endpoint, json=payload)
+            data = await resp.json()
+
+        assert resp.status == 400
+        assert data["error"]["code"] == "BAD_REQUEST"
+        getattr(mock_sdk, method_name).assert_not_awaited()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("url", ["   ", ["https://test.com"], {"url": "https://test.com"}])
+    async def test_login_rejects_non_string_or_blank_url_without_calling_sdk(self, url):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        mock_sdk = AsyncMock()
+        server._sdk = mock_sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.post("/login", json={"url": url})
+            data = await resp.json()
+
+        assert resp.status == 400
+        assert data["error"]["code"] == "BAD_REQUEST"
+        mock_sdk.login.assert_not_awaited()
+
+    @pytest.mark.asyncio
     async def test_execute_success(self, tmp_path):
         from aiohttp.test_utils import TestClient, TestServer
 

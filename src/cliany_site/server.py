@@ -126,6 +126,13 @@ class APIServer:
         return error_response("BAD_REQUEST", message)
 
     @staticmethod
+    def _required_string(body: Mapping[str, Any], name: str) -> str | None:
+        value = body.get(name)
+        if not isinstance(value, str) or not value.strip():
+            return None
+        return value
+
+    @staticmethod
     def _query_bool(request: Request, name: str) -> bool | None:
         values = request.query.getall(name, [])
         if not values:
@@ -213,9 +220,11 @@ class APIServer:
             return error_response
         assert body is not None
 
-        url = body.get("url")
-        workflow = body.get("workflow") or body.get("workflow_description")
-        if not url or not workflow:
+        url = self._required_string(body, "url")
+        workflow = self._required_string(body, "workflow")
+        if workflow is None and "workflow" not in body:
+            workflow = self._required_string(body, "workflow_description")
+        if url is None or workflow is None:
             return self._json_response(self._bad_request("缺少 url 或 workflow 字段"), status=400)
 
         force = body.get("force", False)
@@ -231,9 +240,9 @@ class APIServer:
             return error_response
         assert body is not None
 
-        domain = body.get("domain")
-        command = body.get("command")
-        if not domain or not command:
+        domain = self._required_string(body, "domain")
+        command = self._required_string(body, "command")
+        if domain is None or command is None:
             return self._json_response(self._bad_request("缺少 domain 或 command 字段"), status=400)
 
         params = body.get("params")
@@ -255,8 +264,8 @@ class APIServer:
             return error_response
         assert body is not None
 
-        url = body.get("url")
-        if not url:
+        url = self._required_string(body, "url")
+        if url is None:
             return self._json_response(self._bad_request("缺少 url 字段"), status=400)
 
         sdk = await self._get_sdk()

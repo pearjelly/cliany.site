@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.345] - 2026-08-31
+
+### Fixed
+
+- `POST /explore`, `POST /execute`, and `POST /login` now reject required text fields that are arrays, objects, or blank strings with `BAD_REQUEST` / HTTP `400` before the SDK is called. `workflow_description` remains compatible only when `workflow` is absent.
+
 ## [0.16.344] - 2026-08-31
 
 ### Fixed
@@ -3044,7 +3050,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.344...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.345...HEAD
+[0.16.345]: https://github.com/pearjelly/cliany.site/compare/v0.16.344...v0.16.345
 [0.16.344]: https://github.com/pearjelly/cliany.site/compare/v0.16.343...v0.16.344
 [0.16.343]: https://github.com/pearjelly/cliany.site/compare/v0.16.342...v0.16.343
 [0.16.342]: https://github.com/pearjelly/cliany.site/compare/v0.16.341...v0.16.342

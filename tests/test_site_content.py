@@ -128,18 +128,20 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
         "--doctor-json /tmp/cliany-doctor-preflight.json"
     ) in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.344" in index
+    assert "Current baseline: v0.16.345" in index
     assert "Repeated boolean query keys also return" in index
     assert "Repeated <code>require_capability</code> and <code>domain</code> keys" in index
+    assert "POST /explore, POST /execute, and POST /login now require non-empty text fields" in index
     assert "Dependabot now groups GitHub Actions upgrades" in index
     assert "actions/setup-python@v7" in index
-    assert "当前基线：v0.16.344" in script
+    assert "当前基线：v0.16.345" in script
     assert "重复布尔键同样返回" in script
     assert "重复 <code>require_capability</code> 与 <code>domain</code> 键也返回" in script
+    assert "POST /explore、POST /execute 与 POST /login 现在要求必填文本字段为非空字符串" in script
     assert "Dependabot 现在将 GitHub Actions 升级合并为一个可审阅提案" in script
     assert "actions/setup-python@v7" in script
-    assert 'en: "Current baseline: v0.16.344.' in script
-    assert "en: 'Current baseline: v0.16.344." not in script
+    assert 'en: "Current baseline: v0.16.345.' in script
+    assert "en: 'Current baseline: v0.16.345." not in script
     assert "adapter package is runnable" in index
     assert "adapter package 是否可运行" in script
     assert "source-safety scan" in index
@@ -160,6 +162,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "<code>404</code> 表示 adapter 或命令不存在" in docs
     assert "<code>503</code> 表示 Chrome 或 LLM 依赖暂不可用" in docs
     assert "params</code> 必须是对象" in docs
+    assert "必填 <code>url</code>、<code>workflow</code>、<code>domain</code> 与 <code>command</code> 必须是非空字符串" in docs
+    assert "不会让畸形 JSON 变成意外服务端错误" in docs
     assert 'cliany-site --headless serve --port 8080' in docs
     assert 'cliany-site --cdp-url "ws://chrome:9222" serve --port 8080' in docs
     assert "GET /health" in docs
@@ -188,7 +192,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.344 · Python" in docs
+    assert "v0.16.345 · Python" in docs
     assert "GET /adapters?detail=" in docs
     assert "BAD_REQUEST" in docs
     assert "各只能出现一次" in docs
