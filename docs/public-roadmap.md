@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-08-31
-- **Current baseline:** v0.16.345
+- **Current baseline:** v0.16.346
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -52,6 +52,8 @@ As of v0.16.343, each of those boolean query keys may occur at most once. Repeat
 As of v0.16.344, `GET /doctor` rejects repeated `require_capability` keys and `GET /verify` rejects repeated `domain` keys with `BAD_REQUEST` / HTTP `400`. A request can no longer silently choose a capability or adapter domain based on query-string ordering.
 
 As of v0.16.345, the required text fields for `POST /explore`, `POST /execute`, and `POST /login` are explicit non-empty strings. Malformed JSON stops at the HTTP boundary with `BAD_REQUEST` / HTTP `400` instead of reaching browser or SDK work; this does not establish Chrome, LLM, candidate adapter, or third-party workflow readiness.
+
+As of v0.16.346, HTTP write endpoints reject unknown JSON fields with `BAD_REQUEST` / HTTP `400` rather than silently dropping a misspelled client parameter. `POST /explore` still accepts the documented `workflow_description` compatibility alias.
 
 As of v0.16.301, invoking a discovered current-schema adapter that cannot register no longer looks like an unknown command. The root CLI returns structured `E_VERIFY_STATIC` details and points to `cliany-site verify <domain> --strict --json`; this is a local static diagnosis, not proof that a browser, site workflow, or LLM provider is ready.
 

@@ -133,6 +133,10 @@ class APIServer:
         return value
 
     @staticmethod
+    def _unexpected_fields(body: Mapping[str, Any], allowed: frozenset[str]) -> list[str]:
+        return sorted(set(body) - allowed)
+
+    @staticmethod
     def _query_bool(request: Request, name: str) -> bool | None:
         values = request.query.getall(name, [])
         if not values:
@@ -220,6 +224,14 @@ class APIServer:
             return error_response
         assert body is not None
 
+        unexpected = self._unexpected_fields(
+            body, frozenset({"url", "workflow", "workflow_description", "force"})
+        )
+        if unexpected:
+            return self._json_response(
+                self._bad_request(f"不支持的 explore 字段: {', '.join(unexpected)}"), status=400
+            )
+
         url = self._required_string(body, "url")
         workflow = self._required_string(body, "workflow")
         if workflow is None and "workflow" not in body:
@@ -239,6 +251,14 @@ class APIServer:
         if error_response is not None:
             return error_response
         assert body is not None
+
+        unexpected = self._unexpected_fields(
+            body, frozenset({"domain", "command", "params", "dry_run", "sandbox"})
+        )
+        if unexpected:
+            return self._json_response(
+                self._bad_request(f"不支持的 execute 字段: {', '.join(unexpected)}"), status=400
+            )
 
         domain = self._required_string(body, "domain")
         command = self._required_string(body, "command")
@@ -263,6 +283,12 @@ class APIServer:
         if error_response is not None:
             return error_response
         assert body is not None
+
+        unexpected = self._unexpected_fields(body, frozenset({"url"}))
+        if unexpected:
+            return self._json_response(
+                self._bad_request(f"不支持的 login 字段: {', '.join(unexpected)}"), status=400
+            )
 
         url = self._required_string(body, "url")
         if url is None:

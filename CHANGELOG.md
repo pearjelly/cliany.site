@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.346] - 2026-08-31
+
+### Fixed
+
+- `POST /explore`, `POST /execute`, and `POST /login` now reject unknown JSON fields with `BAD_REQUEST` / HTTP `400` before calling the SDK. Each endpoint accepts only its documented fields, while `workflow_description` remains a compatibility alias when `workflow` is absent.
+
 ## [0.16.345] - 2026-08-31
 
 ### Fixed
@@ -3050,7 +3056,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.345...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.346...HEAD
+[0.16.346]: https://github.com/pearjelly/cliany.site/compare/v0.16.345...v0.16.346
 [0.16.345]: https://github.com/pearjelly/cliany.site/compare/v0.16.344...v0.16.345
 [0.16.344]: https://github.com/pearjelly/cliany.site/compare/v0.16.343...v0.16.344
 [0.16.343]: https://github.com/pearjelly/cliany.site/compare/v0.16.342...v0.16.343

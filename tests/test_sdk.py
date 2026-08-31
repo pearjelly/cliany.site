@@ -1705,6 +1705,44 @@ class TestAPIServer:
         getattr(mock_sdk, method_name).assert_not_awaited()
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("endpoint", "payload", "method_name"),
+        [
+            (
+                "/explore",
+                {"url": "https://test.com", "workflow": "搜索", "workflwo": "typo"},
+                "explore",
+            ),
+            (
+                "/execute",
+                {"domain": "test.com", "command": "search", "parmas": {"query": "cliany"}},
+                "execute",
+            ),
+            ("/login", {"url": "https://test.com", "wait": True}, "login"),
+        ],
+    )
+    async def test_mutating_endpoints_reject_unknown_fields_without_calling_sdk(
+        self, endpoint, payload, method_name
+    ):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        mock_sdk = AsyncMock()
+        server._sdk = mock_sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.post(endpoint, json=payload)
+            data = await resp.json()
+
+        assert resp.status == 400
+        assert data["error"]["code"] == "BAD_REQUEST"
+        assert "不支持" in data["error"]["message"]
+        getattr(mock_sdk, method_name).assert_not_awaited()
+
+    @pytest.mark.asyncio
     @pytest.mark.parametrize("url", ["   ", ["https://test.com"], {"url": "https://test.com"}])
     async def test_login_rejects_non_string_or_blank_url_without_calling_sdk(self, url):
         from aiohttp.test_utils import TestClient, TestServer
