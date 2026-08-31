@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-08-30
-- **Current baseline:** v0.16.343
+- **Updated:** 2026-08-31
+- **Current baseline:** v0.16.344
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -48,6 +48,8 @@ As of v0.16.341, the public site and documentation use explicit local system fon
 As of v0.16.342, `GET /adapters?detail=` shares the API's strict boolean parsing with `GET /doctor?llm_live=`. Valid `true`/`false`, `1`/`0`, and `yes`/`no` spellings remain compatible; an invalid value returns `BAD_REQUEST` / HTTP `400` instead of silently falling back to the compact adapter list.
 
 As of v0.16.343, each of those boolean query keys may occur at most once. Repeated keys, including conflicting pairs such as `?detail=true&detail=false`, return `BAD_REQUEST` / HTTP `400` rather than leaving a client dependent on query-string ordering.
+
+As of v0.16.344, `GET /doctor` rejects repeated `require_capability` keys and `GET /verify` rejects repeated `domain` keys with `BAD_REQUEST` / HTTP `400`. A request can no longer silently choose a capability or adapter domain based on query-string ordering.
 
 As of v0.16.301, invoking a discovered current-schema adapter that cannot register no longer looks like an unknown command. The root CLI returns structured `E_VERIFY_STATIC` details and points to `cliany-site verify <domain> --strict --json`; this is a local static diagnosis, not proof that a browser, site workflow, or LLM provider is ready.
 

@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.344] - 2026-08-31
+
+### Fixed
+
+- `GET /doctor` now rejects repeated `require_capability` keys and `GET /verify` rejects repeated `domain` keys with `BAD_REQUEST` / HTTP `400`, instead of silently selecting one query value.
+
 ## [0.16.343] - 2026-08-30
 
 ### Fixed
@@ -3038,7 +3044,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.343...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.344...HEAD
+[0.16.344]: https://github.com/pearjelly/cliany.site/compare/v0.16.343...v0.16.344
 [0.16.343]: https://github.com/pearjelly/cliany.site/compare/v0.16.342...v0.16.343
 [0.16.342]: https://github.com/pearjelly/cliany.site/compare/v0.16.341...v0.16.342
 [0.16.341]: https://github.com/pearjelly/cliany.site/compare/v0.16.340...v0.16.341

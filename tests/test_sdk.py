@@ -1274,6 +1274,25 @@ class TestAPIServer:
         mock_sdk.verify.assert_not_awaited()
 
     @pytest.mark.asyncio
+    async def test_verify_endpoint_rejects_duplicate_domain_without_calling_sdk(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        mock_sdk = AsyncMock()
+        server._sdk = mock_sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.get("/verify?domain=one.example&domain=two.example")
+            data = await resp.json()
+
+        assert resp.status == 400
+        assert data["error"]["code"] == "BAD_REQUEST"
+        mock_sdk.verify.assert_not_awaited()
+
+    @pytest.mark.asyncio
     async def test_verify_endpoint_returns_real_static_failure(self, tmp_path):
         from aiohttp.test_utils import TestClient, TestServer
 
@@ -1477,6 +1496,27 @@ class TestAPIServer:
 
         async with TestClient(TestServer(app)) as client:
             resp = await client.get("/doctor?llm_live=true&llm_live=false")
+            data = await resp.json()
+
+        assert resp.status == 400
+        assert data["error"]["code"] == "BAD_REQUEST"
+        sdk.doctor.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    async def test_doctor_endpoint_rejects_duplicate_capability_query(self):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.server import APIServer
+
+        server = APIServer()
+        sdk = AsyncMock()
+        server._sdk = sdk
+        app = server._build_app()
+
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.get(
+                "/doctor?require_capability=generate_adapters&require_capability=run_browser_workflows"
+            )
             data = await resp.json()
 
         assert resp.status == 400

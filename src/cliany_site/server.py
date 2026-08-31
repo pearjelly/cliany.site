@@ -167,7 +167,15 @@ class APIServer:
                 self._bad_request("llm_live 查询参数只能提供一次且必须是布尔值"),
                 status=400,
             )
-        require_capability = request.query.get("require_capability")
+        require_capability_values = request.query.getall("require_capability", [])
+        if len(require_capability_values) > 1:
+            return self._json_response(
+                self._bad_request("require_capability 查询参数只能提供一次"),
+                status=400,
+            )
+        require_capability = (
+            require_capability_values[0] if require_capability_values else None
+        )
         sdk = await self._get_sdk()
         result = await sdk.doctor(
             llm_live=llm_live,
@@ -187,7 +195,12 @@ class APIServer:
         return self._json_response(result)
 
     async def _handle_verify(self, request: Request) -> Response:
-        domain = request.query.get("domain")
+        domain_values = request.query.getall("domain", [])
+        if len(domain_values) > 1:
+            return self._json_response(
+                self._bad_request("domain 查询参数只能提供一次"), status=400
+            )
+        domain = domain_values[0] if domain_values else None
         if not domain:
             return self._json_response(self._bad_request("缺少 domain 查询参数"), status=400)
         sdk = await self._get_sdk()
