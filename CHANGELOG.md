@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.347] - 2026-09-01
+
 ### Fixed
 
 - `POST /explore` and `POST /login` now reject URL values that are not whitespace-free `http` or `https` URLs with a host before SDK or browser work starts. Invalid schemes, missing hosts, and malformed URLs return `BAD_REQUEST` / HTTP `400`.
@@ -3060,7 +3062,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.346...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.347...HEAD
+[0.16.347]: https://github.com/pearjelly/cliany.site/compare/v0.16.346...v0.16.347
 [0.16.346]: https://github.com/pearjelly/cliany.site/compare/v0.16.345...v0.16.346
 [0.16.345]: https://github.com/pearjelly/cliany.site/compare/v0.16.344...v0.16.345
 [0.16.344]: https://github.com/pearjelly/cliany.site/compare/v0.16.343...v0.16.344
