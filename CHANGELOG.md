@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `ClanySite.explore()` and `ClanySite.login()` now share the HTTP API's strict whitespace-free HTTP(S) URL contract. Invalid schemes, missing hosts, malformed ports, and non-string values return `INVALID_URL` before creating an explorer or browser session.
+
 ## [0.16.347] - 2026-09-01
 
 ### Fixed

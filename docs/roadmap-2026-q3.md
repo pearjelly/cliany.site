@@ -25,6 +25,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 - API 单值选择器边界：`GET /doctor` 的 `require_capability` 和 `GET /verify` 的 `domain` 同样拒绝重复键，避免在 SDK 前静默选择 capability 或 adapter domain。
 - API 写入请求边界：`POST /explore`、`POST /execute` 与 `POST /login` 的必填文本字段已收紧为非空字符串；数组、对象或空白字符串在进入 SDK 前返回 `BAD_REQUEST` / HTTP `400`，而 `workflow_description` 仅在 `workflow` 缺席时保留兼容。每个写端点现在也拒绝未知 JSON 字段，避免客户端拼写错误后悄悄丢失参数。
 - API 写 URL 边界：`POST /explore` 与 `POST /login` 只接受无空白、带 host 的 `http` 或 `https` URL；不支持的协议、缺失 host、畸形端口和含空白值在进入 SDK 或浏览器前返回 `BAD_REQUEST` / HTTP `400`，`POST /execute` 保持不变。
+- SDK 写 URL 边界：直接调用 `ClanySite.explore()` 与 `ClanySite.login()` 复用同一安全 URL 校验；无效协议、缺失 host、畸形端口或非字符串值会在构造 explorer 或浏览器 session 前返回 `INVALID_URL`。
 - Release notes 可靠性：tag workflow 直接使用仓库中已审阅的版本化 GitHub Release Notes；readiness 会在 tag 前检查版本标题、用户可读正文并拒绝自动 compare-only notes，避免 PyPI 发布后才发现 GitHub Release 需要人工修复。
 - Candidate 晋级证据：candidate 案例已经具备 promotion command plan、acceptance criteria、LLM preflight blocker handoff、issue artifacts 和 machine-readable evidence summary。
 - Public issue freshness：`audit_candidate_issues.py` 会把开放 `case-proposal` candidate issue 与当前 template 比对，并把不在 manifest 中的 title 报为 `unexpected`；只有人工确认且没有 `missing`、`duplicate`、`unexpected` 时才重写 stale body，让 public issue 不会继续引导贡献者执行过期或孤立的 preflight 命令。

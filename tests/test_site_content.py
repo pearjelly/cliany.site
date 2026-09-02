@@ -142,6 +142,9 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "HTTP 写端点会以 <code>BAD_REQUEST</code>/400 拒绝未知 JSON 字段" in script
     assert "POST /explore and POST /login reject non-http(s)" in index
     assert "POST /explore</code> 与 <code>POST /login</code> 会在 SDK 或浏览器工作前" in script
+    assert "ClanySite.explore() and ClanySite.login()" in index
+    assert "ClanySite.explore()</code> 与 <code>ClanySite.login()" in script
+    assert "构造 explorer 或浏览器 session 前返回 <code>INVALID_URL</code>" in docs
     assert "Dependabot 现在将 GitHub Actions 升级合并为一个可审阅提案" in script
     assert "actions/setup-python@v7" in script
     assert 'en: "Current baseline: v0.16.347.' in script

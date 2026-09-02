@@ -13610,3 +13610,39 @@ def test_v016347_release_draft_rejects_invalid_http_write_urls() -> None:
         "does not establish Chrome availability",
     ]:
         assert snippet in notes
+
+
+def test_v016348_release_draft_extends_http_url_validation_to_sdk() -> None:
+    draft = (ROOT / "docs" / "releases" / "v0.16.348-draft.md").read_text(
+        encoding="utf-8"
+    )
+    notes = (ROOT / "docs" / "releases" / "v0.16.348-github-release.md").read_text(
+        encoding="utf-8"
+    )
+
+    for snippet in [
+        "# v0.16.348 发布草案",
+        "**目标版本：** `0.16.348`",
+        "**提交范围：** `v0.16.347..HEAD`",
+        "**提交范围：** `v0.16.348..HEAD`",
+        "ClanySite.explore()",
+        "ClanySite.login()",
+        "INVALID_URL",
+        "E_LLM_UNAVAILABLE",
+        "cases/manifest.json",
+        "candidate issue",
+        "release_readiness.py --strict --target-version 0.16.348 --remote",
+        "git tag v0.16.348",
+        "release_readiness.py --strict --release-tag v0.16.348 --remote --remote-name origin",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.348",
+        "ClanySite.explore()",
+        "ClanySite.login()",
+        "INVALID_URL",
+        "does not establish Chrome availability",
+    ]:
+        assert snippet in notes

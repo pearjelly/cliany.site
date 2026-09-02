@@ -199,6 +199,10 @@ const I18N = {
     zh: '<code>POST /explore</code> 与 <code>POST /login</code> 会在 SDK 或浏览器工作前以 <code>BAD_REQUEST</code>/400 拒绝非 HTTP(S)、缺失 host 或含空白的 URL。',
     en: '<code>POST /explore</code> and <code>POST /login</code> reject non-HTTP(S), hostless, or whitespace-containing URLs with <code>BAD_REQUEST</code>/400 before SDK or browser work begins.'
   },
+  'qs.maintainer.sdkUrl': {
+    zh: '<code>ClanySite.explore()</code> 与 <code>ClanySite.login()</code> 也会在构造 explorer 或浏览器 session 前拒绝不安全 URL，并返回 <code>INVALID_URL</code>。',
+    en: '<code>ClanySite.explore()</code> and <code>ClanySite.login()</code> also reject unsafe URLs with <code>INVALID_URL</code> before constructing an explorer or browser session.'
+  },
   'qs.maintainer.loop': {
     zh: '选择下一块发布切片时，从 <code>docs/weekly-maintainer-loop.md</code> 开始。',
     en: 'Start from <code>docs/weekly-maintainer-loop.md</code> when choosing the next release slice.'

@@ -45,6 +45,7 @@ from cliany_site.errors import (
     DataCommandQualityError,
 )
 from cliany_site.response import error_response, success_response
+from cliany_site.url_validation import is_safe_http_url
 
 logger = logging.getLogger(__name__)
 
@@ -142,6 +143,12 @@ class ClanySite:
         Returns:
             标准信封格式 ``{"success": bool, "data": {...}, "error": ...}``
         """
+        if not is_safe_http_url(url):
+            return error_response(
+                "INVALID_URL",
+                "url 必须是不含空白、带 host 的 http 或 https URL",
+            )
+
         from cliany_site.codegen.generator import AdapterGenerator, _safe_domain, save_adapter
         from cliany_site.codegen.merger import AdapterMerger
         from cliany_site.explorer.engine import WorkflowExplorer
@@ -393,12 +400,16 @@ class ClanySite:
         Returns:
             标准信封格式，含 session_file 和 cookies_count
         """
+        if not is_safe_http_url(url):
+            return error_response(
+                "INVALID_URL",
+                "url 必须是不含空白、带 host 的 http 或 https URL",
+            )
+
         from cliany_site.session import save_session
 
         parsed = urlparse(url)
         domain = parsed.netloc or parsed.path
-        if not domain:
-            return error_response("INVALID_URL", f"无法从 URL 提取 domain: {url}")
 
         browser_session = await self._ensure_browser_session()
 
