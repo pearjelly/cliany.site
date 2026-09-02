@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-09-01
-- **Current baseline:** v0.16.347
+- **Updated:** 2026-09-02
+- **Current baseline:** v0.16.348
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -56,6 +56,8 @@ As of v0.16.345, the required text fields for `POST /explore`, `POST /execute`, 
 As of v0.16.346, HTTP write endpoints reject unknown JSON fields with `BAD_REQUEST` / HTTP `400` rather than silently dropping a misspelled client parameter. `POST /explore` still accepts the documented `workflow_description` compatibility alias.
 
 As of v0.16.347, `POST /explore` and `POST /login` accept only whitespace-free `http` or `https` URLs with a host. Unsupported schemes, hostless URLs, malformed ports, and whitespace-containing values return `BAD_REQUEST` / HTTP `400` before SDK or browser work begins; `POST /execute` is unchanged.
+
+As of v0.16.348, direct `ClanySite.explore()` and `ClanySite.login()` calls use that same URL boundary. Unsupported schemes, hostless URLs, malformed ports, whitespace-containing strings, and non-string values return `INVALID_URL` before an explorer or browser session is constructed.
 
 As of v0.16.301, invoking a discovered current-schema adapter that cannot register no longer looks like an unknown command. The root CLI returns structured `E_VERIFY_STATIC` details and points to `cliany-site verify <domain> --strict --json`; this is a local static diagnosis, not proof that a browser, site workflow, or LLM provider is ready.
 

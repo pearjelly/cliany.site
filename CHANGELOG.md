@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.348] - 2026-09-02
+
 ### Fixed
 
 - `ClanySite.explore()` and `ClanySite.login()` now share the HTTP API's strict whitespace-free HTTP(S) URL contract. Invalid schemes, missing hosts, malformed ports, and non-string values return `INVALID_URL` before creating an explorer or browser session.
@@ -3066,7 +3068,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.347...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.348...HEAD
+[0.16.348]: https://github.com/pearjelly/cliany.site/compare/v0.16.347...v0.16.348
 [0.16.347]: https://github.com/pearjelly/cliany.site/compare/v0.16.346...v0.16.347
 [0.16.346]: https://github.com/pearjelly/cliany.site/compare/v0.16.345...v0.16.346
 [0.16.345]: https://github.com/pearjelly/cliany.site/compare/v0.16.344...v0.16.345
