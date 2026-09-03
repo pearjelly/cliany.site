@@ -290,6 +290,32 @@ class TestSDKDoctor:
         assert result["success"] is False
         assert result["error"]["code"] == "E_INVALID_PARAM"
 
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("llm_live", ["false", 0, 1, None])
+    async def test_doctor_rejects_non_boolean_live_preflight_before_checks(self, llm_live):
+        from cliany_site.sdk import ClanySite
+
+        with patch(
+            "cliany_site.commands.doctor._run_checks", new_callable=AsyncMock
+        ) as run_checks:
+            result = await ClanySite().doctor(llm_live=llm_live)
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_INVALID_PARAM"
+        run_checks.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("require_capability", [[], {}, 1])
+    async def test_doctor_rejects_non_string_capability_without_type_error(
+        self, require_capability
+    ):
+        from cliany_site.sdk import ClanySite
+
+        result = await ClanySite().doctor(require_capability=require_capability)
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_INVALID_PARAM"
+
 
 # ═══════════════════════════════════════════════════════════
 # SDK — list_adapters

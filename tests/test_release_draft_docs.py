@@ -13646,3 +13646,38 @@ def test_v016348_release_draft_extends_http_url_validation_to_sdk() -> None:
         "does not establish Chrome availability",
     ]:
         assert snippet in notes
+
+
+def test_v016349_release_draft_rejects_truthy_sdk_live_preflight_values() -> None:
+    draft = (ROOT / "docs" / "releases" / "v0.16.349-draft.md").read_text(
+        encoding="utf-8"
+    )
+    notes = (ROOT / "docs" / "releases" / "v0.16.349-github-release.md").read_text(
+        encoding="utf-8"
+    )
+
+    for snippet in [
+        "# v0.16.349 发布草案",
+        "**目标版本：** `0.16.349`",
+        "**提交范围：** `v0.16.348..HEAD`",
+        "**提交范围：** `v0.16.349..HEAD`",
+        "ClanySite.doctor()",
+        "E_INVALID_PARAM",
+        "E_LLM_UNAVAILABLE",
+        "cases/README.md",
+        "search-extraction-gap",
+        "release_readiness.py --strict --target-version 0.16.349 --remote",
+        "git tag v0.16.349",
+        "release_readiness.py --strict --release-tag v0.16.349 --remote --remote-name origin",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.349",
+        "non-boolean",
+        "truthy Python values",
+        "E_INVALID_PARAM",
+        "does not establish Chrome availability",
+    ]:
+        assert snippet in notes

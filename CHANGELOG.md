@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Direct SDK `doctor()` now rejects non-boolean `llm_live` values and non-string capabilities with `E_INVALID_PARAM` before creating a CDP connection or starting a live provider preflight.
+
 ## [0.16.348] - 2026-09-02
 
 ### Fixed

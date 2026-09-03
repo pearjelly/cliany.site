@@ -144,7 +144,10 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "POST /explore</code> 与 <code>POST /login</code> 会在 SDK 或浏览器工作前" in script
     assert "ClanySite.explore() and ClanySite.login()" in index
     assert "ClanySite.explore()</code> 与 <code>ClanySite.login()" in script
+    assert "Direct SDK <code>doctor()</code> accepts only a real boolean" in index
+    assert "直接调用 SDK <code>doctor()</code> 时，<code>llm_live</code> 必须是实际布尔值" in script
     assert "构造 explorer 或浏览器 session 前返回 <code>INVALID_URL</code>" in docs
+    assert "truthy 字符串意外启动 live preflight" in docs
     assert "Dependabot 现在将 GitHub Actions 升级合并为一个可审阅提案" in script
     assert "actions/setup-python@v7" in script
     assert 'en: "Current baseline: v0.16.348.' in script

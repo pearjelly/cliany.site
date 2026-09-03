@@ -203,6 +203,10 @@ const I18N = {
     zh: '<code>ClanySite.explore()</code> 与 <code>ClanySite.login()</code> 也会在构造 explorer 或浏览器 session 前拒绝不安全 URL，并返回 <code>INVALID_URL</code>。',
     en: '<code>ClanySite.explore()</code> and <code>ClanySite.login()</code> also reject unsafe URLs with <code>INVALID_URL</code> before constructing an explorer or browser session.'
   },
+  'qs.maintainer.sdkDoctor': {
+    zh: '直接调用 SDK <code>doctor()</code> 时，<code>llm_live</code> 必须是实际布尔值；无效值会在任何 live provider 调用前返回 <code>E_INVALID_PARAM</code>。',
+    en: 'Direct SDK <code>doctor()</code> accepts only a real boolean <code>llm_live</code>, returning <code>E_INVALID_PARAM</code> before any live provider call for invalid values.'
+  },
   'qs.maintainer.loop': {
     zh: '选择下一块发布切片时，从 <code>docs/weekly-maintainer-loop.md</code> 开始。',
     en: 'Start from <code>docs/weekly-maintainer-loop.md</code> when choosing the next release slice.'

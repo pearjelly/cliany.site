@@ -462,7 +462,16 @@ class ClanySite:
         )
         from cliany_site.envelope import ErrorCode
 
-        if require_capability is not None and require_capability not in _CAPABILITY_CHOICES:
+        if not isinstance(llm_live, bool):
+            return error_response(
+                ErrorCode.E_INVALID_PARAM,
+                "llm_live 必须是布尔值。",
+                "请传入 True 或 False。",
+            )
+        if require_capability is not None and (
+            not isinstance(require_capability, str)
+            or require_capability not in _CAPABILITY_CHOICES
+        ):
             return error_response(
                 ErrorCode.E_INVALID_PARAM,
                 "require_capability 必须是已支持的 doctor capability。",
