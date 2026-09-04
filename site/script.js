@@ -207,6 +207,10 @@ const I18N = {
     zh: '直接调用 SDK <code>doctor()</code> 时，<code>llm_live</code> 必须是实际布尔值；无效值会在任何 live provider 调用前返回 <code>E_INVALID_PARAM</code>。',
     en: 'Direct SDK <code>doctor()</code> accepts only a real boolean <code>llm_live</code>, returning <code>E_INVALID_PARAM</code> before any live provider call for invalid values.'
   },
+  'qs.maintainer.sdkWorkflow': {
+    zh: '直接调用 SDK <code>explore()</code> 时，workflow 必须是非空文本；<code>navigate()</code> 也会在浏览器工作开始前拒绝不安全 URL。',
+    en: 'Direct SDK <code>explore()</code> requires a non-blank workflow description, and <code>navigate()</code> rejects unsafe URLs before browser work begins.'
+  },
   'qs.maintainer.loop': {
     zh: '选择下一块发布切片时，从 <code>docs/weekly-maintainer-loop.md</code> 开始。',
     en: 'Start from <code>docs/weekly-maintainer-loop.md</code> when choosing the next release slice.'

@@ -148,6 +148,12 @@ class ClanySite:
                 "INVALID_URL",
                 "url 必须是不含空白、带 host 的 http 或 https URL",
             )
+        if not isinstance(workflow_description, str) or not workflow_description.strip():
+            return error_response(
+                "E_INVALID_PARAM",
+                "workflow_description 必须是非空字符串。",
+                "请传入要自动化的浏览器工作流描述。",
+            )
 
         from cliany_site.codegen.generator import AdapterGenerator, _safe_domain, save_adapter
         from cliany_site.codegen.merger import AdapterMerger
@@ -607,6 +613,12 @@ class ClanySite:
         Returns:
             标准信封格式
         """
+        if not is_safe_http_url(url):
+            return error_response(
+                "INVALID_URL",
+                "url 必须是不含空白、带 host 的 http 或 https URL",
+            )
+
         browser_session = await self._ensure_browser_session()
         try:
             await browser_session.navigate_to(url, new_tab=False)

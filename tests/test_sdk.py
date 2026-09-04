@@ -969,6 +969,18 @@ class TestSDKExplore:
         mock_explorer.assert_not_called()
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("workflow_description", ["", "   ", None, ["搜索"], {"task": "搜索"}])
+    async def test_explore_rejects_invalid_workflow_before_explorer(self, workflow_description):
+        from cliany_site.sdk import ClanySite
+
+        with patch("cliany_site.explorer.engine.WorkflowExplorer") as mock_explorer:
+            result = await ClanySite().explore("https://example.com", workflow_description)
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_INVALID_PARAM"
+        mock_explorer.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_explore_cdp_unavailable(self):
         from cliany_site.sdk import ClanySite
 
@@ -1146,6 +1158,28 @@ class TestSDKNavigate:
             cs = ClanySite()
             result = await cs.navigate("https://example.com")
             assert result["success"] is False
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "file:///tmp/private",
+            "javascript:alert(1)",
+            "https://example.com path",
+            "https:///missing-host",
+            "https://example.com:invalid",
+            None,
+        ],
+    )
+    async def test_navigate_rejects_invalid_http_url_before_browser_session(self, url):
+        from cliany_site.sdk import ClanySite
+
+        with patch.object(ClanySite, "_ensure_browser_session") as ensure_session:
+            result = await ClanySite().navigate(url)
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "INVALID_URL"
+        ensure_session.assert_not_awaited()
 
 
 # ═══════════════════════════════════════════════════════════

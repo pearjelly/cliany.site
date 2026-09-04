@@ -146,6 +146,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "ClanySite.explore()</code> 与 <code>ClanySite.login()" in script
     assert "Direct SDK <code>doctor()</code> accepts only a real boolean" in index
     assert "直接调用 SDK <code>doctor()</code> 时，<code>llm_live</code> 必须是实际布尔值" in script
+    assert "Direct SDK <code>explore()</code> requires a non-blank workflow description" in index
+    assert "workflow 必须是非空文本" in script
     assert "构造 explorer 或浏览器 session 前返回 <code>INVALID_URL</code>" in docs
     assert "truthy 字符串意外启动 live preflight" in docs
     assert "Dependabot 现在将 GitHub Actions 升级合并为一个可审阅提案" in script

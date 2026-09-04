@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Direct SDK `explore()` now rejects blank or non-string workflow descriptions, and `navigate()` rejects unsafe URLs before creating an explorer or browser session. Both paths return stable error envelopes instead of passing malformed automation input to browser work.
+
 ## [0.16.349] - 2026-09-04
 
 ### Fixed
