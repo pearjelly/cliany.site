@@ -149,6 +149,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Direct SDK <code>explore()</code> requires a non-blank workflow description" in index
     assert "workflow 必须是非空文本" in script
     assert "malformed <code>force</code>, <code>params</code>, <code>dry_run</code>, <code>sandbox</code>, or <code>detail</code> values" in script
+    assert "save_session(domain)</code> validates a host before opening Chrome" in script
+    assert "save_session(domain)</code> 只接受可带合法端口的主机名" in docs
     assert "同步 <code>execute()</code> 支持 <code>sandbox=True</code>" in docs
     assert "构造 explorer 或浏览器 session 前返回 <code>INVALID_URL</code>" in docs
     assert "truthy 字符串意外启动 live preflight" in docs

@@ -1259,6 +1259,44 @@ class TestSDKGetPageInfo:
 
 class TestSDKSaveSession:
     @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "domain",
+        ["", " ", "example.com/path", "user:secret@example.com", "example.com:bad", None],
+    )
+    async def test_save_session_rejects_invalid_session_domain_before_browser(self, domain):
+        from cliany_site.sdk import ClanySite
+
+        with patch.object(
+            ClanySite,
+            "_ensure_browser_session",
+            new_callable=AsyncMock,
+        ) as ensure_browser:
+            result = await ClanySite().save_session(domain)
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_INVALID_PARAM"
+        ensure_browser.assert_not_awaited()
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("domain", ["test.com", "localhost:9222", "[::1]:9222"])
+    async def test_save_session_accepts_session_host_with_optional_port(self, domain):
+        from cliany_site.sdk import ClanySite
+
+        mock_session = AsyncMock()
+        with (
+            patch.object(ClanySite, "_ensure_browser_session", return_value=mock_session),
+            patch(
+                "cliany_site.session.save_session",
+                new_callable=AsyncMock,
+                return_value=("/path/session.json", 10),
+            ),
+        ):
+            result = await ClanySite().save_session(domain)
+
+        assert result["success"] is True
+        assert result["data"]["domain"] == domain
+
+    @pytest.mark.asyncio
     async def test_save_session_success(self):
         from cliany_site.sdk import ClanySite
 

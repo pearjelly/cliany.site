@@ -208,8 +208,8 @@ const I18N = {
     en: 'Direct SDK <code>doctor()</code> accepts only a real boolean <code>llm_live</code>, returning <code>E_INVALID_PARAM</code> before any live provider call for invalid values.'
   },
   'qs.maintainer.sdkWorkflow': {
-    zh: '直接调用 SDK <code>explore()</code> 时，workflow 必须是非空文本；<code>navigate()</code> 会拒绝不安全 URL；<code>force</code>、<code>params</code>、<code>dry_run</code>、<code>sandbox</code> 与 <code>detail</code> 的畸形控制值会在 adapter 或浏览器工作前返回 <code>E_INVALID_PARAM</code>。',
-    en: 'Direct SDK <code>explore()</code> requires a non-blank workflow description, <code>navigate()</code> rejects unsafe URLs, and malformed <code>force</code>, <code>params</code>, <code>dry_run</code>, <code>sandbox</code>, or <code>detail</code> values return <code>E_INVALID_PARAM</code> before adapter or browser work.'
+    zh: '直接调用 SDK <code>explore()</code> 时，workflow 必须是非空文本；<code>navigate()</code> 会拒绝不安全 URL；<code>save_session(domain)</code> 会在打开 Chrome 前校验主机名；<code>force</code>、<code>params</code>、<code>dry_run</code>、<code>sandbox</code> 与 <code>detail</code> 的畸形控制值会在 adapter 或浏览器工作前返回 <code>E_INVALID_PARAM</code>。',
+    en: 'Direct SDK <code>explore()</code> requires a non-blank workflow description, <code>navigate()</code> rejects unsafe URLs, <code>save_session(domain)</code> validates a host before opening Chrome, and malformed <code>force</code>, <code>params</code>, <code>dry_run</code>, <code>sandbox</code>, or <code>detail</code> values return <code>E_INVALID_PARAM</code> before adapter or browser work.'
   },
   'qs.maintainer.loop': {
     zh: '选择下一块发布切片时，从 <code>docs/weekly-maintainer-loop.md</code> 开始。',

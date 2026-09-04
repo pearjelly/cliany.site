@@ -45,7 +45,7 @@ from cliany_site.errors import (
     DataCommandQualityError,
 )
 from cliany_site.response import error_response, success_response
-from cliany_site.url_validation import is_safe_http_url
+from cliany_site.url_validation import is_safe_http_url, is_safe_session_domain
 
 logger = logging.getLogger(__name__)
 
@@ -618,6 +618,13 @@ class ClanySite:
         Returns:
             标准信封格式
         """
+        if not is_safe_session_domain(domain):
+            return error_response(
+                "E_INVALID_PARAM",
+                "domain 必须是不含凭据、路径或空白的主机名，可带端口。",
+                "请传入例如 example.com、localhost:9222 或 [::1]:9222。",
+            )
+
         from cliany_site.session import save_session as _save
 
         browser_session = await self._ensure_browser_session()

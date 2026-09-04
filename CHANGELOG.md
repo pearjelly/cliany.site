@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Direct SDK `save_session(domain)` now accepts only a host with an optional valid port. Empty values, paths, URL credentials, whitespace, and invalid ports return `E_INVALID_PARAM` before Chrome is opened or a session is persisted.
+
 ## [0.16.351] - 2026-09-04
 
 ### Fixed
