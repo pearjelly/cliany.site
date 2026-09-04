@@ -63,6 +63,8 @@ As of v0.16.349, direct SDK `doctor()` requires a real boolean `llm_live` and a 
 
 As of v0.16.350, direct SDK `explore()` requires a non-blank text workflow and `navigate()` accepts only whitespace-free HTTP(S) URLs with a host. Invalid input returns a stable local error envelope before an explorer or browser session is created, so a programmatic caller gets a repairable boundary instead of malformed input reaching browser work.
 
+As of v0.16.351, direct SDK control values follow the same strict boundary as the documented HTTP API: `force`, `params`, `dry_run`, `sandbox`, and `detail` reject malformed types with `E_INVALID_PARAM` before adapter lookup or browser work. The synchronous `execute()` helper now exposes `sandbox=True` and forwards the same local action preflight. This is local input validation, not evidence of Chrome, live LLM, candidate adapter, or third-party workflow success.
+
 As of v0.16.301, invoking a discovered current-schema adapter that cannot register no longer looks like an unknown command. The root CLI returns structured `E_VERIFY_STATIC` details and points to `cliany-site verify <domain> --strict --json`; this is a local static diagnosis, not proof that a browser, site workflow, or LLM provider is ready.
 
 As of v0.16.302, `cliany-site cases --status active` gives each maintained active case a human-readable first-run order: fixed-SHA HTTPS installation, strict verification, only the login declared by that case, and then its declared read-only command. It is guidance only: it does not install, log in, execute, overwrite, or turn an occupied directory into health evidence.

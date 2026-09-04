@@ -28,6 +28,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 - SDK 写 URL 边界：直接调用 `ClanySite.explore()` 与 `ClanySite.login()` 复用同一安全 URL 校验；无效协议、缺失 host、畸形端口或非字符串值会在构造 explorer 或浏览器 session 前返回 `INVALID_URL`。
 - SDK doctor 输入边界：`ClanySite.doctor()` 只接受实际布尔 `llm_live` 和字符串 capability；字符串、数字、`None` 或非字符串 capability 会在 CDP 或 live provider 检查前返回 `E_INVALID_PARAM`，不再依赖 Python truthiness。
 - SDK 浏览器入口边界：`ClanySite.explore()` 只接受非空文本 workflow，`navigate()` 只接受无空白、带 host 的 HTTP(S) URL；非法输入会在创建 explorer 或浏览器 session 前返回稳定错误信封，避免把程序调用方的畸形输入带入浏览器工作。
+- SDK 控制参数边界：`explore(force=...)`、`execute(..., params=..., dry_run=..., sandbox=...)` 与 `list_adapters(detail=...)` 仅接受声明类型；畸形值在 adapter 查找或浏览器工作前返回 `E_INVALID_PARAM`，同步 `execute()` 也公开 `sandbox=True` 并转发相同的本地预检。
 - Release notes 可靠性：tag workflow 直接使用仓库中已审阅的版本化 GitHub Release Notes；readiness 会在 tag 前检查版本标题、用户可读正文并拒绝自动 compare-only notes，避免 PyPI 发布后才发现 GitHub Release 需要人工修复。
 - Candidate 晋级证据：candidate 案例已经具备 promotion command plan、acceptance criteria、LLM preflight blocker handoff、issue artifacts 和 machine-readable evidence summary。
 - Public issue freshness：`audit_candidate_issues.py` 会把开放 `case-proposal` candidate issue 与当前 template 比对，并把不在 manifest 中的 title 报为 `unexpected`；只有人工确认且没有 `missing`、`duplicate`、`unexpected` 时才重写 stale body，让 public issue 不会继续引导贡献者执行过期或孤立的 preflight 命令。

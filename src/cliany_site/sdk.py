@@ -154,6 +154,12 @@ class ClanySite:
                 "workflow_description 必须是非空字符串。",
                 "请传入要自动化的浏览器工作流描述。",
             )
+        if not isinstance(force, bool):
+            return error_response(
+                "E_INVALID_PARAM",
+                "force 必须是布尔值。",
+                "请传入 True 或 False。",
+            )
 
         from cliany_site.codegen.generator import AdapterGenerator, _safe_domain, save_adapter
         from cliany_site.codegen.merger import AdapterMerger
@@ -252,6 +258,24 @@ class ClanySite:
                 "E_INVALID_PARAM",
                 "domain 必须是单个安全 adapter 目录名。",
                 "请传入已安装 adapter 的域名，例如 github.com。",
+            )
+        if not isinstance(command, str) or not command.strip():
+            return error_response(
+                "E_INVALID_PARAM",
+                "command 必须是非空字符串。",
+                "请传入已安装 adapter 中声明的命令名。",
+            )
+        if params is not None and not isinstance(params, dict):
+            return error_response(
+                "E_INVALID_PARAM",
+                "params 必须是对象。",
+                "请传入字典，或省略 params。",
+            )
+        if not isinstance(dry_run, bool) or not isinstance(sandbox, bool):
+            return error_response(
+                "E_INVALID_PARAM",
+                "dry_run 和 sandbox 必须是布尔值。",
+                "请传入 True 或 False。",
             )
 
         cfg = get_config()
@@ -521,6 +545,13 @@ class ClanySite:
         Returns:
             标准信封格式，data 中包含 adapters 列表
         """
+        if not isinstance(detail, bool):
+            return error_response(
+                "E_INVALID_PARAM",
+                "detail 必须是布尔值。",
+                "请传入 True 或 False。",
+            )
+
         from cliany_site.loader import discover_adapters
 
         adapters = discover_adapters()
@@ -715,6 +746,7 @@ def execute(
     *,
     params: dict[str, Any] | None = None,
     dry_run: bool = False,
+    sandbox: bool = False,
     cdp_url: str | None = None,
     headless: bool | None = None,
 ) -> dict[str, Any]:
@@ -725,6 +757,7 @@ def execute(
         command: 命令名称
         params: 命令参数
         dry_run: 是否仅验证
+        sandbox: 是否在连接浏览器前限制跨域导航和危险操作
         cdp_url: 自定义 CDP 连接地址
         headless: 是否 Headless 模式
 
@@ -739,7 +772,13 @@ def execute(
 
     async def _inner() -> dict[str, Any]:
         async with ClanySite(cdp_url=cdp_url, headless=headless) as cs:
-            return await cs.execute(domain, command, params=params, dry_run=dry_run)
+            return await cs.execute(
+                domain,
+                command,
+                params=params,
+                dry_run=dry_run,
+                sandbox=sandbox,
+            )
 
     return _run_async(_inner())
 

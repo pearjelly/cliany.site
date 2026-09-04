@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Direct Python SDK control options now reject malformed values before adapter lookup or browser work: `explore(force=...)`, `execute(..., params=..., dry_run=..., sandbox=...)`, and `list_adapters(detail=...)` return `E_INVALID_PARAM` instead of relying on Python truthiness or downstream failures. The synchronous `execute()` helper now exposes `sandbox=True` and forwards the same local preflight.
+
 ## [0.16.350] - 2026-09-04
 
 ### Fixed

@@ -577,6 +577,36 @@ class TestSDKVerifySync:
 
 class TestSDKExecute:
     @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("command", "params", "dry_run", "sandbox"),
+        [
+            ("", None, False, False),
+            ("   ", None, False, False),
+            (None, None, False, False),
+            ("search", ["query", "cliany"], False, False),
+            ("search", None, "false", False),
+            ("search", None, False, "true"),
+        ],
+    )
+    async def test_execute_rejects_invalid_options_before_adapter_lookup(
+        self, command, params, dry_run, sandbox
+    ):
+        from cliany_site.sdk import ClanySite
+
+        with patch("cliany_site.sdk.get_config") as get_config:
+            result = await ClanySite().execute(
+                "test.com",
+                command,
+                params=params,
+                dry_run=dry_run,
+                sandbox=sandbox,
+            )
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_INVALID_PARAM"
+        get_config.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_execute_adapter_not_found(self, tmp_path):
         from cliany_site.sdk import ClanySite
 
@@ -981,6 +1011,18 @@ class TestSDKExplore:
         mock_explorer.assert_not_called()
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("force", ["false", 0, 1, None])
+    async def test_explore_rejects_non_boolean_force_before_explorer(self, force):
+        from cliany_site.sdk import ClanySite
+
+        with patch("cliany_site.explorer.engine.WorkflowExplorer") as mock_explorer:
+            result = await ClanySite().explore("https://example.com", "测试", force=force)
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_INVALID_PARAM"
+        mock_explorer.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_explore_cdp_unavailable(self):
         from cliany_site.sdk import ClanySite
 
@@ -1250,6 +1292,29 @@ class TestSyncFunctions:
             result = list_adapters()
             assert result["success"] is True
             assert result["data"]["count"] == 0
+
+    def test_list_adapters_sync_rejects_non_boolean_detail(self):
+        from cliany_site.sdk import list_adapters
+
+        result = list_adapters(detail="false")
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_INVALID_PARAM"
+
+    def test_execute_sync_forwards_sandbox(self):
+        from cliany_site.sdk import ClanySite, execute
+
+        response = {"success": True, "data": {}, "error": None}
+        with patch.object(ClanySite, "execute", new_callable=AsyncMock, return_value=response) as call:
+            assert execute("test.com", "search", sandbox=True) == response
+
+        call.assert_awaited_once_with(
+            "test.com",
+            "search",
+            params=None,
+            dry_run=False,
+            sandbox=True,
+        )
 
     def test_doctor_sync(self, tmp_path):
         from cliany_site.sdk import ClanySite, doctor
