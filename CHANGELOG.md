@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.351] - 2026-09-04
+
 ### Fixed
 
 - Direct Python SDK control options now reject malformed values before adapter lookup or browser work: `explore(force=...)`, `execute(..., params=..., dry_run=..., sandbox=...)`, and `list_adapters(detail=...)` return `E_INVALID_PARAM` instead of relying on Python truthiness or downstream failures. The synchronous `execute()` helper now exposes `sandbox=True` and forwards the same local preflight.
@@ -3084,7 +3086,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.350...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.351...HEAD
+[0.16.351]: https://github.com/pearjelly/cliany.site/compare/v0.16.350...v0.16.351
 [0.16.350]: https://github.com/pearjelly/cliany.site/compare/v0.16.349...v0.16.350
 [0.16.349]: https://github.com/pearjelly/cliany.site/compare/v0.16.348...v0.16.349
 [0.16.348]: https://github.com/pearjelly/cliany.site/compare/v0.16.347...v0.16.348
