@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.350] - 2026-09-04
+
 ### Fixed
 
 - Direct SDK `explore()` now rejects blank or non-string workflow descriptions, and `navigate()` rejects unsafe URLs before creating an explorer or browser session. Both paths return stable error envelopes instead of passing malformed automation input to browser work.
@@ -3078,7 +3080,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.349...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.350...HEAD
+[0.16.350]: https://github.com/pearjelly/cliany.site/compare/v0.16.349...v0.16.350
 [0.16.349]: https://github.com/pearjelly/cliany.site/compare/v0.16.348...v0.16.349
 [0.16.348]: https://github.com/pearjelly/cliany.site/compare/v0.16.347...v0.16.348
 [0.16.347]: https://github.com/pearjelly/cliany.site/compare/v0.16.346...v0.16.347

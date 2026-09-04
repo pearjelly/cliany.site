@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-09-04
-- **Current baseline:** v0.16.349
+- **Current baseline:** v0.16.350
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -60,6 +60,8 @@ As of v0.16.347, `POST /explore` and `POST /login` accept only whitespace-free `
 As of v0.16.348, direct `ClanySite.explore()` and `ClanySite.login()` calls use that same URL boundary. Unsupported schemes, hostless URLs, malformed ports, whitespace-containing strings, and non-string values return `INVALID_URL` before an explorer or browser session is constructed.
 
 As of v0.16.349, direct SDK `doctor()` requires a real boolean `llm_live` and a string capability. Invalid values return `E_INVALID_PARAM` before a CDP connection or live provider preflight, so a truthy value such as `"false"` cannot accidentally trigger a provider request.
+
+As of v0.16.350, direct SDK `explore()` requires a non-blank text workflow and `navigate()` accepts only whitespace-free HTTP(S) URLs with a host. Invalid input returns a stable local error envelope before an explorer or browser session is created, so a programmatic caller gets a repairable boundary instead of malformed input reaching browser work.
 
 As of v0.16.301, invoking a discovered current-schema adapter that cannot register no longer looks like an unknown command. The root CLI returns structured `E_VERIFY_STATIC` details and points to `cliany-site verify <domain> --strict --json`; this is a local static diagnosis, not proof that a browser, site workflow, or LLM provider is ready.
 
