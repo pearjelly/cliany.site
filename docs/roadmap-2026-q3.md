@@ -1,9 +1,9 @@
 # cliany-site 2026 Q3 路线图
 
 - **制定日期：** 2026-06-10
-- **校准日期：** 2026-09-02
-- **基线版本：** v0.16.348
-- **目标周期：** 滚动维护（2026-09-02 起）
+- **校准日期：** 2026-09-04
+- **基线版本：** v0.16.349
+- **目标周期：** 滚动维护（2026-09-04 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
 
@@ -13,7 +13,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 已完成校准
 
-2026-06-10 的原始路线图以 v0.14.2 为基线；当前公开基线为 v0.16.348。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
+2026-06-10 的原始路线图以 v0.14.2 为基线；当前公开基线为 v0.16.349。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
 
 - 首次成功路径：README、README.zh、官网和 `doctor` 输出已经围绕 10 分钟路径、真实 demo、LLM live preflight 和可执行下一步重新组织。
 - 真实案例库：`cliany-site cases` 已成为案例发现、单案例展开、issue template、evidence bundle 和 promotion plan 的统一入口。
@@ -26,6 +26,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 - API 写入请求边界：`POST /explore`、`POST /execute` 与 `POST /login` 的必填文本字段已收紧为非空字符串；数组、对象或空白字符串在进入 SDK 前返回 `BAD_REQUEST` / HTTP `400`，而 `workflow_description` 仅在 `workflow` 缺席时保留兼容。每个写端点现在也拒绝未知 JSON 字段，避免客户端拼写错误后悄悄丢失参数。
 - API 写 URL 边界：`POST /explore` 与 `POST /login` 只接受无空白、带 host 的 `http` 或 `https` URL；不支持的协议、缺失 host、畸形端口和含空白值在进入 SDK 或浏览器前返回 `BAD_REQUEST` / HTTP `400`，`POST /execute` 保持不变。
 - SDK 写 URL 边界：直接调用 `ClanySite.explore()` 与 `ClanySite.login()` 复用同一安全 URL 校验；无效协议、缺失 host、畸形端口或非字符串值会在构造 explorer 或浏览器 session 前返回 `INVALID_URL`。
+- SDK doctor 输入边界：`ClanySite.doctor()` 只接受实际布尔 `llm_live` 和字符串 capability；字符串、数字、`None` 或非字符串 capability 会在 CDP 或 live provider 检查前返回 `E_INVALID_PARAM`，不再依赖 Python truthiness。
 - Release notes 可靠性：tag workflow 直接使用仓库中已审阅的版本化 GitHub Release Notes；readiness 会在 tag 前检查版本标题、用户可读正文并拒绝自动 compare-only notes，避免 PyPI 发布后才发现 GitHub Release 需要人工修复。
 - Candidate 晋级证据：candidate 案例已经具备 promotion command plan、acceptance criteria、LLM preflight blocker handoff、issue artifacts 和 machine-readable evidence summary。
 - Public issue freshness：`audit_candidate_issues.py` 会把开放 `case-proposal` candidate issue 与当前 template 比对，并把不在 manifest 中的 title 报为 `unexpected`；只有人工确认且没有 `missing`、`duplicate`、`unexpected` 时才重写 stale body，让 public issue 不会继续引导贡献者执行过期或孤立的 preflight 命令。
@@ -75,7 +76,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 | adapter 可维护性 | metadata/package 校验和安全审计已进入门禁 | demo adapter 有 release asset、安装验证、回归报告和失败修复建议 |
 | 探索/抽取可靠性 | LLM outage 和抽取质量已有结构化信号 | 常见失败能定位到 provider、页面状态、selector、字段质量或能力边界 |
 | 集成可用性 | CLI 主路径强，SDK/API/headless 示例偏弱 | SDK、HTTP API、headless/remote CDP 均有可复制最小示例 |
-| 发布节奏 | v0.16.348，GitHub Release / PyPI / 官网发布流程已跑通，PyPI latest 缓存滞后可由版本专属 endpoint 复核，官网 alias 由 `vercel inspect www.cliany.site` 复核，短暂远端传输失败有有限重试而持续失败仍阻断，首页与文档无 Google Fonts 运行时依赖，API 查询与写请求的非法、重复或未知字段都在 tag 前由回归保护，直接 SDK 的 browser-facing URL 也在构造 explorer 或 browser session 前由回归保护，primary adapter handoff command aliases 与 doctor preflight evidence state 已进入维护者路径 | 每天 1~3 个可验证版本；每周至少 3 天有提交；发布后 publication audit 为绿 |
+| 发布节奏 | v0.16.349，GitHub Release / PyPI / 官网发布流程已跑通，PyPI latest 缓存滞后可由版本专属 endpoint 复核，官网 alias 由 `vercel inspect www.cliany.site` 复核，短暂远端传输失败有有限重试而持续失败仍阻断，首页与文档无 Google Fonts 运行时依赖，API 查询与写请求的非法、重复或未知字段都在 tag 前由回归保护，直接 SDK 的 browser-facing URL 与 doctor live-preflight 参数也会在资源创建前由回归保护，primary adapter handoff command aliases 与 doctor preflight evidence state 已进入维护者路径 | 每天 1~3 个可验证版本；每周至少 3 天有提交；发布后 publication audit 为绿 |
 
 ## 双视图维护规则
 

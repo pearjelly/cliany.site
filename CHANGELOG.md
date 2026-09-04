@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.349] - 2026-09-04
+
 ### Fixed
 
 - Direct SDK `doctor()` now rejects non-boolean `llm_live` values and non-string capabilities with `E_INVALID_PARAM` before creating a CDP connection or starting a live provider preflight.
@@ -3072,7 +3074,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.348...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.349...HEAD
+[0.16.349]: https://github.com/pearjelly/cliany.site/compare/v0.16.348...v0.16.349
 [0.16.348]: https://github.com/pearjelly/cliany.site/compare/v0.16.347...v0.16.348
 [0.16.347]: https://github.com/pearjelly/cliany.site/compare/v0.16.346...v0.16.347
 [0.16.346]: https://github.com/pearjelly/cliany.site/compare/v0.16.345...v0.16.346
