@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.352] - 2026-09-05
+
 ### Fixed
 
 - Direct SDK `save_session(domain)` now accepts only a host with an optional valid port. Empty values, paths, URL credentials, whitespace, and invalid ports return `E_INVALID_PARAM` before Chrome is opened or a session is persisted.
@@ -3090,7 +3092,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.351...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.352...HEAD
+[0.16.352]: https://github.com/pearjelly/cliany.site/compare/v0.16.351...v0.16.352
 [0.16.351]: https://github.com/pearjelly/cliany.site/compare/v0.16.350...v0.16.351
 [0.16.350]: https://github.com/pearjelly/cliany.site/compare/v0.16.349...v0.16.350
 [0.16.349]: https://github.com/pearjelly/cliany.site/compare/v0.16.348...v0.16.349

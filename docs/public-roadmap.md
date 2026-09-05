@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-09-04
-- **Current baseline:** v0.16.351
+- **Updated:** 2026-09-05
+- **Current baseline:** v0.16.352
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -64,6 +64,8 @@ As of v0.16.349, direct SDK `doctor()` requires a real boolean `llm_live` and a 
 As of v0.16.350, direct SDK `explore()` requires a non-blank text workflow and `navigate()` accepts only whitespace-free HTTP(S) URLs with a host. Invalid input returns a stable local error envelope before an explorer or browser session is created, so a programmatic caller gets a repairable boundary instead of malformed input reaching browser work.
 
 As of v0.16.351, direct SDK control values follow the same strict boundary as the documented HTTP API: `force`, `params`, `dry_run`, `sandbox`, and `detail` reject malformed types with `E_INVALID_PARAM` before adapter lookup or browser work. The synchronous `execute()` helper now exposes `sandbox=True` and forwards the same local action preflight. This is local input validation, not evidence of Chrome, live LLM, candidate adapter, or third-party workflow success.
+
+As of v0.16.352, direct SDK `save_session(domain)` accepts only a host with an optional valid port before opening Chrome or writing a session. Empty values, paths, URL credentials, whitespace, and invalid ports return `E_INVALID_PARAM`; ordinary hosts, host:port values, and bracketed IPv6 hosts remain compatible. This local input boundary does not establish Chrome, live LLM, candidate adapter, or third-party workflow success.
 
 As of v0.16.301, invoking a discovered current-schema adapter that cannot register no longer looks like an unknown command. The root CLI returns structured `E_VERIFY_STATIC` details and points to `cliany-site verify <domain> --strict --json`; this is a local static diagnosis, not proof that a browser, site workflow, or LLM provider is ready.
 
