@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-09-05
-- **Current baseline:** v0.16.352
+- **Updated:** 2026-09-08
+- **Current baseline:** v0.16.353
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -14,6 +14,8 @@ cliany-site turns real browser workflows into reusable CLI commands. The Q3 road
 - Adapter verification, marketplace packaging, metadata validation, and generated-code security checks.
 - Four maintained historical demos with copyable GitHub Release asset URLs and pinned SHA-256 installation checks.
 - Release readiness and publication checks that keep GitHub Release, PyPI, CI, changelog, website publication, and case catalog validation tied together.
+
+As of v0.16.353, synchronous Python callers can use `save_session(domain, cdp_url=..., headless=...)` without managing an event loop. It delegates to the same validated `ClanySite.save_session()` path, preserving the session-host boundary and browser configuration rather than bypassing Chrome or persistence safeguards.
 
 ## Near Term: 2026-07-29 to 2026-08-05
 

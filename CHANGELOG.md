@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.353] - 2026-09-08
+
 ### Added
 
 - Added synchronous `save_session(domain, cdp_url=..., headless=...)` for Python SDK callers. It uses the same session-host validation and browser configuration path as `await ClanySite(...).save_session(domain)`.
@@ -3096,7 +3098,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.352...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.353...HEAD
+[0.16.353]: https://github.com/pearjelly/cliany.site/compare/v0.16.352...v0.16.353
 [0.16.352]: https://github.com/pearjelly/cliany.site/compare/v0.16.351...v0.16.352
 [0.16.351]: https://github.com/pearjelly/cliany.site/compare/v0.16.350...v0.16.351
 [0.16.350]: https://github.com/pearjelly/cliany.site/compare/v0.16.349...v0.16.350
