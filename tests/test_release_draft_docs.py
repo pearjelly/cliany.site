@@ -13717,3 +13717,37 @@ def test_v016352_release_draft_validates_sdk_session_host_before_browser() -> No
         "live LLM success",
     ]:
         assert snippet in notes
+
+
+def test_v016353_release_draft_prepares_sync_sdk_session_helper() -> None:
+    draft = (ROOT / "docs" / "releases" / "v0.16.353-draft.md").read_text(
+        encoding="utf-8"
+    )
+    notes = (ROOT / "docs" / "releases" / "v0.16.353-github-release.md").read_text(
+        encoding="utf-8"
+    )
+
+    for snippet in [
+        "# v0.16.353 发布草案",
+        "**目标版本：** `0.16.353`",
+        "**提交范围：** `v0.16.353..HEAD`",
+        "**提交范围：** `v0.16.352..HEAD`",
+        "save_session(domain, cdp_url=..., headless=...)",
+        "E_INVALID_PARAM",
+        "E_LLM_UNAVAILABLE",
+        "cases/manifest.json",
+        "release_readiness.py --strict --target-version 0.16.353 --remote",
+        "git tag v0.16.353",
+        "release_readiness.py --strict --release-tag v0.16.353 --remote --remote-name origin",
+        "check_release_publication.py --strict --remote --distribution --json",
+    ]:
+        assert snippet in draft
+
+    for snippet in [
+        "# v0.16.353",
+        "save_session(domain, cdp_url=..., headless=...)",
+        "E_INVALID_PARAM",
+        "does not establish Chrome availability",
+        "live LLM success",
+    ]:
+        assert snippet in notes

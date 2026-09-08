@@ -1322,6 +1322,21 @@ class TestSDKSaveSession:
 
 
 class TestSyncFunctions:
+    def test_save_session_sync_forwards_browser_options(self):
+        from cliany_site.sdk import ClanySite, save_session
+
+        response = {"success": True, "data": {}, "error": None}
+        calls = []
+
+        async def fake_save_session(self, domain):
+            calls.append((self._cdp_url, self._headless, domain))
+            return response
+
+        with patch.object(ClanySite, "save_session", autospec=True, side_effect=fake_save_session):
+            assert save_session("example.com", cdp_url="ws://chrome:9222", headless=True) == response
+
+        assert calls == [("ws://chrome:9222", True, "example.com")]
+
     def test_list_adapters_sync(self, tmp_path):
         from cliany_site.sdk import list_adapters
 
@@ -2444,12 +2459,13 @@ class TestServeCLI:
 
 class TestPackageExports:
     def test_public_api_importable(self):
-        from cliany_site import ClanySite, doctor, execute, explore, list_adapters, login, verify
+        from cliany_site import ClanySite, doctor, execute, explore, list_adapters, login, save_session, verify
 
         assert ClanySite is not None
         assert callable(explore)
         assert callable(execute)
         assert callable(login)
+        assert callable(save_session)
         assert callable(doctor)
         assert callable(list_adapters)
         assert callable(verify)

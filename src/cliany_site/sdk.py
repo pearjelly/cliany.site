@@ -814,6 +814,21 @@ def login(
     return _run_async(_inner())
 
 
+def save_session(
+    domain: str,
+    *,
+    cdp_url: str | None = None,
+    headless: bool | None = None,
+) -> dict[str, Any]:
+    """同步版: 保存当前浏览器的 Session 数据。"""
+
+    async def _inner() -> dict[str, Any]:
+        async with ClanySite(cdp_url=cdp_url, headless=headless) as cs:
+            return await cs.save_session(domain)
+
+    return _run_async(_inner())
+
+
 def doctor(
     *,
     cdp_url: str | None = None,

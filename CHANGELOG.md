@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added synchronous `save_session(domain, cdp_url=..., headless=...)` for Python SDK callers. It uses the same session-host validation and browser configuration path as `await ClanySite(...).save_session(domain)`.
+
 ## [0.16.352] - 2026-09-05
 
 ### Fixed
