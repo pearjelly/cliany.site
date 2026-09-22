@@ -230,6 +230,8 @@ def summarize_extract_quality(
         return {"status": "not_applicable", "ok": True, "extracts": []}
     if all(item.get("ok") for item in extracts):
         status = "ok"
+    elif any(item.get("status") == "partial" or item.get("field_blank_rows") for item in extracts):
+        status = "partial"
     elif any(item.get("status") == "empty" for item in extracts):
         status = "empty"
     else:

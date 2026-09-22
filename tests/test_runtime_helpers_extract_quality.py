@@ -87,7 +87,8 @@ def test_summarize_extract_quality_matches_extract_results_after_navigation():
     quality = runtime_helpers.summarize_extract_quality(results, action_steps)
 
     assert quality["ok"] is False
-    assert quality["status"] == "empty"
+    assert quality["status"] == "partial"
+    assert quality["extracts"][0]["status"] == "empty"
     assert quality["extracts"][0]["step_index"] == 0
     assert "field is blank in all rows: title" in quality["extracts"][0]["issues"]
     assert quality["extracts"][0]["field_blank_rows"] == {"title": [1], "url": [1]}

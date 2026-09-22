@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 import types
 
+import pytest
+
 from click.testing import CliRunner
 
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
@@ -16,6 +18,39 @@ MINIMAL_CODE = (
     "@click.group()\n"
     "def cli(): pass\n"
 )
+
+
+@pytest.mark.parametrize("contents,success", [
+    ([[]], True),
+    ([[{"title": "", "url": ""}]], False),
+    ([[], [{"title": "A", "url": ""}]], False),
+    ([[{"title": "A", "url": ""}], []], False),
+])
+def test_generated_empty_allowance_uses_actual_quality(contents, success):
+    actions = [ActionStep(
+        action_type="extract", page_url="https://example.com", selector="article",
+        extract_mode="list", fields_map={"title": "h3", "url": "a@href"},
+    ) for _ in contents]
+    command = CommandSuggestion(
+        name="list-results", description="Read results", args=[],
+        action_steps=list(range(len(actions))), expects_nonempty=False,
+    )
+    code = AdapterGenerator(domain="example.com").generate(
+        _make_explore_result(actions=actions, commands=[command]), "example.com",
+    )
+    module = types.ModuleType("generated_quality_adapter")
+    exec(code, module.__dict__)  # noqa: S102 - 测试生成代码的 Click 行为
+    module.execute_steps_via_atoms = lambda *args: [
+        {"ok": True, "command": "browser extract", "data": {"content": content}}
+        for content in contents
+    ]
+    result = CliRunner().invoke(module.cli, ["list-results", "--json"])
+    payload = json.loads(result.output)
+    assert payload["ok"] is success
+    assert result.exit_code == (0 if success else 1)
+    if not success:
+        assert payload["error"]["code"] == "E_EMPTY_RESULT"
+        assert payload["data"]["quality"]["status"] == "partial"
 
 
 def _make_explore_result(
