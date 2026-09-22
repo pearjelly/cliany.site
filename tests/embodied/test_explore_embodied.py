@@ -1,8 +1,10 @@
 # pyright: reportMissingImports=false
 """真实 headless Chromium + CDP 的 AXTree 具身测试。"""
 
+import asyncio
 import json
 import socket
+import sys
 
 import pytest
 
@@ -63,6 +65,57 @@ async def test_capture_axtree_from_headless_chrome(local_server, headless_browse
         assert search_fields, f"selector_map 应含搜索框元素，实际: {list(selector_map.values())[:10]}"
     finally:
         await cdp.disconnect()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
+@pytest.mark.parametrize("command", ["click", "type"])
+async def test_browser_cli_changes_real_form(
+    local_server, headless_browser_cdp_url, tmp_home, command
+):
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.connect_over_cdp(
+            headless_browser_cdp_url.replace("ws://", "http://")
+        )
+        page = await browser.contexts[0].new_page()
+        await page.goto(f"{local_server}/browser_atoms.html")
+
+        async def run(*args):
+            process = await asyncio.create_subprocess_exec(
+                sys.executable, "-m", "cliany_site", "--cdp-url", headless_browser_cdp_url,
+                "browser", *args, "--json",
+                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+            )
+            try:
+                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=45)
+            except TimeoutError:
+                process.kill()
+                await process.communicate()
+                raise
+            assert process.returncode == 0, (stdout.decode(), stderr.decode())
+            result = json.loads(stdout)
+            assert result["ok"] is True, result
+            return result
+
+        try:
+            if command == "click":
+                await run("click", "--text", "Apply")
+                assert await page.get_by_role("status").text_content() == "seed"
+            else:
+                await page.get_by_label("Name").press("End")
+                await run("type", "--text", "Name", "--value", "Ada")
+                assert await page.get_by_label("Name").input_value() == "seedAda"
+                assert await page.get_by_role("status").text_content() == "untouched"
+                await run("type", "--text", "Name", "--value", "Grace", "--clear", "--submit")
+                assert await page.get_by_label("Name").input_value() == "Grace"
+                assert await page.get_by_role("status").text_content() == "Grace"
+                await run("type", "--text", "Name", "--value", "", "--submit")
+                assert await page.get_by_label("Name").input_value() == "Grace"
+                assert await page.get_by_role("status").text_content() == "Grace"
+                await run("type", "--text", "Name", "--value", "", "--clear")
+                assert await page.get_by_label("Name").input_value() == ""
+        finally:
+            await browser.close()
 
 
 @pytest.mark.embodied

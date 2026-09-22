@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import importlib
 import json
 
 import click
@@ -91,12 +92,24 @@ async def _run_click(cdp, ref: str | None, text: str | None) -> Envelope:
                 )
 
             assert found_ref is not None
-            await browser_session.execute_action(
-                {"action": "click_element", "index": int(found_ref)}
+            node = await browser_session.get_element_by_index(int(found_ref))
+            if node is None:
+                return err(
+                    command="browser click",
+                    code=ErrorCode.E_SELECTOR_NOT_FOUND,
+                    message=f"未找到可点击元素: ref={found_ref!r}",
+                    hint="页面结构可能已变化，请重新运行 browser find",
+                    source="builtin",
+                )
+            events_module = importlib.import_module("browser_use.browser.events")
+            event = browser_session.event_bus.dispatch(
+                events_module.ClickElementEvent(node=node)
             )
+            await event
+            await event.event_result(raise_if_any=True, raise_if_none=False)
         finally:
             await cdp.disconnect()
-    except (OSError, RuntimeError) as exc:
+    except (OSError, RuntimeError, ValueError) as exc:
         return err(
             command="browser click",
             code=ErrorCode.E_CDP_UNAVAILABLE,

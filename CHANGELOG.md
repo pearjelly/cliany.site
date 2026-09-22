@@ -7,6 +7,11 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Standalone `browser click` and `browser type` now use supported browser-use events instead of the removed `execute_action` API. Commands await handler results and reject missing live nodes before dispatch.
+- `browser type` preserves its `--clear` and `--submit` options. Empty input without `--clear` no longer triggers browser-use's implicit clearing behavior. Real Chromium tests invoke the CLI in separate processes and inspect form values and submission results.
+
 ## [0.16.356] - 2026-09-22
 
 ### Fixed

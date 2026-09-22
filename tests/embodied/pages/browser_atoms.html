@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Browser command fixture</title></head>
+<body>
+  <form id="form">
+    <label for="name">Name</label>
+    <input id="name" value="seed">
+    <button type="submit">Apply</button>
+  </form>
+  <output id="result">untouched</output>
+  <script>
+    document.getElementById('form').addEventListener('submit', event => {
+      event.preventDefault();
+      document.getElementById('result').textContent = document.getElementById('name').value;
+    });
+  </script>
+</body>
+</html>

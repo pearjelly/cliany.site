@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import importlib
 import json
 
 import click
@@ -104,21 +105,33 @@ async def _run_type(
                 )
 
             assert found_ref is not None
-            idx = int(found_ref)
-            if clear:
-                await browser_session.execute_action(
-                    {"action": "clear_input", "index": idx}
+            node = await browser_session.get_element_by_index(int(found_ref))
+            if node is None:
+                return err(
+                    command="browser type",
+                    code=ErrorCode.E_SELECTOR_NOT_FOUND,
+                    message=f"未找到可输入元素: ref={found_ref!r}",
+                    hint="页面结构可能已变化，请重新运行 browser find",
+                    source="builtin",
                 )
-            await browser_session.execute_action(
-                {"action": "input_text", "index": idx, "text": value}
+            events_module = importlib.import_module("browser_use.browser.events")
+            # browser-use treats empty TypeTextEvent text as a request to clear.
+            action = (
+                events_module.TypeTextEvent(node=node, text=value, clear=clear)
+                if value or clear else events_module.ClickElementEvent(node=node)
             )
+            event = browser_session.event_bus.dispatch(action)
+            await event
+            await event.event_result(raise_if_any=True, raise_if_none=False)
             if submit:
-                await browser_session.execute_action(
-                    {"action": "send_keys", "keys": "\n"}
+                submit_event = browser_session.event_bus.dispatch(
+                    events_module.SendKeysEvent(keys="Enter")
                 )
+                await submit_event
+                await submit_event.event_result(raise_if_any=True, raise_if_none=False)
         finally:
             await cdp.disconnect()
-    except (OSError, RuntimeError) as exc:
+    except (OSError, RuntimeError, ValueError) as exc:
         return err(
             command="browser type",
             code=ErrorCode.E_CDP_UNAVAILABLE,

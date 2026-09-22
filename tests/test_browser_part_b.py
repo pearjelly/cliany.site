@@ -20,8 +20,29 @@ _MOCK_AXTREE = {
 }
 
 
+class _Event:
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+        self.event_result = AsyncMock()
+
+    def __await__(self):
+        async def wait():
+            return self
+        return wait().__await__()
+
+
+def _action_session():
+    session = MagicMock()
+    session.get_element_by_index = AsyncMock(return_value=object())
+    session.event_bus.dispatch.side_effect = lambda event: event
+    return session
+
+
 @pytest.fixture()
-def runner():
+def runner(monkeypatch):
+    import browser_use.browser.events as events
+    for name in ("ClickElementEvent", "TypeTextEvent", "SendKeysEvent"):
+        monkeypatch.setattr(events, name, _Event)
     return CliRunner()
 
 
@@ -94,8 +115,7 @@ class TestBrowserFind:
 
 class TestBrowserClick:
     def test_click_success(self, no_llm, runner):
-        mock_session = MagicMock()
-        mock_session.execute_action = AsyncMock()
+        mock_session = _action_session()
         with (
             patch(
                 "cliany_site.browser.cdp.CDPConnection.check_available",
@@ -119,8 +139,7 @@ class TestBrowserClick:
             assert data["data"]["status"] == "clicked"
 
     def test_click_invalid_ref(self, no_llm, runner):
-        mock_session = MagicMock()
-        mock_session.execute_action = AsyncMock()
+        mock_session = _action_session()
         with (
             patch(
                 "cliany_site.browser.cdp.CDPConnection.check_available",
@@ -146,8 +165,7 @@ class TestBrowserClick:
             assert data["error"]["hint"] is not None
 
     def test_click_by_text(self, no_llm, runner):
-        mock_session = MagicMock()
-        mock_session.execute_action = AsyncMock()
+        mock_session = _action_session()
         with (
             patch(
                 "cliany_site.browser.cdp.CDPConnection.check_available",
@@ -174,8 +192,7 @@ class TestBrowserClick:
 
 class TestBrowserType:
     def test_type_success(self, no_llm, runner):
-        mock_session = MagicMock()
-        mock_session.execute_action = AsyncMock()
+        mock_session = _action_session()
         with (
             patch(
                 "cliany_site.browser.cdp.CDPConnection.check_available",
@@ -203,8 +220,7 @@ class TestBrowserType:
             assert data["data"]["ref"] == "2"
 
     def test_type_with_submit(self, no_llm, runner):
-        mock_session = MagicMock()
-        mock_session.execute_action = AsyncMock()
+        mock_session = _action_session()
         with (
             patch(
                 "cliany_site.browser.cdp.CDPConnection.check_available",
@@ -239,8 +255,7 @@ class TestBrowserType:
             assert data["data"]["submitted"] is True
 
     def test_type_invalid_ref(self, no_llm, runner):
-        mock_session = MagicMock()
-        mock_session.execute_action = AsyncMock()
+        mock_session = _action_session()
         with (
             patch(
                 "cliany_site.browser.cdp.CDPConnection.check_available",
