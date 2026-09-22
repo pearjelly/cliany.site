@@ -63,14 +63,12 @@ def workflow_run(ctx: click.Context, file: str, json_mode: bool | None, dry_run:
                 err_msg = f"步骤 '{sr.name}' 失败: {sr.error}"
                 break
         print_response(
-            error_response("WORKFLOW_FAILED", err_msg or "工作流执行失败", fix="检查各步骤配置和 adapter 状态"),
+            error_response(
+                "WORKFLOW_FAILED", err_msg or "工作流执行失败",
+                fix="检查各步骤配置和 adapter 状态", details=result.to_dict(),
+            ),
             json_mode=effective_json,
-            exit_on_error=False,
         )
-        if effective_json:
-            import json as _json
-
-            print(_json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
 
 
 @workflow_group.command("validate")
@@ -160,11 +158,7 @@ def workflow_batch(
                 "BATCH_PARTIAL_FAILURE",
                 f"批量执行完成：成功 {result.succeeded} / 失败 {result.failed} / 总计 {result.total}",
                 fix="检查失败项的错误信息",
+                details=result.to_dict(),
             ),
             json_mode=effective_json,
-            exit_on_error=False,
         )
-        if effective_json:
-            import json as _json
-
-            print(_json.dumps(result.to_dict(), ensure_ascii=False, indent=2))

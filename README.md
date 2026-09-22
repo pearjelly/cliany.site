@@ -429,6 +429,8 @@ one comparison (`==`, `!=`, `>`, `<`, `>=`, `<=`) against a scalar value. Invali
 condition syntax fails validation before execution; missing condition fields and
 invalid numeric comparisons stop the workflow. Explicit `null` values remain
 comparable. Missing ordinary parameter references still resolve to an empty string.
+Failed workflow and batch commands on current master exit nonzero; JSON output is
+one error response, with step/item results under `error.details`.
 
 ### Batch Execution
 
