@@ -325,8 +325,9 @@ async def fallback_browser():
 
 @pytest.mark.embodied
 @pytest.mark.asyncio
+@pytest.mark.parametrize("long_name", [False, True])
 async def test_jev_intent_finder_reads_real_tree_without_mutation(
-    local_server, headless_browser_cdp_url, tmp_home, monkeypatch,
+    local_server, headless_browser_cdp_url, tmp_home, monkeypatch, long_name,
 ):
     import httpx
 
@@ -358,13 +359,22 @@ async def test_jev_intent_finder_reads_real_tree_without_mutation(
         try:
             page = await browser.contexts[0].new_page()
             await page.goto(url)
+            if long_name:
+                await page.locator("input").evaluate(
+                    "(element, label) => element.setAttribute('aria-label', label)",
+                    "Name " + "x" * 512 + " not available",
+                )
             result = await _run_find(
                 CDPConnection(cdp_url=headless_browser_cdp_url), "intent", "Enter my name", 5, True,
             )
-            assert result["ok"] is True, result
-            assert result["data"][0]["name"] == "Name"
-            assert result["data"][0]["role"] == "textbox"
-            assert len(requests) == 1
+            if long_name:
+                assert result["error"]["code"] == "E_INVALID_PARAM", result
+                assert not requests
+            else:
+                assert result["ok"] is True, result
+                assert result["data"][0]["name"] == "Name"
+                assert result["data"][0]["role"] == "textbox"
+                assert len(requests) == 1
             assert await page.locator("input").input_value() == "seed"
             assert await page.locator("output").get_attribute("data-submits") == "0"
         finally:

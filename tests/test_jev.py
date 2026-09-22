@@ -106,6 +106,30 @@ async def test_candidate_limit_does_not_truncate(transport):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("field,limit", [("name", 512), ("role", 80)])
+async def test_oversized_candidate_semantics_prevent_request(transport, field, limit):
+    calls, response = transport
+    response["body"] = answer(probabilities={"element_0": 0.98, "none": 0.02})
+    nodes = {"12": {"name": "Apply", "role": "button", field: "x" * limit + " not available"}}
+    result = await jev.choose_element(nodes, "Apply", allow_remote=True)
+    assert result["error"]["code"] == "E_INVALID_PARAM"
+    assert not calls
+
+
+@pytest.mark.asyncio
+async def test_candidate_semantics_at_limits_remain_complete(transport):
+    calls, response = transport
+    response["body"] = answer(probabilities={"element_0": 0.98, "none": 0.02})
+    nodes = {"12": {"name": "x" * 512, "role": "r" * 80}}
+    result = await jev.choose_element(nodes, "Apply", allow_remote=True)
+    assert result["ok"] is True
+    criteria = json.loads(calls[0].content)["questions"]["target"]["criteria"]
+    assert criteria["element_0"] == nodes["12"]
+    assert result["data"][0]["name"] == nodes["12"]["name"]
+    assert result["data"][0]["role"] == nodes["12"]["role"]
+
+
+@pytest.mark.asyncio
 async def test_oversized_confidence_threshold_prevents_request(transport):
     calls, _ = transport
     result = await jev.choose_element(NODES, "Name", min_confidence=10 ** 400, allow_remote=True)

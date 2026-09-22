@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Jev no longer silently truncates candidate names and roles before asking the model. Over-limit semantics reject the whole lookup before any request; labels at the supported limits are preserved intact.
+
 - Jev rejects oversized integer probabilities and confidence values with structured errors instead of raising a numeric overflow. Invalid caller thresholds are rejected before any remote request.
 
 - Parameter propagation and action deduplication now distinguish recorded page URLs, element refs, and navigation destinations, not just action type/name/role. Generated commands preserve separate same-label inputs on different pages instead of replacing or dropping the wrong input. Existing adapters require regeneration.

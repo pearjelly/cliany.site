@@ -37,14 +37,17 @@ async def choose_element(
     if not intent.strip() or len(intent) > 4096 or not _probability(min_confidence):
         return err("browser find", ErrorCode.E_INVALID_PARAM, "意图须为 1–4096 字符，置信度门槛须在 0–1 之间")
     candidates = {
-        f"element_{index}": {"ref": str(ref), "name": str(node.get("name", ""))[:512],
-                             "role": str(node.get("role", "unknown"))[:80]}
+        f"element_{index}": {"ref": str(ref), "name": str(node.get("name", "")),
+                             "role": str(node.get("role", "unknown"))}
         for index, (ref, node) in enumerate(selector_map.items()) if isinstance(node, dict)
     }
     if not candidates:
         return err("browser find", ErrorCode.E_SELECTOR_NOT_FOUND, "当前页面没有可选元素")
     if len(candidates) > 254:
         return err("browser find", ErrorCode.E_INVALID_PARAM, "候选超过 254 个，请缩小页面范围；不会截断候选后猜测")
+    if any(len(item["name"]) > 512 or len(item["role"]) > 80 for item in candidates.values()):
+        return err("browser find", ErrorCode.E_INVALID_PARAM,
+                   "候选名称超过 512 字符或角色超过 80 字符；不会截断语义后猜测，请使用 text/role 查找")
     criteria = {key: {"name": item["name"], "role": item["role"]} for key, item in candidates.items()}
     criteria["none"] = {"name": "No unique suitable element, or insufficient information", "role": "abstain"}
     model = os.environ.get("CLIANY_JEV_MODEL", "jev-latest")
