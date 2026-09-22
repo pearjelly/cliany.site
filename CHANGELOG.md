@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Malformed model responses no longer signal successful exploration completion. Response objects and boolean completion flags are validated, and completed recorded actions require explicit command definitions instead of bypassing quality checks through a synthesized fallback command.
+
 - Declared exploration commands must preserve recorded action order and partition all actions exactly once. Missing, overlapping, duplicate, out-of-range, or non-integer indices now fail instead of being silently filtered or split evenly between unrelated commands.
 
 - Exploration that exhausts its step budget without reaching completion now fails instead of synthesizing a reusable command from partial actions. Its recording is finalized as incomplete.

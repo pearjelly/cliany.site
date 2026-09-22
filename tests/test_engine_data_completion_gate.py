@@ -209,3 +209,34 @@ async def test_explicit_uneven_partition_preserves_command_ownership(mocker, tmp
     assert [(command.name, command.action_steps) for command in result.commands] == [
         ("open", [0]), ("apply", [1, 2]),
     ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("commands", [[], None, {}, "run-workflow"])
+async def test_completed_actions_require_explicit_commands(mocker, tmp_home, commands):
+    _prepare(mocker, [{
+        "actions": [{"type": "click", "ref": "1", "description": "打开页面"}],
+        "commands": commands, "done": True,
+    }], [[]])
+
+    with pytest.raises(RuntimeError, match="命令"):
+        await WorkflowExplorer().explore("https://example.com/search", "读取数据", record=False)
+
+
+@pytest.mark.asyncio
+async def test_malformed_response_after_action_cannot_complete_workflow(mocker, tmp_home):
+    import json
+
+    from cliany_site.explorer.engine import _parse_llm_response
+
+    first = {"actions": [{"type": "click", "ref": "1", "description": "打开页面"}], "done": False}
+    invoke = _prepare(mocker, [first, {}], [[]])
+    invoke.side_effect = [SimpleNamespace(content=json.dumps(first)), SimpleNamespace(content="broken response")]
+    mocker.patch("cliany_site.explorer.engine._parse_llm_response", side_effect=_parse_llm_response)
+    save = mocker.patch("cliany_site.explorer.engine.save_adapter")
+
+    with pytest.raises(ValueError, match="解析失败"):
+        await WorkflowExplorer().explore("https://example.com/search", "读取数据", record=False)
+
+    assert invoke.await_count == 2
+    save.assert_not_called()

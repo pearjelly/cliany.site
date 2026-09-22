@@ -160,15 +160,16 @@ class TestParseLlmResponse:
         result = _parse_llm_response(text)
         assert result["done"] is True
 
-    def test_invalid_json_returns_fallback(self):
-        result = _parse_llm_response("not json at all")
-        assert result["done"] is True
-        assert result["actions"] == []
-        assert "解析失败" in result["reasoning"]
+    @pytest.mark.parametrize("text", ["not json at all", "", '{"done":'])
+    def test_invalid_json_never_signals_completion(self, text):
+        with pytest.raises(ValueError, match="解析失败"):
+            _parse_llm_response(text)
 
-    def test_empty_string_returns_fallback(self):
-        result = _parse_llm_response("")
-        assert result["done"] is True
+    @pytest.mark.parametrize("text", ['[]', '[{"done": true}]', 'null', '42',
+                                      '{"done": "false"}', '{"done": 1}', '{"done": null}'])
+    def test_invalid_response_shape_is_rejected(self, text):
+        with pytest.raises(ValueError, match="JSON 对象"):
+            _parse_llm_response(text)
 
 
 class TestToText:

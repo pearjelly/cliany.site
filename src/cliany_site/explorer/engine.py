@@ -428,22 +428,23 @@ def _get_replay_llm():
 
 
 def _parse_llm_response(text: str) -> dict:
-    match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
-    if match:
-        text = match.group(1)
-    match = re.search(r"\{.*\}", text, re.DOTALL)
-    if match:
-        text = match.group(0)
     try:
-        result: dict[Any, Any] = json.loads(text)
-        return result
-    except (json.JSONDecodeError, ValueError):
-        return {
-            "done": True,
-            "actions": [],
-            "commands": [],
-            "reasoning": "LLM 响应解析失败",
-        }
+        result = json.loads(text)
+    except json.JSONDecodeError:
+        match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+        if match:
+            text = match.group(1)
+        else:
+            match = re.search(r"\{.*\}", text, re.DOTALL)
+            if match:
+                text = match.group(0)
+        try:
+            result = json.loads(text)
+        except json.JSONDecodeError as exc:
+            raise ValueError("LLM 响应解析失败，不能确认探索完成") from exc
+    if not isinstance(result, dict) or type(result.get("done", False)) is not bool:
+        raise ValueError("LLM 响应须为 JSON 对象，done 必须为布尔值")
+    return result
 
 
 _RETRYABLE_STATUS_CODES = frozenset({429, 500, 502, 503, 504})
@@ -999,7 +1000,9 @@ class WorkflowExplorer:
 
                     commands_data = parsed.get("commands", [])
                     if not isinstance(commands_data, list):
-                        commands_data = []
+                        raise RuntimeError("完成响应中的 commands 必须为命令列表，请重新探索")
+                    if result.actions and not commands_data:
+                        raise RuntimeError("已录制动作但未声明可复用命令，不会自动生成回退命令；请重新探索")
 
                     if commands_data:
                         _validate_command_partition(commands_data, len(result.actions))
@@ -1086,18 +1089,6 @@ class WorkflowExplorer:
                 raise RuntimeError(
                     f"探索达到 {cfg.explore_max_steps} 步上限但尚未确认完成；"
                     "不会将部分动作生成为可复用命令，请缩小任务范围后重新探索"
-                )
-
-            if not result.commands and result.actions:
-                inferred_args = _infer_params_from_actions(result.actions, workflow_description)
-                fallback_name = _infer_command_name_from_description(workflow_description) or "run-workflow"
-                result.commands.append(
-                    CommandSuggestion(
-                        name=fallback_name,
-                        description=workflow_description,
-                        args=inferred_args,
-                        action_steps=list(range(len(result.actions))),
-                    )
                 )
 
             saved_path = save_extract_markdown(
