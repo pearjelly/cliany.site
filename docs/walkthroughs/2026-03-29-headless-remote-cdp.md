@@ -84,6 +84,13 @@
 
 ## 使用示例
 
+2026-09-22（Unreleased）：完整 `ws://.../devtools/browser/...`、`wss://...` 和
+HTTPS 地址现在保留协议、路径与查询参数，不再重建为裸 HTTP 主机端口。
+完整 WebSocket 地址的健康检查和标签页枚举使用 CDP 协议；仅主机端口的
+`ws://host:9222` 仍按历史 HTTP discovery 简写处理。真实 Chromium 已验证
+完整 ws 地址的连接、导航和快照；托管服务的认证、TLS 和网络可达性仍须现场验证。
+查询参数可能包含凭据，请勿把真实连接地址写入共享文档或日志。
+
 ```bash
 # 连接远程 CDP (如 Docker 容器中的 Chrome)
 cliany-site --cdp-url ws://192.168.1.100:9222 doctor --json

@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- CDP connections preserve full WebSocket and HTTPS endpoints, including paths and query parameters. Full WebSocket endpoints use CDP requests for health and target discovery; secure schemes default to port 443. Legacy `ws://host:port` discovery shorthand remains compatible. Real Chromium covers the full WebSocket connection path.
+
 - Docker build inputs now include the required README and bundled case catalog before package installation. Previously the packaging backend failed because the declared readme was missing.
 
 - Human-readable `browser find` output now includes each target's ref, role, name and available decision scores instead of only a count. Page control characters are escaped; JSON envelopes remain unchanged.

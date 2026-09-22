@@ -1,4 +1,5 @@
 # src/cliany_site/browser/cdp.py
+import asyncio
 import logging
 import subprocess
 from contextlib import asynccontextmanager
@@ -24,7 +25,7 @@ def _parse_cdp_url(cdp_url: str) -> tuple[str, int]:
         url = f"http://{url}"
     parsed = urlparse(url)
     host = parsed.hostname or "localhost"
-    port = parsed.port or 9222
+    port = parsed.port or (443 if parsed.scheme in {"https", "wss"} else 9222)
     return host, port
 
 
@@ -67,10 +68,46 @@ class CDPConnection:
             return _parse_cdp_url(self._cdp_url)
         return "localhost", port or get_config().cdp_port
 
+    def _connection_url(self, port: int | None = None) -> str:
+        if not self._cdp_url:
+            return f"http://localhost:{port or get_config().cdp_port}"
+        url = self._cdp_url.strip()
+        parsed = urlparse(url if "://" in url else f"http://{url}")
+        # Legacy ws://host:port denotes an HTTP discovery endpoint, not a socket path.
+        if parsed.scheme == "ws" and parsed.path in {"", "/"} and not parsed.query:
+            parsed = parsed._replace(scheme="http")
+        if parsed.scheme == "http" and parsed.port is None:
+            parsed = parsed._replace(netloc=f"{parsed.netloc}:9222")
+        return parsed.geturl()
+
+    def _http_resource_url(self, resource: str, port: int | None = None) -> str:
+        parsed = urlparse(self._connection_url(port))
+        base_path = parsed.path.rstrip('/').removesuffix('/json/version')
+        return parsed._replace(path=f"{base_path}/{resource}").geturl()
+
+    async def _websocket_request(self, method: str) -> dict[str, Any]:
+        async with (
+            asyncio.timeout(get_config().cdp_timeout),
+            aiohttp.ClientSession() as session,
+            session.ws_connect(self._connection_url()) as socket,
+        ):
+            await socket.send_json({"id": 1, "method": method})
+            while True:
+                reply = await socket.receive_json()
+                if not isinstance(reply, dict):
+                    raise ValueError("Invalid CDP response")
+                if reply.get("id") == 1:
+                    result = reply.get("result")
+                    if "error" in reply or not isinstance(result, dict):
+                        raise ValueError("CDP request failed")
+                    return result
+
     async def check_available(self, port: int | None = None) -> bool:
         host, resolved_port = self._resolve_host_port(port)
 
-        if self.is_remote:
+        endpoint = urlparse(self._connection_url(port))
+        if (self.is_remote or endpoint.scheme in {"https", "ws", "wss"}
+                or endpoint.query or endpoint.path not in {"", "/"}):
             return await self._probe_remote(host, resolved_port)
 
         try:
@@ -87,23 +124,25 @@ class CDPConnection:
 
     async def _probe_remote(self, host: str, port: int) -> bool:
         try:
+            if urlparse(self._connection_url(port)).scheme in {"ws", "wss"}:
+                result = await self._websocket_request("Browser.getVersion")
+                return isinstance(result.get("product"), str) and bool(result["product"])
             async with (
                 aiohttp.ClientSession() as session,
                 session.get(
-                    f"http://{host}:{port}/json/version",
+                    self._http_resource_url("json/version", port),
                     timeout=aiohttp.ClientTimeout(total=get_config().cdp_timeout),
                 ) as resp,
             ):
                 return resp.status == 200
-        except (TimeoutError, aiohttp.ClientError, OSError, ValueError) as exc:
-            logger.debug("远程 CDP 探测失败 (%s:%d): %s", host, port, exc)
+        except (TimeoutError, aiohttp.ClientError, OSError, ValueError, TypeError):
+            logger.debug("远程 CDP 探测失败 (%s:%d)", host, port)
             return False
 
     async def connect(self, port: int | None = None) -> BrowserSession:
-        host, resolved_port = self._resolve_host_port(port)
         is_local = not self.is_remote
         profile = BrowserProfile(
-            cdp_url=f"http://{host}:{resolved_port}",
+            cdp_url=self._connection_url(port),
             is_local=is_local,
         )
         self._session = BrowserSession(browser_profile=profile)
@@ -113,10 +152,15 @@ class CDPConnection:
     async def get_pages(self, port: int | None = None) -> list[dict]:
         host, resolved_port = self._resolve_host_port(port)
         try:
+            if urlparse(self._connection_url(port)).scheme in {"ws", "wss"}:
+                targets = (await self._websocket_request("Target.getTargets")).get("targetInfos")
+                if not isinstance(targets, list) or any(not isinstance(item, dict) for item in targets):
+                    return []
+                return [{**item, "id": item.get("targetId", "")} for item in targets]
             async with (
                 aiohttp.ClientSession() as session,
                 session.get(
-                    f"http://{host}:{resolved_port}/json/list",
+                    self._http_resource_url("json/list", port),
                     timeout=aiohttp.ClientTimeout(total=get_config().cdp_timeout),
                 ) as resp,
             ):
@@ -124,8 +168,8 @@ class CDPConnection:
                     result: list[dict[Any, Any]] = await resp.json()
                     return result
                 return []
-        except (TimeoutError, aiohttp.ClientError, OSError, ValueError) as exc:
-            logger.debug("获取标签页列表失败 (%s:%d): %s", host, resolved_port, exc)
+        except (TimeoutError, aiohttp.ClientError, OSError, ValueError, TypeError):
+            logger.debug("获取标签页列表失败 (%s:%d)", host, resolved_port)
             return []
 
     async def disconnect(self):
