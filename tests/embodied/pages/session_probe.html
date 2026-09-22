@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Session restoration probe</title>
+<output>loading</output>
+<script>
+document.querySelector('output').textContent = document.cookie.split('; ').includes('session_probe=authenticated')
+  ? 'authenticated' : 'anonymous';
+</script>
+</html>

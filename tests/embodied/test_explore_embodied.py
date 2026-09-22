@@ -385,3 +385,53 @@ async def test_unresolved_replay_does_not_click_button(local_server, headless_br
         finally:
             await cdp.disconnect()
             await browser.close()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
+@pytest.mark.parametrize("named", [True, False])
+async def test_generated_cli_restores_cookie_before_first_navigation(
+    local_server, headless_browser_cdp_url, tmp_home, named, monkeypatch,
+):
+    from cliany_site.codegen.generator import AdapterGenerator, save_adapter
+    from cliany_site.explorer.models import ActionStep, CommandSuggestion, ExploreResult, PageInfo
+    from cliany_site.session import save_session_data
+
+    monkeypatch.setenv("PYTHON_KEYRING_BACKEND", "keyring.backends.null.Keyring")
+    monkeypatch.setattr("cliany_site.security._load_key_from_keyring", lambda: None)
+    monkeypatch.setattr("cliany_site.security._save_key_to_keyring", lambda key: False)
+    url = f"{local_server}/session_probe.html"
+    result = ExploreResult(
+        pages=[PageInfo(url, "Session restoration probe")],
+        actions=[ActionStep("extract", url, selector="output", extract_mode="list", fields_map={"status": ""})],
+        commands=[CommandSuggestion("read-session", "Read session", [], [0])] if named else [],
+    )
+    save_adapter("127.0.0.1", AdapterGenerator().generate(result, "127.0.0.1"), explore_result=result)
+    save_session_data("127.0.0.1", {"cookies": [{
+        "name": "session_probe", "value": "authenticated", "domain": "127.0.0.1", "path": "/",
+    }]})
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.connect_over_cdp(headless_browser_cdp_url.replace("ws://", "http://"))
+        try:
+            await browser.contexts[0].clear_cookies()
+            process = await asyncio.create_subprocess_exec(
+                sys.executable, "-m", "cliany_site", "--cdp-url", headless_browser_cdp_url,
+                "127.0.0.1", "read-session" if named else "run-workflow", "--json",
+                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+            )
+            try:
+                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=45)
+            except TimeoutError:
+                process.kill()
+                await process.communicate()
+                raise
+            assert process.returncode == 0, (stdout.decode(), stderr.decode())
+            response = json.loads(stdout)
+            assert response["ok"] is True
+            if named:
+                extracts = [item for item in response["data"]["results"] if item["command"] == "browser extract"]
+                assert extracts[0]["data"]["content"] == [{"status": "authenticated"}]
+            page = next(page for ctx in browser.contexts for page in ctx.pages if page.url == url)
+            assert await page.locator("output").text_content() == "authenticated"
+        finally:
+            await browser.close()

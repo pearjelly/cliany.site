@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Browser navigation now honors `--session` and restores saved cookies before loading the destination; expired sessions prevent navigation. Generated adapter navigation inherits this behavior, and legacy code-generation templates now inject cookies before navigation as well. Real new-process CLI tests use encrypted temporary sessions and a clean Chromium cookie jar. Regenerate old adapters to receive template changes.
+
 - Recorded names and roles now constrain deterministic, model-repair, and vision candidates, so matching styles or identifiers cannot outweigh conflicting semantics. Real Chromium verifies zero submissions when only a differently named button remains. Repair prompt JSON braces are escaped so the actual prompt can be formatted.
 
 - Recorded action replay now compares semantic candidates before trusting a reused element index. Equal highest scores fail closed without repair or vision fallback; a real Chromium regression verifies that duplicate Apply buttons cause zero submissions. Ref-only actions retain their existing behavior.

@@ -134,13 +134,13 @@ def {function_name}({function_signature}):
         if not await cdp.check_available():
             return error_response(CDP_UNAVAILABLE, "Chrome CDP 不可用", "启动 Chrome 并开启 --remote-debugging-port=9222")
         browser_session = await cdp.connect()
-        await browser_session.navigate_to(SOURCE_URL, new_tab=False)
-        await asyncio.sleep(1.5)
         session_data = load_session_data(DOMAIN)
         if session_data:
             if session_data.get("expires_hint") == "expired":
                 return error_response(SESSION_EXPIRED, "Session 已失效", "请重新登录后再执行命令")
             await browser_session._cdp_set_cookies(session_data.get("cookies", []))
+        await browser_session.navigate_to(SOURCE_URL, new_tab=False)
+        await asyncio.sleep(1.5)
         root_ctx = ctx.find_root()
         root_obj = root_ctx.obj if isinstance(root_ctx.obj, dict) else {{}}
         sandbox_enabled = root_obj.get("sandbox", False)
@@ -202,13 +202,13 @@ def run_workflow(ctx: click.Context, json_mode: bool | None, resume: bool, retry
         if not await cdp.check_available():
             return error_response(CDP_UNAVAILABLE, "Chrome CDP 不可用", "启动 Chrome 并开启 --remote-debugging-port=9222")
         browser_session = await cdp.connect()
-        await browser_session.navigate_to(SOURCE_URL, new_tab=False)
-        await asyncio.sleep(1.5)
         session_data = load_session_data(DOMAIN)
         if session_data:
             if session_data.get("expires_hint") == "expired":
                 return error_response(SESSION_EXPIRED, "Session 已失效", "请重新登录后再执行命令")
             await browser_session._cdp_set_cookies(session_data.get("cookies", []))
+        await browser_session.navigate_to(SOURCE_URL, new_tab=False)
+        await asyncio.sleep(1.5)
         root_ctx = ctx.find_root()
         root_obj = root_ctx.obj if isinstance(root_ctx.obj, dict) else {}
         sandbox_enabled = root_obj.get("sandbox", False)
@@ -636,13 +636,13 @@ def {function_name}(ctx: click.Context, json_mode: bool | None, retry: bool, **p
         if not await cdp.check_available():
             return error_response(CDP_UNAVAILABLE, "Chrome CDP 不可用", "启动 Chrome 并开启 --remote-debugging-port=9222")
         browser_session = await cdp.connect()
-        await browser_session.navigate_to(SOURCE_URL, new_tab=False)
-        await asyncio.sleep(1.5)
         session_data = load_session_data(DOMAIN)
         if session_data:
             if session_data.get("expires_hint") == "expired":
                 return error_response(SESSION_EXPIRED, "Session 已失效", "请重新登录后再执行命令")
             await browser_session._cdp_set_cookies(session_data.get("cookies", []))
+        await browser_session.navigate_to(SOURCE_URL, new_tab=False)
+        await asyncio.sleep(1.5)
         try:
             await execute_action_steps(browser_session, actions, continue_on_error=True)
             return success_response({{"status": "completed", "command": "atoms {command_name}", "atom_id": {atom_id!r}, "args": params}})

@@ -54,13 +54,16 @@ def navigate(
     root_obj = ctx.find_root().obj if isinstance(ctx.find_root().obj, dict) else {}
     effective_json = json_mode if json_mode is not None else bool(root_obj.get("json_mode"))
     cdp = cdp_from_context(ctx)
-    result = asyncio.run(_run_navigate(cdp, url, wait_state, timeout))
+    if session:
+        result = asyncio.run(_run_navigate(cdp, url, wait_state, timeout, session))
+    else:
+        result = asyncio.run(_run_navigate(cdp, url, wait_state, timeout))
     _print_envelope(result, effective_json)
     if not result.get("ok"):
         ctx.exit(1)
 
 
-async def _run_navigate(cdp, url: str, wait_state: str, timeout: int) -> Envelope:
+async def _run_navigate(cdp, url: str, wait_state: str, timeout: int, session: str | None = None) -> Envelope:
     _browser_provider = get_config().browser_provider
     if _browser_provider and _browser_provider.lower() != "chrome":
         from cliany_site.providers.capabilities import feature_gate
@@ -94,6 +97,14 @@ async def _run_navigate(cdp, url: str, wait_state: str, timeout: int) -> Envelop
     try:
         browser_session = await cdp.connect()
         try:
+            if session:
+                from cliany_site.session import load_session_data
+
+                saved = load_session_data(session)
+                if saved:
+                    if saved.get("expires_hint") == "expired":
+                        return err("browser navigate", ErrorCode.E_SESSION_EXPIRED, "Session 已失效，请重新登录")
+                    await browser_session._cdp_set_cookies(saved.get("cookies", []))
             await browser_session.navigate_to(url)
             if wait_state in ("networkidle", "domcontentloaded"):
                 page = await browser_session.get_current_page()
