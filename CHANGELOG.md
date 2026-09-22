@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- Workflow and batch command results are parsed from stdout only, so stderr diagnostics cannot replace structured data or turn a failure envelope into success. Invalid, empty, or multiple JSON documents now fail the step even with exit code zero; adapters must honor the requested `--json` contract.
 - Workflow and batch child commands now inherit the root CDP URL, headless mode, sandbox, forced-browser routing, and diagnosis flags. Options are captured before worker dispatch; real two-browser tests verify workflow and serial batch replay use the explicit browser without touching the environment-default browser.
 - Failed workflow and batch CLI commands now exit nonzero and emit a single JSON error response. Detailed step/item results, including successful data before a failure, are preserved in `error.details` instead of a second standalone JSON document.
 - Workflow references now resolve zero-based array indexes, including nested arrays and named-step results. Invalid condition syntax fails validation before execution; missing condition paths and invalid numeric comparisons fail the step instead of defaulting to execution. Malformed indexes cannot become partially interpolated parameters.

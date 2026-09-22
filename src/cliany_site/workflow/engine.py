@@ -239,7 +239,7 @@ class ClickAdapterExecutor(StepExecutor):
         import json as _json
 
         try:
-            parsed: dict[str, Any] = _json.loads(result.output)
+            parsed: dict[str, Any] = _json.loads(result.stdout)
             if not isinstance(parsed, dict):
                 return {
                     "success": False,
@@ -253,13 +253,14 @@ class ClickAdapterExecutor(StepExecutor):
                     "error": {"code": "STEP_FAILED", "message": f"命令以非零状态退出: {result.exit_code}"},
                 }
             return parsed
-        except (ValueError, _json.JSONDecodeError):
-            if result.exit_code == 0:
-                return {"success": True, "data": {"raw_output": result.output}, "error": None}
+        except _json.JSONDecodeError:
             return {
                 "success": False,
                 "data": None,
-                "error": {"code": "STEP_FAILED", "message": result.output.strip()},
+                "error": {
+                    "code": "STEP_FAILED",
+                    "message": f"命令未返回有效 JSON（退出码 {result.exit_code}）: {result.output.strip()}",
+                },
             }
 
 

@@ -9,7 +9,7 @@ from cliany_site.workflow.engine import ClickAdapterExecutor, StepExecutor, run_
 from cliany_site.workflow.models import RetryPolicy, StepDef, WorkflowDef
 
 
-def _executor(responses, *, exit_code=0):
+def _executor(responses, *, exit_code=0, stderr="", raw=False):
     calls = []
 
     @click.group()
@@ -26,10 +26,41 @@ def _executor(responses, *, exit_code=0):
     @click.pass_context
     def read(ctx, value, json_mode):
         calls.append(value)
-        click.echo(json.dumps(responses[min(len(calls) - 1, len(responses) - 1)]))
+        if stderr:
+            click.echo(stderr, err=True)
+        response = responses[min(len(calls) - 1, len(responses) - 1)]
+        click.echo(response if raw else json.dumps(response))
         ctx.exit(exit_code)
 
     return ClickAdapterExecutor(cli), calls
+
+
+@pytest.mark.parametrize("payload,success", [
+    (ok("read", {"name": "Ada"}), True),
+    (err("read", "E_EMPTY_RESULT", "No rows"), False),
+])
+def test_stderr_does_not_change_envelope_status_or_data(payload, success):
+    executor, calls = _executor([payload], stderr="diagnostic warning")
+    result = run_workflow(WorkflowDef("test", steps=[
+        StepDef("read", "example.com", "read"),
+    ]), executor)
+    assert result.success is success
+    assert result.steps[0].data == payload["data"]
+    if not success:
+        assert result.steps[0].error == "No rows"
+    assert calls == ["Ada"]
+
+
+@pytest.mark.parametrize("raw", ["", "not JSON", '{"ok":true', '{"ok":true}\n{"ok":true}'])
+def test_invalid_json_stops_workflow_even_with_zero_exit(raw):
+    executor, calls = _executor([raw], raw=True)
+    result = run_workflow(WorkflowDef("test", steps=[
+        StepDef("read", "example.com", "read"),
+        StepDef("never", "example.com", "read"),
+    ]), executor)
+    assert result.success is False
+    assert calls == ["Ada"]
+    assert "JSON" in result.steps[0].error
 
 
 def test_workflow_consumes_real_click_envelope_and_preserves_data(tmp_home):

@@ -433,6 +433,9 @@ Failed workflow and batch commands on current master exit nonzero; JSON output i
 one error response, with step/item results under `error.details`.
 Workflow and batch child commands also inherit root `--cdp-url`, `--headless`,
 `--sandbox`, `--force-browser`, and `--diagnose` options.
+Child commands must return one JSON result object on stdout when called with
+`--json`; stderr diagnostics are kept separate. Empty or invalid JSON fails the
+step even when the child exits with status zero.
 
 ### Batch Execution
 
