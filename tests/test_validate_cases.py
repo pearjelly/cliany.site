@@ -272,7 +272,7 @@ def test_current_cases_manifest_validates_without_packages():
             "online_smoke",
         ]
 
-    expected_active_installs = {
+    expected_published_installs = {
         "demo.suiteondemand.com": (
             "https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/"
             "demo.suiteondemand.com-0.14.1.cliany-adapter.tar.gz",
@@ -292,10 +292,13 @@ def test_current_cases_manifest_validates_without_packages():
     active_cases = [
         case for case in report.to_dict()["cases"] if case["status"] == "active"
     ]
-    assert {case["adapter_domain"] for case in active_cases} == set(expected_active_installs)
-    for case in active_cases:
-        url, sha256 = expected_active_installs[case["adapter_domain"]]
-        assert case["commands"][0] == f"cliany-site market install {url} --sha256 {sha256}"
+    assert {case["adapter_domain"] for case in active_cases} == {"demo.suiteondemand.com", "issues.apache.org"}
+    for case in report.to_dict()["cases"]:
+        if case.get("adapter_domain") in expected_published_installs:
+            url, sha256 = expected_published_installs[case["adapter_domain"]]
+            assert case["commands"][0] == f"cliany-site market install {url} --sha256 {sha256}"
+        if case.get("adapter_domain") == "cwiki.apache.org":
+            assert case["status"] == "degraded"
 
 
 def test_cases_report_flags_duplicate_ids(tmp_path):
