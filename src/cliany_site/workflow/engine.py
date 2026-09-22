@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import logging
 import re
 import time
@@ -11,43 +12,50 @@ from cliany_site.workflow.models import StepDef, WorkflowDef
 logger = logging.getLogger(__name__)
 
 # $prev.data.field  /  $steps.step_name.data.field  /  $env.VAR
-_VAR_PATTERN = re.compile(r"\$(?:prev|steps\.\w+|env)\.[a-zA-Z0-9_.]+")
+_VAR_PATTERN = re.compile(r"\$(?:prev|steps\.[\w-]+|env)(?:\.\w+|\[\d+\])+")
+_MISSING = object()
 
 
 # ── 变量插值 ─────────────────────────────────────────────
 
 
-def resolve_variable(expr: str, context: WorkflowContext) -> Any:
+def resolve_variable(expr: str, context: WorkflowContext, *, strict: bool = False) -> Any:
     if not expr.startswith("$"):
         return expr
 
-    parts = expr[1:].split(".")
+    if not _VAR_PATTERN.fullmatch(expr):
+        if expr.startswith(("$prev.", "$prev[", "$steps.", "$env.")):
+            raise ValueError(f"无效变量表达式: {expr}")
+        return expr
 
-    if parts[0] == "prev":
+    if expr.startswith("$prev.") or expr.startswith("$prev["):
         node: Any = context.prev_result
-        for key in parts[1:]:
-            if isinstance(node, dict):
-                node = node.get(key)
-            else:
-                return None
-        return node
-
-    if parts[0] == "steps" and len(parts) >= 3:
-        step_name = parts[1]
-        node = context.step_results.get(step_name)
-        for key in parts[2:]:
-            if isinstance(node, dict):
-                node = node.get(key)
-            else:
-                return None
-        return node
-
-    if parts[0] == "env" and len(parts) == 2:
+        path = expr[len("$prev"):]
+    elif expr.startswith("$steps."):
+        step_name = expr[len("$steps."):].split(".", 1)[0].split("[", 1)[0]
+        node = context.step_results.get(step_name, _MISSING)
+        path = expr[len("$steps.") + len(step_name):]
+    else:
         import os
+        name = expr[len("$env."):]
+        if not re.fullmatch(r"\w+", name):
+            raise ValueError(f"无效环境变量表达式: {expr}")
+        if strict and name not in os.environ:
+            raise ValueError(f"条件变量不存在: {expr}")
+        return os.environ.get(name, "")
 
-        return os.environ.get(parts[1], "")
-
-    return expr
+    for key, index in re.findall(r"\.(\w+)|\[(\d+)\]", path):
+        if key and isinstance(node, dict):
+            node = node.get(key, _MISSING)
+        elif index and isinstance(node, list) and int(index) < len(node):
+            node = node[int(index)]
+        else:
+            node = _MISSING
+        if node is _MISSING:
+            if strict:
+                raise ValueError(f"条件变量不存在或路径类型不匹配: {expr}")
+            return None
+    return node
 
 
 def interpolate_value(value: str, context: WorkflowContext) -> str:
@@ -60,6 +68,8 @@ def interpolate_value(value: str, context: WorkflowContext) -> str:
         return str(resolved) if resolved is not None else ""
 
     def _replace(m: re.Match) -> str:
+        if value[m.end():m.end() + 1] == "[":
+            raise ValueError(f"无效数组索引: {value}")
         resolved = resolve_variable(m.group(0), context)
         return str(resolved) if resolved is not None else ""
 
@@ -72,22 +82,21 @@ def interpolate_params(params: dict[str, str], context: WorkflowContext) -> dict
 
 # ── 条件求值 ─────────────────────────────────────────────
 
-_CONDITION_PATTERN = re.compile(r"^(\$[a-zA-Z0-9_.]+)\s*(==|!=|>=|<=|>|<)\s*(.+)$")
+_CONDITION_PATTERN = re.compile(rf"^({_VAR_PATTERN.pattern})\s*(==|!=|>=|<=|>|<)\s*(.+)$")
 
 
-def evaluate_condition(when: str, context: WorkflowContext) -> bool:
+def _parse_condition(when: str) -> tuple[str, str, Any] | None:
     if not when or not when.strip():
-        return True
+        return None
 
     when = when.strip()
     m = _CONDITION_PATTERN.match(when)
     if not m:
-        logger.warning("无法解析条件表达式: %s，默认执行", when)
-        return True
+        raise ValueError(f"无法解析条件表达式: {when}")
 
     var_expr, operator, raw_expected = m.group(1), m.group(2), m.group(3).strip()
-
-    actual = resolve_variable(var_expr, context)
+    if var_expr.startswith("$env") and not re.fullmatch(r"\$env\.\w+", var_expr):
+        raise ValueError(f"无效环境变量表达式: {var_expr}")
 
     expected: Any = raw_expected
     if raw_expected.lower() == "true":
@@ -98,15 +107,21 @@ def evaluate_condition(when: str, context: WorkflowContext) -> bool:
         expected = None
     else:
         try:
-            expected = int(raw_expected)
-        except ValueError:
-            try:
-                expected = float(raw_expected)
-            except ValueError:
-                if (raw_expected.startswith('"') and raw_expected.endswith('"')) or (
-                    raw_expected.startswith("'") and raw_expected.endswith("'")
-                ):
-                    expected = raw_expected[1:-1]
+            expected = ast.literal_eval(raw_expected)
+        except (ValueError, SyntaxError):
+            if not re.fullmatch(r"[a-zA-Z_][\w-]*", raw_expected):
+                raise ValueError(f"无效条件比较值: {raw_expected}") from None
+        if not isinstance(expected, (str, int, float, bool)) and expected is not None:
+            raise ValueError(f"条件比较值必须是标量: {raw_expected}")
+    return var_expr, operator, expected
+
+
+def evaluate_condition(when: str, context: WorkflowContext) -> bool:
+    condition = _parse_condition(when)
+    if condition is None:
+        return True
+    var_expr, operator, expected = condition
+    actual = resolve_variable(var_expr, context, strict=True)
 
     if operator == "==":
         return bool(actual == expected)
@@ -116,8 +131,7 @@ def evaluate_condition(when: str, context: WorkflowContext) -> bool:
     try:
         a, b = float(actual), float(expected)
     except (TypeError, ValueError):
-        logger.warning("条件比较无法转为数字: %s %s %s，默认执行", actual, operator, expected)
-        return True
+        raise ValueError(f"条件比较无法转为数字: {var_expr} {operator} {expected}") from None
 
     if operator == ">":
         return bool(a > b)
@@ -128,7 +142,7 @@ def evaluate_condition(when: str, context: WorkflowContext) -> bool:
     if operator == "<=":
         return bool(a <= b)
 
-    return True
+    return False
 
 
 # ── 执行上下文 ───────────────────────────────────────────
@@ -246,7 +260,10 @@ def _run_step_with_retry(
     context: WorkflowContext,
     executor: StepExecutor,
 ) -> StepResult:
-    params = interpolate_params(step.params, context)
+    try:
+        params = interpolate_params(step.params, context)
+    except ValueError as exc:
+        return StepResult(name=step.name, success=False, error=str(exc), attempts=0)
     policy = step.retry
 
     last_error: str | None = None
@@ -306,10 +323,26 @@ def run_workflow(
     overall_start = time.monotonic()
     all_ok = True
 
+    for step in workflow.steps:
+        try:
+            _parse_condition(step.when)
+        except ValueError as exc:
+            return WorkflowResult(
+                name=workflow.name, success=False,
+                steps=[StepResult(name=step.name, success=False, error=str(exc), attempts=0)],
+                elapsed_ms=(time.monotonic() - overall_start) * 1000,
+            )
+
     for i, step in enumerate(workflow.steps):
         logger.info("执行步骤 %d/%d: %s", i + 1, len(workflow.steps), step.name)
 
-        if not evaluate_condition(step.when, context):
+        try:
+            should_run = evaluate_condition(step.when, context)
+        except ValueError as exc:
+            results.append(StepResult(name=step.name, success=False, error=str(exc), attempts=0))
+            all_ok = False
+            break
+        if not should_run:
             logger.info("步骤 '%s' 条件不满足，跳过", step.name)
             results.append(StepResult(name=step.name, success=True, skipped=True))
             continue

@@ -6,6 +6,7 @@ from typing import Any
 
 import yaml
 
+from cliany_site.workflow.engine import _parse_condition
 from cliany_site.workflow.models import RetryPolicy, StepDef, WorkflowDef
 
 logger = logging.getLogger(__name__)
@@ -43,13 +44,18 @@ def _parse_step(raw: Any, index: int) -> StepDef:
         raise WorkflowParseError(f"步骤 {index} 的 params 必须是字典")
 
     params: dict[str, str] = {str(k): str(v) for k, v in params_raw.items()}
+    when = str(raw.get("when", ""))
+    try:
+        _parse_condition(when)
+    except ValueError as exc:
+        raise WorkflowParseError(f"步骤 {index} 的 when 无效: {exc}") from exc
 
     return StepDef(
         name=str(raw["name"]),
         adapter=str(raw["adapter"]),
         command=str(raw["command"]),
         params=params,
-        when=str(raw.get("when", "")),
+        when=when,
         retry=_parse_retry(raw.get("retry")),
     )
 

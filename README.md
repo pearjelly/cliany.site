@@ -423,6 +423,13 @@ cliany-site workflow run workflow.yaml --json
 cliany-site workflow validate workflow.yaml --json
 ```
 
+On current master (unreleased), references support zero-based array indexes such as
+`$prev.data.results[0].name` and `$steps.search.data.results[0].name`. Conditions use
+one comparison (`==`, `!=`, `>`, `<`, `>=`, `<=`) against a scalar value. Invalid
+condition syntax fails validation before execution; missing condition fields and
+invalid numeric comparisons stop the workflow. Explicit `null` values remain
+comparable. Missing ordinary parameter references still resolve to an empty string.
+
 ### Batch Execution
 
 ```bash

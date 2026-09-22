@@ -121,10 +121,11 @@ def _execute_one_item(
 ) -> BatchItemResult:
     context = WorkflowContext(prev_result={"data": row_params})
     merged = {**step.params, **row_params}
-    final_params = interpolate_params(merged, context)
+    final_params = merged
 
     start = time.monotonic()
     try:
+        final_params = interpolate_params(merged, context)
         result = executor.execute_step(step.adapter, step.command, final_params)
         success = result.get("ok", result.get("success")) is True
         elapsed = (time.monotonic() - start) * 1000

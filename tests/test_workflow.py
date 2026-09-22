@@ -307,13 +307,15 @@ class TestEvaluateCondition:
         ctx = WorkflowContext(prev_result={"data": {"val": 42}})
         assert evaluate_condition("$prev.data.val == 42", ctx) is True
 
-    def test_unparseable_defaults_true(self) -> None:
+    def test_unparseable_raises(self) -> None:
         ctx = WorkflowContext()
-        assert evaluate_condition("this is not a condition", ctx) is True
+        with pytest.raises(ValueError):
+            evaluate_condition("this is not a condition", ctx)
 
-    def test_non_numeric_comparison_defaults_true(self) -> None:
+    def test_non_numeric_comparison_raises(self) -> None:
         ctx = WorkflowContext(prev_result={"data": {"name": "abc"}})
-        assert evaluate_condition("$prev.data.name > 5", ctx) is True
+        with pytest.raises(ValueError):
+            evaluate_condition("$prev.data.name > 5", ctx)
 
 
 # ── StepResult / WorkflowResult ──────────────────────────
