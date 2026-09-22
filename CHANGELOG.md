@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Docker build inputs now include the required README and bundled case catalog before package installation. Previously the packaging backend failed because the declared readme was missing.
+
 - Human-readable `browser find` output now includes each target's ref, role, name and available decision scores instead of only a count. Page control characters are escaped; JSON envelopes remain unchanged.
 
 - Jev no longer silently truncates candidate names and roles before asking the model. Over-limit semantics reject the whole lookup before any request; labels at the supported limits are preserved intact.
