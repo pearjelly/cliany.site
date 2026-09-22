@@ -94,15 +94,22 @@ cliany-site --headless explore "https://example.com" "查看首页" --json
 # 组合使用
 cliany-site --cdp-url ws://chrome-host:9222 --headless login "https://github.com" --json
 
-# Docker 一键启动
-docker compose up -d
-docker compose exec cliany cliany-site doctor --json
-
 # 环境变量方式（无需每次传参）
 export CLIANY_CDP_URL=ws://192.168.1.100:9222
 export CLIANY_HEADLESS=true
 cliany-site doctor --json
 ```
+
+### Docker 验收状态（2026-09-22 更新）
+
+当前不能将 Docker 示例视为一键可用：打包所需 README 和案例目录已补齐，
+但默认 root 用户启动 Chromium 被浏览器拒绝；非 root 探针同样报告无可用沙箱。
+不要通过关闭沙箱或使用特权容器绕过该问题。完整浏览器工作流仍待验收。
+
+Compose 服务名实际是 `cliany-site`，不是 `cliany`。默认命令 `doctor --json`
+是一次性诊断，退出后不能用 `compose exec` 当作常驻服务继续操作。
+修复容器运行条件后应使用 `docker compose run --rm cliany-site doctor --json`
+验证，并检查 CDP 状态而不只看进程退出码。当前建议使用已验证的本机安装路径。
 
 ## 测试覆盖
 
