@@ -16,7 +16,7 @@ Workflow/batch now preserve returned data, support indexed references, reject in
 
 A deterministic-model exploration test now covers real browser observation/actions, result construction, adapter generation, persistence, and fresh CLI replay with changed inputs. It exposed and repaired missing source URLs caused by an outdated page metadata API. This is offline model-boundary integration, not evidence that a live model can discover a new public workflow.
 
-The shared executor's browser routing and non-mutating dry-run repair shipped in v0.16.356. Full cross-entrypoint semantic parity, concurrency, login-session restoration, duplicate-name disambiguation, and live public-site generation remain unproven. See the [next acceptance plan](plans/2026-09-22-reliability-acceptance.md).
+The shared executor's browser routing and non-mutating dry-run repair shipped in v0.16.356. Subsequent unreleased tests verify Cookie restoration before navigation, refusal of equal-score or conflicting semantic targets, and safe serial batch execution. They do not establish full cross-entrypoint parity, localStorage restoration, arbitrary duplicate-name disambiguation, browser concurrency, or live public-site generation. See the [acceptance plan](plans/2026-09-22-reliability-acceptance.md) and [v0.16.357 release handoff](releases/v0.16.357-draft.md); the next tag is gated until at least September 23.
 
 - A 10-minute first-run path that starts with `doctor`, real demo cases, and replay before requiring users to configure an LLM.
 - A real case catalog with CRM, DevOps, knowledge-base, and package-search workflows.
