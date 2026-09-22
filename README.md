@@ -1,5 +1,9 @@
 # cliany-site
 
+Experimental on current master: [Jev intent-based element discovery](docs/jev-intent-finder.md)
+uses typed choices and confidence gates to locate controls without acting on them.
+Explicit remote-data consent and a TypeSafe API key are required; not yet in PyPI v0.16.356.
+
 [![PyPI version](https://img.shields.io/pypi/v/cliany-site)](https://pypi.org/project/cliany-site/)
 [![Python](https://img.shields.io/pypi/pyversions/cliany-site)](https://pypi.org/project/cliany-site/)
 [![CI](https://github.com/pearjelly/cliany.site/actions/workflows/ci.yml/badge.svg)](https://github.com/pearjelly/cliany.site/actions/workflows/ci.yml)

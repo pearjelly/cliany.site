@@ -31,12 +31,14 @@ def _print_envelope(result: Envelope, json_mode: bool) -> None:
 @click.option(
     "--by",
     "by_field",
-    type=click.Choice(["text", "role", "attr"]),
+    type=click.Choice(["text", "role", "attr", "intent"]),
     default="text",
-    help="查找方式：text 文本模糊匹配 / role 角色精确匹配 / attr 属性值匹配",
+    help="查找方式：text 文本 / role 角色 / attr 属性 / intent 使用 Jev 意图定位",
 )
 @click.option("--value", required=True, help="查找值")
 @click.option("--limit", default=5, show_default=True, help="最大返回数量")
+@click.option("--allow-remote", is_flag=True, help="允许将意图及元素名称、角色发送至 TypeSafe")
+@click.option("--min-confidence", type=click.FloatRange(0, 1), default=0.8, show_default=True)
 @click.option("--session", default=None, help="会话名称")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出模式")
 @click.pass_context
@@ -47,19 +49,32 @@ def find(
     limit: int,
     session: str | None,
     json_mode: bool | None,
+    allow_remote: bool,
+    min_confidence: float,
 ) -> None:
     root_obj = ctx.find_root().obj if isinstance(ctx.find_root().obj, dict) else {}
     effective_json = json_mode if json_mode is not None else bool(root_obj.get("json_mode"))
     cdp = cdp_from_context(ctx)
-    result = asyncio.run(_run_find(cdp, by_field, value, limit))
+    if by_field == "intent":
+        result = asyncio.run(_run_find(cdp, by_field, value, limit, allow_remote, min_confidence))
+    else:
+        result = asyncio.run(_run_find(cdp, by_field, value, limit))
     _print_envelope(result, effective_json)
     if not result.get("ok"):
         ctx.exit(1)
 
 
-async def _run_find(cdp, by_field: str, value: str, limit: int) -> Envelope:
+async def _run_find(cdp, by_field: str, value: str, limit: int,
+                    allow_remote: bool = False, min_confidence: float = 0.8) -> Envelope:
     from cliany_site.browser.axtree import capture_axtree
     from cliany_site.commands.browser._common import fuzzy_find_by_text
+
+    if by_field == "intent":
+        from cliany_site.browser.jev import preflight
+
+        blocked = preflight(allow_remote)
+        if blocked is not None:
+            return blocked
 
     if not await cdp.check_available():
         return err(
@@ -83,6 +98,11 @@ async def _run_find(cdp, by_field: str, value: str, limit: int) -> Envelope:
         )
 
     selector_map = tree.get("selector_map", {})
+
+    if by_field == "intent":
+        from cliany_site.browser.jev import choose_element
+
+        return await choose_element(selector_map, value, min_confidence=min_confidence, allow_remote=allow_remote)
 
     if by_field == "text":
         results = fuzzy_find_by_text(selector_map, value, limit)

@@ -307,3 +307,51 @@ async def fallback_browser():
             yield browser, f"ws://127.0.0.1:{port}"
         finally:
             await browser.close()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
+async def test_jev_intent_finder_reads_real_tree_without_mutation(
+    local_server, headless_browser_cdp_url, tmp_home, monkeypatch,
+):
+    import httpx
+
+    from cliany_site.browser import jev
+    from cliany_site.browser.cdp import CDPConnection
+    from cliany_site.commands.browser.find import _run_find
+
+    monkeypatch.setenv("CLIANY_QA_OFFLINE", "0")
+    monkeypatch.setenv("TYPESAFE_API_KEY", "offline-test-key")
+    client = httpx.AsyncClient
+    requests = []
+
+    def respond(request):
+        payload = json.loads(request.content)
+        requests.append(payload)
+        criteria = payload["questions"]["target"]["criteria"]
+        target = next(key for key, value in criteria.items() if value == {"name": "Name", "role": "textbox"})
+        return httpx.Response(200, json={"model": "offline-contract", "answers": {"target": {
+            "type": "choice", "choice": target, "confidence": 1.0,
+            "probabilities": {key: float(key == target) for key in criteria},
+        }}})
+
+    monkeypatch.setattr(jev, "AsyncClient", lambda **kwargs: client(
+        **kwargs, transport=httpx.MockTransport(respond),
+    ))
+    url = f"{local_server}/browser_atoms.html"
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.connect_over_cdp(headless_browser_cdp_url.replace("ws://", "http://"))
+        try:
+            page = await browser.contexts[0].new_page()
+            await page.goto(url)
+            result = await _run_find(
+                CDPConnection(cdp_url=headless_browser_cdp_url), "intent", "Enter my name", 5, True,
+            )
+            assert result["ok"] is True, result
+            assert result["data"][0]["name"] == "Name"
+            assert result["data"][0]["role"] == "textbox"
+            assert len(requests) == 1
+            assert await page.locator("input").input_value() == "seed"
+            assert await page.locator("output").get_attribute("data-submits") == "0"
+        finally:
+            await browser.close()

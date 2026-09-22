@@ -36,6 +36,7 @@ dependencies = [
     "keyring>=25.7.0",
     "portalocker>=2.8",
     "jsonschema>=4.26.0",
+    "httpx>=0.28.1",
 ]
 
 [project.optional-dependencies]

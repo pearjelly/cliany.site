@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Experimental Jev intent-based element discovery: `browser find --by intent --value ... --allow-remote`. Uses a finite AXTree Choice set with abstention and confidence checks, never performs browser actions, and requires explicit remote-data consent plus `TYPESAFE_API_KEY`. Offline mode prevents requests. See `docs/jev-intent-finder.md`; live provider accuracy and latency are not yet validated.
+
 ### Fixed
 
 - Newly generated commands no longer append their first inline action list to itself or overwrite preceding reused actions. Reused atom calls and extract steps retain their recorded order instead of being removed by the generic duplicate filter. Existing generated adapters must be regenerated; their files are not edited in place.
