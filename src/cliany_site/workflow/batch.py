@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from cliany_site.workflow.engine import StepExecutor, WorkflowContext, interpolate_params
+from cliany_site.workflow.engine import ClickAdapterExecutor, StepExecutor, WorkflowContext, interpolate_params
 from cliany_site.workflow.models import StepDef
 
 logger = logging.getLogger(__name__)
@@ -165,6 +165,10 @@ def run_batch(
 ) -> BatchResult:
     overall_start = time.monotonic()
     results: list[BatchItemResult] = []
+
+    if concurrency > 1 and isinstance(executor, ClickAdapterExecutor):
+        logger.warning("内置浏览器执行器共享浏览器与 CLI 输出上下文，批量任务将串行执行")
+        concurrency = 1
 
     if concurrency <= 1:
         for i, row in enumerate(data):

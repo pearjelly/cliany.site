@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Built-in Click/browser batch execution now serializes whole items when a higher concurrency is requested, with an explicit warning, avoiding shared CliRunner output and browser-state races. Custom executors retain the concurrent path. A real-browser two-row regression checks distinct results and an untouched alternate browser; this is not parallel-browser support.
+
 - Browser navigation now honors `--session` and restores saved cookies before loading the destination; expired sessions prevent navigation. Generated adapter navigation inherits this behavior, and legacy code-generation templates now inject cookies before navigation as well. Real new-process CLI tests use encrypted temporary sessions and a clean Chromium cookie jar. Regenerate old adapters to receive template changes.
 
 - Recorded names and roles now constrain deterministic, model-repair, and vision candidates, so matching styles or identifiers cannot outweigh conflicting semantics. Real Chromium verifies zero submissions when only a differently named button remains. Repair prompt JSON braces are escaped so the actual prompt can be formatted.

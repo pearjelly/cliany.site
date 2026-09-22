@@ -152,7 +152,9 @@ async def test_action_replay_changes_real_page_only_outside_dry_run(
 
 @pytest.mark.embodied
 @pytest.mark.asyncio
-@pytest.mark.parametrize("entrypoint", ["sdk", "http", "cli", "workflow", "batch", "explore_cli"])
+@pytest.mark.parametrize(
+    "entrypoint", ["sdk", "http", "cli", "workflow", "batch", "batch_requested_parallel", "explore_cli"],
+)
 async def test_generated_adapter_returns_real_form_data(
     local_server, headless_browser_cdp_url, fallback_browser, tmp_home, entrypoint, monkeypatch
 ):
@@ -257,10 +259,13 @@ async def test_generated_adapter_returns_real_form_data(
                     }],
                 }))
                 command = ["workflow", "run", str(workflow_file), "--json"]
-            elif entrypoint == "batch":
+            elif entrypoint in ("batch", "batch_requested_parallel"):
                 batch_file = tmp_home / "names.csv"
-                batch_file.write_text(f"name\n{name}\n", encoding="utf-8")
+                rows = [name, f"{name} second"] if entrypoint == "batch_requested_parallel" else [name]
+                batch_file.write_text("name\n" + "\n".join(rows) + "\n", encoding="utf-8")
                 command = ["workflow", "batch", "127.0.0.1", "read-name", str(batch_file), "--json"]
+                if entrypoint == "batch_requested_parallel":
+                    command.extend(["--concurrency", "2"])
             process = await asyncio.create_subprocess_exec(
                 sys.executable, "-m", "cliany_site", "--cdp-url", headless_browser_cdp_url,
                 *command,
@@ -275,7 +280,14 @@ async def test_generated_adapter_returns_real_form_data(
             assert all(page.url == "about:blank" for ctx in fallback.contexts for page in ctx.pages)
             response = json.loads(stdout)
             assert process.returncode == 0, (response, stderr.decode())
-            if entrypoint in ("workflow", "batch"):
+            if entrypoint == "batch_requested_parallel":
+                items = response["data"]["results"]
+                assert len(items) == 2
+                for item, expected in zip(items, [name, f"{name} second"], strict=True):
+                    assert item["success"] is True
+                    extracts = [r for r in item["data"]["results"] if r["command"] == "browser extract"]
+                    assert extracts[0]["data"]["content"] == [{"name": expected}]
+            if entrypoint in ("workflow", "batch", "batch_requested_parallel"):
                 assert response["success"] is True, response
                 key = "steps" if entrypoint == "workflow" else "results"
                 response = {"data": response["data"][key][0]["data"]}
@@ -289,6 +301,8 @@ async def test_generated_adapter_returns_real_form_data(
                 try:
                     page = next(page for ctx in inspection.contexts for page in ctx.pages if page.url == url)
                     assert await page.locator("output").get_attribute("data-submits") == "1"
+                    if entrypoint == "batch_requested_parallel":
+                        assert await page.locator("output").text_content() == f"{name} second"
                 finally:
                     await inspection.close()
             continue

@@ -62,7 +62,7 @@ cliany-site cases
 - **Headless & Remote Browsers** — Supports `--headless` and `--cdp-url ws://host:port` for running in servers or Docker.
 - **Obscura Lifecycle Management** — Dedicated `obscura` command group for binary installation, rollback, and health checks.
 - **YAML Workflow Orchestration** — Declarative multi-step workflows with data passing, conditional logic, and retry strategies.
-- **Data-Driven Batch Execution** — CSV/JSON batch parameters with concurrency control and summary reports.
+- **Data-Driven Batch Execution** — CSV/JSON batch parameters with ordered browser execution and summary reports.
 - **Encrypted Session Storage** — Fernet symmetric encryption with system Keychain integration for key management.
 - **Sandbox Execution Mode** — `--sandbox` preflights generated adapter actions before atom execution; SDK and HTTP callers can opt in to the same local boundary.
 - **Generated Code Security Audit** — AST static analysis detects dangerous patterns like eval/exec/os.system.
@@ -445,8 +445,14 @@ step even when the child exits with status zero.
 
 ```bash
 # Batch execution from CSV
-cliany-site workflow batch github.com search data.csv --concurrency 3 --json
+cliany-site workflow batch github.com search data.csv --json
 ```
+
+On current master (Unreleased), the built-in browser executor runs batch items
+sequentially, even when `--concurrency` is greater than one. It shares browser
+state and CLI output capture; independent processes sharing the same browser
+are not isolated. Custom `run_batch` executors retain the concurrent path and
+must provide their own isolation.
 
 ### Adapter Marketplace
 

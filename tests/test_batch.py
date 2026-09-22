@@ -132,6 +132,39 @@ class MockBatchExecutor(StepExecutor):
 
 
 class TestRunBatch:
+    def test_click_executor_keeps_requested_parallel_items_on_calling_thread(self, caplog):
+        import threading
+
+        import click
+
+        from cliany_site.workflow.engine import ClickAdapterExecutor
+
+        threads = []
+
+        @click.group()
+        def cli():
+            pass
+
+        @cli.group("example.com")
+        def adapter():
+            pass
+
+        @adapter.command("echo")
+        @click.option("--value")
+        @click.option("--json", "json_mode", is_flag=True)
+        def echo(value, json_mode):
+            threads.append(threading.get_ident())
+            click.echo(json.dumps({"ok": True, "data": value}))
+
+        data = [{"value": str(i)} for i in range(3)]
+        result = run_batch(StepDef(name="b", adapter="example.com", command="echo"),
+                           data, ClickAdapterExecutor(cli), concurrency=3)
+
+        assert [item.data for item in result.results] == ["0", "1", "2"]
+        assert result.succeeded == 3
+        assert threads == [threading.get_ident()] * 3
+        assert "串行执行" in caplog.text
+
     def test_sequential_all_success(self) -> None:
         step = StepDef(name="b", adapter="a.com", command="go")
         data = [{"q": "hello"}, {"q": "world"}]

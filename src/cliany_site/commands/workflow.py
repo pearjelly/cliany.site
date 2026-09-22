@@ -115,7 +115,7 @@ def workflow_validate(ctx: click.Context, file: str, json_mode: bool | None) -> 
 @click.argument("adapter")
 @click.argument("command")
 @click.argument("data_file", type=click.Path(exists=True))
-@click.option("--concurrency", "-c", type=int, default=1, help="并发数（默认 1）")
+@click.option("--concurrency", "-c", type=int, default=1, help="并发请求数（内置浏览器执行器固定串行）")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出模式")
 @click.pass_context
 def workflow_batch(
