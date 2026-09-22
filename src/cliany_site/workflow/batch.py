@@ -102,6 +102,7 @@ class BatchResult:
                     "params": r.params,
                     "success": r.success,
                     "error": r.error,
+                    "data": r.data,
                     "elapsed_ms": round(r.elapsed_ms, 1),
                 }
                 for r in self.results
@@ -125,7 +126,7 @@ def _execute_one_item(
     start = time.monotonic()
     try:
         result = executor.execute_step(step.adapter, step.command, final_params)
-        success = bool(result.get("success", False))
+        success = result.get("ok", result.get("success")) is True
         elapsed = (time.monotonic() - start) * 1000
         err: str | None = None
         if not success:

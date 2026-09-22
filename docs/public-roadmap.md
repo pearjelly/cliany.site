@@ -14,6 +14,8 @@ Unreleased on September 22: standalone `browser click/type` now use the supporte
 
 Also unreleased: SDK and HTTP now consume real generator metadata and return extracted data with quality diagnostics. A local Chromium form verifies two changed inputs through fresh SDK and HTTP sessions, using an actual saved adapter rather than handwritten metadata. Full CLI/workflow parity, live model generation, and public-site replay remain separate acceptance work.
 
+Workflow/batch result compatibility is also fixed in Unreleased: actual Click commands returning `ok` now compose correctly, retries stop on success, nonzero exits override success claims, and serialized summaries retain returned data. This is protocol-level validation; indexed variable expressions and full generated-browser workflow replay still require acceptance work.
+
 The shared executor now dispatches browser actions after routing and keeps dry-run from mutating pages. A real Chromium form test covers typing, selecting, clicking, and unchanged dry-run state. Generated CLI atom compatibility and complete cross-entrypoint replay remain the next priorities; this test does not establish those broader workflows.
 
 - A 10-minute first-run path that starts with `doctor`, real demo cases, and replay before requiring users to configure an LLM.

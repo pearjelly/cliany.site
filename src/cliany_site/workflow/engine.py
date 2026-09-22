@@ -138,7 +138,7 @@ def evaluate_condition(when: str, context: WorkflowContext) -> bool:
 class StepResult:
     name: str
     success: bool
-    data: dict[str, Any] | None = None
+    data: Any = None
     error: str | None = None
     skipped: bool = False
     elapsed_ms: float = 0.0
@@ -171,6 +171,7 @@ class WorkflowResult:
                     "elapsed_ms": round(s.elapsed_ms, 1),
                     "attempts": s.attempts,
                     "error": s.error,
+                    "data": s.data,
                 }
                 for s in self.steps
             ],
@@ -214,6 +215,18 @@ class ClickAdapterExecutor(StepExecutor):
 
         try:
             parsed: dict[str, Any] = _json.loads(result.output)
+            if not isinstance(parsed, dict):
+                return {
+                    "success": False,
+                    "data": None,
+                    "error": {"code": "STEP_FAILED", "message": "命令 JSON 必须是结果对象"},
+                }
+            if result.exit_code != 0 and parsed.get("ok", parsed.get("success")) is True:
+                return {
+                    "success": False,
+                    "data": parsed.get("data"),
+                    "error": {"code": "STEP_FAILED", "message": f"命令以非零状态退出: {result.exit_code}"},
+                }
             return parsed
         except (ValueError, _json.JSONDecodeError):
             if result.exit_code == 0:
@@ -240,7 +253,7 @@ def _run_step_with_retry(
     for attempt in range(1, policy.max_attempts + 1):
         try:
             result = executor.execute_step(step.adapter, step.command, params)
-            success = result.get("success", False)
+            success = result.get("ok", result.get("success")) is True
             if success or attempt >= policy.max_attempts:
                 return StepResult(
                     name=step.name,
