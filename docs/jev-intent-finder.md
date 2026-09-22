@@ -12,6 +12,8 @@ cliany-site --cdp-url http://localhost:9222 browser find \
 
 尚未发布到 PyPI v0.16.356，需使用包含本修改的源码。`CLIANY_JEV_MODEL` 可指定模型，默认 `jev-latest`。使用浏览器当前页面，不恢复登录 session；页面刷新后 ref 可能失效，应重新定位。
 
+省略 `--json` 时，终端也会显示目标的 ref、角色、完整名称、得分、置信度与模型，便于人工检查；名称中的换行和终端控制字符会转义。程序调用仍应使用 `--json` 并检查 `ok`。
+
 ## 设计依据
 
 [官方介绍](https://typesafe.ai/blog/introducing-system-one-models-and-jev)将 Jev 定位为结构化决策模型，不提供任意字符串生成。本项目采用 [Choice](https://docs.typesafe.ai/primitives/choice)：选项由当前 AXTree 生成，并包含“无法确定”。通过[官方 HTTP API](https://docs.typesafe.ai/api)调用，无需额外模型 SDK。

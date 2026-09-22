@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Human-readable `browser find` output now includes each target's ref, role, name and available decision scores instead of only a count. Page control characters are escaped; JSON envelopes remain unchanged.
+
 - Jev no longer silently truncates candidate names and roles before asking the model. Over-limit semantics reject the whole lookup before any request; labels at the supported limits are preserved intact.
 
 - Jev rejects oversized integer probabilities and confidence values with structured errors instead of raising a numeric overflow. Invalid caller thresholds are rejected before any remote request.

@@ -17,6 +17,12 @@ def _print_envelope(result: Envelope, json_mode: bool) -> None:
         data = result.get("data", [])
         count = len(data) if isinstance(data, list) else 0
         click.echo(f"✓ 找到 {count} 个元素")
+        if isinstance(data, list):
+            for item in data:
+                fields = ("ref", "role", "name", "score", "confidence", "model")
+                click.echo("  " + " ".join(
+                    f"{key}={json.dumps(item[key], ensure_ascii=False)}" for key in fields if key in item
+                ))
     else:
         error_info = result.get("error")
         error_code = error_info.get("code", "ERROR") if error_info else "ERROR"
