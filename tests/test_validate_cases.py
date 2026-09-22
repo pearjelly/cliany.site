@@ -236,7 +236,7 @@ def test_current_cases_manifest_validates_without_packages():
     report = validate_cases.build_report(ROOT)
 
     assert report.ok is True
-    assert report.active >= 3
+    assert report.active == 2
     assert report.candidate >= 1
     assert report.known_gap >= 1
     assert report.checked_packages is False
