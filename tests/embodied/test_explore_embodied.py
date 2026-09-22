@@ -36,18 +36,20 @@ async def headless_browser_cdp_url():
 
 @pytest.mark.embodied
 @pytest.mark.asyncio
-@pytest.mark.parametrize("full_endpoint", [False, True])
-async def test_capture_axtree_from_headless_chrome(local_server, headless_browser_cdp_url, full_endpoint):
+@pytest.mark.parametrize("endpoint_kind", ["legacy", "websocket", "http-discovery"])
+async def test_capture_axtree_from_headless_chrome(local_server, headless_browser_cdp_url, endpoint_kind):
     import aiohttp
 
     from cliany_site.browser.axtree import capture_axtree
     from cliany_site.browser.cdp import CDPConnection
 
     page_url = f"{local_server}/sample_form.html"
-    if full_endpoint:
+    if endpoint_kind == "websocket":
         async with aiohttp.ClientSession() as client:
             async with client.get(headless_browser_cdp_url.replace("ws://", "http://") + "/json/version") as response:
                 headless_browser_cdp_url = (await response.json())["webSocketDebuggerUrl"]
+    elif endpoint_kind == "http-discovery":
+        headless_browser_cdp_url = headless_browser_cdp_url.replace("ws://", "http://") + "/json/version"
     cdp = CDPConnection(cdp_url=headless_browser_cdp_url, headless=True)
     assert await cdp.check_available()
     browser_session = await cdp.connect()

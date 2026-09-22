@@ -36,7 +36,9 @@ async def test_http_discovery_preserves_proxy_prefix_and_query(unused_tcp_port):
     async def handle(request):
         assert request.query["token"] == "test-token"
         paths.append(request.path)
-        return web.json_response([] if request.path.endswith("/list") else {"Browser": "Chrome/test"})
+        return web.json_response([] if request.path.endswith("/list") else {
+            "Browser": "Chrome/test", "webSocketDebuggerUrl": f"ws://127.0.0.1:{unused_tcp_port}/devtools/browser/test",
+        })
 
     app = web.Application()
     app.router.add_get("/proxy/json/{resource}", handle)
@@ -50,6 +52,33 @@ async def test_http_discovery_preserves_proxy_prefix_and_query(unused_tcp_port):
             assert await cdp.get_pages() == []
             launch.assert_not_called()
         assert paths == ["/proxy/json/version", "/proxy/json/list"]
+    finally:
+        await runner.cleanup()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("payload", [
+    "<html>Sign in</html>", [], {}, {"Browser": "Chrome/test"},
+    {"Browser": "", "webSocketDebuggerUrl": "ws://remote/browser"},
+    {"Browser": "Chrome/test", "webSocketDebuggerUrl": "https://remote/login"},
+    {"Browser": "Chrome/test", "webSocketDebuggerUrl": "ws:///missing-host"},
+    {"Browser": "Chrome/test", "webSocketDebuggerUrl": "ws://remote:invalid/browser"},
+    {"Browser": "Chrome/test", "webSocketDebuggerUrl": 123},
+])
+async def test_http_200_without_cdp_discovery_is_not_available(unused_tcp_port, payload):
+    async def handle(request):
+        if isinstance(payload, str):
+            return web.Response(text=payload, content_type="text/html")
+        return web.json_response(payload)
+
+    app = web.Application()
+    app.router.add_get("/proxy/json/version", handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    try:
+        await web.TCPSite(runner, "127.0.0.1", unused_tcp_port).start()
+        cdp = CDPConnection(cdp_url=f"http://127.0.0.1:{unused_tcp_port}/proxy")
+        assert await cdp.check_available() is False
     finally:
         await runner.cleanup()
 

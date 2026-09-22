@@ -134,7 +134,19 @@ class CDPConnection:
                     timeout=aiohttp.ClientTimeout(total=get_config().cdp_timeout),
                 ) as resp,
             ):
-                return resp.status == 200
+                if resp.status != 200:
+                    return False
+                discovery = await resp.json()
+                if not isinstance(discovery, dict):
+                    return False
+                product = discovery.get("Browser")
+                socket_url = discovery.get("webSocketDebuggerUrl")
+                if (not isinstance(product, str) or not product.strip()
+                        or not isinstance(socket_url, str) or any(char.isspace() for char in socket_url)):
+                    return False
+                endpoint = urlparse(socket_url)
+                return (endpoint.scheme in {"ws", "wss"} and bool(endpoint.hostname)
+                        and (endpoint.port is None or endpoint.port > 0))
         except (TimeoutError, aiohttp.ClientError, OSError, ValueError, TypeError):
             logger.debug("远程 CDP 探测失败 (%s:%d)", host, port)
             return False
