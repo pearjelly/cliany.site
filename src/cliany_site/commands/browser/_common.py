@@ -14,11 +14,15 @@ def resolve_ref(selector_map: dict, ref: str) -> Any | None:
     return selector_map.get(str(ref))
 
 
-def fuzzy_find_by_text(selector_map: dict, text: str, limit: int = 5) -> list[dict]:
+def fuzzy_find_by_text(selector_map: dict, text: str, limit: int = 5, role: str | None = None) -> list[dict]:
     """按文本模糊查找元素，返回 [{ref, role, name, score, snippet}]"""
     text_lower = text.lower()
     results: list[dict] = []
     for ref_id, element in selector_map.items():
+        if role and role.casefold() not in (
+            str(element.get("role", "")).casefold(), str(element.get("tag_name", "")).casefold(),
+        ):
+            continue
         name = element.get("name", "")
         if text_lower in name.lower():
             exact = text_lower == name.lower()

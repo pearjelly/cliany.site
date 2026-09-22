@@ -31,6 +31,7 @@ def _print_envelope(result: Envelope, json_mode: bool) -> None:
 @browser_group.command("type")
 @click.option("--ref", "ref", default=None, help="元素 ref ID")
 @click.option("--text", "text", default=None, help="元素文本（模糊匹配）")
+@click.option("--role", default=None, help="按 AXTree 角色限定文本匹配")
 @click.option("--value", required=True, help="要输入的内容")
 @click.option("--submit", is_flag=True, default=False, help="输入后发送 Enter")
 @click.option("--clear", is_flag=True, default=False, help="输入前清空字段")
@@ -41,6 +42,7 @@ def type_cmd(
     ctx: click.Context,
     ref: str | None,
     text: str | None,
+    role: str | None,
     value: str,
     submit: bool,
     clear: bool,
@@ -54,7 +56,7 @@ def type_cmd(
         ctx.exit(1)
         return
     cdp = cdp_from_context(ctx)
-    result = asyncio.run(_run_type(cdp, ref, text, value, submit, clear))
+    result = asyncio.run(_run_type(cdp, ref, text, value, submit, clear, role=role))
     _print_envelope(result, effective_json)
     if not result.get("ok"):
         ctx.exit(1)
@@ -67,6 +69,7 @@ async def _run_type(
     value: str,
     submit: bool,
     clear: bool,
+    role: str | None = None,
 ) -> Envelope:
     from cliany_site.browser.axtree import capture_axtree
     from cliany_site.commands.browser._common import fuzzy_find_by_text, resolve_ref
@@ -90,7 +93,7 @@ async def _run_type(
                 element = resolve_ref(selector_map, ref)
                 found_ref = ref
             elif text is not None:
-                results = fuzzy_find_by_text(selector_map, text, limit=1)
+                results = fuzzy_find_by_text(selector_map, text, limit=1, role=role)
                 if results:
                     found_ref = results[0]["ref"]
                     element = resolve_ref(selector_map, found_ref)

@@ -14,6 +14,7 @@ from cliany_site.envelope import Envelope, ErrorCode, err, ok
 @browser_group.command("submit")
 @click.option("--ref", "ref", default=None, help="要聚焦的输入元素 ref ID")
 @click.option("--text", "text", default=None, help="要聚焦的输入元素文本（模糊匹配）")
+@click.option("--role", default=None, help="按 AXTree 角色限定文本匹配")
 @click.option("--session", default=None, help="会话名称")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出模式")
 @click.pass_context
@@ -21,19 +22,20 @@ def submit_cmd(
     ctx: click.Context,
     ref: str | None,
     text: str | None,
+    role: str | None,
     session: str | None,
     json_mode: bool | None,
 ) -> None:
     root_obj = ctx.find_root().obj if isinstance(ctx.find_root().obj, dict) else {}
     effective_json = json_mode if json_mode is not None else bool(root_obj.get("json_mode"))
     cdp = cdp_from_context(ctx)
-    result = asyncio.run(_run_submit(cdp, ref, text))
+    result = asyncio.run(_run_submit(cdp, ref, text, role=role))
     print_envelope(result, effective_json)
     if not result.get("ok"):
         ctx.exit(1)
 
 
-async def _run_submit(cdp, ref: str | None, text: str | None) -> Envelope:
+async def _run_submit(cdp, ref: str | None, text: str | None, role: str | None = None) -> Envelope:
     from cliany_site.browser.axtree import capture_axtree
 
     if not await cdp.check_available():
@@ -57,7 +59,7 @@ async def _run_submit(cdp, ref: str | None, text: str | None) -> Envelope:
                     element = resolve_ref(selector_map, ref)
                     found_ref = ref
                 else:
-                    results = fuzzy_find_by_text(selector_map, text or "", limit=1)
+                    results = fuzzy_find_by_text(selector_map, text or "", limit=1, role=role)
                     if results:
                         found_ref = results[0]["ref"]
                         element = resolve_ref(selector_map, found_ref)

@@ -164,8 +164,8 @@ async def test_generated_adapter_returns_real_form_data(
 
     url = f"{local_server}/browser_atoms.html"
     actions = [
-        ActionStep("type", url, value="{{name}}", target_name="Name", target_role="textbox"),
-        ActionStep("click", url, target_name="Apply", target_role="button"),
+        ActionStep("type", url, value="{{name}}", target_ref="999998", target_name="Name", target_role="textbox"),
+        ActionStep("click", url, target_ref="999999", target_name="Apply", target_role="button"),
         ActionStep("extract", url, selector="output", extract_mode="list", fields_map={"name": ""}),
     ]
     result = ExploreResult(

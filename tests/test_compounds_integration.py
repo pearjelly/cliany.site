@@ -54,6 +54,18 @@ def _make_dom_service(raw_elements: dict) -> AsyncMock:
 
 
 class TestCaptureAxtreeCompounds:
+    async def test_ax_role_is_preserved_with_legacy_tag(self, monkeypatch):
+        monkeypatch.setenv("CLIANY_AXTREE_PRUNE", "0")
+        element = _make_mock_element("input", {}, ax_name="Name")
+        element.ax_node.role = "textbox"
+        with (
+            patch("browser_use.dom.service.DomService", return_value=_make_dom_service({"1": element})),
+            patch("cliany_site.config.get_config", return_value=_make_cfg()),
+        ):
+            tree = await capture_axtree(_make_browser_session())
+        assert tree["selector_map"]["1"]["role"] == "textbox"
+        assert tree["selector_map"]["1"]["tag_name"] == "input"
+
     async def test_compounds_key_always_present(self, monkeypatch):
         monkeypatch.delenv("CLIANY_AXTREE_PRUNE", raising=False)
 

@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- Recorded click/type/select/submit replay now prefers saved AXTree names and roles over stale element refs. Browser action commands accept `--role` to constrain text matching; snapshots preserve actual accessibility roles and retain tag names for legacy recordings. Records without a name retain ref-based behavior. Real generated replay tests carry invalid saved refs across CLI, SDK, HTTP, workflow, and batch entrypoints.
 - Generated data commands no longer let `expects_nonempty=false` bypass missing-field errors: blank object rows and partial extracts take precedence over empty extracts in the quality summary, matching SDK behavior. Actual zero-row results remain permitted when explicitly declared.
 - Generated command atom replay now parses stdout independently of stderr, requires a boolean `ok` result object, and rejects success JSON paired with a nonzero exit. Invalid child results return a structured error instead of leaking non-object values or accepting truthy status strings.
 - Workflow and batch command results are parsed from stdout only, so stderr diagnostics cannot replace structured data or turn a failure envelope into success. Invalid, empty, or multiple JSON documents now fail the step even with exit code zero; adapters must honor the requested `--json` contract.

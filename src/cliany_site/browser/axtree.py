@@ -71,9 +71,13 @@ async def capture_axtree(browser_session: Any) -> dict:
         for ref_id, element in serialized.selector_map.items():
             try:
                 role = element.tag_name if hasattr(element, "tag_name") else "unknown"
+                tag_name = role
                 ax_name = ""
                 if hasattr(element, "ax_node") and element.ax_node is not None:
                     ax_name = getattr(element.ax_node, "name", "") or ""
+                    ax_role = getattr(element.ax_node, "role", "")
+                    if isinstance(ax_role, str) and ax_role:
+                        role = ax_role
                 if not ax_name:
                     ax_name = element.node_value if hasattr(element, "node_value") else ""
 
@@ -84,6 +88,7 @@ async def capture_axtree(browser_session: Any) -> dict:
                 entry: dict[str, Any] = {
                     "ref": str(ref_id),
                     "role": role,
+                    "tag_name": tag_name,
                     "name": ax_name,
                     "attributes": dict(getattr(element, "attributes", {}) or {}),
                 }

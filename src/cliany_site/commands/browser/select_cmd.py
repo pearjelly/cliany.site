@@ -14,6 +14,7 @@ from cliany_site.envelope import Envelope, ErrorCode, err, ok
 @browser_group.command("select")
 @click.option("--ref", "ref", default=None, help="元素 ref ID")
 @click.option("--text", "text", default=None, help="元素文本（模糊匹配）")
+@click.option("--role", default=None, help="按 AXTree 角色限定文本匹配")
 @click.option("--value", required=True, help="要选择的选项文本")
 @click.option("--session", default=None, help="会话名称")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出模式")
@@ -22,6 +23,7 @@ def select_cmd(
     ctx: click.Context,
     ref: str | None,
     text: str | None,
+    role: str | None,
     value: str,
     session: str | None,
     json_mode: bool | None,
@@ -34,13 +36,13 @@ def select_cmd(
         return
 
     cdp = cdp_from_context(ctx)
-    result = asyncio.run(_run_select(cdp, ref, text, value))
+    result = asyncio.run(_run_select(cdp, ref, text, value, role=role))
     print_envelope(result, effective_json)
     if not result.get("ok"):
         ctx.exit(1)
 
 
-async def _run_select(cdp, ref: str | None, text: str | None, value: str) -> Envelope:
+async def _run_select(cdp, ref: str | None, text: str | None, value: str, role: str | None = None) -> Envelope:
     from cliany_site.browser.axtree import capture_axtree
 
     if not await cdp.check_available():
@@ -63,7 +65,7 @@ async def _run_select(cdp, ref: str | None, text: str | None, value: str) -> Env
                 element = resolve_ref(selector_map, ref)
                 found_ref = ref
             elif text is not None:
-                results = fuzzy_find_by_text(selector_map, text, limit=1)
+                results = fuzzy_find_by_text(selector_map, text, limit=1, role=role)
                 if results:
                     found_ref = results[0]["ref"]
                     element = resolve_ref(selector_map, found_ref)

@@ -132,10 +132,12 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
         args: list[str] = ["browser", "click"]
         ref = step.get("ref")
         name = step.get("target_name")
-        if ref:
-            args.extend(["--ref", str(ref)])
-        elif name:
+        if name:
             args.extend(["--text", str(name)])
+            if step.get("target_role"):
+                args.extend(["--role", str(step["target_role"])])
+        elif ref:
+            args.extend(["--ref", str(ref)])
         return run_atom(args, session=domain)
 
     if action_type == "type":
@@ -143,10 +145,12 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
         ref = step.get("ref")
         name = step.get("target_name")
         value = str(step.get("value") or "")
-        if ref:
-            args.extend(["--ref", str(ref)])
-        elif name:
+        if name:
             args.extend(["--text", str(name)])
+            if step.get("target_role"):
+                args.extend(["--role", str(step["target_role"])])
+        elif ref:
+            args.extend(["--ref", str(ref)])
         args.extend(["--value", value])
         args.append("--clear")
         return run_atom(args, session=domain)
@@ -156,10 +160,12 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
         ref = step.get("ref")
         name = step.get("target_name")
         value = str(step.get("value") or "")
-        if ref:
-            args.extend(["--ref", str(ref)])
-        elif name:
+        if name:
             args.extend(["--text", str(name)])
+            if step.get("target_role"):
+                args.extend(["--role", str(step["target_role"])])
+        elif ref:
+            args.extend(["--ref", str(ref)])
         args.extend(["--value", value])
         return run_atom(args, session=domain)
 
@@ -167,10 +173,12 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
         args = ["browser", "submit"]
         ref = step.get("ref")
         name = step.get("target_name")
-        if ref:
-            args.extend(["--ref", str(ref)])
-        elif name:
+        if name:
             args.extend(["--text", str(name)])
+            if step.get("target_role"):
+                args.extend(["--role", str(step["target_role"])])
+        elif ref:
+            args.extend(["--ref", str(ref)])
         return run_atom(args, session=domain)
 
     if action_type == "extract":
