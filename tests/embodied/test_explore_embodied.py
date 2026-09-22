@@ -355,3 +355,29 @@ async def test_jev_intent_finder_reads_real_tree_without_mutation(
             assert await page.locator("output").get_attribute("data-submits") == "0"
         finally:
             await browser.close()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
+async def test_ambiguous_replay_does_not_click_either_button(local_server, headless_browser_cdp_url, tmp_home):
+    from cliany_site.action_runtime import ActionExecutionError, execute_action_steps
+    from cliany_site.browser.cdp import CDPConnection
+
+    cdp = CDPConnection(cdp_url=headless_browser_cdp_url)
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.connect_over_cdp(headless_browser_cdp_url.replace("ws://", "http://"))
+        try:
+            page = await browser.contexts[0].new_page()
+            await page.goto(f"{local_server}/browser_atoms.html")
+            await page.evaluate(
+                "document.querySelector('form').appendChild(document.querySelector('button').cloneNode(true))"
+            )
+            session = await cdp.connect()
+            with pytest.raises(ActionExecutionError, match="未找到目标元素"):
+                await execute_action_steps(session, [{
+                    "type": "click", "ref": "999999", "target_name": "Apply", "target_role": "button",
+                }])
+            assert await page.locator("output").get_attribute("data-submits") == "0"
+        finally:
+            await cdp.disconnect()
+            await browser.close()

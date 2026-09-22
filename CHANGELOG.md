@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Recorded action replay now compares semantic candidates before trusting a reused element index. Equal highest scores fail closed without repair or vision fallback; a real Chromium regression verifies that duplicate Apply buttons cause zero submissions. Ref-only actions retain their existing behavior.
+
 - Malformed model responses no longer signal successful exploration completion. Response objects and boolean completion flags are validated, and completed recorded actions require explicit command definitions instead of bypassing quality checks through a synthesized fallback command.
 
 - Declared exploration commands must preserve recorded action order and partition all actions exactly once. Missing, overlapping, duplicate, out-of-range, or non-integer indices now fail instead of being silently filtered or split evenly between unrelated commands.

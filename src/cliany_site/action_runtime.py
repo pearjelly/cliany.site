@@ -495,15 +495,16 @@ async def _resolve_action_node(browser_session: Any, action_data: dict[str, Any]
         direct_index = _parse_ref_to_index(ref_value)
         if direct_index is not None:
             direct_candidate = selector_map.get(str(direct_index))
-            if isinstance(direct_candidate, dict):
-                direct_score = _score_candidate(action_data, direct_candidate, current_url)
-                if direct_score > 0 or not any(
-                    action_data.get(key) for key in ("target_name", "target_role", "target_attributes")
-                ):
-                    return await browser_session.get_element_by_index(direct_index)
+            if isinstance(direct_candidate, dict) and not any(
+                action_data.get(key) for key in (
+                    "target_name", "target_role", "target_attributes", "target_frame_id", "target_shadow_root_type",
+                )
+            ):
+                return await browser_session.get_element_by_index(direct_index)
 
         best_index: int | None = None
         best_score = 0
+        tied = False
         for ref, candidate in selector_map.items():
             if not isinstance(candidate, dict):
                 continue
@@ -513,8 +514,14 @@ async def _resolve_action_node(browser_session: Any, action_data: dict[str, Any]
                 if candidate_index is not None:
                     best_index = candidate_index
                     best_score = score
+                    tied = False
+            elif score == best_score and score > 0 and _parse_ref_to_index(str(ref)) is not None:
+                tied = True
 
         if best_index is not None and best_score > 0:
+            if tied:
+                logger.warning("多个元素具有相同最高语义匹配分数，拒绝选择目标")
+                return None
             return await browser_session.get_element_by_index(best_index)
 
         if attempt < _get_resolve_max_retries():
