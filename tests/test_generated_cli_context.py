@@ -20,7 +20,7 @@ def test_nested_atom_inherits_root_browser_options(tmp_home, monkeypatch, root_o
 
     def invoke(runner, cli, args, **kwargs):
         calls.append(args)
-        return SimpleNamespace(output=json.dumps({"ok": True, "data": {}}))
+        return SimpleNamespace(stdout=json.dumps({"ok": True, "data": {}}), exit_code=0)
 
     monkeypatch.setattr(runtime_helpers.CliRunner, "invoke", invoke)
     with click.Context(click.Group("root"), obj=root_obj) as root:

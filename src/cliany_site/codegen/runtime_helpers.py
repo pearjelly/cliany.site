@@ -32,14 +32,19 @@ def run_atom(
     runner = CliRunner()
     result = runner.invoke(cli, args, catch_exceptions=False)
     try:
-        envelope = cast(Envelope, json.loads(result.output))
-    except (json.JSONDecodeError, ValueError):
+        parsed = json.loads(result.stdout)
+        if not isinstance(parsed, dict) or not isinstance(parsed.get("ok"), bool):
+            raise ValueError("命令 JSON 必须包含布尔 ok 状态")
+        if result.exit_code != 0 and parsed["ok"]:
+            raise ValueError(f"命令以非零状态退出: {result.exit_code}")
+        envelope = cast(Envelope, parsed)
+    except ValueError as exc:
         from cliany_site.envelope import ErrorCode, err
 
         envelope = err(
             command=" ".join(command),
             code=ErrorCode.E_UNKNOWN,
-            message=result.output[:200],
+            message=f"{exc}: {result.output[:200]}",
             source="builtin",
         )
 

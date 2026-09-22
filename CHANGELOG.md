@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- Generated command atom replay now parses stdout independently of stderr, requires a boolean `ok` result object, and rejects success JSON paired with a nonzero exit. Invalid child results return a structured error instead of leaking non-object values or accepting truthy status strings.
 - Workflow and batch command results are parsed from stdout only, so stderr diagnostics cannot replace structured data or turn a failure envelope into success. Invalid, empty, or multiple JSON documents now fail the step even with exit code zero; adapters must honor the requested `--json` contract.
 - Workflow and batch child commands now inherit the root CDP URL, headless mode, sandbox, forced-browser routing, and diagnosis flags. Options are captured before worker dispatch; real two-browser tests verify workflow and serial batch replay use the explicit browser without touching the environment-default browser.
 - Failed workflow and batch CLI commands now exit nonzero and emit a single JSON error response. Detailed step/item results, including successful data before a failure, are preserved in `error.details` instead of a second standalone JSON document.
