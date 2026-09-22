@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Parameter propagation and action deduplication now distinguish recorded page URLs, element refs, and navigation destinations, not just action type/name/role. Generated commands preserve separate same-label inputs on different pages instead of replacing or dropping the wrong input. Existing adapters require regeneration.
+
 - Exploration infers parameters only from each command's owned actions while preserving global action indices. Code generation rejects explicit parameter indices outside the command instead of silently matching another action's default value. Generated Click regression tests verify that two commands replace only their own inputs; existing adapters require regeneration.
 
 - Demo evidence can require a configured minimum number of row objects, so an empty successful envelope no longer passes Confluence's advertised search check. The historical Confluence keyword demo is marked degraded with a dated live audit; its generated adapter and archive remain unchanged.

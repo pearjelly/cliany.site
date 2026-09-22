@@ -5,9 +5,12 @@ import re
 from cliany_site.explorer.models import ActionStep
 
 
-def action_fingerprint(action: ActionStep) -> tuple[str, str, str]:
+def action_fingerprint(action: ActionStep) -> tuple[str, ...]:
     return (
         action.action_type or "",
+        action.page_url or "",
+        action.target_ref or "",
+        action.target_url or "",
         action.target_name or "",
         action.target_role or "",
     )
@@ -113,7 +116,7 @@ def remove_redundant_duplicate_actions(
     all_actions: list[ActionStep],
     param_overrides: dict[int, str],
 ) -> list[int]:
-    seen: dict[tuple[str, str, str, str], int] = {}
+    seen: dict[tuple[str, ...], int] = {}
     keep: list[int] = []
     for idx in step_indices:
         if not (0 <= idx < len(all_actions)):
