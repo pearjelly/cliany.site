@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Exploration that exhausts its step budget without reaching completion now fails instead of synthesizing a reusable command from partial actions. Its recording is finalized as incomplete.
+
 - Newly generated commands no longer append their first inline action list to itself or overwrite preceding reused actions. Reused atom calls and extract steps retain their recorded order instead of being removed by the generic duplicate filter. Existing generated adapters must be regenerated; their files are not edited in place.
 - AXTree capture now reads page URLs and titles through the supported browser-use `get_url`/`get_title` API. A deterministic-model, real-browser exploration-to-generated-CLI regression reproduces the formerly blank source URL and verifies changed-input replay from fresh processes.
 - Recorded click/type/select/submit replay now prefers saved AXTree names and roles over stale element refs. Browser action commands accept `--role` to constrain text matching; snapshots preserve actual accessibility roles and retain tag names for legacy recordings. Records without a name retain ref-based behavior. Real generated replay tests carry invalid saved refs across CLI, SDK, HTTP, workflow, and batch entrypoints.

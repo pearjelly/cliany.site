@@ -168,3 +168,16 @@ async def test_data_command_allows_real_empty_when_expects_nonempty_is_false(moc
 
     assert [command.name for command in result.commands] == ["search-results"]
     assert result.commands[0].expects_nonempty is False
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("actions", [[], [{"type": "click", "ref": "1", "description": "打开页面"}]])
+async def test_exhausted_exploration_never_returns_partial_commands(mocker, tmp_home, actions):
+    invoke = _prepare(mocker, [{"actions": actions, "done": False}] * 2, [[], []])
+    save = mocker.patch("cliany_site.explorer.engine.save_adapter")
+
+    with pytest.raises(RuntimeError, match="尚未确认完成"):
+        await WorkflowExplorer().explore("https://example.com/search", "打开页面", record=False)
+
+    assert invoke.await_count == 2
+    save.assert_not_called()

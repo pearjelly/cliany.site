@@ -1084,6 +1084,11 @@ class WorkflowExplorer:
                 if next_url and next_url != tree.get("url", ""):
                     with contextlib.suppress(OSError, RuntimeError, TimeoutError):
                         await browser_session.navigate_to(next_url, new_tab=False)
+            else:
+                raise RuntimeError(
+                    f"探索达到 {cfg.explore_max_steps} 步上限但尚未确认完成；"
+                    "不会将部分动作生成为可复用命令，请缩小任务范围后重新探索"
+                )
 
             if not result.commands and result.actions:
                 inferred_args = _infer_params_from_actions(result.actions, workflow_description)

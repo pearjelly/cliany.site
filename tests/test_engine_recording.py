@@ -128,6 +128,20 @@ def _one_step_done_result() -> list[dict]:
 
 class TestWorkflowExplorerRecording:
     @pytest.mark.asyncio
+    async def test_step_limit_finalizes_recording_as_incomplete(self, mocker, tmp_home):
+        manager = MagicMock()
+        manifest = manager.start_recording.return_value
+        _prepare_explore_mocks(
+            mocker, parse_results=[{"actions": [], "done": False}], recording_manager=manager,
+        )
+        mocker.patch("cliany_site.explorer.engine.get_config", return_value=_make_config(1))
+
+        with pytest.raises(RuntimeError, match="尚未确认完成"):
+            await WorkflowExplorer().explore("https://example.com/start", "测试工作流", record=True)
+
+        manager.finalize.assert_called_once_with(manifest, completed=False)
+
+    @pytest.mark.asyncio
     async def test_record_true_calls_start_recording(self, mocker):
         recording_manager = MagicMock()
         recording_manager.start_recording.return_value = MagicMock()
