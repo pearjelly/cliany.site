@@ -181,3 +181,31 @@ async def test_exhausted_exploration_never_returns_partial_commands(mocker, tmp_
 
     assert invoke.await_count == 2
     save.assert_not_called()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("partitions", [
+    [[0], [2]], [[0, 1], [1, 2]], [[0, 0], [1, 2]], [[0], [1, 3]],
+    [[False], [1, 2]], [[0], ["1", 2]], [[1, 0], [2]], [[0, 1, 2], []],
+    [[0, 1, 2], None], [[0, 1]],
+])
+async def test_invalid_command_partition_is_not_guessed(mocker, tmp_home, partitions):
+    actions = [{"type": "click", "ref": "1", "description": f"步骤 {i}"} for i in range(3)]
+    commands = [{"name": f"action-{i}", "action_steps": steps} for i, steps in enumerate(partitions)]
+    _prepare(mocker, [{"actions": actions, "commands": commands, "done": True}], [[]])
+
+    with pytest.raises(RuntimeError, match="命令动作分区无效"):
+        await WorkflowExplorer().explore("https://example.com/search", "执行两个操作", record=False)
+
+
+@pytest.mark.asyncio
+async def test_explicit_uneven_partition_preserves_command_ownership(mocker, tmp_home):
+    actions = [{"type": "click", "ref": "1", "description": f"步骤 {i}"} for i in range(3)]
+    commands = [{"name": "open", "action_steps": [0]}, {"name": "apply", "action_steps": [1, 2]}]
+    _prepare(mocker, [{"actions": actions, "commands": commands, "done": True}], [[]])
+
+    result = await WorkflowExplorer().explore("https://example.com/search", "执行两个操作", record=False)
+
+    assert [(command.name, command.action_steps) for command in result.commands] == [
+        ("open", [0]), ("apply", [1, 2]),
+    ]

@@ -89,6 +89,20 @@ def _valid_action_indices(raw_indices: object, action_count: int) -> list[int]:
     return [index for index in raw_indices if isinstance(index, int) and 0 <= index < action_count]
 
 
+def _validate_command_partition(commands: list[object], action_count: int) -> None:
+    """Validate ownership before filtering indices can hide invalid model output."""
+    assigned: list[int] = []
+    for command in commands:
+        indices = command.get("action_steps") if isinstance(command, dict) else None
+        if (not isinstance(indices, list) or (action_count > 0 and not indices)
+                or any(type(index) is not int or not 0 <= index < action_count for index in indices)
+                or indices != sorted(indices)):
+            raise RuntimeError("命令动作分区无效：每个命令须按录制顺序声明有效动作索引；请重新探索")
+        assigned.extend(indices)
+    if sorted(assigned) != list(range(action_count)):
+        raise RuntimeError("命令动作分区无效：每个动作须恰好归属一个命令，不允许遗漏或重复；请重新探索")
+
+
 def _data_command_completion_failures(
     commands_data: list[object],
     actions: list[ActionStep],
@@ -987,6 +1001,9 @@ class WorkflowExplorer:
                     if not isinstance(commands_data, list):
                         commands_data = []
 
+                    if commands_data:
+                        _validate_command_partition(commands_data, len(result.actions))
+
                     completion_failures = _data_command_completion_failures(
                         commands_data,
                         result.actions,
@@ -1049,25 +1066,6 @@ class WorkflowExplorer:
                             better = _infer_command_name_from_description(cmd.description or workflow_description)
                             if better:
                                 cmd.name = better
-
-                    all_action_indices = set(range(len(result.actions)))
-                    assigned_indices: set[int] = set()
-                    for cmd in result.commands:
-                        assigned_indices.update(cmd.action_steps)
-
-                    if assigned_indices != all_action_indices:
-                        # LLM didn't provide valid partitioning — fall back
-                        if len(result.commands) == 1:
-                            result.commands[0].action_steps = list(range(len(result.actions)))
-                        else:
-                            total = len(result.actions)
-                            n_cmds = len(result.commands)
-                            per_cmd = total // n_cmds if n_cmds else total
-                            start = 0
-                            for i, cmd in enumerate(result.commands):
-                                end = start + per_cmd if i < n_cmds - 1 else total
-                                cmd.action_steps = list(range(start, end))
-                                start = end
 
                     _ca = parsed.get("canonical_actions", [])
                     result.canonical_actions = [a for a in _ca if isinstance(a, dict)]

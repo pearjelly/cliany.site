@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Declared exploration commands must preserve recorded action order and partition all actions exactly once. Missing, overlapping, duplicate, out-of-range, or non-integer indices now fail instead of being silently filtered or split evenly between unrelated commands.
+
 - Exploration that exhausts its step budget without reaching completion now fails instead of synthesizing a reusable command from partial actions. Its recording is finalized as incomplete.
 
 - Newly generated commands no longer append their first inline action list to itself or overwrite preceding reused actions. Reused atom calls and extract steps retain their recorded order instead of being removed by the generic duplicate filter. Existing generated adapters must be regenerated; their files are not edited in place.
