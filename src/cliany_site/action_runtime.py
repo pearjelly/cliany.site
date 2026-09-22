@@ -159,11 +159,22 @@ def substitute_parameters(actions_data: list[dict[str, Any]], params: dict[str, 
     return substituted
 
 
+def _matches_recorded_semantics(action_data: dict[str, Any], candidate: dict[str, Any]) -> bool:
+    target_name = _normalize_text(action_data.get("target_name", ""))
+    name = _normalize_text(candidate.get("name", ""))
+    if target_name and (not name or (target_name not in name and name not in target_name)):
+        return False
+    role = _normalize_text(action_data.get("target_role", ""))
+    return not role or role == _normalize_text(candidate.get("role", ""))
+
+
 def _score_candidate(
     action_data: dict[str, Any],
     candidate: dict[str, Any],
     current_url: str,
 ) -> int:
+    if not _matches_recorded_semantics(action_data, candidate):
+        return 0
     score = 0
 
     target_name = _normalize_text(action_data.get("target_name", ""))
@@ -328,6 +339,9 @@ async def _attempt_vision_locate(
     ref_index = _parse_ref_to_index(ref)
     if ref_index is None:
         return None
+    candidate = tree.get("selector_map", {}).get(str(ref_index))
+    if not isinstance(candidate, dict) or not _matches_recorded_semantics(action_data, candidate):
+        return None
 
     try:
         node = await browser_session.get_element_by_index(ref_index)
@@ -442,7 +456,8 @@ async def _attempt_adaptive_repair(browser_session: Any, action_data: dict[str, 
             if candidate_index is None:
                 continue
 
-            if not isinstance(selector_map.get(str(candidate_index)), dict):
+            candidate = selector_map.get(str(candidate_index))
+            if not isinstance(candidate, dict) or not _matches_recorded_semantics(action_data, candidate):
                 continue
 
             try:

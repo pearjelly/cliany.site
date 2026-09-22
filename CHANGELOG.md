@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Recorded names and roles now constrain deterministic, model-repair, and vision candidates, so matching styles or identifiers cannot outweigh conflicting semantics. Real Chromium verifies zero submissions when only a differently named button remains. Repair prompt JSON braces are escaped so the actual prompt can be formatted.
+
 - Recorded action replay now compares semantic candidates before trusting a reused element index. Equal highest scores fail closed without repair or vision fallback; a real Chromium regression verifies that duplicate Apply buttons cause zero submissions. Ref-only actions retain their existing behavior.
 
 - Malformed model responses no longer signal successful exploration completion. Response objects and boolean completion flags are validated, and completed recorded actions require explicit command definitions instead of bypassing quality checks through a synthesized fallback command.
