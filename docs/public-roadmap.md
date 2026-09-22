@@ -16,6 +16,8 @@ Also unreleased: SDK and HTTP now consume real generator metadata and return ext
 
 Workflow/batch result compatibility is also fixed in Unreleased: actual Click commands returning `ok` now compose correctly, retries stop on success, nonzero exits override success claims, and serialized summaries retain returned data. This is protocol-level validation; indexed variable expressions and full generated-browser workflow replay still require acceptance work.
 
+Generated CLI replay now also passes the local form acceptance test in fresh processes: explicit CDP routing leaves a separate default browser untouched, recorded typing replaces old values, and structured extraction returns actual objects. The same saved adapter returns Ada and Grace through CLI, SDK, and HTTP; this does not yet establish workflow/batch browser-context propagation or stale-ref recovery.
+
 The shared executor now dispatches browser actions after routing and keeps dry-run from mutating pages. A real Chromium form test covers typing, selecting, clicking, and unchanged dry-run state. Generated CLI atom compatibility and complete cross-entrypoint replay remain the next priorities; this test does not establish those broader workflows.
 
 - A 10-minute first-run path that starts with `doctor`, real demo cases, and replay before requiring users to configure an LLM.

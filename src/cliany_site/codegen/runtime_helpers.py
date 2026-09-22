@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from typing import Any, cast
 
+import click
 from click.testing import CliRunner
 
 from cliany_site.envelope import Envelope
@@ -16,7 +17,15 @@ def run_atom(
 ) -> Envelope:
     from cliany_site.cli import cli  # 延迟导入，避免与 loader.py 的循环导入
 
-    args = list(command)
+    current_ctx = click.get_current_context(silent=True)
+    root_obj = current_ctx.find_root().obj if current_ctx is not None else None
+    args: list[str] = []
+    if isinstance(root_obj, dict):
+        if root_obj.get("cdp_url"):
+            args.extend(["--cdp-url", root_obj["cdp_url"]])
+        if root_obj.get("headless"):
+            args.append("--headless")
+    args.extend(command)
     if session:
         args.extend(["--session", session])
     args.append("--json")
@@ -134,6 +143,7 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
         elif name:
             args.extend(["--text", str(name)])
         args.extend(["--value", value])
+        args.append("--clear")
         return run_atom(args, session=domain)
 
     if action_type == "select":

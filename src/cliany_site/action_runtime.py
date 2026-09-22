@@ -1,7 +1,6 @@
 import asyncio
 import contextlib
 import copy
-import json
 import logging
 import re
 import time
@@ -16,7 +15,7 @@ from cliany_site.capability import ApiEndpoint, route_action
 from cliany_site.config import get_config
 from cliany_site.envelope import ErrorCode
 from cliany_site.errors import ClanySiteError
-from cliany_site.extract import build_extract_js
+from cliany_site.extract import _coerce_json_like_extract_data, build_extract_js
 from cliany_site.progress import NullProgressReporter, ProgressReporter
 
 logger = logging.getLogger(__name__)
@@ -80,20 +79,6 @@ def _adaptive_repair_enabled() -> bool:
 
 def _normalize_text(value: Any) -> str:
     return re.sub(r"\s+", " ", str(value or "")).strip().casefold()
-
-
-def _coerce_json_like_extract_data(raw_result: Any) -> Any:
-    if not isinstance(raw_result, str):
-        return raw_result
-
-    text = raw_result.strip()
-    if not text or text[:1] not in {"[", "{"}:
-        return raw_result
-
-    try:
-        return json.loads(text)
-    except (json.JSONDecodeError, TypeError, ValueError):
-        return raw_result
 
 
 def _parse_ref_to_index(ref: str) -> int | None:

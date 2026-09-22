@@ -151,9 +151,9 @@ async def test_action_replay_changes_real_page_only_outside_dry_run(
 
 @pytest.mark.embodied
 @pytest.mark.asyncio
-@pytest.mark.parametrize("entrypoint", ["sdk", "http"])
+@pytest.mark.parametrize("entrypoint", ["sdk", "http", "cli"])
 async def test_generated_adapter_returns_real_form_data(
-    local_server, headless_browser_cdp_url, tmp_home, entrypoint
+    local_server, headless_browser_cdp_url, fallback_browser, tmp_home, entrypoint, monkeypatch
 ):
     from aiohttp.test_utils import TestClient, TestServer
 
@@ -178,7 +178,7 @@ async def test_generated_adapter_returns_real_form_data(
         if entrypoint == "sdk":
             async with ClanySite(cdp_url=headless_browser_cdp_url) as sdk:
                 response = await sdk.execute("127.0.0.1", "read-name", params={"name": name})
-        else:
+        elif entrypoint == "http":
             server = APIServer(cdp_url=headless_browser_cdp_url)
             async with TestClient(TestServer(server._build_app())) as client:
                 http_response = await client.post("/execute", json={
@@ -186,6 +186,40 @@ async def test_generated_adapter_returns_real_form_data(
                 })
                 response = await http_response.json()
                 assert http_response.status == 200, response
+        else:
+            fallback, fallback_url = fallback_browser
+            monkeypatch.setenv("CLIANY_CDP_URL", fallback_url)
+            process = await asyncio.create_subprocess_exec(
+                sys.executable, "-m", "cliany_site", "--cdp-url", headless_browser_cdp_url,
+                "127.0.0.1", "read-name", "--name", name, "--json",
+                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+            )
+            try:
+                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=45)
+            except TimeoutError:
+                process.kill()
+                await process.communicate()
+                raise
+            assert all(page.url == "about:blank" for ctx in fallback.contexts for page in ctx.pages)
+            response = json.loads(stdout)
+            assert process.returncode == 0, (response, stderr.decode())
+            assert response["ok"] is True, response
+            extracts = [r for r in response["data"]["results"] if r["command"] == "browser extract"]
+            assert extracts[0]["data"]["content"] == [{"name": name}]
+            assert response["data"]["quality"]["ok"] is True
+            continue
         assert response["success"] is True, response
         assert response["data"]["results"][0]["data"] == [{"name": name}]
         assert response["data"]["quality"]["ok"] is True
+
+
+@pytest.fixture
+async def fallback_browser():
+    port = _pick_free_port()
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(headless=True, args=[f"--remote-debugging-port={port}"])
+        await browser.new_page()
+        try:
+            yield browser, f"ws://127.0.0.1:{port}"
+        finally:
+            await browser.close()

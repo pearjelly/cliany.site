@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- Generated CLI replay now forwards the caller's explicit CDP URL and headless option into nested browser commands, replaces recorded input values, and decodes structured extraction JSON with the same helper as SDK replay. A two-browser subprocess test verifies that the default browser remains untouched and changed inputs return the expected data.
 - Workflow and batch execution now accept boolean `ok` envelopes as well as legacy `success` responses, preserve result data in JSON summaries, and reject a success payload when the CLI exits nonzero. Explicit `ok` takes precedence; malformed truthy status values are not successes.
 - SDK and HTTP execution now read generated `commands` metadata, translate recorded actions, navigate to the recorded source, and apply recorded parameter defaults and action-index overrides. Legacy `command_defs` remains supported.
 - SDK and HTTP execution now return extraction results and quality details. Required empty results, missing extraction, and incomplete fields fail; explicitly permitted zero-match results remain valid.

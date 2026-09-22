@@ -6,7 +6,24 @@ extract.py — 将 extract action 参数转换为可在 Page.evaluate() 中执�
 
 from __future__ import annotations
 
+import json
+from typing import Any
+
 SUPPORTED_EXTRACT_MODES = ("text", "list", "table", "attribute")
+
+
+def _coerce_json_like_extract_data(raw_result: Any) -> Any:
+    if not isinstance(raw_result, str):
+        return raw_result
+
+    text = raw_result.strip()
+    if not text or text[:1] not in {"[", "{"}:
+        return raw_result
+
+    try:
+        return json.loads(text)
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return raw_result
 
 
 def _escape_selector(selector: str) -> str:
