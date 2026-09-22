@@ -6,7 +6,7 @@
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
 
-September 22 audit: Jenkins is now degraded because its published archive lacks required v3 metadata. Three active cases remain. Jira returned five issues, while Confluence returned an empty result that still needs investigation. Package installation and dry-run now reject invalid v3 metadata before replacing existing adapters. See the [dated audit](user-evidence/2026-09-22-active-demo-audit.md).
+September 22 audit: Jenkins is degraded because its published archive lacks required v3 metadata. Confluence is also degraded: its historical adapter uses a title filter, while the advertised keyword query returns zero rows. Two active cases remain. Jira returned five issues. Package installation and dry-run reject invalid v3 metadata before replacing existing adapters; configured evidence row checks now reject empty demo results. See the [original audit](user-evidence/2026-09-22-active-demo-audit.md) and [Confluence follow-up](user-evidence/2026-09-22-confluence-keyword-audit.md).
 
 ## What Is Already In Place
 

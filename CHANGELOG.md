@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Demo evidence can require a configured minimum number of row objects, so an empty successful envelope no longer passes Confluence's advertised search check. The historical Confluence keyword demo is marked degraded with a dated live audit; its generated adapter and archive remain unchanged.
+
 - Built-in Click/browser batch execution now serializes whole items when a higher concurrency is requested, with an explicit warning, avoiding shared CliRunner output and browser-state races. Custom executors retain the concurrent path. A real-browser two-row regression checks distinct results and an untouched alternate browser; this is not parallel-browser support.
 
 - Browser navigation now honors `--session` and restores saved cookies before loading the destination; expired sessions prevent navigation. Generated adapter navigation inherits this behavior, and legacy code-generation templates now inject cookies before navigation as well. Real new-process CLI tests use encrypted temporary sessions and a clean Chromium cookie jar. Regenerate old adapters to receive template changes.

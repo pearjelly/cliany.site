@@ -48,11 +48,11 @@
     "id": "apache-confluence-search",
     "title": "ASF Confluence page search",
     "category": "knowledge-base",
-    "status": "active",
+    "status": "degraded",
     "target_url": "https://cwiki.apache.org/",
     "adapter_domain": "cwiki.apache.org",
     "source_release": "v0.14.1",
-    "docs": "README.md#asf-confluence-wiki",
+    "docs": "docs/user-evidence/2026-09-22-confluence-keyword-audit.md",
     "example_output": "cases/examples/apache-confluence-search.json",
     "commands": [
       "cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/cwiki.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa",
@@ -63,7 +63,8 @@
       "offline_commands": [
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
       ],
-      "online": "read-only wiki search returns a JSON envelope with page rows"
+      "online": "read-only wiki search returns a JSON envelope with page rows",
+      "expected_rows": {"path": ["data", "results"], "min_count": 1}
     }
   },
   {

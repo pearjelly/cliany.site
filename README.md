@@ -353,6 +353,11 @@ cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json
 ```
 
 ### ASF Confluence (Wiki)
+
+Degraded on 2026-09-22: the historical adapter passes `--query` as a title filter,
+not keyword search. The command below returns zero rows and is not a successful
+search demo. See the [dated audit](docs/user-evidence/2026-09-22-confluence-keyword-audit.md).
+
 ```bash
 cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/cwiki.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa
 cliany-site verify cwiki.apache.org --strict --json

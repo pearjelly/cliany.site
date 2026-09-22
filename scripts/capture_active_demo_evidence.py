@@ -51,7 +51,7 @@ class CommandResult:
     @property
     def envelope_success(self) -> bool:
         payload = self.payload
-        return isinstance(payload, dict) and (payload.get("ok") is True or payload.get("success") is True)
+        return isinstance(payload, dict) and payload.get("ok", payload.get("success")) is True
 
     @property
     def ok(self) -> bool:
@@ -125,6 +125,25 @@ def run_command(command: str, *, runner: Runner = subprocess.run) -> CommandResu
     )
 
 
+def check_expected_rows(case: dict[str, Any], result: CommandResult) -> dict[str, Any]:
+    expectation = case.get("validation", {}).get("expected_rows")
+    if expectation is None:
+        return {"ok": True, "status": "not_configured"}
+    if not isinstance(expectation, dict):
+        raise ValueError("expected_rows must be an object")
+    path, minimum = expectation.get("path"), expectation.get("min_count")
+    if (not isinstance(path, list) or not path or not all(isinstance(key, str) and key for key in path)
+            or type(minimum) is not int or minimum < 0):
+        raise ValueError("expected_rows requires a key path and nonnegative integer min_count")
+    rows = result.payload
+    for key in path:
+        rows = rows.get(key) if isinstance(rows, dict) else None
+    if not isinstance(rows, list) or not all(isinstance(row, dict) and row for row in rows):
+        return {"ok": False, "status": "invalid_rows", "row_count": None, "min_count": minimum}
+    return {"ok": len(rows) >= minimum, "status": "ok" if len(rows) >= minimum else "too_few_rows",
+            "row_count": len(rows), "min_count": minimum}
+
+
 def capture_case(
     case: dict[str, Any],
     *,
@@ -144,6 +163,7 @@ def capture_case(
             skipped=True,
             skip_reason="strict verify did not return ok=true; read-only command was not run",
         )
+    row_check = check_expected_rows(case, read_only)
     return {
         "captured": captured or date.today().isoformat(),
         "case_id": str(case.get("id") or ""),
@@ -153,7 +173,8 @@ def capture_case(
         "source_release": case.get("source_release"),
         "verify": verify,
         "read_only": read_only,
-        "ok": verify.ok and read_only.ok,
+        "row_check": row_check,
+        "ok": verify.ok and read_only.ok and row_check["ok"],
     }
 
 
@@ -215,6 +236,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"**Case:** `{report['case_id']}` ({report['title']})",
         f"**Target:** {report['target_url']}",
         f"**Overall:** `{str(bool(report['ok'])).lower()}`",
+        f"**Row check:** `{json.dumps(report.get('row_check', {}), ensure_ascii=False)}`",
         "",
         "This is a dated maintainer evidence snapshot, not a service-availability guarantee. "
         "It records only the commands declared by the active case. The read-only command is "

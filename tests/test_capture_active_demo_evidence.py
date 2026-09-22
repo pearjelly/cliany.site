@@ -90,3 +90,23 @@ def test_markdown_keeps_boundary_and_result_payload():
     assert "read-only command is run only after strict static verification" in markdown
     assert '"kind": "verify"' in markdown
     assert "candidate package promotion" in markdown
+
+
+@pytest.mark.parametrize("rows,expected", [([], False), ([{"title": "Page"}], True),
+                                           ([{}], False), (["Page"], False), (None, False)])
+def test_capture_requires_declared_rows_even_with_successful_envelope(rows, expected):
+    case = _case()
+    case["validation"]["expected_rows"] = {"path": ["data", "results"], "min_count": 1}
+
+    def runner(argv, **kwargs):
+        return SimpleNamespace(returncode=0, stdout=json.dumps({"ok": True, "data": {"results": rows}}), stderr="")
+
+    report = capture.capture_case(case, runner=runner)
+    assert report["ok"] is expected
+    assert report["read_only"].ok is True
+    assert report["row_check"]["ok"] is expected
+
+
+def test_false_ok_cannot_be_overridden_by_legacy_success():
+    result = capture.CommandResult("test", 0, '{"ok": false, "success": true}', "")
+    assert result.ok is False
