@@ -431,6 +431,8 @@ invalid numeric comparisons stop the workflow. Explicit `null` values remain
 comparable. Missing ordinary parameter references still resolve to an empty string.
 Failed workflow and batch commands on current master exit nonzero; JSON output is
 one error response, with step/item results under `error.details`.
+Workflow and batch child commands also inherit root `--cdp-url`, `--headless`,
+`--sandbox`, `--force-browser`, and `--diagnose` options.
 
 ### Batch Execution
 

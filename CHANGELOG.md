@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- Workflow and batch child commands now inherit the root CDP URL, headless mode, sandbox, forced-browser routing, and diagnosis flags. Options are captured before worker dispatch; real two-browser tests verify workflow and serial batch replay use the explicit browser without touching the environment-default browser.
 - Failed workflow and batch CLI commands now exit nonzero and emit a single JSON error response. Detailed step/item results, including successful data before a failure, are preserved in `error.details` instead of a second standalone JSON document.
 - Workflow references now resolve zero-based array indexes, including nested arrays and named-step results. Invalid condition syntax fails validation before execution; missing condition paths and invalid numeric comparisons fail the step instead of defaulting to execution. Malformed indexes cannot become partially interpolated parameters.
 - Generated CLI replay now forwards the caller's explicit CDP URL and headless option into nested browser commands, replaces recorded input values, and decodes structured extraction JSON with the same helper as SDK replay. A two-browser subprocess test verifies that the default browser remains untouched and changed inputs return the expected data.

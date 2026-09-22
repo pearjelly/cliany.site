@@ -151,7 +151,7 @@ async def test_action_replay_changes_real_page_only_outside_dry_run(
 
 @pytest.mark.embodied
 @pytest.mark.asyncio
-@pytest.mark.parametrize("entrypoint", ["sdk", "http", "cli"])
+@pytest.mark.parametrize("entrypoint", ["sdk", "http", "cli", "workflow", "batch"])
 async def test_generated_adapter_returns_real_form_data(
     local_server, headless_browser_cdp_url, fallback_browser, tmp_home, entrypoint, monkeypatch
 ):
@@ -189,9 +189,25 @@ async def test_generated_adapter_returns_real_form_data(
         else:
             fallback, fallback_url = fallback_browser
             monkeypatch.setenv("CLIANY_CDP_URL", fallback_url)
+            command = ["127.0.0.1", "read-name", "--name", name, "--json"]
+            if entrypoint == "workflow":
+                import yaml
+
+                workflow_file = tmp_home / "workflow.yaml"
+                workflow_file.write_text(yaml.safe_dump({
+                    "name": "read form", "steps": [{
+                        "name": "read", "adapter": "127.0.0.1", "command": "read-name",
+                        "params": {"name": name},
+                    }],
+                }))
+                command = ["workflow", "run", str(workflow_file), "--json"]
+            elif entrypoint == "batch":
+                batch_file = tmp_home / "names.csv"
+                batch_file.write_text(f"name\n{name}\n", encoding="utf-8")
+                command = ["workflow", "batch", "127.0.0.1", "read-name", str(batch_file), "--json"]
             process = await asyncio.create_subprocess_exec(
                 sys.executable, "-m", "cliany_site", "--cdp-url", headless_browser_cdp_url,
-                "127.0.0.1", "read-name", "--name", name, "--json",
+                *command,
                 stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
             )
             try:
@@ -203,7 +219,12 @@ async def test_generated_adapter_returns_real_form_data(
             assert all(page.url == "about:blank" for ctx in fallback.contexts for page in ctx.pages)
             response = json.loads(stdout)
             assert process.returncode == 0, (response, stderr.decode())
-            assert response["ok"] is True, response
+            if entrypoint in ("workflow", "batch"):
+                assert response["success"] is True, response
+                key = "steps" if entrypoint == "workflow" else "results"
+                response = {"data": response["data"][key][0]["data"]}
+            else:
+                assert response["ok"] is True, response
             extracts = [r for r in response["data"]["results"] if r["command"] == "browser extract"]
             assert extracts[0]["data"]["content"] == [{"name": name}]
             assert response["data"]["quality"]["ok"] is True

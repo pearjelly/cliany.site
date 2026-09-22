@@ -208,7 +208,18 @@ class StepExecutor:
 
 class ClickAdapterExecutor(StepExecutor):
     def __init__(self, cli_group: Any = None) -> None:
+        import click
+
         self._cli = cli_group
+        ctx = click.get_current_context(silent=True)
+        root_obj = ctx.find_root().obj if ctx is not None else None
+        self._root_args: list[str] = []
+        if isinstance(root_obj, dict):
+            if root_obj.get("cdp_url"):
+                self._root_args.extend(["--cdp-url", root_obj["cdp_url"]])
+            for option in ("headless", "sandbox", "force_browser", "diagnose"):
+                if root_obj.get(option):
+                    self._root_args.append(f"--{option.replace('_', '-')}")
 
     def execute_step(self, adapter: str, command: str, params: dict[str, str]) -> dict[str, Any]:
         from click.testing import CliRunner
@@ -218,7 +229,7 @@ class ClickAdapterExecutor(StepExecutor):
 
             self._cli = cli
 
-        args = [adapter, command, "--json"]
+        args = [*self._root_args, adapter, command, "--json"]
         for key, val in params.items():
             args.extend([f"--{key}", val])
 
