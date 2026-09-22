@@ -58,6 +58,9 @@ async def test_finite_choice_uses_minimal_state(transport):
     (answer("invented"), "E_PARSE_FAILED"),
     (answer(confidence=True), "E_PARSE_FAILED"),
     (answer(confidence=float("nan")), "E_PARSE_FAILED"),
+    (answer(confidence=10 ** 400), "E_PARSE_FAILED"),
+    (answer(confidence=-(10 ** 400)), "E_PARSE_FAILED"),
+    (answer(probabilities={"element_0": 10 ** 400, "element_1": 0, "none": 0}), "E_PARSE_FAILED"),
     (answer(probabilities={"element_0": 1}), "E_PARSE_FAILED"),
     (answer(probabilities={"element_0": 0.2, "element_1": 0.7, "none": 0.1}), "E_PARSE_FAILED"),
     (answer(probabilities={"element_0": 1, "element_1": 1, "none": 0}), "E_PARSE_FAILED"),
@@ -99,6 +102,14 @@ async def test_candidate_limit_does_not_truncate(transport):
     calls, _ = transport
     nodes = {str(i): {"name": str(i), "role": "button"} for i in range(255)}
     assert (await jev.choose_element(nodes, "Name", allow_remote=True))["error"]["code"] == "E_INVALID_PARAM"
+    assert not calls
+
+
+@pytest.mark.asyncio
+async def test_oversized_confidence_threshold_prevents_request(transport):
+    calls, _ = transport
+    result = await jev.choose_element(NODES, "Name", min_confidence=10 ** 400, allow_remote=True)
+    assert result["error"]["code"] == "E_INVALID_PARAM"
     assert not calls
 
 
