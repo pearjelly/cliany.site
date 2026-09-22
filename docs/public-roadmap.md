@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-09-22
-- **Current baseline:** v0.16.355
+- **Current baseline:** v0.16.356
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -10,6 +10,8 @@ September 22 audit: Jenkins is now degraded because its published archive lacks 
 
 ## What Is Already In Place
 
+The shared executor now dispatches browser actions after routing and keeps dry-run from mutating pages. A real Chromium form test covers typing, selecting, clicking, and unchanged dry-run state. Generated CLI atom compatibility and complete cross-entrypoint replay remain the next priorities; this test does not establish those broader workflows.
+
 - A 10-minute first-run path that starts with `doctor`, real demo cases, and replay before requiring users to configure an LLM.
 - A real case catalog with CRM, DevOps, knowledge-base, and package-search workflows.
 - Structured JSON envelopes for success and failure, including retryable LLM outage reporting through `E_LLM_UNAVAILABLE`.
@@ -17,7 +19,7 @@ September 22 audit: Jenkins is now degraded because its published archive lacks 
 - Four maintained historical demos with copyable GitHub Release asset URLs and pinned SHA-256 installation checks.
 - Release readiness and publication checks that keep GitHub Release, PyPI, CI, changelog, website publication, and case catalog validation tied together.
 
-As of v0.16.355, synchronous Python callers can use `save_session(domain, cdp_url=..., headless=...)` without managing an event loop. It delegates to the same validated `ClanySite.save_session()` path, preserving the session-host boundary and browser configuration rather than bypassing Chrome or persistence safeguards.
+As of v0.16.356, synchronous Python callers can use `save_session(domain, cdp_url=..., headless=...)` without managing an event loop. It delegates to the same validated `ClanySite.save_session()` path, preserving the session-host boundary and browser configuration rather than bypassing Chrome or persistence safeguards.
 
 ## Near Term: 2026-07-29 to 2026-08-05
 

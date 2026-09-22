@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Action replay fixture</title></head>
+<body>
+  <label for="name">Name</label>
+  <input id="name" aria-label="Name">
+  <label for="color">Color</label>
+  <select id="color" aria-label="Color">
+    <option>Red</option><option>Blue</option>
+  </select>
+  <button id="apply" type="button">Apply</button>
+  <output id="result">untouched</output>
+  <script>
+    document.getElementById('apply').addEventListener('click', () => {
+      document.getElementById('result').textContent =
+        document.getElementById('name').value + ':' + document.getElementById('color').value;
+    });
+  </script>
+</body>
+</html>

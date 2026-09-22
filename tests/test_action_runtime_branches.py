@@ -127,7 +127,7 @@ async def test_attempt_vision_locate_called_when_repair_fails():
 
 @pytest.mark.parametrize("action_type", ["click", "type", "select", "navigate", "submit"])
 @pytest.mark.asyncio
-async def test_route_action_dispatches_by_type(action_type, monkeypatch):
+async def test_route_action_dispatches_by_type(action_type, monkeypatch, tmp_home):
     session = _browser_session()
     events_module = _fake_events_module()
     monkeypatch.setitem(__import__("sys").modules, "browser_use.browser.events", events_module)
@@ -150,12 +150,70 @@ async def test_route_action_dispatches_by_type(action_type, monkeypatch):
         with mock.patch("cliany_site.action_runtime.asyncio.sleep", new=mock.AsyncMock()):
             with mock.patch("cliany_site.report.save_report"):
                 with mock.patch("cliany_site.report.save_execution_log"):
-                    await execute_action_steps(session, [action], dry_run=True)
+                    await execute_action_steps(session, [action])
 
     dispatched_event = session.event_bus.dispatch.call_args.args[0]
     assert dispatched_event.__class__.__name__ == expected_event
     if action_type == "submit":
         assert dispatched_event.kwargs["keys"] == "Enter"
+
+
+@pytest.mark.parametrize("action_type", ["click", "type", "select", "navigate", "submit", "extract"])
+async def test_dry_run_never_dispatches_actions(action_type, monkeypatch, tmp_home):
+    session = _browser_session()
+    monkeypatch.setitem(__import__("sys").modules, "browser_use.browser.events", _fake_events_module())
+    action = {"type": action_type, "url": "https://example.com/next", "value": "test"}
+    progress = mock.Mock()
+    with mock.patch("cliany_site.action_runtime._resolve_action_node", new=mock.AsyncMock(return_value=object())):
+        with mock.patch("cliany_site.action_runtime.route_action") as route:
+            await execute_action_steps(session, [action], dry_run=True, progress=progress)
+    session.event_bus.dispatch.assert_not_called()
+    route.assert_not_called()
+    progress.on_execute_done.assert_called_once_with(1, 0, 1, mock.ANY)
+
+
+@pytest.mark.parametrize("api_fails", [True, False])
+async def test_api_routing_records_steps_and_falls_back(api_fails, monkeypatch, tmp_home):
+    from cliany_site.capability import ApiEndpoint, RouteDecision
+
+    session = _browser_session()
+    monkeypatch.setitem(__import__("sys").modules, "browser_use.browser.events", _fake_events_module())
+    endpoint = ApiEndpoint(url="https://example.com/api", method="GET", status=200,
+                           sample_response_keys=[], content_type="application/json")
+    monkeypatch.setattr("cliany_site.action_runtime.route_action",
+                        lambda *args, **kwargs: RouteDecision(mode="api", endpoint=endpoint, reason="test"))
+    api = mock.AsyncMock(side_effect=RuntimeError("offline") if api_fails else None)
+    monkeypatch.setattr("cliany_site.action_runtime._execute_api_step", api)
+    monkeypatch.setattr("cliany_site.action_runtime._resolve_action_node", mock.AsyncMock(return_value=object()))
+    monkeypatch.setattr("cliany_site.action_runtime._handle_post_click_navigation", mock.AsyncMock())
+    progress = mock.Mock()
+    if api_fails:
+        with pytest.warns(UserWarning, match="falling back"):
+            await execute_action_steps(session, [{"type": "click"}], progress=progress)
+    else:
+        await execute_action_steps(session, [{"type": "click"}], progress=progress)
+    assert session.event_bus.dispatch.call_count == int(api_fails)
+    progress.on_execute_done.assert_called_once_with(1, 0, 1, mock.ANY)
+
+
+async def test_continue_on_error_reports_failed_event_then_runs_next_step(monkeypatch, tmp_home):
+    session = _browser_session()
+    monkeypatch.setitem(__import__("sys").modules, "browser_use.browser.events", _fake_events_module())
+    failed_event = _AwaitableEvent()
+
+    async def result(*, raise_if_any, **kwargs):
+        if raise_if_any:
+            raise RuntimeError("browser rejected click")
+
+    failed_event.event_result = result
+    session.event_bus.dispatch.side_effect = [failed_event, _AwaitableEvent()]
+    monkeypatch.setattr("cliany_site.action_runtime._resolve_action_node", mock.AsyncMock(return_value=object()))
+    monkeypatch.setattr("cliany_site.action_runtime._handle_post_click_navigation", mock.AsyncMock())
+    progress = mock.Mock()
+    await execute_action_steps(session, [{"type": "click"}, {"type": "submit"}],
+                               continue_on_error=True, progress=progress)
+    assert session.event_bus.dispatch.call_count == 2
+    progress.on_execute_done.assert_called_once_with(1, 1, 2, mock.ANY)
 
 
 @pytest.mark.asyncio

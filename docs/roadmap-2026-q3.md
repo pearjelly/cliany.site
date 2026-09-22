@@ -2,7 +2,7 @@
 
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-09-22
-- **基线版本：** v0.16.355
+- **基线版本：** v0.16.356
 - **目标周期：** 滚动维护（2026-09-08 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -13,7 +13,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 已完成校准
 
-2026-06-10 的原始路线图以 v0.14.2 为基线；当前公开基线为 v0.16.355。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
+2026-06-10 的原始路线图以 v0.14.2 为基线；当前公开基线为 v0.16.356。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
 
 - 首次成功路径：README、README.zh、官网和 `doctor` 输出已经围绕 10 分钟路径、真实 demo、LLM live preflight 和可执行下一步重新组织。
 - 真实案例库：`cliany-site cases` 已成为案例发现、单案例展开、issue template、evidence bundle 和 promotion plan 的统一入口。
@@ -63,6 +63,8 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 当前判断
 
+2026-09-22 v0.16.356：共享执行器的 API/browser 分支已分离，普通动作与 API 失败回退会真正派发事件；dry-run 不执行页面动作；continue-on-error 不再隐藏 handler 错误。真实 Chromium 表单验证了输入、选择、点击与 dry-run 不变性，旧 v0.16.355 在同一测试中复现了 dry-run 修改页面。后续首要任务仍是原子 click/type 的 browser-use 接口迁移与生成 adapter 的完整回放验证，本次不宣称这些独立路径已修复。
+
 后续首要任务：独立复现并修复并行审计提出的核心执行断点，包括普通 click/type/select 是否真正派发浏览器动作、原子 click/type 是否使用锁定 browser-use 支持的接口，以及 CLI/SDK/HTTP/workflow 的返回契约是否一致。以真实页面状态变化作为验收；Confluence/Jenkins 案例修复随后使用同一执行链验证。发布与离线测试通过不能替代这些端到端证据。
 
 2026-09-22 第二轮真实案例审计：Jira 返回 5 条 issue；Confluence 搜索返回空列表，待核查有效性；Jenkins 公开包缺少 v3 必填字段，已降为 degraded。当前目录是 3 active、3 candidate、1 degraded、1 known-gap。安装与 dry-run 已补充 schema/domain 校验，避免哈希正确的坏包替换现有 adapter。下一轮优先处理 Confluence 空结果与采集脚本只检查信封的问题，Jenkins 恢复必须经过新包和真实 smoke。
@@ -86,7 +88,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 | adapter 可维护性 | metadata/package 校验和安全审计已进入门禁 | demo adapter 有 release asset、安装验证、回归报告和失败修复建议 |
 | 探索/抽取可靠性 | LLM outage 和抽取质量已有结构化信号 | 常见失败能定位到 provider、页面状态、selector、字段质量或能力边界 |
 | 集成可用性 | CLI 主路径强，SDK/API/headless 示例偏弱 | SDK、HTTP API、headless/remote CDP 均有可复制最小示例 |
-| 发布节奏 | v0.16.355，GitHub Release / PyPI / 官网发布流程已跑通，PyPI latest 缓存滞后可由版本专属 endpoint 复核，官网 alias 由 `vercel inspect www.cliany.site` 复核，短暂远端传输失败有有限重试而持续失败仍阻断，首页与文档无 Google Fonts 运行时依赖，API 查询与写请求的非法、重复或未知字段都在 tag 前由回归保护，直接 SDK 的 browser-facing URL、workflow 文本、doctor live-preflight 参数与 session host 也会在资源创建前由回归保护，primary adapter handoff command aliases 与 doctor preflight evidence state 已进入维护者路径 | 每天 1~3 个可验证版本；每周至少 3 天有提交；发布后 publication audit 为绿 |
+| 发布节奏 | v0.16.356，GitHub Release / PyPI / 官网发布流程已跑通，PyPI latest 缓存滞后可由版本专属 endpoint 复核，官网 alias 由 `vercel inspect www.cliany.site` 复核，短暂远端传输失败有有限重试而持续失败仍阻断，首页与文档无 Google Fonts 运行时依赖，API 查询与写请求的非法、重复或未知字段都在 tag 前由回归保护，直接 SDK 的 browser-facing URL、workflow 文本、doctor live-preflight 参数与 session host 也会在资源创建前由回归保护，primary adapter handoff command aliases 与 doctor preflight evidence state 已进入维护者路径 | 每天 1~3 个可验证版本；每周至少 3 天有提交；发布后 publication audit 为绿 |
 
 ## 双视图维护规则
 

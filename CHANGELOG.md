@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+## [0.16.356] - 2026-09-22
+
+### Fixed
+
+- The shared action executor now dispatches browser actions when API routing selects the browser or an API call fails. Click, type, select, and submit no longer skip execution while reporting success.
+- Dry-run validates actions without dispatching navigation, input, clicks, selection, submission, or extraction. A real Chromium regression reproduces the old unwanted page mutations and verifies the corrected behavior.
+- Successful API-routed steps now enter progress and execution reports. Browser handler errors are recorded as failed steps even with continue-on-error, which continues with the next action instead of hiding the failure.
+
 ## [0.16.355] - 2026-09-22
 
 ### Fixed
@@ -3111,7 +3119,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.355...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.356...HEAD
+[0.16.356]: https://github.com/pearjelly/cliany.site/compare/v0.16.355...v0.16.356
 [0.16.355]: https://github.com/pearjelly/cliany.site/compare/v0.16.354...v0.16.355
 [0.16.354]: https://github.com/pearjelly/cliany.site/compare/v0.16.353...v0.16.354
 [0.16.353]: https://github.com/pearjelly/cliany.site/compare/v0.16.352...v0.16.353

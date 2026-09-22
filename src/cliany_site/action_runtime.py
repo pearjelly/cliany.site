@@ -702,13 +702,13 @@ async def execute_action_steps(
                         logger.debug("[dry-run] %s → 元素已定位 (验证通过)", action_type)
 
                 # capability routing：非 dry_run 时检查是否走 API
+                api_completed = False
                 if not dry_run and action_type not in ("navigate", "extract"):
                     _decision = route_action(action_data, _api_endpoints, force_browser=_force_browser)
                     if _decision.mode == "api" and _decision.endpoint is not None:
                         try:
-                            _api_result = await _execute_api_step(_decision.endpoint, action_data)
-                            completed_indices.append(idx)
-                            continue
+                            await _execute_api_step(_decision.endpoint, action_data)
+                            api_completed = True
                         except Exception as _api_err:
                             warnings.warn(
                                 f"API step failed: {_api_err}, falling back to browser",
@@ -717,6 +717,8 @@ async def execute_action_steps(
                             )
                             # fall through to browser execution
 
+                if dry_run or api_completed:
+                    pass
                 elif action_type == "navigate":
                     current_url = step_page_url
                     nav_url = normalize_navigation_url(action_data.get("url", ""), current_url)
@@ -736,14 +738,14 @@ async def execute_action_steps(
                         )
                     )
                     await event
-                    await event.event_result(raise_if_any=not continue_on_error, raise_if_none=False)
+                    await event.event_result(raise_if_any=True, raise_if_none=False)
                     await asyncio.sleep(_get_post_navigate_delay())
 
                 elif action_type == "submit":
                     # `submit` is reserved for Enter-based forms. Explicit buttons use `click`.
                     event = browser_session.event_bus.dispatch(SendKeysEvent(keys="Enter"))
                     await event
-                    await event.event_result(raise_if_any=not continue_on_error, raise_if_none=False)
+                    await event.event_result(raise_if_any=True, raise_if_none=False)
 
                 elif action_type == "extract":
                     await asyncio.sleep(1.5)
@@ -845,20 +847,20 @@ async def execute_action_steps(
                     if action_type == "click":
                         event = browser_session.event_bus.dispatch(ClickElementEvent(node=node))
                         await event
-                        await event.event_result(raise_if_any=not continue_on_error, raise_if_none=False)
+                        await event.event_result(raise_if_any=True, raise_if_none=False)
                         await _handle_post_click_navigation(browser_session, action_data)
                     elif action_type == "type":
                         value = action_data.get("value", "")
                         if isinstance(value, str):
                             event = browser_session.event_bus.dispatch(TypeTextEvent(node=node, text=value, clear=True))
                             await event
-                            await event.event_result(raise_if_any=not continue_on_error, raise_if_none=False)
+                            await event.event_result(raise_if_any=True, raise_if_none=False)
                     elif action_type == "select":
                         value = action_data.get("value", "")
                         if isinstance(value, str) and value:
                             event = browser_session.event_bus.dispatch(SelectDropdownOptionEvent(node=node, text=value))
                             await event
-                            await event.event_result(raise_if_any=not continue_on_error, raise_if_none=False)
+                            await event.event_result(raise_if_any=True, raise_if_none=False)
 
             except Exception as exc:
                 logger.warning("%s步骤 %d (%s) 执行失败: %s", mode_label, idx, action_type, exc)

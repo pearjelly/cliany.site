@@ -1,6 +1,7 @@
 # pyright: reportMissingImports=false
 """真实 headless Chromium + CDP 的 AXTree 具身测试。"""
 
+import json
 import socket
 
 import pytest
@@ -60,5 +61,36 @@ async def test_capture_axtree_from_headless_chrome(local_server, headless_browse
         ]
 
         assert search_fields, f"selector_map 应含搜索框元素，实际: {list(selector_map.values())[:10]}"
+    finally:
+        await cdp.disconnect()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
+async def test_action_replay_changes_real_page_only_outside_dry_run(
+    local_server, headless_browser_cdp_url, tmp_home, monkeypatch
+):
+    from cliany_site.action_runtime import execute_action_steps
+    from cliany_site.browser.cdp import CDPConnection
+
+    monkeypatch.setenv("CLIANY_POST_CLICK_NAV_DELAY", "0")
+    cdp = CDPConnection(cdp_url=headless_browser_cdp_url, headless=True)
+    session = await cdp.connect()
+    try:
+        await session.navigate_to(f"{local_server}/action_replay.html", new_tab=False)
+        page = await session.get_current_page()
+        actions = [
+            {"type": "type", "target_name": "Name", "target_role": "textbox", "value": "Ada"},
+            {"type": "select", "target_name": "Color", "target_role": "combobox", "value": "Blue"},
+            {"type": "click", "target_name": "Apply", "target_role": "button"},
+        ]
+        state = (
+            "() => [document.getElementById('name').value, "
+            "document.getElementById('color').value, document.getElementById('result').textContent]"
+        )
+        await execute_action_steps(session, actions, dry_run=True)
+        assert json.loads(await page.evaluate(state)) == ["", "Red", "untouched"]
+        await execute_action_steps(session, actions)
+        assert json.loads(await page.evaluate(state)) == ["Ada", "Blue", "Ada:Blue"]
     finally:
         await cdp.disconnect()
