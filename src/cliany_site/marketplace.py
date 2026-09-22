@@ -19,12 +19,14 @@ import urllib.request
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from importlib import resources
 from io import BytesIO
 from pathlib import Path, PureWindowsPath
 from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
 from cliany_site.config import get_config
+from cliany_site.metadata import LegacyMetadataError, MetadataParseError, load_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -501,6 +503,23 @@ def _validate_extracted_adapter_package(manifest: AdapterManifest, tmp_path: Pat
         if actual_hash != expected_hash:
             msg = f"文件校验失败: {filename} (期望 {expected_hash[:16]}..., 实际 {actual_hash[:16]}...)"
             raise ValueError(msg)
+
+    try:
+        metadata = load_metadata(tmp_path / "metadata.json")
+    except LegacyMetadataError:
+        return
+    except (MetadataParseError, UnicodeDecodeError) as exc:
+        raise ValueError(f"安装包 metadata.json 无效: {exc}") from exc
+
+    import jsonschema
+
+    schema = json.loads(resources.files("cliany_site").joinpath("schemas/metadata.v3.json").read_text("utf-8"))
+    try:
+        jsonschema.validate(metadata, schema)
+    except jsonschema.ValidationError as exc:
+        raise ValueError(f"安装包 metadata.json 不符合 v3 schema: {exc.message}") from exc
+    if metadata["domain"] != manifest.domain:
+        raise ValueError("安装包 metadata.json 的 domain 与 manifest.json 不一致")
 
 
 def uninstall_adapter(domain: str) -> bool:

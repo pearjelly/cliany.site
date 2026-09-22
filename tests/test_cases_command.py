@@ -154,9 +154,10 @@ def test_cases_command_returns_catalog_summary(tmp_home):
     assert payload["command"] == "cases"
     data = payload["data"]
     assert data["summary"]["catalog_total"] >= 8
-    assert data["summary"]["active_count"] >= 4
+    assert data["summary"]["active_count"] >= 3
     assert data["summary"]["candidate_count"] >= 3
-    assert data["summary"]["status_counts"]["active"] >= 4
+    assert data["summary"]["status_counts"]["active"] >= 3
+    assert data["summary"]["status_counts"]["degraded"] >= 1
     assert data["promotion_evidence_summary"]["candidate_count"] >= 3
     assert data["promotion_evidence_summary"]["pending_count"] >= 9
     assert data["promotion_evidence_summary"]["primary_task_detail"]["case_id"] == "pypi-project-search"

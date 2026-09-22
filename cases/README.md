@@ -22,7 +22,7 @@
 | `suitecrm-accounts` | SuiteCRM demo 账户列表 | active | 企业 CRM 查询，无 API 后台操作 CLI 化；样例输出见 [suitecrm-accounts.json](examples/suitecrm-accounts.json) |
 | `apache-jira-issues` | ASF Jira issue 列表 | active | DevOps/项目管理列表读取；样例输出见 [apache-jira-issues.json](examples/apache-jira-issues.json) |
 | `apache-confluence-search` | ASF Confluence 页面搜索 | active | 团队知识库搜索；样例输出见 [apache-confluence-search.json](examples/apache-confluence-search.json) |
-| `apache-jenkins-jobs` | ASF Jenkins job 列表 | active | 构建状态查询；样例输出见 [apache-jenkins-jobs.json](examples/apache-jenkins-jobs.json) |
+| `apache-jenkins-jobs` | ASF Jenkins job 列表 | degraded | v0.14.1 包缺少 v3 必填元数据，暂停推荐安装；见 [2026-09-22 实测](../docs/user-evidence/2026-09-22-active-demo-audit.md) |
 | `pypi-project-search` | PyPI 项目搜索 | candidate | Python 包注册表搜索候选；样例输出见 [pypi-project-search.json](examples/pypi-project-search.json)，待生成 adapter 包和在线 smoke 后晋级 active |
 | `npm-package-search` | npm 包搜索 | candidate | JavaScript 包注册表搜索候选；样例输出见 [npm-package-search.json](examples/npm-package-search.json)，待生成 adapter 包和在线 smoke 后晋级 active |
 | `crates-io-crate-search` | crates.io crate 搜索 | candidate | Rust 包注册表搜索候选；样例输出见 [crates-io-crate-search.json](examples/crates-io-crate-search.json)，待生成 adapter 包和在线 smoke 后晋级 active |
@@ -30,13 +30,13 @@
 
 ## Active Demo Downloads
 
-四个 `active` 案例的首条 `commands` 已是可复制的 GitHub Release v0.14.1 HTTPS 安装命令，并固定对应 archive 的 SHA-256。首次安装时用下面命令查看安全首跑路径：输出会按「固定 SHA-256 安装、`verify --strict`、仅在案例声明登录时登录、只读命令」的顺序展示。需要无写入预检时，在安装命令末尾追加 `--dry-run --json`。
+三个 `active` 案例的首条 `commands` 已是可复制的 GitHub Release v0.14.1 HTTPS 安装命令，并固定对应 archive 的 SHA-256。Jenkins 已降为 `degraded`，不再进入 active 首跑列表。首次安装时用下面命令查看安全首跑路径：输出会按「固定 SHA-256 安装、`verify --strict`、仅在案例声明登录时登录、只读命令」的顺序展示。需要无写入预检时，在安装命令末尾追加 `--dry-run --json`。
 
 ```bash
 cliany-site cases --status active
 ```
 
-这只是首次安装指南，不会安装、登录或执行命令；已存在同名 adapter 时，直接运行 `cliany-site verify <adapter_domain> --strict --json`，通过后再按案例需要登录或执行只读命令，不要把占用目录当作健康证明。`doctor` 仍可诊断环境，但不会按指定 case 选择快速路径。历史 demo asset 已验证可以被当前 `market install` 读取，但本目录不把第三方站点的实时可用性或在线 replay 结果当作永久承诺。
+这只是首次安装指南，不会安装、登录或执行命令；已存在同名 adapter 时，直接运行 `cliany-site verify <adapter_domain> --strict --json`，通过后再按案例需要登录或执行只读命令，不要把占用目录当作健康证明。`doctor` 仍可诊断环境，但不会按指定 case 选择快速路径。历史 asset 的哈希正确不代表元数据合格或第三方工作流可用；v0.16.355 起，安装和 dry-run 会校验 v3 metadata，错误包须由维护者修复后重新发布。
 
 ## Candidate Cases
 

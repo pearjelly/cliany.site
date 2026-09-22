@@ -492,12 +492,13 @@ wheels = [
 
 [[package]]
 name = "cliany-site"
-version = "0.16.354"
+version = "0.16.355"
 source = { editable = "." }
 dependencies = [
     { name = "browser-use" },
     { name = "click" },
     { name = "cryptography" },
+    { name = "jsonschema" },
     { name = "keyring" },
     { name = "langchain-anthropic" },
     { name = "langchain-openai" },
@@ -540,6 +541,7 @@ requires-dist = [
     { name = "browser-use" },
     { name = "click" },
     { name = "cryptography", specifier = ">=46.0.5" },
+    { name = "jsonschema", specifier = ">=4.26.0" },
     { name = "keyring", specifier = ">=25.7.0" },
     { name = "langchain-anthropic" },
     { name = "langchain-openai" },

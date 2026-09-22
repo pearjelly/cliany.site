@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.355] - 2026-09-22
+
+### Fixed
+
+- Marketplace installation and dry-run now validate v3 package metadata against the bundled schema and manifest domain before replacing any installed adapter. Invalid JSON and unsupported metadata versions also fail early; legacy packages remain installable for migration. JSON Schema validation is now an explicit runtime dependency.
+- Marked the Apache Jenkins demo degraded after confirming its published v0.14.1 archive lacks required v3 fields. Added a dated audit covering Jira's five live results, Confluence's empty response, and the Jenkins package failure.
+
 ## [0.16.354] - 2026-09-22
 
 ### Fixed
@@ -3104,7 +3111,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.354...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.355...HEAD
+[0.16.355]: https://github.com/pearjelly/cliany.site/compare/v0.16.354...v0.16.355
 [0.16.354]: https://github.com/pearjelly/cliany.site/compare/v0.16.353...v0.16.354
 [0.16.353]: https://github.com/pearjelly/cliany.site/compare/v0.16.352...v0.16.353
 [0.16.352]: https://github.com/pearjelly/cliany.site/compare/v0.16.351...v0.16.352

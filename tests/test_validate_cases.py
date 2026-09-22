@@ -236,7 +236,7 @@ def test_current_cases_manifest_validates_without_packages():
     report = validate_cases.build_report(ROOT)
 
     assert report.ok is True
-    assert report.active >= 4
+    assert report.active >= 3
     assert report.candidate >= 1
     assert report.known_gap >= 1
     assert report.checked_packages is False
@@ -287,11 +287,6 @@ def test_current_cases_manifest_validates_without_packages():
             "https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/"
             "cwiki.apache.org-0.14.1.cliany-adapter.tar.gz",
             "effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa",
-        ),
-        "builds.apache.org": (
-            "https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/"
-            "builds.apache.org-0.14.1.cliany-adapter.tar.gz",
-            "b09710acbabfb5465a6e04b5b140a4ffa4aa24795a2b4ada60eeabbddddea0c2",
         ),
     }
     active_cases = [

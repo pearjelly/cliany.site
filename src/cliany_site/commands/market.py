@@ -18,6 +18,8 @@ from cliany_site.response import error_response, print_response, success_respons
 
 
 def _install_fix_hint(message: str) -> str:
+    if message.startswith("安装包 metadata.json"):
+        return "请联系包维护者修复 metadata.json 并重新发布；已有安装未被替换，--force 不能跳过元数据校验。"
     if "已安装" in message:
         return "使用 --force 覆盖安装，或先运行 cliany-site market uninstall <domain> 卸载旧版本。"
     if "不安全路径" in message:

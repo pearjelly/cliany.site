@@ -70,11 +70,11 @@
     "id": "apache-jenkins-jobs",
     "title": "ASF Jenkins job list",
     "category": "ci",
-    "status": "active",
+    "status": "degraded",
     "target_url": "https://builds.apache.org/",
     "adapter_domain": "builds.apache.org",
     "source_release": "v0.14.1",
-    "docs": "README.md#asf-jenkins-build-status",
+    "docs": "docs/user-evidence/2026-09-22-active-demo-audit.md",
     "example_output": "cases/examples/apache-jenkins-jobs.json",
     "commands": [
       "cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/builds.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 b09710acbabfb5465a6e04b5b140a4ffa4aa24795a2b4ada60eeabbddddea0c2",

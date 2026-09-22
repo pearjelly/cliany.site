@@ -37,6 +37,30 @@ from cliany_site.marketplace import (
 # ── helpers ──────────────────────────────────────────────
 
 
+@pytest.mark.parametrize("dry_run", [True, False])
+@pytest.mark.parametrize("metadata", [
+    '{"schema_version":3,"domain":"broken.test","commands":[]}',
+    '{"schema_version":3,"domain":"other.test","generated_at":"2026-09-22T00:00:00Z",'
+    '"generator_version":"test","commands":[]}',
+    '{"schema_version":3,"domain":"broken.test","generated_at":"2026-09-22T00:00:00Z",'
+    '"generator_version":"test","commands":[{"name":"search","expects_nonempty":"false"}]}',
+    '[]',
+    'invalid json',
+])
+def test_invalid_package_metadata_cannot_replace_installed_adapter(tmp_home, metadata, dry_run):
+    cfg = _make_config(tmp_home / ".cliany-site")
+    adapter_dir = _create_adapter(cfg.adapters_dir, "broken.test")
+    with patch("cliany_site.marketplace.get_config", return_value=cfg):
+        package = _make_tarball(tmp_home, "broken.test", metadata_json=metadata)
+        (adapter_dir / "metadata.json").write_text('{"workflow":"keep existing"}', encoding="utf-8")
+        before = {p.name: p.read_bytes() for p in adapter_dir.iterdir()}
+        operation = inspect_adapter_package if dry_run else install_adapter
+        with pytest.raises(ValueError, match="metadata.json"):
+            operation(package, force=True)
+        assert {p.name: p.read_bytes() for p in adapter_dir.iterdir()} == before
+        assert list_backups("broken.test") == []
+
+
 def _make_config(tmp_path: Path) -> MagicMock:
     cfg = MagicMock()
     cfg.home_dir = tmp_path
@@ -75,13 +99,16 @@ def _make_tarball(
     path_traversal: bool = False,
     no_manifest: bool = False,
     manifest_data: object | None = None,
+    metadata_json: str | None = None,
 ) -> Path:
     """手工构建一个 .tar.gz 安装包"""
     import hashlib
 
     pack_path = tmp_path / f"{domain}{PACK_EXTENSION}"
     commands_content = b"import click\n\n@click.command()\ndef test():\n    pass\n"
-    metadata_content = json.dumps({"workflow": "test", "version": version}).encode("utf-8")
+    metadata_content = (
+        metadata_json if metadata_json is not None else json.dumps({"workflow": "test", "version": version})
+    ).encode("utf-8")
 
     commands_hash = hashlib.sha256(commands_content).hexdigest()
     metadata_hash = hashlib.sha256(metadata_content).hexdigest()
