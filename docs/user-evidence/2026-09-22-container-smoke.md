@@ -29,3 +29,19 @@
 真实 `cases --json` 验证项目支持的源码目录回退路径。没有将直接资源探针算作通过。
 
 结论：打包输入缺失已修复，实际镜像可构建且非浏览器入口可用；浏览器容器运行仍未修复。
+
+## 非 root 沙箱复验
+
+在上述镜像上建立仅用于本机验证的 `cliany-site:sandbox-probe`（短 ID
+`38da0a718d63`），安装与 Chromium 匹配的 `chromium-sandbox`，创建 UID 10001
+的非 root 用户及其 HOME。正式 Dockerfile 和 Compose 没有因此改动。
+
+以 `--rm --network none` 运行 Chromium 的 `about:blank` dump-dom 探针，未增加
+capabilities、未指定特权模式或自定义安全策略，结果退出码 133。错误为创建新
+命名空间时 `Operation not permitted`，随后 Zygote 进程退出。Docker 报告当前
+启用 AppArmor、内置 seccomp 与 cgroup namespace；仅凭错误不能确定是哪一层
+策略阻止该操作，不能宣称添加沙箱包即可修复，也不能宣称所有 Docker 主机都会失败。
+
+后续需要在受支持的宿主环境验证最小必要的命名空间策略及浏览器沙箱是否实际启用，
+或验证应用容器连接独立、已安全运行的浏览器。禁止用 `--no-sandbox`、
+`--privileged` 或关闭全部 seccomp/AppArmor 的方式充当成功证据。
