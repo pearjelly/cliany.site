@@ -345,7 +345,17 @@ class ClanySite:
         except (json.JSONDecodeError, OSError) as e:
             return error_response(EXECUTION_FAILED, f"读取 adapter 元数据失败: {e}")
 
-        command_defs = metadata.get("command_defs", [])
+        recorded_commands = metadata.get("commands", [])
+        command_defs = [
+            item for item in recorded_commands
+            if isinstance(item, dict) and "actions" in item
+        ] if isinstance(recorded_commands, list) else []
+        generated_command = any(item.get("name") == command for item in command_defs)
+        recorded_names = {item.get("name") for item in command_defs}
+        command_defs.extend(
+            item for item in metadata.get("command_defs", [])
+            if isinstance(item, dict) and item.get("name") not in recorded_names
+        )
         cmd_def = None
         for cd in command_defs:
             if cd.get("name") == command:
@@ -369,6 +379,53 @@ class ClanySite:
 
         from cliany_site.action_runtime import substitute_parameters
 
+        if generated_command:
+            from cliany_site.codegen.params import auto_detect_params_from_actions, build_param_overrides
+            from cliany_site.explorer.models import ActionStep
+
+            try:
+                recorded_actions = [ActionStep(**action) for action in actions_data]
+            except (TypeError, ValueError) as exc:
+                return error_response("E_VERIFY_STATIC", f"命令动作元数据无效: {exc}")
+            indices = list(range(len(recorded_actions)))
+            command_args = cmd_def.get("args") or auto_detect_params_from_actions(indices, recorded_actions)
+
+            effective_params = {
+                arg["name"]: arg["default"] for arg in command_args
+                if isinstance(arg, dict) and arg.get("name") and arg.get("default") is not None
+            }
+            effective_params.update(params or {})
+            for arg in command_args:
+                if arg.get("required") and effective_params.get(arg.get("name")) is None:
+                    return error_response("E_INVALID_PARAM", f"缺少必填参数: {arg.get('name')}")
+            params = effective_params
+
+            original_indices = cmd_def.get("action_steps", indices)
+            arguments = []
+            for arg in command_args:
+                item = dict(arg)
+                if "action_index" in item:
+                    item["action_index"] = (
+                        original_indices.index(item["action_index"])
+                        if item["action_index"] in original_indices else None
+                    )
+                arguments.append(item)
+            overrides = build_param_overrides(arguments, indices, recorded_actions)
+            actions_data = [
+                {
+                    **action,
+                    "type": action.get("action_type"),
+                    "ref": action.get("target_ref", ""),
+                    "url": action.get("target_url", ""),
+                    "fields": action.get("fields_map", {}),
+                    "value": overrides.get(index, action.get("value", "")),
+                }
+                for index, action in enumerate(actions_data)
+            ]
+            source_url = metadata.get("source_url")
+            if source_url:
+                actions_data.insert(0, {"type": "navigate", "url": source_url})
+
         effective_actions = substitute_parameters(actions_data, params or {})
         if sandbox:
             from cliany_site.sandbox import SandboxPolicy, validate_action_steps
@@ -391,6 +448,7 @@ class ClanySite:
             logger.debug("加载 session 失败，继续执行: domain=%s", domain)
 
         try:
+            extraction_results: list[dict[str, Any]] = []
             await execute_action_steps(
                 browser_session,
                 actions_data,
@@ -399,7 +457,34 @@ class ClanySite:
                 domain=domain,
                 command_name=command,
                 dry_run=dry_run,
+                extraction_results=extraction_results,
             )
+            from cliany_site.extract_quality import evaluate_extract_quality
+
+            extracts = [
+                {
+                    **evaluate_extract_quality(item["extract_mode"], item["data"], item.get("fields")).to_dict(),
+                    "step_index": item["step_index"],
+                }
+                for item in extraction_results if "data" in item
+            ]
+            quality_status = (
+                "not_applicable" if not extracts else
+                "partial" if any(item["status"] == "partial" or item.get("field_blank_rows") for item in extracts) else
+                "empty" if any(item["status"] == "empty" for item in extracts) else "ok"
+            )
+            quality = {"ok": quality_status in ("ok", "not_applicable"), "status": quality_status, "extracts": extracts}
+            requires_data = any(action.get("type") == "extract" for action in actions_data) or (
+                command.lower().replace("_", "-").startswith(("list-", "search-", "read-", "extract-"))
+            )
+            if (
+                not dry_run and requires_data and quality_status != "ok"
+                and (quality_status != "empty" or cmd_def.get("expects_nonempty", True))
+            ):
+                return error_response(
+                    "E_EMPTY_RESULT", "命令未返回符合要求的提取结果",
+                    details={"quality": quality, "results": extraction_results},
+                )
             return success_response(
                 {
                     "domain": domain,
@@ -407,6 +492,8 @@ class ClanySite:
                     "actions_executed": len(actions_data),
                     "dry_run": dry_run,
                     "status": "completed",
+                    "results": extraction_results,
+                    "quality": quality,
                 }
             )
         except Exception as e:

@@ -9,6 +9,8 @@
 
 ### Fixed
 
+- SDK and HTTP execution now read generated `commands` metadata, translate recorded actions, navigate to the recorded source, and apply recorded parameter defaults and action-index overrides. Legacy `command_defs` remains supported.
+- SDK and HTTP execution now return extraction results and quality details. Required empty results, missing extraction, and incomplete fields fail; explicitly permitted zero-match results remain valid.
 - Standalone `browser click` and `browser type` now use supported browser-use events instead of the removed `execute_action` API. Commands await handler results and reject missing live nodes before dispatch.
 - `browser type` preserves its `--clear` and `--submit` options. Empty input without `--clear` no longer triggers browser-use's implicit clearing behavior. Real Chromium tests invoke the CLI in separate processes and inspect form values and submission results.
 

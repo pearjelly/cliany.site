@@ -12,6 +12,8 @@ September 22 audit: Jenkins is now degraded because its published archive lacks 
 
 Unreleased on September 22: standalone `browser click/type` now use the supported event API, with subprocess CLI tests against real Chromium covering clicks, existing text, replacement, empty input, and Enter submission. This is not yet in PyPI v0.16.356. The next release must complete the normal publication gates after the daily three-tag limit resets; generated-adapter/SDK parity remains unproven.
 
+Also unreleased: SDK and HTTP now consume real generator metadata and return extracted data with quality diagnostics. A local Chromium form verifies two changed inputs through fresh SDK and HTTP sessions, using an actual saved adapter rather than handwritten metadata. Full CLI/workflow parity, live model generation, and public-site replay remain separate acceptance work.
+
 The shared executor now dispatches browser actions after routing and keeps dry-run from mutating pages. A real Chromium form test covers typing, selecting, clicking, and unchanged dry-run state. Generated CLI atom compatibility and complete cross-entrypoint replay remain the next priorities; this test does not establish those broader workflows.
 
 - A 10-minute first-run path that starts with `doctor`, real demo cases, and replay before requiring users to configure an LLM.

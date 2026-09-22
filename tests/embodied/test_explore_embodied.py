@@ -147,3 +147,45 @@ async def test_action_replay_changes_real_page_only_outside_dry_run(
         assert json.loads(await page.evaluate(state)) == ["Ada", "Blue", "Ada:Blue"]
     finally:
         await cdp.disconnect()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
+@pytest.mark.parametrize("entrypoint", ["sdk", "http"])
+async def test_generated_adapter_returns_real_form_data(
+    local_server, headless_browser_cdp_url, tmp_home, entrypoint
+):
+    from aiohttp.test_utils import TestClient, TestServer
+
+    from cliany_site.codegen.generator import AdapterGenerator, save_adapter
+    from cliany_site.explorer.models import ActionStep, CommandSuggestion, ExploreResult, PageInfo
+    from cliany_site.sdk import ClanySite
+    from cliany_site.server import APIServer
+
+    url = f"{local_server}/browser_atoms.html"
+    actions = [
+        ActionStep("type", url, value="{{name}}", target_name="Name", target_role="textbox"),
+        ActionStep("click", url, target_name="Apply", target_role="button"),
+        ActionStep("extract", url, selector="output", extract_mode="list", fields_map={"name": ""}),
+    ]
+    result = ExploreResult(
+        pages=[PageInfo(url, "Browser command fixture")], actions=actions,
+        commands=[CommandSuggestion("read-name", "Read form result", [{"name": "name", "required": True}], [0, 1, 2])],
+    )
+    save_adapter("127.0.0.1", AdapterGenerator().generate(result, "127.0.0.1"), explore_result=result)
+    # Each request uses a fresh SDK/session; it must navigate from metadata itself.
+    for name in ("Ada", "Grace"):
+        if entrypoint == "sdk":
+            async with ClanySite(cdp_url=headless_browser_cdp_url) as sdk:
+                response = await sdk.execute("127.0.0.1", "read-name", params={"name": name})
+        else:
+            server = APIServer(cdp_url=headless_browser_cdp_url)
+            async with TestClient(TestServer(server._build_app())) as client:
+                http_response = await client.post("/execute", json={
+                    "domain": "127.0.0.1", "command": "read-name", "params": {"name": name},
+                })
+                response = await http_response.json()
+                assert http_response.status == 200, response
+        assert response["success"] is True, response
+        assert response["data"]["results"][0]["data"] == [{"name": name}]
+        assert response["data"]["quality"]["ok"] is True
