@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.354] - 2026-09-22
+
+### Fixed
+
+- Live LLM preflight now requests a JSON object, matching the OpenAI client's JSON response mode. Strict OpenAI-compatible providers no longer reject the health check because its prompt requested plain text.
+
 ## [0.16.353] - 2026-09-08
 
 ### Added
@@ -3098,7 +3104,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.353...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.354...HEAD
+[0.16.354]: https://github.com/pearjelly/cliany.site/compare/v0.16.353...v0.16.354
 [0.16.353]: https://github.com/pearjelly/cliany.site/compare/v0.16.352...v0.16.353
 [0.16.352]: https://github.com/pearjelly/cliany.site/compare/v0.16.351...v0.16.352
 [0.16.351]: https://github.com/pearjelly/cliany.site/compare/v0.16.350...v0.16.351
