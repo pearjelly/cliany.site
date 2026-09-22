@@ -51,7 +51,9 @@ def build_param_overrides(
 
         primary_idx: int | None = None
         action_idx = arg.get("action_index")
-        if isinstance(action_idx, int) and action_idx in step_set:
+        if "action_index" in arg:
+            if type(action_idx) is not int or action_idx not in step_set:
+                raise ValueError(f"参数 {name} 的 action_index 不属于当前命令")
             primary_idx = action_idx
         else:
             default = str(arg.get("default") or "").strip()

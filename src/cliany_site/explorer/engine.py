@@ -244,12 +244,17 @@ def _infer_command_name_from_description(description: str) -> str:
 def _infer_params_from_actions(
     actions: list,
     workflow_description: str,
+    *,
+    action_indices: list[int] | None = None,
 ) -> list[dict]:
     _ = workflow_description
     inferred_args: list[dict] = []
     seen_names: set[str] = set()
+    selected = set(action_indices) if action_indices is not None else None
 
     for action_index, action in enumerate(actions):
+        if selected is not None and action_index not in selected:
+            continue
         if len(inferred_args) >= 5:
             break
 
@@ -1064,7 +1069,9 @@ class WorkflowExplorer:
 
                     for cmd in result.commands:
                         if not cmd.args:
-                            cmd.args = _infer_params_from_actions(result.actions, workflow_description)
+                            cmd.args = _infer_params_from_actions(
+                                result.actions, workflow_description, action_indices=cmd.action_steps,
+                            )
                         if cmd.name in _GENERIC_COMMAND_NAMES:
                             better = _infer_command_name_from_description(cmd.description or workflow_description)
                             if better:

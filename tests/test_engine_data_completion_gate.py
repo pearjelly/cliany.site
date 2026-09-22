@@ -240,3 +240,40 @@ async def test_malformed_response_after_action_cannot_complete_workflow(mocker, 
 
     assert invoke.await_count == 2
     save.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_parameter_inference_is_scoped_to_owning_command(mocker, tmp_home):
+    actions = [
+        {"type": "type", "ref": "1", "value": "first"},
+        {"type": "type", "ref": "1", "value": "second"},
+    ]
+    commands = [{"name": "first", "action_steps": [0]}, {"name": "second", "action_steps": [1]}]
+    _prepare(mocker, [{"actions": actions, "commands": commands, "done": True}], [[]])
+
+    result = await WorkflowExplorer().explore("https://example.com/search", "执行两个输入任务", record=False)
+
+    assert [(command.args[0]["action_index"], command.args[0]["default"]) for command in result.commands] == [
+        (0, "first"), (1, "second"),
+    ]
+    assert all(len(command.args) == 1 for command in result.commands)
+
+    from click.testing import CliRunner
+
+    from cliany_site.codegen.generator import AdapterGenerator, save_adapter
+    from cliany_site.loader import load_adapter
+
+    dispatched = []
+
+    def execute(steps, *args, **kwargs):
+        dispatched.append(steps)
+        return []
+
+    mocker.patch("cliany_site.codegen.runtime_helpers.execute_steps_via_atoms", side_effect=execute)
+    save_adapter("example.com", AdapterGenerator().generate(result, "example.com"), explore_result=result)
+    cli = load_adapter("example.com")
+    assert cli is not None
+    for command, value in zip(result.commands, ["changed-first", "changed-second"], strict=True):
+        invocation = CliRunner().invoke(cli, [command.name, f"--{command.args[0]['name']}", value, "--json"])
+        assert invocation.exit_code == 0, invocation.output
+    assert [[step.get("value") for step in steps] for steps in dispatched] == [["changed-first"], ["changed-second"]]

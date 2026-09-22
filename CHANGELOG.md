@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Exploration infers parameters only from each command's owned actions while preserving global action indices. Code generation rejects explicit parameter indices outside the command instead of silently matching another action's default value. Generated Click regression tests verify that two commands replace only their own inputs; existing adapters require regeneration.
+
 - Demo evidence can require a configured minimum number of row objects, so an empty successful envelope no longer passes Confluence's advertised search check. The historical Confluence keyword demo is marked degraded with a dated live audit; its generated adapter and archive remain unchanged.
 
 - Built-in Click/browser batch execution now serializes whole items when a higher concurrency is requested, with an explicit warning, avoiding shared CliRunner output and browser-state races. Custom executors retain the concurrent path. A real-browser two-row regression checks distinct results and an untouched alternate browser; this is not parallel-browser support.
