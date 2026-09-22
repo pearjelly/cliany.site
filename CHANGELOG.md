@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Browser session saving now retains only cookies applicable to the requested host, including valid parent-domain cookies, instead of copying unrelated sites' credentials from the shared browser. Existing session files are not rewritten; re-save them to replace older broad captures. LocalStorage restoration remains unsupported.
+
 - Remote HTTP CDP health checks now validate discovery JSON and its browser/WebSocket fields. A login page, generic HTTP 200, missing discovery fields or malformed socket URL no longer reports the browser as available.
 
 - CDP connections preserve full WebSocket and HTTPS endpoints, including paths and query parameters. Full WebSocket endpoints use CDP requests for health and target discovery; secure schemes default to port 443. Legacy `ws://host:port` discovery shorthand remains compatible. Real Chromium covers the full WebSocket connection path.

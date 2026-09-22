@@ -42,7 +42,7 @@ cliany-site cases
 - **LLM Call Retry Mechanism** — Automatic retries during network fluctuations to improve exploration success rates.
 - **Retryable LLM Outage Signal** — `explore --json` reports gateway, rate-limit, provider connection, or service outages as `E_LLM_UNAVAILABLE` with sanitized retry details instead of raw upstream HTML.
 - **Unified JSON Envelope** — All commands support `--json`, outputting a machine-readable `{ok, data, error, meta}` envelope (v1).
-- **Persistent Sessions** — Maintains Cookie / LocalStorage login states across commands.
+- **Persistent Sessions** — Saves cookies applicable to the selected host for reuse across commands. LocalStorage restoration is not yet supported; cross-domain SSO may require signing in again.
 - **Dynamic Adapter Loading** — Automatically registers CLI subcommands by domain, allowing for easy expansion.
 - **Automatic Browser Management** — Manages Chrome debugging instances or experimental Obscura binaries automatically.
 - **Data Extraction with Quality Signals** — Extracts structured page data, saves Markdown reports, and keeps empty/partial results visible through `data.quality`; generated data commands require actual extracted results unless they explicitly model a legitimate zero-match result.

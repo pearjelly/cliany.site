@@ -424,6 +424,32 @@ async def test_unresolved_replay_does_not_click_button(local_server, headless_br
 
 @pytest.mark.embodied
 @pytest.mark.asyncio
+async def test_saved_session_excludes_other_sites(headless_browser_cdp_url, tmp_home, monkeypatch):
+    from cliany_site.browser.cdp import CDPConnection
+    from cliany_site.session import load_session_data, save_session
+
+    monkeypatch.setattr("cliany_site.security._load_key_from_keyring", lambda: None)
+    monkeypatch.setattr("cliany_site.security._save_key_to_keyring", lambda key: False)
+    cdp = CDPConnection(cdp_url=headless_browser_cdp_url)
+    try:
+        session = await cdp.connect()
+        await session._cdp_set_cookies([
+            {"name": "site", "value": "site-test-value", "domain": "app.example.test", "path": "/"},
+            {"name": "parent", "value": "parent-test-value", "domain": ".example.test", "path": "/"},
+            {"name": "unrelated", "value": "other-test-value", "domain": "another.test", "path": "/"},
+        ])
+        _, count = await save_session("app.example.test", session)
+        saved = load_session_data("app.example.test")
+        assert count == 2
+        assert saved is not None
+        assert {cookie["name"] for cookie in saved["cookies"]} == {"site", "parent"}
+        assert "other-test-value" not in json.dumps(saved)
+    finally:
+        await cdp.disconnect()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
 @pytest.mark.parametrize("named", [True, False])
 async def test_generated_cli_restores_cookie_before_first_navigation(
     local_server, headless_browser_cdp_url, tmp_home, named, monkeypatch,

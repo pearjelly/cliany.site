@@ -5,6 +5,7 @@ import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlparse
 
 import portalocker
 
@@ -126,7 +127,7 @@ def clear_session(domain: str) -> bool:
 
 
 async def save_session(domain: str, browser_session: "BrowserSession") -> tuple[str, int]:
-    """从 BrowserSession 通过 CDP 提取 cookies，保存到文件。
+    """从 BrowserSession 提取适用于指定主机的 cookies，保存到文件。
 
     Returns:
         (文件路径, cookies 数量) 的元组
@@ -134,15 +135,27 @@ async def save_session(domain: str, browser_session: "BrowserSession") -> tuple[
     Raises:
         RuntimeError: 无法从浏览器获取 cookies 时抛出
     """
+    host = urlparse(f"//{domain}").hostname
+    if not host:
+        raise RuntimeError("保存 Session 需要有效的站点主机名")
+    host = host.encode("idna").decode("ascii").lower()
     try:
         cookies: list[Any] = await browser_session._cdp_get_cookies()
     except Exception as e:
         raise RuntimeError(f"无法从浏览器获取 Cookie: {e}") from e
 
-    cookie_list = [
+    all_cookies = [
         c.model_dump() if hasattr(c, "model_dump") else dict(c)
         for c in cookies
     ]
+    cookie_list = []
+    for cookie in all_cookies:
+        cookie_domain = cookie.get("domain")
+        if not isinstance(cookie_domain, str) or not cookie_domain:
+            continue
+        cookie_host = cookie_domain.lstrip(".").strip("[]").lower()
+        if cookie_host == host or (cookie_domain.startswith(".") and host.endswith(f".{cookie_host}")):
+            cookie_list.append(cookie)
     data = {
         "cookies": cookie_list,
         "localStorage": {},
