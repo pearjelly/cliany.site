@@ -284,6 +284,13 @@ async def test_generated_adapter_returns_real_form_data(
             extracts = [r for r in response["data"]["results"] if r["command"] == "browser extract"]
             assert extracts[0]["data"]["content"] == [{"name": name}]
             assert response["data"]["quality"]["ok"] is True
+            async with async_playwright() as playwright:
+                inspection = await playwright.chromium.connect_over_cdp(headless_browser_cdp_url.replace("ws://", "http://"))
+                try:
+                    page = next(page for ctx in inspection.contexts for page in ctx.pages if page.url == url)
+                    assert await page.locator("output").get_attribute("data-submits") == "1"
+                finally:
+                    await inspection.close()
             continue
         assert response["success"] is True, response
         assert response["data"]["results"][0]["data"] == [{"name": name}]

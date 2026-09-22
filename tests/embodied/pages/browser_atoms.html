@@ -7,10 +7,12 @@
     <input id="name" value="seed">
     <button type="submit">Apply</button>
   </form>
-  <output id="result">untouched</output>
+  <output id="result" data-submits="0">untouched</output>
   <script>
     document.getElementById('form').addEventListener('submit', event => {
       event.preventDefault();
+      const result = document.getElementById('result');
+      result.dataset.submits = String(Number(result.dataset.submits) + 1);
       document.getElementById('result').textContent = document.getElementById('name').value;
     });
   </script>

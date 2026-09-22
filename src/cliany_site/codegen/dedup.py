@@ -120,6 +120,9 @@ def remove_redundant_duplicate_actions(
             keep.append(idx)
             continue
         action = all_actions[idx]
+        if action.action_type in {"reuse_atom", "extract"}:
+            keep.append(idx)
+            continue
         effective_value = param_overrides.get(idx, action.value or "")
         key = (*action_fingerprint(action), effective_value)
         if key in seen:

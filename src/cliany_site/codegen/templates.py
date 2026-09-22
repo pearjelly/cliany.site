@@ -304,7 +304,7 @@ def render_execution_blocks(
         if group_type == "inline":
             step_indices: list[int] = group_data
             var_counter[0] += 1
-            var_name = f"action_steps_{var_counter[0]}" if var_counter[0] > 1 else "action_steps"
+            var_name = f"action_steps_{var_counter[0]}"
             comment_lines = _render_action_comment_lines(step_indices, all_actions)
             literal = render_action_data_literal(step_indices, all_actions, param_overrides)
             block_lines.append(f"            {var_name} = json.loads({literal!r})")

@@ -40,10 +40,14 @@ def test_generated_empty_allowance_uses_actual_quality(contents, success):
     )
     module = types.ModuleType("generated_quality_adapter")
     exec(code, module.__dict__)  # noqa: S102 - 测试生成代码的 Click 行为
-    module.execute_steps_via_atoms = lambda *args: [
-        {"ok": True, "command": "browser extract", "data": {"content": content}}
-        for content in contents
-    ]
+    def execute(steps, *args):
+        assert len(steps) == len(contents)
+        return [
+            {"ok": True, "command": "browser extract", "data": {"content": content}}
+            for content in contents
+        ]
+
+    module.execute_steps_via_atoms = execute
     result = CliRunner().invoke(module.cli, ["list-results", "--json"])
     payload = json.loads(result.output)
     assert payload["ok"] is success
