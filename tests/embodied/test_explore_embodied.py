@@ -48,6 +48,7 @@ async def test_capture_axtree_from_headless_chrome(local_server, headless_browse
         await browser_session.navigate_to(page_url, new_tab=False)
 
         tree = await capture_axtree(browser_session)
+        assert tree["url"] == page_url
         selector_map = tree["selector_map"]
 
         search_fields = [
@@ -151,7 +152,7 @@ async def test_action_replay_changes_real_page_only_outside_dry_run(
 
 @pytest.mark.embodied
 @pytest.mark.asyncio
-@pytest.mark.parametrize("entrypoint", ["sdk", "http", "cli", "workflow", "batch"])
+@pytest.mark.parametrize("entrypoint", ["sdk", "http", "cli", "workflow", "batch", "explore_cli"])
 async def test_generated_adapter_returns_real_form_data(
     local_server, headless_browser_cdp_url, fallback_browser, tmp_home, entrypoint, monkeypatch
 ):
@@ -172,6 +173,61 @@ async def test_generated_adapter_returns_real_form_data(
         pages=[PageInfo(url, "Browser command fixture")], actions=actions,
         commands=[CommandSuggestion("read-name", "Read form result", [{"name": "name", "required": True}], [0, 1, 2])],
     )
+    if entrypoint == "explore_cli":
+        from types import SimpleNamespace
+
+        from cliany_site.explorer import engine
+
+        observed = []
+        capture = engine.capture_axtree
+
+        async def observe(session, *args, **kwargs):
+            tree = await capture(session, *args, **kwargs)
+            observed.append(tree)
+            return tree
+
+        class ScriptedModel:
+            model = "offline-form-contract"
+            calls = 0
+
+            async def ainvoke(self, prompt):
+                self.calls += 1
+                assert self.calls == 1
+                nodes = observed[-1]["selector_map"]
+                name_ref = next(ref for ref, node in nodes.items() if node["name"] == "Name" and node["role"] == "textbox")
+                apply_ref = next(ref for ref, node in nodes.items() if node["name"] == "Apply" and node["role"] == "button")
+                return SimpleNamespace(content=json.dumps({
+                    "actions": [
+                        {"type": "type", "ref": name_ref, "value": "Ada"},
+                        {"type": "click", "ref": apply_ref},
+                        {"type": "extract", "selector": "output", "extract_mode": "list", "fields": {"name": ""}},
+                    ],
+                    "commands": [{"name": "read-name", "description": "Read form result",
+                                  "args": [{"name": "name", "required": True, "action_index": 0}],
+                                  "action_steps": [0, 1, 2]}],
+                    "done": True,
+                }))
+
+        model = ScriptedModel()
+        monkeypatch.setattr(engine, "capture_axtree", observe)
+        monkeypatch.setattr(engine, "_get_llm", lambda **kwargs: model)
+        result = await engine.WorkflowExplorer(cdp_url=headless_browser_cdp_url).explore(
+            url, "Enter Ada, apply, and extract the resulting name as a reusable command", record=False,
+        )
+        assert model.calls == 1
+        assert [action.action_type for action in result.actions] == ["type", "click", "extract"]
+        assert result.actions[0].target_name == "Name"
+        assert result.actions[0].target_role == "textbox"
+        assert result.commands[0].name == "read-name"
+        assert result.pages[0].url == url
+        assert all(action.page_url == url for action in result.actions)
+        async with async_playwright() as playwright:
+            inspection = await playwright.chromium.connect_over_cdp(headless_browser_cdp_url.replace("ws://", "http://"))
+            try:
+                page = next(page for ctx in inspection.contexts for page in ctx.pages if page.url == url)
+                assert await page.locator("output").inner_text() == "Ada"
+            finally:
+                await inspection.close()
     save_adapter("127.0.0.1", AdapterGenerator().generate(result, "127.0.0.1"), explore_result=result)
     # Each request uses a fresh SDK/session; it must navigate from metadata itself.
     for name in ("Ada", "Grace"):

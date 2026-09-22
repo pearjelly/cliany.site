@@ -10,17 +10,13 @@ September 22 audit: Jenkins is now degraded because its published archive lacks 
 
 ## What Is Already In Place
 
-Unreleased on September 22: standalone `browser click/type` now use the supported event API, with subprocess CLI tests against real Chromium covering clicks, existing text, replacement, empty input, and Enter submission. This is not yet in PyPI v0.16.356. The next release must complete the normal publication gates after the daily three-tag limit resets; generated-adapter/SDK parity remains unproven.
+Unreleased on September 22: real saved adapters now pass a local Chromium form test through CLI, SDK, HTTP, workflow, and serial batch. Two changed inputs return Ada and Grace, explicit browser selection leaves a separate default browser untouched, and recorded names/roles recover from invalid saved refs. Standalone click/type use the supported event API. These repairs are not yet in PyPI v0.16.356.
 
-Also unreleased: SDK and HTTP now consume real generator metadata and return extracted data with quality diagnostics. A local Chromium form verifies two changed inputs through fresh SDK and HTTP sessions, using an actual saved adapter rather than handwritten metadata. Full CLI/workflow parity, live model generation, and public-site replay remain separate acceptance work.
+Workflow/batch now preserve returned data, support indexed references, reject invalid conditions, propagate root execution options, and fail nonzero with one JSON error object. Child stderr no longer corrupts JSON, invalid results cannot become successes, and allowing zero matches does not waive missing-field errors.
 
-Workflow/batch result compatibility is also fixed in Unreleased: actual Click commands returning `ok` now compose correctly, retries stop on success, nonzero exits override success claims, and serialized summaries retain returned data. This is protocol-level validation; indexed variable expressions and full generated-browser workflow replay still require acceptance work.
+A deterministic-model exploration test now covers real browser observation/actions, result construction, adapter generation, persistence, and fresh CLI replay with changed inputs. It exposed and repaired missing source URLs caused by an outdated page metadata API. This is offline model-boundary integration, not evidence that a live model can discover a new public workflow.
 
-Generated CLI replay now also passes the local form acceptance test in fresh processes: explicit CDP routing leaves a separate default browser untouched, recorded typing replaces old values, and structured extraction returns actual objects. The same saved adapter returns Ada and Grace through CLI, SDK, and HTTP; this does not yet establish workflow/batch browser-context propagation or stale-ref recovery.
-
-Unreleased workflow expression repair now supports the README's zero-based array references and fails closed on invalid conditions. Syntax is checked before dispatch, and missing condition fields or invalid numeric comparisons stop execution. Full browser-backed workflow/batch acceptance is still pending.
-
-The shared executor now dispatches browser actions after routing and keeps dry-run from mutating pages. A real Chromium form test covers typing, selecting, clicking, and unchanged dry-run state. Generated CLI atom compatibility and complete cross-entrypoint replay remain the next priorities; this test does not establish those broader workflows.
+The shared executor's browser routing and non-mutating dry-run repair shipped in v0.16.356. Full cross-entrypoint semantic parity, concurrency, login-session restoration, duplicate-name disambiguation, and live public-site generation remain unproven. See the [next acceptance plan](plans/2026-09-22-reliability-acceptance.md).
 
 - A 10-minute first-run path that starts with `doctor`, real demo cases, and replay before requiring users to configure an LLM.
 - A real case catalog with CRM, DevOps, knowledge-base, and package-search workflows.

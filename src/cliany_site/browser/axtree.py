@@ -122,8 +122,8 @@ async def capture_axtree(browser_session: Any) -> dict:
     title = ""
     try:
         page = await browser_session.get_current_page()
-        url = page.url if page else ""
-        title = await page.title() if page else ""
+        url = await page.get_url() if page else ""
+        title = await page.get_title() if page else ""
     except (RuntimeError, OSError, AttributeError):
         pass
 

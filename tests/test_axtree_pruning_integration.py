@@ -30,8 +30,8 @@ def _make_cfg(vision: bool = False) -> MagicMock:
 def _make_browser_session() -> AsyncMock:
     bs = AsyncMock()
     page = AsyncMock()
-    page.url = "https://example.com"
-    page.title = AsyncMock(return_value="Example Page")
+    page.get_url = AsyncMock(return_value="https://example.com")
+    page.get_title = AsyncMock(return_value="Example Page")
     bs.get_current_page = AsyncMock(return_value=page)
     bs.update_cached_selector_map = MagicMock()
     return bs
