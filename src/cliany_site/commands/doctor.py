@@ -149,10 +149,13 @@ def _human_action_for_check(check: dict[str, Any]) -> str:
     provider_label = "OpenAI 兼容服务" if provider == "openai" else "Anthropic 服务"
     error_code = str(details.get("error_code") or "")
     if error_code == ErrorCode.E_LLM_DISABLED or details.get("reason") == "missing_llm_key":
+        key_name = "CLIANY_OPENAI_API_KEY" if provider == "openai" else "CLIANY_ANTHROPIC_API_KEY"
         return (
-            "E_LLM_DISABLED：未配置 LLM key。请设置 CLIANY_ANTHROPIC_API_KEY 或 "
-            "CLIANY_OPENAI_API_KEY 后重试；仅安装或执行已有 adapter 可暂时忽略。"
+            f"E_LLM_DISABLED：未配置当前服务的 LLM key。请设置 {key_name} 后重试；"
+            "仅安装或执行已有 adapter 可暂时忽略。"
         )
+    if error_code == ErrorCode.E_LLM_AUTH_FAILED:
+        return f"{provider_label}认证失败。请核对该服务的密钥、账户权限和 API 地址；不要将密钥发往其他服务。"
     status_code = details.get("status_code")
     message = str(details.get("message") or "")
     transport_reason = details.get("transport_reason")
@@ -667,7 +670,7 @@ async def _run_llm_live_check(has_llm: bool, provider: str) -> dict[str, Any]:
         }
 
     from cliany_site.errors import LlmUnavailableError
-    from cliany_site.explorer.engine import _get_llm, _invoke_llm_with_retry
+    from cliany_site.explorer.engine import _extract_status_code, _get_llm, _invoke_llm_with_retry
 
     t0 = time.monotonic()
     try:
@@ -710,16 +713,28 @@ async def _run_llm_live_check(has_llm: bool, provider: str) -> dict[str, Any]:
     except Exception as exc:
         duration_ms = int((time.monotonic() - t0) * 1000)
         transport = _transport_failure_details(exc)
+        status_code = _extract_status_code(exc)
+        auth_failed = status_code in {401, 403}
         return {
             "name": "llm_live",
             "status": "warning",
             "duration_ms": duration_ms,
             "details": {
                 "provider": provider,
-                "error_code": ErrorCode.E_UNKNOWN,
-                "message": "LLM 服务连接失败" if transport else str(exc),
+                "error_code": (
+                    ErrorCode.E_LLM_AUTH_FAILED if auth_failed
+                    else ErrorCode.E_LLM_UNAVAILABLE if transport
+                    else ErrorCode.E_UNKNOWN
+                ),
+                "message": (
+                    "LLM 服务认证失败" if auth_failed
+                    else "LLM 服务连接失败" if transport
+                    else f"LLM 服务返回 HTTP {status_code}" if status_code is not None
+                    else "LLM 预检失败"
+                ),
+                "status_code": status_code,
                 **transport,
-                "retryable": False,
+                "retryable": bool(transport),
                 "phase": "llm_preflight",
             },
         }
@@ -759,12 +774,17 @@ async def _run_checks(
             "details": None
         })
 
-    has_llm = bool(
-        os.environ.get("CLIANY_ANTHROPIC_API_KEY")
-        or os.environ.get("CLIANY_OPENAI_API_KEY")
-        or os.environ.get("ANTHROPIC_API_KEY")
-        or os.environ.get("OPENAI_API_KEY")
-    )
+    provider = (
+        os.environ.get("CLIANY_EXPLORE_LLM_PROVIDER") or os.environ.get("CLIANY_LLM_PROVIDER", "anthropic")
+    ).lower()
+    if provider == "openai":
+        has_llm = bool(os.environ.get("CLIANY_EXPLORE_OPENAI_API_KEY") or os.environ.get("CLIANY_OPENAI_API_KEY"))
+    else:
+        has_llm = bool(
+            os.environ.get("CLIANY_EXPLORE_ANTHROPIC_API_KEY")
+            or os.environ.get("CLIANY_ANTHROPIC_API_KEY")
+            or os.environ.get("ANTHROPIC_API_KEY")
+        )
     checks.append({
         "name": "llm",
         "status": "ok" if has_llm else "warning",
@@ -772,7 +792,6 @@ async def _run_checks(
         "details": None
     })
 
-    provider = os.environ.get("CLIANY_LLM_PROVIDER", "anthropic").lower()
     checks.append({
         "name": "llm_provider",
         "status": "ok" if provider in {"anthropic", "openai"} else "fail",
@@ -781,7 +800,7 @@ async def _run_checks(
     })
 
     if provider == "openai":
-        base_url = os.environ.get("CLIANY_OPENAI_BASE_URL")
+        base_url = os.environ.get("CLIANY_EXPLORE_OPENAI_BASE_URL") or os.environ.get("CLIANY_OPENAI_BASE_URL")
         try:
             normalized_base_url = _normalize_openai_base_url(base_url)
             checks.append({

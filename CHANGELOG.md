@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+## [0.16.359] - 2026-09-23
+
+### Fixed
+
+- Live `doctor` now checks the API key for the provider actually selected for exploration, including role-specific overrides. A key for another provider no longer makes generation appear locally ready.
+- Direct 401/403 preflight responses return non-retryable `E_LLM_AUTH_FAILED` with safe guidance and HTTP status, instead of `E_UNKNOWN` and raw upstream response text. Other unexpected preflight responses are also summarized without exposing their body.
+- OpenAI-compatible base URL validation follows the exploration-specific override when set, matching the client used by the preflight.
+
 ## [0.16.358] - 2026-09-23
 
 ### Fixed
@@ -3187,7 +3195,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.358...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.359...HEAD
+[0.16.359]: https://github.com/pearjelly/cliany.site/compare/v0.16.358...v0.16.359
 [0.16.358]: https://github.com/pearjelly/cliany.site/compare/v0.16.357...v0.16.358
 [0.16.357]: https://github.com/pearjelly/cliany.site/compare/v0.16.356...v0.16.357
 [0.16.356]: https://github.com/pearjelly/cliany.site/compare/v0.16.355...v0.16.356

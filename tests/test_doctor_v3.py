@@ -142,6 +142,37 @@ def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):
     }
 
 
+def test_doctor_requires_key_for_selected_explore_provider(tmp_home, clean_env, no_llm, monkeypatch):
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.setattr("cliany_site.explorer.engine._load_dotenv", lambda: None)
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("CLIANY_EXPLORE_LLM_PROVIDER", "anthropic")
+    monkeypatch.setenv("CLIANY_OPENAI_API_KEY", "other-provider-key")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    result = CliRunner().invoke(
+        cli, ["--json", "doctor", "--llm-live", "--require-capability", "generate_adapters"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code != 0
+    payload = json.loads(result.output)
+    assert payload["error"]["code"] == "E_LLM_DISABLED"
+    checks = payload["error"]["details"]["checks"]
+    llm_live = next(check for check in checks if check["name"] == "llm_live")
+    assert llm_live["details"]["skipped"] is True
+    assert llm_live["details"]["provider"] == "anthropic"
+    assert "CLIANY_ANTHROPIC_API_KEY" in llm_live["action"]
+    assert "CLIANY_OPENAI_API_KEY" not in llm_live["action"]
+
+
 def test_doctor_human_output_groups_action_items(tmp_home, no_llm, monkeypatch):
     """Test that non-JSON doctor output is readable for first-run users"""
     class MockCDP:
@@ -673,7 +704,7 @@ def test_doctor_human_live_preflight_explains_missing_key(tmp_home, no_llm, monk
     )
 
     assert result.exit_code == 1
-    assert "E_LLM_DISABLED：未配置 LLM key。" in result.output
+    assert "E_LLM_DISABLED：未配置当前服务的 LLM key。" in result.output
     assert "LLM 上游暂不可用" not in result.output
     assert "处理完成后重新检查：cliany-site doctor --llm-live --require-capability generate_adapters" in result.output
 

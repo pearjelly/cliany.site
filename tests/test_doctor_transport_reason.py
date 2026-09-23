@@ -12,6 +12,7 @@ from cliany_site.commands.doctor import (
     _run_llm_live_check,
     _transport_failure_details,
 )
+from cliany_site.envelope import ErrorCode
 from cliany_site.errors import LlmUnavailableError
 
 
@@ -51,3 +52,25 @@ def test_unknown_or_cyclic_exception_chain_is_not_guessed():
     error = RuntimeError("certificate error in arbitrary upstream text")
     error.__cause__ = error
     assert _transport_failure_details(error) == {}
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status_code", [401, 403])
+async def test_live_check_sanitizes_authentication_response(monkeypatch, status_code):
+    class AuthenticationError(Exception):
+        def __init__(self):
+            super().__init__("private-marker: upstream response body")
+            self.status_code = status_code
+
+    monkeypatch.setattr("cliany_site.explorer.engine._get_llm", lambda: object())
+    monkeypatch.setattr(
+        "cliany_site.explorer.engine._invoke_llm_with_retry",
+        AsyncMock(side_effect=AuthenticationError()),
+    )
+
+    result = await _run_llm_live_check(True, "anthropic")
+    assert result["details"]["error_code"] == ErrorCode.E_LLM_AUTH_FAILED
+    assert result["details"]["retryable"] is False
+    assert result["details"]["status_code"] == status_code
+    assert "private-marker" not in json.dumps(result)
+    assert "密钥" in _enrich_checks([result])["llm_live_preflight"]["action"]

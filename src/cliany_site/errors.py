@@ -119,6 +119,7 @@ ERROR_FIX_HINTS: dict[str, str] = {
     "E_PARSE_FAILED": "解析失败：页面结构可能已变更；尝试 --heal 或重新 explore 该域。",
     "E_EMPTY_RESULT": "命令期望返回非空列表，但提取结果为空；可能是登录态过期、过滤条件过严或选择器失配。",
     "E_LLM_DISABLED": "请设置 CLIANY_ANTHROPIC_API_KEY 或 CLIANY_OPENAI_API_KEY 环境变量",
+    "E_LLM_AUTH_FAILED": "请检查所选 LLM 服务的密钥、账户权限和 API 地址是否匹配。",
     "E_LLM_UNAVAILABLE": (
         "LLM 上游服务暂不可用或限流；请稍后重试，或切换 CLIANY_LLM_PROVIDER / "
         "CLIANY_OPENAI_BASE_URL。"
