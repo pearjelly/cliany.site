@@ -160,7 +160,7 @@ def _human_action_for_check(check: dict[str, Any]) -> str:
         return _TRANSPORT_ACTIONS[transport_reason]
     if isinstance(status_code, int):
         return (
-            f"{provider_label} 暂时不可用（HTTP {status_code}）。请稍后重试；"
+            f"{provider_label}暂时不可用（HTTP {status_code}）。请稍后重试；"
             "若持续失败，请检查服务地址和账户状态。"
         )
     if "connection" in message.lower():
@@ -356,7 +356,7 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
     }
     for check in checks:
         severity = _severity_for_check(check)
-        action = _action_for_check(check)
+        action = _human_action_for_check(check)
         check["severity"] = severity
         check["action"] = action
         item = {"name": check["name"], "status": check["status"], "action": action}

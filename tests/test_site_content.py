@@ -3,6 +3,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_site_docs_explain_jev_consent_and_session_boundary():
+    docs = (ROOT / "site" / "docs" / "index.html").read_text(encoding="utf-8")
+    assert 'id="explore"' in docs
+    assert "browser find --by intent" in docs
+    assert "--allow-remote" in docs
+    assert "TYPESAFE_API_KEY" in docs
+    assert "不会点击、输入或自动生成 adapter" in docs
+    assert "当前不支持恢复 LocalStorage" in docs
+
+
 def test_sdk_examples_include_an_async_entrypoint():
     for path in (ROOT / "README.md", ROOT / "README.zh.md", ROOT / "site" / "docs" / "index.html"):
         text = path.read_text(encoding="utf-8")

@@ -170,11 +170,12 @@ cliany-site cases --json
         <pre><code>cliany-site doctor [--json] [--llm-live]</code></pre>
         <p>准备运行 <code>explore</code> 时，使用 <code>cliany-site doctor --llm-live --require-capability generate_adapters --json</code> 做一次真实 provider 预检；只有它成功，才继续生成新 adapter。没有 key 会返回 <code>E_LLM_DISABLED</code>，上游连接失败会返回 <code>E_LLM_UNAVAILABLE</code>，两者都保留 <code>error.details</code>。</p>
         <p>能力门禁失败时，JSON 会在 <code>error.details</code> 保留完整 <code>checks</code> / <code>summary</code>；缺少 Chrome/CDP 返回 <code>E_CDP_UNAVAILABLE</code>，没有 LLM key 返回 <code>E_LLM_DISABLED</code>，provider 上游不可用则保留 <code>E_LLM_UNAVAILABLE</code>，方便自动化修复正确依赖或稍后重试。普通 <code>doctor --json</code> 在硬检查失败时也返回同一套稳定错误码，不会退回通用 <code>E_UNKNOWN</code>。普通 <code>doctor --llm-live</code> 也会把缺少 key 指向配置修复，把上游错误指向重试。</p>
+        <p>实时模型检查若因 TLS、DNS、拒绝连接或超时失败，<code>error.details.summary.llm_live_preflight.transport_reason</code> 会给出安全的分类，<code>action</code> 会给出对应排查方向；TLS 握手失败并不能证明密钥无效。</p>
         <p>返回示例：</p>
         <pre><code>{"success": true, "data": {"cdp": true, "llm": true, "adapters_dir": true}}</code></pre>
 
         <h2 id="login">login — 保存登录状态</h2>
-        <p>打开目标 URL，等待用户在浏览器中完成登录，然后持久化 Cookie / LocalStorage。</p>
+        <p>打开目标 URL，等待用户在浏览器中完成登录，然后持久化适用于目标主机的 Cookie。当前不支持恢复 LocalStorage；依赖它的站点需重新登录。</p>
         <pre><code>cliany-site login "https://your-site.com" [--json]</code></pre>
 
         <h2 id="explore">explore — 探索工作流</h2>
@@ -188,6 +189,10 @@ Options:
   --extend &lt;domain&gt;  增量扩展已有适配器
   --record / --no-record  是否记录探索过程</code></pre>
         <p><code>--headless</code> 和 <code>--cdp-url</code> 是根选项，必须放在 <code>explore</code> 前。前者让 cliany-site 启动无头 Chrome；后者连接已经运行的远程 CDP 浏览器。</p>
+        <h3>Jev 意图定位（实验性）</h3>
+        <p>不确定控件名称时，可用自然语言在当前页面中只读查找。此命令不会点击、输入或自动生成 adapter；必须配置 <code>TYPESAFE_API_KEY</code>，并显式允许外发意图与页面元素名称、角色。不要在禁止外发敏感信息的页面使用；模型准确率和延迟尚未经过真实服务评测。</p>
+        <pre><code>cliany-site browser find --by intent --value "输入订单号的搜索框" --allow-remote --min-confidence 0.8 --json</code></pre>
+        <p>返回的 ref 只适用于当前页面状态。完整的数据边界与拒绝策略见 <a href="https://github.com/pearjelly/cliany.site/blob/master/docs/jev-intent-finder.md">Jev 意图定位文档</a>。</p>
         <p>示例：</p>
         <pre><code># 基础探索
 cliany-site explore "https://github.com" "搜索仓库并查看 README" --json

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from cliany_site.commands.doctor import (
+    _enrich_checks,
     _human_action_for_check,
     _llm_live_preflight_summary,
     _run_llm_live_check,
@@ -38,6 +39,10 @@ async def test_live_check_exposes_only_safe_transport_category(monkeypatch, caus
     assert "private-marker" not in json.dumps(result)
     assert _llm_live_preflight_summary([result])["transport_reason"] == reason
     assert _human_action_for_check(result)
+    summary = _enrich_checks([result])
+    assert summary["should_fix"][0]["action"] == _human_action_for_check(result)
+    assert summary["llm_live_preflight"]["action"] == _human_action_for_check(result)
+    assert "private-marker" not in json.dumps(summary)
     if reason == "tls_certificate_verify_failed":
         assert "不要关闭证书验证" in _human_action_for_check(result)
 
