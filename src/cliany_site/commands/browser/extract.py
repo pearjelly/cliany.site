@@ -102,6 +102,22 @@ async def _run_extract(
         try:
             if mode:
                 content = await _do_structured_extract(browser_session, selector, mode, fields)
+                if mode in {"list", "table"} and content == []:
+                    title = None
+                    try:
+                        page = await browser_session.get_current_page()
+                        title = await page.evaluate("() => document.title") if page is not None else None
+                    except (OSError, RuntimeError, ValueError):
+                        pass
+                    if isinstance(title, str) and title.strip().casefold() == "client challenge":
+                        return err(
+                            command="browser extract",
+                            code=ErrorCode.E_PAGE_NOT_READY,
+                            message="站点返回 Client Challenge 页面，无法提取搜索结果",
+                            hint="等待站点恢复正常页面后重试；不要将挑战页当作零匹配结果",
+                            details={"reason": "site_challenge", "title": title},
+                            source="builtin",
+                        )
             else:
                 content = await _do_extract(browser_session, selector, fmt)
         finally:

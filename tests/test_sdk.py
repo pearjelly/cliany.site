@@ -1410,6 +1410,13 @@ class TestSyncFunctions:
 
 
 class TestAPIServer:
+    def test_page_not_ready_maps_to_service_unavailable(self):
+        from cliany_site.server import APIServer
+
+        assert APIServer._result_status(
+            {"success": False, "error": {"code": "E_PAGE_NOT_READY"}}
+        ) == 503
+
     def test_build_app(self):
         from cliany_site.server import APIServer
 

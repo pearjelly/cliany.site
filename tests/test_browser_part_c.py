@@ -165,6 +165,65 @@ class TestBrowserExtract:
             assert data["data"]["quality"]["status"] == "empty"
             assert "all rows are blank" in data["data"]["quality"]["issues"]
 
+    def test_structured_extract_identifies_client_challenge(self, no_llm, runner):
+        mock_page = MagicMock()
+        mock_page.evaluate = AsyncMock(side_effect=[[], "Client Challenge"])
+        mock_session = MagicMock()
+        mock_session.get_current_page = AsyncMock(return_value=mock_page)
+        with (
+            patch("cliany_site.browser.cdp.CDPConnection.check_available", AsyncMock(return_value=True)),
+            patch("cliany_site.browser.cdp.CDPConnection.connect", AsyncMock(return_value=mock_session)),
+            patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+        ):
+            result = runner.invoke(
+                cli,
+                ["browser", "extract", "--selector", ".result", "--mode", "list", "--json"],
+            )
+
+        assert result.exit_code != 0
+        data = json.loads(result.output)
+        assert data["error"]["code"] == "E_PAGE_NOT_READY"
+        assert data["error"]["details"] == {"reason": "site_challenge", "title": "Client Challenge"}
+        assert mock_page.evaluate.await_args_list[1].args == ("() => document.title",)
+
+    def test_structured_extract_keeps_normal_empty_result(self, no_llm, runner):
+        mock_page = MagicMock()
+        mock_page.evaluate = AsyncMock(side_effect=[[], "Search results"])
+        mock_session = MagicMock()
+        mock_session.get_current_page = AsyncMock(return_value=mock_page)
+        with (
+            patch("cliany_site.browser.cdp.CDPConnection.check_available", AsyncMock(return_value=True)),
+            patch("cliany_site.browser.cdp.CDPConnection.connect", AsyncMock(return_value=mock_session)),
+            patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+        ):
+            result = runner.invoke(
+                cli,
+                ["browser", "extract", "--selector", ".result", "--mode", "list", "--json"],
+            )
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["data"]["quality"]["status"] == "empty"
+
+    def test_structured_extract_keeps_empty_result_when_title_probe_fails(self, no_llm, runner):
+        mock_page = MagicMock()
+        mock_page.evaluate = AsyncMock(side_effect=[[], RuntimeError("title unavailable")])
+        mock_session = MagicMock()
+        mock_session.get_current_page = AsyncMock(return_value=mock_page)
+        with (
+            patch("cliany_site.browser.cdp.CDPConnection.check_available", AsyncMock(return_value=True)),
+            patch("cliany_site.browser.cdp.CDPConnection.connect", AsyncMock(return_value=mock_session)),
+            patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+        ):
+            result = runner.invoke(
+                cli,
+                ["browser", "extract", "--selector", ".result", "--mode", "list", "--json"],
+            )
+
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert data["data"]["quality"]["status"] == "empty"
+
     def test_structured_extract_strict_quality_fails_on_empty(self, no_llm, runner):
         mock_page = MagicMock()
         mock_page.evaluate = AsyncMock(return_value=[{"title": "", "url": ""}])
