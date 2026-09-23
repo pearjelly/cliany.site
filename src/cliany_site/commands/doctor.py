@@ -677,7 +677,7 @@ async def _run_llm_live_check(has_llm: bool, provider: str) -> dict[str, Any]:
         llm = _get_llm()
         await _invoke_llm_with_retry(
             llm,
-            'Reply with a JSON object only: {"status":"ok"}.',
+            'Reply with a JSON object only (valid json): {"status":"ok"}.',
             max_attempts=1,
             base_delay=0,
             backoff_factor=1,

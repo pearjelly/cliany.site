@@ -769,6 +769,7 @@ class WorkflowExplorer:
                     selector_candidates=selector_candidates_text,
                     workflow_description=workflow_description,
                     completed_steps=completed_steps_text,
+                    completed_action_count=len(result.actions),
                 )
 
                 if data_completion_feedback:
@@ -929,7 +930,7 @@ class WorkflowExplorer:
                         completed_steps.append(description)
 
                 if completed_steps:
-                    completed_steps_text = "\n".join(f"{i + 1}. {desc}" for i, desc in enumerate(completed_steps))
+                    completed_steps_text = "\n".join(f"{i}. {desc}" for i, desc in enumerate(completed_steps))
 
                 _extraction_results: list = []
                 await execute_action_steps(

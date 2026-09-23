@@ -6,7 +6,7 @@ SYSTEM_PROMPT = """你是一个网站探索 Agent，你的目标是理解用户�
 3. 已经完成的探索步骤
 4. 该域名已有的原子操作清单（如果有）
 
-你的任务是分析页面内容，识别完成工作流所需的操作，并以 JSON 格式返回你的分析结果。
+你的任务是分析页面内容，识别完成工作流所需的操作，并以 JSON（json）格式返回你的分析结果。
 
 始终以 JSON 格式回复，包含以下字段：
 - actions: 当前页面需要执行的操作列表
@@ -248,8 +248,11 @@ URL: {url}
 ## 工作流描述
 {workflow_description}
 
-## 已完成的探索步骤
+## 已完成的探索动作（从 0 开始编号）
 {completed_steps}
+
+已录制 {completed_action_count} 个动作。本轮 actions 的第一个动作编号是 {completed_action_count}。
+如果本轮设置 done=true，commands.action_steps 必须覆盖此前及本轮的全部动作编号，不能漏掉本轮新增的动作。
 
 请分析页面，识别完成工作流的下一步操作。优先使用页面现有元素完成流程，只在拥有真实 URL 时才输出导航 URL。
 只有当已经完成 "{workflow_description}" 整个目标时，done 才能为 true；如果只是完成了中间某一步，done 必须为 false。以 JSON 格式回复。"""
