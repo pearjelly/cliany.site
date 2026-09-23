@@ -3114,6 +3114,15 @@ def test_release_readiness_allows_finalized_target_changelog_before_tag(tmp_path
     assert report.cadence.changelog_unreleased_compare_expected.endswith("v0.1.1...HEAD")
     assert "CHANGELOG Unreleased has no content while HEAD is ahead of latest tag" not in report.blockers
 
+    draft_path = repo / "docs" / "releases" / "v0.1.1-draft.md"
+    draft_path.write_text(_release_draft("0.1.1", "0.1.1"), encoding="utf-8")
+    missing_previous_compare = _build_report(
+        repo, today=date(2026, 6, 10), min_commit_days=1, target_version="0.1.1"
+    )
+    assert missing_previous_compare.draft.issues == [
+        "release draft missing snippet: **提交范围：** `v0.1.0..HEAD`"
+    ]
+
 
 def test_release_readiness_accepts_tagged_release_mode(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)

@@ -1145,12 +1145,19 @@ def build_report(
     expected_target = target_version or (
         _strip_v_prefix(release_tag) if release_tag else _next_patch_version(current_version)
     )
-    draft_base_version = _previous_tag_version(root, release_tag) if release_tag else current_version
     cadence = build_cadence_report(
         root,
         today=today or date.today(),
         min_commit_days=min_commit_days,
         max_daily_releases=max_daily_releases,
+    )
+    draft_base_version = (
+        _previous_tag_version(root, release_tag)
+        if release_tag else (
+            _strip_v_prefix(cadence.latest_tag)
+            if target_version and current_version == expected_target and cadence.latest_tag
+            else current_version
+        )
     )
     cases = build_cases_report(root, packages_dir=packages_dir)
     draft = _build_draft_report(root, draft_base_version or current_version, expected_target)
