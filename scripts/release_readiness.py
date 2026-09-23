@@ -700,7 +700,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
             "adapter_package",
             "metadata_validation",
             "online_smoke",
-            "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+            "python scripts/validate_cases.py --case-id pypi-project-search "
+            "--packages-dir ~/.cliany-site/packages "
             "--include-candidate-packages --strict",
             "doctor_preflight_state_fields",
             "doctor_preflight_state_statuses",
@@ -784,7 +785,8 @@ def _build_project_metadata_report(root: Path) -> ProjectMetadataReport:
         "site/index.html": [
             "10-Minute Success Path",
             "Try it in three commands",
-            "Browse maintained cases before configuring an LLM",
+            "Get a real result",
+            "cliany-site demo --case-id apache-jira-issues --json",
             "cliany-site cases",
             "Real Demo Case Proposal",
             "docs/weekly-maintainer-loop.md",
