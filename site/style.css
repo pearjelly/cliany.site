@@ -821,6 +821,9 @@ html.js .qs-grid.visible .qs-card {
 .first-success-card .code-block {
   flex: 1 1 auto;
   min-width: 0;
+  overflow-x: hidden;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .first-success-card .copy-btn {

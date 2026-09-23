@@ -77,7 +77,7 @@ assert_contains "$SITE_HTML" 'href="#try-it"' "site routes primary CTA to first 
 assert_contains "$SITE_HTML" 'href="#feedback"' "site navigation reaches feedback"
 assert_contains "$SITE_HTML" 'data-clipboard="pip install cliany-site"' "site copies install command"
 assert_contains "$SITE_HTML" 'data-clipboard="cliany-site doctor"' "site copies readiness command"
-assert_contains "$SITE_HTML" 'data-clipboard="cliany-site cases"' "site copies case discovery command"
+assert_contains "$SITE_HTML" 'data-clipboard="cliany-site demo --case-id apache-jira-issues --json"' "site copies a real first-result command"
 
 for template in bug_report.yml feature_request.yml case_proposal.yml; do
   assert_contains "$SITE_HTML" "issues/new?template=$template" "site links $template"

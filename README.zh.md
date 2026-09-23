@@ -19,9 +19,10 @@ cliany-site 通过 Chrome CDP 观察浏览器工作流，用 LLM 将其转成站
 pip install cliany-site
 cliany-site doctor
 cliany-site cases
+cliany-site demo --case-id apache-jira-issues --json
 ```
 
-`doctor` 会给出适合人的下一步建议；`cases` 会列出维护中的公开案例及其当前验证路径，让你在配置 LLM 前先了解真实案例。`cliany-site cases --status active` 会按「固定 SHA 安装、`verify --strict`、仅在案例声明登录时登录、只读命令」给出安全首跑顺序。想查看案例，请继续阅读 [10 分钟成功路径](docs/quickstart-10min.md)；准备自动化自己的站点时，再配置 Chrome/CDP 与 LLM。
+`doctor` 会给出下一步建议；`cliany-site cases --status active` 列出维护中的公开案例。`demo` 仅在本地没有 Jira adapter 时按固定哈希安装，严格校验后运行只读查询，并要求至少返回一条 issue；不会运行需要登录或尚未发布的案例。首次运行的前提条件见 [10 分钟成功路径](docs/quickstart-10min.md)；准备自动化自己的站点时，再配置 Chrome/CDP 与 LLM。
 
 ### 告诉我们结果
 

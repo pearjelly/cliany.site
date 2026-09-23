@@ -84,6 +84,16 @@ cliany-site cases --json
 - `--json` 输出是 `{ok, data, error, meta}` JSON envelope；`ok=true` 时，`data` 中包含案例和验证信息。
 - 以当前 `cases` 输出为准，不要从历史文档复制旧的发布归档文件名。
 
+### 4. 拿到第一条真实结果
+
+当前无需登录的 Jira 案例可直接运行：
+
+```bash
+cliany-site demo --case-id apache-jira-issues --json
+```
+
+命令只在本地没有同名 adapter 时按案例固定 SHA-256 安装；随后执行 `verify --strict`，通过才运行案例声明的只读 SPARK issue 查询，并要求至少一条 issue。`ok=true` 的 `data.result` 保留原始查询结果，`data.row_count` 给出实际行数。安装、校验、查询或结果门槛失败都会非零退出，且不会继续后续步骤。已有同名 adapter 不会被覆盖，但仍须通过严格校验。这个入口不运行 candidate、degraded 或需要登录的案例，也不需要 LLM key；第三方站点和必要的浏览器/CDP 可用性仍以实际执行结果为准。
+
 维护者在 2026-08-17 真实复核了 `issues.apache.org` active demo：`cliany-site verify issues.apache.org --strict --json` 返回静态 verdict `ok`，通过后才执行 `cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json`，返回 5 条只读结果。维护者可用下面的受边界约束的捕获器重跑同一路径并写出日期化 snapshot：
 
 ```bash
@@ -158,6 +168,7 @@ cliany-site github.com search --query "cliany.site" --json
 
 - `cliany-site doctor` 返回可读摘要和 `下一步`；`cliany-site doctor --json` 返回结构化 JSON 与 `recommended_next_step`。
 - `cliany-site cases` 能列出维护中的案例；`cliany-site cases --json` 返回结构化 JSON。
+- `cliany-site demo --case-id apache-jira-issues --json` 返回 `ok=true`，`data.row_count >= 1`，且 `data.result.data.issues` 中有真实 issue；只列出案例不算业务结果成功。
 - 如果继续使用 `explore`，生成结果能被 `list` 发现，并能用 `--json` 执行。
 
 ## 跑通后的下一步

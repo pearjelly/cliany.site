@@ -23,9 +23,10 @@ cliany-site observes a browser workflow through Chrome CDP, uses an LLM to turn 
 pip install cliany-site
 cliany-site doctor
 cliany-site cases
+cliany-site demo --case-id apache-jira-issues --json
 ```
 
-`doctor` gives you a human-readable next step. `cases` lists maintained public cases and their current verification paths, so you can understand a real example before configuring an LLM. `cliany-site cases --status active` renders a safe first-run order: fixed-SHA install, `verify --strict`, case-declared login only when needed, then the read-only command. Follow the [10-minute success path](docs/quickstart-10min.md) to review a case, or configure Chrome/CDP and an LLM when you are ready to generate a command for your own site.
+`doctor` gives you a human-readable next step. `cliany-site cases --status active` lists maintained public cases; `demo` installs the pinned Jira adapter only if absent, verifies it strictly, then runs a read-only query and requires at least one issue row. It does not run login-required or candidate cases. Follow the [10-minute success path](docs/quickstart-10min.md) for prerequisites, or configure Chrome/CDP and an LLM when you are ready to generate a command for your own site.
 
 ### Tell us what happened
 

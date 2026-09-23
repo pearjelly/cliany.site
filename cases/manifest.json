@@ -41,7 +41,8 @@
       "offline_commands": [
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
       ],
-      "online": "read-only issue listing returns a JSON envelope with issue rows"
+      "online": "read-only issue listing returns a JSON envelope with issue rows",
+      "expected_rows": {"path": ["data", "issues"], "min_count": 1}
     }
   },
   {

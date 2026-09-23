@@ -260,17 +260,13 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "GraphQL" in script
     assert "HTTP <code>500/502/503/504</code>" in script
     assert "不会创建公网 issue" in script
-    assert "demo_adapter_quickstart.recommended_commands" in index
-    assert "verify --strict" in index
+    assert "cliany-site demo --case-id apache-jira-issues --json" in index
+    assert "data-clipboard=\"cliany-site demo --case-id apache-jira-issues --json\"" in index
     assert "verify --strict" in docs
     assert "固定 SHA-256 安装" in docs
-    assert "不会替你安装、登录、执行或覆盖" in docs
+    assert "不覆盖已有 adapter" in docs
     assert "cliany-site cases --status active" in docs
-    human_step = "# 2. 复制上一步 human `doctor` 按顺序打印的命令"
-    automation_step = "# 3. 自动化脚本才运行 JSON 路径"
-    assert human_step in docs
-    assert automation_step in docs
-    assert docs.index(human_step) < docs.index(automation_step)
+    assert "data.row_count &gt;= 1" in docs
     assert "会把未来的 adapter 命令标为“当前不可运行”" in docs
     assert "不能当作 active demo 快速命令" in docs
     assert "provider 预检失败时" in docs
@@ -310,7 +306,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert 'cliany-site --cdp-url "ws://chrome:9222" serve --port 8080' in readme_zh
     assert "curl -i http://localhost:8080/health" in readme_zh
     assert '"service":"cliany-site"' in readme_zh
-    assert "ready_for_demo_adapters=true" in docs
+    assert "cliany-site demo --case-id apache-jira-issues --json" in docs
     assert "exposes <code>recommended_commands</code>" in script
     assert "verify --strict" in script
     assert "commands.py" in script
@@ -339,7 +335,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "website alias inspect" in index
     assert "PyPI version-specific publication audit" in index
     assert "10-Minute Success Path" in script
-    assert "demo_adapter_quickstart.recommended_commands" in script
+    assert "至少一条 issue" in script
     assert "cliany-site cases --case-id suitecrm-accounts" in docs
     assert "primary_next_task_acceptance_criteria" in script
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in script

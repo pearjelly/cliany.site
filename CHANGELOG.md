@@ -7,6 +7,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- `cliany-site demo --case-id apache-jira-issues --json` runs a first-result path from a clean install: pinned-SHA adapter installation only when absent, strict verification, a declared read-only query, and a nonempty issue-row oracle. It stops on any failed stage, never overwrites an existing adapter, and refuses candidate or login-required cases.
+
+### Changed
+
+- Jev intent lookup now preserves up to three ranked, validated element candidates and the abstention probability for human review. Uncertain decisions still return `ok=false` and never act on the page.
+- The README and website first-run path now ends at a public result, rather than at case discovery alone.
+
 ## [0.16.359] - 2026-09-23
 
 ### Fixed

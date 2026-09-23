@@ -134,26 +134,15 @@ export CLIANY_OPENAI_API_KEY="sk-..."</code></pre>
         <p><code>explore --json</code> 遇到 LLM 网关、限流或服务暂不可用时会返回 <code>E_LLM_UNAVAILABLE</code>，并在 <code>details.retryable</code>、<code>details.status_code</code> 和 <code>details.phase</code> 中给出可重试上下文；错误消息会清洗原始 HTML 网关页。</p>
 
         <h2 id="quickstart">10 分钟成功路径</h2>
-        <p>首次运行先确认 CLI 可用。运行 <code>cliany-site cases --status active</code> 可查看每个已发布 active case 的安全首跑顺序：固定 SHA-256 安装、<code>verify --strict</code>、仅案例声明的登录和只读命令；它只提供指引，不会替你安装、登录、执行或覆盖。已安装或占用的目标始终从严格校验开始。只有 <code>commands.py</code> 可加载后才执行只读案例；否则先查看维护中的公开案例。不需要先配置 LLM key。准备好生成自己的命令时，再进入 <a href="#config">配置 LLM</a> 和 <a href="#explore">explore</a>。</p>
+        <p>先检查本机，再运行一个无需登录的公开只读案例。<code>demo</code> 只在本地没有同名 adapter 时按固定 SHA-256 安装，始终先运行 <code>verify --strict</code>，通过后才查询 Jira，并要求至少一条 issue。失败会非零退出，不覆盖已有 adapter，不执行 candidate 或需要登录的案例。不需要先配置 LLM key；第三方站点及必要的浏览器/CDP 可用性仍以执行结果为准。准备生成自己的命令时，再进入 <a href="#config">配置 LLM</a> 和 <a href="#explore">explore</a>。</p>
         <pre><code># 1. 查看 human 摘要和下一步
 cliany-site doctor
 
-# 2. 复制上一步 human `doctor` 按顺序打印的命令
-#    未安装时是固定 HTTPS + SHA-256 安装、verify --strict、只读案例；
-#    已安装或占用时从 verify --strict 开始。普通输出不含 data.summary 字段。
+# 2. 拿到真实 issue 结果；检查 ok=true 和 data.row_count &gt;= 1
+cliany-site demo --case-id apache-jira-issues --json
 
-# 3. 自动化脚本才运行 JSON 路径
-cliany-site doctor --json
-#    当 data.summary.ready_for_demo_adapters=true 时，按
-#    data.summary.demo_adapter_quickstart.recommended_commands 的顺序运行；candidate 不会进入该路径
-
-# 4. 否则查看维护中的公开案例和各自的验证路径
-cliany-site cases
-
-# 5. 脚本使用机器可读案例目录
-cliany-site cases --json
-
-# 6. 准备好后再配置 LLM 并生成自己的命令</code></pre>
+# 3. 查看其他维护中的案例
+cliany-site cases --status active</code></pre>
         <p>2026-08-17 的真实 maintainer snapshot 已复核 <code>issues.apache.org</code> active demo：<code>cliany-site verify issues.apache.org --strict --json</code> 返回静态 verdict <code>ok</code>，通过后才运行 <code>cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json</code> 并返回 5 条只读结果。<code>scripts/capture_active_demo_evidence.py</code> 会按相同顺序写出日期化快照；请查看 <a href="https://github.com/pearjelly/cliany.site/blob/master/docs/user-evidence/2026-08-17-issues-apache-spark.md">完整证据快照</a>。它是捕获时点的环境证据，不代表 candidate package、live LLM 或第三方服务持续可用。</p>
         <p>普通 <code>doctor</code> 只检查本地配置，不会真实调用 LLM provider。自动化读取 JSON 时，<code>data.summary.ready_for_explore</code> 与 <code>generate_adapters.local_ready</code> 只表示本地配置可用，<code>local_blockers</code> 只解释本地前提；只有 <code>data.summary.ready_for_live_explore=true</code>（或等价 capability 字段）才能放行真实 <code>explore</code>。provider 预检失败时，本地前提仍可保持 <code>local_ready=true</code>，同时整体 <code>ready=false</code>、<code>live_blockers=["llm_live"]</code>；按 <code>next_step</code> 重跑严格命令：</p>
         <pre><code>cliany-site doctor --llm-live --require-capability generate_adapters --json</code></pre>

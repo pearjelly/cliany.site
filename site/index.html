@@ -9,7 +9,7 @@
   <meta property="og:description" content="Turn repeated browser work into reusable CLI commands — start with a quick readiness check.">
   <meta property="og:type" content="website">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%231A1612%22/><text x=%2218%22 y=%2270%22 font-family=%22monospace%22 font-size=%2260%22 font-weight=%22bold%22 fill=%22%23D97757%22>%3E_</text></svg>">
-  <link rel="stylesheet" href="style.css?v=20260717a">
+  <link rel="stylesheet" href="style.css?v=20260923a">
   <script>document.documentElement.classList.replace('no-js','js');</script>
   <script>(function(){var s;try{s=localStorage.getItem('cliany-lang')}catch(e){}var l=(s==='en'||s==='zh')?s:(navigator.language&&navigator.language.startsWith('zh')?'zh':'en');document.documentElement.lang=l==='en'?'en':'zh-CN';document.documentElement.dataset.lang=l;})()</script>
 </head>
@@ -88,12 +88,12 @@
       <div class="container">
         <div class="section-header reveal">
           <h2 class="section-title" data-i18n="try.title">Try it in three commands</h2>
-          <p class="section-subtitle" data-i18n="try.subtitle">Install, see the next safe step, then choose a maintained example before connecting an LLM.</p>
+          <p class="section-subtitle" data-i18n="try.subtitle">Install, check readiness, then get a real result from a public read-only case.</p>
         </div>
         <div class="first-success-grid reveal">
           <article class="first-success-card"><span class="first-success-number">01</span><h3 data-i18n="try.install.title">Install</h3><p data-i18n="try.install.body">Get the CLI from PyPI.</p><div class="code-block-container"><pre class="code-block"><code>pip install cliany-site</code></pre><button class="copy-btn" data-clipboard="pip install cliany-site" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button></div></article>
           <article class="first-success-card"><span class="first-success-number">02</span><h3 data-i18n="try.check.title">Check readiness</h3><p data-i18n="try.check.body">Read the human-friendly next step for your machine.</p><div class="code-block-container"><pre class="code-block"><code>cliany-site doctor</code></pre><button class="copy-btn" data-clipboard="cliany-site doctor" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button></div></article>
-          <article class="first-success-card"><span class="first-success-number">03</span><h3 data-i18n="try.cases.title">Choose a maintained example</h3><p data-i18n="try.cases.body">Browse public cases and their current validation paths before you configure Chrome/CDP or an LLM for your own workflow.</p><div class="code-block-container"><pre class="code-block"><code>cliany-site cases</code></pre><button class="copy-btn" data-clipboard="cliany-site cases" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button></div></article>
+          <article class="first-success-card"><span class="first-success-number">03</span><h3 data-i18n="try.cases.title">Get a real result</h3><p data-i18n="try.cases.body">Run a pinned, read-only Jira case. Installation and strict verification happen before the query; at least one issue is required.</p><div class="code-block-container"><pre class="code-block"><code>cliany-site demo --case-id apache-jira-issues --json</code></pre><button class="copy-btn" data-clipboard="cliany-site demo --case-id apache-jira-issues --json" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button></div></article>
         </div>
         <p class="first-success-guide reveal"><a href="https://github.com/pearjelly/cliany.site/blob/master/docs/quickstart-10min.md" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" data-i18n="try.guide">Follow the 10-minute guide →</a></p>
       </div>
@@ -427,7 +427,7 @@
       <div class="container">
         <div class="section-header reveal">
           <h2 class="section-title" data-i18n="qs.title">10-Minute Success Path</h2>
-          <p class="section-subtitle" data-i18n="qs.subtitle">Browse maintained cases before configuring an LLM for your own commands</p>
+          <p class="section-subtitle" data-i18n="qs.subtitle">Run a public read-only result before configuring an LLM for your own commands</p>
         </div>
 
         <div class="qs-grid reveal">
@@ -461,18 +461,14 @@ cliany-site doctor --llm-live --json</code></pre>
           </div>
 
           <div class="qs-card">
-            <h3 class="qs-title" data-i18n="qs.step3">Step 3: Run an Active Demo or Browse Cases</h3>
+            <h3 class="qs-title" data-i18n="qs.step3">Step 3: Run a Read-Only Demo</h3>
             <div class="code-block-container">
-              <pre class="code-block"><code># If doctor --json reports ready_for_demo_adapters=true,
-# run data.summary.demo_adapter_quickstart.recommended_commands in order
-# (install only when absent, then verify --strict; run the read-only demo only after it succeeds)
+              <pre class="code-block"><code># Installs only if absent, verifies strictly, then queries public Jira issues
+cliany-site demo --case-id apache-jira-issues --json
 
-# Otherwise browse public cases and their current validation paths
-cliany-site cases
-
-# Machine-readable catalog for scripts
-cliany-site cases --json</code></pre>
-              <button class="copy-btn" data-clipboard="cliany-site cases --json" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button>
+# See other maintained cases
+cliany-site cases --status active</code></pre>
+              <button class="copy-btn" data-clipboard="cliany-site demo --case-id apache-jira-issues --json" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button>
             </div>
           </div>
 
@@ -576,7 +572,7 @@ cliany-site explore "https://github.com" "search repos" --json</code></pre>
     </div>
   </footer>
 
-  <script src="script.js?v=20260720a"></script>
+  <script src="script.js?v=20260923a"></script>
   <script>setTimeout(function(){document.body.style.visibility='visible'},2000)</script>
 </body>
 </html>

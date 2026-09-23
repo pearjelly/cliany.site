@@ -247,6 +247,7 @@ def cli(ctx, json_mode, verbose, debug, cdp_url, headless, sandbox, explain, for
 
 from cliany_site.commands.cases import cases_cmd
 from cliany_site.commands.check import check_cmd
+from cliany_site.commands.demo import demo_cmd
 from cliany_site.commands.doctor import doctor
 from cliany_site.commands.explore import explore_cmd
 from cliany_site.commands.list_cmd import list_cmd
@@ -268,6 +269,7 @@ cli.add_command(tui_cmd)
 cli.add_command(report_group)
 cli.add_command(check_cmd)
 cli.add_command(cases_cmd)
+cli.add_command(demo_cmd)
 cli.add_command(workflow_group)
 cli.add_command(market_group)
 cli.add_command(serve_cmd)
