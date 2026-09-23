@@ -1,14 +1,14 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-09-23
-- **Current baseline:** v0.16.359
+- **Current baseline:** v0.16.360
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
 
-September 23 provider audit: v0.16.359 checks the key for the selected exploration provider and reports upstream 401/403 as a non-retryable authentication failure without exposing response text. The configured OpenAI-compatible endpoint still closes TLS before an HTTP response; the alternate Anthropic-compatible endpoint returned HTTP 401. Neither path proves live adapter generation ready.
+September 23 release candidate: the newly configured OpenAI-compatible provider passed a live preflight and generated a PyPI search adapter. Its local archive installed and ran from an isolated HOME, but no public release asset or independent HTTPS install has been verified yet. v0.16.359 also checks the key for the selected exploration provider and reports upstream 401/403 as a non-retryable authentication failure without exposing response text. Jev's live accuracy remains unmeasured.
 
-September 23 follow-up: v0.16.358 makes live-provider transport failures actionable in JSON and documents Jev's explicit consent and read-only boundary on the public site. The configured provider still closes the TLS connection before an HTTP response; new public-site adapter generation remains unverified. The active Jira demo passed strict verification and returned five read-only issue rows on September 23.
+September 23 follow-up: v0.16.358 made live-provider transport failures actionable in JSON and documented Jev's explicit consent and read-only boundary on the public site. The active Jira demo passed strict verification and returned five read-only issue rows. The v0.16.360 first-result command now packages that install, verification, and read-only query into one guarded CLI flow.
 
 September 22 audit: Jenkins is degraded because its published archive lacks required v3 metadata. Confluence is also degraded: its historical adapter uses a title filter, while the advertised keyword query returns zero rows. Two active cases remain. Jira returned five issues. Package installation and dry-run reject invalid v3 metadata before replacing existing adapters; configured evidence row checks now reject empty demo results. See the [original audit](user-evidence/2026-09-22-active-demo-audit.md) and [Confluence follow-up](user-evidence/2026-09-22-confluence-keyword-audit.md).
 

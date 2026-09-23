@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.360] - 2026-09-24
+
 ### Added
 
 - `cliany-site demo --case-id apache-jira-issues --json` runs a first-result path from a clean install: pinned-SHA adapter installation only when absent, strict verification, a declared read-only query, and a nonempty issue-row oracle. It stops on any failed stage, never overwrites an existing adapter, and refuses candidate or login-required cases.
@@ -22,7 +24,7 @@
 
 - `validate_cases.py --case-id` can strictly validate one candidate package without requiring unrelated candidate packages. Candidate promotion plans and issue handoffs now include the matching case ID in their package-validation command.
 - OpenAI-compatible live preflight includes the lowercase `json` token required by some JSON-mode providers, and exploration shows zero-based action boundaries to avoid omitting the final action.
-- Generated list/table adapters briefly retry an otherwise successful empty extraction after a browser action, reducing transient zero-row results without masking persistent emptiness or partial field quality.
+- Generated list/table adapters briefly retry an otherwise successful empty extraction, reducing transient zero-row results without masking persistent emptiness or partial field quality.
 
 ## [0.16.359] - 2026-09-23
 
@@ -3212,7 +3214,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.359...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.360...HEAD
+[0.16.360]: https://github.com/pearjelly/cliany.site/compare/v0.16.359...v0.16.360
 [0.16.359]: https://github.com/pearjelly/cliany.site/compare/v0.16.358...v0.16.359
 [0.16.358]: https://github.com/pearjelly/cliany.site/compare/v0.16.357...v0.16.358
 [0.16.357]: https://github.com/pearjelly/cliany.site/compare/v0.16.356...v0.16.357
