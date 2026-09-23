@@ -16,6 +16,12 @@
 
 - Jev intent lookup now preserves up to three ranked, validated element candidates and the abstention probability for human review. Uncertain decisions still return `ok=false` and never act on the page.
 - The README and website first-run path now ends at a public result, rather than at case discovery alone.
+- The PyPI candidate's documented command and sample now match the generated `search-packages --query` adapter; its verified local package remains a candidate until a public release asset is installable.
+
+### Fixed
+
+- `validate_cases.py --case-id` can strictly validate one candidate package without requiring unrelated candidate packages. Candidate promotion plans and issue handoffs now include the matching case ID in their package-validation command.
+- OpenAI-compatible live preflight includes the lowercase `json` token required by some JSON-mode providers, and exploration shows zero-based action boundaries to avoid omitting the final action.
 
 ## [0.16.359] - 2026-09-23
 

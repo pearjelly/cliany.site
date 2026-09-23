@@ -384,10 +384,11 @@ def test_candidate_issue_script_requires_review_ack_when_gate_needs_review() -> 
 def _pypi_promotion_command_plan(*, explore_query: str = "search Python packages") -> list[dict[str, object]]:
     explore_command = f'cliany-site explore "https://pypi.org" "{explore_query}" --json'
     metadata_command = (
-        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "python scripts/validate_cases.py --case-id pypi-project-search "
+        "--packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict"
     )
-    smoke_command = "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json"
+    smoke_command = "cliany-site pypi.org search-packages --query cliany-site --json"
     return [
         {
             "task": "llm_live_preflight",
@@ -579,7 +580,7 @@ def _readiness_report() -> SimpleNamespace:
                     adapter_domain="pypi.org",
                     commands=[
                         'cliany-site explore "https://pypi.org" "search Python packages" --json',
-                        "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json",
+                        "cliany-site pypi.org search-packages --query cliany-site --json",
                     ],
                     offline_commands=[
                         "python scripts/validate_cases.py --strict",
@@ -1808,10 +1809,11 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
     preflight_command = "cliany-site doctor --llm-live --require-capability generate_adapters --json"
     explore_command = 'cliany-site explore "https://pypi.org" "search Python packages" --json'
     metadata_command = (
-        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "python scripts/validate_cases.py --case-id pypi-project-search "
+        "--packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict"
     )
-    smoke_command = "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json"
+    smoke_command = "cliany-site pypi.org search-packages --query cliany-site --json"
 
     assert data["release_draft_path"] == "docs/releases/v0.16.2-draft.md"
     assert data["release_draft_issues"] == [
@@ -2121,7 +2123,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         "target_url": "https://pypi.org/search/?q=cliany-site",
         "commands": [
             'cliany-site explore "https://pypi.org" "search Python packages" --json',
-            "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json",
+            "cliany-site pypi.org search-packages --query cliany-site --json",
         ],
         "offline_commands": [
             "python scripts/validate_cases.py --strict",
@@ -2233,7 +2235,8 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
         },
         "evidence_bundle_primary_next_task_runbook": _pypi_primary_runbook(),
         "candidate_package_validation_command": (
-            "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+            "python scripts/validate_cases.py --case-id pypi-project-search "
+            "--packages-dir ~/.cliany-site/packages "
             "--include-candidate-packages --strict"
         ),
         "promotion_command_plan": _pypi_promotion_command_plan(),
@@ -2323,7 +2326,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "- Target URL: https://pypi.org/search/?q=cliany-site\n"
             "- Candidate commands:\n"
             '  - `cliany-site explore "https://pypi.org" "search Python packages" --json`\n'
-            "  - `cliany-site pypi.org search-projects --query cliany-site --limit 5 --json`\n"
+            "  - `cliany-site pypi.org search-packages --query cliany-site --json`\n"
             "- Offline validation commands:\n"
             "  - `python scripts/validate_cases.py --strict`\n"
             "  - `python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md`\n\n"
@@ -2340,13 +2343,13 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             f"  - command_sha256: `{_command_sha256(explore_command)}`\n"
             "  - source: `commands.explore`\n"
             "  - missing: `false`\n"
-            "- `metadata_validation`: `python scripts/validate_cases.py "
+            "- `metadata_validation`: `python scripts/validate_cases.py --case-id pypi-project-search "
             "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`\n"
             f"  - command_sha256: `{_command_sha256(metadata_command)}`\n"
             "  - source: `candidate_package_validation_command`\n"
             "  - missing: `false`\n"
-            "- `online_smoke`: `cliany-site pypi.org search-projects --query cliany-site "
-            "--limit 5 --json`\n"
+            "- `online_smoke`: `cliany-site pypi.org search-packages --query cliany-site "
+            "--json`\n"
             f"  - command_sha256: `{_command_sha256(smoke_command)}`\n"
             "  - source: `commands.adapter`\n"
             "  - missing: `false`\n\n"
@@ -2458,7 +2461,7 @@ def test_plan_json_keeps_actionable_validation_commands(tmp_path):
             "## Validation Evidence\n"
             "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.\n"
             "- Expected adapter package: `pypi.org-<version>.cliany-adapter.tar.gz`\n"
-            "- Candidate package validation command: `python scripts/validate_cases.py "
+            "- Candidate package validation command: `python scripts/validate_cases.py --case-id pypi-project-search "
             "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`\n"
             "- Paste the local `scripts/validate_cases.py --packages-dir` result.\n"
             "- Paste the read-only JSON envelope summary with `data.quality.ok=true` and `row_count>0`.\n\n"
@@ -4922,7 +4925,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert "  - missing: `false`" in body
     assert (
         "  - command_sha256: "
-        f"`{_command_sha256('cliany-site pypi.org search-projects --query cliany-site --limit 5 --json')}`"
+        f"`{_command_sha256('cliany-site pypi.org search-packages --query cliany-site --json')}`"
         in body
     )
     assert "  - source: `commands.adapter`" in body
@@ -4931,12 +4934,12 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         in body
     )
     assert (
-        "`metadata_validation`: `python scripts/validate_cases.py "
+        "`metadata_validation`: `python scripts/validate_cases.py --case-id pypi-project-search "
         "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`"
         in body
     )
     assert (
-        "`online_smoke`: `cliany-site pypi.org search-projects --query cliany-site --limit 5 --json`"
+        "`online_smoke`: `cliany-site pypi.org search-packages --query cliany-site --json`"
         in body
     )
     assert "## Evidence Bundle" in body
@@ -4955,7 +4958,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     assert metadata[0]["target_url"] == "https://pypi.org/search/?q=cliany-site"
     assert metadata[0]["commands"] == [
         'cliany-site explore "https://pypi.org" "search Python packages" --json',
-        "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json",
+        "cliany-site pypi.org search-packages --query cliany-site --json",
     ]
     assert metadata[0]["offline_commands"] == [
         "python scripts/validate_cases.py --strict",
@@ -5065,7 +5068,8 @@ def test_plan_writes_candidate_issue_files(tmp_path):
     }
     assert metadata[0]["evidence_bundle_primary_next_task_runbook"] == _pypi_primary_runbook()
     assert metadata[0]["candidate_package_validation_command"] == (
-        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "python scripts/validate_cases.py --case-id pypi-project-search "
+        "--packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict"
     )
     assert metadata[0]["promotion_command_plan"] == _pypi_promotion_command_plan()
@@ -5638,7 +5642,7 @@ def test_plan_writes_candidate_issue_files(tmp_path):
         "`checks[llm_live].details.error_code`, `checks[llm_live].details.retryable`, "
         "`checks[llm_live].details.status_code`, `checks[llm_live].details.phase`, "
         "`checks[llm_live].details.message` | "
-        "`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "`python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict` | "
         "`cliany-site cases --case-id pypi-project-search --issue-template` | "
         "`cliany-site cases --case-id pypi-project-search --issue-template --json` | "

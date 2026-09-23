@@ -103,7 +103,7 @@ Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path or Gi
 adapter package 存在后，运行：
 
 ```bash
-python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict
+python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict
 ```
 
 验收证据应说明：
@@ -121,7 +121,7 @@ python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --includ
 安装或加载 adapter 后，运行只读 smoke 命令：
 
 ```bash
-cliany-site pypi.org search-projects --query cliany-site --limit 5 --json
+cliany-site pypi.org search-packages --query cliany-site --json
 ```
 
 验收证据应包含：

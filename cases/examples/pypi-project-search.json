@@ -1,23 +1,28 @@
 {
   "ok": true,
   "data": {
-    "command": "search-projects",
+    "command": "search-packages",
     "args": {
-      "query": "cliany-site",
-      "limit": 5
+      "query": "cliany-site"
     },
     "results": [
       {
         "ok": true,
-        "action": "extract",
+        "command": "browser extract",
         "data": {
-          "projects": [
+          "content": [
             {
-              "name": "cliany-site",
-              "summary": "Example project result",
-              "url": "https://pypi.org/project/cliany-site/"
+              "title": "cliany-site",
+              "url": "/project/cliany-site/",
+              "snippet": "Turn browser workflows into reusable site-specific CLI commands."
             }
-          ]
+          ],
+          "quality": {
+            "ok": true,
+            "status": "ok",
+            "row_count": 1,
+            "field_names": ["snippet", "title", "url"]
+          }
         }
       }
     ],

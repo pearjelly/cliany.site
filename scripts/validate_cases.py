@@ -795,7 +795,7 @@ def _check_case(
                         f"adapter command domain mismatch: expected {adapter_domain!r}, got {command_domain!r}"
                     )
     elif status == "candidate":
-        check.promotion_command_plan = _candidate_promotion_command_plan(commands)
+        check.promotion_command_plan = _candidate_promotion_command_plan(commands, case_id)
         if not adapter_domain:
             check.issues.append("candidate case requires adapter_domain")
         if not commands:
@@ -1151,8 +1151,13 @@ def build_report(
     root: Path = ROOT,
     packages_dir: Path | None = None,
     include_candidate_packages: bool = False,
+    case_id: str | None = None,
 ) -> CasesReport:
     cases = _load_manifest(root)
+    if case_id is not None:
+        cases = [case for case in cases if case.get("id") == case_id]
+        if not cases:
+            raise ValueError(f"unknown case id: {case_id}")
     checks = [
         _check_case(
             case,
@@ -1312,7 +1317,7 @@ def _command_summary(commands: list[str]) -> str:
     return "<br>".join(commands) if commands else "-"
 
 
-def _candidate_promotion_command_plan(commands: list[str]) -> list[dict[str, Any]]:
+def _candidate_promotion_command_plan(commands: list[str], case_id: str) -> list[dict[str, Any]]:
     explore_commands = [command for command in commands if command.startswith("cliany-site explore ")]
     adapter_commands = [
         command
@@ -1332,7 +1337,10 @@ def _candidate_promotion_command_plan(commands: list[str]) -> list[dict[str, Any
         },
         {
             "task": "metadata_validation",
-            "command": CANDIDATE_PACKAGE_VALIDATION_COMMAND,
+            "command": (
+                f"python scripts/validate_cases.py --case-id {shlex.quote(case_id)} "
+                "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
+            ),
             "source": "candidate_package_validation_command",
         },
         {
@@ -1746,6 +1754,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--json", action="store_true", help="Output machine-readable JSON.")
     parser.add_argument("--strict", action="store_true", help="Exit non-zero when validation fails.")
     parser.add_argument("--packages-dir", type=Path, help="Optional directory containing .cliany-adapter.tar.gz files.")
+    parser.add_argument("--case-id", help="Validate only the named case, including its package when requested.")
     parser.add_argument(
         "--include-candidate-packages",
         action="store_true",
@@ -1754,11 +1763,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--report", type=Path, help="Optional Markdown report path for CI artifacts.")
     args = parser.parse_args(argv)
 
-    report = build_report(
-        ROOT,
-        packages_dir=args.packages_dir,
-        include_candidate_packages=args.include_candidate_packages,
-    )
+    try:
+        report = build_report(
+            ROOT,
+            packages_dir=args.packages_dir,
+            include_candidate_packages=args.include_candidate_packages,
+            case_id=args.case_id,
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
     if args.report is not None:
         _write_markdown_report(report, args.report)
     if args.json:

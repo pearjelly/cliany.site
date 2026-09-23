@@ -1,10 +1,13 @@
 import hashlib
 import importlib.util
 import json
+import shlex
 import sys
 import tarfile
 from io import BytesIO
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "validate_cases.py"
@@ -448,10 +451,14 @@ def test_cases_report_accepts_candidate_case_with_expected_commands(tmp_path):
         {
             "task": "metadata_validation",
             "command": (
-                "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+                "python scripts/validate_cases.py --case-id candidate-case "
+                "--packages-dir ~/.cliany-site/packages "
                 "--include-candidate-packages --strict"
             ),
-            "command_sha256": CANDIDATE_PACKAGE_VALIDATION_COMMAND_SHA256,
+            "command_sha256": _command_sha256(
+                "python scripts/validate_cases.py --case-id candidate-case "
+                "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
+            ),
             "source": "candidate_package_validation_command",
             "missing": False,
         },
@@ -1183,6 +1190,47 @@ def test_cases_report_reports_missing_candidate_package_when_requested(tmp_path)
     ) in package["next_actions"]
 
 
+def test_cases_report_can_validate_one_candidate_package(tmp_path):
+    cases = []
+    for case_id, domain in (("ready", "ready.example.com"), ("missing", "missing.example.com")):
+        case = _case(case_id, domain=domain)
+        case["status"] = "candidate"
+        case["source_release"] = None
+        case["promotion"] = {
+            "adapter_package": f"publish {domain}-<version>.cliany-adapter.tar.gz",
+            "metadata_validation": "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict",
+            "online_smoke": f"cliany-site {domain} list-items --json",
+        }
+        case["promotion_evidence"] = _promotion_evidence()
+        cases.append(case)
+    _write_cases(tmp_path, cases)
+    packages_dir = tmp_path / "packages"
+    _write_package(packages_dir, "ready.example.com-0.1.0.cliany-adapter.tar.gz", domain="ready.example.com")
+
+    full_report = validate_cases.build_report(
+        tmp_path, packages_dir=packages_dir, include_candidate_packages=True,
+    )
+    focused_report = validate_cases.build_report(
+        tmp_path, packages_dir=packages_dir, include_candidate_packages=True, case_id="ready",
+    )
+
+    assert full_report.ok is False
+    assert focused_report.ok is True
+    assert focused_report.total == 1
+    assert focused_report.cases[0].package["status"] == "ok"
+
+
+def test_cases_report_rejects_unknown_case_id(tmp_path):
+    _write_cases(tmp_path, [_case("known")])
+    with pytest.raises(ValueError, match="unknown case id: absent"):
+        validate_cases.build_report(tmp_path, case_id="absent")
+
+
+def test_candidate_validation_plan_quotes_case_id():
+    command = validate_cases._candidate_promotion_command_plan([], "case; echo unsafe")[2]["command"]
+    assert shlex.split(command)[2:4] == ["--case-id", "case; echo unsafe"]
+
+
 def test_cases_report_writes_markdown_report(tmp_path):
     metadata_validation = "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
     candidate = _case("candidate-case")
@@ -1283,7 +1331,7 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "## Promotion Command Plan" in text
     assert "- `adapter_package`: `Not declared.`" in text
     assert (
-        "- `metadata_validation`: `python scripts/validate_cases.py "
+        "- `metadata_validation`: `python scripts/validate_cases.py --case-id candidate-case "
         "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`"
         in text
     )

@@ -24,8 +24,15 @@ PROMOTION_COMMAND_PLAN_TASKS = (
 PACKAGE_EXTENSION = ".cliany-adapter.tar.gz"
 CANDIDATE_PACKAGES_DIR = "~/.cliany-site/packages"
 CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
-    f"python scripts/validate_cases.py --packages-dir {CANDIDATE_PACKAGES_DIR} --include-candidate-packages --strict"
+    f"python scripts/validate_cases.py --case-id <case-id> --packages-dir {CANDIDATE_PACKAGES_DIR} "
+    "--include-candidate-packages --strict"
 )
+
+
+def _candidate_package_validation_command(case_id: str) -> str:
+    return CANDIDATE_PACKAGE_VALIDATION_COMMAND.replace("<case-id>", shlex.quote(case_id))
+
+
 LLM_LIVE_PREFLIGHT_COMMAND = (
     "cliany-site doctor --llm-live --require-capability generate_adapters --json"
 )
@@ -225,7 +232,7 @@ def _candidate_promotion_command_plan(case: dict[str, Any]) -> list[dict[str, An
         },
         {
             "task": "metadata_validation",
-            "command": CANDIDATE_PACKAGE_VALIDATION_COMMAND if adapter_domain else "",
+            "command": _candidate_package_validation_command(str(case.get("id") or "")) if adapter_domain else "",
             "source": "candidate_package_validation_command",
         },
         {
@@ -877,7 +884,7 @@ def _candidate_issue_template(
             "## Validation Evidence",
             "- Attach the generated `.cliany-adapter.tar.gz` path or release asset name.",
             f"- Expected adapter package: `{expected_adapter_package or '-'}`",
-            (f"- Candidate package validation command: `{CANDIDATE_PACKAGE_VALIDATION_COMMAND}`"),
+            (f"- Candidate package validation command: `{_candidate_package_validation_command(case_id)}`"),
             "- Paste the local `scripts/validate_cases.py --packages-dir` result.",
             "- Paste the read-only JSON envelope summary with `data.quality.ok=true` and `row_count>0`.",
             "",
@@ -1158,7 +1165,9 @@ def _candidate_evidence_bundle(
         **_doctor_preflight_evidence_command_fields(required=True),
         **_doctor_preflight_evidence_template_aliases(),
         **_doctor_preflight_state_contract(required=True),
-        "candidate_package_validation_command": CANDIDATE_PACKAGE_VALIDATION_COMMAND if adapter_domain else "",
+        "candidate_package_validation_command": (
+            _candidate_package_validation_command(case_id) if adapter_domain else ""
+        ),
         "promotion_command_plan": promotion_command_plan,
         "promotion_command_plan_count": len(promotion_command_plan),
         "promotion_command_plan_missing_tasks": [item["task"] for item in promotion_command_plan if item["missing"]],

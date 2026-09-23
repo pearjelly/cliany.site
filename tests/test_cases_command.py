@@ -5,7 +5,11 @@ from pathlib import Path
 from click.testing import CliRunner
 
 from cliany_site.cli import cli
-from cliany_site.commands.cases import _active_case_quickstart_commands, _print_human_cases
+from cliany_site.commands.cases import (
+    _active_case_quickstart_commands,
+    _candidate_package_validation_command,
+    _print_human_cases,
+)
 
 DOCTOR_PREFLIGHT_EVIDENCE_FIELDS = [
     "summary.ready_for_explore",
@@ -71,6 +75,15 @@ DOCTOR_PREFLIGHT_STATE_STATUSES_SHA256 = hashlib.sha256(
     ).encode()
 ).hexdigest()
 LLM_LIVE_PREFLIGHT_COMMAND = "cliany-site doctor --llm-live --require-capability generate_adapters --json"
+PYPI_PACKAGE_EVIDENCE = (
+    "2026-09-23: generated ~/.cliany-site/packages/pypi.org-0.16.360.cliany-adapter.tar.gz; "
+    "SHA-256 37efcddbf52606c3249155b41c015d0dab22765b6d813dd0ed575b739170ad23. "
+    "Public release asset pending."
+)
+PYPI_PACKAGE_NEXT_ACTION = (
+    "Attach the verified pypi.org-0.16.360.cliany-adapter.tar.gz to GitHub Release "
+    "v0.16.360 and verify its public digest-backed install."
+)
 LLM_LIVE_PREFLIGHT_COMMAND_SHA256 = hashlib.sha256(LLM_LIVE_PREFLIGHT_COMMAND.encode("utf-8")).hexdigest()
 DOCTOR_PREFLIGHT_JSON_PATH = "/tmp/cliany-doctor-preflight.json"
 DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND = (
@@ -78,8 +91,12 @@ DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND = (
 )
 DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND = f"{DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND} --markdown"
 CANDIDATE_PACKAGE_VALIDATION_COMMAND = (
-    "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
+    "python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
 )
+
+
+def test_candidate_package_validation_command_quotes_case_id():
+    assert "--case-id 'case; echo unsafe'" in _candidate_package_validation_command("case; echo unsafe")
 PYPI_PROMOTION_COMMAND_PLAN_SUMMARY = {
     "command_count": 4,
     "missing_command_count": 0,
@@ -163,7 +180,7 @@ def test_cases_command_returns_catalog_summary(tmp_home):
     assert data["promotion_evidence_summary"]["primary_task_detail"]["case_id"] == "pypi-project-search"
     assert data["promotion_evidence_summary"]["primary_task_detail"]["task"] == "adapter_package"
     assert data["promotion_evidence_summary"]["primary_task_detail"]["status"] == "pending"
-    assert data["promotion_evidence_summary"]["primary_task_detail"]["evidence"] == ""
+    assert data["promotion_evidence_summary"]["primary_task_detail"]["evidence"] == PYPI_PACKAGE_EVIDENCE
     assert data["promotion_evidence_summary"]["primary_task_detail"]["acceptance_criteria"].startswith(
         "Attach the generated"
     )
@@ -215,7 +232,7 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
         "case_id": "pypi-project-search",
         "task": "adapter_package",
         "status": "pending",
-        "evidence": "",
+        "evidence": PYPI_PACKAGE_EVIDENCE,
         "next_action": data["promotion_evidence_summary"]["primary_next_action"],
         "next_step": "llm_live_preflight",
         "next_command": LLM_LIVE_PREFLIGHT_COMMAND,
@@ -267,7 +284,7 @@ def test_cases_command_filters_candidates_with_detail(tmp_home):
         data["promotion_evidence_summary"]["primary_next_task"]
         == data["promotion_evidence_summary"]["primary_task_detail"]
     )
-    assert "Generate pypi.org" in data["promotion_evidence_summary"]["primary_next_action"]
+    assert data["promotion_evidence_summary"]["primary_next_action"] == PYPI_PACKAGE_NEXT_ACTION
     assert {case["status"] for case in data["cases"]} == {"candidate"}
     assert all("promotion" in case for case in data["cases"])
     assert all("promotion_evidence" in case for case in data["cases"])
@@ -413,15 +430,15 @@ def test_cases_command_human_candidate_next_step_shows_primary_detail(tmp_home):
     assert result.exit_code == 0
     assert "Candidate 下一步" in result.output
     assert "pypi-project-search/adapter_package (pending)" in result.output
-    assert "evidence: Not attached yet." in result.output
+    assert "37efcddbf52606c3249155b41c015d0dab22765b6d813dd0ed575b739170ad23" in result.output
     assert "acceptance: Attach the generated" in result.output
-    assert "package path or release asset name" in result.output
+    assert "package path or GitHub Release asset name" in result.output
     assert "preflight_required: true" in result.output
     assert "preflight_blocker: Run the live LLM preflight before explore." in result.output
     assert "cliany-site doctor --llm-live --require-capability generate_adapters --json" in result.output
     assert "preflight 通过后再执行:" in result.output
     assert "预期 adapter 命令（当前不可运行；需完成发布、安装和严格校验后再执行）:" in result.output
-    assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in result.output
+    assert "cliany-site pypi.org search-packages --query cliany-site --json" in result.output
 
 
 def test_cases_human_output_uses_primary_next_task(capsys):
@@ -483,9 +500,9 @@ def test_cases_command_human_case_detail_shows_all_commands(tmp_home):
     assert "Validation" in result.output
     assert "Promotion Tasks" in result.output
     assert "adapter_package: pending" in result.output
-    assert "Generate pypi.org" in result.output
+    assert "Attach the verified pypi.org" in result.output
     assert "cliany-site explore" in result.output
-    assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in result.output
+    assert "cliany-site pypi.org search-packages --query cliany-site --json" in result.output
     assert "python scripts/validate_cases.py --strict" in result.output
 
 
@@ -504,11 +521,8 @@ def test_cases_command_issue_template_json(tmp_home):
     assert payload["data"]["issue_template_promotion_command_plan_summary"] == (PYPI_PROMOTION_COMMAND_PLAN_SUMMARY)
     assert primary_task["task"] == "adapter_package"
     assert primary_task["status"] == "pending"
-    assert primary_task["evidence"] == ""
-    assert primary_task["next_action"] == (
-        "Generate pypi.org-<version>.cliany-adapter.tar.gz with cliany-site explore "
-        "and market publish, then attach the package path or release asset name."
-    )
+    assert primary_task["evidence"] == PYPI_PACKAGE_EVIDENCE
+    assert primary_task["next_action"] == PYPI_PACKAGE_NEXT_ACTION
     assert primary_task["next_step"] == "llm_live_preflight"
     assert primary_task["next_command"] == LLM_LIVE_PREFLIGHT_COMMAND
     assert primary_task["next_command_source"] == "doctor.require_capability_preflight"
@@ -558,7 +572,7 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "  - missing: `false`" in template
     assert (
         "  - command_sha256: "
-        f"`{_command_sha256('cliany-site pypi.org search-projects --query cliany-site --limit 5 --json')}`" in template
+        f"`{_command_sha256('cliany-site pypi.org search-packages --query cliany-site --json')}`" in template
     )
     assert "  - source: `commands.adapter`" in template
     assert "## LLM Preflight Gate" in template
@@ -597,13 +611,13 @@ def test_cases_command_issue_template_json(tmp_home):
         '"search Python packages for cliany-site and list project names" --json`' in template
     )
     assert (
-        "`metadata_validation`: `python scripts/validate_cases.py "
+        "`metadata_validation`: `python scripts/validate_cases.py --case-id pypi-project-search "
         "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`" in template
     )
-    assert "`online_smoke`: `cliany-site pypi.org search-projects --query cliany-site --limit 5 --json`" in template
+    assert "`online_smoke`: `cliany-site pypi.org search-packages --query cliany-site --json`" in template
     assert "`adapter_package`" in template
     assert "Acceptance criteria: Attach the generated <domain>-<version>.cliany-adapter.tar.gz" in template
-    assert "Generate pypi.org" in template
+    assert "Attach the verified pypi.org" in template
     assert "## Evidence Bundle" in template
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle" in template
     assert "cliany-site cases --case-id pypi-project-search --evidence-bundle --json" in template
@@ -611,7 +625,7 @@ def test_cases_command_issue_template_json(tmp_home):
     assert "Candidate package validation command" in template
     assert "Expected adapter package: `pypi.org-<version>.cliany-adapter.tar.gz`" in template
     assert (
-        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict" in template
     )
     assert "Do not mark the case `active`" in template
@@ -640,7 +654,7 @@ def test_cases_command_issue_template_human_outputs_markdown(tmp_home):
     assert "checks[cdp].status" in result.output
     assert "Candidate package validation command" in result.output
     assert (
-        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict" in result.output
     )
     assert "案例库" not in result.output
@@ -802,13 +816,13 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["primary_next_task_acceptance_criteria"] == (
         "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name."
     )
-    assert bundle["primary_next_action"].startswith("Generate pypi.org")
+    assert bundle["primary_next_action"] == PYPI_PACKAGE_NEXT_ACTION
     assert bundle["acceptance_criteria"] == {
         "adapter_package": (
             "Attach the generated <domain>-<version>.cliany-adapter.tar.gz package path or GitHub Release asset name."
         ),
         "metadata_validation": (
-            "Paste `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+            "Paste `python scripts/validate_cases.py --case-id <case-id> --packages-dir ~/.cliany-site/packages "
             "--include-candidate-packages --strict` output showing the candidate package "
             "passed schema v3, manifest hash, and adapter_domain validation."
         ),
@@ -890,9 +904,9 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         },
         {
             "task": "online_smoke",
-            "command": "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json",
+            "command": "cliany-site pypi.org search-packages --query cliany-site --json",
             "command_sha256": _command_sha256(
-                "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json"
+                "cliany-site pypi.org search-packages --query cliany-site --json"
             ),
             "source": "commands.adapter",
             "missing": False,
@@ -956,7 +970,7 @@ def test_cases_command_evidence_bundle_json(tmp_home):
     assert bundle["tasks"][0]["handoff"].startswith('Run `cliany-site explore "https://pypi.org"')
     assert "python scripts/validate_cases.py --strict" in bundle["offline_commands"]
     assert bundle["candidate_package_validation_command"] == (
-        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
+        "python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
     )
 
 
@@ -1115,7 +1129,7 @@ def test_cases_command_issue_template_accepts_doctor_json(tmp_home, tmp_path):
     assert "## Doctor Preflight Evidence" in data["issue_template"]
     assert str(doctor_json) not in data["issue_template"]
     assert "- values_sha256: `" in data["issue_template"]
-    assert "- Current package evidence: Not attached yet." in data["issue_template"]
+    assert "- Current package evidence: 2026-09-23: generated" in data["issue_template"]
     assert "- Doctor preflight evidence: Attached (values_sha256: `" in data["issue_template"]
     assert "- Current execution gate: `blocked`" in data["issue_template"]
     assert "- Adapter package runnable: `false`" in data["issue_template"]
@@ -1329,15 +1343,15 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "`adapter_package` (commands.explore): `cliany-site explore" in result.output
     assert (
         "`metadata_validation` (candidate_package_validation_command): "
-        "`python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "`python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict`" in result.output
     )
     assert (
         "`online_smoke` (commands.adapter): "
-        "`cliany-site pypi.org search-projects --query cliany-site --limit 5 --json`" in result.output
+        "`cliany-site pypi.org search-packages --query cliany-site --json`" in result.output
     )
     assert (
-        "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages "
+        "python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages "
         "--include-candidate-packages --strict" in result.output
     )
     assert "## Promotion evidence" in result.output
@@ -1597,10 +1611,13 @@ def test_cases_command_promotion_plan_prioritizes_closest_candidate(tmp_home, mo
     assert plan["primary_case_id"] == "nearly-ready-candidate"
     assert plan["primary_task"] == "metadata_validation"
     assert plan["primary_next_step"] == "metadata_validation"
-    assert plan["primary_command"] == CANDIDATE_PACKAGE_VALIDATION_COMMAND
-    assert plan["primary_task_command"] == CANDIDATE_PACKAGE_VALIDATION_COMMAND
-    assert plan["primary_next_item"]["command"] == CANDIDATE_PACKAGE_VALIDATION_COMMAND
-    assert plan["primary_next_item"]["task_command"] == CANDIDATE_PACKAGE_VALIDATION_COMMAND
+    focused_command = CANDIDATE_PACKAGE_VALIDATION_COMMAND.replace(
+        "pypi-project-search", "nearly-ready-candidate"
+    )
+    assert plan["primary_command"] == focused_command
+    assert plan["primary_task_command"] == focused_command
+    assert plan["primary_next_item"]["command"] == focused_command
+    assert plan["primary_next_item"]["task_command"] == focused_command
     assert plan["primary_next_item"]["case_id"] == "nearly-ready-candidate"
     assert plan["primary_next_item"]["priority_rank"] == 1
     assert plan["primary_next_item"]["priority_reason"] == (

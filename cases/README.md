@@ -23,7 +23,7 @@
 | `apache-jira-issues` | ASF Jira issue 列表 | active | DevOps/项目管理列表读取；样例输出见 [apache-jira-issues.json](examples/apache-jira-issues.json) |
 | `apache-confluence-search` | ASF Confluence 页面搜索 | degraded | 原关键词示例返回零行，历史适配器使用 title 过滤；见 [审计](../docs/user-evidence/2026-09-22-confluence-keyword-audit.md) |
 | `apache-jenkins-jobs` | ASF Jenkins job 列表 | degraded | v0.14.1 包缺少 v3 必填元数据，暂停推荐安装；见 [2026-09-22 实测](../docs/user-evidence/2026-09-22-active-demo-audit.md) |
-| `pypi-project-search` | PyPI 项目搜索 | candidate | Python 包注册表搜索候选；样例输出见 [pypi-project-search.json](examples/pypi-project-search.json)，待生成 adapter 包和在线 smoke 后晋级 active |
+| `pypi-project-search` | PyPI 项目搜索 | candidate | Python 包注册表搜索候选；样例输出见 [pypi-project-search.json](examples/pypi-project-search.json)，本地包与只读 smoke 已验证，待公开 release asset 后晋级 active |
 | `npm-package-search` | npm 包搜索 | candidate | JavaScript 包注册表搜索候选；样例输出见 [npm-package-search.json](examples/npm-package-search.json)，待生成 adapter 包和在线 smoke 后晋级 active |
 | `crates-io-crate-search` | crates.io crate 搜索 | candidate | Rust 包注册表搜索候选；样例输出见 [crates-io-crate-search.json](examples/crates-io-crate-search.json)，待生成 adapter 包和在线 smoke 后晋级 active |
 | `search-extraction-gap` | 搜索结果抽取复盘 | known-gap | 明确「页面交互强、列表抽取弱」的产品边界 |
@@ -62,7 +62,7 @@ cliany-site cases --status active
 |--------|------------|----------|
 | `llm_live_preflight` | 负责启动 candidate 晋级的维护者 | 运行 `cliany-site doctor --llm-live --require-capability generate_adapters --json`，确认 `summary.llm_live_preflight.ready=true` 且 `llm_live` 没有阻塞 `ready_for_explore`，再进入真实 `explore` |
 | `adapter_package` | 熟悉 `explore` / `market publish` 的维护者 | 生成 `<domain>-<version>.cliany-adapter.tar.gz`，并把包资产放到 release candidate 或本地 `~/.cliany-site/packages` |
-| `metadata_validation` | 首次贡献者或文档/测试贡献者 | 运行 `python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`，确认目标 candidate 包通过 schema v3、manifest hash 和 domain 校验 |
+| `metadata_validation` | 首次贡献者或文档/测试贡献者 | 运行 `python scripts/validate_cases.py --case-id <case-id> --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict`，确认目标 candidate 包通过 schema v3、manifest hash 和 domain 校验 |
 | `online_smoke` | 能手动访问第三方公开站点的维护者 | 运行 candidate 声明的只读命令，保存 JSON envelope 摘要，并确认 `data.quality.ok=true` 和 `row_count>0` |
 
 每个 issue 都应引用对应 case id、`promotion` 字段、`promotion_evidence` 状态和推荐验证命令；如果任一子任务还没完成，案例继续保持 `candidate`，不要提前改成 `active`。
@@ -127,7 +127,7 @@ python scripts/release_readiness.py --packages-dir ~/.cliany-site/packages --req
 如果要给 candidate 案例补齐 adapter package evidence，使用显式 candidate 包检查命令，按 `<domain>-<version>.cliany-adapter.tar.gz` 约定定位候选包：
 
 ```bash
-python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict
+python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict
 ```
 
 当包校验失败时，`scripts/validate_cases.py --report` 会在 Package 列输出 `next:` 建议，例如重新生成 schema v3 metadata、修正 `adapter_domain`、重建 hash 或补齐 `commands.py` / `metadata.json`。这些建议只帮助维护者定位 release asset 问题，不会自动修改 `~/.cliany-site/packages`。

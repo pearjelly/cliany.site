@@ -102,36 +102,37 @@
     "example_output": "cases/examples/pypi-project-search.json",
     "commands": [
       "cliany-site explore \"https://pypi.org\" \"search Python packages for cliany-site and list project names\" --json",
-      "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json"
+      "cliany-site pypi.org search-packages --query cliany-site --json"
     ],
     "validation": {
       "offline": "candidate entry and example output validate without release adapter package assets",
       "offline_commands": [
         "python scripts/validate_cases.py --strict",
-        "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md"
+        "python scripts/validate_cases.py --report /tmp/cliany-case-catalog-report.md",
+        "python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
       ],
       "online": "read-only PyPI search returns project cards for the query"
     },
     "promotion": {
       "adapter_package": "Generate and publish pypi.org-<version>.cliany-adapter.tar.gz in a future release.",
-      "metadata_validation": "Run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict once the package exists.",
-      "online_smoke": "Run cliany-site pypi.org search-projects --query cliany-site --limit 5 --json against PyPI and confirm non-empty project rows."
+      "metadata_validation": "Run python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict once the package exists.",
+      "online_smoke": "Run cliany-site pypi.org search-packages --query cliany-site --json against PyPI and confirm non-empty project rows."
     },
     "promotion_evidence": {
       "adapter_package": {
         "status": "pending",
-        "evidence": null,
-        "next_action": "Generate pypi.org-<version>.cliany-adapter.tar.gz with cliany-site explore and market publish, then attach the package path or release asset name."
+        "evidence": "2026-09-23: generated ~/.cliany-site/packages/pypi.org-0.16.360.cliany-adapter.tar.gz; SHA-256 37efcddbf52606c3249155b41c015d0dab22765b6d813dd0ed575b739170ad23. Public release asset pending.",
+        "next_action": "Attach the verified pypi.org-0.16.360.cliany-adapter.tar.gz to GitHub Release v0.16.360 and verify its public digest-backed install."
       },
       "metadata_validation": {
         "status": "pending",
         "evidence": null,
-        "next_action": "After the package exists, run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict and paste the result."
+        "next_action": "Run python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict and record the focused result."
       },
       "online_smoke": {
         "status": "pending",
         "evidence": null,
-        "next_action": "Run cliany-site pypi.org search-projects --query cliany-site --limit 5 --json and attach a JSON envelope summary with data.quality.ok=true and row_count>0."
+        "next_action": "Run cliany-site pypi.org search-packages --query cliany-site --json and attach a JSON envelope summary with data.quality.ok=true and row_count>0."
       }
     }
   },

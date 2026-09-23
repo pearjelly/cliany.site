@@ -2447,8 +2447,13 @@ def _candidate_package_validation_command(packages_dir: Path | None) -> str | No
     )
 
 
-def _default_candidate_package_validation_command() -> str:
-    return CANDIDATE_PACKAGE_VALIDATION_COMMAND
+def _default_candidate_package_validation_command(case_id: str | None = None) -> str:
+    if case_id is None:
+        return CANDIDATE_PACKAGE_VALIDATION_COMMAND
+    return (
+        f"python scripts/validate_cases.py --case-id {shlex.quote(case_id)} "
+        "--packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
+    )
 
 
 def _publication_worktree_clean(publication: Any) -> bool:
@@ -3244,7 +3249,7 @@ def _case_promotion_evidence_summary(cases_report: Any) -> dict[str, Any]:
     primary_command_plan = (
         _candidate_promotion_command_plan(
             commands=_case_string_list(primary_case, "commands"),
-            candidate_package_validation_command=CANDIDATE_PACKAGE_VALIDATION_COMMAND,
+            candidate_package_validation_command=_default_candidate_package_validation_command(primary_case_id),
         )
         if primary_case is not None
         else []
@@ -3347,7 +3352,9 @@ def _case_promotion_command_plan_summary(cases_report: Any) -> dict[str, Any]:
         if not isinstance(command_plan, list) or not command_plan:
             command_plan = _candidate_promotion_command_plan(
                 commands=commands,
-                candidate_package_validation_command=_default_candidate_package_validation_command(),
+                candidate_package_validation_command=_default_candidate_package_validation_command(
+                    _case_string_value(case, "id")
+                ),
             )
         command_count += len(command_plan)
         case_missing_tasks: list[str] = []
@@ -3407,7 +3414,9 @@ def _candidate_promotions(
             continue
         commands = _case_string_list(case, "commands")
         offline_commands = _case_string_list(case, "offline_commands")
-        candidate_package_validation_command = _default_candidate_package_validation_command()
+        candidate_package_validation_command = _default_candidate_package_validation_command(
+            _case_string_value(case, "id")
+        )
         promotion_command_plan = _candidate_promotion_command_plan(
             commands=commands,
             candidate_package_validation_command=candidate_package_validation_command,
@@ -4059,7 +4068,7 @@ def _candidate_issue_body(
             f"- Expected adapter package: `{expected_adapter_package or '-'}`",
             (
                 "- Candidate package validation command: "
-                f"`{_default_candidate_package_validation_command()}`"
+                f"`{_default_candidate_package_validation_command(case_id)}`"
             ),
             "- Paste the local `scripts/validate_cases.py --packages-dir` result.",
             "- Paste the read-only JSON envelope summary with `data.quality.ok=true` and `row_count>0`.",

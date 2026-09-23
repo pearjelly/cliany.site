@@ -131,7 +131,7 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     assert "Candidate Promotion Runbook" in docs
     assert "docs/candidate-promotion-runbook.md" in docs
     assert "pypi.org-&lt;version&gt;.cliany-adapter.tar.gz" in docs
-    assert "cliany-site pypi.org search-projects --query cliany-site --limit 5 --json" in docs
+    assert "cliany-site pypi.org search-packages --query cliany-site --json" in docs
     assert "cliany-site cases --case-id &lt;id&gt; --evidence-bundle --json" in docs
     assert (
         "audit_candidate_issues.py --repo pearjelly/cliany.site "
