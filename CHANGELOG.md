@@ -10,6 +10,7 @@
 ### Added
 
 - `cliany-site demo --case-id apache-jira-issues --json` runs a first-result path from a clean install: pinned-SHA adapter installation only when absent, strict verification, a declared read-only query, and a nonempty issue-row oracle. It stops on any failed stage, never overwrites an existing adapter, and refuses candidate or login-required cases.
+- Human-readable `demo` output now shows the result count and escaped issue summaries, with a stage-specific recovery hint on failure; JSON output remains unchanged.
 
 ### Changed
 
