@@ -4,7 +4,7 @@
 
 ## 路径 A：先验证 CLI 并查看维护中的案例
 
-这条路径优先验证安装、命令入口和维护中的公开案例。它不要求你先配置 LLM key；只查看案例也不需要 Chrome/CDP。执行已发布 demo 的最后一条只读命令时，仍按 `doctor` 的 CDP 提示准备浏览器。
+这条路径优先验证安装、命令入口和维护中的公开案例。Jira 首跑案例使用其已发布 adapter 的公开只读 API，不要求先配置 LLM key 或 Chrome/CDP；生成自己的站点命令仍需要按 `doctor` 提示准备浏览器和模型。
 
 ### 1. 安装
 
@@ -92,7 +92,7 @@ cliany-site cases --json
 cliany-site demo --case-id apache-jira-issues --json
 ```
 
-命令只在本地没有同名 adapter 时按案例固定 SHA-256 安装；随后执行 `verify --strict`，通过才运行案例声明的只读 SPARK issue 查询，并要求至少一条 issue。`ok=true` 的 `data.result` 保留原始查询结果，`data.row_count` 给出实际行数。安装、校验、查询或结果门槛失败都会非零退出，且不会继续后续步骤。已有同名 adapter 不会被覆盖，但仍须通过严格校验。这个入口不运行 candidate、degraded 或需要登录的案例，也不需要 LLM key；第三方站点和必要的浏览器/CDP 可用性仍以实际执行结果为准。
+命令只在本地没有同名 adapter 时按案例固定 SHA-256 安装；随后执行 `verify --strict`，通过才运行案例声明的只读 SPARK issue 查询，并要求至少一条 issue。`ok=true` 的 `data.result` 保留原始查询结果，`data.row_count` 给出实际行数。安装、校验、查询或结果门槛失败都会非零退出，且不会继续后续步骤。已有同名 adapter 不会被覆盖，但仍须通过严格校验。这个入口不运行 candidate、degraded 或需要登录的案例。Jira 案例无需 LLM key 或 Chrome/CDP，但仍依赖 GitHub 发布资产与 Jira 站点可达。
 
 维护者在 2026-08-17 真实复核了 `issues.apache.org` active demo：`cliany-site verify issues.apache.org --strict --json` 返回静态 verdict `ok`，通过后才执行 `cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json`，返回 5 条只读结果。维护者可用下面的受边界约束的捕获器重跑同一路径并写出日期化 snapshot：
 

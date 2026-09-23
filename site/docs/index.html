@@ -134,7 +134,7 @@ export CLIANY_OPENAI_API_KEY="sk-..."</code></pre>
         <p><code>explore --json</code> 遇到 LLM 网关、限流或服务暂不可用时会返回 <code>E_LLM_UNAVAILABLE</code>，并在 <code>details.retryable</code>、<code>details.status_code</code> 和 <code>details.phase</code> 中给出可重试上下文；错误消息会清洗原始 HTML 网关页。</p>
 
         <h2 id="quickstart">10 分钟成功路径</h2>
-        <p>先检查本机，再运行一个无需登录的公开只读案例。<code>demo</code> 只在本地没有同名 adapter 时按固定 SHA-256 安装，始终先运行 <code>verify --strict</code>，通过后才查询 Jira，并要求至少一条 issue。失败会非零退出，不覆盖已有 adapter，不执行 candidate 或需要登录的案例。不需要先配置 LLM key；第三方站点及必要的浏览器/CDP 可用性仍以执行结果为准。准备生成自己的命令时，再进入 <a href="#config">配置 LLM</a> 和 <a href="#explore">explore</a>。</p>
+        <p>先检查本机，再运行一个无需登录的公开只读案例。<code>demo</code> 只在本地没有同名 adapter 时按固定 SHA-256 安装，始终先运行 <code>verify --strict</code>，通过后才查询 Jira，并要求至少一条 issue。失败会非零退出，不覆盖已有 adapter，不执行 candidate 或需要登录的案例。不需要先配置 LLM key 或 Chrome/CDP；Jira 案例仍依赖 GitHub 发布资产和 Jira 站点可达。准备生成自己的命令时，再进入 <a href="#config">配置 LLM</a> 和 <a href="#explore">explore</a>。</p>
         <pre><code># 1. 查看 human 摘要和下一步
 cliany-site doctor
 
