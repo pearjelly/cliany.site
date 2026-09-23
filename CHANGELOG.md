@@ -13,6 +13,8 @@
 
 ### Fixed
 
+- Live model diagnostics expose a safe transport error category when the exception chain identifies TLS closure, certificate verification, DNS, refusal or timeout. Human-readable guidance distinguishes these from an HTTP authentication failure without echoing low-level exception text.
+
 - Browser session saving now retains only cookies applicable to the requested host, including valid parent-domain cookies, instead of copying unrelated sites' credentials from the shared browser. Existing session files are not rewritten; re-save them to replace older broad captures. LocalStorage restoration remains unsupported.
 
 - Remote HTTP CDP health checks now validate discovery JSON and its browser/WebSocket fields. A login page, generic HTTP 200, missing discovery fields or malformed socket URL no longer reports the browser as available.

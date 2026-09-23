@@ -3,6 +3,8 @@ import asyncio
 import importlib.metadata as importlib_metadata
 import json
 import os
+import socket
+import ssl
 import sys
 import time
 from pathlib import Path
@@ -101,6 +103,34 @@ _CHECK_LABELS = {
 }
 
 
+_TRANSPORT_ACTIONS = {
+    "tls_certificate_verify_failed": "TLS 证书验证失败。请检查系统时间、受信任证书及服务证书；不要关闭证书验证。",
+    "tls_connection_closed": "TLS 握手或传输被中断。请检查服务地址、代理和网络；尚不能据此判断密钥是否有效。",
+    "dns_resolution_failed": "服务域名解析失败。请检查服务地址和 DNS 配置。",
+    "connection_refused": "服务拒绝连接。请检查服务地址、端口及上游服务状态。",
+    "connection_timeout": "连接或响应超时。请检查网络及上游服务状态后重试。",
+}
+
+
+def _transport_failure_details(exc: BaseException) -> dict[str, str]:
+    current: BaseException | None = exc
+    seen: set[int] = set()
+    kinds = (
+        (ssl.SSLCertVerificationError, "tls_certificate_verify_failed"),
+        (ssl.SSLEOFError, "tls_connection_closed"),
+        (socket.gaierror, "dns_resolution_failed"),
+        (ConnectionRefusedError, "connection_refused"),
+        (TimeoutError, "connection_timeout"),
+    )
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        for kind, reason in kinds:
+            if isinstance(current, kind):
+                return {"transport_reason": reason}
+        current = current.__cause__ or current.__context__
+    return {}
+
+
 def _check_label(name: str) -> str:
     return _CHECK_LABELS.get(name, name)
 
@@ -125,6 +155,9 @@ def _human_action_for_check(check: dict[str, Any]) -> str:
         )
     status_code = details.get("status_code")
     message = str(details.get("message") or "")
+    transport_reason = details.get("transport_reason")
+    if isinstance(transport_reason, str) and transport_reason in _TRANSPORT_ACTIONS:
+        return _TRANSPORT_ACTIONS[transport_reason]
     if isinstance(status_code, int):
         return (
             f"{provider_label} 暂时不可用（HTTP {status_code}）。请稍后重试；"
@@ -215,6 +248,7 @@ def _llm_live_preflight_summary(checks: list[dict[str, Any]]) -> dict[str, Any]:
                 "phase",
                 "skipped",
                 "reason",
+                "transport_reason",
             ):
                 if key in details:
                     summary[key] = details[key]
@@ -658,6 +692,7 @@ async def _run_llm_live_check(has_llm: bool, provider: str) -> dict[str, Any]:
         }
     except LlmUnavailableError as exc:
         duration_ms = int((time.monotonic() - t0) * 1000)
+        transport = _transport_failure_details(exc)
         return {
             "name": "llm_live",
             "status": "warning",
@@ -665,14 +700,16 @@ async def _run_llm_live_check(has_llm: bool, provider: str) -> dict[str, Any]:
             "details": {
                 "provider": provider,
                 "error_code": ErrorCode.E_LLM_UNAVAILABLE,
-                "message": str(exc),
+                "message": "LLM 服务连接失败" if transport else str(exc),
                 "retryable": exc.retryable,
                 "status_code": exc.status_code,
+                **transport,
                 "phase": "llm_preflight",
             },
         }
     except Exception as exc:
         duration_ms = int((time.monotonic() - t0) * 1000)
+        transport = _transport_failure_details(exc)
         return {
             "name": "llm_live",
             "status": "warning",
@@ -680,7 +717,8 @@ async def _run_llm_live_check(has_llm: bool, provider: str) -> dict[str, Any]:
             "details": {
                 "provider": provider,
                 "error_code": ErrorCode.E_UNKNOWN,
-                "message": str(exc),
+                "message": "LLM 服务连接失败" if transport else str(exc),
+                **transport,
                 "retryable": False,
                 "phase": "llm_preflight",
             },
