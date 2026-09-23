@@ -23,7 +23,7 @@
 | `apache-jira-issues` | ASF Jira issue 列表 | active | DevOps/项目管理列表读取；样例输出见 [apache-jira-issues.json](examples/apache-jira-issues.json) |
 | `apache-confluence-search` | ASF Confluence 页面搜索 | degraded | 原关键词示例返回零行，历史适配器使用 title 过滤；见 [审计](../docs/user-evidence/2026-09-22-confluence-keyword-audit.md) |
 | `apache-jenkins-jobs` | ASF Jenkins job 列表 | degraded | v0.14.1 包缺少 v3 必填元数据，暂停推荐安装；见 [2026-09-22 实测](../docs/user-evidence/2026-09-22-active-demo-audit.md) |
-| `pypi-project-search` | PyPI 项目搜索 | candidate | Python 包注册表搜索候选；样例输出见 [pypi-project-search.json](examples/pypi-project-search.json)，本地包与只读 smoke 已验证，待公开 release asset 后晋级 active |
+| `pypi-project-search` | PyPI 项目搜索 | candidate | Python 包注册表搜索候选；样例输出见 [pypi-project-search.json](examples/pypi-project-search.json)，[本地包与只读 smoke](../docs/user-evidence/2026-09-23-pypi-package-smoke.md) 已验证，待公开 release asset 后晋级 active |
 | `npm-package-search` | npm 包搜索 | candidate | JavaScript 包注册表搜索候选；样例输出见 [npm-package-search.json](examples/npm-package-search.json)，待生成 adapter 包和在线 smoke 后晋级 active |
 | `crates-io-crate-search` | crates.io crate 搜索 | candidate | Rust 包注册表搜索候选；样例输出见 [crates-io-crate-search.json](examples/crates-io-crate-search.json)，待生成 adapter 包和在线 smoke 后晋级 active |
 | `search-extraction-gap` | 搜索结果抽取复盘 | known-gap | 明确「页面交互强、列表抽取弱」的产品边界 |

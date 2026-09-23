@@ -22,6 +22,7 @@
 
 - `validate_cases.py --case-id` can strictly validate one candidate package without requiring unrelated candidate packages. Candidate promotion plans and issue handoffs now include the matching case ID in their package-validation command.
 - OpenAI-compatible live preflight includes the lowercase `json` token required by some JSON-mode providers, and exploration shows zero-based action boundaries to avoid omitting the final action.
+- Generated list/table adapters briefly retry an otherwise successful empty extraction after a browser action, reducing transient zero-row results without masking persistent emptiness or partial field quality.
 
 ## [0.16.359] - 2026-09-23
 

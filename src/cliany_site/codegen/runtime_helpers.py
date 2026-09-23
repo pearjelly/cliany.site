@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from typing import Any, cast
 
 import click
@@ -200,7 +201,16 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
         fields = step.get("fields")
         if isinstance(fields, dict) and fields:
             args.extend(["--fields-json", json.dumps(fields, ensure_ascii=False)])
-        return run_atom(args, session=domain)
+        result = run_atom(args, session=domain)
+        if mode in ("list", "table"):
+            for delay in (0.5, 1.0):
+                data = result.get("data")
+                quality = data.get("quality") if isinstance(data, dict) else None
+                if not (result.get("ok") and isinstance(quality, dict) and quality.get("status") == "empty"):
+                    break
+                time.sleep(delay)
+                result = run_atom(args, session=domain)
+        return result
 
     return _err(
         command=f"browser {action_type}",
