@@ -31,6 +31,14 @@ def _print_envelope(result: Envelope, json_mode: bool) -> None:
             f"✗ {error_code}: {error_msg}",
             err=True,
         )
+        details = error_info.get("details") if error_info else None
+        alternatives = details.get("alternatives") if isinstance(details, dict) else None
+        if isinstance(alternatives, list):
+            for item in alternatives:
+                click.echo("  " + " ".join(
+                    f"{key}={json.dumps(item[key], ensure_ascii=False)}"
+                    for key in ("ref", "role", "name", "probability") if key in item
+                ), err=True)
 
 
 @browser_group.command("find")

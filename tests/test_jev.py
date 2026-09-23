@@ -42,6 +42,11 @@ async def test_finite_choice_uses_minimal_state(transport):
     result = await jev.choose_element(NODES, "Where should I enter my name?", allow_remote=True)
     assert result["ok"] is True
     assert result["data"][0]["ref"] == "12"
+    assert result["data"][0]["alternatives"] == [
+        {"ref": "12", "name": "Name", "role": "textbox", "probability": 0.97},
+        {"ref": "20", "name": "Apply", "role": "button", "probability": 0.01},
+    ]
+    assert result["data"][0]["none_probability"] == 0.02
     payload = json.loads(calls[0].content)
     assert str(calls[0].url) == jev.ENDPOINT
     assert set(payload["questions"]["target"]["criteria"]) == {"element_0", "element_1", "none"}
@@ -72,6 +77,34 @@ async def test_invalid_or_uncertain_decisions_fail_closed(transport, payload, co
     result = await jev.choose_element(NODES, "Name", allow_remote=True)
     assert result["ok"] is False
     assert result["error"]["code"] == code
+
+
+@pytest.mark.asyncio
+async def test_uncertain_choice_returns_ranked_evidence_without_success(transport):
+    _, response = transport
+    response["body"] = answer(confidence=0.4, probabilities={"element_0": 0.6, "element_1": 0.3, "none": 0.1})
+    result = await jev.choose_element(NODES, "Name", allow_remote=True)
+    assert result["ok"] is False
+    assert result["error"]["code"] == "E_SELECTOR_NOT_FOUND"
+    details = result["error"]["details"]
+    assert [item["ref"] for item in details["alternatives"]] == ["12", "20"]
+    assert [item["probability"] for item in details["alternatives"]] == [0.6, 0.3]
+    assert details["none_probability"] == 0.1
+
+
+def test_uncertain_choice_prints_safe_evidence_to_stderr(capsys):
+    from cliany_site.commands.browser.find import _print_envelope
+    from cliany_site.envelope import ErrorCode, err
+
+    result = err("browser find", ErrorCode.E_SELECTOR_NOT_FOUND, "未确定", details={
+        "alternatives": [{"ref": "12", "role": "button", "name": "Apply\n\x1b[31m", "probability": 0.6}],
+    })
+    _print_envelope(result, False)
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert 'ref="12"' in captured.err
+    assert "\\n\\u001b[31m" in captured.err
+    assert "\x1b[31m" not in captured.err
 
 
 @pytest.mark.asyncio

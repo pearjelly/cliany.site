@@ -85,6 +85,12 @@ async def choose_element(
         return err("browser find", ErrorCode.E_PARSE_FAILED, "Jev 返回无效决策；未选择任何元素")
     details = {"confidence": confidence, "probability": probability, "min_confidence": min_confidence,
                "model": body.get("model", model), "choice": choice}
+    alternatives = [
+        {**candidates[key], "probability": probabilities[key]}
+        for key in sorted(candidates, key=lambda key: probabilities[key], reverse=True)[:3]
+    ]
+    details["alternatives"] = alternatives
+    details["none_probability"] = probabilities["none"]
     if choice == "none" or tied or confidence < min_confidence or probability < min_confidence:
         return err("browser find", ErrorCode.E_SELECTOR_NOT_FOUND,
                    "Jev 未找到足够确定的唯一目标；请人工检查页面", details=details)
@@ -94,4 +100,5 @@ async def choose_element(
         return err("browser find", ErrorCode.E_SELECTOR_NOT_FOUND,
                    "多个候选具有相同名称与角色，现有证据不足以消歧", details=details)
     return ok("browser find", [{**selected, "score": probability, "confidence": confidence,
-                                "model": details["model"], "snippet": selected["name"][:80]}])
+                                "model": details["model"], "snippet": selected["name"][:80],
+                                "alternatives": alternatives, "none_probability": probabilities["none"]}])
