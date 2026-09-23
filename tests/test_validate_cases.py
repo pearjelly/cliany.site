@@ -244,7 +244,8 @@ def test_current_cases_manifest_validates_without_packages():
     assert report.known_gap >= 1
     assert report.checked_packages is False
     assert report.promotion_evidence_summary["candidate_count"] == report.candidate
-    assert report.promotion_evidence_summary["pending_count"] == report.candidate * 3
+    assert report.promotion_evidence_summary["pending_count"] == report.candidate * 3 - 1
+    assert report.promotion_evidence_summary["complete_count"] == 1
     assert report.promotion_evidence_summary["primary_next_action"]
     assert report.promotion_command_plan_summary == {
         "candidate_count": report.candidate,

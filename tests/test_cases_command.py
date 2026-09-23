@@ -176,7 +176,8 @@ def test_cases_command_returns_catalog_summary(tmp_home):
     assert data["summary"]["status_counts"]["active"] == 2
     assert data["summary"]["status_counts"]["degraded"] == 2
     assert data["promotion_evidence_summary"]["candidate_count"] >= 3
-    assert data["promotion_evidence_summary"]["pending_count"] >= 9
+    assert data["promotion_evidence_summary"]["pending_count"] >= 8
+    assert data["promotion_evidence_summary"]["complete_count"] >= 1
     assert data["promotion_evidence_summary"]["primary_task_detail"]["case_id"] == "pypi-project-search"
     assert data["promotion_evidence_summary"]["primary_task_detail"]["task"] == "adapter_package"
     assert data["promotion_evidence_summary"]["primary_task_detail"]["status"] == "pending"
@@ -755,15 +756,15 @@ def test_cases_command_evidence_bundle_json(tmp_home):
         "d8f01afdd80df4b44821838c4a0b555cbec833de8bc881baf85b1036bfff7bab"
     )
     assert bundle["ready_to_promote"] is False
-    assert bundle["status_counts"] == {"pending": 3, "blocked": 0, "complete": 0}
-    assert bundle["pending_task_count"] == 3
+    assert bundle["status_counts"] == {"pending": 2, "blocked": 0, "complete": 1}
+    assert bundle["pending_task_count"] == 2
     assert bundle["blocked_task_count"] == 0
-    assert bundle["complete_task_count"] == 0
-    assert bundle["incomplete_task_count"] == 3
-    assert bundle["pending_tasks"] == ["adapter_package", "metadata_validation", "online_smoke"]
+    assert bundle["complete_task_count"] == 1
+    assert bundle["incomplete_task_count"] == 2
+    assert bundle["pending_tasks"] == ["adapter_package", "online_smoke"]
     assert bundle["blocked_tasks"] == []
-    assert bundle["complete_tasks"] == []
-    assert bundle["incomplete_tasks"] == ["adapter_package", "metadata_validation", "online_smoke"]
+    assert bundle["complete_tasks"] == ["metadata_validation"]
+    assert bundle["incomplete_tasks"] == ["adapter_package", "online_smoke"]
     assert bundle["primary_pending_task"]["task"] == "adapter_package"
     assert bundle["primary_blocked_task"] is None
     assert bundle["primary_incomplete_task"]["task"] == "adapter_package"
@@ -1314,7 +1315,7 @@ def test_cases_command_evidence_bundle_human_outputs_markdown(tmp_home):
     assert "## Evidence bundle: `pypi-project-search`" in result.output
     assert "Ready to promote: `false`" in result.output
     assert "Blocked tasks: `0`" in result.output
-    assert "Incomplete tasks: `3`" in result.output
+    assert "Incomplete tasks: `2`" in result.output
     assert "Primary next task: `adapter_package`" in result.output
     assert "Primary next step: `llm_live_preflight`" in result.output
     assert "Primary next command: `cliany-site doctor --llm-live --require-capability generate_adapters --json`" in result.output
@@ -1375,8 +1376,8 @@ def test_cases_command_promotion_plan_json(tmp_home):
     plan = payload["data"]["promotion_plan"]
     assert plan["candidate_count"] >= 3
     assert plan["ready_to_promote_count"] == 0
-    assert plan["pending_task_count"] >= 9
-    assert plan["incomplete_task_count"] >= 9
+    assert plan["pending_task_count"] >= 8
+    assert plan["incomplete_task_count"] >= 8
     assert plan["primary_case_id"] == "pypi-project-search"
     assert plan["primary_task"] == "adapter_package"
     assert plan["primary_next_step"] == "llm_live_preflight"
@@ -1440,7 +1441,7 @@ def test_cases_command_promotion_plan_json(tmp_home):
         "doctor_preflight_evidence_extract_command": (DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND),
         "doctor_preflight_evidence_markdown_command": (DOCTOR_PREFLIGHT_EVIDENCE_MARKDOWN_COMMAND),
         "priority_rank": 1,
-        "priority_reason": "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0",
+        "priority_reason": "rank 1: complete 1/3, pending 2, blocked 0, missing commands 0",
     }
     assert plan["candidates"][0]["case_id"] == "pypi-project-search"
     assert plan["candidates"][0]["expected_adapter_package"] == ("pypi.org-<version>.cliany-adapter.tar.gz")
@@ -1457,7 +1458,7 @@ def test_cases_command_promotion_plan_json(tmp_home):
     )
     assert plan["candidates"][0]["priority_rank"] == 1
     assert plan["candidates"][0]["priority_reason"] == (
-        "rank 1: complete 0/3, pending 3, blocked 0, missing commands 0"
+        "rank 1: complete 1/3, pending 2, blocked 0, missing commands 0"
     )
     assert plan["candidates"][0]["llm_live_preflight_blocker_note"] == plan["llm_live_preflight_blocker_note"]
     assert plan["candidates"][0]["llm_live_preflight_command_sha256"] == LLM_LIVE_PREFLIGHT_COMMAND_SHA256
@@ -1509,7 +1510,7 @@ def test_cases_command_promotion_plan_human_outputs_queue(tmp_home):
     )
     assert "## Candidate queue" in result.output
     assert "priority: `1`" in result.output
-    assert "priority_reason: rank 1: complete 0/3, pending 3, blocked 0, missing commands 0" in result.output
+    assert "priority_reason: rank 1: complete 1/3, pending 2, blocked 0, missing commands 0" in result.output
     assert "ready_to_promote: `false`" in result.output
     assert "issue_template: `cliany-site cases --case-id pypi-project-search --issue-template`" in result.output
     assert (
@@ -1518,7 +1519,7 @@ def test_cases_command_promotion_plan_human_outputs_queue(tmp_home):
     )
     assert "## Incomplete task queue" in result.output
     assert "`pypi-project-search/adapter_package` (pending)" in result.output
-    assert "priority_reason: rank 1: complete 0/3, pending 3, blocked 0, missing commands 0" in result.output
+    assert "priority_reason: rank 1: complete 1/3, pending 2, blocked 0, missing commands 0" in result.output
     assert "acceptance: Attach the generated" in result.output
     assert "issue_template: `cliany-site cases --case-id pypi-project-search --issue-template`" in result.output
 

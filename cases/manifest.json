@@ -125,14 +125,14 @@
         "next_action": "Attach the verified pypi.org-0.16.360.cliany-adapter.tar.gz to GitHub Release v0.16.360 and verify its public digest-backed install."
       },
       "metadata_validation": {
-        "status": "pending",
-        "evidence": null,
-        "next_action": "Run python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict and record the focused result."
+        "status": "complete",
+        "evidence": "2026-09-23: focused strict validation of the local pypi.org-0.16.360.cliany-adapter.tar.gz package passed (1 candidate, ok=true); this does not verify the future public release asset.",
+        "next_action": "After publishing the release asset, rerun python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict against the downloaded package."
       },
       "online_smoke": {
         "status": "pending",
-        "evidence": null,
-        "next_action": "Run cliany-site pypi.org search-packages --query cliany-site --json and attach a JSON envelope summary with data.quality.ok=true and row_count>0."
+        "evidence": "2026-09-23: an earlier isolated HOME returned 20 project rows, but later shared and fresh isolated Chrome replays failed; the fresh browser showed PyPI's Client Challenge page instead of search results.",
+        "next_action": "Repeat the read-only search from an independent HOME and Chrome session when PyPI serves normal results; require quality.ok=true and row_count>0 before promotion. Do not bypass the site challenge."
       }
     }
   },
