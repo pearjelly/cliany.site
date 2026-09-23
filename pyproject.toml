@@ -37,6 +37,7 @@ dependencies = [
     "portalocker>=2.8",
     "jsonschema>=4.26.0",
     "httpx>=0.28.1",
+    "markdownify>=1.2.2",
 ]
 
 [project.optional-dependencies]

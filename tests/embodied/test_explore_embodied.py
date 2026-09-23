@@ -132,6 +132,44 @@ async def test_browser_cli_changes_real_form(
 
 @pytest.mark.embodied
 @pytest.mark.asyncio
+async def test_browser_cli_extracts_and_evaluates_real_page(local_server, headless_browser_cdp_url, tmp_home):
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.connect_over_cdp(
+            headless_browser_cdp_url.replace("ws://", "http://")
+        )
+        page = await browser.contexts[0].new_page()
+        await page.goto(f"{local_server}/browser_atoms.html")
+        await page.set_content('<main><h1>Alpha</h1><p>Beta</p><pre>{"count":2}</pre></main>')
+
+        async def run(*args):
+            process = await asyncio.create_subprocess_exec(
+                sys.executable, "-m", "cliany_site", "--cdp-url", headless_browser_cdp_url,
+                "browser", *args, "--json",
+                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+            )
+            try:
+                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=45)
+            except TimeoutError:
+                process.kill()
+                await process.communicate()
+                raise
+            assert process.returncode == 0, (stdout.decode(), stderr.decode())
+            payload = json.loads(stdout)
+            assert payload["ok"] is True, payload
+            return payload["data"]["content"] if args[0] == "extract" else payload["data"]["result"]
+
+        try:
+            assert "Alpha" in await run("extract", "--selector", "main", "--format", "text")
+            markdown = await run("extract", "--selector", "main", "--format", "markdown")
+            assert "# Alpha" in markdown and "Beta" in markdown
+            assert await run("extract", "--selector", "pre", "--format", "json") == {"count": 2}
+            assert await run("eval", "--expr", "Promise.resolve(2)", "--allow-eval") == 2
+        finally:
+            await browser.close()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
 async def test_action_replay_changes_real_page_only_outside_dry_run(
     local_server, headless_browser_cdp_url, tmp_home, monkeypatch
 ):

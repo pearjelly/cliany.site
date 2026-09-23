@@ -26,8 +26,10 @@ def runner():
 
 class TestBrowserExtract:
     def test_extract_success(self, no_llm, runner):
+        mock_page = MagicMock()
+        mock_page.evaluate = AsyncMock(return_value=json.dumps({"found": True, "content": "Hello World"}))
         mock_session = MagicMock()
-        mock_session.execute_action = AsyncMock(return_value={"content": "Hello World"})
+        mock_session.get_current_page = AsyncMock(return_value=mock_page)
         with (
             patch(
                 "cliany_site.browser.cdp.CDPConnection.check_available",
@@ -48,6 +50,7 @@ class TestBrowserExtract:
             assert data["data"]["content"] == "Hello World"
             assert data["data"]["format"] == "text"
             assert data["data"]["selector"] is None
+            assert mock_page.evaluate.await_args.args[1:] == (None, "text")
 
     def test_extract_cdp_unavailable(self, no_llm, runner):
         with patch(
@@ -63,10 +66,12 @@ class TestBrowserExtract:
             assert data["error"]["code"] == "E_CDP_UNAVAILABLE"
 
     def test_extract_with_selector(self, no_llm, runner):
-        mock_session = MagicMock()
-        mock_session.execute_action = AsyncMock(
-            return_value={"content": "section content"}
+        mock_page = MagicMock()
+        mock_page.evaluate = AsyncMock(
+            return_value=json.dumps({"found": True, "content": "<main><h1>Example</h1><p>section content</p></main>"})
         )
+        mock_session = MagicMock()
+        mock_session.get_current_page = AsyncMock(return_value=mock_page)
         with (
             patch(
                 "cliany_site.browser.cdp.CDPConnection.check_available",
@@ -87,6 +92,60 @@ class TestBrowserExtract:
             assert data["ok"] is True
             assert data["data"]["selector"] == "main"
             assert data["data"]["format"] == "markdown"
+            assert "# Example" in data["data"]["content"]
+            assert "section content" in data["data"]["content"]
+            assert mock_page.evaluate.await_args.args[1:] == ("main", "markdown")
+
+    def test_extract_json_parses_selected_text(self, no_llm, runner):
+        mock_page = MagicMock()
+        mock_page.evaluate = AsyncMock(
+            return_value=json.dumps({"found": True, "content": '{"status":"ok","count":2}'})
+        )
+        mock_session = MagicMock()
+        mock_session.get_current_page = AsyncMock(return_value=mock_page)
+        with (
+            patch("cliany_site.browser.cdp.CDPConnection.check_available", AsyncMock(return_value=True)),
+            patch("cliany_site.browser.cdp.CDPConnection.connect", AsyncMock(return_value=mock_session)),
+            patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+        ):
+            result = runner.invoke(
+                cli, ["browser", "extract", "--selector", "pre", "--format", "json", "--json"]
+            )
+
+        assert result.exit_code == 0, result.output
+        assert json.loads(result.output)["data"]["content"] == {"status": "ok", "count": 2}
+
+    def test_extract_json_rejects_invalid_text(self, no_llm, runner):
+        mock_page = MagicMock()
+        mock_page.evaluate = AsyncMock(return_value=json.dumps({"found": True, "content": "not json"}))
+        mock_session = MagicMock()
+        mock_session.get_current_page = AsyncMock(return_value=mock_page)
+        with (
+            patch("cliany_site.browser.cdp.CDPConnection.check_available", AsyncMock(return_value=True)),
+            patch("cliany_site.browser.cdp.CDPConnection.connect", AsyncMock(return_value=mock_session)),
+            patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+        ):
+            result = runner.invoke(
+                cli, ["browser", "extract", "--selector", "pre", "--format", "json", "--json"]
+            )
+
+        assert result.exit_code != 0
+        assert json.loads(result.output)["error"]["code"] == "E_PARSE_FAILED"
+
+    def test_extract_reports_missing_selector(self, no_llm, runner):
+        mock_page = MagicMock()
+        mock_page.evaluate = AsyncMock(return_value=json.dumps({"found": False, "content": ""}))
+        mock_session = MagicMock()
+        mock_session.get_current_page = AsyncMock(return_value=mock_page)
+        with (
+            patch("cliany_site.browser.cdp.CDPConnection.check_available", AsyncMock(return_value=True)),
+            patch("cliany_site.browser.cdp.CDPConnection.connect", AsyncMock(return_value=mock_session)),
+            patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+        ):
+            result = runner.invoke(cli, ["browser", "extract", "--selector", "article", "--json"])
+
+        assert result.exit_code != 0
+        assert json.loads(result.output)["error"]["code"] == "E_SELECTOR_NOT_FOUND"
 
     def test_structured_extract_list_with_fields(self, no_llm, runner):
         mock_page = MagicMock()

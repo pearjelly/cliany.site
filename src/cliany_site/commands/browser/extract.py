@@ -6,6 +6,7 @@ import re
 from typing import Any, cast
 
 import click
+from markdownify import markdownify
 
 from cliany_site.browser.cdp import cdp_from_context
 from cliany_site.commands.browser import browser_group
@@ -187,16 +188,47 @@ async def _do_structured_extract(
         )
 
 
-async def _do_extract(browser_session, selector: str | None, fmt: str) -> str | Envelope:
+async def _do_extract(browser_session, selector: str | None, fmt: str) -> object | Envelope:
     try:
-        result = await browser_session.execute_action(
-            {"action": "extract_content", "selector": selector, "format": fmt}
+        page = await browser_session.get_current_page()
+        if page is None:
+            return err(
+                command="browser extract",
+                code=ErrorCode.E_PAGE_NOT_READY,
+                message="无法获取当前页面",
+                source="builtin",
+            )
+        raw = await page.evaluate(
+            """(selector, format) => {
+                const element = selector ? document.querySelector(selector) : document.body;
+                if (!element) return {found: false, content: ''};
+                return {
+                    found: true,
+                    content: format === 'markdown'
+                        ? element.outerHTML
+                        : (element.innerText ?? element.textContent ?? ''),
+                };
+            }""",
+            selector,
+            fmt,
         )
-        if isinstance(result, dict) and "content" in result:
-            return str(result["content"])
-        if isinstance(result, str):
-            return result
-    except Exception as exc:
+        result = json.loads(raw) if isinstance(raw, str) else raw
+        if not isinstance(result, dict) or not result.get("found"):
+            return err(
+                command="browser extract",
+                code=ErrorCode.E_SELECTOR_NOT_FOUND,
+                message=f"未找到元素: selector={selector!r}",
+                source="builtin",
+            )
+        content = result.get("content")
+        if not isinstance(content, str):
+            raise ValueError("页面内容不是文本")
+        if fmt == "markdown":
+            return markdownify(content, heading_style="ATX", strip=["script", "style"]).strip()
+        if fmt == "json":
+            return cast(object, json.loads(content))
+        return content
+    except (OSError, RuntimeError, ValueError, TypeError) as exc:
         return err(
             command="browser extract",
             code=ErrorCode.E_PARSE_FAILED,
