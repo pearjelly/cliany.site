@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import re
 from typing import Any, cast
 
 import click
@@ -235,36 +234,5 @@ async def _do_extract(browser_session, selector: str | None, fmt: str) -> object
             message=str(exc)[:200],
             details={"selector": selector, "mode": fmt},
         )
-
-    # 回退：获取页面源码并提取文本
-    try:
-        source = await browser_session.execute_action({"action": "get_page_source"})
-        if isinstance(source, dict):
-            source = source.get("html", "") or source.get("source", "")
-        if isinstance(source, str):
-            return _html_to_text(source, fmt)
-    except Exception as exc:
-        return err(
-            command="browser extract",
-            code=ErrorCode.E_PARSE_FAILED,
-            message=str(exc)[:200],
-            details={"selector": selector, "mode": fmt},
-        )
-
-    return ""
-
-
-def _html_to_text(html: str, fmt: str) -> str:
-    cleaned = re.sub(
-        r"<(script|style)[^>]*>.*?</\1>",
-        "",
-        html,
-        flags=re.DOTALL | re.IGNORECASE,
-    )
-    # 移除所有 HTML 标签
-    text = re.sub(r"<[^>]+>", " ", cleaned)
-    # 合并多余空白
-    return re.sub(r"\s+", " ", text).strip()
-
 
 extract_atom = extract
