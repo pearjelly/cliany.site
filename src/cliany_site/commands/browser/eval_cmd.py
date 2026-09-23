@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 
 import click
 
@@ -39,6 +40,17 @@ def eval_cmd(
         ctx.exit(1)
         return
 
+    if not expr.strip():
+        result = err(
+            command="browser eval",
+            code=ErrorCode.E_INVALID_PARAM,
+            message="--expr 不能为空",
+            source="builtin",
+        )
+        print_envelope(result, effective_json)
+        ctx.exit(1)
+        return
+
     cdp = cdp_from_context(ctx)
     result = asyncio.run(_run_eval(cdp, expr))
     print_envelope(result, effective_json)
@@ -57,12 +69,21 @@ async def _run_eval(cdp, expr: str) -> Envelope:
     try:
         browser_session = await cdp.connect()
         try:
-            eval_result = await browser_session.execute_action(
-                {"action": "execute_script", "script": expr}
+            page = await browser_session.get_current_page()
+            if page is None:
+                return err(
+                    command="browser eval",
+                    code=ErrorCode.E_PAGE_NOT_READY,
+                    message="无法获取当前页面",
+                    source="builtin",
+                )
+            raw_result = await page.evaluate(
+                f"() => Promise.resolve(({expr})).then(value => JSON.stringify(value))"
             )
+            eval_result = json.loads(raw_result) if raw_result else None
         finally:
             await cdp.disconnect()
-    except (OSError, RuntimeError) as exc:
+    except (OSError, RuntimeError, ValueError) as exc:
         return err(
             command="browser eval",
             code=ErrorCode.E_CDP_UNAVAILABLE,

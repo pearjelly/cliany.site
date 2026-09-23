@@ -26,6 +26,7 @@
 - OpenAI-compatible live preflight includes the lowercase `json` token required by some JSON-mode providers, and exploration shows zero-based action boundaries to avoid omitting the final action.
 - Generated list/table adapters briefly retry an otherwise successful empty extraction, reducing transient zero-row results without masking persistent emptiness or partial field quality.
 - Structured list/table extraction now identifies an observed `Client Challenge` page as `E_PAGE_NOT_READY` with `reason=site_challenge`, instead of reporting a misleading zero-row result. Normal empty results retain their existing contract.
+- Opt-in `browser eval --allow-eval` now uses the installed browser-use page API instead of a removed session method, and preserves JSON result types for expressions and resolved Promises.
 
 ## [0.16.359] - 2026-09-23
 

@@ -316,8 +316,10 @@ class TestBrowserEval:
             assert data["error"]["code"] == "E_EVAL_DISABLED"
 
     def test_eval_success_with_flag(self, no_llm, runner):
+        mock_page = MagicMock()
+        mock_page.evaluate = AsyncMock(return_value="2")
         mock_session = MagicMock()
-        mock_session.execute_action = AsyncMock(return_value=2)
+        mock_session.get_current_page = AsyncMock(return_value=mock_page)
         with (
             patch(
                 "cliany_site.browser.cdp.CDPConnection.check_available",
@@ -338,6 +340,53 @@ class TestBrowserEval:
             assert data["ok"] is True
             assert data["data"]["expr"] == "1+1"
             assert data["data"]["result"] == 2
+            mock_page.evaluate.assert_awaited_once_with(
+                "() => Promise.resolve((1+1)).then(value => JSON.stringify(value))"
+            )
+
+    @pytest.mark.parametrize(
+        ("expr", "raw", "expected"),
+        [
+            ("document.title", '"Example"', "Example"),
+            ("({ok: true, count: 2})", '{"ok":true,"count":2}', {"ok": True, "count": 2}),
+            ('Promise.resolve("ready")', '"ready"', "ready"),
+            ("undefined", "", None),
+        ],
+    )
+    def test_eval_preserves_json_result_types(self, no_llm, runner, expr, raw, expected):
+        mock_page = MagicMock()
+        mock_page.evaluate = AsyncMock(return_value=raw)
+        mock_session = MagicMock()
+        mock_session.get_current_page = AsyncMock(return_value=mock_page)
+        with (
+            patch("cliany_site.browser.cdp.CDPConnection.check_available", AsyncMock(return_value=True)),
+            patch("cliany_site.browser.cdp.CDPConnection.connect", AsyncMock(return_value=mock_session)),
+            patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+        ):
+            result = runner.invoke(cli, ["browser", "eval", "--expr", expr, "--allow-eval", "--json"])
+
+        assert result.exit_code == 0, result.output
+        assert json.loads(result.output)["data"]["result"] == expected
+
+    def test_eval_rejects_blank_expression_before_cdp(self, no_llm, runner):
+        with patch("cliany_site.browser.cdp.CDPConnection.check_available", AsyncMock(side_effect=AssertionError)):
+            result = runner.invoke(cli, ["browser", "eval", "--expr", "  ", "--allow-eval", "--json"])
+
+        assert result.exit_code != 0
+        assert json.loads(result.output)["error"]["code"] == "E_INVALID_PARAM"
+
+    def test_eval_requires_current_page(self, no_llm, runner):
+        mock_session = MagicMock()
+        mock_session.get_current_page = AsyncMock(return_value=None)
+        with (
+            patch("cliany_site.browser.cdp.CDPConnection.check_available", AsyncMock(return_value=True)),
+            patch("cliany_site.browser.cdp.CDPConnection.connect", AsyncMock(return_value=mock_session)),
+            patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+        ):
+            result = runner.invoke(cli, ["browser", "eval", "--expr", "1+1", "--allow-eval", "--json"])
+
+        assert result.exit_code != 0
+        assert json.loads(result.output)["error"]["code"] == "E_PAGE_NOT_READY"
 
     def test_eval_cdp_unavailable_with_flag(self, no_llm, runner):
         with patch(
