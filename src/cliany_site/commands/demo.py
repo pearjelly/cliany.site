@@ -6,7 +6,7 @@ import re
 import shlex
 import subprocess
 import sys
-from typing import Any
+from typing import Any, cast
 
 import click
 
@@ -79,7 +79,8 @@ def run_demo(case_id: str) -> Envelope:
         query_argv = _command_argv(query, ["cliany-site", domain])
         _row_count({}, validation)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
-        return err("demo", ErrorCode.E_INVALID_PARAM, str(exc))
+        return err("demo", ErrorCode.E_INVALID_PARAM, str(exc),
+                   hint="运行 cliany-site cases --status active 查看可用案例")
 
     target = get_config().adapters_dir / domain
     installed = target.exists() or target.is_symlink()
@@ -87,18 +88,22 @@ def run_demo(case_id: str) -> Envelope:
         passed, payload = _run_step(install_argv)
         if not passed:
             return err("demo", ErrorCode.E_DOWNLOAD_FAILED, "固定哈希 adapter 安装失败；未执行查询",
+                       hint="检查 GitHub 发布资产是否可达；不要移除 --sha256 或使用 --force 跳过校验",
                        details={"stage": "install", "upstream_error": (payload or {}).get("error")})
     passed, payload = _run_step(verify_argv)
     if not passed:
         return err("demo", ErrorCode.E_VERIFY_STATIC, "严格验证失败；未执行查询",
+                   hint=f"运行 cliany-site verify {domain} --strict --json 查看诊断；不会覆盖已有 adapter",
                    details={"stage": "verify", "upstream_error": (payload or {}).get("error")})
     passed, payload = _run_step(query_argv)
     if not passed or payload is None:
         return err("demo", ErrorCode.E_UNKNOWN, "只读查询失败",
+                   hint="检查公开 Jira 服务是否可达，稍后重试；安装和校验不会因此重做",
                    details={"stage": "query", "upstream_error": (payload or {}).get("error")})
     row_count, minimum = _row_count(payload, validation)
     if row_count < minimum:
         return err("demo", ErrorCode.E_EMPTY_RESULT, "只读查询未达到案例结果门槛",
+                   hint="查询成功但没有足够的 issue；检查 Jira 返回内容和案例条件",
                    details={"stage": "oracle", "row_count": row_count, "min_count": minimum})
     return ok("demo", {"case_id": case_id, "adapter_domain": domain, "installed_now": not installed,
                        "row_count": row_count, "result": payload})
@@ -112,4 +117,17 @@ def demo_cmd(ctx: click.Context, case_id: str, json_mode: bool | None) -> None:
     """安装、严格验证并运行一个公开只读案例。"""
     root_obj = ctx.find_root().obj if isinstance(ctx.find_root().obj, dict) else {}
     effective_json = json_mode if json_mode is not None else bool(root_obj.get("json_mode"))
-    print_response(run_demo(case_id), json_mode=effective_json)
+    result = run_demo(case_id)
+    if effective_json or not result.get("ok"):
+        print_response(result, json_mode=effective_json)
+        return
+    data = cast(dict[str, Any], result["data"])
+    click.echo(f"✓ {data['case_id']}: {data['row_count']} 条结果")
+    query_data = data["result"].get("data")
+    issues = query_data.get("issues") if isinstance(query_data, dict) else None
+    if isinstance(issues, list):
+        for issue in issues:
+            if isinstance(issue, dict):
+                key = json.dumps(str(issue.get("key", "")), ensure_ascii=False)
+                summary = json.dumps(str(issue.get("summary", "")), ensure_ascii=False)
+                click.echo(f"  {key}  {summary}")

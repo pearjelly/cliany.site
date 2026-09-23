@@ -35,6 +35,37 @@ def test_demo_runs_pinned_install_verify_and_read_only_query(tmp_home, monkeypat
     assert calls[2][2:5] == ["cliany_site", "issues.apache.org", "list-issues"]
 
 
+def test_human_output_summarizes_results_without_terminal_controls(tmp_home, monkeypatch):
+    replies = iter([
+        (True, {"success": True}),
+        (True, {"ok": True}),
+        (True, _result([{"key": "SPARK-1", "summary": "Hello\n\x1b[31m"}])),
+    ])
+    monkeypatch.setattr(demo, "_run_step", lambda argv: next(replies))
+    result = CliRunner().invoke(cli, ["demo", "--case-id", "apache-jira-issues"])
+    assert result.exit_code == 0
+    assert "1 条结果" in result.stdout
+    assert '"SPARK-1"' in result.stdout
+    assert "\\n\\u001b[31m" in result.stdout
+    assert "\x1b[31m" not in result.stdout
+    assert "'success': True" not in result.stdout
+
+
+def test_human_failure_shows_recovery_hint_and_stops(tmp_home, monkeypatch):
+    calls = []
+
+    def run(argv):
+        calls.append(argv)
+        return False, {"success": False, "error": {"code": "INSTALL_FAILED"}}
+
+    monkeypatch.setattr(demo, "_run_step", run)
+    result = CliRunner().invoke(cli, ["demo", "--case-id", "apache-jira-issues"])
+    assert result.exit_code == 1
+    assert "E_DOWNLOAD_FAILED" in result.stdout
+    assert "GitHub" in result.stdout
+    assert len(calls) == 1
+
+
 def test_existing_adapter_is_verified_without_reinstall(tmp_home, monkeypatch):
     target = get_config().adapters_dir / "issues.apache.org"
     target.mkdir(parents=True)
@@ -89,6 +120,7 @@ def test_each_failure_stops_later_steps(tmp_home, monkeypatch):
         result = demo.run_demo("apache-jira-issues")
         assert result["ok"] is False
         assert result["error"]["code"] == code
+        assert result["error"]["hint"]
         assert len(calls) == failure_at + 1
 
 
