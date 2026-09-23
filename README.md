@@ -1,8 +1,8 @@
 # cliany-site
 
-Experimental on current master: [Jev intent-based element discovery](docs/jev-intent-finder.md)
+Experimental in v0.16.357: [Jev intent-based element discovery](docs/jev-intent-finder.md)
 uses typed choices and confidence gates to locate controls without acting on them.
-Explicit remote-data consent and a TypeSafe API key are required; not yet in PyPI v0.16.356.
+Explicit remote-data consent and a TypeSafe API key are required; live model performance is unverified.
 
 [![PyPI version](https://img.shields.io/pypi/v/cliany-site)](https://pypi.org/project/cliany-site/)
 [![Python](https://img.shields.io/pypi/pyversions/cliany-site)](https://pypi.org/project/cliany-site/)
@@ -453,7 +453,7 @@ step even when the child exits with status zero.
 cliany-site workflow batch github.com search data.csv --json
 ```
 
-On current master (Unreleased), the built-in browser executor runs batch items
+As of v0.16.357, the built-in browser executor runs batch items
 sequentially, even when `--concurrency` is greater than one. It shares browser
 state and CLI output capture; independent processes sharing the same browser
 are not isolated. Custom `run_batch` executors retain the concurrent path and

@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-09-22
-- **Current baseline:** v0.16.356
+- **Updated:** 2026-09-23
+- **Current baseline:** v0.16.357
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -10,13 +10,13 @@ September 22 audit: Jenkins is degraded because its published archive lacks requ
 
 ## What Is Already In Place
 
-Unreleased on September 22: real saved adapters now pass a local Chromium form test through CLI, SDK, HTTP, workflow, and serial batch. Two changed inputs return Ada and Grace, explicit browser selection leaves a separate default browser untouched, and recorded names/roles recover from invalid saved refs. Standalone click/type use the supported event API. These repairs are not yet in PyPI v0.16.356.
+In v0.16.357, real saved adapters pass a local Chromium form test through CLI, SDK, HTTP, workflow, and serial batch. Two changed inputs return Ada and Grace, explicit browser selection leaves a separate default browser untouched, and recorded names/roles recover from invalid saved refs. Standalone click/type use the supported event API. Jev adds opt-in, read-only intent lookup; its live model quality is not yet validated.
 
 Workflow/batch now preserve returned data, support indexed references, reject invalid conditions, propagate root execution options, and fail nonzero with one JSON error object. Child stderr no longer corrupts JSON, invalid results cannot become successes, and allowing zero matches does not waive missing-field errors.
 
 A deterministic-model exploration test now covers real browser observation/actions, result construction, adapter generation, persistence, and fresh CLI replay with changed inputs. It exposed and repaired missing source URLs caused by an outdated page metadata API. This is offline model-boundary integration, not evidence that a live model can discover a new public workflow.
 
-The shared executor's browser routing and non-mutating dry-run repair shipped in v0.16.356. Subsequent unreleased tests verify Cookie restoration before navigation, refusal of equal-score or conflicting semantic targets, and safe serial batch execution. They do not establish full cross-entrypoint parity, localStorage restoration, arbitrary duplicate-name disambiguation, browser concurrency, or live public-site generation. See the [acceptance plan](plans/2026-09-22-reliability-acceptance.md) and [v0.16.357 release handoff](releases/v0.16.357-draft.md); the next tag is gated until at least September 23.
+The shared executor's browser routing and non-mutating dry-run repair shipped in v0.16.356. v0.16.357 adds Cookie restoration before navigation, refusal of equal-score or conflicting semantic targets, and safe serial batch execution. These tests do not establish full cross-entrypoint parity, localStorage restoration, arbitrary duplicate-name disambiguation, browser concurrency, or live public-site generation. See the [acceptance plan](plans/2026-09-22-reliability-acceptance.md) and [v0.16.357 release handoff](releases/v0.16.357-draft.md).
 
 - A 10-minute first-run path that starts with `doctor`, real demo cases, and replay before requiring users to configure an LLM.
 - A real case catalog with CRM, DevOps, knowledge-base, and package-search workflows.

@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.357] - 2026-09-23
+
 ### Added
 
 - Experimental Jev intent-based element discovery: `browser find --by intent --value ... --allow-remote`. Uses a finite AXTree Choice set with abstention and confidence checks, never performs browser actions, and requires explicit remote-data consent plus `TYPESAFE_API_KEY`. Offline mode prevents requests. See `docs/jev-intent-finder.md`; live provider accuracy and latency are not yet validated.
@@ -3177,7 +3179,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.356...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.357...HEAD
+[0.16.357]: https://github.com/pearjelly/cliany.site/compare/v0.16.356...v0.16.357
 [0.16.356]: https://github.com/pearjelly/cliany.site/compare/v0.16.355...v0.16.356
 [0.16.355]: https://github.com/pearjelly/cliany.site/compare/v0.16.354...v0.16.355
 [0.16.354]: https://github.com/pearjelly/cliany.site/compare/v0.16.353...v0.16.354
