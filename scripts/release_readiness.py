@@ -467,6 +467,8 @@ def _build_draft_report(root: Path, current_version: str, target_version: str) -
             issues.append(f"GitHub Release notes missing heading: {expected_heading}")
         elif not notes.removeprefix(expected_heading).strip():
             issues.append("GitHub Release notes must include reviewed user-facing content")
+        if "Release candidate notes. Not published yet." in notes:
+            issues.append("GitHub Release notes still contain unpublished candidate status")
 
     return DraftReport(ok=not issues, path=str(path), target_version=target_version, issues=issues)
 

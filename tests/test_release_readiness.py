@@ -1915,6 +1915,22 @@ def test_release_readiness_blocks_reviewed_github_release_notes_without_content(
     ]
 
 
+def test_release_readiness_blocks_unpublished_candidate_release_notes(tmp_path):
+    repo = _init_repo(tmp_path, with_draft=True)
+    notes_path = repo / "docs" / "releases" / "v0.1.1-github-release.md"
+    notes_path.write_text(
+        "# v0.1.1\n\nRelease candidate notes. Not published yet.\n\nUseful changes.\n",
+        encoding="utf-8",
+    )
+
+    report = _build_report(repo, today=date(2026, 6, 10), min_commit_days=1)
+
+    assert report.ok is False
+    assert report.draft.issues == [
+        "GitHub Release notes still contain unpublished candidate status"
+    ]
+
+
 def test_release_readiness_blocks_release_workflow_with_generated_notes(tmp_path):
     repo = _init_repo(tmp_path, with_draft=True)
     release_workflow = _release_workflow().replace(

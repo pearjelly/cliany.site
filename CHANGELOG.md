@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+## [0.16.358] - 2026-09-23
+
+### Fixed
+
+- Live `doctor --json` now places transport-specific, safe recovery guidance in each check and the preflight summary. TLS, DNS, timeout, refused connections, and HTTP responses no longer share one generic action; raw exception text remains excluded.
+- Public documentation now shows Jev's opt-in, read-only intent lookup and accurately states that saved browser sessions restore applicable Cookies, not LocalStorage.
+- Release readiness rejects GitHub Release notes that still say "Release candidate notes. Not published yet." The v0.16.357 public notes were corrected after publication.
+
 ## [0.16.357] - 2026-09-23
 
 ### Added
@@ -3179,7 +3187,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.357...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.358...HEAD
+[0.16.358]: https://github.com/pearjelly/cliany.site/compare/v0.16.357...v0.16.358
 [0.16.357]: https://github.com/pearjelly/cliany.site/compare/v0.16.356...v0.16.357
 [0.16.356]: https://github.com/pearjelly/cliany.site/compare/v0.16.355...v0.16.356
 [0.16.355]: https://github.com/pearjelly/cliany.site/compare/v0.16.354...v0.16.355
