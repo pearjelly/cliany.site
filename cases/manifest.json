@@ -114,20 +114,20 @@
       "online": "read-only PyPI search returns project cards for the query"
     },
     "promotion": {
-      "adapter_package": "Generate and publish pypi.org-<version>.cliany-adapter.tar.gz in a future release.",
+      "adapter_package": "Publish pypi.org-<version>.cliany-adapter.tar.gz in a GitHub Release and verify its public SHA-256; v0.16.360 is complete.",
       "metadata_validation": "Run python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict once the package exists.",
       "online_smoke": "Run cliany-site pypi.org search-packages --query cliany-site --json against PyPI and confirm non-empty project rows."
     },
     "promotion_evidence": {
       "adapter_package": {
-        "status": "pending",
-        "evidence": "2026-09-23: generated ~/.cliany-site/packages/pypi.org-0.16.360.cliany-adapter.tar.gz; SHA-256 37efcddbf52606c3249155b41c015d0dab22765b6d813dd0ed575b739170ad23. Public release asset pending.",
-        "next_action": "Attach the verified pypi.org-0.16.360.cliany-adapter.tar.gz to GitHub Release v0.16.360 and verify its public digest-backed install."
+        "status": "complete",
+        "evidence": "2026-09-24: GitHub Release v0.16.360 carries pypi.org-0.16.360.cliany-adapter.tar.gz with SHA-256 37efcddbf52606c3249155b41c015d0dab22765b6d813dd0ed575b739170ad23. A fresh HOME installed the public HTTPS asset with that digest and verify pypi.org --strict returned verdict=ok.",
+        "next_action": "Keep the public asset and digest available while repeating the pending read-only online smoke."
       },
       "metadata_validation": {
         "status": "complete",
-        "evidence": "2026-09-23: focused strict validation of the local pypi.org-0.16.360.cliany-adapter.tar.gz package passed (1 candidate, ok=true); this does not verify the future public release asset.",
-        "next_action": "After publishing the release asset, rerun python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict against the downloaded package."
+        "evidence": "2026-09-23: focused strict validation of the local pypi.org-0.16.360.cliany-adapter.tar.gz package passed (1 candidate, ok=true). 2026-09-24: public release digest matched, and a fresh HOME installed and strictly verified the public HTTPS asset.",
+        "next_action": "If the release asset or metadata changes, rerun python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict."
       },
       "online_smoke": {
         "status": "pending",

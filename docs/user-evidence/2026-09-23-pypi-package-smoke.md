@@ -2,7 +2,7 @@
 
 ## Scope
 
-Read-only local package acceptance for the generated PyPI adapter. This is not evidence that a GitHub Release asset is publicly installable.
+Read-only local package acceptance for the generated PyPI adapter, followed by public asset verification on 2026-09-24.
 
 Package: `pypi.org-0.16.360.cliany-adapter.tar.gz`
 
@@ -25,6 +25,10 @@ A later `cliany-site` query on the shared Chrome returned `E_CDP_UNAVAILABLE` af
 
 With the v0.16.360 candidate's page-title diagnostic, another fresh isolated Chrome replay returned top-level `E_PAGE_NOT_READY` with `reason=site_challenge` and `title=Client Challenge`. The browser was closed after the check. This improves the failure explanation; it does not make the PyPI workflow pass or establish site availability.
 
-## Release Gate
+## Public Asset (2026-09-24)
 
-Keep `pypi-project-search` as `candidate` until the exact archive is attached to GitHub Release `v0.16.360`, its public SHA-256 is verified, and an independent HOME can install the asset by HTTPS URL and repeat strict verification plus a successful read-only smoke against normal PyPI search results.
+GitHub Release `v0.16.360` publishes the archive with the same SHA-256. Using the published `cliany-site==0.16.360` in a fresh HOME, installation from the public HTTPS release URL with `--sha256` succeeded, and `verify pypi.org --strict --json` returned `verdict=ok` with no issues. This was repeated in a second fresh HOME. The package asset and metadata gates are complete.
+
+## Remaining Gate
+
+Keep `pypi-project-search` as `candidate` until an independent HOME can repeat a successful read-only smoke against normal PyPI search results. The isolated Chrome check on 2026-09-24 still reached PyPI's `Client Challenge` and returned `E_PAGE_NOT_READY` with `reason=site_challenge`; do not bypass the challenge or treat package verification as online workflow success.

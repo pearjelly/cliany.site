@@ -55,6 +55,15 @@ def test_cases_manifest_entries_are_actionable():
                 assert evidence.get("evidence") or evidence.get("next_action")
 
 
+def test_pypi_public_package_complete_but_online_smoke_pending():
+    pypi_case = next(case for case in _load_cases() if case["id"] == "pypi-project-search")
+
+    assert pypi_case["status"] == "candidate"
+    assert pypi_case["promotion_evidence"]["adapter_package"]["status"] == "complete"
+    assert pypi_case["promotion_evidence"]["metadata_validation"]["status"] == "complete"
+    assert pypi_case["promotion_evidence"]["online_smoke"]["status"] == "pending"
+
+
 def test_cases_manifest_docs_links_exist_locally():
     for case in _load_cases():
         doc_path = case["docs"].split("#", 1)[0]

@@ -2,8 +2,10 @@ import hashlib
 import json
 from pathlib import Path
 
+import pytest
 from click.testing import CliRunner
 
+import cliany_site.commands.cases as cases_module
 from cliany_site.cli import cli
 from cliany_site.commands.cases import (
     _active_case_quickstart_commands,
@@ -84,6 +86,25 @@ PYPI_PACKAGE_NEXT_ACTION = (
     "Attach the verified pypi.org-0.16.360.cliany-adapter.tar.gz to GitHub Release "
     "v0.16.360 and verify its public digest-backed install."
 )
+
+
+@pytest.fixture(autouse=True)
+def pending_package_case(monkeypatch):
+    original_load = cases_module._load_cases_manifest
+
+    def load_with_pending_package():
+        cases, source, paths = original_load()
+        if source is None:
+            return cases, source, paths
+        pypi_case = next(case for case in cases if case["id"] == "pypi-project-search")
+        pypi_case["promotion_evidence"]["adapter_package"].update(
+            status="pending",
+            evidence=PYPI_PACKAGE_EVIDENCE,
+            next_action=PYPI_PACKAGE_NEXT_ACTION,
+        )
+        return cases, source, paths
+
+    monkeypatch.setattr(cases_module, "_load_cases_manifest", load_with_pending_package)
 LLM_LIVE_PREFLIGHT_COMMAND_SHA256 = hashlib.sha256(LLM_LIVE_PREFLIGHT_COMMAND.encode("utf-8")).hexdigest()
 DOCTOR_PREFLIGHT_JSON_PATH = "/tmp/cliany-doctor-preflight.json"
 DOCTOR_PREFLIGHT_EVIDENCE_EXTRACT_COMMAND = (

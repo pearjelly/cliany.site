@@ -200,7 +200,7 @@ def test_candidate_expectations_can_render_saved_doctor_preflight_evidence(tmp_p
     evidence = audit_candidate_issues.cases_command._load_doctor_preflight_evidence(doctor_json)
 
     expectations = audit_candidate_issues.candidate_issue_expectations(
-        ["pypi-project-search"],
+        ["npm-package-search"],
         doctor_preflight_evidence=evidence,
     )
 
