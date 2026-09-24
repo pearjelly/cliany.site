@@ -71,6 +71,19 @@ def test_release_publication_passes_when_branch_and_tag_are_pushed(tmp_path):
     }
 
 
+def test_release_publication_accepts_pushed_annotated_tag(tmp_path):
+    repo = _init_repo_with_origin(tmp_path)
+    _commit(repo, "CHANGELOG.md", "released\n", "release")
+    _git(repo, "tag", "-a", "v0.1.1", "-m", "release v0.1.1")
+    _git(repo, "push", "origin", "master", "v0.1.1")
+
+    report = release_publication.build_report(repo, remote_check=True)
+
+    assert report.ok is True
+    assert report.remote_tag_commit == report.tag_commit
+    assert report.tag_published is True
+
+
 def test_release_publication_checks_github_release_and_pypi_visibility(tmp_path, monkeypatch):
     repo = _init_repo_with_origin(tmp_path)
 

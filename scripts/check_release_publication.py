@@ -196,16 +196,21 @@ def _remote_from_upstream(upstream: str | None, fallback: str) -> str:
 
 
 def _ls_remote_ref(root: Path, remote: str, ref: str) -> tuple[str | None, str | None]:
+    refs = [ref, f"{ref}^{{}}"] if ref.startswith("refs/tags/") else [ref]
     try:
-        output = _retry_transient_network(lambda: _run_git(["ls-remote", remote, ref], root))
+        output = _retry_transient_network(lambda: _run_git(["ls-remote", remote, *refs], root))
     except subprocess.CalledProcessError:
         return None, f"Remote ref check failed for `{ref}` on `{remote}`."
     if not output:
         return None, None
-    for line in output.splitlines():
-        parts = line.split()
-        if len(parts) == 2 and parts[1] == ref:
-            return parts[0], None
+    resolved = {
+        parts[1]: parts[0]
+        for line in output.splitlines()
+        if len(parts := line.split()) == 2
+    }
+    for candidate in reversed(refs):
+        if candidate in resolved:
+            return resolved[candidate], None
     return None, None
 
 
