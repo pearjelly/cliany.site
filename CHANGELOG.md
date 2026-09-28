@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+## [0.16.361] - 2026-09-28
+
+### Changed
+
+- The PyPI search candidate now records its public, SHA-256-verified adapter asset and fresh-HOME strict installation as complete. `cases` points to the remaining read-only online smoke instead of asking contributors to generate or upload an already published package. The case stays `candidate` because PyPI's `Client Challenge` still prevents a reliable search result.
+
+### Fixed
+
+- Remote publication audit now resolves annotated release tags to their commit before comparing them with local tags. Published releases no longer appear to be missing solely because GitHub stores an annotated tag object.
+
 ## [0.16.360] - 2026-09-24
 
 ### Added
@@ -3217,7 +3227,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.360...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.361...HEAD
+[0.16.361]: https://github.com/pearjelly/cliany.site/compare/v0.16.360...v0.16.361
 [0.16.360]: https://github.com/pearjelly/cliany.site/compare/v0.16.359...v0.16.360
 [0.16.359]: https://github.com/pearjelly/cliany.site/compare/v0.16.358...v0.16.359
 [0.16.358]: https://github.com/pearjelly/cliany.site/compare/v0.16.357...v0.16.358

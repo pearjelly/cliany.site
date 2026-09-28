@@ -1,12 +1,12 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-09-23
-- **Current baseline:** v0.16.360
+- **Updated:** 2026-09-28
+- **Current baseline:** v0.16.361
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
 
-September 23 release candidate: the newly configured OpenAI-compatible provider passed a live preflight and generated a PyPI search adapter. Its local archive installed and ran from an isolated HOME, but no public release asset or independent HTTPS install has been verified yet. v0.16.359 also checks the key for the selected exploration provider and reports upstream 401/403 as a non-retryable authentication failure without exposing response text. Jev's live accuracy remains unmeasured.
+September 28 release candidate: the PyPI search adapter is a published GitHub Release asset with a verified SHA-256. Installation and strict verification from the public HTTPS URL passed in fresh HOME directories. The read-only search still meets PyPI's `Client Challenge`, so the case remains a candidate until a normal online result is independently verified. The newly configured OpenAI-compatible provider passed a live preflight; Jev's live accuracy remains unmeasured.
 
 September 23 follow-up: v0.16.358 made live-provider transport failures actionable in JSON and documented Jev's explicit consent and read-only boundary on the public site. The active Jira demo passed strict verification and returned five read-only issue rows. The v0.16.360 first-result command now packages that install, verification, and read-only query into one guarded CLI flow.
 
