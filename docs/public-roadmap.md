@@ -1,10 +1,12 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-09-28
-- **Current baseline:** v0.16.361
+- **Current baseline:** v0.16.362
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
+
+September 28 navigation follow-up: a real crates.io attempt reached a browser navigation timeout, while a direct request from the maintainer network returned HTTP 403. `explore` now identifies the navigation timeout as a page-readiness failure, with no claim that a model or generated adapter succeeded. The crates.io case remains a candidate until its normal search page can be reached and the read-only workflow can be verified.
 
 September 28 release candidate: the PyPI search adapter is a published GitHub Release asset with a verified SHA-256. Installation and strict verification from the public HTTPS URL passed in fresh HOME directories. The read-only search still meets PyPI's `Client Challenge`, so the case remains a candidate until a normal online result is independently verified. The newly configured OpenAI-compatible provider passed a live preflight; Jev's live accuracy remains unmeasured.
 

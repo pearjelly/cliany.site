@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+## [0.16.362] - 2026-09-28
+
+### Fixed
+
+- When the browser library times out during page navigation, `explore --json` now returns `E_PAGE_NOT_READY` with `reason=navigation_timeout` and a site-access hint instead of the misleading generic `E_UNKNOWN` / model-configuration hint. Unrelated runtime failures keep their existing classification.
+
+### Changed
+
+- The crates.io candidate records a real headless navigation timeout and HTTP 403 observed from the maintainer network. No adapter was generated or case promoted; its next step is to confirm normal site access before repeating read-only exploration.
+
 ## [0.16.361] - 2026-09-28
 
 ### Changed
@@ -3227,7 +3237,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.361...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.362...HEAD
+[0.16.362]: https://github.com/pearjelly/cliany.site/compare/v0.16.361...v0.16.362
 [0.16.361]: https://github.com/pearjelly/cliany.site/compare/v0.16.360...v0.16.361
 [0.16.360]: https://github.com/pearjelly/cliany.site/compare/v0.16.359...v0.16.360
 [0.16.359]: https://github.com/pearjelly/cliany.site/compare/v0.16.358...v0.16.359

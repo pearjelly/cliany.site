@@ -211,8 +211,8 @@
     "promotion_evidence": {
       "adapter_package": {
         "status": "pending",
-        "evidence": null,
-        "next_action": "Generate crates.io-<version>.cliany-adapter.tar.gz with cliany-site explore and market publish, then attach the package path or release asset name."
+        "evidence": "2026-09-28: live model and headless browser preflight passed in an isolated HOME, but crates.io search returned HTTP 403 from this network and browser navigation timed out. No adapter was generated.",
+        "next_action": "Recheck crates.io accessibility from an independent network before repeating read-only explore; then generate crates.io-<version>.cliany-adapter.tar.gz and attach the package path or release asset name."
       },
       "metadata_validation": {
         "status": "pending",
