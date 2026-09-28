@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- `browser navigate` and SDK `navigate()` now classify observed browser navigation timeouts as `E_PAGE_NOT_READY` instead of misleading CDP or generic execution failures. Both return an actionable site-access hint; unrelated browser disconnects keep their prior classification.
+
+### Changed
+
+- The PyPI search candidate records a fresh, public-package read-only retry that reached a navigation timeout while PyPI served a `Client Challenge` page. The package gate remains complete, but online success remains unverified and the case stays `candidate`.
+
 ## [0.16.363] - 2026-09-28
 
 ### Fixed

@@ -749,6 +749,15 @@ class ClanySite:
             await browser_session.navigate_to(url, new_tab=False)
             return success_response({"url": url, "status": "navigated"})
         except (OSError, RuntimeError, TimeoutError) as e:
+            if isinstance(e, TimeoutError) or (
+                isinstance(e, RuntimeError) and str(e).startswith("Page.navigate() timed out after ")
+            ):
+                return error_response(
+                    "E_PAGE_NOT_READY",
+                    "页面导航超时",
+                    "请确认目标站点在当前网络可访问后重试；若站点返回验证页，不要绕过其限制。",
+                    details={"url": url, "reason": "navigation_timeout"},
+                )
             return error_response(EXECUTION_FAILED, f"导航失败: {e}")
 
     # ── get_page_info ────────────────────────────────────
