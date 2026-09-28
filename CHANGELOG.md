@@ -20,6 +20,7 @@
 - The PyPI search candidate records a fresh, public-package read-only retry that reached a navigation timeout while PyPI served a `Client Challenge` page. A later replay with the browser-lifetime fix reached typing and clicking before the challenge page blocked extraction. The package gate remains complete, but online success remains unverified and the case stays `candidate`.
 - A fresh-HOME run of the published Jira first-result demo installed and strictly verified its adapter, returned five issue rows, and reused the installation on a second run. The evidence explicitly distinguishes Jira API access from browser replay.
 - A real model generated and replayed a parameterized local form workflow with two distinct outputs in the next-version worktree. Navigation timed out when tests replaced the system HOME with a temporary directory; two auto-launched Chrome runs navigated successfully with the normal system HOME and isolated cliany-site runtime data. The successful model run used a pre-opened CDP browser and does not promote any public-site candidate.
+- The npm search candidate now records an isolated browser access check: the maintainer network returned HTTP 403, and Chrome reached a Cloudflare challenge rather than package results. It remains a candidate; no adapter or online success is claimed.
 
 ## [0.16.363] - 2026-09-28
 

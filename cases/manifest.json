@@ -166,8 +166,8 @@
     "promotion_evidence": {
       "adapter_package": {
         "status": "pending",
-        "evidence": null,
-        "next_action": "Generate www.npmjs.com-<version>.cliany-adapter.tar.gz with cliany-site explore and market publish, then attach the package path or release asset name."
+        "evidence": "2026-09-28: the search URL returned HTTP 403 from this network. Isolated headless Chrome accepted the URL, but page readiness timed out and AXTree showed eight Cloudflare challenge nodes, not package results. No model exploration or adapter package was produced; see docs/user-evidence/2026-09-28-npm-access.md.",
+        "next_action": "Confirm normal npm search page access from an independent network, then rerun the live-model gate before read-only explore. Generate and publish www.npmjs.com-<version>.cliany-adapter.tar.gz only after usable page content is observed."
       },
       "metadata_validation": {
         "status": "pending",
