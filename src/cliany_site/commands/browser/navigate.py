@@ -112,11 +112,14 @@ async def _run_navigate(cdp, url: str, wait_state: str, timeout: int, session: s
         finally:
             await cdp.disconnect()
     except (OSError, RuntimeError, TimeoutError) as exc:
-        if isinstance(exc, (TimeoutError, asyncio.TimeoutError)):
+        if isinstance(exc, TimeoutError) or (
+            isinstance(exc, RuntimeError) and str(exc).startswith("Page.navigate() timed out after ")
+        ):
             return err(
                 command="browser navigate",
                 code=ErrorCode.E_PAGE_NOT_READY,
                 message="页面就绪超时",
+                hint="请确认目标站点在当前网络可访问后重试；若站点返回验证页，不要绕过其限制。",
                 details={"error": str(exc)},
                 source="builtin",
             )

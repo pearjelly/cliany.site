@@ -102,6 +102,30 @@ class TestBrowserNavigate:
             data = json.loads(result.output)
             assert data["ok"] is False
 
+    @pytest.mark.parametrize(
+        ("failure", "expected_code"),
+        [
+            (TimeoutError("on_NavigateToUrlEvent timed out after 30.0s"), "E_PAGE_NOT_READY"),
+            (RuntimeError("Page.navigate() timed out after 20.0s (20002ms)"), "E_PAGE_NOT_READY"),
+            (RuntimeError("Browser disconnected"), "E_CDP_UNAVAILABLE"),
+        ],
+    )
+    def test_navigate_classifies_navigation_failure(self, no_llm, runner, failure, expected_code):
+        mock_session = MagicMock()
+        mock_session.navigate_to = AsyncMock(side_effect=failure)
+        with (
+            patch("cliany_site.browser.cdp.CDPConnection.check_available", AsyncMock(return_value=True)),
+            patch("cliany_site.browser.cdp.CDPConnection.connect", AsyncMock(return_value=mock_session)),
+            patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+        ):
+            result = runner.invoke(cli, ["browser", "navigate", "https://example.com", "--json"])
+
+        assert result.exit_code != 0
+        data = json.loads(result.output)
+        assert data["error"]["code"] == expected_code
+        if expected_code == "E_PAGE_NOT_READY":
+            assert data["error"]["hint"]
+
 
 class TestBrowserWait:
     def test_wait_networkidle_success(self, no_llm, runner):

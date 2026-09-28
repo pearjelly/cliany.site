@@ -131,7 +131,7 @@
       },
       "online_smoke": {
         "status": "pending",
-        "evidence": "2026-09-23: an earlier isolated HOME returned 20 project rows, but later shared and fresh isolated Chrome replays failed; the fresh browser showed PyPI's Client Challenge page instead of search results.",
+        "evidence": "2026-09-23: an earlier isolated HOME returned 20 project rows, but later shared and fresh isolated Chrome replays failed; the fresh browser showed PyPI's Client Challenge page instead of search results. 2026-09-28: a fresh HOME with PyPI-installed cliany-site 0.16.363 installed and strictly verified the public adapter, but its read-only search returned E_PAGE_NOT_READY after an event-bus navigation timeout. A separate HTTP request showed Client Challenge; online success remains unverified.",
         "next_action": "Repeat the read-only search from an independent HOME and Chrome session when PyPI serves normal results; require quality.ok=true and row_count>0 before promotion. Do not bypass the site challenge."
       }
     }

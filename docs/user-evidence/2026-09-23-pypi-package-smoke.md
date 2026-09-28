@@ -32,3 +32,5 @@ GitHub Release `v0.16.360` publishes the archive with the same SHA-256. Using th
 ## Remaining Gate
 
 Keep `pypi-project-search` as `candidate` until an independent HOME can repeat a successful read-only smoke against normal PyPI search results. The isolated Chrome check on 2026-09-24 still reached PyPI's `Client Challenge` and returned `E_PAGE_NOT_READY` with `reason=site_challenge`; do not bypass the challenge or treat package verification as online workflow success.
+
+On 2026-09-28, a fresh `/tmp` HOME installed `cliany-site==0.16.363` from the official PyPI index, installed the public v0.16.360 adapter asset by its recorded SHA-256, and passed `verify pypi.org --strict`. Its isolated headless read-only `search-packages --query cliany-site` run exited nonzero with `E_PAGE_NOT_READY` after `on_NavigateToUrlEvent` timed out at 30 seconds. An independent HTTP request to the same search URL returned a `Client Challenge` title. The browser stopped and its isolated CDP port was no longer listening. This confirms the published timeout classification, but does not establish a successful online smoke or prove the challenge caused that specific timeout.
