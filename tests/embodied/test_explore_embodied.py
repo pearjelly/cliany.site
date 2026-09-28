@@ -60,26 +60,12 @@ def test_generated_command_reuses_auto_launched_chrome(local_server, tmp_home, m
     with sync_playwright() as playwright:
         chrome_binary = launcher.find_chrome_binary() or Path(playwright.chromium.executable_path)
     monkeypatch.setattr(launcher, "find_chrome_binary", lambda: chrome_binary)
-    launch_stderr = tmp_home / "chrome-launch.stderr"
-    original_launch = launcher.launch_chrome
-    original_popen = launcher.subprocess.Popen
-
-    def launch_with_diagnostics(*args, **kwargs):
-        with launch_stderr.open("wb") as stderr, monkeypatch.context() as launch_patch:
-            def capture_stderr(command, **popen_kwargs):
-                return original_popen(command, **{**popen_kwargs, "stderr": stderr})
-
-            launch_patch.setattr(launcher.subprocess, "Popen", capture_stderr)
-            return original_launch(*args, **kwargs)
-
-    monkeypatch.setattr(launcher, "launch_chrome", launch_with_diagnostics)
     for name, color in (("Ada", "Blue"), ("Grace", "Red")):
         run = CliRunner().invoke(
             cli,
             ["--headless", "127.0.0.1", "apply-and-read", "--name", name, "--color", color, "--json"],
         )
-        launch_detail = launch_stderr.read_text(errors="replace")[-1500:] if launch_stderr.exists() else ""
-        assert run.exit_code == 0, f"{run.output}\nChrome: {chrome_binary}\n{launch_detail}"
+        assert run.exit_code == 0, f"{run.output}\nChrome: {chrome_binary}"
         payload = json.loads(run.stdout)
         assert payload["ok"] is True
         assert payload["data"]["quality"]["status"] == "ok"
