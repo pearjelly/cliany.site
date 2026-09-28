@@ -72,7 +72,7 @@ async def _run_type(
     role: str | None = None,
 ) -> Envelope:
     from cliany_site.browser.axtree import capture_axtree
-    from cliany_site.commands.browser._common import fuzzy_find_by_text, resolve_ref
+    from cliany_site.commands.browser._common import fuzzy_find_by_text, resolve_ref, site_challenge_error
 
     if not await cdp.check_available():
         return err(
@@ -99,6 +99,9 @@ async def _run_type(
                     element = resolve_ref(selector_map, found_ref)
 
             if element is None:
+                challenge = site_challenge_error("browser type", tree)
+                if challenge is not None:
+                    return challenge
                 return err(
                     command="browser type",
                     code=ErrorCode.E_SELECTOR_NOT_FOUND,

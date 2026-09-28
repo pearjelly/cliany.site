@@ -11,11 +11,12 @@
 
 - `browser navigate` and SDK `navigate()` now classify observed browser navigation timeouts as `E_PAGE_NOT_READY` instead of misleading CDP or generic execution failures. Both return an actionable site-access hint; unrelated browser disconnects keep their prior classification.
 - Generated data commands no longer reject valid nonempty text extraction solely because it is not list-shaped; blank text and missing extract actions still fail. Exploration now catches an extract-only follow-up that would lose earlier input or clicks on independent replay, asks the model to combine the dependent steps, and refuses to emit a misleading adapter if repair fails.
+- Generated commands now keep one auto-launched Chrome alive across their nested browser steps, so navigation, input, clicks, and extraction share the same page. Only a browser started for that command is closed afterward; existing local and remote CDP browsers remain untouched. When an action target is absent on an observed `Client Challenge` page, browser actions report `E_PAGE_NOT_READY` instead of a misleading missing-selector error.
 - `explore --json` exposes `data.command_group`, the invocable and verifiable safe adapter name for URLs with ports, while preserving the original `data.domain`.
 
 ### Changed
 
-- The PyPI search candidate records a fresh, public-package read-only retry that reached a navigation timeout while PyPI served a `Client Challenge` page. The package gate remains complete, but online success remains unverified and the case stays `candidate`.
+- The PyPI search candidate records a fresh, public-package read-only retry that reached a navigation timeout while PyPI served a `Client Challenge` page. A later replay with the browser-lifetime fix reached typing and clicking before the challenge page blocked extraction. The package gate remains complete, but online success remains unverified and the case stays `candidate`.
 - A fresh-HOME run of the published Jira first-result demo installed and strictly verified its adapter, returned five issue rows, and reused the installation on a second run. The evidence explicitly distinguishes Jira API access from browser replay.
 - A real model generated and replayed a parameterized local form workflow with two distinct outputs in the next-version worktree. Navigation timed out when tests replaced the system HOME with a temporary directory; two auto-launched Chrome runs navigated successfully with the normal system HOME and isolated cliany-site runtime data. The successful model run used a pre-opened CDP browser and does not promote any public-site candidate.
 

@@ -6,7 +6,21 @@ from typing import Any
 
 import click
 
-from cliany_site.envelope import Envelope
+from cliany_site.envelope import Envelope, ErrorCode, err
+
+
+def site_challenge_error(command: str, tree: dict) -> Envelope | None:
+    title = tree.get("title")
+    if not isinstance(title, str) or title.strip().casefold() != "client challenge":
+        return None
+    return err(
+        command=command,
+        code=ErrorCode.E_PAGE_NOT_READY,
+        message="站点返回 Client Challenge 页面，目标工作流不可用",
+        hint="等待站点恢复正常页面后重试；不要在验证页上重新定位元素",
+        details={"reason": "site_challenge", "title": title},
+        source="builtin",
+    )
 
 
 def resolve_ref(selector_map: dict, ref: str) -> Any | None:
