@@ -131,7 +131,7 @@
       },
       "online_smoke": {
         "status": "pending",
-        "evidence": "2026-09-23: an earlier isolated HOME returned 20 project rows, but later shared and fresh isolated Chrome replays failed; the fresh browser showed PyPI's Client Challenge page instead of search results. 2026-09-28: a fresh HOME with PyPI-installed cliany-site 0.16.363 installed and strictly verified the public adapter, but its read-only search returned E_PAGE_NOT_READY after an event-bus navigation timeout. A separate HTTP request showed Client Challenge; online success remains unverified.",
+        "evidence": "2026-09-23: an earlier isolated HOME returned 20 project rows, but later shared and fresh isolated Chrome replays failed; the fresh browser showed PyPI's Client Challenge page instead of search results. 2026-09-28: a temporary system HOME with PyPI-installed cliany-site 0.16.363 installed and strictly verified the public adapter, but read-only search timed out. Keeping normal system HOME and isolating only cliany-site runtime data let headless Chrome reach PyPI's Client Challenge; the published adapter returned E_SELECTOR_NOT_FOUND, not project rows. Temporary system HOME confounds the earlier timeout; online success remains unverified.",
         "next_action": "Repeat the read-only search from an independent HOME and Chrome session when PyPI serves normal results; require quality.ok=true and row_count>0 before promotion. Do not bypass the site challenge."
       }
     }
@@ -211,7 +211,7 @@
     "promotion_evidence": {
       "adapter_package": {
         "status": "pending",
-        "evidence": "2026-09-28: live model and headless browser preflight passed in an isolated HOME, but crates.io search returned HTTP 403 from this network and browser navigation timed out. No adapter was generated.",
+        "evidence": "2026-09-28: live model and headless browser preflight passed with a temporary system HOME, but crates.io search returned HTTP 403 from this network and browser navigation timed out. Later local controls showed temporary system HOME can confound Chrome navigation, so the timeout cannot be attributed to crates.io alone. No adapter was generated.",
         "next_action": "Recheck crates.io accessibility from an independent network before repeating read-only explore; then generate crates.io-<version>.cliany-adapter.tar.gz and attach the package path or release asset name."
       },
       "metadata_validation": {

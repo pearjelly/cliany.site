@@ -17,7 +17,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 - 首次成功路径：README、README.zh、官网和 `doctor` 输出已经围绕 10 分钟路径、真实 demo、LLM live preflight 和可执行下一步重新组织。
 - 2026-09-28 的[独立 HOME 实测](user-evidence/2026-09-28-jira-demo.md)：官方 PyPI v0.16.363 的 `demo --case-id apache-jira-issues` 自动安装并严格验证公开 adapter，返回 5 条 SPARK issue；再次运行复用已安装包。该 adapter 使用 Jira 只读 API，不作为浏览器 replay 或其他站点成功证据。
-- v0.16.364 候选的[真实模型本地页面验证](user-evidence/2026-09-28-live-local-explore.md)：完整参数化命令在独立 CDP 浏览器上两次重放成功；修复文本提取被误判为空，并拦截会丢失前置交互的拆分读取命令。默认 headless Chrome 首次导航仍有超时，不能据此声称冷启动路径已恢复。
+- v0.16.364 候选的[真实模型本地页面验证](user-evidence/2026-09-28-live-local-explore.md)：完整参数化命令在独立 CDP 浏览器上两次重放成功；修复文本提取被误判为空，并拦截会丢失前置交互的拆分读取命令。临时替换系统 HOME 的测试出现导航超时；保留正常系统 HOME、仅隔离项目运行数据后，自动启动的 Chrome 两次成功访问本地页面。尚不能据此保证任意站点的冷启动可靠性。
 - 真实案例库：`cliany-site cases` 已成为案例发现、单案例展开、issue template、evidence bundle 和 promotion plan 的统一入口。
 - 发布门禁：`release_readiness.py`、`check_release_cadence.py`、`check_release_publication.py` 已覆盖版本号、CHANGELOG、草案、CI/release workflow、远端 refs、tag 决策、每日发布上限、GitHub Release、PyPI 和 publication audit。
 - Publication audit 传输恢复：严格审计会有限重试短暂的 Git remote 或 GitHub/PyPI JSON 传输失败；持续失败和 HTTP 响应仍然是阻断证据，绝不会被重试包装成已发布。
