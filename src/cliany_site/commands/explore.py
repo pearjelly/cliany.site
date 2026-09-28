@@ -222,7 +222,12 @@ def explore_cmd(
                 hint="请检查 URL 是否可访问，LLM 配置是否正确",
             )
         except (OSError, RuntimeError) as e:
-            if isinstance(e, RuntimeError) and str(e).startswith("Page.navigate() timed out after "):
+            navigation_timeout = (
+                isinstance(e, RuntimeError) and str(e).startswith("Page.navigate() timed out after ")
+            ) or (
+                isinstance(e, TimeoutError) and "on_NavigateToUrlEvent" in str(e)
+            )
+            if navigation_timeout:
                 return err(
                     "explore",
                     ErrorCode.E_PAGE_NOT_READY,

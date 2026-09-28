@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.363] - 2026-09-28
+
+### Fixed
+
+- `explore --json` now also recognizes the browser event bus's `on_NavigateToUrlEvent` timeout as `E_PAGE_NOT_READY` with `reason=navigation_timeout`. A fresh PyPI install exposed this 30-second variant after v0.16.362 covered the browser's 20-second `Page.navigate()` timeout. Unrelated timeouts still retain `E_UNKNOWN`.
+
 ## [0.16.362] - 2026-09-28
 
 ### Fixed
@@ -3237,7 +3243,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.362...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.363...HEAD
+[0.16.363]: https://github.com/pearjelly/cliany.site/compare/v0.16.362...v0.16.363
 [0.16.362]: https://github.com/pearjelly/cliany.site/compare/v0.16.361...v0.16.362
 [0.16.361]: https://github.com/pearjelly/cliany.site/compare/v0.16.360...v0.16.361
 [0.16.360]: https://github.com/pearjelly/cliany.site/compare/v0.16.359...v0.16.360
