@@ -10,11 +10,14 @@
 ### Fixed
 
 - `browser navigate` and SDK `navigate()` now classify observed browser navigation timeouts as `E_PAGE_NOT_READY` instead of misleading CDP or generic execution failures. Both return an actionable site-access hint; unrelated browser disconnects keep their prior classification.
+- Generated data commands no longer reject valid nonempty text extraction solely because it is not list-shaped; blank text and missing extract actions still fail. Exploration now catches an extract-only follow-up that would lose earlier input or clicks on independent replay, asks the model to combine the dependent steps, and refuses to emit a misleading adapter if repair fails.
+- `explore --json` exposes `data.command_group`, the invocable and verifiable safe adapter name for URLs with ports, while preserving the original `data.domain`.
 
 ### Changed
 
 - The PyPI search candidate records a fresh, public-package read-only retry that reached a navigation timeout while PyPI served a `Client Challenge` page. The package gate remains complete, but online success remains unverified and the case stays `candidate`.
 - A fresh-HOME run of the published Jira first-result demo installed and strictly verified its adapter, returned five issue rows, and reused the installation on a second run. The evidence explicitly distinguishes Jira API access from browser replay.
+- A real model generated and replayed a parameterized local form workflow with two distinct outputs in the next-version worktree. The default auto-launched Chrome still timed out on the first navigation on this host; the successful run used a pre-opened CDP browser and does not promote any public-site candidate.
 
 ## [0.16.363] - 2026-09-28
 

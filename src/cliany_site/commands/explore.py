@@ -278,7 +278,8 @@ def explore_cmd(
             file=sys.stderr,
         )
 
-        adapter_dir = get_config().adapters_dir / _safe_domain(domain)
+        command_group = _safe_domain(domain)
+        adapter_dir = get_config().adapters_dir / command_group
 
         from cliany_site.activity_log import write_log
 
@@ -311,6 +312,7 @@ def explore_cmd(
                 "explore",
                 {
                     "domain": domain,
+                    "command_group": command_group,
                     "adapter_path": adapter_path,
                     "adapter_mode": "created",
                     "commands": commands_list,
@@ -342,6 +344,7 @@ def explore_cmd(
             )
             response_data: dict = {
                 "domain": domain,
+                "command_group": command_group,
                 "adapter_path": adapter_path,
                 "adapter_mode": "merged",
                 "commands": commands_list,
