@@ -1,0 +1,20 @@
+{
+  "schema_version": 3,
+  "domain": "cwiki.apache.org",
+  "generated_at": "2026-09-28T00:00:00+00:00",
+  "generator_version": "curated-1",
+  "source_url": "https://cwiki.apache.org/confluence",
+  "workflow": "在 ASF Confluence 空间中按关键词搜索公开页面",
+  "capability": "api",
+  "api_endpoints": ["GET https://cwiki.apache.org/confluence/rest/api/search"],
+  "commands": [
+    {
+      "name": "search-pages",
+      "source": "api",
+      "expects_nonempty": false,
+      "params": ["space", "query", "limit"],
+      "returns": {"space": "string", "query": "string", "count": "integer", "results": "array"},
+      "examples": ["cliany-site cwiki.apache.org search-pages --space SPARK --query release --json"]
+    }
+  ]
+}
