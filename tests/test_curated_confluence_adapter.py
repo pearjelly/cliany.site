@@ -133,13 +133,13 @@ def test_package_passes_strict_verification_in_isolated_home(tmp_home):
 
 
 def test_build_does_not_write_user_adapter_dir(tmp_home, tmp_path):
-    from scripts.build_curated_confluence_adapter import build
+    from scripts.build_curated_adapter import build
 
-    output = build("0.16.365", tmp_path / "dist")
+    output = build("cwiki.apache.org", "0.16.365", tmp_path / "dist")
     assert output.is_file()
     assert not get_config().adapters_dir.exists()
     try:
-        build("0.16.365", tmp_path / "dist")
+        build("cwiki.apache.org", "0.16.365", tmp_path / "dist")
     except FileExistsError:
         pass
     else:
