@@ -21,7 +21,7 @@
 |----|------|------|------|
 | `suitecrm-accounts` | SuiteCRM demo 账户列表 | active | 企业 CRM 查询，无 API 后台操作 CLI 化；样例输出见 [suitecrm-accounts.json](examples/suitecrm-accounts.json) |
 | `apache-jira-issues` | ASF Jira issue 列表 | active | DevOps/项目管理列表读取；样例输出见 [apache-jira-issues.json](examples/apache-jira-issues.json) |
-| `apache-confluence-search` | ASF Confluence 页面搜索 | degraded | 原关键词示例返回零行，历史适配器使用 title 过滤；见 [审计](../docs/user-evidence/2026-09-22-confluence-keyword-audit.md) |
+| `apache-confluence-search` | ASF Confluence 页面搜索 | degraded | [旧 adapter 审计](../docs/user-evidence/2026-09-22-confluence-keyword-audit.md)确认 title 过滤返回零行；[CQL 只读探测](../docs/user-evidence/2026-09-28-confluence-cql-probe.md)有结果，但替换 adapter 尚未生成和验收 |
 | `apache-jenkins-jobs` | ASF Jenkins job 列表 | degraded | v0.14.1 包缺少 v3 必填元数据，暂停推荐安装；见 [2026-09-22 实测](../docs/user-evidence/2026-09-22-active-demo-audit.md) |
 | `pypi-project-search` | PyPI 项目搜索 | candidate | Python 包注册表搜索候选；样例输出见 [pypi-project-search.json](examples/pypi-project-search.json)。公开 adapter 包与严格校验已通过；[只读在线搜索](../docs/user-evidence/2026-09-23-pypi-package-smoke.md) 尚未稳定通过，暂不晋级 active |
 | `npm-package-search` | npm 包搜索 | candidate | JavaScript 包注册表搜索候选；样例输出见 [npm-package-search.json](examples/npm-package-search.json)。[2026-09-28 访问检查](../docs/user-evidence/2026-09-28-npm-access.md)遇到 Cloudflare 验证页，未生成 adapter；待正常页面、包资产和在线 smoke 验证后再晋级 |
