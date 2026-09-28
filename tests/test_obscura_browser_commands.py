@@ -330,10 +330,12 @@ class TestNavigateSuccessUnderObscura:
         mock_cdp.disconnect = _disconnect
 
         with patch("cliany_site.providers.factory.get_provider", return_value=mock_provider), \
-             patch("cliany_site.browser.cdp.CDPConnection", return_value=mock_cdp):
+             patch("cliany_site.browser.cdp.CDPConnection", return_value=mock_cdp), \
+             patch("cliany_site.browser.axtree.capture_axtree") as capture:
             from cliany_site.cli import cli
             runner = CliRunner()
             result = runner.invoke(cli, ["--json", "browser", "navigate", "https://example.com"], catch_exceptions=False)
+            capture.assert_not_called()
 
         data = json.loads(result.output)
         assert data["ok"] is True

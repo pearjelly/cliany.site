@@ -223,6 +223,10 @@ const I18N = {
     zh: '生成命令的多个步骤现在复用同一个自动启动的浏览器；本地表单的两组参数均已成功重放。站点验证页会报告页面未就绪，PyPI 搜索仍待在线验证。',
     en: 'Generated commands now reuse one auto-launched browser across steps; two parameter sets replayed successfully on a local form. Site challenge pages report page unreadiness, while PyPI search still awaits online verification.'
   },
+  'qs.maintainer.challengeNavigate': {
+    zh: 'Chrome 导航会检查实际页面语义树；遇到 Cloudflare 验证页时返回 <code>E_PAGE_NOT_READY</code>，不会把接受 URL 误报为搜索成功。npm 搜索仍是 candidate。',
+    en: 'Chrome navigation checks the actual page tree. An observed Cloudflare challenge returns <code>E_PAGE_NOT_READY</code> instead of treating an accepted URL as a successful search. npm search remains a candidate.'
+  },
   'qs.maintainer.sdkWorkflow': {
     zh: '直接调用 SDK <code>explore()</code> 时，workflow 必须是非空文本；<code>navigate()</code> 会拒绝不安全 URL；<code>save_session(domain)</code> 会在打开 Chrome 前校验主机名；<code>force</code>、<code>params</code>、<code>dry_run</code>、<code>sandbox</code> 与 <code>detail</code> 的畸形控制值会在 adapter 或浏览器工作前返回 <code>E_INVALID_PARAM</code>。',
     en: 'Direct SDK <code>explore()</code> requires a non-blank workflow description, <code>navigate()</code> rejects unsafe URLs, <code>save_session(domain)</code> validates a host before opening Chrome, and malformed <code>force</code>, <code>params</code>, <code>dry_run</code>, <code>sandbox</code>, or <code>detail</code> values return <code>E_INVALID_PARAM</code> before adapter or browser work.'

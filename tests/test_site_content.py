@@ -139,6 +139,8 @@ def test_site_quickstart_matches_v0150_ten_minute_success_path():
     ) in docs
     assert "1-3 releases/day loop" in index
     assert "Current baseline: v0.16.364" in index
+    assert 'data-i18n="qs.maintainer.challengeNavigate"' in index
+    assert "Chrome 导航会检查实际页面语义树" in script
     assert "Repeated boolean query keys also return" in index
     assert "Repeated <code>require_capability</code> and <code>domain</code> keys" in index
     assert "POST /explore, POST /execute, and POST /login now require non-empty text fields" in index

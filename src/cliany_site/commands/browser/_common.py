@@ -11,12 +11,30 @@ from cliany_site.envelope import Envelope, ErrorCode, err
 
 def site_challenge_error(command: str, tree: dict) -> Envelope | None:
     title = tree.get("title")
-    if not isinstance(title, str) or title.strip().casefold() != "client challenge":
+    client_challenge = isinstance(title, str) and title.strip().casefold() == "client challenge"
+    nodes = tree.get("selector_map", {})
+    if not isinstance(nodes, dict):
+        nodes = {}
+    challenge_path = any(
+        isinstance(node, dict)
+        and isinstance(node.get("attributes"), dict)
+        and "/cdn-cgi/challenge-platform/" in str(node["attributes"].get("href", ""))
+        for node in nodes.values()
+    )
+    cloudflare_brand = any(
+        isinstance(node, dict) and "cloudflare" in str(node.get("name", "")).casefold()
+        for node in nodes.values()
+    )
+    waiting_title = isinstance(title, str) and (
+        "just a moment" in title.casefold() or "请稍候" in title
+    )
+    cloudflare_challenge = cloudflare_brand and (challenge_path or waiting_title)
+    if not client_challenge and not cloudflare_challenge:
         return None
     return err(
         command=command,
         code=ErrorCode.E_PAGE_NOT_READY,
-        message="站点返回 Client Challenge 页面，目标工作流不可用",
+        message="站点返回验证页，目标工作流不可用",
         hint="等待站点恢复正常页面后重试；不要在验证页上重新定位元素",
         details={"reason": "site_challenge", "title": title},
         source="builtin",

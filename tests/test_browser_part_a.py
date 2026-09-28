@@ -80,6 +80,7 @@ class TestBrowserNavigate:
                 AsyncMock(return_value=mock_session),
             ),
             patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+            patch("cliany_site.browser.axtree.capture_axtree", AsyncMock(return_value={"selector_map": {}})),
         ):
             result = runner.invoke(
                 cli, ["browser", "navigate", "http://example.com", "--json"]

@@ -91,6 +91,22 @@ async def headless_browser_cdp_url():
 
 @pytest.mark.embodied
 @pytest.mark.asyncio
+async def test_browser_navigate_detects_challenge_page(local_server, headless_browser_cdp_url, tmp_home):
+    from cliany_site.browser.cdp import CDPConnection
+    from cliany_site.commands.browser.navigate import _run_navigate
+
+    cdp = CDPConnection(cdp_url=headless_browser_cdp_url, headless=True)
+    blocked = await _run_navigate(cdp, f"{local_server}/cloudflare_challenge.html", "load", 30)
+    assert blocked["ok"] is False
+    assert blocked["error"]["code"] == "E_PAGE_NOT_READY"
+    assert blocked["error"]["details"]["reason"] == "site_challenge"
+
+    ordinary = await _run_navigate(cdp, f"{local_server}/sample_form.html", "load", 30)
+    assert ordinary["ok"] is True
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
 @pytest.mark.parametrize("endpoint_kind", ["legacy", "websocket", "http-discovery"])
 async def test_capture_axtree_from_headless_chrome(local_server, headless_browser_cdp_url, endpoint_kind):
     import aiohttp
