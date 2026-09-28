@@ -14,6 +14,7 @@
 ### Changed
 
 - The PyPI search candidate records a fresh, public-package read-only retry that reached a navigation timeout while PyPI served a `Client Challenge` page. The package gate remains complete, but online success remains unverified and the case stays `candidate`.
+- A fresh-HOME run of the published Jira first-result demo installed and strictly verified its adapter, returned five issue rows, and reused the installation on a second run. The evidence explicitly distinguishes Jira API access from browser replay.
 
 ## [0.16.363] - 2026-09-28
 
