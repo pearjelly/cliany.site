@@ -14,6 +14,7 @@ permissions:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  CLIANY_QA_OFFLINE: "1"
 
 jobs:
   website-javascript:
@@ -42,6 +43,24 @@ jobs:
         run: uv pip install -e ".[dev]" --system
       - name: Ruff 检查
         run: ruff check src/
+
+  curated-adapters:
+    name: Curated Adapter Packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: 安装依赖
+        run: uv pip install -e ".[test,dev]" --system
+      - name: 检查受维护 adapter 源码
+        run: ruff check curated_adapters/ scripts/build_curated_adapter.py tests/test_curated_confluence_adapter.py tests/test_curated_jenkins_adapter.py
+      - name: 验证隔离打包、安装与严格校验
+        run: pytest tests/test_curated_confluence_adapter.py tests/test_curated_jenkins_adapter.py -q --no-cov
 
   typecheck:
     name: Type Check (mypy)
