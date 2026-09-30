@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.364] - 2026-09-30
+
 ### Fixed
 
 - `browser navigate` and SDK `navigate()` now classify observed browser navigation timeouts as `E_PAGE_NOT_READY` instead of misleading CDP or generic execution failures. Both return an actionable site-access hint; unrelated browser disconnects keep their prior classification.
@@ -3260,7 +3262,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.363...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.364...HEAD
+[0.16.364]: https://github.com/pearjelly/cliany.site/compare/v0.16.363...v0.16.364
 [0.16.363]: https://github.com/pearjelly/cliany.site/compare/v0.16.362...v0.16.363
 [0.16.362]: https://github.com/pearjelly/cliany.site/compare/v0.16.361...v0.16.362
 [0.16.361]: https://github.com/pearjelly/cliany.site/compare/v0.16.360...v0.16.361
