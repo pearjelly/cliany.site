@@ -7,6 +7,16 @@ from cliany_site.explorer.interactive import InteractiveController
 from cliany_site.explorer.models import ExploreResult, PageInfo, TurnSnapshot
 
 
+@pytest.fixture(autouse=True)
+def capture_package_logs(caplog):
+    package_logger = logging.getLogger("cliany_site")
+    package_logger.addHandler(caplog.handler)
+    try:
+        yield
+    finally:
+        package_logger.removeHandler(caplog.handler)
+
+
 def _make_snapshot(actions=1, pages=1):
     return TurnSnapshot(
         turn_index=0,
