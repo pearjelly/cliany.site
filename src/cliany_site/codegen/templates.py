@@ -691,20 +691,8 @@ def _render_empty_result_check(command_name: str, expects_nonempty: bool) -> str
         f'                _message = "{command_name} 提取结果质量未通过"\n'
         f'            if not (quality.get("status") == "empty" and not {expectation_literal}):\n'
         '                failed = {"ok": False, "error": {"code": "E_EMPTY_RESULT", "message": _message, "details": quality}}\n'
-        f"        elif {expectation_literal}:\n"
-        "            _agg: list = []\n"
-        "            for _r in results:\n"
-        '                if _r.get("ok"):\n'
-        '                    _d = _r.get("data") or {}\n'
-        "                    if isinstance(_d, list):\n"
-        "                        _agg.extend(_d)\n"
-        "                    elif isinstance(_d, dict):\n"
-        "                        for _v in _d.values():\n"
-        "                            if isinstance(_v, list):\n"
-        "                                _agg.extend(_v)\n"
-        "                                break\n"
-        "            if not _agg:\n"
-        f'                failed = {{"ok": False, "error": {{"code": "E_EMPTY_RESULT", "message": "{command_name} 未找到任何结果"}}}}\n'
+        f"        elif {expectation_literal} and not quality.get(\"extracts\"):\n"
+        f'            failed = {{"ok": False, "error": {{"code": "E_EMPTY_RESULT", "message": "{command_name} 未找到任何结果"}}}}\n'
     )
 
 

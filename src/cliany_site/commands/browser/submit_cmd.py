@@ -7,7 +7,7 @@ import click
 
 from cliany_site.browser.cdp import cdp_from_context
 from cliany_site.commands.browser import browser_group
-from cliany_site.commands.browser._common import fuzzy_find_by_text, print_envelope, resolve_ref
+from cliany_site.commands.browser._common import fuzzy_find_by_text, print_envelope, resolve_ref, site_challenge_error
 from cliany_site.envelope import Envelope, ErrorCode, err, ok
 
 
@@ -65,6 +65,9 @@ async def _run_submit(cdp, ref: str | None, text: str | None, role: str | None =
                         element = resolve_ref(selector_map, found_ref)
 
                 if element is None or found_ref is None:
+                    challenge = site_challenge_error("browser submit", tree)
+                    if challenge is not None:
+                        return challenge
                     return err(
                         command="browser submit",
                         code=ErrorCode.E_SELECTOR_NOT_FOUND,

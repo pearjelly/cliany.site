@@ -119,7 +119,7 @@ def _data_command_completion_failures(
 
     failures: list[dict[str, Any]] = []
     for command_position, raw_command in enumerate(commands_data):
-        if not isinstance(raw_command, dict) or not _is_data_command_name(raw_command.get("name")):
+        if not isinstance(raw_command, dict):
             continue
 
         name = str(raw_command.get("name", "")).strip()
@@ -129,6 +129,8 @@ def _data_command_completion_failures(
             for action_index in action_indices
             if actions[action_index].action_type == "extract"
         ]
+        if not extract_indices and not _is_data_command_name(name):
+            continue
         base_failure = {
             "command_index": command_position,
             "name": name,
@@ -137,6 +139,17 @@ def _data_command_completion_failures(
         }
         if not extract_indices:
             failures.append({**base_failure, "reason": "missing_owned_extract"})
+            continue
+
+        if (
+            action_indices
+            and all(actions[index].action_type == "extract" for index in action_indices)
+            and any(
+                action.action_type in {"click", "type", "select", "submit"}
+                for action in actions[:action_indices[0]]
+            )
+        ):
+            failures.append({**base_failure, "reason": "missing_replay_prerequisites"})
             continue
 
         expects_nonempty = raw_command.get("expects_nonempty")
@@ -187,11 +200,17 @@ def _data_command_completion_failures(
 
 
 def _data_completion_feedback(failures: list[dict[str, Any]]) -> str:
-    lines = [
-        "## 数据命令完成门禁",
-        "上一次尝试不能结束探索。只修正以下数据命令，并再次执行其自己的 extract 动作。",
-        "缺失、空结果或字段不完整时必须保持 done=false；不要编造数据或把其他命令的 extract 归属给它。",
-    ]
+    lines = ["## 数据命令完成门禁", "上一次尝试不能结束探索。"]
+    if any(failure.get("reason") == "missing_replay_prerequisites" for failure in failures):
+        lines.append(
+            "生成的每个命令都会从来源 URL 独立重放。请将前置输入、选择、点击与依赖它们的 extract 合并为一个命令；"
+            "重新分配已有动作索引，不要凭空新增页面操作。"
+        )
+    if any(failure.get("reason") != "missing_replay_prerequisites" for failure in failures):
+        lines.extend([
+            "只修正以下数据命令，并再次执行其自己的 extract 动作。",
+            "缺失、空结果或字段不完整时必须保持 done=false；不要编造数据或把其他命令的 extract 归属给它。",
+        ])
     for failure in failures:
         name = failure.get("name") or f"command-{failure.get('command_index', 0) + 1}"
         reason = failure.get("reason", "unknown")

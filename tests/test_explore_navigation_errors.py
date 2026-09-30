@@ -58,3 +58,37 @@ def test_explore_classifies_navigation_timeout_without_hiding_other_errors(
             "phase": "navigation",
             "url": "https://crates.io/search?q=serde",
         }
+
+
+def test_explore_returns_invocable_group_for_local_port(tmp_home, clean_env, monkeypatch):
+    import cliany_site.activity_log as activity_log
+    import cliany_site.browser.cdp as cdp_mod
+    import cliany_site.codegen.generator as generator_mod
+    import cliany_site.commands.explore as explore_mod
+    import cliany_site.explorer.engine as engine_mod
+    from cliany_site.explorer.models import ExploreResult
+
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_home / "config"))
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("CLIANY_OPENAI_API_KEY", "test-key")
+    monkeypatch.setattr(engine_mod, "_load_dotenv", lambda: None)
+    cdp = MagicMock()
+    cdp.check_available = AsyncMock(return_value=True)
+    monkeypatch.setattr(cdp_mod, "cdp_from_context", lambda _: cdp)
+    explorer = MagicMock()
+    explorer.explore = AsyncMock(return_value=ExploreResult())
+    monkeypatch.setattr(engine_mod, "WorkflowExplorer", lambda **kwargs: explorer)
+    monkeypatch.setattr(generator_mod, "save_adapter", lambda *args, **kwargs: "/tmp/adapter.py")
+    monkeypatch.setattr(explore_mod, "_post_save_agent_md", lambda *args: None)
+    monkeypatch.setattr(activity_log, "write_log", lambda *args: None)
+
+    result = CliRunner().invoke(
+        cli,
+        ["explore", "http://127.0.0.1:48765/action_replay.html", "read result", "--json"],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+    payload = json.loads(result.stdout)
+    assert payload["data"]["domain"] == "127.0.0.1:48765"
+    assert payload["data"]["command_group"] == "127.0.0.1_48765"

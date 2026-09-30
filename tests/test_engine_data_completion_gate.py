@@ -133,6 +133,39 @@ async def test_data_command_repairs_missing_owned_extract_before_completion(mock
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("followup_name", ["read-result", "fetch-result"])
+async def test_extract_only_followup_must_include_replay_prerequisites(mocker, tmp_home, followup_name):
+    actions = [
+        {"type": "type", "ref": "1", "value": "Ada", "description": "输入姓名"},
+        {"type": "click", "ref": "1", "description": "应用输入"},
+        {"type": "extract", "selector": "output", "extract_mode": "text", "description": "读取结果"},
+    ]
+    split = [
+        {"name": "apply-input", "args": [], "action_steps": [0, 1]},
+        {"name": followup_name, "args": [], "action_steps": [2]},
+    ]
+    combined = [{"name": followup_name, "args": [], "action_steps": [0, 1, 2]}]
+    invoke = _prepare(
+        mocker,
+        [
+            {"actions": actions, "commands": split, "done": True},
+            {"actions": [], "commands": combined, "done": True},
+        ],
+        [[{"step_index": 2, "extract_mode": "text", "data": {"text": "Ada"}}], []],
+    )
+
+    result = await WorkflowExplorer().explore("https://example.com/search", "输入姓名并读取结果", record=False)
+
+    assert invoke.await_count == 2
+    assert [(command.name, command.action_steps) for command in result.commands] == [
+        (followup_name, [0, 1, 2]),
+    ]
+    repair_prompt = invoke.await_args_list[1].args[1]
+    assert "missing_replay_prerequisites" in repair_prompt
+    assert "从来源 URL 独立重放" in repair_prompt
+
+
+@pytest.mark.asyncio
 async def test_data_command_rejects_partial_extract_after_one_repair(mocker):
     partial_payload = [
         {

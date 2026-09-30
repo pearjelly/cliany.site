@@ -86,14 +86,22 @@ def launch_chrome(port: int | None = None, headless: bool = False) -> subprocess
         stderr=subprocess.DEVNULL,
     )
 
-    for _ in range(20):
+    for _ in range(40):
         time.sleep(0.5)
         ws_url = detect_running_chrome(port)
         if ws_url:
             return proc
+        exit_code = proc.poll()
+        if exit_code is not None:
+            raise RuntimeError(f"Chrome 启动后提前退出 (exit={exit_code}, port={port})")
 
     proc.terminate()
-    raise TimeoutError(f"Chrome 启动后 10 秒内 CDP 端口 {port} 未就绪")
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait(timeout=5)
+    raise TimeoutError(f"Chrome 启动后 20 秒内 CDP 端口 {port} 未就绪")
 
 
 def ensure_chrome(port: int | None = None, headless: bool = False) -> tuple[str, subprocess.Popen | None]:

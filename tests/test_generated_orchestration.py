@@ -4,7 +4,6 @@ import json
 import types
 
 import pytest
-
 from click.testing import CliRunner
 
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
@@ -131,6 +130,34 @@ class TestGeneratedNoCdpImport:
         assert 'if not quality.get("ok", True):' in code
         assert '"code": "E_EMPTY_RESULT"' in code
         assert '"details": quality' in code
+
+    @pytest.mark.parametrize(
+        ("text", "expected_success"),
+        [("Ada:Blue", True), ("   ", False)],
+    )
+    def test_generated_read_command_checks_text_content(self, text, expected_success):
+        actions = [ActionStep(
+            action_type="extract", page_url="https://example.com",
+            selector="output", extract_mode="text",
+        )]
+        command = CommandSuggestion(
+            name="read-result", description="读取结果", args=[], action_steps=[0],
+        )
+        code = AdapterGenerator(domain="example.com").generate(
+            _make_explore_result(actions=actions, commands=[command]), "example.com",
+        )
+        module = types.ModuleType("generated_text_adapter")
+        exec(code, module.__dict__)  # noqa: S102 - 测试生成代码的 Click 行为
+        module.execute_steps_via_atoms = lambda steps, source_url, domain: [  # noqa: ARG005
+            {"ok": True, "command": "browser extract", "data": {"content": {"text": text}}}
+        ]
+
+        result = CliRunner().invoke(module.cli, ["read-result", "--json"])
+        payload = json.loads(result.output)
+        assert payload["ok"] is expected_success
+        assert result.exit_code == (0 if expected_success else 1)
+        if not expected_success:
+            assert payload["error"]["code"] == "E_EMPTY_RESULT"
 
     def test_generated_extract_command_fails_when_actions_return_no_data(self):
         actions = [

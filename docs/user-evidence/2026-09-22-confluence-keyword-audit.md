@@ -17,6 +17,8 @@ the original query's nonempty relevant results. Do not substitute the easier
 exact-title lookup as proof of keyword search. The historical generated file
 and published archive have not been changed.
 
+A [September 28 CQL probe](2026-09-28-confluence-cql-probe.md) returned five read-only results for the original space and keyword through the documented search endpoint. The case remains degraded until a replacement adapter passes package and command-level checks.
+
 The new evidence gate checks configured row location, minimum count, and row
 object shape. It does not establish relevance or correctness of every field.
 

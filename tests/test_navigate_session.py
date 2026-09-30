@@ -18,6 +18,8 @@ async def test_session_is_checked_and_restored_before_navigation(monkeypatch, ex
     })
     monkeypatch.setattr("cliany_site.commands.browser.navigate.get_config",
                         lambda: SimpleNamespace(browser_provider="chrome"))
+    monkeypatch.setattr("cliany_site.browser.axtree.capture_axtree",
+                        AsyncMock(return_value={"selector_map": {}}))
     observed = []
     browser._cdp_set_cookies.side_effect = lambda value: observed.append(("cookies", value))
     browser.navigate_to.side_effect = lambda url: observed.append(("navigate", url))

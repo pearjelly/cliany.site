@@ -1,16 +1,22 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-09-28
-- **Current baseline:** v0.16.363
+- **Current baseline:** v0.16.364
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
 
 September 28 navigation follow-up: a real crates.io attempt reached browser navigation timeouts, while a direct request from the maintainer network returned HTTP 403. `explore` now identifies both the browser's 20-second `Page.navigate()` timeout and the event bus's 30-second navigation-handler timeout as page-readiness failures, with no claim that a model or generated adapter succeeded. The crates.io case remains a candidate until its normal search page can be reached and the read-only workflow can be verified.
 
+The [npm access check](user-evidence/2026-09-28-npm-access.md) found a Cloudflare verification page, not package results. The next-version Chrome navigation check now reports that observed page as `E_PAGE_NOT_READY` rather than a successful workflow, including a partially loaded challenge tree. npm remains a candidate; normal site access and an independently verified read-only result are still required.
+
+Next-version local validation: with a separately opened CDP browser, a real model generated one command that replayed a small form workflow and returned two different requested results. The [evidence](user-evidence/2026-09-28-live-local-explore.md) also records an earlier broken split command. Temporary system HOME was a confound in navigation-timeout tests: two auto-launched Chrome runs with normal system HOME and isolated runtime data reached the local page. This candidate work is not yet published and does not validate PyPI, npm, crates.io, or Jev live accuracy.
+
+The [generated-browser lifetime follow-up](user-evidence/2026-09-28-generated-browser-lifetime.md) found a separate replay defect: nested steps closed an auto-launched Chrome after navigation, leaving the next step on a new blank page. The next-version candidate keeps that browser for the full command. An unchanged published PyPI adapter then reached its search click before the observed `Client Challenge` blocked extraction; a local generated workflow replayed two distinct form results on auto-launched headless Chrome. This is not a successful PyPI online smoke.
+
 September 28 release candidate: the PyPI search adapter is a published GitHub Release asset with a verified SHA-256. Installation and strict verification from the public HTTPS URL passed in fresh HOME directories. The read-only search still meets PyPI's `Client Challenge`, so the case remains a candidate until a normal online result is independently verified. The newly configured OpenAI-compatible provider passed a live preflight; Jev's live accuracy remains unmeasured.
 
-September 23 follow-up: v0.16.358 made live-provider transport failures actionable in JSON and documented Jev's explicit consent and read-only boundary on the public site. The active Jira demo passed strict verification and returned five read-only issue rows. The v0.16.360 first-result command now packages that install, verification, and read-only query into one guarded CLI flow.
+September 23 follow-up: v0.16.358 made live-provider transport failures actionable in JSON and documented Jev's explicit consent and read-only boundary on the public site. The active Jira demo passed strict verification and returned five read-only issue rows. The v0.16.360 first-result command now packages that install, verification, and read-only query into one guarded CLI flow. A [fresh-HOME run on September 28](user-evidence/2026-09-28-jira-demo.md) repeated that result with published v0.16.363 and reused the adapter on a second run; it reads Jira's public API, not a browser workflow.
 
 September 22 audit: Jenkins is degraded because its published archive lacks required v3 metadata. Confluence is also degraded: its historical adapter uses a title filter, while the advertised keyword query returns zero rows. Two active cases remain. Jira returned five issues. Package installation and dry-run reject invalid v3 metadata before replacing existing adapters; configured evidence row checks now reject empty demo results. See the [original audit](user-evidence/2026-09-22-active-demo-audit.md) and [Confluence follow-up](user-evidence/2026-09-22-confluence-keyword-audit.md).
 

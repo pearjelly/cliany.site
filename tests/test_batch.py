@@ -133,6 +133,7 @@ class MockBatchExecutor(StepExecutor):
 
 class TestRunBatch:
     def test_click_executor_keeps_requested_parallel_items_on_calling_thread(self, caplog):
+        import logging
         import threading
 
         import click
@@ -157,8 +158,13 @@ class TestRunBatch:
             click.echo(json.dumps({"ok": True, "data": value}))
 
         data = [{"value": str(i)} for i in range(3)]
-        result = run_batch(StepDef(name="b", adapter="example.com", command="echo"),
-                           data, ClickAdapterExecutor(cli), concurrency=3)
+        package_logger = logging.getLogger("cliany_site")
+        package_logger.addHandler(caplog.handler)
+        try:
+            result = run_batch(StepDef(name="b", adapter="example.com", command="echo"),
+                               data, ClickAdapterExecutor(cli), concurrency=3)
+        finally:
+            package_logger.removeHandler(caplog.handler)
 
         assert [item.data for item in result.results] == ["0", "1", "2"]
         assert result.succeeded == 3

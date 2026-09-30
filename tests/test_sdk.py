@@ -1203,6 +1203,28 @@ class TestSDKNavigate:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
+        ("failure", "expected_code"),
+        [
+            (TimeoutError("on_NavigateToUrlEvent timed out after 30.0s"), "E_PAGE_NOT_READY"),
+            (RuntimeError("Page.navigate() timed out after 20.0s (20002ms)"), "E_PAGE_NOT_READY"),
+            (RuntimeError("Browser disconnected"), "EXECUTION_FAILED"),
+        ],
+    )
+    async def test_navigate_classifies_navigation_failure(self, failure, expected_code):
+        from cliany_site.sdk import ClanySite
+
+        mock_session = AsyncMock()
+        mock_session.navigate_to = AsyncMock(side_effect=failure)
+        with patch.object(ClanySite, "_ensure_browser_session", return_value=mock_session):
+            result = await ClanySite().navigate("https://example.com")
+
+        assert result["success"] is False
+        assert result["error"]["code"] == expected_code
+        if expected_code == "E_PAGE_NOT_READY":
+            assert result["error"]["fix"]
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
         "url",
         [
             "file:///tmp/private",

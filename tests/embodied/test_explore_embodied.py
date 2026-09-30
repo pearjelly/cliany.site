@@ -18,6 +18,61 @@ def _pick_free_port() -> int:
         return int(sock.getsockname()[1])
 
 
+@pytest.mark.embodied
+def test_generated_command_reuses_auto_launched_chrome(local_server, tmp_home, monkeypatch):
+    import os
+    import pwd
+    from dataclasses import replace
+    from pathlib import Path
+
+    from click.testing import CliRunner
+    from playwright.sync_api import sync_playwright
+
+    from cliany_site import config
+    from cliany_site.browser import launcher
+    from cliany_site.cli import cli
+    from cliany_site.codegen.generator import AdapterGenerator, save_adapter
+    from cliany_site.explorer.models import ActionStep, CommandSuggestion, ExploreResult, PageInfo
+    from cliany_site.loader import register_adapters
+
+    monkeypatch.setenv("HOME", pwd.getpwuid(os.getuid()).pw_dir)
+    port = _pick_free_port()
+    config._config = replace(config.get_config(), home_dir=tmp_home / ".cliany-site", cdp_port=port)
+
+    url = f"{local_server}/action_replay.html"
+    actions = [
+        ActionStep("type", url, value="{{name}}", target_name="Name", target_role="textbox"),
+        ActionStep("select", url, value="{{color}}", target_name="Color", target_role="combobox"),
+        ActionStep("click", url, target_name="Apply", target_role="button"),
+        ActionStep("extract", url, selector="#result", extract_mode="text"),
+    ]
+    result = ExploreResult(
+        pages=[PageInfo(url, "Local form")],
+        actions=actions,
+        commands=[CommandSuggestion("apply-and-read", "Apply form and read result", [
+            {"name": "name", "required": True, "action_index": 0},
+            {"name": "color", "required": True, "action_index": 1},
+        ], [0, 1, 2, 3])],
+    )
+    save_adapter("127.0.0.1", AdapterGenerator().generate(result, "127.0.0.1"), explore_result=result)
+    register_adapters(cli)
+
+    with sync_playwright() as playwright:
+        chrome_binary = launcher.find_chrome_binary() or Path(playwright.chromium.executable_path)
+    monkeypatch.setattr(launcher, "find_chrome_binary", lambda: chrome_binary)
+    for name, color in (("Ada", "Blue"), ("Grace", "Red")):
+        run = CliRunner().invoke(
+            cli,
+            ["--headless", "127.0.0.1", "apply-and-read", "--name", name, "--color", color, "--json"],
+        )
+        assert run.exit_code == 0, f"{run.output}\nChrome: {chrome_binary}"
+        payload = json.loads(run.stdout)
+        assert payload["ok"] is True
+        assert payload["data"]["quality"]["status"] == "ok"
+        assert payload["data"]["results"][-1]["data"]["content"] == {"text": f"{name}:{color}"}
+        assert launcher.detect_running_chrome(port) is None
+
+
 @pytest.fixture
 async def headless_browser_cdp_url():
     """用 Playwright 启动 headless Chromium，并暴露给 cliany.site 使用的 CDP 端口。"""
@@ -32,6 +87,22 @@ async def headless_browser_cdp_url():
             yield f"ws://127.0.0.1:{port}"
         finally:
             await browser.close()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
+async def test_browser_navigate_detects_challenge_page(local_server, headless_browser_cdp_url, tmp_home):
+    from cliany_site.browser.cdp import CDPConnection
+    from cliany_site.commands.browser.navigate import _run_navigate
+
+    cdp = CDPConnection(cdp_url=headless_browser_cdp_url, headless=True)
+    blocked = await _run_navigate(cdp, f"{local_server}/cloudflare_challenge.html", "load", 30)
+    assert blocked["ok"] is False
+    assert blocked["error"]["code"] == "E_PAGE_NOT_READY"
+    assert blocked["error"]["details"]["reason"] == "site_challenge"
+
+    ordinary = await _run_navigate(cdp, f"{local_server}/sample_form.html", "load", 30)
+    assert ordinary["ok"] is True
 
 
 @pytest.mark.embodied

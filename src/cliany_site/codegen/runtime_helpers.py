@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import time
+from contextvars import ContextVar
 from typing import Any, cast
+from urllib.parse import urlparse
 
 import click
 from click.testing import CliRunner
 
 from cliany_site.envelope import Envelope
 from cliany_site.extract_quality import evaluate_extract_quality
+
+_workflow_browser: ContextVar[dict[str, Any] | None] = ContextVar("workflow_browser", default=None)
 
 
 def run_atom(
@@ -21,6 +26,41 @@ def run_atom(
     current_ctx = click.get_current_context(silent=True)
     root_obj = current_ctx.find_root().obj if current_ctx is not None else None
     args: list[str] = []
+    browser = _workflow_browser.get()
+    if browser is not None:
+        from cliany_site.browser.launcher import ChromeNotFoundError, ensure_chrome
+        from cliany_site.config import get_config
+        from cliany_site.envelope import ErrorCode, err
+
+        cfg = get_config()
+        requested_url = root_obj.get("cdp_url") if isinstance(root_obj, dict) else None
+        requested_url = requested_url or cfg.cdp_url
+        parsed = None
+        if requested_url:
+            parsed = urlparse(requested_url if "://" in requested_url else f"http://{requested_url}")
+        local_url = parsed is not None and (
+            parsed.scheme == "http"
+            and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+            and parsed.path in {"", "/"}
+            and not parsed.query
+        )
+        if local_url or (not requested_url and cfg.browser_provider in {"", "chrome"}):
+            if "url" not in browser:
+                port = (parsed.port or 9222) if parsed is not None else cfg.cdp_port
+                headless = bool(root_obj.get("headless", cfg.headless)) if isinstance(root_obj, dict) else cfg.headless
+                try:
+                    _, proc = ensure_chrome(port, headless=headless)
+                except (ChromeNotFoundError, OSError, RuntimeError, TimeoutError) as exc:
+                    return err(
+                        command=" ".join(command),
+                        code=ErrorCode.E_CDP_UNAVAILABLE,
+                        message=f"Chrome CDP 不可用: {exc}",
+                        source="builtin",
+                    )
+                browser["url"] = f"http://localhost:{port}"
+                browser["proc"] = proc
+            if not (isinstance(root_obj, dict) and root_obj.get("cdp_url")):
+                args.extend(["--cdp-url", browser["url"]])
     if isinstance(root_obj, dict):
         if root_obj.get("cdp_url"):
             args.extend(["--cdp-url", root_obj["cdp_url"]])
@@ -96,20 +136,32 @@ def execute_steps_via_atoms(
             ]
 
     results: list[Envelope] = []
+    browser: dict[str, Any] = {}
+    token = _workflow_browser.set(browser)
+    try:
+        if source_url:
+            nav_result = run_atom(["browser", "navigate", source_url], session=domain)
+            results.append(nav_result)
+            if not nav_result.get("ok"):
+                return results
 
-    if source_url:
-        nav_result = run_atom(["browser", "navigate", source_url], session=domain)
-        results.append(nav_result)
-        if not nav_result.get("ok"):
-            return results
+        for step in action_steps:
+            result = _execute_single_step(step, domain)
+            results.append(result)
+            if not result.get("ok"):
+                break
 
-    for step in action_steps:
-        result = _execute_single_step(step, domain)
-        results.append(result)
-        if not result.get("ok"):
-            break
-
-    return results
+        return results
+    finally:
+        _workflow_browser.reset(token)
+        proc = browser.get("proc")
+        if proc is not None:
+            proc.terminate()
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait(timeout=5)
 
 
 def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:

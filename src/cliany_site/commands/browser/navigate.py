@@ -65,6 +65,7 @@ def navigate(
 
 async def _run_navigate(cdp, url: str, wait_state: str, timeout: int, session: str | None = None) -> Envelope:
     _browser_provider = get_config().browser_provider
+    can_capture_axtree = True
     if _browser_provider and _browser_provider.lower() != "chrome":
         from cliany_site.providers.capabilities import feature_gate
         from cliany_site.providers.factory import get_provider
@@ -79,6 +80,7 @@ async def _run_navigate(cdp, url: str, wait_state: str, timeout: int, session: s
                 hint="请检查 CLIANY_BROWSER_PROVIDER 配置",
             )
         _gate = feature_gate("browser.navigate", _snap)
+        can_capture_axtree = _snap.supports_axtree
         if not _gate.allowed:
             return err(
                 command="browser navigate",
@@ -109,14 +111,24 @@ async def _run_navigate(cdp, url: str, wait_state: str, timeout: int, session: s
             if wait_state in ("networkidle", "domcontentloaded"):
                 page = await browser_session.get_current_page()
                 await page.wait_for_load_state(wait_state, timeout=timeout * 1000)
+            if can_capture_axtree:
+                from cliany_site.browser.axtree import capture_axtree
+                from cliany_site.commands.browser._common import site_challenge_error
+
+                challenge = site_challenge_error("browser navigate", await capture_axtree(browser_session))
+                if challenge is not None:
+                    return challenge
         finally:
             await cdp.disconnect()
     except (OSError, RuntimeError, TimeoutError) as exc:
-        if isinstance(exc, (TimeoutError, asyncio.TimeoutError)):
+        if isinstance(exc, TimeoutError) or (
+            isinstance(exc, RuntimeError) and str(exc).startswith("Page.navigate() timed out after ")
+        ):
             return err(
                 command="browser navigate",
                 code=ErrorCode.E_PAGE_NOT_READY,
                 message="页面就绪超时",
+                hint="请确认目标站点在当前网络可访问后重试；若站点返回验证页，不要绕过其限制。",
                 details={"error": str(exc)},
                 source="builtin",
             )
