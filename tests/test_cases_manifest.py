@@ -64,6 +64,13 @@ def test_pypi_public_package_complete_but_online_smoke_pending():
     assert pypi_case["promotion_evidence"]["online_smoke"]["status"] == "pending"
 
 
+def test_active_confluence_case_links_public_package_audit():
+    case = next(case for case in _load_cases() if case["id"] == "apache-confluence-search")
+
+    assert case["status"] == "active"
+    assert case["docs"] == "docs/user-evidence/2026-10-01-confluence-public-package-audit.md"
+
+
 def test_cases_manifest_docs_links_exist_locally():
     for case in _load_cases():
         doc_path = case["docs"].split("#", 1)[0]

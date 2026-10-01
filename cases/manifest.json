@@ -53,7 +53,7 @@
     "target_url": "https://cwiki.apache.org/",
     "adapter_domain": "cwiki.apache.org",
     "source_release": "v0.16.365",
-    "docs": "docs/user-evidence/2026-09-28-confluence-cql-probe.md",
+    "docs": "docs/user-evidence/2026-10-01-confluence-public-package-audit.md",
     "example_output": "cases/examples/apache-confluence-search.json",
     "commands": [
       "cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.16.365/cwiki.apache.org-0.16.365.cliany-adapter.tar.gz --sha256 85ab3e918f32070fd69ae2947e69530b936a9d6655588d5153612d2686cac84f",
