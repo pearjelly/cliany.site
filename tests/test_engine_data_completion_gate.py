@@ -178,7 +178,7 @@ async def test_data_command_rejects_partial_extract_after_one_repair(mocker):
         {"actions": [_extract_action()], "commands": [_data_command([0])], "done": True},
         {"actions": [_extract_action()], "commands": [_data_command([0, 1])], "done": True},
     ]
-    _prepare(mocker, parse_results, [partial_payload, partial_payload])
+    invoke = _prepare(mocker, parse_results, [partial_payload, partial_payload])
 
     with pytest.raises(DataCommandQualityError) as exc_info:
         await WorkflowExplorer().explore("https://example.com/search", "搜索结果", record=False)
@@ -187,6 +187,9 @@ async def test_data_command_rejects_partial_extract_after_one_repair(mocker):
     failure = exc_info.value.details["data_commands"][0]
     assert failure["reason"] == "extract_quality_failed"
     assert failure["quality"]["status"] == "partial"
+    repair_prompt = invoke.await_args_list[1].args[1]
+    assert '"url"' in repair_prompt
+    assert "若任务未要求且页面无对应值，移除这些字段" in repair_prompt
 
 
 @pytest.mark.asyncio

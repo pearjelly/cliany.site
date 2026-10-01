@@ -215,6 +215,14 @@ def _data_completion_feedback(failures: list[dict[str, Any]]) -> str:
         name = failure.get("name") or f"command-{failure.get('command_index', 0) + 1}"
         reason = failure.get("reason", "unknown")
         lines.append(f"- {name}: {reason}")
+        quality = failure.get("quality")
+        blank_rows = quality.get("field_blank_rows") if isinstance(quality, dict) else None
+        if isinstance(blank_rows, dict) and blank_rows:
+            fields = [str(field)[:80] for field in list(blank_rows)[:5]]
+            lines.append(
+                f"  以下字段在结果中全部为空：{json.dumps(fields, ensure_ascii=False)}。"
+                "若任务未要求且页面无对应值，移除这些字段；若任务要求，定位真实值后重新提取。不要编造。"
+            )
     return "\n".join(lines)
 
 
