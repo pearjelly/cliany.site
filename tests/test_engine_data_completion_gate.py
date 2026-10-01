@@ -246,6 +246,7 @@ async def test_invalid_command_partition_gets_one_nonexecuting_repair(mocker, tm
     result = await WorkflowExplorer().explore("https://example.com/search", "检查", record=False)
 
     assert result.commands[0].action_steps == [0, 1]
+    assert result.partition_repair_attempts == 1
     assert invoke.await_count == 2
     assert execute.await_count == 1
     repair_prompt = invoke.await_args_list[1].args[1]
@@ -279,6 +280,7 @@ async def test_explicit_uneven_partition_preserves_command_ownership(mocker, tmp
     assert [(command.name, command.action_steps) for command in result.commands] == [
         ("open", [0]), ("apply", [1, 2]),
     ]
+    assert result.partition_repair_attempts == 0
 
 
 @pytest.mark.asyncio

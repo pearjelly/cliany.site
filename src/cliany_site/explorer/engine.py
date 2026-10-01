@@ -1033,6 +1033,7 @@ class WorkflowExplorer:
                         try:
                             _validate_command_partition(commands_data, len(result.actions))
                         except RuntimeError as partition_error:
+                            result.partition_repair_attempts += 1
                             recorded_actions = [
                                 {"index": index, "type": action.action_type, "description": action.description}
                                 for index, action in enumerate(result.actions)

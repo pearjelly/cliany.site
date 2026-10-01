@@ -247,6 +247,7 @@ def explore_cmd(
             "atoms_reused": 0,
             "validation_warnings": 0,
             "action_quality_score": 1.0,
+            "partition_repair_attempts": explore_result.partition_repair_attempts,
         }
 
         try:
