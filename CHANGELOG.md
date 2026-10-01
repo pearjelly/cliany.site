@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.369] - 2026-10-03
+
 ### Fixed
 
 - Declare directly imported `aiohttp` and `PyYAML` as runtime dependencies, so clean installs do not rely on another package to keep providing them transitively. Update the security support table to follow the latest stable release instead of the obsolete 0.6.x line.
@@ -3301,7 +3303,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.368...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.369...HEAD
+[0.16.369]: https://github.com/pearjelly/cliany.site/compare/v0.16.368...v0.16.369
 [0.16.368]: https://github.com/pearjelly/cliany.site/compare/v0.16.367...v0.16.368
 [0.16.367]: https://github.com/pearjelly/cliany.site/compare/v0.16.366...v0.16.367
 [0.16.366]: https://github.com/pearjelly/cliany.site/compare/v0.16.365...v0.16.366

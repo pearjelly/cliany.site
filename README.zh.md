@@ -39,7 +39,7 @@ cliany-site demo --case-id apache-jira-issues --json
 - **LLM 调用重试机制** — 网络抖动时自动重试，提升探索成功率
 - **可重试 LLM 上游故障信号** — `explore --json` 会把网关、限流或服务不可用归类为 `E_LLM_UNAVAILABLE`，返回清洗后的重试详情，而不是原始 HTML。
 - **统一 JSON 信封** — 所有命令支持 `--json`，输出机器可读的 `{ok, data, error, meta}` 信封 (v1)
-- **持久化 Session** — 跨命令保持 Cookie / LocalStorage 登录状态
+- **持久化 Session** — 跨命令恢复适用于目标主机的 Cookie；暂不支持恢复 LocalStorage
 - **动态适配器加载** — 按域名自动注册 CLI 子命令，随时扩展
 - **自动浏览器管理** — 自动管理 Chrome 调试实例或实验性 Obscura 二进制文件
 - **带质量信号的数据抽取** — 支持从页面提取结构化数据、保存 Markdown 报告，并持续通过 `data.quality` 暴露空结果与字段缺失；生成的数据命令必须返回真实提取结果，除非明确声明零匹配本来合法

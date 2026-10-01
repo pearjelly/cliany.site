@@ -492,7 +492,7 @@ wheels = [
 
 [[package]]
 name = "cliany-site"
-version = "0.16.368"
+version = "0.16.369"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
