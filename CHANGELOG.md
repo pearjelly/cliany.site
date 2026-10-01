@@ -14,6 +14,7 @@
 - Declare directly imported `aiohttp` and `PyYAML` as runtime dependencies, so clean installs do not rely on another package to keep providing them transitively. Update the security support table to follow the latest stable release instead of the obsolete 0.6.x line.
 - Refuse to write plaintext cookies when Session encryption fails. Encryption keys and Session files now use atomic writes and process locks; legacy plaintext is usable only after successful migration, which cannot overwrite a newer save.
 - An explicit `browser navigate --session` now fails before navigation if that Session is missing or unreadable. Generated anonymous workflows only request Session restoration when a saved file exists, preserving no-login demos while surfacing corrupted saved Sessions.
+- A login attempt that captures no applicable cookies now leaves any previously saved Session untouched while CLI and SDK continue to report `NO_COOKIES`.
 - The release preflight now checks GitHub Release publication timestamps in Shanghai time before tagging and in the tag workflow. It blocks at the three-releases-per-day cap or when the remote count cannot be verified, covering releases whose publication day differs from their lightweight tag's commit day. Tag workflows run serially so two releases cannot claim the same remaining slot.
 
 ### Evidence
