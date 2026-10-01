@@ -7,6 +7,21 @@
 
 ## [Unreleased]
 
+## [0.16.366] - 2026-10-02
+
+### Changed
+
+- Promoted the maintained ASF Confluence search case to active after the published v0.16.365 archive passed an independent pinned-hash install, strict verification, and a nonempty read-only replay. `demo --case-id apache-confluence-search` now offers a one-command first run; a fresh isolated install returned six pages and a repeat run reused the verified adapter without overwriting it.
+- The demo's failure hints and human result summary now support both Jira issues and Confluence pages. The Confluence offline example matches the maintained adapter's result shape.
+
+## [0.16.365] - 2026-10-01
+
+### Added
+
+- A maintained, read-only ASF Confluence adapter now searches public pages by keyword through the CQL endpoint. Its v0.16.365 archive has an exact SHA-256 installation command; an isolated install passed strict verification and returned five `SPARK` / `release` rows. The historical exact-title adapter remains untouched, and the case stays degraded until the published asset is independently installed and audited.
+
+## [0.16.364] - 2026-09-30
+
 ### Fixed
 
 - `browser navigate` and SDK `navigate()` now classify observed browser navigation timeouts as `E_PAGE_NOT_READY` instead of misleading CDP or generic execution failures. Both return an actionable site-access hint; unrelated browser disconnects keep their prior classification.
@@ -3260,7 +3275,10 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.363...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.366...HEAD
+[0.16.366]: https://github.com/pearjelly/cliany.site/compare/v0.16.365...v0.16.366
+[0.16.365]: https://github.com/pearjelly/cliany.site/compare/v0.16.364...v0.16.365
+[0.16.364]: https://github.com/pearjelly/cliany.site/compare/v0.16.363...v0.16.364
 [0.16.363]: https://github.com/pearjelly/cliany.site/compare/v0.16.362...v0.16.363
 [0.16.362]: https://github.com/pearjelly/cliany.site/compare/v0.16.361...v0.16.362
 [0.16.361]: https://github.com/pearjelly/cliany.site/compare/v0.16.360...v0.16.361

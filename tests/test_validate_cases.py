@@ -239,7 +239,7 @@ def test_current_cases_manifest_validates_without_packages():
     report = validate_cases.build_report(ROOT)
 
     assert report.ok is True
-    assert report.active == 2
+    assert report.active == 3
     assert report.candidate >= 1
     assert report.known_gap >= 1
     assert report.checked_packages is False
@@ -288,21 +288,23 @@ def test_current_cases_manifest_validates_without_packages():
             "ad5867d361f372914c536fb59c8f26837af96ed407859cf69dc8464922f05319",
         ),
         "cwiki.apache.org": (
-            "https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/"
-            "cwiki.apache.org-0.14.1.cliany-adapter.tar.gz",
-            "effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa",
+            "https://github.com/pearjelly/cliany.site/releases/download/v0.16.365/"
+            "cwiki.apache.org-0.16.365.cliany-adapter.tar.gz",
+            "85ab3e918f32070fd69ae2947e69530b936a9d6655588d5153612d2686cac84f",
         ),
     }
     active_cases = [
         case for case in report.to_dict()["cases"] if case["status"] == "active"
     ]
-    assert {case["adapter_domain"] for case in active_cases} == {"demo.suiteondemand.com", "issues.apache.org"}
+    assert {case["adapter_domain"] for case in active_cases} == {
+        "demo.suiteondemand.com", "issues.apache.org", "cwiki.apache.org"
+    }
     for case in report.to_dict()["cases"]:
         if case.get("adapter_domain") in expected_published_installs:
             url, sha256 = expected_published_installs[case["adapter_domain"]]
             assert case["commands"][0] == f"cliany-site market install {url} --sha256 {sha256}"
         if case.get("adapter_domain") == "cwiki.apache.org":
-            assert case["status"] == "degraded"
+            assert case["status"] == "active"
 
 
 def test_cases_report_flags_duplicate_ids(tmp_path):

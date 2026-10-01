@@ -51,6 +51,30 @@ def test_human_output_summarizes_results_without_terminal_controls(tmp_home, mon
     assert "'success': True" not in result.stdout
 
 
+def test_confluence_demo_summarizes_pages(tmp_home, monkeypatch):
+    replies = iter([
+        (True, {"success": True}),
+        (True, {"ok": True}),
+        (True, {"ok": True, "data": {"results": [{"id": "38572314", "title": "Preparing Spark Releases"}]}}),
+    ])
+    monkeypatch.setattr(demo, "_run_step", lambda argv: next(replies))
+    result = CliRunner().invoke(cli, ["demo", "--case-id", "apache-confluence-search"])
+    assert result.exit_code == 0
+    assert '"38572314"  "Preparing Spark Releases"' in result.stdout
+
+
+def test_confluence_empty_result_hint_names_its_domain(tmp_home, monkeypatch):
+    replies = iter([
+        (True, {"success": True}),
+        (True, {"ok": True}),
+        (True, {"ok": True, "data": {"results": []}}),
+    ])
+    monkeypatch.setattr(demo, "_run_step", lambda argv: next(replies))
+    result = demo.run_demo("apache-confluence-search")
+    assert result["error"]["code"] == "E_EMPTY_RESULT"
+    assert "cwiki.apache.org" in result["error"]["hint"]
+
+
 def test_human_failure_shows_recovery_hint_and_stops(tmp_home, monkeypatch):
     calls = []
 

@@ -26,7 +26,7 @@ cliany-site cases
 cliany-site demo --case-id apache-jira-issues --json
 ```
 
-`doctor` gives you a human-readable next step. `cliany-site cases --status active` lists maintained public cases; `demo` installs the pinned Jira adapter only if absent, verifies it strictly, then runs a read-only query and requires at least one issue row. It does not run login-required or candidate cases. Follow the [10-minute success path](docs/quickstart-10min.md) for prerequisites, or configure Chrome/CDP and an LLM when you are ready to generate a command for your own site.
+`doctor` gives you a human-readable next step. `cliany-site cases --status active` lists maintained public cases; `demo` installs a pinned no-login adapter only if absent, verifies it strictly, then runs a read-only query and requires at least one result row. Jira and Confluence are supported; login-required and candidate cases are not. Follow the [10-minute success path](docs/quickstart-10min.md) for prerequisites, or configure Chrome/CDP and an LLM when you are ready to generate a command for your own site.
 
 ### Tell us what happened
 
@@ -357,12 +357,16 @@ cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json
 
 ### ASF Confluence (Wiki)
 
-Degraded on 2026-09-22: the historical adapter passes `--query` as a title filter,
-not keyword search. The command below returns zero rows and is not a successful
-search demo. See the [dated audit](docs/user-evidence/2026-09-22-confluence-keyword-audit.md).
+The historical v0.14.1 adapter used an exact-title filter and returned zero rows.
+The maintained read-only v0.16.365 package searches by keyword. Its public asset
+passed a separate pinned-hash install, strict verification, and read-only replay
+audit, so this case is now active. Existing installs
+are never replaced automatically; review a `--dry-run --json` first, then use
+an explicit `--force` only if you intend to replace your adapter. See the
+[evidence](docs/user-evidence/2026-10-01-confluence-public-package-audit.md).
 
 ```bash
-cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/cwiki.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa
+cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.16.365/cwiki.apache.org-0.16.365.cliany-adapter.tar.gz --sha256 85ab3e918f32070fd69ae2947e69530b936a9d6655588d5153612d2686cac84f
 cliany-site verify cwiki.apache.org --strict --json
 cliany-site cwiki.apache.org search-pages --space SPARK --query "release" --json
 ```

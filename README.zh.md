@@ -22,7 +22,7 @@ cliany-site cases
 cliany-site demo --case-id apache-jira-issues --json
 ```
 
-`doctor` 会给出下一步建议；`cliany-site cases --status active` 列出维护中的公开案例。`demo` 仅在本地没有 Jira adapter 时按固定哈希安装，严格校验后运行只读查询，并要求至少返回一条 issue；不会运行需要登录或尚未发布的案例。首次运行的前提条件见 [10 分钟成功路径](docs/quickstart-10min.md)；准备自动化自己的站点时，再配置 Chrome/CDP 与 LLM。
+`doctor` 会给出下一步建议；`cliany-site cases --status active` 列出维护中的公开案例。`demo` 仅在本地没有目标 adapter 时按固定哈希安装，严格校验后运行只读查询，并要求至少返回一条结果；Jira 和 Confluence 可用，需要登录或尚未发布的案例不可用。首次运行的前提条件见 [10 分钟成功路径](docs/quickstart-10min.md)；准备自动化自己的站点时，再配置 Chrome/CDP 与 LLM。
 
 ### 告诉我们结果
 
@@ -337,8 +337,14 @@ cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json
 ```
 
 ### ASF Confluence (Wiki)
+
+历史 v0.14.1 包使用精确标题过滤，关键词搜索返回空结果。维护中的 v0.16.365
+只读包已通过公开资产固定哈希安装、严格校验和查询验收，案例现为 active。
+已有同名 adapter 不会自动覆盖；先用
+`--dry-run --json` 查看替换计划，确认后才显式使用 `--force`。
+
 ```bash
-cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/cwiki.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa
+cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.16.365/cwiki.apache.org-0.16.365.cliany-adapter.tar.gz --sha256 85ab3e918f32070fd69ae2947e69530b936a9d6655588d5153612d2686cac84f
 cliany-site verify cwiki.apache.org --strict --json
 cliany-site cwiki.apache.org search-pages --space SPARK --query "release" --json
 ```
