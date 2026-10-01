@@ -5,6 +5,8 @@ import json
 from datetime import date
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(
     "check_github_release_cap", ROOT / "scripts" / "check_github_release_cap.py"
@@ -63,3 +65,13 @@ def test_strict_fails_closed_on_invalid_release_data(monkeypatch, capsys) -> Non
     report = json.loads(capsys.readouterr().out)
     assert report["release_count_today"] is None
     assert "missing" in report["error"]
+
+
+def test_tag_release_workflow_checks_cap_before_build() -> None:
+    workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8"))
+    jobs = workflow["jobs"]
+    steps = jobs["release-preflight"]["steps"]
+    check = next(step for step in steps if step.get("name") == "Check GitHub publication capacity")
+    assert check["run"] == "python scripts/check_github_release_cap.py --strict --json"
+    assert check["env"]["GH_TOKEN"] == "${{ github.token }}"
+    assert jobs["build"]["needs"] == "release-preflight"
