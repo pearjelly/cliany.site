@@ -52,3 +52,15 @@ One opt-in live exploration started from the [Python documentation homepage](htt
 Before the replay fix, fresh-browser runs returned success with 21 `pathlib` rows and 2 `asyncio` rows. The browser DOM already had 41 and 21 matching rows, respectively, immediately after those CLI calls, and the page was still rendering. This is a silent partial-result defect: nonempty quality alone did not mean the list had settled.
 
 Generated list/table replay now resamples every 0.5 seconds until four consecutive contents agree, with a six-second bound and `E_PAGE_NOT_READY` if results keep changing. Errors from a later sample pass through. On fresh-browser reruns of the same generated command, `pathlib` and `asyncio` each returned 100 rows; the page showed `Search finished` and contained 131 and 399 rows. All 100 returned titles and links matched the browser DOM for both queries. The extractor intentionally caps list output at 100 items, so these results demonstrate the first 100 only, **not** complete retrieval or a universal guarantee that a short quiet period means a page is done. The rule adds about 1.5 seconds for stable lists and up to six seconds for changing ones. No public-site claim is included in the controlled 8/9 score above.
+
+### Fresh public-page trials and package candidate
+
+On commit `47c64dec15dea04f6cf968b597d6a1e71065524c`, three more opt-in `deepseek-v4.1-flash` explorations independently started from the Python documentation homepage with fresh runtime homes and Chromium processes. The workflow explicitly requested the first 100 search titles and links. Each generated one `search-python-docs` command with a required `query` argument. Each command was replayed in a separate fresh browser for `pathlib` and `asyncio`. The independent oracle required the query in the resulting page URL, visible `Search finished` status, a nonempty result, and exact title/link agreement with the first 100 browser DOM rows. All six replays passed; this is 3/3 explorations, not a population-level reliability estimate.
+
+| Trial | Explore (s) | `pathlib` replay (s) | `asyncio` replay (s) | Oracle |
+| --- | ---: | ---: | ---: | --- |
+| 1 | 49.75 | 7.42 | 6.36 | Both 100/100 match |
+| 2 | 20.87 | 5.96 | 6.48 | Both 100/100 match |
+| 3 | 43.28 | 7.36 | 5.81 | Both 100/100 match |
+
+Trial 1's unedited generated adapter was locally packaged as `docs.python.org-0.16.370.cliany-adapter.tar.gz` (SHA-256 `bb56d401923b7aa5b632657843a56d938778d8ed39465aed05b94980e132c0b7`). A separate clean runtime home installed that archive, passed `verify docs.python.org --strict`, and replayed a changed `dataclasses` query in a fresh browser: 44 returned rows exactly matched the page's 44 title/link rows after `Search finished`. The package is **local and unpublished**; no public package URL, published-version install, or fixed-SHA remote download has yet passed. This case remains a candidate until those release-time checks do.
