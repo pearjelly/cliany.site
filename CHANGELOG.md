@@ -16,6 +16,7 @@
 ### Evidence
 
 - Rechecked the published PyPI search candidate with cliany-site 0.16.368. Its public adapter installed and strictly verified, but auto-launched navigation timed out; a separately opened CDP browser reached typing before PyPI served `Client Challenge`. The case remains candidate, without bypassing the site restriction or treating the challenge as empty results.
+- Rechecked the historical SuiteCRM v0.14.1 public adapter with PyPI cliany-site 0.16.368 in fresh HOME directories. The pinned HTTPS asset installed, strictly verified, and registered `list-accounts`; the login-required online query was not attempted or claimed.
 
 ## [0.16.368] - 2026-10-02
 

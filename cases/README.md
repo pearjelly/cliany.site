@@ -19,7 +19,7 @@
 
 | ID | 场景 | 状态 | 价值 |
 |----|------|------|------|
-| `suitecrm-accounts` | SuiteCRM demo 账户列表 | active | 企业 CRM 查询，无 API 后台操作 CLI 化；样例输出见 [suitecrm-accounts.json](examples/suitecrm-accounts.json) |
+| `suitecrm-accounts` | SuiteCRM demo 账户列表 | active | 企业 CRM 查询；[公开包静态审计](../docs/user-evidence/2026-10-02-suitecrm-public-package-audit.md)通过，登录后的在线查询本次未验证；样例输出见 [suitecrm-accounts.json](examples/suitecrm-accounts.json) |
 | `apache-jira-issues` | ASF Jira issue 列表 | active | DevOps/项目管理列表读取；样例输出见 [apache-jira-issues.json](examples/apache-jira-issues.json) |
 | `apache-confluence-search` | ASF Confluence 页面搜索 | active | [维护版公开包验收](../docs/user-evidence/2026-10-01-confluence-public-package-audit.md)：固定哈希安装、严格校验、只读搜索返回 5 行；旧 v0.14.1 adapter 仍不推荐 |
 | `apache-jenkins-jobs` | ASF Jenkins job 列表 | active | [维护版公开包验收](../docs/user-evidence/2026-10-02-jenkins-public-package-audit.md)：固定哈希安装、严格校验、只读查询返回 5/106 条；旧 v0.14.1 包仍不推荐 |
