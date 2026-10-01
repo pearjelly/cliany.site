@@ -93,6 +93,7 @@ cliany-site demo --case-id apache-jira-issues --json
 ```
 
 ASF Confluence 页面搜索也已完成公开包验收，可运行 `cliany-site demo --case-id apache-confluence-search --json`。
+2026-10-02 的 [PyPI 首跑复测](user-evidence/2026-10-02-confluence-pypi-demo-audit.md)在全新 HOME 返回 6 条只读结果，并在第二次运行复用安装。
 ASF Jenkins 只读 job 列表也已完成公开包验收，可运行 `cliany-site demo --case-id apache-jenkins-jobs --json`。
 
 命令只在本地没有同名 adapter 时按案例固定 SHA-256 安装；随后执行 `verify --strict`，通过才运行案例声明的只读查询，并要求至少一条结果。`ok=true` 的 `data.result` 保留原始查询结果，`data.row_count` 给出实际行数。安装、校验、查询或结果门槛失败都会非零退出，且不会继续后续步骤。已有同名 adapter 不会被覆盖，但仍须通过严格校验。这个入口不运行 candidate、degraded 或需要登录的案例。Jira、Confluence 和 Jenkins 案例无需 LLM key 或 Chrome/CDP，但仍依赖 GitHub 发布资产与第三方站点可达。

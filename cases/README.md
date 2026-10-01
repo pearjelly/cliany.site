@@ -21,7 +21,7 @@
 |----|------|------|------|
 | `suitecrm-accounts` | SuiteCRM demo 账户列表 | active | 企业 CRM 查询；[公开包静态审计](../docs/user-evidence/2026-10-02-suitecrm-public-package-audit.md)通过，登录后的在线查询本次未验证；样例输出见 [suitecrm-accounts.json](examples/suitecrm-accounts.json) |
 | `apache-jira-issues` | ASF Jira issue 列表 | active | [PyPI 首跑审计](../docs/user-evidence/2026-10-02-jira-pypi-demo-audit.md)：全新 HOME 安装、严格校验及只读查询返回 5 行；样例输出见 [apache-jira-issues.json](examples/apache-jira-issues.json) |
-| `apache-confluence-search` | ASF Confluence 页面搜索 | active | [维护版公开包验收](../docs/user-evidence/2026-10-01-confluence-public-package-audit.md)：固定哈希安装、严格校验、只读搜索返回 5 行；旧 v0.14.1 adapter 仍不推荐 |
+| `apache-confluence-search` | ASF Confluence 页面搜索 | active | [维护版公开包验收](../docs/user-evidence/2026-10-01-confluence-public-package-audit.md)及 [PyPI 首跑复测](../docs/user-evidence/2026-10-02-confluence-pypi-demo-audit.md)：固定哈希安装、严格校验、当前只读查询返回 6 行；旧 v0.14.1 adapter 仍不推荐 |
 | `apache-jenkins-jobs` | ASF Jenkins job 列表 | active | [维护版公开包验收](../docs/user-evidence/2026-10-02-jenkins-public-package-audit.md)：固定哈希安装、严格校验、只读查询返回 5/106 条；旧 v0.14.1 包仍不推荐 |
 | `pypi-project-search` | PyPI 项目搜索 | candidate | Python 包注册表搜索候选；样例输出见 [pypi-project-search.json](examples/pypi-project-search.json)。公开 adapter 包与严格校验已通过；[只读在线搜索](../docs/user-evidence/2026-09-23-pypi-package-smoke.md) 尚未稳定通过，暂不晋级 active |
 | `npm-package-search` | npm 包搜索 | candidate | JavaScript 包注册表搜索候选；样例输出见 [npm-package-search.json](examples/npm-package-search.json)。[2026-09-28 访问检查](../docs/user-evidence/2026-09-28-npm-access.md)遇到 Cloudflare 验证页，未生成 adapter；待正常页面、包资产和在线 smoke 验证后再晋级 |
