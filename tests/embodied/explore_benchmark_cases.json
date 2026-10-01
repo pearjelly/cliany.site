@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "form-result",
+      "path": "/action_replay.html",
+      "workflow": "Enter Ada in Name, choose Blue in Color, click Apply, and read the result. Generate one reusable command with name and color parameters.",
+      "required_actions": ["type", "select", "click", "extract"],
+      "replays": [
+        {
+          "args": {"name": "Grace", "color": "Red"},
+          "expected_text": "Grace:Red"
+        }
+      ]
+    },
+    {
+      "id": "filter-catalog",
+      "path": "/filter_catalog.html",
+      "workflow": "Search for beta using Filter packages, click Search, and read the result count and package names. Generate one reusable command with a query parameter; zero matches are valid.",
+      "required_actions": ["type", "click", "extract"],
+      "replays": [
+        {
+          "args": {"query": "gamma"},
+          "expected_summary": "1 matches",
+          "expected_rows": ["Gamma toolkit"],
+          "expected_codes": ["gamma"]
+        },
+        {
+          "args": {"query": "no-such-package"},
+          "expected_summary": "0 matches",
+          "expected_rows": [],
+          "expected_codes": []
+        }
+      ]
+    },
+    {
+      "id": "semantic-reorder",
+      "path": "/semantic_reorder.html",
+      "workflow": "Click the button named Inspect Beta, not any Inspect noise button, then read the result. Generate one reusable command.",
+      "required_actions": ["click", "extract"],
+      "replays": [
+        {
+          "args": {},
+          "expected_text": "Beta"
+        }
+      ]
+    }
+  ]
+}
