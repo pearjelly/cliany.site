@@ -64,3 +64,5 @@ On commit `47c64dec15dea04f6cf968b597d6a1e71065524c`, three more opt-in `deepsee
 | 3 | 43.28 | 7.36 | 5.81 | Both 100/100 match |
 
 Trial 1's unedited generated adapter was locally packaged as `docs.python.org-0.16.370.cliany-adapter.tar.gz` (SHA-256 `bb56d401923b7aa5b632657843a56d938778d8ed39465aed05b94980e132c0b7`). A separate clean runtime home installed that archive, passed `verify docs.python.org --strict`, and replayed a changed `dataclasses` query in a fresh browser: 44 returned rows exactly matched the page's 44 title/link rows after `Search finished`. The package is **local and unpublished**; no public package URL, published-version install, or fixed-SHA remote download has yet passed. This case remains a candidate until those release-time checks do.
+
+The catalog tracks this as `python-docs-search` with the local package metadata gate complete and the public-package and published-install smoke gates pending. Focused `validate_cases.py --case-id python-docs-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict` passed for the local SHA-256 archive; it does not replace validation of the future Release download.
