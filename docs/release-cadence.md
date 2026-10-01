@@ -18,7 +18,7 @@
 推荐顺序：
 
 1. 运行 `python scripts/plan_next_iteration.py --json`，读取 `recommended_theme`、`recommended_slice`、`primary_next_action` 和 `standard_release_flow_primary_next_action`。
-   如果 `commit_cadence.release_count_today >= commit_cadence.max_daily_releases` 或 `daily_release_limit_ok=false`，当天停止 tag 发布。该离线计数使用 tag 指向的 commit 日期，只是近似值；还须核对 GitHub Releases 的 `publishedAt` 在 `Asia/Shanghai` 当天的数量。任一计数达到 3 就停止发布；远端状态无法核实时不发布。
+   如果 `commit_cadence.release_count_today >= commit_cadence.max_daily_releases` 或 `daily_release_limit_ok=false`，当天停止 tag 发布。该离线计数使用 tag 指向的 commit 日期，只是近似值；创建 tag 前还须运行 `python scripts/check_github_release_cap.py --strict --json`，按 GitHub Releases 的 `publishedAt` 核对 `Asia/Shanghai` 当天的数量。任一计数达到 3 就停止发布；远端状态无法核实时不发布。
 2. 选择能当天验证的最小切片，并在 `docs/releases/vX.Y.Z-draft.md` 写清用户价值、风险、验证命令和剩余阻塞。
 3. 完成 `pyproject.toml`、CHANGELOG 的目标版本标题与 compare links、受影响的 README/官网入口和已审阅的 GitHub Release Notes；运行相关测试、`uv build` 与 `twine check`，提交后确保工作树干净。target-mode 接受项目版本已经 bump、上一版 tag 仍为 latest 的最终 CHANGELOG 状态；创建 tag 后必须改用 `--release-tag` 做严格校验。
 4. 在最终 HEAD 运行 `node --check site/script.js`、`python scripts/release_readiness.py --strict --target-version X.Y.Z --remote --remote-name origin` 和 `python scripts/validate_cases.py --strict`，并补充相关 `pytest` 或 `qa/*.sh`。master CI 与 tag Release Preflight 会重复网站 JavaScript 语法检查。
@@ -59,7 +59,7 @@
 - [ ] README/README.zh/官网中受影响的版本文案同步。
 - [ ] `node --check site/script.js` 通过，且 CI 与 Release Preflight 的网站 JavaScript 语法门禁仍在。
 - [ ] 在干净 release-base 上先运行 `python scripts/release_readiness.py --strict --target-version X.Y.Z --remote --remote-name origin`。
-- [ ] 核对 GitHub Releases 的 `publishedAt`（转换为 `Asia/Shanghai`）和本地 tag 所指向的 commit 日期；任一口径当天已有 3 个版本时停止发布。
+- [ ] 运行 `python scripts/check_github_release_cap.py --strict --json`，并核对本地 tag 所指向的 commit 日期；任一口径当天已有 3 个版本时停止发布。
 - [ ] 推送 `master` 后确认 GitHub CI 与 Embodied CI 都成功，再创建本地 tag。
 - [ ] 创建本地 tag 后运行 `python scripts/release_readiness.py --strict --release-tag vX.Y.Z --remote --remote-name origin`；通过后才推送 tag。
 - [ ] 运行离线默认检查：`CLIANY_QA_OFFLINE=1 pytest tests/ -q`，并完成 `uv build` 和 `twine check`。
@@ -93,6 +93,7 @@ python scripts/plan_next_iteration.py --target-version 0.15.0 --remote --json
 python scripts/check_release_cadence.py
 python scripts/check_release_cadence.py --json
 python scripts/check_release_cadence.py --max-daily-releases 3 --json
+python scripts/check_github_release_cap.py --strict --json
 
 # 检查最新本地 release commit/tag 是否已经可从 upstream 或远端看到
 python scripts/check_release_publication.py
@@ -141,7 +142,7 @@ CI 的 `Release Readiness Report` job 会在 PR/主分支生成 `release-readine
 
 `check_release_publication.py --distribution` 还会输出 `distribution.github_release_notes_status`：空 body 为 `empty`，只有自动 compare 链接的 body 为 `compare_only`，有用户可读内容时为 `present`。前两种状态会让严格公开审计失败；`github_release_notes_status` 只在目标 tag 的正式 GitHub Release 已被读取时出现，避免用旧版本的 body 掩盖 tag 不匹配。
 
-`check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、当天 release tag 指向的 commit 数量是否不超过 3、`CHANGELOG.md` Unreleased 是否有内容、`[Unreleased]` compare 链接是否指向最新 tag 到 `HEAD`，以及工作区是否干净。轻量 tag 没有独立创建时间，commit 日期可能早于 GitHub Release 的实际发布日期；因此 `release_count_today` 不能替代发布前的 GitHub `publishedAt` 核对。默认模式用于观察，`--strict` 用于发版前拦截；`--max-daily-releases` 可在 `check_release_cadence.py`、`release_readiness.py` 和 `plan_next_iteration.py` 三个入口使用，默认值为 3。周提交天数通过 `weekly_commit_cadence_ok`、`missing_commit_days` 和 cadence `next_actions` 暴露为周节奏提醒，不作为当天合格 release tag 的硬阻塞；发版硬门禁仍会拦截超过每日发布上限、tag/version 不一致、CHANGELOG 缺失、compare 链接漂移或工作区未清理。
+`check_release_cadence.py` 会检查当前 `pyproject.toml` 版本、最新 tag、本周唯一提交日期数、当天 release tag 指向的 commit 数量是否不超过 3、`CHANGELOG.md` Unreleased 是否有内容、`[Unreleased]` compare 链接是否指向最新 tag 到 `HEAD`，以及工作区是否干净。轻量 tag 没有独立创建时间，commit 日期可能早于 GitHub Release 的实际发布日期；因此 `release_count_today` 不能替代发布前的 `check_github_release_cap.py --strict`。后者需要 `gh` 登录和网络访问，无法核对远端时严格模式会失败。默认模式用于观察，`--strict` 用于发版前拦截；`--max-daily-releases` 可在 `check_release_cadence.py`、`release_readiness.py` 和 `plan_next_iteration.py` 三个入口使用，默认值为 3。周提交天数通过 `weekly_commit_cadence_ok`、`missing_commit_days` 和 cadence `next_actions` 暴露为周节奏提醒，不作为当天合格 release tag 的硬阻塞；发版硬门禁仍会拦截超过每日发布上限、tag/version 不一致、CHANGELOG 缺失、compare 链接漂移或工作区未清理。
 
 当 cadence 未满足时，`check_release_cadence.py` 的文本输出和 `--json` 都会包含纯文本 `next_actions`，提示维护者继续补足本周提交天数、暂停超过 3 个版本/日的 tag 发布、修正 tag/version、更新 CHANGELOG compare 链接或清理工作区；渲染为文本时才添加列表符号。JSON 输出还会包含 `weekly_commit_cadence_ok`、`missing_commit_days`、`release_count_today`、`max_daily_releases`、`daily_release_limit_ok`、`primary_next_action` 和 `next_actions_sha256`，便于维护脚本直接判断本周还差几个独立提交日、当天是否已经达到发布上限、展示首要节奏动作并检测 action list 是否漂移。每日版本发布前也读取这些字段，确保“每天发版”不会掩盖本周提交日不足、tag/version 不一致、超过每日发布上限或未清理工作区；其中本周提交日不足是可见提醒，后几项是发版硬阻塞。
 
