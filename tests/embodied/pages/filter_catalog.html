@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Filter catalog fixture</title></head>
+<body>
+  <label for="query">Filter packages</label>
+  <input id="query" type="search">
+  <button id="search" type="button">Search</button>
+  <output id="summary">Not searched</output>
+  <ul id="results" aria-label="Package results"></ul>
+  <script>
+    const packages = [
+      { code: 'alpha', name: 'Alpha toolkit' },
+      { code: 'beta', name: 'Beta runner' },
+      { code: 'gamma', name: 'Gamma toolkit' },
+    ];
+    document.getElementById('search').addEventListener('click', () => {
+      const query = document.getElementById('query').value.trim().toLowerCase();
+      const matches = packages.filter(item => item.name.toLowerCase().includes(query));
+      const results = document.getElementById('results');
+      results.replaceChildren();
+      for (const item of matches) {
+        const row = document.createElement('li');
+        row.dataset.code = item.code;
+        row.textContent = item.name;
+        results.append(row);
+      }
+      document.getElementById('summary').textContent = `${matches.length} matches`;
+    });
+  </script>
+</body>
+</html>
