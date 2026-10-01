@@ -44,8 +44,8 @@ def test_readmes_publish_copyable_active_demo_installs() -> None:
         "cwiki.apache.org-0.16.365.cliany-adapter.tar.gz": (
             "85ab3e918f32070fd69ae2947e69530b936a9d6655588d5153612d2686cac84f"
         ),
-        "builds.apache.org-0.14.1.cliany-adapter.tar.gz": (
-            "b09710acbabfb5465a6e04b5b140a4ffa4aa24795a2b4ada60eeabbddddea0c2"
+        "builds.apache.org-0.16.367.cliany-adapter.tar.gz": (
+            "10ac9f4dc1ce2b4cc364d9fe9517e1ecabd50743885f404040abf8fc248ef18b"
         ),
     }
     for filename in ("README.md", "README.zh.md"):

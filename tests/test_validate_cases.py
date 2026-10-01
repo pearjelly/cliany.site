@@ -292,6 +292,11 @@ def test_current_cases_manifest_validates_without_packages():
             "cwiki.apache.org-0.16.365.cliany-adapter.tar.gz",
             "85ab3e918f32070fd69ae2947e69530b936a9d6655588d5153612d2686cac84f",
         ),
+        "builds.apache.org": (
+            "https://github.com/pearjelly/cliany.site/releases/download/v0.16.367/"
+            "builds.apache.org-0.16.367.cliany-adapter.tar.gz",
+            "10ac9f4dc1ce2b4cc364d9fe9517e1ecabd50743885f404040abf8fc248ef18b",
+        ),
     }
     active_cases = [
         case for case in report.to_dict()["cases"] if case["status"] == "active"
@@ -305,6 +310,8 @@ def test_current_cases_manifest_validates_without_packages():
             assert case["commands"][0] == f"cliany-site market install {url} --sha256 {sha256}"
         if case.get("adapter_domain") == "cwiki.apache.org":
             assert case["status"] == "active"
+        if case.get("adapter_domain") == "builds.apache.org":
+            assert case["status"] == "degraded"
 
 
 def test_cases_report_flags_duplicate_ids(tmp_path):

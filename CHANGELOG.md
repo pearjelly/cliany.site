@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.367] - 2026-10-02
+
+### Added
+
+- A maintained, read-only ASF Jenkins job-list adapter candidate with schema v3 metadata. It reports limited returned rows separately from the true top-level total, and only exposes Apache Jenkins HTTPS result URLs. The historical generated adapter remains unchanged.
+- An isolated builder and offline CI job cover both maintained Confluence and Jenkins packages. A frozen Jenkins v0.16.367 archive passed a pinned-hash dry-run, install, strict verification, and a live read-only query returning 5 of 106 top-level jobs. The case remains degraded until the exact public Release asset passes an independent install and replay audit.
+
 ## [0.16.366] - 2026-10-02
 
 ### Changed
@@ -3275,7 +3282,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.366...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.367...HEAD
+[0.16.367]: https://github.com/pearjelly/cliany.site/compare/v0.16.366...v0.16.367
 [0.16.366]: https://github.com/pearjelly/cliany.site/compare/v0.16.365...v0.16.366
 [0.16.365]: https://github.com/pearjelly/cliany.site/compare/v0.16.364...v0.16.365
 [0.16.364]: https://github.com/pearjelly/cliany.site/compare/v0.16.363...v0.16.364
