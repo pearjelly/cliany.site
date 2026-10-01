@@ -7,6 +7,23 @@
 
 ## [Unreleased]
 
+## [0.16.370] - 2026-10-03
+
+### Added
+
+- Add an opt-in fresh-browser explore/replay benchmark with independent page-result oracles. Three controlled tasks scored 8/9 on one clean baseline; a separate real Python documentation search candidate passed 3/3 fresh explorations and six changed-query replays. These are small, single-provider samples, not general reliability claims.
+- Track the Python documentation search as a candidate case with a local schema-v3 package and explicit public-package promotion gates. The generated command is not yet a published adapter asset.
+
+### Fixed
+
+- Generated list/table commands now resample client-rendered results until four consecutive contents agree. A list that keeps changing returns `E_PAGE_NOT_READY` instead of a successful partial result; the intentional 100-item list cap remains.
+- Search/filter exploration may declare `expects_nonempty=false` when the workflow explicitly permits zero matches, without relaxing missing-field checks.
+- An invalid final command action partition receives one non-executing correction request. A second invalid partition or newly proposed page actions still fail validation; `partition_repair_attempts` exposes whether correction was attempted.
+
+### Evidence
+
+- Before the list-settling fix, a real Python documentation search returned successful but partial lists while the page was still rendering. After the fix, fresh replays returned the first 100 `pathlib` and `asyncio` rows with exact title/link agreement against the browser page after search completion. An independently installed local adapter package returned 44/44 matching `dataclasses` rows; public Release download and published-version replay are pending.
+
 ## [0.16.369] - 2026-10-03
 
 ### Fixed
@@ -3305,7 +3322,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.369...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.370...HEAD
+[0.16.370]: https://github.com/pearjelly/cliany.site/compare/v0.16.369...v0.16.370
 [0.16.369]: https://github.com/pearjelly/cliany.site/compare/v0.16.368...v0.16.369
 [0.16.368]: https://github.com/pearjelly/cliany.site/compare/v0.16.367...v0.16.368
 [0.16.367]: https://github.com/pearjelly/cliany.site/compare/v0.16.366...v0.16.367
