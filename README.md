@@ -374,10 +374,10 @@ cliany-site cwiki.apache.org search-pages --space SPARK --query "release" --json
 ### ASF Jenkins (Build Status)
 
 The historical v0.14.1 archive lacks required schema v3 metadata. The maintained
-v0.16.367 read-only replacement passed a pinned-hash local install, strict
-verification, and a five-row public query. Its public Release asset still needs
-an independent post-publication audit, so this case remains degraded. Existing
-adapters are not overwritten automatically. See the [candidate evidence](docs/user-evidence/2026-09-28-jenkins-curated-candidate.md).
+v0.16.367 read-only replacement passed an independent public-asset and PyPI CLI
+audit: pinned-hash install, strict verification, and five rows out of 106 top-level
+entries. This case is now active. Existing adapters are not overwritten
+automatically. See the [public audit](docs/user-evidence/2026-10-02-jenkins-public-package-audit.md).
 
 ```bash
 cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.16.367/builds.apache.org-0.16.367.cliany-adapter.tar.gz --sha256 10ac9f4dc1ce2b4cc364d9fe9517e1ecabd50743885f404040abf8fc248ef18b
