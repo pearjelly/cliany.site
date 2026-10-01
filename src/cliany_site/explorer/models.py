@@ -40,12 +40,12 @@ class ExploreResult:
     actions: list[ActionStep] = field(default_factory=list)
     commands: list[CommandSuggestion] = field(default_factory=list)
     explore_model: str = ""
-    partition_repair_attempts: int = 0
     smoke: list[dict] = field(default_factory=list)
     canonical_actions: list[dict] = field(default_factory=list)
     selector_pool: list[dict] = field(default_factory=list)
     api_endpoints: list = field(default_factory=list)
     capability: dict = field(default_factory=dict)
+    partition_repair_attempts: int = field(default=0, init=False)
 
     def to_dict(self) -> dict:
         import dataclasses
