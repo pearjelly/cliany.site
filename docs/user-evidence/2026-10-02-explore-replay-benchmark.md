@@ -4,6 +4,8 @@
 
 Opt-in live LLM test on commit `aa227fb1a643c766fa1a0289fed13b8d8d19ae84` (`git_dirty=false`), using the local v0.16.369 candidate and configured `deepseek-v4.1-flash` provider. These are controlled local pages, not public-site workflows or a published PyPI v0.16.369 build. Each trial used a fresh runtime home and headless Chromium instance for exploration; each replay used another fresh browser. Playwright read the page DOM independently of the generated command result.
 
+The semantic-target fixture inserts a different number of preceding buttons on each load. An embodied test captures the project's actual AXTree `selector_map` over CDP on two loads and verifies that `Inspect Beta` retains its button role/name while its `@ref` changes. This checks the claimed reference drift directly, beyond DOM row order.
+
 Run: `uv run python tests/embodied/run_live_benchmark.py --allow-live-llm --trials 3 --report /tmp/cliany-live-benchmark-2026-10-02-aa227fb.json`. The JSON report is outside the repository; it contains per-trial phase, latency, generated command, declared empty-result expectation, replay outcome, and error code. No token or cost metric was available from this invocation.
 
 | Task | Fresh explorations with correct independent replay | Replay oracle |

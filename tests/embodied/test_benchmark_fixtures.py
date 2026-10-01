@@ -70,3 +70,34 @@ async def test_semantic_reorder_oracle(benchmark_server):
                 await page.close()
         finally:
             await browser.close()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
+async def test_semantic_reorder_changes_target_axtree_ref(benchmark_server, unused_tcp_port):
+    from cliany_site.browser.axtree import capture_axtree
+    from cliany_site.browser.cdp import CDPConnection
+
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(
+            headless=True, args=[f"--remote-debugging-port={unused_tcp_port}"]
+        )
+        cdp = CDPConnection(cdp_url=f"ws://127.0.0.1:{unused_tcp_port}", headless=True)
+        try:
+            assert await cdp.check_available()
+            browser_session = await cdp.connect()
+            refs = []
+            for _ in range(2):
+                await browser_session.navigate_to(f"{benchmark_server}/semantic_reorder.html", new_tab=False)
+                tree = await capture_axtree(browser_session)
+                target = [
+                    element["ref"]
+                    for element in tree["selector_map"].values()
+                    if element.get("role") == "button" and element.get("name") == "Inspect Beta"
+                ]
+                assert len(target) == 1
+                refs.append(target[0])
+            assert refs[0] != refs[1]
+        finally:
+            await cdp.disconnect()
+            await browser.close()
