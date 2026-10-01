@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-10-02
-- **Current baseline:** v0.16.366
+- **Current baseline:** v0.16.367
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -44,6 +44,8 @@ As of v0.16.356, synchronous Python callers can use `save_session(domain, cdp_ur
 The next focus is turning candidate real-world cases into verified active demos.
 
 The published v0.16.365 Confluence package passed an independent pinned-hash install, strict verification and read-only replay. The maintained search case can now be active; the historical exact-title package remains unsuitable, and existing user adapters are not replaced automatically. See the [public package audit](user-evidence/2026-10-01-confluence-public-package-audit.md).
+
+v0.16.367 prepares a maintained, read-only Jenkins job-list package. A frozen archive passed a pinned-hash local install, strict verification, and a five-row query; the command reports 106 top-level entries in total. The case remains degraded until the exact public archive is independently installed and replayed. See the [candidate evidence](user-evidence/2026-09-28-jenkins-curated-candidate.md).
 
 As of v0.16.329, public candidate issue rewrites protect attached Doctor Preflight Evidence: an explicit `--apply --confirm-rewrite` without the current `--doctor-json` now stops with `doctor_json_required_before_rewrite` instead of erasing a traceable values hash. The default audit remains read-only, and the guarded rewrite path still requires current evidence.
 

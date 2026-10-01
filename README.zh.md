@@ -350,10 +350,15 @@ cliany-site cwiki.apache.org search-pages --space SPARK --query "release" --json
 ```
 
 ### ASF Jenkins (构建状态)
+
+历史 v0.14.1 包缺少 schema v3 必填元数据。维护版 v0.16.367 只读包已在隔离环境中
+通过固定哈希安装、严格校验并返回 5 条公开 job；公开 Release 资产仍需发布后独立验收，
+案例暂保持 degraded。已有 adapter 不会自动覆盖；见[候选证据](docs/user-evidence/2026-09-28-jenkins-curated-candidate.md)。
+
 ```bash
-cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/builds.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 b09710acbabfb5465a6e04b5b140a4ffa4aa24795a2b4ada60eeabbddddea0c2
+cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.16.367/builds.apache.org-0.16.367.cliany-adapter.tar.gz --sha256 10ac9f4dc1ce2b4cc364d9fe9517e1ecabd50743885f404040abf8fc248ef18b
 cliany-site verify builds.apache.org --strict --json
-cliany-site builds.apache.org list-jobs --json
+cliany-site builds.apache.org list-jobs --limit 5 --json
 ```
 
 > **免责声明**：以上 demo 站点由第三方维护，可能临时不可用。cliany-site 仅提供 CLI 适配层，不控制 demo 数据或可用性。

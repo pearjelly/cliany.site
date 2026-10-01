@@ -75,12 +75,12 @@
     "status": "degraded",
     "target_url": "https://builds.apache.org/",
     "adapter_domain": "builds.apache.org",
-    "source_release": "v0.14.1",
-    "docs": "docs/user-evidence/2026-09-22-active-demo-audit.md",
+    "source_release": "v0.16.367",
+    "docs": "docs/user-evidence/2026-09-28-jenkins-curated-candidate.md",
     "example_output": "cases/examples/apache-jenkins-jobs.json",
     "commands": [
-      "cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/builds.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 b09710acbabfb5465a6e04b5b140a4ffa4aa24795a2b4ada60eeabbddddea0c2",
-      "cliany-site builds.apache.org list-jobs --json"
+      "cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.16.367/builds.apache.org-0.16.367.cliany-adapter.tar.gz --sha256 10ac9f4dc1ce2b4cc364d9fe9517e1ecabd50743885f404040abf8fc248ef18b",
+      "cliany-site builds.apache.org list-jobs --limit 5 --json"
     ],
     "validation": {
       "offline": "adapter package metadata should validate against schema v3",
