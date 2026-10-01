@@ -104,10 +104,10 @@
 
       <main>
         <h1>cliany-site 文档</h1>
-        <p class="intro-meta">v0.16.365 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
+        <p class="intro-meta">v0.16.366 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
 
         <p>cliany-site 基于 LLM 和 Chrome CDP 协议，将任意网页操作自动化为可重复调用的 CLI 命令。核心流程：<strong>explore（探索）→ generate（生成适配器）→ run（执行）</strong>。</p>
-        <p>v0.16.365 提供维护中的 ASF Confluence 只读关键词搜索包。隔离安装、严格校验与公开页面回放返回了 5 条 SPARK 结果；发布资产仍需按固定 SHA-256 独立复核，案例在此之前保持 degraded。已有 adapter 不会自动覆盖。安装命令见 <a href="https://github.com/pearjelly/cliany.site#asf-confluence-wiki">README</a>。</p>
+        <p>v0.16.365 提供维护中的 ASF Confluence 只读关键词搜索包。公开资产已按固定 SHA-256 在隔离环境完成安装、严格校验与只读查询验收，案例现为 active；已有 adapter 不会自动覆盖。安装命令见 <a href="https://github.com/pearjelly/cliany.site#asf-confluence-wiki">README</a>。</p>
         <p>Chrome 的 <code>browser navigate</code> 会检查导航后的语义树：若看到站点验证页，返回 <code>E_PAGE_NOT_READY</code>，不会把已接受 URL 误作可用页面。npm 搜索在当前网络仍受 Cloudflare 验证页阻挡。</p>
         <p>严格发布预检会校验包版本、官网和两份路线图使用同一基线；路线图版本滞后会在创建 tag 前阻断发布。这是发布上下文的一致性检查，不代表 Chrome、LLM 或第三方工作流已就绪。</p>
         <p>严格 publication audit 会有限重试短暂的远端 Git 或 GitHub/PyPI JSON 传输失败；持续失败和 HTTP 响应仍是阻断证据，不会被当作已发布。</p>
@@ -136,14 +136,17 @@ export CLIANY_OPENAI_API_KEY="sk-..."</code></pre>
         <p><code>explore --json</code> 遇到 LLM 网关、限流或服务暂不可用时会返回 <code>E_LLM_UNAVAILABLE</code>，并在 <code>details.retryable</code>、<code>details.status_code</code> 和 <code>details.phase</code> 中给出可重试上下文；错误消息会清洗原始 HTML 网关页。</p>
 
         <h2 id="quickstart">10 分钟成功路径</h2>
-        <p>先检查本机，再运行一个无需登录的公开只读案例。<code>demo</code> 只在本地没有同名 adapter 时按固定 SHA-256 安装，始终先运行 <code>verify --strict</code>，通过后才查询 Jira，并要求至少一条 issue。失败会非零退出，不覆盖已有 adapter，不执行 candidate 或需要登录的案例。不需要先配置 LLM key 或 Chrome/CDP；Jira 案例仍依赖 GitHub 发布资产和 Jira 站点可达。准备生成自己的命令时，再进入 <a href="#config">配置 LLM</a> 和 <a href="#explore">explore</a>。</p>
+        <p>先检查本机，再运行一个无需登录的公开只读案例。<code>demo</code> 只在本地没有同名 adapter 时按固定 SHA-256 安装，始终先运行 <code>verify --strict</code>，通过后才查询，并要求至少一条结果。失败会非零退出，不覆盖已有 adapter，不执行 candidate 或需要登录的案例。不需要先配置 LLM key 或 Chrome/CDP；Jira 和 Confluence 案例仍依赖 GitHub 发布资产和第三方站点可达。准备生成自己的命令时，再进入 <a href="#config">配置 LLM</a> 和 <a href="#explore">explore</a>。</p>
         <pre><code># 1. 查看 human 摘要和下一步
 cliany-site doctor
 
 # 2. 拿到真实 issue 结果；检查 ok=true 和 data.row_count &gt;= 1
 cliany-site demo --case-id apache-jira-issues --json
 
-# 3. 查看其他维护中的案例
+# 3. 或搜索公开 Wiki 页面
+cliany-site demo --case-id apache-confluence-search --json
+
+# 4. 查看其他维护中的案例
 cliany-site cases --status active</code></pre>
         <p>2026-08-17 的真实 maintainer snapshot 已复核 <code>issues.apache.org</code> active demo：<code>cliany-site verify issues.apache.org --strict --json</code> 返回静态 verdict <code>ok</code>，通过后才运行 <code>cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json</code> 并返回 5 条只读结果。<code>scripts/capture_active_demo_evidence.py</code> 会按相同顺序写出日期化快照；请查看 <a href="https://github.com/pearjelly/cliany.site/blob/master/docs/user-evidence/2026-08-17-issues-apache-spark.md">完整证据快照</a>。它是捕获时点的环境证据，不代表 candidate package、live LLM 或第三方服务持续可用。</p>
         <p>普通 <code>doctor</code> 只检查本地配置，不会真实调用 LLM provider。自动化读取 JSON 时，<code>data.summary.ready_for_explore</code> 与 <code>generate_adapters.local_ready</code> 只表示本地配置可用，<code>local_blockers</code> 只解释本地前提；只有 <code>data.summary.ready_for_live_explore=true</code>（或等价 capability 字段）才能放行真实 <code>explore</code>。provider 预检失败时，本地前提仍可保持 <code>local_ready=true</code>，同时整体 <code>ready=false</code>、<code>live_blockers=["llm_live"]</code>；按 <code>next_step</code> 重跑严格命令：</p>

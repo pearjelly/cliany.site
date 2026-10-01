@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+## [0.16.366] - 2026-10-02
+
+### Changed
+
+- Promoted the maintained ASF Confluence search case to active after the published v0.16.365 archive passed an independent pinned-hash install, strict verification, and a nonempty read-only replay. `demo --case-id apache-confluence-search` now offers a one-command first run; a fresh isolated install returned six pages and a repeat run reused the verified adapter without overwriting it.
+- The demo's failure hints and human result summary now support both Jira issues and Confluence pages. The Confluence offline example matches the maintained adapter's result shape.
+
 ## [0.16.365] - 2026-10-01
 
 ### Added
@@ -3268,7 +3275,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.365...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.366...HEAD
+[0.16.366]: https://github.com/pearjelly/cliany.site/compare/v0.16.365...v0.16.366
 [0.16.365]: https://github.com/pearjelly/cliany.site/compare/v0.16.364...v0.16.365
 [0.16.364]: https://github.com/pearjelly/cliany.site/compare/v0.16.363...v0.16.364
 [0.16.363]: https://github.com/pearjelly/cliany.site/compare/v0.16.362...v0.16.363

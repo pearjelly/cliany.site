@@ -21,7 +21,7 @@
 |----|------|------|------|
 | `suitecrm-accounts` | SuiteCRM demo 账户列表 | active | 企业 CRM 查询，无 API 后台操作 CLI 化；样例输出见 [suitecrm-accounts.json](examples/suitecrm-accounts.json) |
 | `apache-jira-issues` | ASF Jira issue 列表 | active | DevOps/项目管理列表读取；样例输出见 [apache-jira-issues.json](examples/apache-jira-issues.json) |
-| `apache-confluence-search` | ASF Confluence 页面搜索 | degraded | [旧 adapter 审计](../docs/user-evidence/2026-09-22-confluence-keyword-audit.md)确认 title 过滤返回零行；[维护版 CQL 只读命令](../docs/user-evidence/2026-09-28-confluence-cql-probe.md)在隔离安装中返回 5 行，待公开包独立验收后再晋级 |
+| `apache-confluence-search` | ASF Confluence 页面搜索 | active | [维护版公开包验收](../docs/user-evidence/2026-10-01-confluence-public-package-audit.md)：固定哈希安装、严格校验、只读搜索返回 5 行；旧 v0.14.1 adapter 仍不推荐 |
 | `apache-jenkins-jobs` | ASF Jenkins job 列表 | degraded | v0.14.1 包缺少 v3 必填元数据，暂停推荐安装；见 [2026-09-22 实测](../docs/user-evidence/2026-09-22-active-demo-audit.md) |
 | `pypi-project-search` | PyPI 项目搜索 | candidate | Python 包注册表搜索候选；样例输出见 [pypi-project-search.json](examples/pypi-project-search.json)。公开 adapter 包与严格校验已通过；[只读在线搜索](../docs/user-evidence/2026-09-23-pypi-package-smoke.md) 尚未稳定通过，暂不晋级 active |
 | `npm-package-search` | npm 包搜索 | candidate | JavaScript 包注册表搜索候选；样例输出见 [npm-package-search.json](examples/npm-package-search.json)。[2026-09-28 访问检查](../docs/user-evidence/2026-09-28-npm-access.md)遇到 Cloudflare 验证页，未生成 adapter；待正常页面、包资产和在线 smoke 验证后再晋级 |
@@ -30,7 +30,7 @@
 
 ## Active Demo Downloads
 
-两个 `active` 案例的首条 `commands` 是可复制的 GitHub Release v0.14.1 HTTPS 安装命令，并固定对应 archive 的 SHA-256。Confluence 的 v0.16.365 维护包也有固定哈希的安装命令，但公开包仍待独立验收，当前不进入 active 首跑列表；Jenkins 同样保持 `degraded`。首次安装时用下面命令查看安全首跑路径：输出会按「固定 SHA-256 安装、`verify --strict`、仅在案例声明登录时登录、只读命令」的顺序展示。需要无写入预检时，在安装命令末尾追加 `--dry-run --json`。
+三个 `active` 案例的首条 `commands` 是可复制的 GitHub Release HTTPS 安装命令，并固定对应 archive 的 SHA-256。Jira 和 SuiteCRM 使用 v0.14.1 包；Confluence 使用已独立验收的 v0.16.365 维护包。Jenkins 仍保持 `degraded`。首次安装时用下面命令查看安全首跑路径：输出会按「固定 SHA-256 安装、`verify --strict`、仅在案例声明登录时登录、只读命令」的顺序展示。需要无写入预检时，在安装命令末尾追加 `--dry-run --json`。
 
 ```bash
 cliany-site cases --status active

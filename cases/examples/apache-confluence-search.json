@@ -6,25 +6,10 @@
       "space": "SPARK",
       "query": "release"
     },
+    "count": 2,
     "results": [
-      {
-        "ok": true,
-        "action": "extract",
-        "data": {
-          "pages": [
-            {
-              "title": "Example Release Notes",
-              "space": "SPARK",
-              "url": "https://cwiki.apache.org/example-release-notes"
-            },
-            {
-              "title": "Release Process Example",
-              "space": "SPARK",
-              "url": "https://cwiki.apache.org/release-process-example"
-            }
-          ]
-        }
-      }
+      {"id": "example-1", "title": "Example Release Notes", "space": "SPARK", "url": "https://cwiki.apache.org/confluence/display/SPARK/Example+Release+Notes"},
+      {"id": "example-2", "title": "Release Process Example", "space": "SPARK", "url": "https://cwiki.apache.org/confluence/display/SPARK/Release+Process+Example"}
     ],
     "quality": {
       "ok": true,
