@@ -41,8 +41,8 @@ def test_readmes_publish_copyable_active_demo_installs() -> None:
         "issues.apache.org-0.14.1.cliany-adapter.tar.gz": (
             "ad5867d361f372914c536fb59c8f26837af96ed407859cf69dc8464922f05319"
         ),
-        "cwiki.apache.org-0.14.1.cliany-adapter.tar.gz": (
-            "effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa"
+        "cwiki.apache.org-0.16.365.cliany-adapter.tar.gz": (
+            "85ab3e918f32070fd69ae2947e69530b936a9d6655588d5153612d2686cac84f"
         ),
         "builds.apache.org-0.14.1.cliany-adapter.tar.gz": (
             "b09710acbabfb5465a6e04b5b140a4ffa4aa24795a2b4ada60eeabbddddea0c2"

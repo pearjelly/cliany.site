@@ -288,9 +288,9 @@ def test_current_cases_manifest_validates_without_packages():
             "ad5867d361f372914c536fb59c8f26837af96ed407859cf69dc8464922f05319",
         ),
         "cwiki.apache.org": (
-            "https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/"
-            "cwiki.apache.org-0.14.1.cliany-adapter.tar.gz",
-            "effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa",
+            "https://github.com/pearjelly/cliany.site/releases/download/v0.16.365/"
+            "cwiki.apache.org-0.16.365.cliany-adapter.tar.gz",
+            "85ab3e918f32070fd69ae2947e69530b936a9d6655588d5153612d2686cac84f",
         ),
     }
     active_cases = [

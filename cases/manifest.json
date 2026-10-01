@@ -52,11 +52,11 @@
     "status": "degraded",
     "target_url": "https://cwiki.apache.org/",
     "adapter_domain": "cwiki.apache.org",
-    "source_release": "v0.14.1",
-    "docs": "docs/user-evidence/2026-09-22-confluence-keyword-audit.md",
+    "source_release": "v0.16.365",
+    "docs": "docs/user-evidence/2026-09-28-confluence-cql-probe.md",
     "example_output": "cases/examples/apache-confluence-search.json",
     "commands": [
-      "cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/cwiki.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa",
+      "cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.16.365/cwiki.apache.org-0.16.365.cliany-adapter.tar.gz --sha256 85ab3e918f32070fd69ae2947e69530b936a9d6655588d5153612d2686cac84f",
       "cliany-site cwiki.apache.org search-pages --space SPARK --query \"release\" --json"
     ],
     "validation": {

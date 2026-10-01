@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-09-28
-- **Current baseline:** v0.16.364
+- **Current baseline:** v0.16.365
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
@@ -42,6 +42,8 @@ As of v0.16.356, synchronous Python callers can use `save_session(domain, cdp_ur
 ## Near Term: 2026-07-29 to 2026-08-05
 
 The next focus is turning candidate real-world cases into verified active demos.
+
+v0.16.365 prepares a maintained, read-only Confluence keyword-search package. An isolated install returned five public `SPARK` pages and passed strict verification. The case remains degraded until the published archive is independently installed and replayed with its pinned SHA-256; existing user adapters are not replaced automatically.
 
 As of v0.16.329, public candidate issue rewrites protect attached Doctor Preflight Evidence: an explicit `--apply --confirm-rewrite` without the current `--doctor-json` now stops with `doctor_json_required_before_rewrite` instead of erasing a traceable values hash. The default audit remains read-only, and the guarded rewrite path still requires current evidence.
 
