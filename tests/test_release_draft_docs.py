@@ -13751,3 +13751,19 @@ def test_v016353_release_draft_prepares_sync_sdk_session_helper() -> None:
         "live LLM success",
     ]:
         assert snippet in notes
+
+
+def test_v016370_release_materials_keep_public_docs_as_candidate() -> None:
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    draft = (ROOT / "docs" / "releases" / "v0.16.370-draft.md").read_text(encoding="utf-8")
+    notes = (ROOT / "docs" / "releases" / "v0.16.370-github-release.md").read_text(encoding="utf-8")
+
+    assert "## [0.16.370] - 2026-10-03" in changelog
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.370...HEAD" in changelog
+    assert "# v0.16.370 发布草案" in draft
+    assert "cases/manifest.json" in draft
+    assert "公开 Release 资产" in draft
+    assert "# v0.16.370" in notes
+    assert "100-item list limit remains" in notes
+    assert "as a **candidate**" in notes
+    assert "fixed-SHA public Release download" in notes
