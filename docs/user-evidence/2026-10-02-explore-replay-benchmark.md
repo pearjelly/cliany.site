@@ -66,3 +66,16 @@ On commit `47c64dec15dea04f6cf968b597d6a1e71065524c`, three more opt-in `deepsee
 Trial 1's unedited generated adapter was locally packaged as `docs.python.org-0.16.370.cliany-adapter.tar.gz` (SHA-256 `bb56d401923b7aa5b632657843a56d938778d8ed39465aed05b94980e132c0b7`). A separate clean runtime home installed that archive, passed `verify docs.python.org --strict`, and replayed a changed `dataclasses` query in a fresh browser: 44 returned rows exactly matched the page's 44 title/link rows after `Search finished`. The package is **local and unpublished**; no public package URL, published-version install, or fixed-SHA remote download has yet passed. This case remains a candidate until those release-time checks do.
 
 The catalog tracks this as `python-docs-search` with the local package metadata gate complete and the public-package and published-install smoke gates pending. Focused `validate_cases.py --case-id python-docs-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict` passed for the local SHA-256 archive; it does not replace validation of the future Release download.
+
+## Thirty-trial fixed-baseline follow-up
+
+An opt-in run on clean commit `8c240719f80fc09bddd19204e2a8ce251362be7b` (`git_dirty=false`, local package version `0.16.370`, configured `deepseek-v4.1-flash`) used the same three predeclared controlled tasks and fresh runtime/browser isolation. Command: `uv run python tests/embodied/run_live_benchmark.py --allow-live-llm --trials 10 --report /tmp/cliany-live-benchmark-2026-10-02-8c24071-30.json`. Live LLM preflight passed. The local JSON report is outside the repository; no token or cost metric was captured.
+
+| Task | Correct independent replays | First failing phase |
+| --- | ---: | --- |
+| Form action | 10/10 | None |
+| Filter/search, including zero-match replay | 7/10 | Trial 5: explore quality gate `E_EMPTY_RESULT` after 237.66 s; trial 8: benchmark explore timeout at 300.03 s; trial 10: positive `gamma` replay returned `E_EMPTY_RESULT` |
+| Semantic target after layout changes | 10/10 | None |
+| **Total** | **27/30** | Three filter failures, retained in the denominator |
+
+All 35 replays that returned success passed their independent page-DOM oracle; one additional `gamma` replay failed explicitly, while its zero-match companion passed. No silent wrong success was observed in this sample. The explore-time median was 33.28 seconds, with a 237.66-second near-tail failure and a 300.03-second timeout. All recorded `partition_repair_attempts` were zero, so the live sample still does not exercise that correction path. The harness records only the failed replay's error code, not the generated extraction metadata or quality details; the cause of trial 10's `E_EMPTY_RESULT` is unresolved and tracked in [Issue #35](https://github.com/pearjelly/cliany.site/issues/35). This controlled single-provider result meets the plan's 27/30 numerical threshold, but does not establish public-site or population-level reliability. In particular, the 7/10 filter result and latency outliers remain product work.
