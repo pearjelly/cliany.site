@@ -20,6 +20,7 @@
 - Search/filter exploration may declare `expects_nonempty=false` when the workflow explicitly permits zero matches, without relaxing missing-field checks.
 - An invalid final command action partition receives one non-executing correction request. A second invalid partition or newly proposed page actions still fail validation; `partition_repair_attempts` exposes whether correction was attempted.
 - When a generated data command fails because a field is blank in every row, its one-time exploration repair feedback now names the field and distinguishes optional absent data from task-required data. The quality gate remains strict.
+- A completion repair may exclude only extract actions already proven to have failed. Other recorded actions must still be assigned exactly once, and the repaired command needs a new successful extract; this makes correction reachable without replaying a known-bad extract.
 - `doctor` now makes clear that a missing `AGENT.md` does not block installing or running an existing adapter. It recommends an LLM preflight before `explore` only when generating a new adapter is the user's next step.
 
 ### Evidence

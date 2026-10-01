@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from cliany_site.errors import DataCommandQualityError
-from cliany_site.explorer.engine import WorkflowExplorer
+from cliany_site.explorer.engine import WorkflowExplorer, _validate_command_partition
 
 
 def _config() -> SimpleNamespace:
@@ -166,7 +166,7 @@ async def test_extract_only_followup_must_include_replay_prerequisites(mocker, t
 
 
 @pytest.mark.asyncio
-async def test_data_command_rejects_partial_extract_after_one_repair(mocker):
+async def test_data_command_rejects_partial_extract_after_one_repair(mocker, tmp_home):
     partial_payload = [
         {
             "step_index": 0,
@@ -176,7 +176,7 @@ async def test_data_command_rejects_partial_extract_after_one_repair(mocker):
     ]
     parse_results = [
         {"actions": [_extract_action()], "commands": [_data_command([0])], "done": True},
-        {"actions": [_extract_action()], "commands": [_data_command([0, 1])], "done": True},
+        {"actions": [_extract_action()], "commands": [_data_command([1])], "done": True},
     ]
     invoke = _prepare(mocker, parse_results, [partial_payload, partial_payload])
 
@@ -190,6 +190,64 @@ async def test_data_command_rejects_partial_extract_after_one_repair(mocker):
     repair_prompt = invoke.await_args_list[1].args[1]
     assert '"url"' in repair_prompt
     assert "若任务未要求且页面无对应值，移除这些字段" in repair_prompt
+
+
+@pytest.mark.asyncio
+async def test_repaired_extract_can_replace_failed_exploration_extract(mocker, tmp_home):
+    corrected_extract = {
+        **_extract_action(),
+        "fields": {"title": "h2"},
+    }
+    invoke = _prepare(
+        mocker,
+        [
+            {"actions": [_extract_action()], "commands": [_data_command([0])], "done": True},
+            {"actions": [corrected_extract], "commands": [_data_command([1])], "done": True},
+        ],
+        [
+            [{"step_index": 0, "extract_mode": "list", "data": [{"title": "Result", "url": "", "snippet": "Text"}]}],
+            [{"step_index": 0, "extract_mode": "list", "data": [{"title": "Result"}]}],
+        ],
+    )
+
+    result = await WorkflowExplorer().explore("https://example.com/search", "读取结果标题", record=False)
+
+    assert result.commands[0].action_steps == [1]
+    assert len(result.actions) == 2
+    assert "舍弃" in invoke.await_args_list[1].args[1]
+
+
+@pytest.mark.asyncio
+async def test_failed_extract_partition_correction_does_not_repeat_page_actions(mocker, tmp_home):
+    corrected_extract = {**_extract_action(), "fields": {"title": "h2"}}
+    invoke = _prepare(
+        mocker,
+        [
+            {"actions": [_extract_action()], "commands": [_data_command([0])], "done": True},
+            {"actions": [corrected_extract], "commands": [_data_command([0, 1])], "done": True},
+            {"actions": [], "commands": [_data_command([1])], "done": True},
+        ],
+        [
+            [{"step_index": 0, "extract_mode": "list", "data": [{"title": "Result", "url": ""}]}],
+            [{"step_index": 0, "extract_mode": "list", "data": [{"title": "Result"}]}],
+        ],
+    )
+    result = await WorkflowExplorer().explore("https://example.com/search", "读取结果标题", record=False)
+
+    assert result.commands[0].action_steps == [1]
+    assert len(result.actions) == 2
+    assert result.partition_repair_attempts == 1
+    assert invoke.await_count == 3
+    assert "已失败 extract 索引 [0] 必须舍弃" in invoke.await_args_list[2].args[1]
+
+
+def test_failed_extract_exception_does_not_allow_omitting_other_actions(tmp_home):
+    with pytest.raises(RuntimeError, match="命令动作分区无效"):
+        _validate_command_partition(
+            [{"action_steps": [2]}],
+            3,
+            discardable_action_indices={1},
+        )
 
 
 @pytest.mark.asyncio

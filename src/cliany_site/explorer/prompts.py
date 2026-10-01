@@ -21,8 +21,8 @@ canonical_actions 和 selector_pool 字段为可选：若 LLM 无法生成，返
 
 commands 字段说明（仅当 done=true 时填写）：
 - 每个命令必须包含 action_steps 字段：一个 0-based 整数列表，指明该命令对应的动作编号（从探索过程所有步骤累积的 actions 列表中取，索引从 0 开始）
-- 所有命令的 action_steps 加起来必须覆盖全部动作索引（0 到 N-1），且每个索引只能出现在一个命令中
-- 如果工作流只有一个命令，action_steps 应包含所有动作的索引
+- 所有命令的 action_steps 加起来必须覆盖全部动作索引（0 到 N-1），且每个索引只能出现在一个命令中；仅当数据命令完成门禁明确列出已失败的 extract 索引时，修正后的命令须舍弃这些失败索引，其他索引仍须全部覆盖
+- 如果工作流只有一个命令，action_steps 应包含所有必须保留的动作索引
 - 每个生成命令都会从来源 URL 重新导航并独立执行；若读取结果依赖此前的输入、选择或点击，必须把这些动作和 extract 放在同一个命令，不能拆成先操作后读取的两个命令
 - 每个命令的 args 字段用于声明可参数化的 CLI 选项（详见下方参数化规则）
 - 每个命令必须显式写出 expects_nonempty（true/false）。默认用 true：空结果表示该数据命令没有得到预期数据。搜索、筛选或确认“某项是否不存在”的工作流若明确允许零匹配，设为 false；例如用户要求搜索命令在无匹配时返回空列表。false 不能用于掩盖字段缺失、部分提取或页面结构变化。
@@ -253,7 +253,7 @@ URL: {url}
 {completed_steps}
 
 已录制 {completed_action_count} 个动作。本轮 actions 的第一个动作编号是 {completed_action_count}。
-如果本轮设置 done=true，commands.action_steps 必须覆盖此前及本轮的全部动作编号，不能漏掉本轮新增的动作。
+如果本轮设置 done=true，commands.action_steps 必须覆盖此前及本轮的全部动作编号；仅可舍弃完成门禁明确列出的失败 extract 索引，不能漏掉其他新增动作。
 
 请分析页面，识别完成工作流的下一步操作。优先使用页面现有元素完成流程，只在拥有真实 URL 时才输出导航 URL。
 只有当已经完成 "{workflow_description}" 整个目标时，done 才能为 true；如果只是完成了中间某一步，done 必须为 false。以 JSON 格式回复。"""

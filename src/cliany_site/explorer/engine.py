@@ -89,7 +89,12 @@ def _valid_action_indices(raw_indices: object, action_count: int) -> list[int]:
     return [index for index in raw_indices if isinstance(index, int) and 0 <= index < action_count]
 
 
-def _validate_command_partition(commands: list[object], action_count: int) -> None:
+def _validate_command_partition(
+    commands: list[object],
+    action_count: int,
+    *,
+    discardable_action_indices: set[int] | None = None,
+) -> None:
     """Validate ownership before filtering indices can hide invalid model output."""
     assigned: list[int] = []
     for command in commands:
@@ -99,7 +104,9 @@ def _validate_command_partition(commands: list[object], action_count: int) -> No
                 or indices != sorted(indices)):
             raise RuntimeError("命令动作分区无效：每个命令须按录制顺序声明有效动作索引；请重新探索")
         assigned.extend(indices)
-    if sorted(assigned) != list(range(action_count)):
+    discardable = discardable_action_indices or set()
+    expected = [index for index in range(action_count) if index not in discardable]
+    if sorted(assigned) != expected:
         raise RuntimeError("命令动作分区无效：每个动作须恰好归属一个命令，不允许遗漏或重复；请重新探索")
 
 
@@ -199,7 +206,9 @@ def _data_command_completion_failures(
     return failures
 
 
-def _data_completion_feedback(failures: list[dict[str, Any]]) -> str:
+def _data_completion_feedback(
+    failures: list[dict[str, Any]], discardable_action_indices: set[int]
+) -> str:
     lines = ["## 数据命令完成门禁", "上一次尝试不能结束探索。"]
     if any(failure.get("reason") == "missing_replay_prerequisites" for failure in failures):
         lines.append(
@@ -211,6 +220,11 @@ def _data_completion_feedback(failures: list[dict[str, Any]]) -> str:
             "只修正以下数据命令，并再次执行其自己的 extract 动作。",
             "缺失、空结果或字段不完整时必须保持 done=false；不要编造数据或把其他命令的 extract 归属给它。",
         ])
+    if discardable_action_indices:
+        lines.append(
+            f"已失败的 extract 动作索引 {sorted(discardable_action_indices)} 必须从最终命令 action_steps 中舍弃；"
+            "其他已录制动作索引仍须恰好归属一个命令。修正后的命令必须包含新的成功 extract。"
+        )
     for failure in failures:
         name = failure.get("name") or f"command-{failure.get('command_index', 0) + 1}"
         reason = failure.get("reason", "unknown")
@@ -764,6 +778,7 @@ class WorkflowExplorer:
             all_extraction_results: list = []
             data_completion_repairs = 0
             data_completion_feedback = ""
+            discardable_action_indices: set[int] = set()
 
             for step_num in range(cfg.explore_max_steps):
                 step_start = time.monotonic()
@@ -1039,18 +1054,28 @@ class WorkflowExplorer:
 
                     if commands_data:
                         try:
-                            _validate_command_partition(commands_data, len(result.actions))
+                            _validate_command_partition(
+                                commands_data,
+                                len(result.actions),
+                                discardable_action_indices=discardable_action_indices,
+                            )
                         except RuntimeError as partition_error:
                             result.partition_repair_attempts += 1
                             recorded_actions = [
                                 {"index": index, "type": action.action_type, "description": action.description}
                                 for index, action in enumerate(result.actions)
                             ]
+                            coverage_rule = (
+                                f"已失败 extract 索引 {sorted(discardable_action_indices)} 必须舍弃，"
+                                "其余已录制动作索引恰好出现一次。"
+                                if discardable_action_indices
+                                else "所有已录制动作索引恰好出现一次。"
+                            )
                             repair_prompt = (
                                 f"{SYSTEM_PROMPT}{extend_section}\n\n"
                                 "上一次完成响应的 commands.action_steps 分区无效。"
                                 "只修正命令分区，不要再次操作页面。返回 JSON：actions=[]、done=true，"
-                                "commands 中每个 action_steps 按顺序排列，所有已录制动作索引恰好出现一次。"
+                                f"commands 中每个 action_steps 按顺序排列，{coverage_rule}"
                                 "保留命令的其他字段与真实业务意图；不能猜测或新增动作。\n"
                                 f"已录制动作：{json.dumps(recorded_actions, ensure_ascii=False)}\n"
                                 f"待修正命令：{json.dumps(commands_data, ensure_ascii=False)}"
@@ -1070,7 +1095,11 @@ class WorkflowExplorer:
                             commands_data = repaired.get("commands")
                             if not isinstance(commands_data, list) or not commands_data:
                                 raise RuntimeError("命令动作分区无效：修正响应必须包含命令列表") from partition_error
-                            _validate_command_partition(commands_data, len(result.actions))
+                            _validate_command_partition(
+                                commands_data,
+                                len(result.actions),
+                                discardable_action_indices=discardable_action_indices,
+                            )
 
                     completion_failures = _data_command_completion_failures(
                         commands_data,
@@ -1088,7 +1117,15 @@ class WorkflowExplorer:
                         }
                         if can_repair:
                             data_completion_repairs += 1
-                            data_completion_feedback = _data_completion_feedback(completion_failures)
+                            discardable_action_indices = {
+                                failure["action_index"]
+                                for failure in completion_failures
+                                if failure.get("reason") in {"extract_quality_failed", "extraction_execution_failed"}
+                                and type(failure.get("action_index")) is int
+                            }
+                            data_completion_feedback = _data_completion_feedback(
+                                completion_failures, discardable_action_indices
+                            )
                             logger.info(
                                 "步骤 %d 的数据命令未通过完成门禁，发起第 %d 次修正",
                                 step_num + 1,
