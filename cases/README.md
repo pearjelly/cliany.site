@@ -22,7 +22,7 @@
 | `suitecrm-accounts` | SuiteCRM demo 账户列表 | active | 企业 CRM 查询，无 API 后台操作 CLI 化；样例输出见 [suitecrm-accounts.json](examples/suitecrm-accounts.json) |
 | `apache-jira-issues` | ASF Jira issue 列表 | active | DevOps/项目管理列表读取；样例输出见 [apache-jira-issues.json](examples/apache-jira-issues.json) |
 | `apache-confluence-search` | ASF Confluence 页面搜索 | active | [维护版公开包验收](../docs/user-evidence/2026-10-01-confluence-public-package-audit.md)：固定哈希安装、严格校验、只读搜索返回 5 行；旧 v0.14.1 adapter 仍不推荐 |
-| `apache-jenkins-jobs` | ASF Jenkins job 列表 | degraded | v0.14.1 包缺少 v3 必填元数据，暂停推荐安装；见 [2026-09-22 实测](../docs/user-evidence/2026-09-22-active-demo-audit.md) |
+| `apache-jenkins-jobs` | ASF Jenkins job 列表 | degraded | v0.14.1 包缺少 v3 必填元数据；[只读替换候选](../docs/user-evidence/2026-09-28-jenkins-curated-candidate.md)已通过本地安装和真实查询，仍待公开发布与复测 |
 | `pypi-project-search` | PyPI 项目搜索 | candidate | Python 包注册表搜索候选；样例输出见 [pypi-project-search.json](examples/pypi-project-search.json)。公开 adapter 包与严格校验已通过；[只读在线搜索](../docs/user-evidence/2026-09-23-pypi-package-smoke.md) 尚未稳定通过，暂不晋级 active |
 | `npm-package-search` | npm 包搜索 | candidate | JavaScript 包注册表搜索候选；样例输出见 [npm-package-search.json](examples/npm-package-search.json)。[2026-09-28 访问检查](../docs/user-evidence/2026-09-28-npm-access.md)遇到 Cloudflare 验证页，未生成 adapter；待正常页面、包资产和在线 smoke 验证后再晋级 |
 | `crates-io-crate-search` | crates.io crate 搜索 | candidate | Rust 包注册表搜索候选；样例输出见 [crates-io-crate-search.json](examples/crates-io-crate-search.json)，待生成 adapter 包和在线 smoke 后晋级 active |

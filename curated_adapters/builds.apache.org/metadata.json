@@ -1,0 +1,20 @@
+{
+  "schema_version": 3,
+  "domain": "builds.apache.org",
+  "generated_at": "2026-09-28T00:00:00+00:00",
+  "generator_version": "curated-1",
+  "source_url": "https://builds.apache.org/",
+  "workflow": "列出 ASF Jenkins 的公开顶层 job 和文件夹",
+  "capability": "api",
+  "api_endpoints": ["GET https://ci-builds.apache.org/api/json"],
+  "commands": [
+    {
+      "name": "list-jobs",
+      "source": "api",
+      "expects_nonempty": false,
+      "params": ["limit"],
+      "returns": {"jobs": "array", "count": "integer", "total": "integer"},
+      "examples": ["cliany-site builds.apache.org list-jobs --limit 5 --json"]
+    }
+  ]
+}

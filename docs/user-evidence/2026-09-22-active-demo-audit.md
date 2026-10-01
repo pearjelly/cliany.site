@@ -20,6 +20,8 @@ Before the fix, `market install <archive> --dry-run --json` reported success bec
 
 The catalog now marks Jenkins `degraded`. Restoring `active` requires a new valid package, a fixed SHA-256 download command, strict metadata validation, and a real successful read-only smoke. The historical generated adapter has not been edited or republished.
 
+A [September 28 maintained replacement candidate](2026-09-28-jenkins-curated-candidate.md) passed local isolated package installation, strict verification, and an actual read-only five-row command. The public asset and post-publication smoke remain pending, so the case status is unchanged.
+
 ## Follow-Up
 
 The three remaining active v0.14.1 archives (Jira, Confluence, SuiteCRM) were each downloaded through their catalog HTTPS URL and fixed SHA-256, then passed `market install --dry-run --json` with the new validator. These checks did not overwrite any installed adapter and do not prove all three online workflows succeed.
