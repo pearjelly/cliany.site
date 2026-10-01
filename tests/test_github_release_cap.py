@@ -69,6 +69,7 @@ def test_strict_fails_closed_on_invalid_release_data(monkeypatch, capsys) -> Non
 
 def test_tag_release_workflow_checks_cap_before_build() -> None:
     workflow = yaml.safe_load((ROOT / ".github" / "workflows" / "release.yml").read_text(encoding="utf-8"))
+    assert workflow["concurrency"] == {"group": "release-publication", "cancel-in-progress": False}
     jobs = workflow["jobs"]
     steps = jobs["release-preflight"]["steps"]
     check = next(step for step in steps if step.get("name") == "Check GitHub publication capacity")

@@ -11,6 +11,10 @@ permissions:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
+concurrency:
+  group: release-publication
+  cancel-in-progress: false
+
 jobs:
   release-preflight:
     name: Release Preflight
