@@ -25,12 +25,14 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Browsers",
 ]
 dependencies = [
+    "aiohttp",
     "browser-use",
     "click",
     "rich",
     "langchain-openai",
     "langchain-anthropic",
     "python-dotenv",
+    "PyYAML",
     "textual",
     "cryptography>=46.0.5",
     "keyring>=25.7.0",
