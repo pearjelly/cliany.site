@@ -92,7 +92,9 @@ cliany-site cases --json
 cliany-site demo --case-id apache-jira-issues --json
 ```
 
-命令只在本地没有同名 adapter 时按案例固定 SHA-256 安装；随后执行 `verify --strict`，通过才运行案例声明的只读 SPARK issue 查询，并要求至少一条 issue。`ok=true` 的 `data.result` 保留原始查询结果，`data.row_count` 给出实际行数。安装、校验、查询或结果门槛失败都会非零退出，且不会继续后续步骤。已有同名 adapter 不会被覆盖，但仍须通过严格校验。这个入口不运行 candidate、degraded 或需要登录的案例。Jira 案例无需 LLM key 或 Chrome/CDP，但仍依赖 GitHub 发布资产与 Jira 站点可达。
+ASF Confluence 页面搜索也已完成公开包验收，可运行 `cliany-site demo --case-id apache-confluence-search --json`。
+
+命令只在本地没有同名 adapter 时按案例固定 SHA-256 安装；随后执行 `verify --strict`，通过才运行案例声明的只读查询，并要求至少一条结果。`ok=true` 的 `data.result` 保留原始查询结果，`data.row_count` 给出实际行数。安装、校验、查询或结果门槛失败都会非零退出，且不会继续后续步骤。已有同名 adapter 不会被覆盖，但仍须通过严格校验。这个入口不运行 candidate、degraded 或需要登录的案例。Jira 和 Confluence 案例无需 LLM key 或 Chrome/CDP，但仍依赖 GitHub 发布资产与第三方站点可达。
 
 维护者在 2026-08-17 真实复核了 `issues.apache.org` active demo：`cliany-site verify issues.apache.org --strict --json` 返回静态 verdict `ok`，通过后才执行 `cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json`，返回 5 条只读结果。维护者可用下面的受边界约束的捕获器重跑同一路径并写出日期化 snapshot：
 

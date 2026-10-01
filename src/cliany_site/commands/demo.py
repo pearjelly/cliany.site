@@ -98,12 +98,12 @@ def run_demo(case_id: str) -> Envelope:
     passed, payload = _run_step(query_argv)
     if not passed or payload is None:
         return err("demo", ErrorCode.E_UNKNOWN, "只读查询失败",
-                   hint="检查公开 Jira 服务是否可达，稍后重试；安装和校验不会因此重做",
+                   hint=f"检查公开 {domain} 服务是否可达，稍后重试；安装和校验不会因此重做",
                    details={"stage": "query", "upstream_error": (payload or {}).get("error")})
     row_count, minimum = _row_count(payload, validation)
     if row_count < minimum:
         return err("demo", ErrorCode.E_EMPTY_RESULT, "只读查询未达到案例结果门槛",
-                   hint="查询成功但没有足够的 issue；检查 Jira 返回内容和案例条件",
+                   hint=f"查询成功但没有足够的结果；检查 {domain} 返回内容和案例条件",
                    details={"stage": "oracle", "row_count": row_count, "min_count": minimum})
     return ok("demo", {"case_id": case_id, "adapter_domain": domain, "installed_now": not installed,
                        "row_count": row_count, "result": payload})
@@ -124,10 +124,12 @@ def demo_cmd(ctx: click.Context, case_id: str, json_mode: bool | None) -> None:
     data = cast(dict[str, Any], result["data"])
     click.echo(f"✓ {data['case_id']}: {data['row_count']} 条结果")
     query_data = data["result"].get("data")
-    issues = query_data.get("issues") if isinstance(query_data, dict) else None
-    if isinstance(issues, list):
-        for issue in issues:
-            if isinstance(issue, dict):
-                key = json.dumps(str(issue.get("key", "")), ensure_ascii=False)
-                summary = json.dumps(str(issue.get("summary", "")), ensure_ascii=False)
-                click.echo(f"  {key}  {summary}")
+    for rows_key, id_key, title_key in (("issues", "key", "summary"), ("results", "id", "title")):
+        rows = query_data.get(rows_key) if isinstance(query_data, dict) else None
+        if isinstance(rows, list):
+            for row in rows:
+                if isinstance(row, dict):
+                    identifier = json.dumps(str(row.get(id_key, "")), ensure_ascii=False)
+                    title = json.dumps(str(row.get(title_key, "")), ensure_ascii=False)
+                    click.echo(f"  {identifier}  {title}")
+            break

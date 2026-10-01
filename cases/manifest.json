@@ -49,7 +49,7 @@
     "id": "apache-confluence-search",
     "title": "ASF Confluence page search",
     "category": "knowledge-base",
-    "status": "degraded",
+    "status": "active",
     "target_url": "https://cwiki.apache.org/",
     "adapter_domain": "cwiki.apache.org",
     "source_release": "v0.16.365",
