@@ -129,6 +129,91 @@ class TestEncryptedSession:
 
             assert load_encrypted_session("nonexist.com") is None
 
+    def test_save_failure_does_not_write_plaintext(self, tmp_path: Path) -> None:
+        from cliany_site.session import save_session_data
+
+        with patch("cliany_site.security.get_config") as mock_cfg:
+            mock_cfg.return_value.sessions_dir = tmp_path / "sessions"
+            mock_cfg.return_value.home_dir = tmp_path
+            with (
+                patch("cliany_site.security.encrypt_data", side_effect=OSError("key unavailable")),
+                pytest.raises(RuntimeError, match="未写入明文"),
+            ):
+                save_session_data("test.com", {"cookies": [{"value": "secret"}]})
+
+        assert not (tmp_path / "sessions" / "test.com.json").exists()
+
+    def test_plaintext_migration_failure_is_not_loaded(self, tmp_path: Path) -> None:
+        from cliany_site.session import load_session_data
+
+        sessions_dir = tmp_path / "sessions"
+        sessions_dir.mkdir()
+        plain_file = sessions_dir / "old.com.json"
+        raw = json.dumps({"domain": "old.com", "cookies": [{"value": "secret"}]})
+        plain_file.write_text(raw)
+
+        with patch("cliany_site.security.get_config") as mock_cfg:
+            mock_cfg.return_value.sessions_dir = sessions_dir
+            mock_cfg.return_value.home_dir = tmp_path
+            with patch("cliany_site.security.encrypt_data", side_effect=OSError("key unavailable")):
+                assert load_session_data("old.com") is None
+
+        assert plain_file.read_text() == raw
+
+    def test_failed_encrypted_replace_preserves_previous_session(self, tmp_path: Path) -> None:
+        from cryptography.fernet import Fernet
+
+        from cliany_site.session import save_session_data
+
+        with patch("cliany_site.security.get_config") as mock_cfg:
+            mock_cfg.return_value.sessions_dir = tmp_path / "sessions"
+            mock_cfg.return_value.home_dir = tmp_path
+            with patch("cliany_site.security.get_encryption_key", return_value=Fernet.generate_key()):
+                path = Path(save_session_data("test.com", {"cookies": [{"value": "first"}]}))
+                original = path.read_bytes()
+                with (
+                    patch("cliany_site.security._atomic_write_bytes", side_effect=OSError("disk full")),
+                    pytest.raises(RuntimeError, match="未写入明文"),
+                ):
+                    save_session_data("test.com", {"cookies": [{"value": "second"}]})
+
+        assert path.read_bytes() == original
+
+    def test_check_session_reads_encrypted_metadata(self, tmp_path: Path) -> None:
+        from cryptography.fernet import Fernet
+
+        from cliany_site.session import check_session, save_session_data
+
+        with patch("cliany_site.security.get_config") as mock_cfg:
+            mock_cfg.return_value.sessions_dir = tmp_path / "sessions"
+            mock_cfg.return_value.home_dir = tmp_path
+            with patch("cliany_site.session.get_config", return_value=mock_cfg.return_value), patch(
+                "cliany_site.security.get_encryption_key", return_value=Fernet.generate_key()
+            ):
+                save_session_data("test.com", {"expires_hint": "later"})
+                result = check_session("test.com")
+
+        assert result["exists"] is True
+        assert result["expires_hint"] == "later"
+        assert result["saved_at"]
+
+    def test_migration_does_not_overwrite_newer_session(self, tmp_path: Path) -> None:
+        from cryptography.fernet import Fernet
+
+        from cliany_site.security import _migrate_to_encrypted, encrypt_data
+
+        sessions_dir = tmp_path / "sessions"
+        sessions_dir.mkdir()
+        path = sessions_dir / "test.com.json"
+        original = b'{"cookies": [{"value": "old"}]}'
+        path.write_bytes(original)
+        newer = encrypt_data('{"cookies": [{"value": "new"}]}', key=Fernet.generate_key())
+        path.write_bytes(newer)
+
+        with patch("cliany_site.security.get_encryption_key", return_value=Fernet.generate_key()):
+            assert not _migrate_to_encrypted("test.com", json.loads(original), path, original)
+        assert path.read_bytes() == newer
+
 
 # ── sandbox.py ───────────────────────────────────────────
 
