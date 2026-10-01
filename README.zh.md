@@ -337,8 +337,14 @@ cliany-site issues.apache.org list-issues --project SPARK --limit 5 --json
 ```
 
 ### ASF Confluence (Wiki)
+
+历史 v0.14.1 包使用精确标题过滤，关键词搜索返回空结果。维护中的 v0.16.365
+只读包在隔离安装后按关键词返回了 5 条 `SPARK` / `release` 页面；公开资产仍需
+发布后独立安装审计，案例暂保留 degraded。已有同名 adapter 不会自动覆盖；先用
+`--dry-run --json` 查看替换计划，确认后才显式使用 `--force`。
+
 ```bash
-cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/cwiki.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 effaa19d1604a833aa474733ba05e216cfc1dbb4d9340e4a775ec6b0e8f313fa
+cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.16.365/cwiki.apache.org-0.16.365.cliany-adapter.tar.gz --sha256 85ab3e918f32070fd69ae2947e69530b936a9d6655588d5153612d2686cac84f
 cliany-site verify cwiki.apache.org --strict --json
 cliany-site cwiki.apache.org search-pages --space SPARK --query "release" --json
 ```
