@@ -153,7 +153,9 @@ async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tup
     if not isinstance(payload, dict) or process.returncode != 0 or payload.get("ok") is not True:
         error = payload.get("error") if isinstance(payload, dict) else None
         code = error.get("code") if isinstance(error, dict) else None
-        return {"ok": False, "error": {"code": code or "CLI_FAILED"}}, elapsed
+        message = error.get("message") if isinstance(error, dict) else None
+        details = error.get("details") if isinstance(error, dict) else None
+        return {"ok": False, "error": {"code": code or "CLI_FAILED", "message": message, "details": details}}, elapsed
     return payload, elapsed
 
 
@@ -204,6 +206,8 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
         await browser.close()
     if not explore.get("ok"):
         outcome["error_code"] = explore.get("error", {}).get("code")
+        outcome["error_message"] = explore.get("error", {}).get("message")
+        outcome["error_details"] = explore.get("error", {}).get("details")
         return outcome
 
     data = explore.get("data", {})
@@ -224,6 +228,12 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
         return outcome
 
     outcome["command"] = command
+    outcome["expects_nonempty"] = next(
+        item.get("expects_nonempty")
+        for index, item in enumerate(metadata["commands"])
+        if isinstance(item, dict) and isinstance(item.get("name"), str)
+        and to_command_name(item["name"], index) == command
+    )
     outcome["replays"] = []
     for replay in case["replays"]:
         port = _free_port()
