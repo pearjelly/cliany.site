@@ -1030,7 +1030,38 @@ class WorkflowExplorer:
                         raise RuntimeError("已录制动作但未声明可复用命令，不会自动生成回退命令；请重新探索")
 
                     if commands_data:
-                        _validate_command_partition(commands_data, len(result.actions))
+                        try:
+                            _validate_command_partition(commands_data, len(result.actions))
+                        except RuntimeError as partition_error:
+                            recorded_actions = [
+                                {"index": index, "type": action.action_type, "description": action.description}
+                                for index, action in enumerate(result.actions)
+                            ]
+                            repair_prompt = (
+                                f"{SYSTEM_PROMPT}{extend_section}\n\n"
+                                "上一次完成响应的 commands.action_steps 分区无效。"
+                                "只修正命令分区，不要再次操作页面。返回 JSON：actions=[]、done=true，"
+                                "commands 中每个 action_steps 按顺序排列，所有已录制动作索引恰好出现一次。"
+                                "保留命令的其他字段与真实业务意图；不能猜测或新增动作。\n"
+                                f"已录制动作：{json.dumps(recorded_actions, ensure_ascii=False)}\n"
+                                f"待修正命令：{json.dumps(commands_data, ensure_ascii=False)}"
+                            )
+                            repair_response = await _invoke_llm_with_retry(
+                                llm,
+                                repair_prompt,
+                                max_attempts=cfg.llm_retry_max_attempts,
+                                base_delay=cfg.llm_retry_base_delay,
+                                backoff_factor=cfg.llm_retry_backoff_factor,
+                            )
+                            repaired = _parse_llm_response(_to_text(repair_response.content))
+                            if repaired.get("done") is not True or repaired.get("actions") != []:
+                                raise RuntimeError(
+                                    "命令动作分区无效：修正响应必须完成且不得新增动作"
+                                ) from partition_error
+                            commands_data = repaired.get("commands")
+                            if not isinstance(commands_data, list) or not commands_data:
+                                raise RuntimeError("命令动作分区无效：修正响应必须包含命令列表") from partition_error
+                            _validate_command_partition(commands_data, len(result.actions))
 
                     completion_failures = _data_command_completion_failures(
                         commands_data,
