@@ -19,6 +19,7 @@
 - Generated list/table commands now resample client-rendered results until four consecutive contents agree. A list that keeps changing returns `E_PAGE_NOT_READY` instead of a successful partial result; the intentional 100-item list cap remains.
 - Search/filter exploration may declare `expects_nonempty=false` when the workflow explicitly permits zero matches, without relaxing missing-field checks.
 - An invalid final command action partition receives one non-executing correction request. A second invalid partition or newly proposed page actions still fail validation; `partition_repair_attempts` exposes whether correction was attempted.
+- `doctor` now makes clear that a missing `AGENT.md` does not block installing or running an existing adapter. It recommends an LLM preflight before `explore` only when generating a new adapter is the user's next step.
 
 ### Evidence
 

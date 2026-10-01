@@ -64,7 +64,10 @@ _CHECK_ACTIONS: dict[str, dict[str, str]] = {
         "ok": "未发现 legacy adapter。",
     },
     "agent_md": {
-        "warning": "运行一次 explore 让 cliany-site 生成/更新 AGENT.md，或手动补齐 sentinel。",
+        "warning": (
+            "安装或运行已有 adapter 无需 AGENT.md；"
+            "仅生成新 adapter 时先完成 LLM 预检，再运行 explore 生成/更新该文件。"
+        ),
         "ok": "Agent 契约文档可识别。",
     },
     "healed_pending": {
@@ -872,7 +875,10 @@ async def _run_checks(
             agent_md_message = None
         else:
             agent_md_status = "no_sentinel"
-            agent_md_message = "AGENT.md 存在但缺少 sentinel，建议运行 cliany-site explore"
+            agent_md_message = (
+                "AGENT.md 缺少管理标记；已有 adapter 不受影响。"
+                "需要自动更新时先完成 LLM 预检，再运行 cliany-site explore"
+            )
         agent_md_details = {
             "status": agent_md_status,
             "path": agent_md_path.name,
@@ -895,7 +901,10 @@ async def _run_checks(
         }
     else:
         agent_md_status = "missing"
-        agent_md_message = "未找到 AGENT.md / AGENTS.md，建议运行 cliany-site explore"
+        agent_md_message = (
+            "未找到 AGENT.md / AGENTS.md；已有 adapter 不受影响。"
+            "需要生成新 adapter 时先完成 LLM 预检，再运行 cliany-site explore"
+        )
         agent_md_details = {
             "status": agent_md_status,
             "path": managed_agent_md_path.name,
