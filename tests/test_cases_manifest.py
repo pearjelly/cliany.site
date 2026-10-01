@@ -71,6 +71,18 @@ def test_active_confluence_case_links_public_package_audit():
     assert case["docs"] == "docs/user-evidence/2026-10-01-confluence-public-package-audit.md"
 
 
+def test_active_jenkins_case_requires_public_package_and_rows():
+    case = next(case for case in _load_cases() if case["id"] == "apache-jenkins-jobs")
+
+    assert case["status"] == "active"
+    assert case["source_release"] == "v0.16.367"
+    assert (
+        case["docs"]
+        == "docs/user-evidence/2026-10-02-jenkins-public-package-audit.md"
+    )
+    assert case["validation"]["expected_rows"] == {"path": ["data", "jobs"], "min_count": 1}
+
+
 def test_cases_manifest_docs_links_exist_locally():
     for case in _load_cases():
         doc_path = case["docs"].split("#", 1)[0]

@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+## [0.16.368] - 2026-10-02
+
+### Changed
+
+- Promoted the maintained ASF Jenkins job-list case to active after the exact public v0.16.367 archive passed independent SHA-256 download, fresh-HOME install, strict verification, and a read-only query returning 5 of 106 top-level entries. The published PyPI CLI repeated the result, and the first-run `demo --case-id apache-jenkins-jobs` installed, verified, and returned five rows; a second run reused the installation. The historical v0.14.1 archive remains unsuitable, and third-party availability can change.
+
 ## [0.16.367] - 2026-10-02
 
 ### Added
@@ -3282,7 +3288,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.367...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.368...HEAD
+[0.16.368]: https://github.com/pearjelly/cliany.site/compare/v0.16.367...v0.16.368
 [0.16.367]: https://github.com/pearjelly/cliany.site/compare/v0.16.366...v0.16.367
 [0.16.366]: https://github.com/pearjelly/cliany.site/compare/v0.16.365...v0.16.366
 [0.16.365]: https://github.com/pearjelly/cliany.site/compare/v0.16.364...v0.16.365

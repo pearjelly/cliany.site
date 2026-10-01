@@ -72,11 +72,11 @@
     "id": "apache-jenkins-jobs",
     "title": "ASF Jenkins job list",
     "category": "ci",
-    "status": "degraded",
+    "status": "active",
     "target_url": "https://builds.apache.org/",
     "adapter_domain": "builds.apache.org",
     "source_release": "v0.16.367",
-    "docs": "docs/user-evidence/2026-09-28-jenkins-curated-candidate.md",
+    "docs": "docs/user-evidence/2026-10-02-jenkins-public-package-audit.md",
     "example_output": "cases/examples/apache-jenkins-jobs.json",
     "commands": [
       "cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.16.367/builds.apache.org-0.16.367.cliany-adapter.tar.gz --sha256 10ac9f4dc1ce2b4cc364d9fe9517e1ecabd50743885f404040abf8fc248ef18b",
@@ -87,7 +87,8 @@
       "offline_commands": [
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
       ],
-      "online": "read-only job listing returns a JSON envelope with build rows"
+      "online": "read-only job listing returns a JSON envelope with build rows",
+      "expected_rows": {"path": ["data", "jobs"], "min_count": 1}
     }
   },
   {

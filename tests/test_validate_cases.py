@@ -239,7 +239,7 @@ def test_current_cases_manifest_validates_without_packages():
     report = validate_cases.build_report(ROOT)
 
     assert report.ok is True
-    assert report.active == 3
+    assert report.active == 4
     assert report.candidate >= 1
     assert report.known_gap >= 1
     assert report.checked_packages is False
@@ -302,7 +302,10 @@ def test_current_cases_manifest_validates_without_packages():
         case for case in report.to_dict()["cases"] if case["status"] == "active"
     ]
     assert {case["adapter_domain"] for case in active_cases} == {
-        "demo.suiteondemand.com", "issues.apache.org", "cwiki.apache.org"
+        "demo.suiteondemand.com",
+        "issues.apache.org",
+        "cwiki.apache.org",
+        "builds.apache.org",
     }
     for case in report.to_dict()["cases"]:
         if case.get("adapter_domain") in expected_published_installs:
@@ -311,7 +314,7 @@ def test_current_cases_manifest_validates_without_packages():
         if case.get("adapter_domain") == "cwiki.apache.org":
             assert case["status"] == "active"
         if case.get("adapter_domain") == "builds.apache.org":
-            assert case["status"] == "degraded"
+            assert case["status"] == "active"
 
 
 def test_cases_report_flags_duplicate_ids(tmp_path):

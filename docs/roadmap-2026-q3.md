@@ -2,7 +2,7 @@
 
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-10-02
-- **基线版本：** v0.16.367
+- **基线版本：** v0.16.368
 - **目标周期：** 滚动维护（2026-09-08 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -13,11 +13,11 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 已完成校准
 
-2026-06-10 的原始路线图以 v0.14.2 为基线；当前候选为 v0.16.367，正式发布前公开版本仍以 PyPI 和 GitHub Release 为准。v0.16.357 加入真实浏览器端到端回归覆盖的执行修复、Cookie 主机范围保存，以及显式授权的 Jev 只读意图定位；v0.16.358 使实时模型连接故障的 JSON 建议更具体；v0.16.359 区分当前 provider 的密钥和不可重试的认证失败。新配置的 OpenAI 兼容模型已通过 live preflight；PyPI adapter 的公开资产安装和严格验证已完成，正常搜索页的只读 online smoke 仍待验证。crates.io 从维护者网络返回 HTTP 403，浏览器及事件总线的导航超时现报告页面就绪错误而非泛用未知错误，案例尚未晋级。Jev 的真实准确率也未测量。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
+2026-06-10 的原始路线图以 v0.14.2 为基线；当前候选为 v0.16.368，正式发布前公开版本仍以 PyPI 和 GitHub Release 为准。v0.16.357 加入真实浏览器端到端回归覆盖的执行修复、Cookie 主机范围保存，以及显式授权的 Jev 只读意图定位；v0.16.358 使实时模型连接故障的 JSON 建议更具体；v0.16.359 区分当前 provider 的密钥和不可重试的认证失败。新配置的 OpenAI 兼容模型已通过 live preflight；PyPI adapter 的公开资产安装和严格验证已完成，正常搜索页的只读 online smoke 仍待验证。crates.io 从维护者网络返回 HTTP 403，浏览器及事件总线的导航超时现报告页面就绪错误而非泛用未知错误，案例尚未晋级。Jev 的真实准确率也未测量。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
 
 - 首次成功路径：README、README.zh、官网和 `doctor` 输出已经围绕 10 分钟路径、真实 demo、LLM live preflight 和可执行下一步重新组织。
 - v0.16.365 的 [Confluence 维护包](user-evidence/2026-10-01-confluence-public-package-audit.md) 已从公开 Release 资产按固定 SHA-256 在隔离 HOME 中完成安装、严格校验和只读回放；维护版案例晋级 active，不修改用户已有 adapter，历史 v0.14.1 包仍不可用。
-- v0.16.367 的 [Jenkins 维护包](user-evidence/2026-09-28-jenkins-curated-candidate.md) 已在本地隔离环境完成固定哈希安装、严格校验和只读回放，返回 5/106 条顶层 job。公开 Release 资产仍需独立安装与复测，案例保持 degraded。
+- v0.16.367 的 [Jenkins 维护包](user-evidence/2026-10-02-jenkins-public-package-audit.md) 已从公开 Release 资产按固定 SHA-256 在隔离 HOME 中完成安装、严格校验和只读回放；PyPI CLI 也独立返回 5/106 条顶层 job。维护版案例晋级 active，历史 v0.14.1 包仍不可用。
 - 2026-09-28 的[独立 HOME 实测](user-evidence/2026-09-28-jira-demo.md)：官方 PyPI v0.16.363 的 `demo --case-id apache-jira-issues` 自动安装并严格验证公开 adapter，返回 5 条 SPARK issue；再次运行复用已安装包。该 adapter 使用 Jira 只读 API，不作为浏览器 replay 或其他站点成功证据。
 - v0.16.364 候选的[真实模型本地页面验证](user-evidence/2026-09-28-live-local-explore.md)：完整参数化命令在独立 CDP 浏览器上两次重放成功；修复文本提取被误判为空，并拦截会丢失前置交互的拆分读取命令。临时替换系统 HOME 的测试出现导航超时；保留正常系统 HOME、仅隔离项目运行数据后，自动启动的 Chrome 两次成功访问本地页面。尚不能据此保证任意站点的冷启动可靠性。
 - v0.16.364 候选的[生成命令浏览器生命周期实测](user-evidence/2026-09-28-generated-browser-lifetime.md)：修复嵌套步骤在导航后关闭自动启动 Chrome 的问题；本地表单用默认 headless 路径独立返回 `Ada:Blue`、`Grace:Red`。公开 PyPI adapter 已能输入并点击，随后被站点 `Client Challenge` 阻断；案例仍是 candidate。
