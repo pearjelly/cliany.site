@@ -17,6 +17,7 @@ def test_execute_single_extract_step_passes_mode_and_fields(monkeypatch):
         }
 
     monkeypatch.setattr(runtime_helpers, "run_atom", fake_run_atom)
+    monkeypatch.setattr(runtime_helpers.time, "sleep", lambda _: None)
 
     result = runtime_helpers._execute_single_step(
         {
@@ -40,7 +41,7 @@ def test_execute_single_extract_step_passes_mode_and_fields(monkeypatch):
             "--fields-json",
             '{"title": "h3", "url": "a@href"}',
         ]
-    ]
+    ] * 4
 
 
 def test_execute_single_extract_step_rejects_missing_selector(monkeypatch):
