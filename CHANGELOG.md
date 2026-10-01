@@ -10,6 +10,8 @@
 ### Fixed
 
 - Declare directly imported `aiohttp` and `PyYAML` as runtime dependencies, so clean installs do not rely on another package to keep providing them transitively. Update the security support table to follow the latest stable release instead of the obsolete 0.6.x line.
+- Refuse to write plaintext cookies when Session encryption fails. Encryption keys and Session files now use atomic writes and process locks; legacy plaintext is usable only after successful migration, which cannot overwrite a newer save.
+- An explicit `browser navigate --session` now fails before navigation if that Session is missing or unreadable. Generated anonymous workflows only request Session restoration when a saved file exists, preserving no-login demos while surfacing corrupted saved Sessions.
 
 ### Evidence
 
