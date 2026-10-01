@@ -249,6 +249,9 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
             row: dict[str, Any] = {"args": replay["args"], "seconds": round(elapsed, 2)}
             if not result.get("ok") or not _has_extract_result(result):
                 row.update(ok=False, phase="replay", error_code=result.get("error", {}).get("code") or "NO_EXTRACT")
+                if not result.get("ok"):
+                    row["error_message"] = result.get("error", {}).get("message")
+                    row["error_details"] = result.get("error", {}).get("details")
             else:
                 try:
                     oracle_ok = await _inspect_page(playwright, port, case, replay)
