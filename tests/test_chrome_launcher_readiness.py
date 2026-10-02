@@ -62,7 +62,7 @@ def test_chrome_launch_reports_bound_port_without_exposing_browser_output(monkey
         launcher.launch_chrome(48794, headless=True)
 
     assert "elapsed=" in str(exc_info.value)
-    assert "profile_created=" in str(exc_info.value)
+    assert "profile_present=" in str(exc_info.value)
     assert "--user-data-dir" not in str(exc_info.value)
 
 
@@ -75,7 +75,7 @@ def test_chrome_launch_reports_exit_at_timeout_boundary(monkeypatch):
     monkeypatch.setattr(launcher, "_tcp_port_open", lambda port: False)
     monkeypatch.setattr(launcher.time, "sleep", lambda seconds: None)
 
-    with pytest.raises(TimeoutError, match=r"process=exit=127"):
+    with pytest.raises(TimeoutError, match=r"process_at_timeout=exit=127"):
         launcher.launch_chrome(48796, headless=True)
 
     process.terminate.assert_not_called()

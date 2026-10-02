@@ -107,7 +107,7 @@ def launch_chrome(port: int | None = None, headless: bool = False) -> subprocess
 
     elapsed = time.monotonic() - started_at
     port_open = _tcp_port_open(port)
-    profile_created = Path(user_data_dir).exists()
+    profile_present = Path(user_data_dir).exists()
     exit_code = proc.poll()
     if exit_code is None:
         proc.terminate()
@@ -116,11 +116,11 @@ def launch_chrome(port: int | None = None, headless: bool = False) -> subprocess
     except subprocess.TimeoutExpired:
         proc.kill()
         proc.wait(timeout=5)
-    process_state = "running" if exit_code is None else f"exit={exit_code}"
+    process_at_timeout = "running" if exit_code is None else f"exit={exit_code}"
     raise TimeoutError(
         f"Chrome 启动后 20 秒内 CDP 端口 {port} 未就绪 "
-        f"(elapsed={elapsed:.1f}s, process={process_state}, tcp_open={port_open}, "
-        f"profile_created={profile_created})"
+        f"(elapsed={elapsed:.1f}s, process_at_timeout={process_at_timeout}, tcp_open={port_open}, "
+        f"profile_present={profile_present})"
     )
 
 
