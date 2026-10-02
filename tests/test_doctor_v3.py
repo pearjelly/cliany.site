@@ -424,6 +424,23 @@ def test_doctor_human_falls_back_to_cases_without_active_demo(tmp_home, no_llm, 
     assert "cliany-site demo --case-id" not in result.output
 
 
+def test_doctor_human_does_not_offer_untrusted_demo_case_id(tmp_home, capsys):
+    from cliany_site.envelope import ok
+
+    doctor_module._print_doctor_human(ok("doctor", {
+        "checks": [],
+        "summary": {
+            "ready_for_existing_adapters": True,
+            "ready_for_demo_adapters": True,
+            "demo_adapter_quickstart": {"case_id": "apache-jira-issues; echo unsafe"},
+        },
+    }))
+
+    output = capsys.readouterr().out
+    assert "查看可直接运行的公开案例：cliany-site cases" in output
+    assert "echo unsafe" not in output
+
+
 def test_doctor_does_not_call_llm_live_by_default(tmp_home, no_llm, monkeypatch):
     """doctor 默认只检查 key/config，不触发真实 LLM 调用。"""
     class MockCDP:

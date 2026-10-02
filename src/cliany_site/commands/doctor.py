@@ -3,6 +3,7 @@ import asyncio
 import importlib.metadata as importlib_metadata
 import json
 import os
+import re
 import socket
 import ssl
 import sys
@@ -584,7 +585,11 @@ def _print_doctor_human(result: Envelope) -> None:
         demo_quickstart = summary.get("demo_adapter_quickstart")
         demo_quickstart = demo_quickstart if isinstance(demo_quickstart, dict) else {}
         demo_case_id = demo_quickstart.get("case_id")
-        if summary.get("ready_for_demo_adapters") and isinstance(demo_case_id, str) and demo_case_id:
+        if (
+            summary.get("ready_for_demo_adapters")
+            and isinstance(demo_case_id, str)
+            and re.fullmatch(r"[a-z0-9][a-z0-9-]*", demo_case_id)
+        ):
             click.echo(f"- 获取首条只读结果：cliany-site demo --case-id {demo_case_id} --json")
         else:
             click.echo("- 查看可直接运行的公开案例：cliany-site cases")
