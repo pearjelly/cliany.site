@@ -1,6 +1,6 @@
 # October 2026 Value Plan
 
-**Decision date:** 2026-10-02. **Published baseline:** v0.16.368. The v0.16.369 release candidate is open in [PR #29](https://github.com/pearjelly/cliany.site/pull/29), not published. The controlled explore/replay study is in draft [PR #31](https://github.com/pearjelly/cliany.site/pull/31) and [Issue #30](https://github.com/pearjelly/cliany.site/issues/30), not part of the published package.
+**Decision date:** 2026-10-02. **Published baseline:** v0.16.368. The v0.16.369 release candidate is open in [PR #29](https://github.com/pearjelly/cliany.site/pull/29), not published. The controlled explore/replay study is in draft [PR #31](https://github.com/pearjelly/cliany.site/pull/31), [PR #34](https://github.com/pearjelly/cliany.site/pull/34), and [Issue #30](https://github.com/pearjelly/cliany.site/issues/30), not part of the published package.
 
 ## Product outcome
 
@@ -9,7 +9,7 @@ A new user should be able to install the public package, obtain one useful read-
 ## Evidence at the decision point
 
 - Four maintained active cases exist. Published-package, fresh-HOME demos have returned nonempty Jira and Confluence results; the Jenkins first-result path also passed a published-package check. These are maintained read-only integrations, not proof that a live model discovered a public browser workflow.
-- A real model completed 8 of 9 fresh explore-to-replay trials across three controlled local tasks on the clean v0.16.369 candidate. The failed trial supplied an invalid command action partition. A later semantic-only 3/3 sample did not trigger the new correction path, so it cannot establish that the correction improved the live success rate. These are small, single-provider samples, not a general accuracy estimate.
+- The early 8/9 controlled sample checked replay page state but not returned extract values, so it is not an end-to-end data-command score. Later strict output-plus-DOM matrices on draft v0.16.370 commits scored 9/9, then 4/9, 7/9, and 8/9. The latest failure was an invalid command action partition after one correction; a subsequent semantic-only 3/3 sample did not exercise that correction path. Reliability and generation latency remain open; [PR #34](https://github.com/pearjelly/cliany.site/pull/34) retains the detailed evidence.
 - PyPI search reached `Client Challenge`; npm reached a Cloudflare challenge; crates.io timed out or returned HTTP 403 from the maintainer network. Their cases remain candidates. Do not bypass site restrictions or promote them on package verification alone.
 - No independent first-time user's end-to-end quickstart result has been recorded. The historical Q3 plan's 1.0-alpha checkpoint is therefore not evidence of alpha readiness.
 
