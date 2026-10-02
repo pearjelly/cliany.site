@@ -44,12 +44,35 @@ def test_command_selection_requires_actions_and_replay_args():
 
 
 def test_extract_evidence_must_be_successful_result():
-    assert benchmark._has_extract_result({"data": {"results": [
+    assert benchmark._extract_contents({"data": {"results": [
         {"command": "browser extract", "ok": True, "data": {"content": {"text": "Beta"}}}
-    ]}})
-    assert not benchmark._has_extract_result({"data": {"results": [
+    ]}}) == [{"text": "Beta"}]
+    assert benchmark._extract_contents({"data": {"results": [
         {"command": "browser click", "ok": True}
-    ]}})
+    ]}}) == []
+
+
+def test_benchmark_requires_returned_count_and_rows_not_just_correct_page():
+    positive = _case("filter-catalog")["replays"][0]
+    zero = _case("filter-catalog")["replays"][1]
+    assert benchmark._matches_expected_extracts(
+        [{"text": "1 matches"}, [{"name": "Gamma toolkit"}]], positive
+    )
+    assert not benchmark._matches_expected_extracts(
+        [{"text": ""}, [{"name": "Gamma toolkit"}]], positive
+    )
+    assert benchmark._matches_expected_extracts([{"text": "0 matches"}, []], zero)
+    assert not benchmark._matches_expected_extracts([{"text": ""}, []], zero)
+    assert not benchmark._matches_expected_extracts([{"text": "0 matches"}], zero)
+
+
+def test_benchmark_requires_returned_form_and_semantic_values():
+    form = _case("form-result")["replays"][0]
+    semantic = _case("semantic-reorder")["replays"][0]
+    assert benchmark._matches_expected_extracts([{"text": "Grace:Red"}], form)
+    assert not benchmark._matches_expected_extracts([{"text": "Ada:Blue"}], form)
+    assert benchmark._matches_expected_extracts([{"text": "Beta"}], semantic)
+    assert not benchmark._matches_expected_extracts([{"text": "Alpha"}], semantic)
 
 
 def test_summary_counts_failures_by_task():
