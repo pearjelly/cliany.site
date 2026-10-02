@@ -1278,6 +1278,36 @@ class TestMarketCLI:
         with patch("cliany_site.marketplace.get_config", return_value=cfg):
             return runner.invoke(market_group, args)
 
+    def test_install_json_preserves_success_and_adds_ok(self, tmp_path: Path, tmp_home: Path) -> None:
+        cfg = _make_config(tmp_home / ".cliany-site")
+        pack_path = _make_tarball(tmp_path / "packs", "cli-contract.com")
+
+        preview = self._invoke(["install", str(pack_path), "--dry-run", "--json"], cfg)
+        assert preview.exit_code == 0
+        preview_data = json.loads(preview.output)
+        assert preview_data["success"] is preview_data["ok"] is True
+        assert preview_data["data"]["dry_run"] is True
+        assert preview_data["error"] is None
+
+        installed = self._invoke(["install", str(pack_path), "--json"], cfg)
+        assert installed.exit_code == 0
+        installed_data = json.loads(installed.output)
+        assert installed_data["success"] is installed_data["ok"] is True
+        assert installed_data["data"]["domain"] == "cli-contract.com"
+        assert installed_data["error"] is None
+
+        duplicate = self._invoke(["install", str(pack_path), "--json"], cfg)
+        assert duplicate.exit_code == 1
+        duplicate_data = json.loads(duplicate.output)
+        assert duplicate_data["success"] is duplicate_data["ok"] is False
+        assert duplicate_data["data"] is None
+        assert duplicate_data["error"]["code"] == "INSTALL_FAILED"
+        assert "--force" in duplicate_data["error"]["fix"]
+
+        human = self._invoke(["install", str(pack_path)], cfg)
+        assert human.exit_code == 1
+        assert "--force" in human.output
+
     def test_publish_success(self, tmp_path: Path) -> None:
         cfg = _make_config(tmp_path)
         _create_adapter(cfg.adapters_dir, "cli-pub.com")
