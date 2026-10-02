@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import importlib.util
 import json
 import subprocess
@@ -141,6 +142,35 @@ def test_progress_profile_counts_partition_repair_wait():
         "model_total_seconds": 129.51,
         "retry_count": 0,
     }
+
+
+@pytest.mark.asyncio
+async def test_cli_timeout_preserves_partial_progress(tmp_home, monkeypatch):
+    class SlowProcess:
+        def __init__(self):
+            self.returncode = None
+            self.stopped = asyncio.Event()
+            self.communicate_calls = 0
+
+        async def communicate(self):
+            self.communicate_calls += 1
+            await self.stopped.wait()
+            return b"", b'{"event":"explore_step_start","step":0,"ts":10}\n'
+
+        def kill(self):
+            self.returncode = -9
+            self.stopped.set()
+
+    process = SlowProcess()
+
+    async def launch(*_args, **_kwargs):
+        return process
+
+    monkeypatch.setattr(benchmark.asyncio, "create_subprocess_exec", launch)
+    result, _, profile = await benchmark._run_cli(tmp_home, ["explore"], timeout=0.01)
+    assert result["error"]["code"] == "BENCHMARK_TIMEOUT"
+    assert profile["steps"] == [{"step": 1}]
+    assert process.communicate_calls == 1
 
 
 def test_live_runner_requires_explicit_opt_in_and_rejects_offline(tmp_home, monkeypatch):

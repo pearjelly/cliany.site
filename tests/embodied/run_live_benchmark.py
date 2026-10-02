@@ -12,7 +12,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from datetime import UTC, datetime
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -254,11 +254,14 @@ async def _run_cli(
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
+    communication = asyncio.create_task(process.communicate())
     try:
-        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
+        stdout, stderr = await asyncio.wait_for(asyncio.shield(communication), timeout=timeout)
     except TimeoutError:
-        process.kill()
-        _, stderr = await process.communicate()
+        if process.returncode is None:
+            with suppress(ProcessLookupError):
+                process.kill()
+        _, stderr = await communication
         return (
             {"ok": False, "error": {"code": "BENCHMARK_TIMEOUT"}},
             time.monotonic() - start,
