@@ -283,6 +283,21 @@ def test_empty_command_is_not_accepted_without_recorded_actions(tmp_home):
         _validate_command_partition([{"name": "inspect-beta", "action_steps": []}], 0)
 
 
+@pytest.mark.parametrize(("indices", "reason"), [
+    (None, "必须是列表"),
+    ([], "不得为空"),
+    (["private-page-token"], "非整数或越界索引"),
+    ([2], "非整数或越界索引"),
+    ([1, 0], "未按录制顺序排列"),
+])
+def test_invalid_partition_reports_bounded_reason_without_echoing_input(tmp_home, indices, reason):
+    with pytest.raises(RuntimeError) as exc_info:
+        _validate_command_partition([{"action_steps": indices}], 2)
+
+    assert reason in str(exc_info.value)
+    assert "private-page-token" not in str(exc_info.value)
+
+
 def test_recorded_actions_require_a_command(tmp_home):
     with pytest.raises(RuntimeError, match="已录制动作但未声明可复用命令"):
         _validate_command_partition([], 1)

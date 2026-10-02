@@ -103,10 +103,14 @@ def _validate_command_partition(
     assigned: list[int] = []
     for command in commands:
         indices = command.get("action_steps") if isinstance(command, dict) else None
-        if (not isinstance(indices, list) or not indices
-                or any(type(index) is not int or not 0 <= index < action_count for index in indices)
-                or indices != sorted(indices)):
-            raise RuntimeError("命令动作分区无效：每个命令须按录制顺序声明有效动作索引；请重新探索")
+        if not isinstance(indices, list):
+            raise RuntimeError("命令动作分区无效：action_steps 必须是列表；请重新探索")
+        if not indices:
+            raise RuntimeError("命令动作分区无效：action_steps 不得为空；请重新探索")
+        if any(type(index) is not int or not 0 <= index < action_count for index in indices):
+            raise RuntimeError("命令动作分区无效：action_steps 含非整数或越界索引；请重新探索")
+        if indices != sorted(indices):
+            raise RuntimeError("命令动作分区无效：action_steps 索引未按录制顺序排列；请重新探索")
         assigned.extend(indices)
         args = command.get("args") if isinstance(command, dict) else None
         if isinstance(args, list):
