@@ -1106,11 +1106,16 @@ class WorkflowExplorer:
                                 }
                                 for index, action in enumerate(result.actions)
                             ]
+                            required_indices = [
+                                index for index in range(len(result.actions))
+                                if index not in discardable_action_indices
+                            ]
                             coverage_rule = (
-                                f"已失败 extract 索引 {sorted(discardable_action_indices)} 必须舍弃，"
-                                "其余已录制动作索引恰好出现一次。"
-                                if discardable_action_indices
-                                else "所有已录制动作索引恰好出现一次。"
+                                f"已失败 extract 索引 {sorted(discardable_action_indices)} 必须舍弃；"
+                                if discardable_action_indices else ""
+                            ) + (
+                                f"所有命令的 action_steps 合起来必须恰好覆盖索引 {required_indices}，"
+                                "每个索引只出现一次。"
                             )
                             repair_prompt = (
                                 "你只修正已完成探索的命令定义，不操作页面，也不创建新动作。"

@@ -266,6 +266,7 @@ async def test_failed_extract_partition_correction_does_not_repeat_page_actions(
     assert result.partition_repair_attempts == 1
     assert invoke.await_count == 3
     assert "已失败 extract 索引 [0] 必须舍弃" in invoke.await_args_list[2].args[1]
+    assert "恰好覆盖索引 [1]" in invoke.await_args_list[2].args[1]
 
 
 def test_failed_extract_exception_does_not_allow_omitting_other_actions(tmp_home):
@@ -308,6 +309,7 @@ async def test_missing_command_gets_one_nonexecuting_repair(mocker, tmp_home):
     assert execute.await_count == 1
     repair_prompt = invoke.await_args_list[1].args[1]
     assert "待修正命令：[]" in repair_prompt
+    assert "恰好覆盖索引 [0]" in repair_prompt
     assert '"value": "Ada"' not in repair_prompt
     assert '"target_name": "Search"' in repair_prompt
 
