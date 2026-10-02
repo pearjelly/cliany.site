@@ -282,6 +282,50 @@ def test_empty_command_is_not_accepted_without_recorded_actions(tmp_home):
         _validate_command_partition([{"name": "inspect-beta", "action_steps": []}], 0)
 
 
+def test_recorded_actions_require_a_command(tmp_home):
+    with pytest.raises(RuntimeError, match="已录制动作但未声明可复用命令"):
+        _validate_command_partition([], 1)
+
+
+@pytest.mark.asyncio
+async def test_missing_command_gets_one_nonexecuting_repair(mocker, tmp_home):
+    action = {"type": "type", "ref": "1", "value": "Ada", "description": "输入姓名"}
+    invoke = _prepare(mocker, [
+        {"actions": [action], "commands": [], "done": True},
+        {"actions": [], "commands": [{
+            "name": "enter-name", "action_steps": [0],
+            "args": [{"name": "name", "action_index": 0, "required": True, "default": "Ada"}],
+        }], "done": True},
+    ], [[]])
+    execute = mocker.patch("cliany_site.explorer.engine.execute_action_steps", new_callable=AsyncMock)
+
+    result = await WorkflowExplorer().explore("https://example.com/search", "输入可变姓名", record=False)
+
+    assert result.commands[0].name == "enter-name"
+    assert result.commands[0].action_steps == [0]
+    assert result.partition_repair_attempts == 1
+    assert invoke.await_count == 2
+    assert execute.await_count == 1
+    repair_prompt = invoke.await_args_list[1].args[1]
+    assert "待修正命令：[]" in repair_prompt
+    assert '"value": "Ada"' not in repair_prompt
+    assert '"target_name": "Search"' in repair_prompt
+
+
+@pytest.mark.asyncio
+async def test_missing_command_repair_cannot_return_another_empty_command_list(mocker, tmp_home):
+    _prepare(mocker, [
+        {"actions": [{"type": "click", "ref": "1", "description": "点击"}], "commands": [], "done": True},
+        {"actions": [], "commands": [], "done": True},
+    ], [[]])
+    execute = mocker.patch("cliany_site.explorer.engine.execute_action_steps", new_callable=AsyncMock)
+
+    with pytest.raises(RuntimeError, match="修正响应必须包含命令列表"):
+        await WorkflowExplorer().explore("https://example.com/search", "点击", record=False)
+
+    assert execute.await_count == 1
+
+
 @pytest.mark.asyncio
 async def test_prefixed_ref_keeps_recorded_semantics_for_replay(mocker, tmp_home):
     _prepare(
@@ -444,10 +488,13 @@ async def test_explicit_uneven_partition_preserves_command_ownership(mocker, tmp
 @pytest.mark.asyncio
 @pytest.mark.parametrize("commands", [[], None, {}, "run-workflow"])
 async def test_completed_actions_require_explicit_commands(mocker, tmp_home, commands):
-    _prepare(mocker, [{
+    responses = [{
         "actions": [{"type": "click", "ref": "1", "description": "打开页面"}],
         "commands": commands, "done": True,
-    }], [[]])
+    }]
+    if commands == []:
+        responses.append({"actions": [], "commands": [], "done": True})
+    _prepare(mocker, responses, [[]])
 
     with pytest.raises(RuntimeError, match="命令"):
         await WorkflowExplorer().explore("https://example.com/search", "读取数据", record=False)

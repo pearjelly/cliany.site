@@ -98,6 +98,8 @@ def _validate_command_partition(
     discardable_action_indices: set[int] | None = None,
 ) -> None:
     """Validate ownership before filtering indices can hide invalid model output."""
+    if action_count > 0 and not commands:
+        raise RuntimeError("已录制动作但未声明可复用命令；请重新探索")
     assigned: list[int] = []
     for command in commands:
         indices = command.get("action_steps") if isinstance(command, dict) else None
@@ -1085,10 +1087,7 @@ class WorkflowExplorer:
                     commands_data = parsed.get("commands", [])
                     if not isinstance(commands_data, list):
                         raise RuntimeError("完成响应中的 commands 必须为命令列表，请重新探索")
-                    if result.actions and not commands_data:
-                        raise RuntimeError("已录制动作但未声明可复用命令，不会自动生成回退命令；请重新探索")
-
-                    if commands_data:
+                    if result.actions or commands_data:
                         try:
                             _validate_command_partition(
                                 commands_data,
@@ -1098,7 +1097,13 @@ class WorkflowExplorer:
                         except RuntimeError as partition_error:
                             result.partition_repair_attempts += 1
                             recorded_actions = [
-                                {"index": index, "type": action.action_type, "description": action.description}
+                                {
+                                    "index": index,
+                                    "type": action.action_type,
+                                    "description": action.description,
+                                    "target_name": action.target_name,
+                                    "target_role": action.target_role,
+                                }
                                 for index, action in enumerate(result.actions)
                             ]
                             coverage_rule = (
@@ -1115,6 +1120,7 @@ class WorkflowExplorer:
                                 f"上一次命令分区或参数归属错误：{partition_error}。\n"
                                 "只修正命令分区和错误的参数 action_index，不要再次操作页面；"
                                 "参数 action_index 必须属于其命令的 action_steps。"
+                                "若待修正命令为空，请根据工作流和已录制动作创建可复用命令及参数；"
                                 f"commands 中每个 action_steps 按顺序排列，{coverage_rule}"
                                 "保留命令的其他字段与真实业务意图；不能猜测或新增动作。\n"
                                 f"已录制动作：{json.dumps(recorded_actions, ensure_ascii=False)}\n"
