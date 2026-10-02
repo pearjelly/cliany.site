@@ -407,6 +407,14 @@ def test_demo_adapter_quickstart_does_not_promote_candidate(monkeypatch):
 
 
 def test_doctor_human_falls_back_to_cases_without_active_demo(tmp_home, no_llm, monkeypatch):
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
     monkeypatch.setattr(cases_module, "_load_cases_manifest", lambda: ([], None, []))
 
     result = CliRunner().invoke(cli, ["doctor"], catch_exceptions=False)
