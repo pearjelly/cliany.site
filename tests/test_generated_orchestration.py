@@ -56,6 +56,33 @@ def test_generated_empty_allowance_uses_actual_quality(contents, success):
         assert payload["data"]["quality"]["status"] == "partial"
 
 
+@pytest.mark.parametrize("count_text,success", [("", False), ("0 matches", True)])
+def test_generated_zero_match_requires_nonblank_count_text(count_text, success):
+    actions = [
+        ActionStep("extract", "https://example.com", selector="#summary", extract_mode="text"),
+        ActionStep("extract", "https://example.com", selector="#results li", extract_mode="list"),
+    ]
+    command = CommandSuggestion(
+        name="search-results", description="Read count and names", args=[],
+        action_steps=[0, 1], expects_nonempty=False,
+    )
+    code = AdapterGenerator(domain="example.com").generate(
+        _make_explore_result(actions=actions, commands=[command]), "example.com",
+    )
+    module = types.ModuleType("generated_count_adapter")
+    exec(code, module.__dict__)  # noqa: S102 - 测试生成代码的 Click 行为
+    module.execute_steps_via_atoms = lambda steps, *args: [  # noqa: ARG005
+        {"ok": True, "command": "browser extract", "data": {"content": {"text": count_text}}},
+        {"ok": True, "command": "browser extract", "data": {"content": []}},
+    ]
+
+    result = CliRunner().invoke(module.cli, ["search-results", "--json"])
+    payload = json.loads(result.output)
+    assert payload["ok"] is success
+    assert result.exit_code == (0 if success else 1)
+    assert payload["data"]["quality"]["status"] == ("empty" if success else "partial")
+
+
 def _make_explore_result(
     actions: list[ActionStep] | None = None,
     commands: list[CommandSuggestion] | None = None,

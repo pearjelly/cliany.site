@@ -192,7 +192,12 @@ def _data_command_completion_failures(
                 latest_evidence.get("data"),
                 fields_map,
             )
-            accepts_empty = not requires_nonempty and quality.status == "empty"
+            accepts_empty = (
+                not requires_nonempty
+                and action.extract_mode in {"list", "table"}
+                and quality.status == "empty"
+                and not quality.field_blank_rows
+            )
             if not quality.ok and not accepts_empty:
                 failures.append(
                     {
@@ -230,6 +235,8 @@ def _data_completion_feedback(
         reason = failure.get("reason", "unknown")
         lines.append(f"- {name}: {reason}")
         quality = failure.get("quality")
+        if isinstance(quality, dict) and quality.get("issues") == ["empty text"]:
+            lines.append("  空文本不是合法零匹配证据；请定位页面真实的数量或状态文本后重新提取。")
         blank_rows = quality.get("field_blank_rows") if isinstance(quality, dict) else None
         if isinstance(blank_rows, dict) and blank_rows:
             fields = [str(field)[:80] for field in list(blank_rows)[:5]]

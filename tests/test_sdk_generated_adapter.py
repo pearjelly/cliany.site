@@ -7,13 +7,16 @@ from cliany_site.explorer.models import ActionStep, CommandSuggestion, ExploreRe
 from cliany_site.sdk import ClanySite
 
 
-def _generate(*, expects_nonempty=True, args=None, value="recorded", source="https://example.com/form"):
+def _generate(
+    *, expects_nonempty=True, args=None, value="recorded", source="https://example.com/form",
+    extract_mode="list",
+):
     result = ExploreResult(
         pages=[PageInfo(source, "Form")],
         actions=[
             ActionStep("navigate", source, target_url=source),
             ActionStep("type", source, target_ref="8", target_name="Name", value=value),
-            ActionStep("extract", source, selector="output", extract_mode="list", fields_map={"name": ""}),
+            ActionStep("extract", source, selector="output", extract_mode=extract_mode, fields_map={"name": ""}),
         ],
         commands=[CommandSuggestion(
             "read-name", "Read name", args if args is not None else [
@@ -84,6 +87,25 @@ async def test_generated_extract_quality(tmp_home, rows, expects_nonempty, succe
     if not success:
         assert result["error"]["code"] == "E_EMPTY_RESULT"
         assert result["error"]["details"]["results"][0]["data"] == rows
+
+
+@pytest.mark.asyncio
+async def test_sdk_rejects_empty_text_even_when_zero_matches_allowed(tmp_home):
+    _generate(expects_nonempty=False, extract_mode="text")
+
+    async def replay(session, actions, **kwargs):
+        kwargs["extraction_results"].append({
+            "step_index": 2, "extract_mode": "text", "fields": {}, "data": {"text": ""},
+        })
+
+    with (
+        patch.object(ClanySite, "_ensure_browser_session", new=AsyncMock()),
+        patch("cliany_site.session.load_session", new=AsyncMock()),
+        patch("cliany_site.action_runtime.execute_action_steps", side_effect=replay),
+    ):
+        result = await ClanySite().execute("example.com", "read-name")
+    assert result["error"]["code"] == "E_EMPTY_RESULT"
+    assert result["error"]["details"]["quality"]["status"] == "partial"
 
 
 @pytest.mark.asyncio

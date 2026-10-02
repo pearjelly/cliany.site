@@ -7,7 +7,13 @@ from unittest.mock import AsyncMock
 import pytest
 
 from cliany_site.errors import DataCommandQualityError
-from cliany_site.explorer.engine import WorkflowExplorer, _validate_command_partition
+from cliany_site.explorer.engine import (
+    WorkflowExplorer,
+    _data_command_completion_failures,
+    _data_completion_feedback,
+    _validate_command_partition,
+)
+from cliany_site.explorer.models import ActionStep
 
 
 def _config() -> SimpleNamespace:
@@ -52,6 +58,26 @@ def _extract_action() -> dict:
         "fields": {"title": "h2", "url": "a@href", "snippet": ".snippet"},
         "description": "提取搜索结果",
     }
+
+
+def test_allowed_zero_match_does_not_hide_empty_count_text():
+    actions = [
+        ActionStep("extract", "https://example.com/search", extract_mode="text"),
+        ActionStep("extract", "https://example.com/search", extract_mode="list"),
+    ]
+    command = [_data_command([0, 1], expects_nonempty=False)]
+    evidence = [
+        {"action_index": 0, "ok": True, "data": {"text": ""}},
+        {"action_index": 1, "ok": True, "data": []},
+    ]
+    failures = _data_command_completion_failures(command, actions, evidence)
+    assert [(failure["reason"], failure["action_index"]) for failure in failures] == [
+        ("extract_quality_failed", 0)
+    ]
+    assert "空文本不是合法零匹配证据" in _data_completion_feedback(failures, set())
+
+    evidence[0]["data"] = {"text": "0 matches"}
+    assert _data_command_completion_failures(command, actions, evidence) == []
 
 
 def _prepare(mocker, parse_results: list[dict], extraction_payloads: list[list[dict]]):
