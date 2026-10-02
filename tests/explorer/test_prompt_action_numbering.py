@@ -24,3 +24,4 @@ def test_explore_prompt_allows_declared_zero_match_search():
     assert "明确允许零匹配，设为 false" in SYSTEM_PROMPT
     assert "false 仅允许 list/table 提取真正返回空集合" in SYSTEM_PROMPT
     assert "不能掩盖空文本、空属性、字段缺失" in SYSTEM_PROMPT
+    assert "不能对列表容器使用 text" in SYSTEM_PROMPT

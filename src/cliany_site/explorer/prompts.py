@@ -94,6 +94,7 @@ actions 中每个操作的字段定义：
   - extract_mode: 提取模式，必须是 text / list / table / attribute 之一：
     - text: 提取单个元素的文本内容
     - list: 提取多个同类元素，每个提取 fields 中定义的字段（最多 100 项）
+      若搜索/筛选允许零匹配，结果集合必须用 list（可定位已观察到的列表容器或结果项），不能对列表容器使用 text；空列表应返回 []，数量/状态另用 text 提取。
     - table: 提取表格数据（最多 500 行）
     - attribute: 提取元素的属性值。selector 为纯 CSS 选择器（如 "a.link"），默认返回所有属性。可通过 fields 指定要提取的属性（如 {"href": "@href", "class": "@class"}）
   - fields: 仅 list/table 模式使用。key 为字段名，value 为子元素 CSS 选择器。支持 "@attr" 语法提取属性（如 {"url": "a@href", "title": "h3"}）。
