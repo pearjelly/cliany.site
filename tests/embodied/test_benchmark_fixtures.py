@@ -130,6 +130,10 @@ async def test_semantic_reorder_changes_target_axtree_ref(benchmark_server, unus
             for _ in range(2):
                 await browser_session.navigate_to(f"{benchmark_server}/semantic_reorder.html", new_tab=False)
                 tree = await capture_axtree(browser_session)
+                assert any(
+                    item["role"] == "status" and "#result" in item["selectors"]
+                    for item in tree["extract_candidates"]
+                )
                 target = [
                     element["ref"]
                     for element in tree["selector_map"].values()
