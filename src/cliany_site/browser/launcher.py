@@ -2,6 +2,7 @@
 import json
 import os
 import shutil
+import socket
 import subprocess
 import time
 import urllib.error
@@ -61,6 +62,14 @@ def detect_running_chrome(port: int | None = None) -> str | None:
     return None
 
 
+def _tcp_port_open(port: int) -> bool:
+    try:
+        with socket.create_connection(("localhost", port), timeout=0.2):
+            return True
+    except OSError:
+        return False
+
+
 def launch_chrome(port: int | None = None, headless: bool = False) -> subprocess.Popen:
     if port is None:
         port = get_config().cdp_port
@@ -86,6 +95,7 @@ def launch_chrome(port: int | None = None, headless: bool = False) -> subprocess
         stderr=subprocess.DEVNULL,
     )
 
+    started_at = time.monotonic()
     for _ in range(40):
         time.sleep(0.5)
         ws_url = detect_running_chrome(port)
@@ -95,13 +105,23 @@ def launch_chrome(port: int | None = None, headless: bool = False) -> subprocess
         if exit_code is not None:
             raise RuntimeError(f"Chrome 启动后提前退出 (exit={exit_code}, port={port})")
 
-    proc.terminate()
+    elapsed = time.monotonic() - started_at
+    port_open = _tcp_port_open(port)
+    profile_created = Path(user_data_dir).exists()
+    exit_code = proc.poll()
+    if exit_code is None:
+        proc.terminate()
     try:
         proc.wait(timeout=5)
     except subprocess.TimeoutExpired:
         proc.kill()
         proc.wait(timeout=5)
-    raise TimeoutError(f"Chrome 启动后 20 秒内 CDP 端口 {port} 未就绪")
+    process_state = "running" if exit_code is None else f"exit={exit_code}"
+    raise TimeoutError(
+        f"Chrome 启动后 20 秒内 CDP 端口 {port} 未就绪 "
+        f"(elapsed={elapsed:.1f}s, process={process_state}, tcp_open={port_open}, "
+        f"profile_created={profile_created})"
+    )
 
 
 def ensure_chrome(port: int | None = None, headless: bool = False) -> tuple[str, subprocess.Popen | None]:
