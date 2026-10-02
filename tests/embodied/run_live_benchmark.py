@@ -114,13 +114,47 @@ def _extract_action_summaries(command: dict[str, Any]) -> list[dict[str, str]]:
     ]
 
 
-def _has_extract_result(payload: dict[str, Any]) -> bool:
+def _extract_contents(payload: dict[str, Any]) -> list[Any]:
     data = payload.get("data")
     results = data.get("results") if isinstance(data, dict) else None
-    return isinstance(results, list) and any(
-        isinstance(result, dict) and result.get("command") == "browser extract" and result.get("ok") is True
+    if not isinstance(results, list):
+        return []
+    return [
+        result["data"]["content"]
         for result in results
-    )
+        if isinstance(result, dict)
+        and result.get("command") == "browser extract"
+        and result.get("ok") is True
+        and isinstance(result.get("data"), dict)
+        and "content" in result["data"]
+    ]
+
+
+def _text_values(value: Any) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, dict):
+        return [text for child in value.values() for text in _text_values(child)]
+    if isinstance(value, list):
+        return [text for child in value for text in _text_values(child)]
+    return []
+
+
+def _matches_expected_extracts(contents: list[Any], replay: dict[str, Any]) -> bool:
+    values = [text for content in contents for text in _text_values(content)]
+    expected_text = replay.get("expected_text")
+    if isinstance(expected_text, str) and expected_text not in values:
+        return False
+    expected_summary = replay.get("expected_summary")
+    if isinstance(expected_summary, str) and expected_summary not in values:
+        return False
+    expected_rows = replay.get("expected_rows")
+    if isinstance(expected_rows, list):
+        if any(row not in values for row in expected_rows):
+            return False
+        if not expected_rows and not any(content == [] for content in contents):
+            return False
+    return bool(contents)
 
 
 def _summarize_trials(trials: list[dict[str, Any]], task_ids: list[str]) -> dict[str, dict[str, int]]:
@@ -260,7 +294,8 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
             cli_args.append("--json")
             result, elapsed = await _run_cli(runtime_home, cli_args, timeout=120)
             row: dict[str, Any] = {"args": replay["args"], "seconds": round(elapsed, 2)}
-            if not result.get("ok") or not _has_extract_result(result):
+            contents = _extract_contents(result)
+            if not result.get("ok") or not contents:
                 row.update(ok=False, phase="replay", error_code=result.get("error", {}).get("code") or "NO_EXTRACT")
                 if not result.get("ok"):
                     row["error_message"] = result.get("error", {}).get("message")
@@ -271,7 +306,15 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
                 except Exception as exc:
                     oracle_ok = False
                     row["error_code"] = type(exc).__name__
-                row.update(ok=oracle_ok, phase="oracle" if not oracle_ok else "complete")
+                output_ok = _matches_expected_extracts(contents, replay)
+                row.update(
+                    ok=oracle_ok and output_ok,
+                    oracle_ok=oracle_ok,
+                    output_ok=output_ok,
+                    phase="oracle" if not oracle_ok else "output" if not output_ok else "complete",
+                )
+                if not output_ok:
+                    row["error_code"] = "EXTRACT_MISMATCH"
             outcome["replays"].append(row)
         finally:
             await browser.close()
