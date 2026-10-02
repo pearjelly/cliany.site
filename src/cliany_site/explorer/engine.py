@@ -1091,10 +1091,13 @@ class WorkflowExplorer:
                                 else "所有已录制动作索引恰好出现一次。"
                             )
                             repair_prompt = (
-                                f"{SYSTEM_PROMPT}{extend_section}\n\n"
-                                f"上一次完成响应的命令分区或参数归属无效：{partition_error}。"
-                                "只修正命令分区，不要再次操作页面；参数 action_index 必须属于其命令的 action_steps。"
-                                "返回 JSON：actions=[]、done=true，"
+                                "你只修正已完成探索的命令定义，不操作页面，也不创建新动作。"
+                                "只返回一个 JSON 对象，必须包含 actions=[]、done=true、commands 列表；"
+                                "不要返回代码块或其他文字。\n"
+                                f"工作流：{workflow_description}\n"
+                                f"上一次命令分区或参数归属错误：{partition_error}。\n"
+                                "只修正命令分区和错误的参数 action_index，不要再次操作页面；"
+                                "参数 action_index 必须属于其命令的 action_steps。"
                                 f"commands 中每个 action_steps 按顺序排列，{coverage_rule}"
                                 "保留命令的其他字段与真实业务意图；不能猜测或新增动作。\n"
                                 f"已录制动作：{json.dumps(recorded_actions, ensure_ascii=False)}\n"

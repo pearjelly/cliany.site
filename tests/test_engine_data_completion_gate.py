@@ -337,7 +337,9 @@ async def test_invalid_command_partition_gets_one_nonexecuting_repair(mocker, tm
     assert invoke.await_count == 2
     assert execute.await_count == 1
     repair_prompt = invoke.await_args_list[1].args[1]
-    assert "只修正命令分区，不要再次操作页面" in repair_prompt
+    assert "只修正命令分区和错误的参数 action_index，不要再次操作页面" in repair_prompt
+    assert "actions=[]、done=true" in repair_prompt
+    assert "当前页面需要执行的操作列表" not in repair_prompt
     assert '"index": 0' in repair_prompt
 
 
