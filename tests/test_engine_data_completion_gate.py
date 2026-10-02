@@ -277,6 +277,30 @@ def test_failed_extract_exception_does_not_allow_omitting_other_actions(tmp_home
         )
 
 
+def test_empty_command_is_not_accepted_without_recorded_actions(tmp_home):
+    with pytest.raises(RuntimeError, match="命令动作分区无效"):
+        _validate_command_partition([{"name": "inspect-beta", "action_steps": []}], 0)
+
+
+@pytest.mark.asyncio
+async def test_prefixed_ref_keeps_recorded_semantics_for_replay(mocker, tmp_home):
+    _prepare(
+        mocker,
+        [{
+            "actions": [{"type": "click", "ref": "@1", "description": "点击 Search"}],
+            "commands": [{"name": "inspect", "action_steps": [0], "args": []}],
+            "done": True,
+        }],
+        [[]],
+    )
+
+    result = await WorkflowExplorer().explore("https://example.com/search", "点击 Search", record=False)
+
+    assert result.actions[0].target_ref == "@1"
+    assert result.actions[0].target_name == "Search"
+    assert result.actions[0].target_role == "button"
+
+
 @pytest.mark.asyncio
 async def test_data_command_allows_real_empty_when_expects_nonempty_is_false(mocker):
     _prepare(

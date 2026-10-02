@@ -150,13 +150,13 @@ class TestWorkflowExplorerExtendDomain:
             mock_resp.content = json.dumps(
                 {
                     "done": True,
-                    "actions": [],
+                    "actions": [{"type": "click", "ref": "1", "description": "打开新命令"}],
                     "commands": [
                         {
                             "name": "new-cmd",
                             "description": "新命令",
                             "args": [],
-                            "action_steps": [],
+                            "action_steps": [0],
                         }
                     ],
                     "reasoning": "测试",

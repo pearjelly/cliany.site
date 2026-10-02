@@ -101,7 +101,7 @@ def _validate_command_partition(
     assigned: list[int] = []
     for command in commands:
         indices = command.get("action_steps") if isinstance(command, dict) else None
-        if (not isinstance(indices, list) or (action_count > 0 and not indices)
+        if (not isinstance(indices, list) or not indices
                 or any(type(index) is not int or not 0 <= index < action_count for index in indices)
                 or indices != sorted(indices)):
             raise RuntimeError("命令动作分区无效：每个命令须按录制顺序声明有效动作索引；请重新探索")
@@ -963,7 +963,7 @@ class WorkflowExplorer:
                         continue
                     action_type = action_data.get("type", "unknown")
                     target_ref = str(action_data.get("ref", "") or "")
-                    selector = selector_map.get(target_ref, {})
+                    selector = selector_map.get(target_ref.removeprefix("@"), {})
                     if not isinstance(selector, dict):
                         selector = {}
 
