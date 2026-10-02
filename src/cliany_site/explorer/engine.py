@@ -18,7 +18,7 @@ from cliany_site.action_runtime import execute_action_steps, normalize_navigatio
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.browser.screenshot import capture_screenshot
-from cliany_site.browser.selector import format_selector_candidates_section
+from cliany_site.browser.selector import format_read_only_extract_candidates, format_selector_candidates_section
 from cliany_site.capability import sniff_api_endpoints
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
 from cliany_site.config import get_config
@@ -811,6 +811,9 @@ class WorkflowExplorer:
 
                 element_tree_text = serialize_axtree(tree)
                 selector_candidates_text = format_selector_candidates_section(selector_map)
+                read_only_candidates = format_read_only_extract_candidates(tree.get("extract_candidates") or [])
+                if read_only_candidates:
+                    selector_candidates_text += "\n只读 AX 语义元素（供 extract 使用）：\n" + read_only_candidates
                 prompt_text = EXPLORE_PROMPT_TEMPLATE.format(
                     url=tree.get("url", ""),
                     title=tree.get("title", ""),

@@ -60,6 +60,40 @@ async def test_filter_catalog_oracle(benchmark_server):
 
 @pytest.mark.embodied
 @pytest.mark.asyncio
+async def test_filter_catalog_exposes_grounded_read_only_extract_candidates(benchmark_server, unused_tcp_port):
+    from cliany_site.browser.axtree import capture_axtree
+    from cliany_site.browser.cdp import CDPConnection
+
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(
+            headless=True, args=[f"--remote-debugging-port={unused_tcp_port}"]
+        )
+        cdp = CDPConnection(cdp_url=f"ws://127.0.0.1:{unused_tcp_port}", headless=True)
+        try:
+            page = await browser.new_page()
+            await page.goto(f"{benchmark_server}/filter_catalog.html")
+            await page.get_by_label("Filter packages").fill("beta")
+            await page.get_by_role("button", name="Search").click()
+            assert await cdp.check_available()
+            browser_session = await cdp.connect()
+            tree = await capture_axtree(browser_session)
+            assert any(
+                item["role"] == "status" and item["text"] == "1 matches"
+                and "#summary" in item["selectors"]
+                for item in tree["extract_candidates"]
+            )
+            assert any(
+                item["role"] == "list" and "#results" in item["selectors"]
+                for item in tree["extract_candidates"]
+            )
+            assert all(item.get("role") != "status" for item in tree["selector_map"].values())
+        finally:
+            await cdp.disconnect()
+            await browser.close()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
 async def test_semantic_reorder_oracle(benchmark_server):
     case = CASES["semantic-reorder"]
     replay = case["replays"][0]
