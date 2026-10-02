@@ -25,3 +25,8 @@ def test_explore_prompt_allows_declared_zero_match_search():
     assert "false 仅允许 list/table 提取真正返回空集合" in SYSTEM_PROMPT
     assert "不能掩盖空文本、空属性、字段缺失" in SYSTEM_PROMPT
     assert "不能对列表容器使用 text" in SYSTEM_PROMPT
+
+
+def test_explore_prompt_preserves_explicit_parameter_names():
+    assert "args.name 必须原样使用这些名称" in SYSTEM_PROMPT
+    assert "不要自行添加 `_value`、`_text` 等后缀或改名" in SYSTEM_PROMPT
