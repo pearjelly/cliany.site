@@ -38,6 +38,13 @@ def test_command_selection_requires_actions_and_replay_args():
         "args": ["name", "color"],
         "actions": case["required_actions"],
     }]
+    metadata["commands"][0]["actions"].append({
+        "action_type": "extract", "extract_mode": "list", "selector": "#results > li"
+    })
+    assert benchmark._extract_action_summaries(metadata["commands"][0]) == [
+        {"mode": "", "selector": ""},
+        {"mode": "list", "selector": "#results > li"}
+    ]
     metadata["commands"][0]["actions"] = [{"action_type": "extract"}, {"action_type": "click"}]
     with pytest.raises(ValueError, match="expected one command"):
         benchmark._select_command(metadata, case)

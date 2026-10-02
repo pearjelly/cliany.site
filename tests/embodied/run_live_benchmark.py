@@ -103,6 +103,17 @@ def _command_summaries(metadata: dict[str, Any]) -> list[dict[str, Any]]:
     return summaries
 
 
+def _extract_action_summaries(command: dict[str, Any]) -> list[dict[str, str]]:
+    return [
+        {
+            "mode": str(action.get("extract_mode") or "")[:40],
+            "selector": str(action.get("selector") or "")[:200],
+        }
+        for action in command.get("actions", [])
+        if isinstance(action, dict) and action.get("action_type") == "extract"
+    ]
+
+
 def _has_extract_result(payload: dict[str, Any]) -> bool:
     data = payload.get("data")
     results = data.get("results") if isinstance(data, dict) else None
@@ -230,12 +241,14 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
         return outcome
 
     outcome["command"] = command
-    outcome["expects_nonempty"] = next(
-        item.get("expects_nonempty")
+    selected_command = next(
+        item
         for index, item in enumerate(metadata["commands"])
         if isinstance(item, dict) and isinstance(item.get("name"), str)
         and to_command_name(item["name"], index) == command
     )
+    outcome["extract_actions"] = _extract_action_summaries(selected_command)
+    outcome["expects_nonempty"] = selected_command.get("expects_nonempty")
     outcome["replays"] = []
     for replay in case["replays"]:
         port = _free_port()

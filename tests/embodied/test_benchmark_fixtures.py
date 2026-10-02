@@ -5,6 +5,8 @@ from pathlib import Path
 
 import pytest
 
+from cliany_site.extract import build_extract_js
+
 playwright_async_api = pytest.importorskip("playwright.async_api")
 async_playwright = playwright_async_api.async_playwright
 CASES = {
@@ -48,6 +50,10 @@ async def test_filter_catalog_oracle(benchmark_server):
                 assert await page.locator("#results li").evaluate_all(
                     "rows => rows.map(row => row.dataset.code)"
                 ) == replay["expected_codes"]
+                expected = [{"name": name} for name in replay["expected_rows"]]
+                assert await page.evaluate(build_extract_js("#results", "list", {"name": ""})) == expected
+                assert await page.evaluate(build_extract_js("#results", "list")) == replay["expected_rows"]
+                assert await page.evaluate(build_extract_js("#results li", "list", {"name": ""})) == expected
         finally:
             await browser.close()
 
