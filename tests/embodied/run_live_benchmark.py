@@ -167,7 +167,39 @@ def _summarize_trials(trials: list[dict[str, Any]], task_ids: list[str]) -> dict
     }
 
 
-async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tuple[dict[str, Any], float]:
+def _progress_profile(stderr: bytes) -> dict[str, Any]:
+    timestamps: dict[int, dict[str, float]] = {}
+    for line in stderr.decode("utf-8", errors="replace").splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(event, dict):
+            continue
+        name, step, timestamp = event.get("event"), event.get("step"), event.get("ts")
+        if name not in {"explore_step_start", "explore_llm_start", "explore_llm_done", "explore_step_done"}:
+            continue
+        if type(step) is not int or type(timestamp) not in {int, float}:
+            continue
+        timestamps.setdefault(step, {})[name] = float(timestamp)
+
+    steps = []
+    for step, events in sorted(timestamps.items()):
+        row: dict[str, Any] = {"step": step + 1}
+        for key, start, end in (
+            ("before_llm_seconds", "explore_step_start", "explore_llm_start"),
+            ("llm_seconds", "explore_llm_start", "explore_llm_done"),
+            ("after_llm_seconds", "explore_llm_done", "explore_step_done"),
+        ):
+            if start in events and end in events and events[end] >= events[start]:
+                row[key] = round(events[end] - events[start], 2)
+        steps.append(row)
+    return {"steps": steps, "llm_seconds": round(sum(row.get("llm_seconds", 0) for row in steps), 2)}
+
+
+async def _run_cli(
+    runtime_home: Path, cli_args: list[str], timeout: int
+) -> tuple[dict[str, Any], float, dict[str, Any]]:
     env = os.environ.copy()
     env["CLIANY_NO_AGENT_MD"] = "1"
     start = time.monotonic()
@@ -185,23 +217,31 @@ async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tup
         stderr=asyncio.subprocess.PIPE,
     )
     try:
-        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=timeout)
+        stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
     except TimeoutError:
         process.kill()
-        await process.communicate()
-        return {"ok": False, "error": {"code": "BENCHMARK_TIMEOUT"}}, time.monotonic() - start
+        _, stderr = await process.communicate()
+        return (
+            {"ok": False, "error": {"code": "BENCHMARK_TIMEOUT"}},
+            time.monotonic() - start,
+            _progress_profile(stderr),
+        )
     elapsed = time.monotonic() - start
+    profile = _progress_profile(stderr)
     try:
         payload = json.loads(stdout)
     except (UnicodeDecodeError, json.JSONDecodeError):
-        return {"ok": False, "error": {"code": "INVALID_CLI_JSON"}}, elapsed
+        return {"ok": False, "error": {"code": "INVALID_CLI_JSON"}}, elapsed, profile
     if not isinstance(payload, dict) or process.returncode != 0 or payload.get("ok") is not True:
         error = payload.get("error") if isinstance(payload, dict) else None
         code = error.get("code") if isinstance(error, dict) else None
         message = error.get("message") if isinstance(error, dict) else None
         details = error.get("details") if isinstance(error, dict) else None
-        return {"ok": False, "error": {"code": code or "CLI_FAILED", "message": message, "details": details}}, elapsed
-    return payload, elapsed
+        return {
+            "ok": False,
+            "error": {"code": code or "CLI_FAILED", "message": message, "details": details},
+        }, elapsed, profile
+    return payload, elapsed, profile
 
 
 async def _inspect_page(playwright: Any, cdp_port: int, case: dict[str, Any], replay: dict[str, Any]) -> bool:
@@ -241,12 +281,13 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
     port = _free_port()
     browser = await playwright.chromium.launch(headless=True, args=[f"--remote-debugging-port={port}"])
     try:
-        explore, elapsed = await _run_cli(
+        explore, elapsed, profile = await _run_cli(
             runtime_home,
             ["--cdp-url", f"ws://127.0.0.1:{port}", "explore", url, case["workflow"], "--no-record", "--json"],
             timeout=300,
         )
         outcome["explore_seconds"] = round(elapsed, 2)
+        outcome["explore_profile"] = profile
     finally:
         await browser.close()
     if not explore.get("ok"):
@@ -292,7 +333,7 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
             for name, value in replay["args"].items():
                 cli_args.extend([f"--{name.replace('_', '-')}", str(value)])
             cli_args.append("--json")
-            result, elapsed = await _run_cli(runtime_home, cli_args, timeout=120)
+            result, elapsed, _ = await _run_cli(runtime_home, cli_args, timeout=120)
             row: dict[str, Any] = {"args": replay["args"], "seconds": round(elapsed, 2)}
             contents = _extract_contents(result)
             if not result.get("ok") or not contents:
@@ -346,7 +387,7 @@ async def _run(args: argparse.Namespace, tasks: list[dict[str, Any]]) -> dict[st
             port = _free_port()
             browser = await playwright.chromium.launch(headless=True, args=[f"--remote-debugging-port={port}"])
             try:
-                preflight, elapsed = await _run_cli(
+                preflight, elapsed, _ = await _run_cli(
                     runtime_root / "preflight",
                     [
                         "--cdp-url", f"ws://127.0.0.1:{port}", "doctor", "--llm-live",

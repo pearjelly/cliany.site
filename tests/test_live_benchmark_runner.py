@@ -94,6 +94,25 @@ def test_summary_counts_failures_by_task():
     }
 
 
+def test_progress_profile_separates_llm_wait_from_browser_work():
+    events = [
+        {"event": "explore_step_start", "step": 0, "ts": 10},
+        {"event": "explore_llm_start", "step": 0, "ts": 12},
+        {"event": "explore_llm_done", "step": 0, "ts": 22},
+        {"event": "explore_step_done", "step": 0, "ts": 25},
+        {"event": "explore_step_start", "step": 1, "ts": 26},
+        {"event": "explore_llm_start", "step": 1, "ts": 27},
+    ]
+    stderr = b"status line\n" + b"\n".join(json.dumps(event).encode() for event in events)
+    assert benchmark._progress_profile(stderr) == {
+        "steps": [
+            {"step": 1, "before_llm_seconds": 2.0, "llm_seconds": 10.0, "after_llm_seconds": 3.0},
+            {"step": 2, "before_llm_seconds": 1.0},
+        ],
+        "llm_seconds": 10.0,
+    }
+
+
 def test_live_runner_requires_explicit_opt_in_and_rejects_offline(tmp_home, monkeypatch):
     report = tmp_home / "report.json"
     with pytest.raises(SystemExit, match="2"):
