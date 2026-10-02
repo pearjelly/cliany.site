@@ -212,9 +212,25 @@ def _progress_profile(stderr: bytes) -> dict[str, Any]:
         if step in attempts:
             row["attempts"] = attempts[step]
         steps.append(row)
+    llm_seconds = round(sum(row.get("llm_seconds", 0) for row in steps), 2)
+    repair_seconds = round(sum(
+        item["seconds"] for group in attempts.values() for item in group
+        if item["phase"] == "partition_repair"
+    ), 2)
+    backoff_seconds = round(sum(
+        item["backoff_seconds"] for group in attempts.values() for item in group
+    ), 2)
+    repair_backoff_seconds = sum(
+        item["backoff_seconds"] for group in attempts.values() for item in group
+        if item["phase"] == "partition_repair"
+    )
+    # Explore LLM intervals already include their own retry backoff; repair has no enclosing interval.
     return {
         "steps": steps,
-        "llm_seconds": round(sum(row.get("llm_seconds", 0) for row in steps), 2),
+        "llm_seconds": llm_seconds,
+        "repair_llm_seconds": repair_seconds,
+        "backoff_seconds": backoff_seconds,
+        "model_total_seconds": round(llm_seconds + repair_seconds + repair_backoff_seconds, 2),
         "retry_count": sum(item["outcome"] == "retry" for group in attempts.values() for item in group),
     }
 

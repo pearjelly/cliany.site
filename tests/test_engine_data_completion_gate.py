@@ -40,9 +40,9 @@ def _tree() -> dict:
     }
 
 
-def _data_command(action_steps: list[int], *, expects_nonempty: bool = True) -> dict:
+def _data_command(action_steps: list[int], *, expects_nonempty: bool = True, name: str = "search-results") -> dict:
     return {
-        "name": "search-results",
+        "name": name,
         "description": "提取搜索结果",
         "args": [],
         "action_steps": action_steps,
@@ -115,16 +115,17 @@ def _prepare(mocker, parse_results: list[dict], extraction_payloads: list[list[d
 
 
 @pytest.mark.asyncio
-async def test_data_command_repairs_missing_owned_extract_before_completion(mocker):
+@pytest.mark.parametrize("command_name", ["search-results", "filter-packages"])
+async def test_data_command_repairs_missing_owned_extract_before_completion(mocker, command_name):
     parse_results = [
         {
             "actions": [{"type": "click", "ref": "1", "description": "打开搜索结果"}],
-            "commands": [_data_command([0])],
+            "commands": [_data_command([0], name=command_name)],
             "done": True,
         },
         {
             "actions": [_extract_action()],
-            "commands": [_data_command([0, 1])],
+            "commands": [_data_command([0, 1], name=command_name)],
             "done": True,
         },
     ]
@@ -155,7 +156,7 @@ async def test_data_command_repairs_missing_owned_extract_before_completion(mock
     assert result.commands[0].action_steps == [0, 1]
     second_prompt = invoke.await_args_list[1].args[1]
     assert "数据命令完成门禁" in second_prompt
-    assert "search-results: missing_owned_extract" in second_prompt
+    assert f"{command_name}: missing_owned_extract" in second_prompt
 
 
 @pytest.mark.asyncio

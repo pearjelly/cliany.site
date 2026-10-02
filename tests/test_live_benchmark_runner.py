@@ -118,7 +118,28 @@ def test_progress_profile_separates_llm_wait_from_browser_work():
             {"step": 2, "before_llm_seconds": 1.0},
         ],
         "llm_seconds": 10.0,
+        "repair_llm_seconds": 0.0,
+        "backoff_seconds": 2.0,
+        "model_total_seconds": 10.0,
         "retry_count": 1,
+    }
+
+
+def test_progress_profile_counts_partition_repair_wait():
+    stderr = json.dumps({
+        "event": "explore_llm_attempt", "step": 1, "phase": "partition_repair",
+        "attempt": 1, "elapsed_ms": 129510, "outcome": "success", "backoff_seconds": 0,
+    }).encode()
+    assert benchmark._progress_profile(stderr) == {
+        "steps": [{"step": 2, "attempts": [
+            {"phase": "partition_repair", "attempt": 1, "seconds": 129.51,
+             "outcome": "success", "backoff_seconds": 0},
+        ]}],
+        "llm_seconds": 0,
+        "repair_llm_seconds": 129.51,
+        "backoff_seconds": 0,
+        "model_total_seconds": 129.51,
+        "retry_count": 0,
     }
 
 

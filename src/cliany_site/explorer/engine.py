@@ -76,7 +76,7 @@ _GENERIC_COMMAND_NAMES = frozenset(
     }
 )
 
-_DATA_COMMAND_PREFIXES = ("list-", "search-", "read-", "extract-")
+_DATA_COMMAND_PREFIXES = ("list-", "search-", "filter-", "read-", "extract-")
 _MAX_DATA_COMPLETION_REPAIRS = 1
 
 
