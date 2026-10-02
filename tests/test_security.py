@@ -70,6 +70,14 @@ class TestEncryptDecrypt:
 
 
 class TestEncryptedSession:
+    def test_windows_separator_stays_inside_session_directory(self, tmp_home: Path) -> None:
+        from cliany_site.security import _session_path as encrypted_session_path
+        from cliany_site.session import _session_path as session_path
+
+        for path in (session_path(r"..\..\outside"), encrypted_session_path(r"..\..\outside")):
+            assert path.parent == tmp_home / ".cliany-site" / "sessions"
+            assert path.name == ".._.._outside.json"
+
     def test_save_and_load(self, tmp_path: Path) -> None:
         with patch("cliany_site.security.get_config") as mock_cfg:
             cfg = MagicMock()

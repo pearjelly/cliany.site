@@ -15,7 +15,7 @@ def _session_path(domain: str) -> Path:
     sessions_dir = get_config().sessions_dir
     sessions_dir.mkdir(parents=True, exist_ok=True)
     # 将 domain 中的非法文件名字符替换为 _
-    safe_domain = domain.replace("/", "_").replace(":", "_")
+    safe_domain = domain.replace("/", "_").replace("\\", "_").replace(":", "_")
     return sessions_dir / f"{safe_domain}.json"
 
 
