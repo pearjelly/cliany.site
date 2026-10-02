@@ -14,6 +14,7 @@ class TestNullProgressReporter:
         r.on_explore_start("https://example.com", "test", 10)
         r.on_explore_step_start(0, 10)
         r.on_explore_llm_start(0)
+        r.on_explore_llm_attempt(0, "explore", 1, 123.4, "success", 0)
         r.on_explore_llm_done(0, 3)
         r.on_explore_step_done(0, 3, 123.4)
         r.on_explore_done(1, 3, 1, 500.0)
@@ -59,6 +60,16 @@ class TestNdjsonProgressReporter:
         assert events[2]["actions_count"] == 3
         assert events[3]["event"] == "explore_step_done"
         assert events[3]["elapsed_ms"] == 456.7
+
+    def test_llm_attempt_event_contains_only_timing_and_retry_metadata(self):
+        r, buf = self._make_reporter()
+        r.on_explore_llm_attempt(1, "explore", 2, 1234.56, "retry", 2.0)
+        event = self._parse_lines(buf)[0]
+        assert event == {
+            "event": "explore_llm_attempt", "ts": event["ts"], "step": 1,
+            "phase": "explore", "attempt": 2, "elapsed_ms": 1234.6,
+            "outcome": "retry", "backoff_seconds": 2.0,
+        }
 
     def test_explore_done_emits_summary(self):
         r, buf = self._make_reporter()

@@ -98,6 +98,10 @@ def test_progress_profile_separates_llm_wait_from_browser_work():
     events = [
         {"event": "explore_step_start", "step": 0, "ts": 10},
         {"event": "explore_llm_start", "step": 0, "ts": 12},
+        {"event": "explore_llm_attempt", "step": 0, "phase": "explore", "attempt": 1, "elapsed_ms": 8000,
+         "outcome": "retry", "backoff_seconds": 2, "ts": 20},
+        {"event": "explore_llm_attempt", "step": 0, "phase": "explore", "attempt": 2, "elapsed_ms": 0,
+         "outcome": "success", "backoff_seconds": 0, "ts": 22},
         {"event": "explore_llm_done", "step": 0, "ts": 22},
         {"event": "explore_step_done", "step": 0, "ts": 25},
         {"event": "explore_step_start", "step": 1, "ts": 26},
@@ -106,10 +110,15 @@ def test_progress_profile_separates_llm_wait_from_browser_work():
     stderr = b"status line\n" + b"\n".join(json.dumps(event).encode() for event in events)
     assert benchmark._progress_profile(stderr) == {
         "steps": [
-            {"step": 1, "before_llm_seconds": 2.0, "llm_seconds": 10.0, "after_llm_seconds": 3.0},
+            {"step": 1, "before_llm_seconds": 2.0, "llm_seconds": 10.0, "after_llm_seconds": 3.0,
+             "attempts": [
+                 {"phase": "explore", "attempt": 1, "seconds": 8.0, "outcome": "retry", "backoff_seconds": 2},
+                 {"phase": "explore", "attempt": 2, "seconds": 0.0, "outcome": "success", "backoff_seconds": 0},
+             ]},
             {"step": 2, "before_llm_seconds": 1.0},
         ],
         "llm_seconds": 10.0,
+        "retry_count": 1,
     }
 
 

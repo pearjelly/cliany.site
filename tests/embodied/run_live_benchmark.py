@@ -169,6 +169,7 @@ def _summarize_trials(trials: list[dict[str, Any]], task_ids: list[str]) -> dict
 
 def _progress_profile(stderr: bytes) -> dict[str, Any]:
     timestamps: dict[int, dict[str, float]] = {}
+    attempts: dict[int, list[dict[str, Any]]] = {}
     for line in stderr.decode("utf-8", errors="replace").splitlines():
         try:
             event = json.loads(line)
@@ -177,6 +178,20 @@ def _progress_profile(stderr: bytes) -> dict[str, Any]:
         if not isinstance(event, dict):
             continue
         name, step, timestamp = event.get("event"), event.get("step"), event.get("ts")
+        if name == "explore_llm_attempt" and type(step) is int:
+            if (
+                type(event.get("attempt")) is int
+                and type(event.get("elapsed_ms")) in {int, float}
+                and event.get("outcome") in {"success", "retry", "error"}
+                and event.get("phase") in {"explore", "partition_repair"}
+            ):
+                attempts.setdefault(step, []).append({
+                    "phase": event["phase"], "attempt": event["attempt"],
+                    "seconds": round(event["elapsed_ms"] / 1000, 2),
+                    "outcome": event["outcome"],
+                    "backoff_seconds": event.get("backoff_seconds", 0),
+                })
+            continue
         if name not in {"explore_step_start", "explore_llm_start", "explore_llm_done", "explore_step_done"}:
             continue
         if type(step) is not int or type(timestamp) not in {int, float}:
@@ -184,7 +199,8 @@ def _progress_profile(stderr: bytes) -> dict[str, Any]:
         timestamps.setdefault(step, {})[name] = float(timestamp)
 
     steps = []
-    for step, events in sorted(timestamps.items()):
+    for step in sorted(timestamps.keys() | attempts.keys()):
+        events = timestamps.get(step, {})
         row: dict[str, Any] = {"step": step + 1}
         for key, start, end in (
             ("before_llm_seconds", "explore_step_start", "explore_llm_start"),
@@ -193,8 +209,14 @@ def _progress_profile(stderr: bytes) -> dict[str, Any]:
         ):
             if start in events and end in events and events[end] >= events[start]:
                 row[key] = round(events[end] - events[start], 2)
+        if step in attempts:
+            row["attempts"] = attempts[step]
         steps.append(row)
-    return {"steps": steps, "llm_seconds": round(sum(row.get("llm_seconds", 0) for row in steps), 2)}
+    return {
+        "steps": steps,
+        "llm_seconds": round(sum(row.get("llm_seconds", 0) for row in steps), 2),
+        "retry_count": sum(item["outcome"] == "retry" for group in attempts.values() for item in group),
+    }
 
 
 async def _run_cli(

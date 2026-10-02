@@ -7,7 +7,9 @@ import os
 import re
 import time
 import warnings
+from collections.abc import Callable
 from datetime import UTC, datetime
+from functools import partial
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -583,26 +585,40 @@ async def _invoke_llm_with_retry(
     max_attempts: int = 3,
     base_delay: float = 2.0,
     backoff_factor: float = 2.0,
+    on_attempt: Callable[[int, float, str, float], None] | None = None,
 ) -> Any:
     """带指数退避重试的 LLM 调用。支持纯文本和多模态消息。"""
+    def report_attempt(attempt: int, elapsed_ms: float, outcome: str, backoff_seconds: float) -> None:
+        if on_attempt is not None:
+            try:
+                on_attempt(attempt, elapsed_ms, outcome, backoff_seconds)
+            except Exception:
+                logger.debug("LLM 尝试耗时观测回调失败", exc_info=True)
+
     for attempt in range(max_attempts):
+        attempt_start = time.monotonic()
         try:
             if isinstance(prompt, str):
-                return await llm.ainvoke(prompt)
+                response = await llm.ainvoke(prompt)
             else:
                 messages = [prompt] if not isinstance(prompt, list) else prompt
-                return await llm.ainvoke(messages)
+                response = await llm.ainvoke(messages)
+            report_attempt(attempt + 1, (time.monotonic() - attempt_start) * 1000, "success", 0)
+            return response
         except Exception as exc:
             retryable = _is_retryable_error(exc)
             if retryable and attempt >= max_attempts - 1:
+                report_attempt(attempt + 1, (time.monotonic() - attempt_start) * 1000, "error", 0)
                 raise LlmUnavailableError(
                     _llm_error_summary(exc),
                     status_code=_extract_status_code(exc),
                     retryable=True,
                 ) from exc
             if not retryable:
+                report_attempt(attempt + 1, (time.monotonic() - attempt_start) * 1000, "error", 0)
                 raise
             delay = base_delay * (backoff_factor**attempt)
+            report_attempt(attempt + 1, (time.monotonic() - attempt_start) * 1000, "retry", delay)
             logger.warning(
                 "LLM 调用失败 (第 %d/%d 次): %s — %.1f 秒后重试",
                 attempt + 1,
@@ -897,6 +913,7 @@ class WorkflowExplorer:
                         max_attempts=cfg.llm_retry_max_attempts,
                         base_delay=cfg.llm_retry_base_delay,
                         backoff_factor=cfg.llm_retry_backoff_factor,
+                        on_attempt=partial(reporter.on_explore_llm_attempt, step_num, "explore"),
                     )
                     logger.debug("步骤 %d: LLM 响应已收到", step_num + 1)
                 except AttributeError as e:
@@ -1109,6 +1126,7 @@ class WorkflowExplorer:
                                 max_attempts=cfg.llm_retry_max_attempts,
                                 base_delay=cfg.llm_retry_base_delay,
                                 backoff_factor=cfg.llm_retry_backoff_factor,
+                                on_attempt=partial(reporter.on_explore_llm_attempt, step_num, "partition_repair"),
                             )
                             repaired = _parse_llm_response(_to_text(repair_response.content))
                             if repaired.get("done") is not True or repaired.get("actions") != []:
