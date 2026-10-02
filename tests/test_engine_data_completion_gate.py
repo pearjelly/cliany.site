@@ -342,6 +342,50 @@ async def test_invalid_command_partition_gets_one_nonexecuting_repair(mocker, tm
 
 
 @pytest.mark.asyncio
+async def test_invalid_argument_ownership_gets_nonexecuting_repair(mocker, tmp_home):
+    actions = [
+        {"type": "type", "ref": "1", "value": "Ada", "description": "输入姓名"},
+        {"type": "click", "ref": "1", "description": "应用"},
+    ]
+    first = {
+        "name": "apply-name", "action_steps": [0, 1],
+        "args": [{"name": "name", "action_index": 2}],
+    }
+    corrected = {
+        "name": "apply-name", "action_steps": [0, 1],
+        "args": [{"name": "name", "action_index": 0}],
+    }
+    invoke = _prepare(mocker, [
+        {"actions": actions, "commands": [first], "done": True},
+        {"actions": [], "commands": [corrected], "done": True},
+    ], [[]])
+    execute = mocker.patch("cliany_site.explorer.engine.execute_action_steps", new_callable=AsyncMock)
+
+    result = await WorkflowExplorer().explore("https://example.com/search", "输入姓名", record=False)
+
+    assert result.partition_repair_attempts == 1
+    assert result.commands[0].args == corrected["args"]
+    assert execute.await_count == 1
+    assert "action_index 不属于当前命令" in invoke.await_args_list[1].args[1]
+
+
+@pytest.mark.asyncio
+async def test_argument_repair_still_rejects_new_actions(mocker, tmp_home):
+    actions = [{"type": "type", "ref": "1", "value": "Ada"}]
+    invalid = {"name": "apply-name", "action_steps": [0], "args": [{"name": "name", "action_index": 1}]}
+    corrected = {"name": "apply-name", "action_steps": [0], "args": [{"name": "name", "action_index": 0}]}
+    _prepare(mocker, [
+        {"actions": actions, "commands": [invalid], "done": True},
+        {"actions": actions, "commands": [corrected], "done": True},
+    ], [[]])
+    execute = mocker.patch("cliany_site.explorer.engine.execute_action_steps", new_callable=AsyncMock)
+
+    with pytest.raises(RuntimeError, match="修正响应必须完成且不得新增动作"):
+        await WorkflowExplorer().explore("https://example.com/search", "输入姓名", record=False)
+    assert execute.await_count == 1
+
+
+@pytest.mark.asyncio
 async def test_partition_repair_rejects_new_actions_without_execution(mocker, tmp_home):
     actions = [{"type": "click", "ref": "1", "description": "检查"}]
     _prepare(mocker, [

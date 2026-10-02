@@ -104,6 +104,15 @@ def _validate_command_partition(
                 or indices != sorted(indices)):
             raise RuntimeError("命令动作分区无效：每个命令须按录制顺序声明有效动作索引；请重新探索")
         assigned.extend(indices)
+        args = command.get("args") if isinstance(command, dict) else None
+        if isinstance(args, list):
+            for arg in args:
+                if not isinstance(arg, dict) or "action_index" not in arg:
+                    continue
+                action_index = arg["action_index"]
+                if type(action_index) is not int or action_index not in indices:
+                    name = str(arg.get("name") or "")
+                    raise RuntimeError(f"参数 {name} 的 action_index 不属于当前命令")
     discardable = discardable_action_indices or set()
     expected = [index for index in range(action_count) if index not in discardable]
     if sorted(assigned) != expected:
@@ -1083,8 +1092,9 @@ class WorkflowExplorer:
                             )
                             repair_prompt = (
                                 f"{SYSTEM_PROMPT}{extend_section}\n\n"
-                                "上一次完成响应的 commands.action_steps 分区无效。"
-                                "只修正命令分区，不要再次操作页面。返回 JSON：actions=[]、done=true，"
+                                f"上一次完成响应的命令分区或参数归属无效：{partition_error}。"
+                                "只修正命令分区，不要再次操作页面；参数 action_index 必须属于其命令的 action_steps。"
+                                "返回 JSON：actions=[]、done=true，"
                                 f"commands 中每个 action_steps 按顺序排列，{coverage_rule}"
                                 "保留命令的其他字段与真实业务意图；不能猜测或新增动作。\n"
                                 f"已录制动作：{json.dumps(recorded_actions, ensure_ascii=False)}\n"
