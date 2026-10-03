@@ -7,6 +7,17 @@
 
 ## [Unreleased]
 
+## [0.16.374] - 2026-10-04
+
+### Added
+
+- Structured browser list extraction and generated commands report `row_limit=100` and `limit_reached` in their quality payload. Reaching the limit warns that completeness is unproven; field quality can still be `ok`.
+- The quickstart and website link a pinned, read-only Python documentation browser-adapter trial and an independent feedback issue. It remains a candidate, not a maintained active demo.
+
+### Evidence and limits
+
+- A maintainer reinstalled the public adapter archive, passed strict verification, and replayed a changed `pathlib` query with 100 rows, `limit_reached=true`, and the expected first title/link. This does not replace independent first-user evidence. The macOS synthetic-`HOME` Chrome navigation issue remains open.
+
 ## [0.16.373] - 2026-10-04
 
 ### Changed
@@ -18,7 +29,7 @@
 ### Evidence and limits
 
 - PR #47 passed full CI, including headless Chromium. A clean fixed-head controlled sample scored 30/30 across three tasks with all 40 changed-input returned-value and independent DOM checks passing. Exploration p95 was 186.4 seconds, and no live command-partition repair occurred; this is not a general reliability claim.
-- Three fresh Python documentation browser trials passed strict verification and changed-query first-result checks. Extraction remains capped at 100 rows; that third-party adapter remains a candidate pending a public package URL and independent-user feedback.
+- Three fresh Python documentation browser trials passed strict verification and changed-query first-result checks. Extraction remains capped at 100 rows; that third-party adapter remains a candidate. Its archive was attached to the v0.16.373 release after publication, while independent-user feedback is still pending.
 
 ## [0.16.372] - 2026-10-04
 
@@ -3351,7 +3362,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.373...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.374...HEAD
+[0.16.374]: https://github.com/pearjelly/cliany.site/compare/v0.16.373...v0.16.374
 [0.16.373]: https://github.com/pearjelly/cliany.site/compare/v0.16.372...v0.16.373
 [0.16.372]: https://github.com/pearjelly/cliany.site/compare/v0.16.371...v0.16.372
 [0.16.371]: https://github.com/pearjelly/cliany.site/compare/v0.16.370...v0.16.371

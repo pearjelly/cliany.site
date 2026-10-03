@@ -11,7 +11,12 @@ from cliany_site.browser.cdp import cdp_from_context
 from cliany_site.commands.browser import browser_group
 from cliany_site.commands.browser._common import print_envelope
 from cliany_site.envelope import Envelope, ErrorCode, err, ok
-from cliany_site.extract import _coerce_json_like_extract_data, _wait_for_list_settle, build_extract_js
+from cliany_site.extract import (
+    LIST_EXTRACT_LIMIT,
+    _coerce_json_like_extract_data,
+    _wait_for_list_settle,
+    build_extract_js,
+)
 from cliany_site.extract_quality import evaluate_extract_quality
 
 
@@ -141,6 +146,9 @@ async def _run_extract(
     }
     if mode:
         quality = evaluate_extract_quality(mode, content, fields).to_dict()
+        if mode == "list":
+            quality["row_limit"] = LIST_EXTRACT_LIMIT
+            quality["limit_reached"] = isinstance(content, list) and len(content) >= LIST_EXTRACT_LIMIT
         payload["quality"] = quality
         if strict_quality and not quality.get("ok", False):
             return err(

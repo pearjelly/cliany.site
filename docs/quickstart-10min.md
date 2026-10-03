@@ -111,6 +111,18 @@ uv run --extra dev --frozen python scripts/capture_active_demo_evidence.py \
 
 完整的本轮输出和边界说明见 [active demo evidence snapshot](user-evidence/2026-08-17-issues-apache-spark.md)；它不代表 candidate adapter package、live LLM 或第三方服务的持续可用性。捕获器只运行 active case manifest 声明的严格校验和只读 JSON 命令；严格校验失败时会跳过只读命令并返回非零。
 
+## 可选：试用浏览器生成的 Python 文档候选命令
+
+这是公开的只读 browser-generated adapter，尚未晋级维护中的 active 案例。需要 Chrome 和可访问的 `docs.python.org`，运行已有命令不需要 LLM key。先在全新虚拟环境安装 PyPI 的 `cliany-site`，再按顺序执行：
+
+```bash
+cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.16.373/docs.python.org-0.1.0.cliany-adapter.tar.gz --sha256 29f1ece48fd6749e53cf7384f5be0878c1617d1d8344641e284b6c37150f6592 --json
+cliany-site verify docs.python.org --strict --json
+cliany-site --headless docs.python.org search-python-docs --query pathlib --json
+```
+
+只在严格验证的 `verdict=ok` 后运行最后一条命令；已有同名 adapter 时不要强制覆盖，先验证现有安装。维护者用公开包复测返回首条 `pathlib` / `library/pathlib.html#module-pathlib`，但这不是独立用户验收。列表最多返回 100 行；从 v0.16.374 起，`data.quality.extracts[*].limit_reached=true` 表示碰到上限，**不**表示已收集全部匹配页面。请在 [独立试用 Issue #55](https://github.com/pearjelly/cliany.site/issues/55) 留下脱敏的首个结果或失败阶段，不要上传凭据、Cookie 或完整本地日志。
+
 ## 路径 B：生成自己的站点命令
 
 这条路径会调用 LLM 并连接 Chrome/CDP，适合在路径 A 跑通后继续。
