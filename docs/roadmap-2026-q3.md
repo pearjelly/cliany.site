@@ -2,7 +2,7 @@
 
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-10-03
-- **基线版本：** v0.16.372
+- **基线版本：** v0.16.373
 - **目标周期：** 滚动维护（2026-09-08 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -13,7 +13,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 已完成校准
 
-2026-06-10 的原始路线图以 v0.14.2 为基线；当前候选为 v0.16.372，正式发布前公开版本仍以 PyPI 和 GitHub Release 为准。v0.16.357 加入真实浏览器端到端回归覆盖的执行修复、Cookie 主机范围保存，以及显式授权的 Jev 只读意图定位；v0.16.358 使实时模型连接故障的 JSON 建议更具体；v0.16.359 区分当前 provider 的密钥和不可重试的认证失败。新配置的 OpenAI 兼容模型已通过 live preflight；PyPI adapter 的公开资产安装和严格验证已完成，正常搜索页的只读 online smoke 仍待验证。crates.io 从维护者网络返回 HTTP 403，浏览器及事件总线的导航超时现报告页面就绪错误而非泛用未知错误，案例尚未晋级。Jev 的真实准确率也未测量。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
+2026-06-10 的原始路线图以 v0.14.2 为基线；当前候选为 v0.16.373，正式发布前公开版本仍以 PyPI 和 GitHub Release 为准。v0.16.357 加入真实浏览器端到端回归覆盖的执行修复、Cookie 主机范围保存，以及显式授权的 Jev 只读意图定位；v0.16.358 使实时模型连接故障的 JSON 建议更具体；v0.16.359 区分当前 provider 的密钥和不可重试的认证失败。新配置的 OpenAI 兼容模型已通过 live preflight；PyPI adapter 的公开资产安装和严格验证已完成，正常搜索页的只读 online smoke 仍待验证。crates.io 从维护者网络返回 HTTP 403，浏览器及事件总线的导航超时现报告页面就绪错误而非泛用未知错误，案例尚未晋级。Jev 的真实准确率也未测量。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
 
 - 首次成功路径：README、README.zh、官网和 `doctor` 输出已经围绕 10 分钟路径、真实 demo、LLM live preflight 和可执行下一步重新组织。
 - v0.16.365 的 [Confluence 维护包](user-evidence/2026-10-01-confluence-public-package-audit.md) 已从公开 Release 资产按固定 SHA-256 在隔离 HOME 中完成安装、严格校验和只读回放；维护版案例晋级 active，不修改用户已有 adapter，历史 v0.14.1 包仍不可用。
