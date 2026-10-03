@@ -17,6 +17,12 @@ from cliany_site.marketplace import (
 from cliany_site.response import error_response, print_response, success_response
 
 
+def _print_market_response(resp: dict[str, object], *, json_mode: bool) -> None:
+    if json_mode:
+        resp = {**resp, "ok": resp["success"]}
+    print_response(resp, json_mode=json_mode)
+
+
 def _install_fix_hint(message: str) -> str:
     if message.startswith("安装包 metadata.json"):
         return "请联系包维护者修复 metadata.json 并重新发布；已有安装未被替换，--force 不能跳过元数据校验。"
@@ -68,7 +74,7 @@ def publish_cmd(ctx: click.Context, domain: str, version: str, author: str, json
     except OSError as exc:
         resp = error_response(EXECUTION_FAILED, str(exc))
 
-    print_response(resp, json_mode=jm)
+    _print_market_response(resp, json_mode=jm)
 
 
 @market_group.command("install")
@@ -102,7 +108,7 @@ def install_cmd(
     except OSError as exc:
         resp = error_response(INSTALL_FAILED, str(exc), ERROR_FIX_HINTS[INSTALL_FAILED])
 
-    print_response(resp, json_mode=jm)
+    _print_market_response(resp, json_mode=jm)
 
 
 @market_group.command("uninstall")
@@ -120,7 +126,7 @@ def uninstall_cmd(ctx: click.Context, domain: str, json_mode: bool) -> None:
     else:
         resp = error_response(ADAPTER_NOT_FOUND, f"adapter '{domain}' 不存在")
 
-    print_response(resp, json_mode=jm)
+    _print_market_response(resp, json_mode=jm)
 
 
 @market_group.command("info")
@@ -135,7 +141,7 @@ def info_cmd(ctx: click.Context, domain: str, json_mode: bool) -> None:
     info = get_adapter_info(domain)
     resp = success_response(info) if info else error_response(ADAPTER_NOT_FOUND, f"adapter '{domain}' 不存在")
 
-    print_response(resp, json_mode=jm)
+    _print_market_response(resp, json_mode=jm)
 
 
 @market_group.command("rollback")
@@ -158,7 +164,7 @@ def rollback_cmd(ctx: click.Context, domain: str, index: int, json_mode: bool) -
         else:
             resp = error_response(EXECUTION_FAILED, f"回滚失败 (索引 {index}，共 {len(backups)} 个备份)")
 
-    print_response(resp, json_mode=jm)
+    _print_market_response(resp, json_mode=jm)
 
 
 @market_group.command("backups")
@@ -172,4 +178,4 @@ def backups_cmd(ctx: click.Context, domain: str, json_mode: bool) -> None:
 
     backups = list_backups(domain)
     resp = success_response({"domain": domain, "backups": backups})
-    print_response(resp, json_mode=jm)
+    _print_market_response(resp, json_mode=jm)
