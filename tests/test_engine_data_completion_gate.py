@@ -9,6 +9,7 @@ import pytest
 from cliany_site.errors import DataCommandQualityError
 from cliany_site.explorer.engine import (
     WorkflowExplorer,
+    _apply_partition_repair,
     _data_command_completion_failures,
     _data_completion_feedback,
 )
@@ -87,6 +88,22 @@ def test_extract_execution_failure_keeps_mode_for_safe_diagnostics():
     failures = _data_command_completion_failures(command, actions, evidence)
     assert failures[0]["reason"] == "extraction_execution_failed"
     assert failures[0]["extract_mode"] == "list"
+
+
+def test_partition_repair_preserves_command_content_and_arg_ownership():
+    original = [
+        {"name": "first", "description": "keep", "action_steps": [0, 2],
+         "args": [{"name": "query", "action_index": 0, "default": "private-value"}]},
+        {"name": "second", "action_steps": [1], "args": []},
+    ]
+    repaired = {"done": True, "actions": [], "commands": [
+        {"name": "first", "action_steps": [0], "description": "changed"},
+        {"name": "second", "action_steps": [1, 2]},
+    ]}
+    merged = _apply_partition_repair(original, repaired, 3)
+    assert [command["action_steps"] for command in merged] == [[0], [1, 2]]
+    assert merged[0]["description"] == "keep"
+    assert merged[0]["args"] == original[0]["args"]
 
 
 @pytest.mark.asyncio
@@ -279,10 +296,58 @@ async def test_exhausted_exploration_never_returns_partial_commands(mocker, tmp_
 async def test_invalid_command_partition_is_not_guessed(mocker, tmp_home, partitions):
     actions = [{"type": "click", "ref": "1", "description": f"步骤 {i}"} for i in range(3)]
     commands = [{"name": f"action-{i}", "action_steps": steps} for i, steps in enumerate(partitions)]
-    _prepare(mocker, [{"actions": actions, "commands": commands, "done": True}], [[]])
+    _prepare(mocker, [
+        {"actions": actions, "commands": commands, "done": True},
+        {"actions": [], "commands": commands, "done": True},
+    ], [[]])
 
     with pytest.raises(RuntimeError, match="命令动作分区无效"):
         await WorkflowExplorer().explore("https://example.com/search", "执行两个操作", record=False)
+
+
+@pytest.mark.asyncio
+async def test_partition_repair_changes_only_ownership_without_replaying_actions(mocker, tmp_home):
+    actions = [{"type": "click", "ref": "1", "description": f"步骤 {i}"} for i in range(3)]
+    actions[0] = {"type": "type", "ref": "1", "value": "private-input-value", "description": "输入"}
+    command = {"name": "run-workflow", "description": "执行任务", "action_steps": [0, 1], "args": []}
+    invoke = _prepare(mocker, [
+        {"actions": actions, "commands": [command], "done": True},
+        {"actions": [], "commands": [{"name": "run-workflow", "action_steps": [0, 1, 2], "args": []}], "done": True},
+    ], [[]])
+    execute = mocker.patch("cliany_site.explorer.engine.execute_action_steps", new_callable=AsyncMock)
+
+    result = await WorkflowExplorer().explore("https://example.com/search", "执行三个操作", record=False)
+
+    assert result.commands[0].action_steps == [0, 1, 2]
+    assert result.commands[0].description == "执行任务"
+    assert result.partition_repair_attempts == 1
+    assert invoke.await_count == 2
+    assert "private-input-value" not in invoke.await_args_list[1].args[1]
+    execute.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(("repair_actions", "repair_name"), [
+    ([{"type": "click", "ref": "1"}], "open"),
+    ([], "other"),
+])
+async def test_partition_repair_rejects_new_actions_and_command_changes(
+    mocker, tmp_home, repair_actions, repair_name,
+):
+    actions = [{"type": "click", "ref": "1", "description": "打开"}]
+    command = {"name": "open", "action_steps": [], "args": []}
+    _prepare(mocker, [
+        {"actions": actions, "commands": [command], "done": True},
+        {"actions": repair_actions, "commands": [
+            {"name": repair_name, "action_steps": [0], "args": []}
+        ], "done": True},
+    ], [[]])
+    save = mocker.patch("cliany_site.explorer.engine.save_adapter")
+
+    with pytest.raises(RuntimeError, match="命令动作分区无效"):
+        await WorkflowExplorer().explore("https://example.com/search", "打开", record=False)
+
+    save.assert_not_called()
 
 
 @pytest.mark.asyncio

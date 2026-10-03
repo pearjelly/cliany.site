@@ -420,6 +420,9 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
         return outcome
 
     data = explore.get("data", {})
+    repairs = data.get("partition_repair_attempts") if isinstance(data, dict) else None
+    if type(repairs) is int and repairs >= 0:
+        outcome["partition_repair_attempts"] = repairs
     group = data.get("command_group")
     if not isinstance(group, str) or not group:
         outcome.update(phase="generation", error_code="MISSING_COMMAND_GROUP")

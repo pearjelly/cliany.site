@@ -81,6 +81,7 @@ _GENERIC_COMMAND_NAMES = frozenset(
 
 _DATA_COMMAND_PREFIXES = ("list-", "search-", "read-", "extract-")
 _MAX_DATA_COMPLETION_REPAIRS = 1
+_MAX_PARTITION_REPAIRS = 1
 
 
 def _is_data_command_name(value: object) -> bool:
@@ -112,6 +113,46 @@ def _validate_command_partition(commands: list[object], action_count: int) -> No
             "命令动作分区无效：每个动作须恰好归属一个命令，不允许遗漏或重复；请重新探索",
             reason="command_partition_invalid",
         )
+
+
+def _apply_partition_repair(
+    commands: list[object], repaired: dict[str, Any], action_count: int,
+) -> list[object]:
+    if repaired.get("done") is not True or repaired.get("actions") != []:
+        raise ExploreContractError(
+            "命令动作分区无效：修正响应不得新增动作",
+            reason="command_partition_invalid",
+        )
+    replacements = repaired.get("commands")
+    if not isinstance(replacements, list) or len(replacements) != len(commands):
+        raise ExploreContractError(
+            "命令动作分区无效：修正响应必须保留原命令",
+            reason="command_partition_invalid",
+        )
+    merged: list[object] = []
+    for original, replacement in zip(commands, replacements, strict=True):
+        if (not isinstance(original, dict) or not isinstance(replacement, dict)
+                or replacement.get("name") != original.get("name")):
+            raise ExploreContractError(
+                "命令动作分区无效：修正响应不得更改命令名称",
+                reason="command_partition_invalid",
+            )
+        merged.append({**original, "action_steps": replacement.get("action_steps")})
+    _validate_command_partition(merged, action_count)
+    for command in merged:
+        if not isinstance(command, dict):
+            continue
+        indices = command["action_steps"]
+        args = command.get("args")
+        for arg in args if isinstance(args, list) else []:
+            if isinstance(arg, dict) and "action_index" in arg:
+                index = arg["action_index"]
+                if type(index) is not int or index not in indices:
+                    raise ExploreContractError(
+                        "命令动作分区无效：参数索引不属于修正后的命令",
+                        reason="command_partition_invalid",
+                    )
+    return merged
 
 
 def _data_command_completion_failures(
@@ -776,6 +817,7 @@ class WorkflowExplorer:
             final_step_count = 0
             all_extraction_results: list = []
             data_completion_repairs = 0
+            partition_repairs = 0
             data_completion_feedback = ""
 
             for step_num in range(cfg.explore_max_steps):
@@ -1060,7 +1102,48 @@ class WorkflowExplorer:
                         )
 
                     if commands_data:
-                        _validate_command_partition(commands_data, len(result.actions))
+                        try:
+                            _validate_command_partition(commands_data, len(result.actions))
+                        except ExploreContractError:
+                            if partition_repairs >= _MAX_PARTITION_REPAIRS:
+                                raise
+                            partition_repairs += 1
+                            result.partition_repair_attempts += 1
+                            recorded_actions = [
+                                {
+                                    "index": index,
+                                    "type": action.action_type,
+                                    "target_name": action.target_name,
+                                    "target_role": action.target_role,
+                                }
+                                for index, action in enumerate(result.actions)
+                            ]
+                            command_summaries = [
+                                {"name": command.get("name"), "action_steps": command.get("action_steps")}
+                                for command in commands_data if isinstance(command, dict)
+                            ]
+                            repair_prompt = (
+                                "页面动作已经执行完毕。只修正现有命令的 action_steps 索引，不操作页面，"
+                                "不新增动作、命令或参数。只返回 JSON 对象：actions=[]、done=true、commands 列表。"
+                                "commands 必须保留原命令名称和顺序；每个 action_steps 按录制顺序排列，"
+                                f"所有命令恰好覆盖索引 {list(range(len(result.actions)))}，每个索引只出现一次。\n"
+                                f"工作流：{workflow_description}\n"
+                                f"已录制动作摘要：{json.dumps(recorded_actions, ensure_ascii=False)}\n"
+                                f"原命令摘要：{json.dumps(command_summaries, ensure_ascii=False)}"
+                            )
+                            reporter.on_explore_llm_start(step_num)
+                            repair_response = await _invoke_llm_with_retry(
+                                llm,
+                                repair_prompt,
+                                max_attempts=cfg.llm_retry_max_attempts,
+                                base_delay=cfg.llm_retry_base_delay,
+                                backoff_factor=cfg.llm_retry_backoff_factor,
+                            )
+                            reporter.on_explore_llm_done(step_num, 0)
+                            repaired = _parse_llm_response(_to_text(repair_response.content))
+                            commands_data = _apply_partition_repair(
+                                commands_data, repaired, len(result.actions),
+                            )
 
                     completion_failures = _data_command_completion_failures(
                         commands_data,

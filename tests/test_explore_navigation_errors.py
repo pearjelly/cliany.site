@@ -130,3 +130,4 @@ def test_explore_returns_invocable_group_for_local_port(tmp_home, clean_env, mon
     payload = json.loads(result.stdout)
     assert payload["data"]["domain"] == "127.0.0.1:48765"
     assert payload["data"]["command_group"] == "127.0.0.1_48765"
+    assert payload["data"]["partition_repair_attempts"] == 0

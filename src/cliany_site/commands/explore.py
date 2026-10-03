@@ -334,6 +334,7 @@ def explore_cmd(
                     "commands_total": len(commands_list),
                     "pages_explored": len(explore_result.pages),
                     "actions_found": len(explore_result.actions),
+                    "partition_repair_attempts": explore_result.partition_repair_attempts,
                     "post_analysis": post_analysis,
                 },
             )
@@ -366,6 +367,7 @@ def explore_cmd(
                 "commands_total": merge_result.total_count,
                 "pages_explored": len(explore_result.pages),
                 "actions_found": len(explore_result.actions),
+                "partition_repair_attempts": explore_result.partition_repair_attempts,
                 "post_analysis": post_analysis,
             }
             if merge_result.conflicts_resolved:
