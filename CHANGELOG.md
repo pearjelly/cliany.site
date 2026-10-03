@@ -7,13 +7,23 @@
 
 ## [Unreleased]
 
+## [0.16.369] - 2026-10-03
+
 ### Fixed
 
 - Declare directly imported `aiohttp` and `PyYAML` as runtime dependencies, so clean installs do not rely on another package to keep providing them transitively. Update the security support table to follow the latest stable release instead of the obsolete 0.6.x line.
+- Refuse to write plaintext cookies when Session encryption fails. Encryption keys and Session files now use atomic writes and process locks; legacy plaintext is usable only after successful migration, which cannot overwrite a newer save.
+- An explicit `browser navigate --session` now fails before navigation if that Session is missing or unreadable. Generated anonymous workflows only request Session restoration when a saved file exists, preserving no-login demos while surfacing corrupted saved Sessions.
+- A login attempt that captures no applicable cookies now leaves any previously saved Session untouched while CLI and SDK continue to report `NO_COOKIES`.
+- Session filenames also replace Windows path separators, so a malformed domain cannot place a Session outside the configured directory on Windows.
+- The release preflight now checks GitHub Release publication timestamps in Shanghai time before tagging and in the tag workflow. It blocks at the three-releases-per-day cap or when the remote count cannot be verified, covering releases whose publication day differs from their lightweight tag's commit day. Tag workflows run serially so two releases cannot claim the same remaining slot.
 
 ### Evidence
 
 - Rechecked the published PyPI search candidate with cliany-site 0.16.368. Its public adapter installed and strictly verified, but auto-launched navigation timed out; a separately opened CDP browser reached typing before PyPI served `Client Challenge`. The case remains candidate, without bypassing the site restriction or treating the challenge as empty results.
+- Rechecked the historical SuiteCRM v0.14.1 public adapter with PyPI cliany-site 0.16.368 in fresh HOME directories. The pinned HTTPS asset installed, strictly verified, and registered `list-accounts`; the login-required online query was not attempted or claimed.
+- Repeated the Jira no-login `demo` with published PyPI cliany-site 0.16.368 and a fresh HOME. Fixed-hash installation, strict verification, and a read-only Spark query returned five rows; a second run reused the adapter. The public Jira archive's SHA-256 still matches the case catalog.
+- Repeated the maintained Confluence no-login `demo` with the same published PyPI CLI in a fresh HOME. Fixed-hash installation, strict verification, and a read-only SPARK search returned six pages; a second run reused the adapter. A nonsense-query negative control returned zero rows, without claiming per-page relevance or future service availability.
 
 ## [0.16.368] - 2026-10-02
 
@@ -3296,7 +3306,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.368...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.369...HEAD
+[0.16.369]: https://github.com/pearjelly/cliany.site/compare/v0.16.368...v0.16.369
 [0.16.368]: https://github.com/pearjelly/cliany.site/compare/v0.16.367...v0.16.368
 [0.16.367]: https://github.com/pearjelly/cliany.site/compare/v0.16.366...v0.16.367
 [0.16.366]: https://github.com/pearjelly/cliany.site/compare/v0.16.365...v0.16.366

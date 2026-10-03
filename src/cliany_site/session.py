@@ -15,7 +15,7 @@ def _session_path(domain: str) -> Path:
     sessions_dir = get_config().sessions_dir
     sessions_dir.mkdir(parents=True, exist_ok=True)
     # 将 domain 中的非法文件名字符替换为 _
-    safe_domain = domain.replace("/", "_").replace(":", "_")
+    safe_domain = domain.replace("/", "_").replace("\\", "_").replace(":", "_")
     return sessions_dir / f"{safe_domain}.json"
 
 
@@ -110,6 +110,8 @@ async def save_session(domain: str, browser_session: "BrowserSession") -> tuple[
         cookie_host = cookie_domain.lstrip(".").strip("[]").lower()
         if cookie_host == host or (cookie_domain.startswith(".") and host.endswith(f".{cookie_host}")):
             cookie_list.append(cookie)
+    if not cookie_list:
+        return "", 0
     data = {
         "cookies": cookie_list,
         "localStorage": {},

@@ -270,5 +270,5 @@ def _migrate_to_encrypted(domain: str, data: dict[str, Any], path: Path, origina
 def _session_path(domain: str) -> Path:
     sessions_dir = get_config().sessions_dir
     sessions_dir.mkdir(parents=True, exist_ok=True)
-    safe_domain = domain.replace("/", "_").replace(":", "_")
+    safe_domain = domain.replace("/", "_").replace("\\", "_").replace(":", "_")
     return sessions_dir / f"{safe_domain}.json"
