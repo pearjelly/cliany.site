@@ -50,6 +50,7 @@ from cliany_site.extract_writer import save_extract_markdown
 from cliany_site.progress import NullProgressReporter, ProgressReporter
 
 logger = logging.getLogger(__name__)
+_EXTRACT_GROUNDING_TIMEOUT_SECONDS = 8.0
 
 
 def _to_snake_case(value: str) -> str:
@@ -1057,16 +1058,21 @@ class WorkflowExplorer:
 
                 _extraction_results: list = []
                 async def validate_extract(session: Any, action_data: dict[str, Any], _index: int) -> None:
-                    snapshot = await capture_axtree(session)
-                    if not is_grounded_extract_selector(
-                        str(action_data.get("selector") or ""),
-                        snapshot.get("selector_map") or {},
-                        snapshot.get("extract_candidates") or [],
-                    ):
-                        raise ExploreContractError(
-                            "提取选择器未在当前页面的 AX 候选中证实；请重新探索",
-                            reason="extract_selector_ungrounded",
-                        )
+                    deadline = time.monotonic() + _EXTRACT_GROUNDING_TIMEOUT_SECONDS
+                    while True:
+                        snapshot = await capture_axtree(session)
+                        if is_grounded_extract_selector(
+                            str(action_data.get("selector") or ""),
+                            snapshot.get("selector_map") or {},
+                            snapshot.get("extract_candidates") or [],
+                        ):
+                            return
+                        if time.monotonic() >= deadline:
+                            raise ExploreContractError(
+                                "提取选择器未在当前页面的 AX 候选中证实；请重新探索",
+                                reason="extract_selector_ungrounded",
+                            )
+                        await asyncio.sleep(0.5)
 
                 await execute_action_steps(
                     browser_session, actions_data, continue_on_error=True,
