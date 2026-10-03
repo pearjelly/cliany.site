@@ -12,6 +12,7 @@ import time
 from typing import Any
 
 SUPPORTED_EXTRACT_MODES = ("text", "list", "table", "attribute")
+LIST_EXTRACT_LIMIT = 100
 
 
 def _coerce_json_like_extract_data(raw_result: Any) -> Any:
@@ -148,7 +149,7 @@ def _build_list_js(selector: str, fields_map: dict | None) -> str:
         f"const selected = Array.from(document.querySelectorAll('{escaped_selector}')); "
         "const items = (selected.length === 1 && ['UL', 'OL'].includes(selected[0].tagName) "
         "? Array.from(selected[0].children).filter(el => el.tagName === 'LI') "
-        ": selected).slice(0, 100); "
+        f": selected).slice(0, {LIST_EXTRACT_LIMIT}); "
     )
 
     if not normalized_fields:

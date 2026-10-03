@@ -121,6 +121,26 @@ def test_summarize_extract_quality_propagates_partial_field_blank_rows():
     assert quality["extracts"][0]["field_blank_rows"] == {"url": [2]}
 
 
+def test_summarize_extract_quality_preserves_list_limit_signal():
+    results = [
+        {
+            "ok": True,
+            "command": "browser extract",
+            "data": {
+                "content": [{"title": "Result"}] * 100,
+                "quality": {"row_limit": 100, "limit_reached": True},
+            },
+        }
+    ]
+    action_steps = [{"type": "extract", "extract_mode": "list", "fields": {"title": ""}}]
+
+    quality = runtime_helpers.summarize_extract_quality(results, action_steps)
+
+    assert quality["ok"] is True
+    assert quality["extracts"][0]["row_limit"] == 100
+    assert quality["extracts"][0]["limit_reached"] is True
+
+
 def test_empty_count_text_is_not_covered_by_allowed_empty_list():
     action_steps = [
         {"type": "extract", "extract_mode": "text", "description": "结果数量"},

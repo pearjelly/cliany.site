@@ -298,6 +298,15 @@ def summarize_extract_quality(
         fields = step.get("fields") if isinstance(step.get("fields"), dict) else None
         extract_mode = str(step.get("extract_mode") or "text")
         quality = evaluate_extract_quality(extract_mode, content, fields).to_dict()
+        source_quality = data.get("quality") if isinstance(data, dict) else None
+        if (
+            extract_mode == "list"
+            and isinstance(source_quality, dict)
+            and isinstance(source_quality.get("row_limit"), int)
+            and isinstance(source_quality.get("limit_reached"), bool)
+        ):
+            quality["row_limit"] = source_quality["row_limit"]
+            quality["limit_reached"] = source_quality["limit_reached"]
         quality["extract_mode"] = extract_mode
         quality["step_index"] = step_index
         if step.get("description"):

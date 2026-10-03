@@ -15,7 +15,7 @@ Explicit remote-data consent and a TypeSafe API key are required; live model per
 
 cliany-site observes a browser workflow through Chrome CDP, uses an LLM to turn it into a site-specific command, and replays that command as structured JSON. Start with a quick readiness check, then review a maintained case or automate a workflow of your own.
 
-**Start here:** [10-minute success path](docs/quickstart-10min.md) · [Release history](CHANGELOG.md)
+**Start here:** [10-minute success path](docs/quickstart-10min.md) · [Browser-generated Python docs candidate](docs/quickstart-10min.md#可选试用浏览器生成的-python-文档候选命令) · [Release history](CHANGELOG.md)
 
 ## Start here
 

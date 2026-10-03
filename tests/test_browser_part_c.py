@@ -229,6 +229,28 @@ class TestBrowserExtract:
             assert data["data"]["quality"]["status"] == "empty"
             assert "all rows are blank" in data["data"]["quality"]["issues"]
 
+    @pytest.mark.parametrize("row_count,limit_reached", [(99, False), (100, True)])
+    def test_structured_list_reports_row_limit(self, no_llm, runner, row_count, limit_reached):
+        mock_page = MagicMock()
+        mock_page.evaluate = AsyncMock(return_value=[{"title": "Result"}] * row_count)
+        mock_session = MagicMock()
+        mock_session.get_current_page = AsyncMock(return_value=mock_page)
+        with (
+            patch("cliany_site.browser.cdp.CDPConnection.check_available", AsyncMock(return_value=True)),
+            patch("cliany_site.browser.cdp.CDPConnection.connect", AsyncMock(return_value=mock_session)),
+            patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+        ):
+            result = runner.invoke(
+                cli,
+                ["browser", "extract", "--selector", ".result", "--mode", "list", "--json"],
+            )
+
+        assert result.exit_code == 0, result.output
+        quality = json.loads(result.output)["data"]["quality"]
+        assert quality["row_count"] == row_count
+        assert quality["row_limit"] == 100
+        assert quality["limit_reached"] is limit_reached
+
     def test_structured_extract_identifies_client_challenge(self, no_llm, runner):
         mock_page = MagicMock()
         mock_page.evaluate = AsyncMock(side_effect=[[], "Client Challenge"])
