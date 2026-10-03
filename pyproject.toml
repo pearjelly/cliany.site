@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cliany-site"
-version = "0.16.368"
+version = "0.16.369"
 description = "Turn browser workflows into reusable site-specific CLI commands."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -25,12 +25,14 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Browsers",
 ]
 dependencies = [
+    "aiohttp",
     "browser-use",
     "click",
     "rich",
     "langchain-openai",
     "langchain-anthropic",
     "python-dotenv",
+    "PyYAML",
     "textual",
     "cryptography>=46.0.5",
     "keyring>=25.7.0",
