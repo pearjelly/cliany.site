@@ -320,8 +320,8 @@ async def test_generated_adapter_returns_real_form_data(
                 apply_ref = next(ref for ref, node in nodes.items() if node["name"] == "Apply" and node["role"] == "button")
                 return SimpleNamespace(content=json.dumps({
                     "actions": [
-                        {"type": "type", "ref": name_ref, "value": "Ada"},
-                        {"type": "click", "ref": apply_ref},
+                        {"type": "type", "ref": f"@{name_ref}", "value": "Ada"},
+                        {"type": "click", "ref": f"@{apply_ref}"},
                         {"type": "extract", "selector": "output", "extract_mode": "list", "fields": {"name": ""}},
                     ],
                     "commands": [{"name": "read-name", "description": "Read form result",

@@ -1,0 +1,41 @@
+{
+  "ok": true,
+  "data": {
+    "command": "search-python-docs",
+    "args": {
+      "query": "dataclasses"
+    },
+    "results": [
+      {
+        "ok": true,
+        "command": "browser extract",
+        "data": {
+          "content": [
+            {
+              "title": "dataclasses",
+              "url": "library/dataclasses.html#module-dataclasses",
+              "snippet": "dataclasses (Python module, in dataclasses - Data Classes)"
+            }
+          ],
+          "quality": {
+            "ok": true,
+            "status": "ok",
+            "row_count": 1,
+            "field_names": ["snippet", "title", "url"]
+          }
+        }
+      }
+    ],
+    "quality": {
+      "ok": true,
+      "status": "ok",
+      "row_count": 1
+    }
+  },
+  "error": null,
+  "meta": {
+    "source": "case-example",
+    "case_id": "python-docs-search",
+    "sample": true
+  }
+}

@@ -255,13 +255,30 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
             args.extend(["--fields-json", json.dumps(fields, ensure_ascii=False)])
         result = run_atom(args, session=domain)
         if mode in ("list", "table"):
-            for delay in (0.5, 1.0):
+            # A nonempty list can still be growing on client-rendered pages.
+            stable_samples = 1
+            for _ in range(12):
                 data = result.get("data")
-                quality = data.get("quality") if isinstance(data, dict) else None
-                if not (result.get("ok") and isinstance(quality, dict) and quality.get("status") == "empty"):
-                    break
-                time.sleep(delay)
-                result = run_atom(args, session=domain)
+                content = data.get("content") if isinstance(data, dict) else None
+                if not result.get("ok") or not isinstance(content, list):
+                    return result
+                time.sleep(0.5)
+                next_result = run_atom(args, session=domain)
+                if not next_result.get("ok"):
+                    return next_result
+                next_data = next_result.get("data")
+                next_content = next_data.get("content") if isinstance(next_data, dict) else None
+                stable_samples = stable_samples + 1 if next_content == content else 1
+                result = next_result
+                if stable_samples >= 4:
+                    return result
+            return _err(
+                command="browser extract",
+                code=ErrorCode.E_PAGE_NOT_READY,
+                message="结构化结果持续变化，请稍后重试",
+                details={"selector": selector, "extract_mode": mode},
+                source="builtin",
+            )
         return result
 
     return _err(
@@ -296,7 +313,9 @@ def summarize_extract_quality(
         data = result.get("data") if isinstance(result.get("data"), dict) else {}
         content = data.get("content") if isinstance(data, dict) else None
         fields = step.get("fields") if isinstance(step.get("fields"), dict) else None
-        quality = evaluate_extract_quality(str(step.get("extract_mode") or "text"), content, fields).to_dict()
+        extract_mode = str(step.get("extract_mode") or "text")
+        quality = evaluate_extract_quality(extract_mode, content, fields).to_dict()
+        quality["extract_mode"] = extract_mode
         quality["step_index"] = step_index
         if step.get("description"):
             quality["description"] = str(step.get("description"))
@@ -306,7 +325,12 @@ def summarize_extract_quality(
         return {"status": "not_applicable", "ok": True, "extracts": []}
     if all(item.get("ok") for item in extracts):
         status = "ok"
-    elif any(item.get("status") == "partial" or item.get("field_blank_rows") for item in extracts):
+    elif any(
+        item.get("status") == "partial"
+        or item.get("field_blank_rows")
+        or (item.get("status") == "empty" and item.get("extract_mode") not in {"list", "table"})
+        for item in extracts
+    ):
         status = "partial"
     elif any(item.get("status") == "empty" for item in extracts):
         status = "empty"

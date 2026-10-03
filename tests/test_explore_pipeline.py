@@ -13,6 +13,13 @@ def test_explore_result_has_smoke():
     assert result.smoke == []
 
 
+def test_explore_result_telemetry_does_not_shift_existing_positional_fields():
+    smoke = [{"action": "state"}]
+    result = ExploreResult([], [], [], "test-model", smoke)
+    assert result.smoke is smoke
+    assert result.partition_repair_attempts == 0
+
+
 def test_explore_result_has_canonical_actions():
     result = ExploreResult()
     assert hasattr(result, "canonical_actions")

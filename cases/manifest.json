@@ -138,6 +138,51 @@
     }
   },
   {
+    "id": "python-docs-search",
+    "title": "Python documentation search",
+    "category": "documentation",
+    "status": "candidate",
+    "target_url": "https://docs.python.org/3/",
+    "adapter_domain": "docs.python.org",
+    "source_release": null,
+    "docs": "docs/user-evidence/2026-10-02-explore-replay-benchmark.md",
+    "example_output": "cases/examples/python-docs-search.json",
+    "commands": [
+      "cliany-site explore \"https://docs.python.org/3/\" \"从 Python 官方文档首页用站内搜索查询 pathlib，生成带 query 参数的可重复搜索命令；提取搜索结果前 100 条的标题和链接。只使用页面实际提供的导航。\" --no-record --json",
+      "cliany-site docs.python.org search-python-docs --query dataclasses --json"
+    ],
+    "validation": {
+      "offline": "candidate entry and example output validate without a public release asset",
+      "offline_commands": [
+        "python scripts/validate_cases.py --strict",
+        "python scripts/validate_cases.py --case-id python-docs-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict"
+      ],
+      "online": "read-only documentation search returns the first 100 matching title and link rows after search completion"
+    },
+    "promotion": {
+      "adapter_package": "Publish docs.python.org-<version>.cliany-adapter.tar.gz in a GitHub Release, then install it from the public HTTPS URL with a pinned SHA-256.",
+      "metadata_validation": "Run python scripts/validate_cases.py --case-id python-docs-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict.",
+      "online_smoke": "Run cliany-site docs.python.org search-python-docs --query dataclasses --json with the published package in a fresh runtime home and independently compare the title and link rows with the browser page."
+    },
+    "promotion_evidence": {
+      "adapter_package": {
+        "status": "pending",
+        "evidence": "2026-10-02: three isolated live explorations generated a parameterized search command; one unedited adapter was packaged locally as docs.python.org-0.16.370.cliany-adapter.tar.gz with SHA-256 bb56d401923b7aa5b632657843a56d938778d8ed39465aed05b94980e132c0b7. No public Release asset exists; see docs/user-evidence/2026-10-02-explore-replay-benchmark.md.",
+        "next_action": "After v0.16.370 is approved and published, upload the exact archive to its GitHub Release and prove fixed-SHA HTTPS installation in a new runtime home."
+      },
+      "metadata_validation": {
+        "status": "complete",
+        "evidence": "2026-10-02: the local archive installed into a separate clean runtime home, verify docs.python.org --strict returned verdict=ok, and focused strict candidate-package validation returned ok=true with no issues for the exact SHA-256 archive.",
+        "next_action": "After uploading the public asset, download it and rerun python scripts/validate_cases.py --case-id python-docs-search --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict; the local result alone does not prove remote distribution."
+      },
+      "online_smoke": {
+        "status": "pending",
+        "evidence": "2026-10-02: three fresh explorations and six changed-query replays passed an independent first-100 title/link DOM oracle; the locally packaged adapter returned 44/44 matching dataclasses rows in a separate runtime home. This is not published-package evidence.",
+        "next_action": "Repeat the read-only dataclasses query with a fixed-SHA installation of the public archive and a fresh browser; require Search finished and independent nonempty title/link agreement."
+      }
+    }
+  },
+  {
     "id": "npm-package-search",
     "title": "npm package search",
     "category": "package-registry",

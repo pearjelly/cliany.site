@@ -21,11 +21,11 @@ canonical_actions 和 selector_pool 字段为可选：若 LLM 无法生成，返
 
 commands 字段说明（仅当 done=true 时填写）：
 - 每个命令必须包含 action_steps 字段：一个 0-based 整数列表，指明该命令对应的动作编号（从探索过程所有步骤累积的 actions 列表中取，索引从 0 开始）
-- 所有命令的 action_steps 加起来必须覆盖全部动作索引（0 到 N-1），且每个索引只能出现在一个命令中
-- 如果工作流只有一个命令，action_steps 应包含所有动作的索引
+- 所有命令的 action_steps 加起来必须覆盖全部动作索引（0 到 N-1），且每个索引只能出现在一个命令中；仅当数据命令完成门禁明确列出已失败的 extract 索引时，修正后的命令须舍弃这些失败索引，其他索引仍须全部覆盖
+- 如果工作流只有一个命令，action_steps 应包含所有必须保留的动作索引
 - 每个生成命令都会从来源 URL 重新导航并独立执行；若读取结果依赖此前的输入、选择或点击，必须把这些动作和 extract 放在同一个命令，不能拆成先操作后读取的两个命令
 - 每个命令的 args 字段用于声明可参数化的 CLI 选项（详见下方参数化规则）
-- 每个命令必须显式写出 expects_nonempty（true/false）。默认用 true：空结果表示该数据命令没有得到预期数据。只有工作流本身是在确认“某项是否不存在”且零匹配是合法业务结果时才设为 false；false 不能用于掩盖字段缺失、部分提取或页面结构变化。
+- 每个命令必须显式写出 expects_nonempty（true/false）。默认用 true：空结果表示该数据命令没有得到预期数据。搜索、筛选或确认“某项是否不存在”的工作流若明确允许零匹配，设为 false；例如用户要求搜索命令在无匹配时返回空列表。false 仅允许 list/table 提取真正返回空集合，不能掩盖空文本、空属性、字段缺失、部分提取或页面结构变化。数量/状态文本必须从页面真实元素提取，不要猜测 CSS 选择器。
 - 命名为 list-、search-、read- 或 extract- 的数据命令必须在其 action_steps 中包含至少一个 extract 动作，并返回实际提取的数据；若无法识别稳定 selector 或字段，不得把该读取任务标记为 done=true。
 
 参数化规则（关键 — 必须严格遵守）：
@@ -39,6 +39,7 @@ commands 字段说明（仅当 done=true 时填写）：
   - default: 探索时使用的真实值（用于生成默认值）
 - 固定不变的操作值（如固定的网站名、导航路径）不需要参数化
 - 参数名必须是合法的 Python 标识符（字母、数字、下划线，snake_case 风格）
+- 如果工作流明确指定了参数名（例如要求 `query` 参数），args.name 必须原样使用这些名称；不要自行添加 `_value`、`_text` 等后缀或改名
 - 强化要求：done=true 时，commands 中每个命令的 args 字段必须显式写出，即使为空数组 [] 也要写出，不能省略
 - 规则：工作流描述中引号包裹的文本、type 操作中用户可能修改的内容（标题、描述、搜索词）→ 必须参数化
 - 规则：固定操作（按钮点击、固定导航）→ 不参数化
@@ -94,6 +95,7 @@ actions 中每个操作的字段定义：
   - extract_mode: 提取模式，必须是 text / list / table / attribute 之一：
     - text: 提取单个元素的文本内容
     - list: 提取多个同类元素，每个提取 fields 中定义的字段（最多 100 项）
+      若搜索/筛选允许零匹配，结果集合必须用 list（可定位已观察到的列表容器或结果项），不能对列表容器使用 text；空列表应返回 []，数量/状态另用 text 提取。
     - table: 提取表格数据（最多 500 行）
     - attribute: 提取元素的属性值。selector 为纯 CSS 选择器（如 "a.link"），默认返回所有属性。可通过 fields 指定要提取的属性（如 {"href": "@href", "class": "@class"}）
   - fields: 仅 list/table 模式使用。key 为字段名，value 为子元素 CSS 选择器。支持 "@attr" 语法提取属性（如 {"url": "a@href", "title": "h3"}）。
@@ -253,7 +255,7 @@ URL: {url}
 {completed_steps}
 
 已录制 {completed_action_count} 个动作。本轮 actions 的第一个动作编号是 {completed_action_count}。
-如果本轮设置 done=true，commands.action_steps 必须覆盖此前及本轮的全部动作编号，不能漏掉本轮新增的动作。
+如果本轮设置 done=true，commands.action_steps 必须覆盖此前及本轮的全部动作编号；仅可舍弃完成门禁明确列出的失败 extract 索引，不能漏掉其他新增动作。
 
 请分析页面，识别完成工作流的下一步操作。优先使用页面现有元素完成流程，只在拥有真实 URL 时才输出导航 URL。
 只有当已经完成 "{workflow_description}" 整个目标时，done 才能为 true；如果只是完成了中间某一步，done 必须为 false。以 JSON 格式回复。"""

@@ -87,6 +87,7 @@ def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):
     monkeypatch.delenv("CLIANY_OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr("cliany_site.commands.doctor.Path.cwd", lambda: tmp_home)
 
     runner = CliRunner()
     result = runner.invoke(cli, ["--json", "doctor"], catch_exceptions=False)
@@ -98,6 +99,10 @@ def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):
     assert llm_check["status"] == "warning"
     assert llm_check["severity"] == "should_fix"
     assert "只安装/执行已有 adapter 可暂时忽略" in llm_check["action"]
+    agent_check = next(c for c in checks if c["name"] == "agent_md")
+    assert agent_check["status"] == "warning"
+    assert "已有 adapter 不受影响" in agent_check["details"]["message"]
+    assert "安装或运行已有 adapter 无需 AGENT.md" in agent_check["action"]
 
     summary = data["data"]["summary"]
     assert summary["counts"]["must_fix"] == 0

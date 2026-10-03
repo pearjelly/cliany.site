@@ -97,14 +97,40 @@ async def test_llm_retry_wraps_gateway_failure_without_html():
             )
 
     llm = FailingLLM()
+    attempts = []
     with pytest.raises(LlmUnavailableError) as exc_info:
-        await _invoke_llm_with_retry(llm, "prompt", max_attempts=2, base_delay=0, backoff_factor=1)
+        await _invoke_llm_with_retry(
+            llm, "prompt", max_attempts=2, base_delay=0, backoff_factor=1,
+            on_attempt=lambda *data: attempts.append(data),
+        )
 
     assert llm.calls == 2
     assert exc_info.value.status_code == 502
     assert exc_info.value.retryable is True
     assert "502 Bad Gateway" in str(exc_info.value)
     assert "<html>" not in str(exc_info.value)
+    assert [(attempt, outcome, backoff) for attempt, _, outcome, backoff in attempts] == [
+        (1, "retry", 0), (2, "error", 0),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_llm_attempt_observer_reports_success_without_changing_response():
+    from cliany_site.explorer.engine import _invoke_llm_with_retry
+
+    class WorkingLLM:
+        async def ainvoke(self, _prompt):
+            return "done"
+
+    attempts = []
+    result = await _invoke_llm_with_retry(
+        WorkingLLM(), "prompt", on_attempt=lambda *data: attempts.append(data),
+    )
+    assert result == "done"
+    assert len(attempts) == 1
+    assert attempts[0][0] == 1
+    assert attempts[0][1] >= 0
+    assert attempts[0][2:] == ("success", 0)
 
 
 def test_explore_llm_gateway_failure_returns_llm_unavailable_json(monkeypatch):

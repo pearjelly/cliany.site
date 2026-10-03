@@ -71,7 +71,7 @@ def _prepare_explore_mocks(
     )
 
     invoke_responses = [SimpleNamespace(content=f"response-{idx}") for idx, _ in enumerate(parse_results)]
-    mocker.patch(
+    invoke_mock = mocker.patch(
         "cliany_site.explorer.engine._invoke_llm_with_retry",
         new_callable=AsyncMock,
         side_effect=invoke_responses,
@@ -99,6 +99,7 @@ def _prepare_explore_mocks(
         "capture_screenshot": capture_screenshot_mock,
         "recording_class": recording_class_mock,
         "execute": execute_mock,
+        "invoke": invoke_mock,
     }
 
 
@@ -239,6 +240,19 @@ class TestWorkflowExplorerRecording:
 
         mocks["recording_class"].assert_not_called()
         assert mocks["capture_screenshot"].await_count == 0
+
+    @pytest.mark.asyncio
+    async def test_prompt_includes_grounded_read_only_extract_candidates(self, mocker):
+        mocks = _prepare_explore_mocks(mocker, parse_results=_one_step_done_result())
+        mocks["capture_axtree"].return_value["extract_candidates"] = [
+            {"role": "status", "name": "", "text": "1 matches", "selectors": ["#summary"]},
+        ]
+
+        await WorkflowExplorer().explore("https://example.com/start", "读取结果数量", record=False)
+
+        prompt = mocks["invoke"].await_args.args[1]
+        assert '只读 AX 语义元素（供 extract 使用）' in prompt
+        assert '[status "" text="1 matches"] → #summary' in prompt
 
     @pytest.mark.asyncio
     async def test_exception_path_finalize_completed_false(self, mocker):

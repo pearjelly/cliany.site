@@ -27,6 +27,9 @@ class ProgressReporter(Protocol):
     def on_explore_start(self, url: str, workflow: str, max_steps: int) -> None: ...
     def on_explore_step_start(self, step: int, max_steps: int) -> None: ...
     def on_explore_llm_start(self, step: int) -> None: ...
+    def on_explore_llm_attempt(
+        self, step: int, phase: str, attempt: int, elapsed_ms: float, outcome: str, backoff_seconds: float
+    ) -> None: ...
     def on_explore_llm_done(self, step: int, actions_count: int) -> None: ...
     def on_explore_step_done(self, step: int, actions_count: int, elapsed_ms: float) -> None: ...
     def on_explore_done(self, total_steps: int, total_actions: int, total_commands: int, elapsed_ms: float) -> None: ...
@@ -53,6 +56,11 @@ class NullProgressReporter:
         pass
 
     def on_explore_llm_start(self, step: int) -> None:
+        pass
+
+    def on_explore_llm_attempt(
+        self, step: int, phase: str, attempt: int, elapsed_ms: float, outcome: str, backoff_seconds: float
+    ) -> None:
         pass
 
     def on_explore_llm_done(self, step: int, actions_count: int) -> None:
@@ -120,6 +128,13 @@ class RichProgressReporter:
     def on_explore_llm_start(self, step: int) -> None:
         self._explore_phase = "LLM 分析中..."
         self._update_explore_live()
+
+    def on_explore_llm_attempt(
+        self, step: int, phase: str, attempt: int, elapsed_ms: float, outcome: str, backoff_seconds: float
+    ) -> None:
+        if outcome == "retry":
+            self._explore_phase = f"LLM 重试中（第 {attempt + 1} 次）..."
+            self._update_explore_live()
 
     def on_explore_llm_done(self, step: int, actions_count: int) -> None:
         self._explore_phase = f"执行 {actions_count} 个动作"
@@ -288,6 +303,14 @@ class NdjsonProgressReporter:
 
     def on_explore_llm_start(self, step: int) -> None:
         self._emit("explore_llm_start", step=step)
+
+    def on_explore_llm_attempt(
+        self, step: int, phase: str, attempt: int, elapsed_ms: float, outcome: str, backoff_seconds: float
+    ) -> None:
+        self._emit(
+            "explore_llm_attempt", step=step, phase=phase, attempt=attempt,
+            elapsed_ms=round(elapsed_ms, 1), outcome=outcome, backoff_seconds=backoff_seconds,
+        )
 
     def on_explore_llm_done(self, step: int, actions_count: int) -> None:
         self._emit("explore_llm_done", step=step, actions_count=actions_count)

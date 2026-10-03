@@ -78,7 +78,7 @@ class TestWorkflowExplorerInteractive:
                 [{"type": "click", "ref": "1", "description": "将被跳过"}],
                 [0],
             ),
-            _done_result_with_actions([], []),
+            {"actions": [], "commands": [], "done": True, "next_url": ""},
         ]
         mocks = _prepare_explore_mocks(mocker, parse_results=parse_results)
 
@@ -99,6 +99,7 @@ class TestWorkflowExplorerInteractive:
         result = await explorer.explore("https://example.com/start", "跳过动作", record=False)
 
         assert len(result.actions) == 0
+        assert result.commands == []
         assert mocks["execute"].await_count == 1
         assert mocks["execute"].await_args.args[1] == []
 
