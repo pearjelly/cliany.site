@@ -181,6 +181,8 @@ def _safe_explore_quality_diagnostics(error: dict[str, Any]) -> dict[str, Any] |
     details = error.get("details")
     if not isinstance(details, dict):
         return None
+    if "data_commands" not in details and "repair_attempts" not in details:
+        return None
     failures = []
     commands = details.get("data_commands")
     for item in commands[:10] if isinstance(commands, list) else []:
@@ -219,6 +221,37 @@ def _safe_explore_quality_diagnostics(error: dict[str, Any]) -> dict[str, Any] |
     }
 
 
+def _safe_replay_quality_diagnostics(error: dict[str, Any]) -> dict[str, Any] | None:
+    if error.get("code") != "E_EMPTY_RESULT":
+        return None
+    details = error.get("details")
+    if not isinstance(details, dict):
+        return None
+    overall_status = details.get("status")
+    if not isinstance(overall_status, str) or overall_status not in {"empty", "partial", "ok", "not_applicable"}:
+        return None
+    extracts = []
+    for item in details.get("extracts", [])[:10] if isinstance(details.get("extracts"), list) else []:
+        if not isinstance(item, dict):
+            continue
+        row: dict[str, Any] = {}
+        mode = item.get("extract_mode")
+        if isinstance(mode, str) and mode in {"text", "attribute", "list", "table"}:
+            row["mode"] = mode
+        status = item.get("status")
+        if isinstance(status, str) and status in {"empty", "partial", "ok"}:
+            row["status"] = status
+        count = item.get("row_count")
+        if type(count) is int and count >= 0:
+            row["row_count"] = count
+        index = item.get("step_index")
+        if type(index) is int and index >= 0:
+            row["step_index"] = index
+        if row:
+            extracts.append(row)
+    return {"status": overall_status, "extracts": extracts}
+
+
 async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tuple[dict[str, Any], float]:
     env = os.environ.copy()
     env["CLIANY_NO_AGENT_MD"] = "1"
@@ -251,6 +284,8 @@ async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tup
         error = payload.get("error") if isinstance(payload, dict) else None
         code = error.get("code") if isinstance(error, dict) else None
         summary = _safe_explore_quality_diagnostics(error) if isinstance(error, dict) else None
+        if summary is None and isinstance(error, dict):
+            summary = _safe_replay_quality_diagnostics(error)
         safe_error = {"code": code or "CLI_FAILED"}
         if summary is not None:
             safe_error["quality_diagnostics"] = summary
@@ -328,6 +363,12 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
         return outcome
 
     outcome["command"] = command
+    for command_index, definition in enumerate(metadata.get("commands", [])):
+        name = definition.get("name") if isinstance(definition, dict) else None
+        if isinstance(name, str) and to_command_name(name, command_index) == command:
+            if isinstance(definition.get("expects_nonempty"), bool):
+                outcome["expects_nonempty"] = definition["expects_nonempty"]
+            break
     outcome["replays"] = []
     for replay in case["replays"]:
         port = _free_port()
@@ -342,6 +383,9 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
             contents = _extract_contents(result)
             if not result.get("ok") or not contents:
                 row.update(ok=False, phase="replay", error_code=result.get("error", {}).get("code") or "NO_EXTRACT")
+                diagnostics = result.get("error", {}).get("quality_diagnostics")
+                if diagnostics is not None:
+                    row["quality_diagnostics"] = diagnostics
             else:
                 try:
                     oracle_ok = await _inspect_page(playwright, port, case, replay)
