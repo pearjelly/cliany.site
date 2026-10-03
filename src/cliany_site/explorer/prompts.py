@@ -97,10 +97,8 @@ actions 中每个操作的字段定义：
     - table: 提取表格数据（最多 500 行）
     - attribute: 提取元素的属性值。selector 为纯 CSS 选择器（如 "a.link"），默认返回所有属性。可通过 fields 指定要提取的属性（如 {"href": "@href", "class": "@class"}）
   - fields: 仅 list/table 模式使用。key 为字段名，value 为子元素 CSS 选择器。支持 "@attr" 语法提取属性（如 {"url": "a@href", "title": "h3"}）。
-    - 处理搜索结果/资讯列表时，默认必须包含这三个字段：
-      - title: 标题文本（例如 "a.title" 或 "h3"）
-      - url: 详情链接（优先用 "@href" 或 "a@href"）
-      - snippet: 正文摘要（例如 ".desc"、".content"、"p"，若页面无摘要可用空字符串）
+    - 字段必须有当前页面可观察到的对应内容或属性；不要仅因是搜索/筛选结果就添加不存在的 url、snippet 等字段，也不要用空字符串伪造字段。
+    - 有详情链接和摘要的搜索结果/资讯列表，提取 title（可读标题文本）、url（真实 href）和 snippet（实际摘要）；若某字段在页面上不存在，就省略该字段。
     - 严禁把 title 映射成 "a@href" 这类属性值；title 必须返回可读文本。
 
 示例 — 在搜索框中搜索 "browser-use"：

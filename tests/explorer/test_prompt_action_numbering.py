@@ -1,6 +1,11 @@
 from cliany_site.explorer.prompts import EXPLORE_PROMPT_TEMPLATE, SYSTEM_PROMPT
 
 
+def test_extract_fields_must_be_observed_on_page():
+    assert "不要仅因是搜索/筛选结果就添加不存在的 url、snippet" in SYSTEM_PROMPT
+    assert "若某字段在页面上不存在，就省略该字段" in SYSTEM_PROMPT
+
+
 def test_explore_prompt_exposes_zero_based_action_boundary():
     prompt = EXPLORE_PROMPT_TEMPLATE.format(
         url="https://example.test",
