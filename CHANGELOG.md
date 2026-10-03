@@ -7,6 +7,17 @@
 
 ## [Unreleased]
 
+## [0.16.371] - 2026-10-03
+
+### Changed
+
+- Marketplace `--json` responses now include `ok` alongside the unchanged `success`, `data`, and `error` fields. Existing consumers can keep using `success`; new scripts can check `ok` consistently with the rest of the CLI. Failure repair hints remain under `error.fix`.
+- An auto-launched Chrome CDP startup timeout now reports bounded observations: elapsed time, process state, whether its TCP port is open, and whether the temporary profile exists. The 20-second wait and cleanup are unchanged. This helps diagnose Issue #36 but is not a startup reliability fix.
+
+### Evidence
+
+- PR #40 and #41 passed their focused and full offline tests after refresh onto v0.16.370 master, plus exact-head CI including headless Chromium. The combined master and published artifacts still require final release verification.
+
 ## [0.16.370] - 2026-10-03
 
 ### Changed
@@ -3317,7 +3328,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.370...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.371...HEAD
+[0.16.371]: https://github.com/pearjelly/cliany.site/compare/v0.16.370...v0.16.371
 [0.16.370]: https://github.com/pearjelly/cliany.site/compare/v0.16.369...v0.16.370
 [0.16.369]: https://github.com/pearjelly/cliany.site/compare/v0.16.368...v0.16.369
 [0.16.368]: https://github.com/pearjelly/cliany.site/compare/v0.16.367...v0.16.368
