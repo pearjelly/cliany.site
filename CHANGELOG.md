@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Declare directly imported `aiohttp` and `PyYAML` as runtime dependencies, so clean installs do not rely on another package to keep providing them transitively. Update the security support table to follow the latest stable release instead of the obsolete 0.6.x line.
+
+### Evidence
+
+- Rechecked the published PyPI search candidate with cliany-site 0.16.368. Its public adapter installed and strictly verified, but auto-launched navigation timed out; a separately opened CDP browser reached typing before PyPI served `Client Challenge`. The case remains candidate, without bypassing the site restriction or treating the challenge as empty results.
+
 ## [0.16.368] - 2026-10-02
 
 ### Changed

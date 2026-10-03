@@ -495,6 +495,7 @@ name = "cliany-site"
 version = "0.16.368"
 source = { editable = "." }
 dependencies = [
+    { name = "aiohttp" },
     { name = "browser-use" },
     { name = "click" },
     { name = "cryptography" },
@@ -506,6 +507,7 @@ dependencies = [
     { name = "markdownify" },
     { name = "portalocker" },
     { name = "python-dotenv" },
+    { name = "pyyaml" },
     { name = "rich" },
     { name = "textual" },
 ]
@@ -540,6 +542,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiohttp" },
     { name = "browser-use" },
     { name = "click" },
     { name = "cryptography", specifier = ">=46.0.5" },
@@ -558,6 +561,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=5.0" },
     { name = "pytest-mock", marker = "extra == 'test'", specifier = ">=3.14" },
     { name = "python-dotenv" },
+    { name = "pyyaml" },
     { name = "rich" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11" },
     { name = "textual" },

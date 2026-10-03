@@ -6,14 +6,14 @@ We take security issues seriously and are committed to responding to and fixing 
 
 # 支持版本 / Supported Versions
 
-我们仅对最新版本提供安全补丁支持。以下是当前支持的版本：
+我们仅对最新正式版本提供安全补丁支持。以下支持范围随正式发布自动更新：
 
-We only provide security patch support for the latest version. The following are the currently supported versions:
+We provide security patches only for the latest stable release. This support range advances with each stable release:
 
 | 版本 / Version | 接受安全补丁 / Accepts Security Patches |
 |----------------|------------------------------------------|
-| 0.6.x（最新） / 0.6.x (Latest) | ✅ |
-| < 0.6.0 / < 0.6.0 | ❌ |
+| 最新正式版本 / Latest stable release | ✅ |
+| 更早版本 / Earlier releases | ❌ |
 
 # 报告漏洞 / Reporting a Vulnerability
 
