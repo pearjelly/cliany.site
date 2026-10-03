@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Semantic reorder fixture</title></head>
+<body>
+  <div id="controls">
+    <button id="target" type="button">Inspect Beta</button>
+  </div>
+  <output id="result" data-hits="0">untouched</output>
+  <script>
+    const controls = document.getElementById('controls');
+    for (let index = 0; index < __SHIFT__; index += 1) {
+      const noise = document.createElement('button');
+      noise.type = 'button';
+      noise.textContent = `Inspect noise ${index + 1}`;
+      noise.addEventListener('click', () => {
+        document.getElementById('result').textContent = 'wrong';
+      });
+      controls.prepend(noise);
+    }
+    document.getElementById('target').addEventListener('click', () => {
+      const result = document.getElementById('result');
+      result.dataset.hits = String(Number(result.dataset.hits) + 1);
+      result.textContent = 'Beta';
+    });
+  </script>
+</body>
+</html>
