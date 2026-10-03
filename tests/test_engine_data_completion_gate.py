@@ -225,10 +225,48 @@ async def test_exhausted_exploration_never_returns_partial_commands(mocker, tmp_
 async def test_invalid_command_partition_is_not_guessed(mocker, tmp_home, partitions):
     actions = [{"type": "click", "ref": "1", "description": f"步骤 {i}"} for i in range(3)]
     commands = [{"name": f"action-{i}", "action_steps": steps} for i, steps in enumerate(partitions)]
-    _prepare(mocker, [{"actions": actions, "commands": commands, "done": True}], [[]])
+    _prepare(mocker, [
+        {"actions": actions, "commands": commands, "done": True},
+        {"actions": [], "commands": commands, "done": True},
+    ], [[]])
 
     with pytest.raises(RuntimeError, match="命令动作分区无效"):
         await WorkflowExplorer().explore("https://example.com/search", "执行两个操作", record=False)
+
+
+@pytest.mark.asyncio
+async def test_invalid_command_partition_gets_one_nonexecuting_repair(mocker, tmp_home):
+    actions = [{"type": "click", "ref": "1", "description": f"步骤 {i}"} for i in range(2)]
+    invoke = _prepare(mocker, [
+        {"actions": actions, "commands": [{"name": "inspect", "action_steps": [1, 0]}], "done": True},
+        {"actions": [], "commands": [{"name": "inspect", "action_steps": [0, 1]}], "done": True},
+    ], [[]])
+    execute = mocker.patch("cliany_site.explorer.engine.execute_action_steps", new_callable=AsyncMock)
+
+    result = await WorkflowExplorer().explore("https://example.com/search", "检查", record=False)
+
+    assert result.commands[0].action_steps == [0, 1]
+    assert result.partition_repair_attempts == 1
+    assert invoke.await_count == 2
+    assert execute.await_count == 1
+    repair_prompt = invoke.await_args_list[1].args[1]
+    assert "只修正命令分区，不要再次操作页面" in repair_prompt
+    assert '"index": 0' in repair_prompt
+
+
+@pytest.mark.asyncio
+async def test_partition_repair_rejects_new_actions_without_execution(mocker, tmp_home):
+    actions = [{"type": "click", "ref": "1", "description": "检查"}]
+    _prepare(mocker, [
+        {"actions": actions, "commands": [{"name": "inspect", "action_steps": [1]}], "done": True},
+        {"actions": actions, "commands": [{"name": "inspect", "action_steps": [0]}], "done": True},
+    ], [[]])
+    execute = mocker.patch("cliany_site.explorer.engine.execute_action_steps", new_callable=AsyncMock)
+
+    with pytest.raises(RuntimeError, match="修正响应必须完成且不得新增动作"):
+        await WorkflowExplorer().explore("https://example.com/search", "检查", record=False)
+
+    assert execute.await_count == 1
 
 
 @pytest.mark.asyncio
@@ -242,6 +280,7 @@ async def test_explicit_uneven_partition_preserves_command_ownership(mocker, tmp
     assert [(command.name, command.action_steps) for command in result.commands] == [
         ("open", [0]), ("apply", [1, 2]),
     ]
+    assert result.partition_repair_attempts == 0
 
 
 @pytest.mark.asyncio

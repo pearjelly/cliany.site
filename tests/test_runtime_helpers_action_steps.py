@@ -122,12 +122,12 @@ def test_empty_list_extract_retries_until_rows_arrive(monkeypatch):
         domain="example.test",
     )
 
-    assert len(calls) == 2
-    assert delays == [0.5]
+    assert len(calls) == 5
+    assert delays == [0.5] * 4
     assert results[0]["data"]["content"] == [{"title": "Result"}]
 
 
-def test_empty_list_extract_retry_is_bounded(monkeypatch):
+def test_empty_list_extract_returns_after_stable_empty_samples(monkeypatch):
     calls: list[list[str]] = []
     delays: list[float] = []
 
@@ -144,12 +144,12 @@ def test_empty_list_extract_retry_is_bounded(monkeypatch):
         domain="example.test",
     )
 
-    assert len(calls) == 3
-    assert delays == [0.5, 1.0]
+    assert len(calls) == 4
+    assert delays == [0.5] * 3
     assert results[0]["data"]["quality"]["status"] == "empty"
 
 
-def test_partial_extract_does_not_retry(monkeypatch):
+def test_partial_extract_waits_for_stability_before_quality_check(monkeypatch):
     calls: list[list[str]] = []
 
     def fake_run_atom(command: list[str], session: str | None = None, heal_on_failure: bool = False):
@@ -157,11 +157,7 @@ def test_partial_extract_does_not_retry(monkeypatch):
         return {"ok": True, "data": {"content": [{"title": ""}], "quality": {"status": "partial"}}}
 
     monkeypatch.setattr(runtime_helpers, "run_atom", fake_run_atom)
-    monkeypatch.setattr(
-        runtime_helpers.time,
-        "sleep",
-        lambda _: (_ for _ in ()).throw(AssertionError("unexpected retry")),
-    )
+    monkeypatch.setattr(runtime_helpers.time, "sleep", lambda _: None)
 
     runtime_helpers.execute_steps_via_atoms(
         [{"type": "extract", "selector": "a.result", "extract_mode": "list"}],
@@ -169,4 +165,48 @@ def test_partial_extract_does_not_retry(monkeypatch):
         domain="example.test",
     )
 
-    assert len(calls) == 1
+    assert len(calls) == 4
+
+
+def test_growing_list_extract_fails_closed_when_it_never_settles(monkeypatch):
+    calls: list[list[str]] = []
+
+    def fake_run_atom(command: list[str], session: str | None = None, heal_on_failure: bool = False):
+        calls.append(command)
+        return {"ok": True, "data": {"content": [{"title": str(len(calls))}]}}
+
+    monkeypatch.setattr(runtime_helpers, "run_atom", fake_run_atom)
+    monkeypatch.setattr(runtime_helpers.time, "sleep", lambda _: None)
+
+    results = runtime_helpers.execute_steps_via_atoms(
+        [{"type": "extract", "selector": "a.result", "extract_mode": "list"}],
+        source_url="",
+        domain="example.test",
+    )
+
+    assert len(calls) == 13
+    assert results[0]["ok"] is False
+    assert results[0]["error"]["code"] == "E_PAGE_NOT_READY"
+
+
+def test_list_extract_passes_through_later_error(monkeypatch):
+    calls = 0
+
+    def fake_run_atom(command: list[str], session: str | None = None, heal_on_failure: bool = False):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return {"ok": True, "data": {"content": [{"title": "Result"}]}}
+        return {"ok": False, "error": {"code": "E_CDP_UNAVAILABLE"}}
+
+    monkeypatch.setattr(runtime_helpers, "run_atom", fake_run_atom)
+    monkeypatch.setattr(runtime_helpers.time, "sleep", lambda _: None)
+
+    results = runtime_helpers.execute_steps_via_atoms(
+        [{"type": "extract", "selector": "a.result", "extract_mode": "list"}],
+        source_url="",
+        domain="example.test",
+    )
+
+    assert calls == 2
+    assert results[0]["error"]["code"] == "E_CDP_UNAVAILABLE"

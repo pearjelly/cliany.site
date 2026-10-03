@@ -45,6 +45,7 @@ class ExploreResult:
     selector_pool: list[dict] = field(default_factory=list)
     api_endpoints: list = field(default_factory=list)
     capability: dict = field(default_factory=dict)
+    partition_repair_attempts: int = field(default=0, init=False)
 
     def to_dict(self) -> dict:
         import dataclasses

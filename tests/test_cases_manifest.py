@@ -64,6 +64,15 @@ def test_pypi_public_package_complete_but_online_smoke_pending():
     assert pypi_case["promotion_evidence"]["online_smoke"]["status"] == "pending"
 
 
+def test_python_docs_local_package_is_not_publicly_promoted():
+    case = next(case for case in _load_cases() if case["id"] == "python-docs-search")
+
+    assert case["status"] == "candidate"
+    assert case["promotion_evidence"]["adapter_package"]["status"] == "pending"
+    assert case["promotion_evidence"]["metadata_validation"]["status"] == "complete"
+    assert case["promotion_evidence"]["online_smoke"]["status"] == "pending"
+
+
 def test_active_confluence_case_links_public_package_audit():
     case = next(case for case in _load_cases() if case["id"] == "apache-confluence-search")
 

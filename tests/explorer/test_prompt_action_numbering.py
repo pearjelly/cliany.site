@@ -17,3 +17,9 @@ def test_explore_prompt_exposes_zero_based_action_boundary():
     assert "0. Type query\n1. Submit search" in prompt
     assert "commands.action_steps 必须覆盖此前及本轮的全部动作编号" in prompt
     assert "json" in SYSTEM_PROMPT.lower()
+
+
+def test_explore_prompt_allows_declared_zero_match_search():
+    assert "搜索、筛选" in SYSTEM_PROMPT
+    assert "明确允许零匹配，设为 false" in SYSTEM_PROMPT
+    assert "false 不能用于掩盖字段缺失" in SYSTEM_PROMPT
