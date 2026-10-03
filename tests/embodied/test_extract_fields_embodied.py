@@ -3,10 +3,11 @@
 from pathlib import Path
 
 import pytest
-from playwright.async_api import async_playwright
 
 from cliany_site.extract import build_extract_js
 from cliany_site.extract_quality import evaluate_extract_quality
+
+async_playwright = pytest.importorskip("playwright.async_api").async_playwright
 
 FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "search_extraction_gap.html"
 FIELDS = {"title": ".result-title", "url": ".result-link@href", "snippet": ".result-snippet"}
