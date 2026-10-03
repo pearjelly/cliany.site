@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Incremental results fixture</title></head>
+<body>
+  <div id="results">
+    <h2>Searching</h2>
+    <ul><li>Result 1</li></ul>
+  </div>
+  <script>
+    let count = 1;
+    const timer = setInterval(() => {
+      count += 1;
+      const row = document.createElement('li');
+      row.textContent = `Result ${count}`;
+      document.querySelector('#results ul').append(row);
+      if (count === 8) {
+        clearInterval(timer);
+        document.querySelector('#results h2').textContent = 'Search Results';
+      }
+    }, 400);
+  </script>
+</body>
+</html>

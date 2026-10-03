@@ -108,18 +108,24 @@ def _build_attribute_js(selector: str, fields_map: dict | None = None) -> str:
 def _build_list_js(selector: str, fields_map: dict | None) -> str:
     escaped_selector = _escape_selector(selector)
     normalized_fields = _normalize_fields_map(fields_map)
+    items_js = (
+        f"const selected = Array.from(document.querySelectorAll('{escaped_selector}')); "
+        "const items = (selected.length === 1 && ['UL', 'OL'].includes(selected[0].tagName) "
+        "? Array.from(selected[0].children).filter(el => el.tagName === 'LI') "
+        ": selected).slice(0, 100); "
+    )
 
     if not normalized_fields:
         return (
             "() => { "
-            + f"const items = Array.from(document.querySelectorAll('{escaped_selector}')).slice(0, 100); "
+            + items_js
             + "return items.map(el => (el.textContent ? el.textContent.trim() : '')); "
             + "}"
         )
 
     lines = [
         "() => {",
-        f"  const items = Array.from(document.querySelectorAll('{escaped_selector}')).slice(0, 100);",
+        f"  {items_js}",
         "  return items.map(el => ({",
     ]
 

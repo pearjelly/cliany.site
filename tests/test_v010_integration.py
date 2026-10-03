@@ -107,6 +107,40 @@ async def test_llm_retry_wraps_gateway_failure_without_html():
     assert "<html>" not in str(exc_info.value)
 
 
+@pytest.mark.asyncio
+async def test_llm_retry_reports_attempts_without_error_text():
+    import io
+
+    from cliany_site.explorer.engine import _invoke_llm_with_retry
+    from cliany_site.progress import NdjsonProgressReporter
+
+    class GatewayError(Exception):
+        status_code = 502
+
+    class FlakyLLM:
+        def __init__(self):
+            self.calls = 0
+
+        async def ainvoke(self, _prompt):
+            self.calls += 1
+            if self.calls == 1:
+                raise GatewayError("private response body")
+            return "ok"
+
+    stream = io.StringIO()
+    reporter = NdjsonProgressReporter(file=stream)
+    result = await _invoke_llm_with_retry(
+        FlakyLLM(), "private prompt", max_attempts=2, base_delay=0,
+        backoff_factor=1, progress=reporter, step=0,
+    )
+    events = [json.loads(line) for line in stream.getvalue().splitlines()]
+    assert result == "ok"
+    assert [event["outcome"] for event in events if event["event"] == "explore_llm_attempt_done"] == [
+        "retry", "success",
+    ]
+    assert "private" not in stream.getvalue()
+
+
 def test_explore_llm_gateway_failure_returns_llm_unavailable_json(monkeypatch):
     from click.testing import CliRunner
 

@@ -60,6 +60,20 @@ class TestNdjsonProgressReporter:
         assert events[3]["event"] == "explore_step_done"
         assert events[3]["elapsed_ms"] == 456.7
 
+    def test_explore_llm_attempt_events_exclude_content(self):
+        r, buf = self._make_reporter()
+        r.on_explore_llm_attempt_start(0, 1)
+        r.on_explore_llm_attempt_done(0, 1, 1234.5, "retry", 2000.0)
+        events = self._parse_lines(buf)
+        assert [event["event"] for event in events] == [
+            "explore_llm_attempt_start", "explore_llm_attempt_done",
+        ]
+        assert events[1]["attempt"] == 1
+        assert events[1]["elapsed_ms"] == 1234.5
+        assert events[1]["outcome"] == "retry"
+        assert events[1]["backoff_ms"] == 2000.0
+        assert set(events[1]) == {"event", "ts", "step", "attempt", "elapsed_ms", "outcome", "backoff_ms"}
+
     def test_explore_done_emits_summary(self):
         r, buf = self._make_reporter()
         r.on_explore_done(3, 8, 2, 5000.0)

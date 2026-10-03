@@ -96,9 +96,9 @@ class TestWorkflowExplorerInteractive:
         )
 
         explorer = WorkflowExplorer(interactive=True)
-        result = await explorer.explore("https://example.com/start", "跳过动作", record=False)
+        with pytest.raises(RuntimeError, match="命令动作分区无效"):
+            await explorer.explore("https://example.com/start", "跳过动作", record=False)
 
-        assert len(result.actions) == 0
         assert mocks["execute"].await_count == 1
         assert mocks["execute"].await_args.args[1] == []
 

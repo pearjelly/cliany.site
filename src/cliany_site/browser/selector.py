@@ -141,6 +141,119 @@ def enrich_selector_map(selector_map: dict[str, dict]) -> dict[str, dict]:
     return selector_map
 
 
+_READ_ONLY_EXTRACT_ROLES = frozenset({"status", "alert", "list", "table"})
+
+
+def collect_read_only_extract_candidates(root: Any, limit: int = 20) -> list[dict[str, Any]]:
+    """Ground extract selectors in visible AX semantics and observed DOM attributes."""
+    if root is None or limit <= 0:
+        return []
+
+    candidates: list[dict[str, Any]] = []
+    pending = [(root, None)]
+    visited = 0
+    semantic_nodes: list[tuple[str, str, Any, dict[str, Any], Any]] = []
+    tag_counts: dict[str, int] = {}
+    while pending and visited < 5000:
+        node, parent = pending.pop()
+        visited += 1
+        if getattr(node, "is_visible", None) is False:
+            continue
+        pending.extend((child, node) for child in reversed(getattr(node, "children_nodes", None) or []))
+        tag = _to_text(getattr(node, "tag_name", "")).lower()
+        tag_counts[tag] = tag_counts.get(tag, 0) + 1
+
+        ax_node = getattr(node, "ax_node", None)
+        role = _to_text(getattr(ax_node, "role", "")).lower()
+        if role not in _READ_ONLY_EXTRACT_ROLES:
+            continue
+        attributes = getattr(node, "attributes", None)
+        if not isinstance(attributes, dict):
+            continue
+        semantic_nodes.append((role, tag, node, attributes, parent))
+
+    for role, tag, node, attributes, parent in semantic_nodes:
+        if len(candidates) >= limit:
+            break
+        selectors = [
+            selector
+            for selector in compute_selector_candidates(tag, attributes)
+            if selector.startswith(("#", '[data-testid="', '[aria-label="'))
+        ][:2]
+        if tag == "output" and tag_counts[tag] == 1:
+            selectors.append(tag)
+        elif not selectors and tag in {"ul", "ol", "table"} and tag_counts[tag] == 1:
+            selectors = [tag]
+        if not selectors and parent is not None and tag in {"ul", "ol", "table"}:
+            siblings = getattr(parent, "children_nodes", None) or []
+            same_kind = sum(
+                _to_text(getattr(sibling, "tag_name", "")).lower() in {"ul", "ol", "table"}
+                for sibling in siblings
+            )
+            if same_kind == 1:
+                parent_attrs = getattr(parent, "attributes", None)
+                if isinstance(parent_attrs, dict):
+                    parent_tag = _to_text(getattr(parent, "tag_name", "")).lower()
+                    anchors = [
+                        value for value in compute_selector_candidates(parent_tag, parent_attrs)
+                        if value.startswith(("#", '[data-testid="', '[aria-label="'))
+                    ]
+                    child_tag = "tr" if tag == "table" else "li"
+                    selectors = [f"{anchor} {child_tag}" for anchor in anchors[:2]]
+        if not selectors:
+            continue
+        name = _to_text(getattr(ax_node, "name", ""))
+        text = _to_text(node.get_all_children_text()) if hasattr(node, "get_all_children_text") else ""
+        if not name and not text and role not in {"list", "table"}:
+            continue
+        candidates.append({"role": role, "name": name[:80], "text": text[:120], "selectors": selectors})
+    return candidates
+
+
+def format_read_only_extract_candidates(candidates: list[dict[str, Any]], max_chars: int = 2000) -> str:
+    lines: list[str] = []
+    for item in candidates:
+        role = _to_text(item.get("role"))
+        name = _to_text(item.get("name")).replace("\n", " ").replace("\r", " ").replace('"', '\\"')
+        text = _to_text(item.get("text")).replace("\n", " ").replace("\r", " ").replace('"', '\\"')
+        selectors = item.get("selectors")
+        if not role or not isinstance(selectors, list) or not selectors:
+            continue
+        line = f'[{role} "{name}" text="{text}"] → {", ".join(str(value) for value in selectors)}'
+        if len("\n".join([*lines, line])) > max_chars:
+            break
+        lines.append(line)
+    return "\n".join(lines)
+
+
+def is_grounded_extract_selector(selector: str, selector_map: dict[str, dict], extract_candidates: list[dict]) -> bool:
+    """Accept only selectors observed in this AX snapshot or a semantic list/table child."""
+    value = _to_text(selector)
+    if not value:
+        return False
+
+    for entry in selector_map.values():
+        if isinstance(entry, dict) and value in (entry.get("css_candidates") or []):
+            return True
+
+    for item in extract_candidates:
+        if not isinstance(item, dict):
+            continue
+        selectors = item.get("selectors")
+        if not isinstance(selectors, list):
+            continue
+        for root in selectors:
+            if not isinstance(root, str) or not root:
+                continue
+            if value == root:
+                return True
+            if item.get("role") == "list" and value == f"{root} li":
+                return True
+            if item.get("role") == "table" and value == f"{root} tr":
+                return True
+    return False
+
+
 def format_selector_candidates_section(selector_map: dict[str, dict], max_chars: int = 3000) -> str:
     if not isinstance(selector_map, dict):
         return ""

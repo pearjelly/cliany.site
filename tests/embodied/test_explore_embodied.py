@@ -19,6 +19,79 @@ def _pick_free_port() -> int:
 
 
 @pytest.mark.embodied
+@pytest.mark.asyncio
+async def test_extract_selector_is_grounded_after_preceding_click(
+    local_server, headless_browser_cdp_url, tmp_home, monkeypatch,
+):
+    from types import SimpleNamespace
+
+    from cliany_site.explorer import engine
+
+    url = f"{local_server}/delayed_extract.html"
+    snapshots = []
+    capture = engine.capture_axtree
+
+    async def observe(session):
+        tree = await capture(session)
+        snapshots.append(tree)
+        return tree
+
+    class ScriptedModel:
+        model = "offline-delayed-extract"
+
+        async def ainvoke(self, _prompt):
+            button_ref = next(
+                ref for ref, node in snapshots[0]["selector_map"].items()
+                if node["name"] == "Show result" and node["role"] == "button"
+            )
+            return SimpleNamespace(content=json.dumps({
+                "actions": [
+                    {"type": "click", "ref": button_ref},
+                    {"type": "extract", "selector": "#dynamic-result", "extract_mode": "text"},
+                ],
+                "commands": [{"name": "read-status", "description": "Read result", "args": [], "action_steps": [0, 1]}],
+                "done": True,
+            }))
+
+    monkeypatch.setattr(engine, "capture_axtree", observe)
+    monkeypatch.setattr(engine, "_get_llm", lambda **_kwargs: ScriptedModel())
+
+    result = await engine.WorkflowExplorer(cdp_url=headless_browser_cdp_url).explore(
+        url, "Click Show result and read the new status", record=False,
+    )
+
+    assert all(
+        "#dynamic-result" not in item.get("selectors", [])
+        for item in snapshots[0]["extract_candidates"]
+    )
+    assert any(
+        "#dynamic-result" in item.get("selectors", [])
+        for item in snapshots[-1]["extract_candidates"]
+    )
+    assert [action.action_type for action in result.actions] == ["click", "extract"]
+    assert result.commands[0].name == "read-status"
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
+async def test_list_extract_waits_for_incremental_results(local_server, headless_browser_cdp_url, tmp_home):
+    from cliany_site.action_runtime import execute_action_steps
+    from cliany_site.browser.cdp import CDPConnection
+
+    cdp = CDPConnection(cdp_url=headless_browser_cdp_url)
+    try:
+        session = await cdp.connect()
+        await session.navigate_to(f"{local_server}/incremental_results.html", new_tab=False)
+        extracts = []
+        await execute_action_steps(session, [{
+            "type": "extract", "selector": "#results li", "extract_mode": "list", "fields": {"title": ""},
+        }], extraction_results=extracts)
+        assert extracts[0]["data"] == [{"title": f"Result {index}"} for index in range(1, 9)]
+    finally:
+        await cdp.disconnect()
+
+
+@pytest.mark.embodied
 def test_generated_command_reuses_auto_launched_chrome(local_server, tmp_home, monkeypatch):
     import os
     import pwd
@@ -273,7 +346,8 @@ async def test_action_replay_changes_real_page_only_outside_dry_run(
 @pytest.mark.embodied
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "entrypoint", ["sdk", "http", "cli", "workflow", "batch", "batch_requested_parallel", "explore_cli"],
+    "entrypoint", ["sdk", "http", "cli", "workflow", "batch", "batch_requested_parallel",
+                   "explore_cli", "explore_cli_missing_command", "explore_cli_no_action"],
 )
 async def test_generated_adapter_returns_real_form_data(
     local_server, headless_browser_cdp_url, fallback_browser, tmp_home, entrypoint, monkeypatch
@@ -295,7 +369,7 @@ async def test_generated_adapter_returns_real_form_data(
         pages=[PageInfo(url, "Browser command fixture")], actions=actions,
         commands=[CommandSuggestion("read-name", "Read form result", [{"name": "name", "required": True}], [0, 1, 2])],
     )
-    if entrypoint == "explore_cli":
+    if entrypoint in ("explore_cli", "explore_cli_missing_command", "explore_cli_no_action"):
         from types import SimpleNamespace
 
         from cliany_site.explorer import engine
@@ -314,7 +388,24 @@ async def test_generated_adapter_returns_real_form_data(
 
             async def ainvoke(self, prompt):
                 self.calls += 1
-                assert self.calls == 1
+                if entrypoint == "explore_cli_no_action" and self.calls == 1:
+                    return SimpleNamespace(content=json.dumps({
+                        "actions": [], "done": True,
+                        "commands": [{"name": "read-name", "action_steps": [0, 1, 2]}],
+                    }))
+                if self.calls == 2:
+                    if entrypoint == "explore_cli_missing_command":
+                        assert '"value": "Ada"' not in prompt
+                        assert '"target_name": "Name"' in prompt
+                        return SimpleNamespace(content=json.dumps({
+                            "actions": [], "done": True,
+                            "commands": [{"name": "read-name", "description": "Read form result",
+                                          "args": [], "action_steps": [0, 1, 2]}],
+                        }))
+                    assert entrypoint == "explore_cli_no_action"
+                    assert "未录制任何页面动作" in prompt
+                else:
+                    assert self.calls == 1
                 nodes = observed[-1]["selector_map"]
                 name_ref = next(ref for ref, node in nodes.items() if node["name"] == "Name" and node["role"] == "textbox")
                 apply_ref = next(ref for ref, node in nodes.items() if node["name"] == "Apply" and node["role"] == "button")
@@ -324,9 +415,11 @@ async def test_generated_adapter_returns_real_form_data(
                         {"type": "click", "ref": apply_ref},
                         {"type": "extract", "selector": "output", "extract_mode": "list", "fields": {"name": ""}},
                     ],
-                    "commands": [{"name": "read-name", "description": "Read form result",
-                                  "args": [{"name": "name", "required": True, "action_index": 0}],
-                                  "action_steps": [0, 1, 2]}],
+                    "commands": ([] if entrypoint == "explore_cli_missing_command" else [
+                        {"name": "read-name", "description": "Read form result",
+                         "args": [{"name": "name", "required": True, "action_index": 0}],
+                         "action_steps": [0, 1, 2]},
+                    ]),
                     "done": True,
                 }))
 
@@ -336,7 +429,8 @@ async def test_generated_adapter_returns_real_form_data(
         result = await engine.WorkflowExplorer(cdp_url=headless_browser_cdp_url).explore(
             url, "Enter Ada, apply, and extract the resulting name as a reusable command", record=False,
         )
-        assert model.calls == 1
+        assert model.calls == (1 if entrypoint == "explore_cli" else 2)
+        assert result.partition_repair_attempts == (1 if entrypoint == "explore_cli_missing_command" else 0)
         assert [action.action_type for action in result.actions] == ["type", "click", "extract"]
         assert result.actions[0].target_name == "Name"
         assert result.actions[0].target_role == "textbox"
@@ -348,6 +442,7 @@ async def test_generated_adapter_returns_real_form_data(
             try:
                 page = next(page for ctx in inspection.contexts for page in ctx.pages if page.url == url)
                 assert await page.locator("output").inner_text() == "Ada"
+                assert await page.locator("output").get_attribute("data-submits") == "1"
             finally:
                 await inspection.close()
     save_adapter("127.0.0.1", AdapterGenerator().generate(result, "127.0.0.1"), explore_result=result)

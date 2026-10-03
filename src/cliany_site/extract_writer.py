@@ -7,6 +7,7 @@ from pathlib import Path
 
 import click
 
+from cliany_site.config import get_config
 from cliany_site.extract_quality import evaluate_extract_quality
 
 
@@ -160,7 +161,7 @@ def save_extract_markdown(
 
         if output_path is None:
             filename = _sanitize_filename(workflow_description)
-            output_path = Path.home() / ".cliany-site" / "adapters" / domain / "extracts" / filename
+            output_path = get_config().adapters_dir / domain / "extracts" / filename
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(content, encoding="utf-8")
