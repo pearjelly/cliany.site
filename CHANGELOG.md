@@ -7,6 +7,11 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Website quickstart Copy controls no longer overlap commands. Narrow quickstart cards use a single column, and the longer `explore` example is readable on screen without changing its executable copy payload.
+- The extended feature grid stays within narrow phone viewports and becomes visible instead of creating an implicit second column and unusually tall cards. Long inline diagnostic identifiers wrap without page-wide horizontal scrolling.
+
 ## [0.16.374] - 2026-10-04
 
 ### Added
