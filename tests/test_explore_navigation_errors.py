@@ -5,6 +5,7 @@ import pytest
 from click.testing import CliRunner
 
 from cliany_site.cli import cli
+from cliany_site.errors import ExploreContractError, LlmResponseFormatError
 
 
 @pytest.mark.parametrize(
@@ -58,6 +59,43 @@ def test_explore_classifies_navigation_timeout_without_hiding_other_errors(
             "phase": "navigation",
             "url": "https://crates.io/search?q=serde",
         }
+
+
+@pytest.mark.parametrize(
+    ("failure", "details"),
+    [
+        (
+            LlmResponseFormatError("private model response", reason="llm_invalid_json"),
+            {"reason": "llm_invalid_json", "phase": "llm_response"},
+        ),
+        (
+            ExploreContractError("private action content", reason="command_partition_invalid"),
+            {"reason": "command_partition_invalid", "phase": "completion"},
+        ),
+    ],
+)
+def test_explore_classifies_known_contract_errors(tmp_home, clean_env, monkeypatch, failure, details):
+    import cliany_site.browser.cdp as cdp_mod
+    import cliany_site.explorer.engine as engine_mod
+
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_home / "config"))
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("CLIANY_OPENAI_API_KEY", "test-key")
+    monkeypatch.setattr(engine_mod, "_load_dotenv", lambda: None)
+    cdp = MagicMock()
+    cdp.check_available = AsyncMock(return_value=True)
+    monkeypatch.setattr(cdp_mod, "cdp_from_context", lambda _: cdp)
+    monkeypatch.setattr(engine_mod.WorkflowExplorer, "explore", AsyncMock(side_effect=failure))
+
+    result = CliRunner().invoke(
+        cli,
+        ["explore", "https://example.com", "read-only search", "--json"],
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 1
+    payload = json.loads(result.stdout)
+    assert payload["error"]["code"] == "E_UNKNOWN"
+    assert payload["error"]["details"] == details
 
 
 def test_explore_returns_invocable_group_for_local_port(tmp_home, clean_env, monkeypatch):

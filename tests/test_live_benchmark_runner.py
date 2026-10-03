@@ -119,6 +119,19 @@ def test_explore_execution_failure_exposes_only_safe_error_shape():
     assert "private" not in json.dumps(summary)
 
 
+def test_unknown_contract_diagnostics_keep_only_enumerated_reason():
+    error = {
+        "code": "E_UNKNOWN",
+        "message": "private model response",
+        "details": {"reason": "command_partition_invalid", "phase": "completion", "raw": "private page"},
+    }
+    summary = benchmark._safe_explore_contract_diagnostics(error)
+    assert summary == {"reason": "command_partition_invalid", "phase": "completion"}
+    assert "private" not in json.dumps(summary)
+    error["details"]["reason"] = "private invented reason"
+    assert benchmark._safe_explore_contract_diagnostics(error) is None
+
+
 def test_replay_quality_diagnostics_keep_modes_without_page_content():
     error = {
         "code": "E_EMPTY_RESULT",

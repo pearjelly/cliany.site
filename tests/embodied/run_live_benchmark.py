@@ -174,6 +174,23 @@ _QUALITY_REASONS = frozenset({
     "extract_quality_failed", "missing_extraction_evidence",
     "extraction_execution_failed", "missing_replay_prerequisites",
 })
+_CONTRACT_REASONS = frozenset({
+    "llm_invalid_json", "llm_invalid_shape", "command_partition_invalid",
+    "command_list_invalid", "missing_commands", "explore_step_limit",
+})
+
+
+def _safe_explore_contract_diagnostics(error: dict[str, Any]) -> dict[str, str] | None:
+    if error.get("code") != "E_UNKNOWN":
+        return None
+    details = error.get("details")
+    if not isinstance(details, dict):
+        return None
+    reason, phase = details.get("reason"), details.get("phase")
+    if (isinstance(reason, str) and reason in _CONTRACT_REASONS
+            and isinstance(phase, str) and phase in {"llm_response", "completion"}):
+        return {"reason": reason, "phase": phase}
+    return None
 
 
 def _safe_explore_quality_diagnostics(error: dict[str, Any]) -> dict[str, Any] | None:
@@ -333,6 +350,9 @@ async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tup
         safe_error = {"code": code or "CLI_FAILED"}
         if summary is not None:
             safe_error["quality_diagnostics"] = summary
+        contract = _safe_explore_contract_diagnostics(error) if isinstance(error, dict) else None
+        if contract is not None:
+            safe_error["contract_diagnostics"] = contract
         result = {"ok": False, "error": safe_error}
         if timing is not None:
             result["benchmark_timing"] = timing
@@ -394,6 +414,9 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
         diagnostics = explore.get("error", {}).get("quality_diagnostics")
         if diagnostics is not None:
             outcome["quality_diagnostics"] = diagnostics
+        contract = explore.get("error", {}).get("contract_diagnostics")
+        if contract is not None:
+            outcome["contract_diagnostics"] = contract
         return outcome
 
     data = explore.get("data", {})

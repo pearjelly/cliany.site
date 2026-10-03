@@ -22,7 +22,12 @@ from cliany_site.browser.selector import format_read_only_extract_candidates, fo
 from cliany_site.capability import sniff_api_endpoints
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
 from cliany_site.config import get_config
-from cliany_site.errors import DataCommandQualityError, LlmUnavailableError
+from cliany_site.errors import (
+    DataCommandQualityError,
+    ExploreContractError,
+    LlmResponseFormatError,
+    LlmUnavailableError,
+)
 from cliany_site.explorer.models import (
     ActionStep,
     CommandSuggestion,
@@ -97,10 +102,16 @@ def _validate_command_partition(commands: list[object], action_count: int) -> No
         if (not isinstance(indices, list) or (action_count > 0 and not indices)
                 or any(type(index) is not int or not 0 <= index < action_count for index in indices)
                 or indices != sorted(indices)):
-            raise RuntimeError("命令动作分区无效：每个命令须按录制顺序声明有效动作索引；请重新探索")
+            raise ExploreContractError(
+                "命令动作分区无效：每个命令须按录制顺序声明有效动作索引；请重新探索",
+                reason="command_partition_invalid",
+            )
         assigned.extend(indices)
     if sorted(assigned) != list(range(action_count)):
-        raise RuntimeError("命令动作分区无效：每个动作须恰好归属一个命令，不允许遗漏或重复；请重新探索")
+        raise ExploreContractError(
+            "命令动作分区无效：每个动作须恰好归属一个命令，不允许遗漏或重复；请重新探索",
+            reason="command_partition_invalid",
+        )
 
 
 def _data_command_completion_failures(
@@ -475,9 +486,9 @@ def _parse_llm_response(text: str) -> dict:
         try:
             result = json.loads(text)
         except json.JSONDecodeError as exc:
-            raise ValueError("LLM 响应解析失败，不能确认探索完成") from exc
+            raise LlmResponseFormatError("LLM 响应解析失败，不能确认探索完成", reason="llm_invalid_json") from exc
     if not isinstance(result, dict) or type(result.get("done", False)) is not bool:
-        raise ValueError("LLM 响应须为 JSON 对象，done 必须为布尔值")
+        raise LlmResponseFormatError("LLM 响应须为 JSON 对象，done 必须为布尔值", reason="llm_invalid_shape")
     return result
 
 
@@ -1038,9 +1049,15 @@ class WorkflowExplorer:
 
                     commands_data = parsed.get("commands", [])
                     if not isinstance(commands_data, list):
-                        raise RuntimeError("完成响应中的 commands 必须为命令列表，请重新探索")
+                        raise ExploreContractError(
+                            "完成响应中的 commands 必须为命令列表，请重新探索",
+                            reason="command_list_invalid",
+                        )
                     if result.actions and not commands_data:
-                        raise RuntimeError("已录制动作但未声明可复用命令，不会自动生成回退命令；请重新探索")
+                        raise ExploreContractError(
+                            "已录制动作但未声明可复用命令，不会自动生成回退命令；请重新探索",
+                            reason="missing_commands",
+                        )
 
                     if commands_data:
                         _validate_command_partition(commands_data, len(result.actions))
@@ -1126,9 +1143,10 @@ class WorkflowExplorer:
                     with contextlib.suppress(OSError, RuntimeError, TimeoutError):
                         await browser_session.navigate_to(next_url, new_tab=False)
             else:
-                raise RuntimeError(
+                raise ExploreContractError(
                     f"探索达到 {cfg.explore_max_steps} 步上限但尚未确认完成；"
-                    "不会将部分动作生成为可复用命令，请缩小任务范围后重新探索"
+                    "不会将部分动作生成为可复用命令，请缩小任务范围后重新探索",
+                    reason="explore_step_limit",
                 )
 
             saved_path = save_extract_markdown(
