@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from cliany_site.errors import ExploreContractError
 from cliany_site.explorer.engine import WorkflowExplorer
 
 
@@ -128,6 +129,24 @@ def _one_step_done_result() -> list[dict]:
 
 
 class TestWorkflowExplorerRecording:
+    @pytest.mark.asyncio
+    async def test_ungrounded_extract_is_rejected_before_page_execution(self, mocker, tmp_home):
+        mocks = _prepare_explore_mocks(
+            mocker,
+            parse_results=[{"actions": [
+                {"type": "extract", "selector": "#guessed li", "extract_mode": "list"}
+            ], "done": False}],
+        )
+        mocks["capture_axtree"].return_value["extract_candidates"] = [
+            {"role": "list", "selectors": ["#results"]}
+        ]
+
+        with pytest.raises(ExploreContractError) as error:
+            await WorkflowExplorer().explore("https://example.com/start", "读取结果")
+
+        assert error.value.reason == "extract_selector_ungrounded"
+        mocks["execute"].assert_not_awaited()
+
     @pytest.mark.asyncio
     async def test_step_limit_finalizes_recording_as_incomplete(self, mocker, tmp_home):
         manager = MagicMock()

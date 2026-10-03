@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from cliany_site.browser.selector import (
     collect_read_only_extract_candidates,
     format_read_only_extract_candidates,
+    is_grounded_extract_selector,
 )
 
 
@@ -51,3 +52,26 @@ def test_empty_semantic_list_remains_addressable():
     assert collect_read_only_extract_candidates(root) == [
         {"role": "list", "name": "", "text": "", "selectors": ["#results"]}
     ]
+
+
+def test_unique_semantic_output_without_id_is_a_candidate():
+    root = Node("body", "generic", "", children=[Node("output", "status", "Ready")])
+    assert collect_read_only_extract_candidates(root) == [
+        {"role": "status", "name": "", "text": "Ready", "selectors": ["output"]}
+    ]
+    root.children_nodes.append(Node("output", "generic", "Other"))
+    assert collect_read_only_extract_candidates(root) == []
+
+
+def test_extract_selector_requires_observed_candidate_or_semantic_child():
+    selector_map = {"1": {"css_candidates": ["#count"]}}
+    candidates = [
+        {"role": "list", "selectors": ["#results"]},
+        {"role": "table", "selectors": ["#records"]},
+    ]
+    assert is_grounded_extract_selector("#count", selector_map, candidates)
+    assert is_grounded_extract_selector("#results li", selector_map, candidates)
+    assert is_grounded_extract_selector("#records tr", selector_map, candidates)
+    assert not is_grounded_extract_selector("#guessed li", selector_map, candidates)
+    assert not is_grounded_extract_selector("#results a", selector_map, candidates)
+    assert not is_grounded_extract_selector("#count li", selector_map, candidates)

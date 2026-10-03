@@ -175,7 +175,7 @@ _QUALITY_REASONS = frozenset({
     "extraction_execution_failed", "missing_replay_prerequisites",
 })
 _CONTRACT_REASONS = frozenset({
-    "llm_invalid_json", "llm_invalid_shape", "command_partition_invalid",
+    "llm_invalid_json", "llm_invalid_shape", "command_partition_invalid", "extract_selector_ungrounded",
     "command_list_invalid", "missing_commands", "explore_step_limit",
 })
 

@@ -152,26 +152,38 @@ def collect_read_only_extract_candidates(root: Any, limit: int = 20) -> list[dic
     candidates: list[dict[str, Any]] = []
     pending = [root]
     visited = 0
-    while pending and len(candidates) < limit and visited < 5000:
+    semantic_nodes: list[tuple[str, str, Any, dict[str, Any]]] = []
+    tag_counts: dict[str, int] = {}
+    while pending and visited < 5000:
         node = pending.pop()
         visited += 1
         if getattr(node, "is_visible", None) is False:
             continue
         pending.extend(reversed(getattr(node, "children_nodes", None) or []))
+        tag = _to_text(getattr(node, "tag_name", "")).lower()
+        tag_counts[tag] = tag_counts.get(tag, 0) + 1
 
         ax_node = getattr(node, "ax_node", None)
         role = _to_text(getattr(ax_node, "role", "")).lower()
         if role not in _READ_ONLY_EXTRACT_ROLES:
             continue
-        tag = _to_text(getattr(node, "tag_name", "")).lower()
         attributes = getattr(node, "attributes", None)
         if not isinstance(attributes, dict):
             continue
+        semantic_nodes.append((role, tag, node, attributes))
+
+    for role, tag, node, attributes in semantic_nodes:
+        if len(candidates) >= limit:
+            break
         selectors = [
             selector
             for selector in compute_selector_candidates(tag, attributes)
             if selector.startswith(("#", '[data-testid="', '[aria-label="'))
         ][:2]
+        if tag == "output" and tag_counts[tag] == 1:
+            selectors.append(tag)
+        elif not selectors and tag in {"ul", "ol", "table"} and tag_counts[tag] == 1:
+            selectors = [tag]
         if not selectors:
             continue
         name = _to_text(getattr(ax_node, "name", ""))
@@ -196,6 +208,34 @@ def format_read_only_extract_candidates(candidates: list[dict[str, Any]], max_ch
             break
         lines.append(line)
     return "\n".join(lines)
+
+
+def is_grounded_extract_selector(selector: str, selector_map: dict[str, dict], extract_candidates: list[dict]) -> bool:
+    """Accept only selectors observed in this AX snapshot or a semantic list/table child."""
+    value = _to_text(selector)
+    if not value:
+        return False
+
+    for entry in selector_map.values():
+        if isinstance(entry, dict) and value in (entry.get("css_candidates") or []):
+            return True
+
+    for item in extract_candidates:
+        if not isinstance(item, dict):
+            continue
+        selectors = item.get("selectors")
+        if not isinstance(selectors, list):
+            continue
+        for root in selectors:
+            if not isinstance(root, str) or not root:
+                continue
+            if value == root:
+                return True
+            if item.get("role") == "list" and value == f"{root} li":
+                return True
+            if item.get("role") == "table" and value == f"{root} tr":
+                return True
+    return False
 
 
 def format_selector_candidates_section(selector_map: dict[str, dict], max_chars: int = 3000) -> str:

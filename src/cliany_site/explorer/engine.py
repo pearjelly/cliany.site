@@ -18,7 +18,11 @@ from cliany_site.action_runtime import execute_action_steps, normalize_navigatio
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.browser.screenshot import capture_screenshot
-from cliany_site.browser.selector import format_read_only_extract_candidates, format_selector_candidates_section
+from cliany_site.browser.selector import (
+    format_read_only_extract_candidates,
+    format_selector_candidates_section,
+    is_grounded_extract_selector,
+)
 from cliany_site.capability import sniff_api_endpoints
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
 from cliany_site.config import get_config
@@ -958,6 +962,15 @@ class WorkflowExplorer:
                 parsed = _parse_llm_response(response_text)
 
                 actions_data = _sanitize_actions_data(parsed.get("actions", []), tree.get("url", ""))
+                if "extract_candidates" in tree:
+                    for action_data in actions_data:
+                        if action_data.get("type") == "extract" and not is_grounded_extract_selector(
+                            str(action_data.get("selector") or ""), selector_map, tree["extract_candidates"]
+                        ):
+                            raise ExploreContractError(
+                                "提取选择器未在当前页面的 AX 候选中证实；请重新探索",
+                                reason="extract_selector_ungrounded",
+                            )
                 reporter.on_explore_llm_done(step_num, len(actions_data))
 
                 if interactive_ctrl is not None:
