@@ -132,6 +132,8 @@ adapter 分发包后缀为 `.cliany-adapter.tar.gz`，由 `src/cliany_site/marke
 
 ## 安装故障排查
 
+`market` 命令的 JSON 输出保留既有 `success` 字段，并增加同值的 `ok` 字段；脚本可统一检查 `ok`，旧客户端仍可检查 `success`。错误对象仍使用 `error.fix`。
+
 `market install --json` 失败时会返回 `INSTALL_FAILED`，并在 `error.fix` 中给出下一步建议：
 
 | 失败信息 | 典型原因 | 修复路径 |
