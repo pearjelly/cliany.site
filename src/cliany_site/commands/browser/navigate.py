@@ -103,10 +103,15 @@ async def _run_navigate(cdp, url: str, wait_state: str, timeout: int, session: s
                 from cliany_site.session import load_session_data
 
                 saved = load_session_data(session)
-                if saved:
-                    if saved.get("expires_hint") == "expired":
-                        return err("browser navigate", ErrorCode.E_SESSION_EXPIRED, "Session 已失效，请重新登录")
-                    await browser_session._cdp_set_cookies(saved.get("cookies", []))
+                if not saved:
+                    return err(
+                        "browser navigate",
+                        ErrorCode.E_SESSION_EXPIRED,
+                        "Session 不存在或无法读取，请重新登录",
+                    )
+                if saved.get("expires_hint") == "expired":
+                    return err("browser navigate", ErrorCode.E_SESSION_EXPIRED, "Session 已失效，请重新登录")
+                await browser_session._cdp_set_cookies(saved.get("cookies", []))
             await browser_session.navigate_to(url)
             if wait_state in ("networkidle", "domcontentloaded"):
                 page = await browser_session.get_current_page()
