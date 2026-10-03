@@ -475,11 +475,11 @@ cliany-site cases --status active</code></pre>
           <div class="qs-card">
             <h3 class="qs-title" data-i18n="qs.step4">Step 4: Generate Your Own</h3>
             <div class="code-block-container">
-              <pre class="code-block"><code># Configure LLM only when you are ready to explore
-# Retryable provider outages return E_LLM_UNAVAILABLE
-export CLIANY_LLM_PROVIDER=anthropic
+              <pre class="code-block"><code>export CLIANY_LLM_PROVIDER=anthropic
 export CLIANY_ANTHROPIC_API_KEY="sk-ant-..."
-cliany-site explore "https://github.com" "search repos" --json</code></pre>
+cliany-site explore \
+  "https://github.com" \
+  "search repos" --json</code></pre>
               <button class="copy-btn" data-clipboard="export CLIANY_LLM_PROVIDER=anthropic&#10;export CLIANY_ANTHROPIC_API_KEY=&#34;sk-ant-...&#34;&#10;cliany-site explore &#34;https://github.com&#34; &#34;search repos&#34; --json" aria-label="Copy to clipboard" data-i18n="copy.btn" data-i18n-aria="aria.copyBtn">Copy</button>
             </div>
           </div>

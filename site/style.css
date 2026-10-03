@@ -764,6 +764,44 @@ html.js .qs-grid.visible .qs-card {
   background: rgba(255,255,255,0.2);
 }
 
+.qs-card .code-block-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.qs-card .code-block {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.qs-card .copy-btn {
+  align-self: flex-end;
+  order: -1;
+  position: static;
+}
+
+@media (max-width: 959px) {
+  .qs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 960px) {
+  .qs-card:last-child {
+    align-items: start;
+    display: grid;
+    gap: 1.5rem;
+    grid-column: 1 / -1;
+    grid-template-columns: 250px minmax(0, 1fr);
+  }
+
+  .qs-card:last-child .qs-title {
+    margin-bottom: 0;
+  }
+}
+
 .hero-kicker {
   color: var(--color-accent);
   font-family: var(--font-mono);
