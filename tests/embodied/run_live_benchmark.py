@@ -282,12 +282,19 @@ def _safe_replay_quality_diagnostics(error: dict[str, Any]) -> dict[str, Any] | 
 def _safe_explore_timing(stderr: bytes, *, ended_at: float) -> dict[str, Any] | None:
     starts: dict[int, float] = {}
     waits: list[float] = []
+    attempt_starts: dict[tuple[int, int], float] = {}
+    attempt_seconds: list[float] = []
+    retry_count = 0
+    scheduled_backoff_seconds = 0.0
     for line in stderr.splitlines():
         try:
             event = json.loads(line)
         except (UnicodeDecodeError, json.JSONDecodeError):
             continue
-        if not isinstance(event, dict) or event.get("event") not in {"explore_llm_start", "explore_llm_done"}:
+        if not isinstance(event, dict) or event.get("event") not in {
+            "explore_llm_start", "explore_llm_done",
+            "explore_llm_attempt_start", "explore_llm_attempt_done",
+        }:
             continue
         step, ts = event.get("step"), event.get("ts")
         if type(step) is not int or step < 0 or not isinstance(ts, (int, float)) or isinstance(ts, bool):
@@ -296,14 +303,40 @@ def _safe_explore_timing(stderr: bytes, *, ended_at: float) -> dict[str, Any] | 
             continue
         if event["event"] == "explore_llm_start":
             starts[step] = float(ts)
-        elif step in starts and ts >= starts[step]:
+        elif event["event"] == "explore_llm_done" and step in starts and ts >= starts[step]:
             waits.append(round(float(ts) - starts.pop(step), 2))
-    if not waits and not starts:
+        else:
+            attempt = event.get("attempt")
+            if type(attempt) is not int or not 1 <= attempt <= 20:
+                continue
+            key = (step, attempt)
+            if event["event"] == "explore_llm_attempt_start":
+                attempt_starts[key] = float(ts)
+            elif event["event"] == "explore_llm_attempt_done" and key in attempt_starts:
+                attempt_starts.pop(key)
+                elapsed = event.get("elapsed_ms")
+                backoff = event.get("backoff_ms")
+                outcome = event.get("outcome")
+                if (not isinstance(elapsed, (int, float)) or isinstance(elapsed, bool)
+                        or not math.isfinite(elapsed) or elapsed < 0):
+                    continue
+                attempt_seconds.append(round(float(elapsed) / 1000, 2))
+                if (outcome == "retry" and isinstance(backoff, (int, float))
+                        and not isinstance(backoff, bool) and math.isfinite(backoff) and backoff >= 0):
+                    retry_count += 1
+                    scheduled_backoff_seconds += float(backoff) / 1000
+    if not waits and not starts and not attempt_seconds and not attempt_starts:
         return None
     summary: dict[str, Any] = {"llm_wait_seconds": waits[:20]}
     if starts:
         latest = max(starts.values())
         summary["inflight_llm_seconds"] = round(max(0.0, ended_at - latest), 2)
+    if attempt_seconds or attempt_starts:
+        summary["attempt_seconds"] = attempt_seconds[:20]
+        summary["retry_count"] = retry_count
+        summary["scheduled_backoff_seconds"] = round(scheduled_backoff_seconds, 2)
+    if attempt_starts:
+        summary["inflight_attempt_seconds"] = round(max(0.0, ended_at - max(attempt_starts.values())), 2)
     return summary
 
 

@@ -612,17 +612,34 @@ async def _invoke_llm_with_retry(
     max_attempts: int = 3,
     base_delay: float = 2.0,
     backoff_factor: float = 2.0,
+    progress: ProgressReporter | None = None,
+    step: int = 0,
 ) -> Any:
     """带指数退避重试的 LLM 调用。支持纯文本和多模态消息。"""
     for attempt in range(max_attempts):
+        if progress is not None:
+            progress.on_explore_llm_attempt_start(step, attempt + 1)
+        attempt_started = time.monotonic()
         try:
             if isinstance(prompt, str):
-                return await llm.ainvoke(prompt)
+                response = await llm.ainvoke(prompt)
             else:
                 messages = [prompt] if not isinstance(prompt, list) else prompt
-                return await llm.ainvoke(messages)
+                response = await llm.ainvoke(messages)
+            if progress is not None:
+                progress.on_explore_llm_attempt_done(
+                    step, attempt + 1, (time.monotonic() - attempt_started) * 1000, "success", 0,
+                )
+            return response
         except Exception as exc:
             retryable = _is_retryable_error(exc)
+            will_retry = retryable and attempt < max_attempts - 1
+            delay = base_delay * (backoff_factor**attempt) if will_retry else 0.0
+            if progress is not None:
+                progress.on_explore_llm_attempt_done(
+                    step, attempt + 1, (time.monotonic() - attempt_started) * 1000,
+                    "retry" if will_retry else "error", delay * 1000,
+                )
             if retryable and attempt >= max_attempts - 1:
                 raise LlmUnavailableError(
                     _llm_error_summary(exc),
@@ -631,7 +648,6 @@ async def _invoke_llm_with_retry(
                 ) from exc
             if not retryable:
                 raise
-            delay = base_delay * (backoff_factor**attempt)
             logger.warning(
                 "LLM 调用失败 (第 %d/%d 次): %s — %.1f 秒后重试",
                 attempt + 1,
@@ -926,6 +942,8 @@ class WorkflowExplorer:
                         max_attempts=cfg.llm_retry_max_attempts,
                         base_delay=cfg.llm_retry_base_delay,
                         backoff_factor=cfg.llm_retry_backoff_factor,
+                        progress=reporter,
+                        step=step_num,
                     )
                     logger.debug("步骤 %d: LLM 响应已收到", step_num + 1)
                 except AttributeError as e:
@@ -1143,6 +1161,8 @@ class WorkflowExplorer:
                                 max_attempts=cfg.llm_retry_max_attempts,
                                 base_delay=cfg.llm_retry_base_delay,
                                 backoff_factor=cfg.llm_retry_backoff_factor,
+                                progress=reporter,
+                                step=step_num,
                             )
                             reporter.on_explore_llm_done(step_num, 0)
                             repaired = _parse_llm_response(_to_text(repair_response.content))

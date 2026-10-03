@@ -180,6 +180,34 @@ def test_progress_timing_excludes_raw_stderr_content():
     assert "private" not in json.dumps(summary)
 
 
+def test_progress_timing_summarizes_attempts_without_private_content():
+    stderr = b"\n".join([
+        b'{"event":"explore_llm_start","step":0,"ts":100}',
+        b'{"event":"explore_llm_attempt_start","step":0,"attempt":1,"ts":100}',
+        b'{"event":"explore_llm_attempt_done","step":0,"attempt":1,"ts":101.5,"elapsed_ms":1500,"outcome":"retry","backoff_ms":2000,"message":"private"}',
+        b'{"event":"explore_llm_attempt_start","step":0,"attempt":2,"ts":103.5}',
+        b'{"event":"explore_llm_attempt_done","step":0,"attempt":2,"ts":106,"elapsed_ms":2500,"outcome":"success","backoff_ms":0}',
+        b'{"event":"explore_llm_done","step":0,"ts":106}',
+    ])
+    summary = benchmark._safe_explore_timing(stderr, ended_at=106)
+    assert summary["attempt_seconds"] == [1.5, 2.5]
+    assert summary["retry_count"] == 1
+    assert summary["scheduled_backoff_seconds"] == 2.0
+
+
+def test_progress_timing_keeps_inflight_attempt_without_content():
+    stderr = b"\n".join([
+        b'{"event":"explore_llm_start","step":0,"ts":100}',
+        b'{"event":"explore_llm_attempt_start","step":0,"attempt":1,"ts":101,"prompt":"private"}',
+    ])
+    summary = benchmark._safe_explore_timing(stderr, ended_at=109)
+    assert summary["inflight_attempt_seconds"] == 8.0
+    assert summary["inflight_llm_seconds"] == 9.0
+    assert summary["retry_count"] == 0
+    assert "private" not in json.dumps(summary)
+    assert "private" not in json.dumps(summary)
+
+
 @pytest.mark.asyncio
 async def test_timeout_keeps_only_safe_inflight_timing(tmp_home, monkeypatch):
     class HangingProcess:
