@@ -150,16 +150,16 @@ def collect_read_only_extract_candidates(root: Any, limit: int = 20) -> list[dic
         return []
 
     candidates: list[dict[str, Any]] = []
-    pending = [root]
+    pending = [(root, None)]
     visited = 0
-    semantic_nodes: list[tuple[str, str, Any, dict[str, Any]]] = []
+    semantic_nodes: list[tuple[str, str, Any, dict[str, Any], Any]] = []
     tag_counts: dict[str, int] = {}
     while pending and visited < 5000:
-        node = pending.pop()
+        node, parent = pending.pop()
         visited += 1
         if getattr(node, "is_visible", None) is False:
             continue
-        pending.extend(reversed(getattr(node, "children_nodes", None) or []))
+        pending.extend((child, node) for child in reversed(getattr(node, "children_nodes", None) or []))
         tag = _to_text(getattr(node, "tag_name", "")).lower()
         tag_counts[tag] = tag_counts.get(tag, 0) + 1
 
@@ -170,9 +170,9 @@ def collect_read_only_extract_candidates(root: Any, limit: int = 20) -> list[dic
         attributes = getattr(node, "attributes", None)
         if not isinstance(attributes, dict):
             continue
-        semantic_nodes.append((role, tag, node, attributes))
+        semantic_nodes.append((role, tag, node, attributes, parent))
 
-    for role, tag, node, attributes in semantic_nodes:
+    for role, tag, node, attributes, parent in semantic_nodes:
         if len(candidates) >= limit:
             break
         selectors = [
@@ -184,6 +184,22 @@ def collect_read_only_extract_candidates(root: Any, limit: int = 20) -> list[dic
             selectors.append(tag)
         elif not selectors and tag in {"ul", "ol", "table"} and tag_counts[tag] == 1:
             selectors = [tag]
+        if not selectors and parent is not None and tag in {"ul", "ol", "table"}:
+            siblings = getattr(parent, "children_nodes", None) or []
+            same_kind = sum(
+                _to_text(getattr(sibling, "tag_name", "")).lower() in {"ul", "ol", "table"}
+                for sibling in siblings
+            )
+            if same_kind == 1:
+                parent_attrs = getattr(parent, "attributes", None)
+                if isinstance(parent_attrs, dict):
+                    parent_tag = _to_text(getattr(parent, "tag_name", "")).lower()
+                    anchors = [
+                        value for value in compute_selector_candidates(parent_tag, parent_attrs)
+                        if value.startswith(("#", '[data-testid="', '[aria-label="'))
+                    ]
+                    child_tag = "tr" if tag == "table" else "li"
+                    selectors = [f"{anchor} {child_tag}" for anchor in anchors[:2]]
         if not selectors:
             continue
         name = _to_text(getattr(ax_node, "name", ""))

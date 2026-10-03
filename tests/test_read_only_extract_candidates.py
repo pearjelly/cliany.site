@@ -63,6 +63,30 @@ def test_unique_semantic_output_without_id_is_a_candidate():
     assert collect_read_only_extract_candidates(root) == []
 
 
+def test_list_can_use_observed_unique_parent_anchor():
+    result_list = Node("ul", "list", "pathlib", children=[Node("li", "listitem", "pathlib")])
+    parent = Node("div", "generic", "pathlib", {"id": "search-results"}, children=[result_list])
+    root = Node("body", "generic", "", children=[Node("ul", "list", "sidebar"), parent])
+
+    assert collect_read_only_extract_candidates(root) == [
+        {"role": "list", "name": "", "text": "pathlib", "selectors": ["#search-results li"]}
+    ]
+    assert is_grounded_extract_selector("#search-results li", {}, collect_read_only_extract_candidates(root))
+
+    parent.children_nodes.append(Node("ul", "list", "other"))
+    assert collect_read_only_extract_candidates(root) == []
+
+
+def test_table_can_use_observed_unique_parent_anchor():
+    table = Node("table", "table", "Ada", children=[Node("tr", "row", "Ada")])
+    parent = Node("section", "generic", "Ada", {"data-testid": "records"}, children=[table])
+    root = Node("body", "generic", "", children=[Node("table", "table", "sidebar"), parent])
+
+    assert collect_read_only_extract_candidates(root) == [
+        {"role": "table", "name": "", "text": "Ada", "selectors": ['[data-testid="records"] tr']}
+    ]
+
+
 def test_extract_selector_requires_observed_candidate_or_semantic_child():
     selector_map = {"1": {"css_candidates": ["#count"]}}
     candidates = [
