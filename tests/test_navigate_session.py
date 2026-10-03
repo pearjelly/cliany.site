@@ -33,3 +33,22 @@ async def test_session_is_checked_and_restored_before_navigation(monkeypatch, ex
     else:
         assert result["ok"] is True
         assert observed == [("cookies", cookies), ("navigate", "https://example.com")]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("saved", [None, {}])
+async def test_missing_or_unreadable_session_does_not_navigate(monkeypatch, saved, tmp_home):
+    browser = AsyncMock()
+    cdp = SimpleNamespace(check_available=AsyncMock(return_value=True),
+                          connect=AsyncMock(return_value=browser), disconnect=AsyncMock())
+    monkeypatch.setattr("cliany_site.session.load_session_data", lambda name: saved)
+    monkeypatch.setattr("cliany_site.commands.browser.navigate.get_config",
+                        lambda: SimpleNamespace(browser_provider="chrome"))
+
+    result = await _run_navigate(cdp, "https://example.com", "load", 30, "example.com")
+
+    assert result["ok"] is False
+    assert result["error"]["code"] == "E_SESSION_EXPIRED"
+    browser._cdp_set_cookies.assert_not_awaited()
+    browser.navigate_to.assert_not_awaited()
+    cdp.disconnect.assert_awaited_once()

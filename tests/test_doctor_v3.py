@@ -203,9 +203,8 @@ def test_doctor_human_output_groups_action_items(tmp_home, no_llm, monkeypatch):
     assert "LLM API 密钥" in result.output
     assert "只安装/执行已有 adapter 可暂时忽略" in result.output
     assert "建议下一步：" in result.output
-    assert f"安装已发布案例：{ACTIVE_INSTALL_COMMAND}" in result.output
-    assert f"安装完成后严格校验：{ACTIVE_STRICT_VERIFY_COMMAND}" in result.output
-    assert f"校验通过后可执行：{ACTIVE_READ_ONLY_COMMAND}" in result.output
+    assert "获取首条只读结果：cliany-site demo --case-id apache-jira-issues --json" in result.output
+    assert ACTIVE_INSTALL_COMMAND not in result.output
     assert "查看可直接运行的公开案例：cliany-site cases" not in result.output
     assert "Existing adapter runtime ready" not in result.output
     assert "blocked by:" not in result.output
@@ -241,11 +240,8 @@ def test_doctor_recommends_verify_first_for_existing_active_demo_adapter(tmp_hom
     assert quickstart["recommended_commands"] == [ACTIVE_STRICT_VERIFY_COMMAND, ACTIVE_READ_ONLY_COMMAND]
     assert summary["recommended_next_step"] == ACTIVE_DEMO_ALREADY_INSTALLED_RECOMMENDATION
     assert "建议下一步：" in human_result.output
-    assert f"先校验已安装案例：{ACTIVE_STRICT_VERIFY_COMMAND}" in human_result.output
-    assert f"校验通过后可执行：{ACTIVE_READ_ONLY_COMMAND}" in human_result.output
+    assert "获取首条只读结果：cliany-site demo --case-id apache-jira-issues --json" in human_result.output
     assert ACTIVE_INSTALL_COMMAND not in human_result.output
-    assert ACTIVE_STRICT_VERIFY_COMMAND in human_result.output
-    assert ACTIVE_READ_ONLY_COMMAND in human_result.output
 
 
 def test_demo_adapter_quickstart_avoids_install_for_an_occupied_target(tmp_home):
@@ -408,6 +404,41 @@ def test_demo_adapter_quickstart_does_not_promote_candidate(monkeypatch):
     assert quickstart["available"] is False
     assert quickstart["commands"] == []
     assert quickstart["replacement"] == "case_catalog_quickstart"
+
+
+def test_doctor_human_falls_back_to_cases_without_active_demo(tmp_home, no_llm, monkeypatch):
+    class MockCDP:
+        def __init__(self, cdp_url=None, headless=None):
+            pass
+
+        async def check_available(self):
+            return True
+
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
+    monkeypatch.setattr(cases_module, "_load_cases_manifest", lambda: ([], None, []))
+
+    result = CliRunner().invoke(cli, ["doctor"], catch_exceptions=False)
+
+    assert result.exit_code == 0
+    assert "查看可直接运行的公开案例：cliany-site cases" in result.output
+    assert "cliany-site demo --case-id" not in result.output
+
+
+def test_doctor_human_does_not_offer_untrusted_demo_case_id(tmp_home, capsys):
+    from cliany_site.envelope import ok
+
+    doctor_module._print_doctor_human(ok("doctor", {
+        "checks": [],
+        "summary": {
+            "ready_for_existing_adapters": True,
+            "ready_for_demo_adapters": True,
+            "demo_adapter_quickstart": {"case_id": "apache-jira-issues; echo unsafe"},
+        },
+    }))
+
+    output = capsys.readouterr().out
+    assert "查看可直接运行的公开案例：cliany-site cases" in output
+    assert "echo unsafe" not in output
 
 
 def test_doctor_does_not_call_llm_live_by_default(tmp_home, no_llm, monkeypatch):

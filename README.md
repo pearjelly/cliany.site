@@ -26,7 +26,7 @@ cliany-site cases
 cliany-site demo --case-id apache-jira-issues --json
 ```
 
-`doctor` gives you a human-readable next step. `cliany-site cases --status active` lists maintained public cases; `demo` installs a pinned no-login adapter only if absent, verifies it strictly, then runs a read-only query and requires at least one result row. Jira and Confluence are supported; login-required and candidate cases are not. Follow the [10-minute success path](docs/quickstart-10min.md) for prerequisites, or configure Chrome/CDP and an LLM when you are ready to generate a command for your own site.
+`doctor` gives you a human-readable next step. `cliany-site cases --status active` lists maintained public cases; `demo` installs a pinned no-login adapter only if absent, verifies it strictly, then runs a read-only query and requires at least one result row. Jira, Confluence, and Jenkins are supported; login-required and candidate cases are not. Follow the [10-minute success path](docs/quickstart-10min.md) for prerequisites, or configure Chrome/CDP and an LLM when you are ready to generate a command for your own site.
 
 ### Tell us what happened
 
@@ -349,6 +349,9 @@ cliany-site demo.suiteondemand.com list-accounts --limit 5 --json
 ```
 
 ### ASF Jira (Issue Tracker)
+
+The published PyPI v0.16.368 CLI repeated the fixed-hash first-run path in a fresh HOME, returning five read-only Spark issues; a second run reused the verified adapter. See the [dated audit](docs/user-evidence/2026-10-02-jira-pypi-demo-audit.md). Third-party availability and issue totals can change.
+
 ```bash
 cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/issues.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 ad5867d361f372914c536fb59c8f26837af96ed407859cf69dc8464922f05319
 cliany-site verify issues.apache.org --strict --json

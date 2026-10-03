@@ -140,7 +140,7 @@ def execute_steps_via_atoms(
     token = _workflow_browser.set(browser)
     try:
         if source_url:
-            nav_result = run_atom(["browser", "navigate", source_url], session=domain)
+            nav_result = run_atom(["browser", "navigate", source_url], session=_navigation_session(domain))
             results.append(nav_result)
             if not nav_result.get("ok"):
                 return results
@@ -179,7 +179,7 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
                 message="navigate 步骤缺少目标 url",
                 source="builtin",
             )
-        return run_atom(["browser", "navigate", url], session=domain)
+        return run_atom(["browser", "navigate", url], session=_navigation_session(domain))
 
     if action_type == "click":
         args: list[str] = ["browser", "click"]
@@ -270,6 +270,12 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
         message=f"未知操作类型: {action_type!r}",
         source="builtin",
     )
+
+
+def _navigation_session(domain: str) -> str | None:
+    from cliany_site.session import _session_path
+
+    return domain if _session_path(domain).is_file() else None
 
 
 def summarize_extract_quality(
