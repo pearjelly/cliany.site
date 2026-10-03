@@ -1,4 +1,4 @@
-"""Field selectors must not borrow text or links from neighboring results."""
+"""Missing result fields must not borrow values from neighboring rows."""
 
 from pathlib import Path
 

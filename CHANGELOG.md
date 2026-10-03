@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+## [0.16.372] - 2026-10-04
+
+### Fixed
+
+- A missing result link or snippet no longer borrows a neighboring row's URL or the whole row's text. Structured extraction leaves that field blank so the existing quality gate reports the incomplete row instead of returning misleading data.
+
+### Evidence
+
+- The new Chromium regression first reproduced a second-row URL incorrectly copied from the first row, then passed with this change. PR #48 passed full offline, embodied Chromium, Python 3.11-3.13, Windows, Ruff, and Mypy checks. This does not establish generated-workflow reliability or independent-user success.
+
 ## [0.16.371] - 2026-10-03
 
 ### Changed
@@ -3328,7 +3338,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.371...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.372...HEAD
+[0.16.372]: https://github.com/pearjelly/cliany.site/compare/v0.16.371...v0.16.372
 [0.16.371]: https://github.com/pearjelly/cliany.site/compare/v0.16.370...v0.16.371
 [0.16.370]: https://github.com/pearjelly/cliany.site/compare/v0.16.369...v0.16.370
 [0.16.369]: https://github.com/pearjelly/cliany.site/compare/v0.16.368...v0.16.369
