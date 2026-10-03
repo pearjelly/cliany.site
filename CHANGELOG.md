@@ -7,6 +7,17 @@
 
 ## [Unreleased]
 
+## [0.16.370] - 2026-10-03
+
+### Changed
+
+- Human-readable `doctor` output now offers one `demo --case-id ... --json` command for a published, active, no-login case when the existing-adapter runtime is ready. The command installs only when the target is absent, verifies strictly, and returns a nonempty read-only result or a nonzero failure. Machine-readable `doctor` fields and the LLM live-preflight boundary are unchanged.
+- The public roadmap links the October value plan. That plan records the completed v0.16.369 publication, the still-unverified independent first-user path, and the controlled generated-command result of 25/30; neither an API-backed demo nor a green release gate is treated as proof of reliable browser-generated workflows.
+
+### Evidence
+
+- In a fresh isolated HOME on the v0.16.369-based candidate, `doctor` printed one copyable Jira demo command; running it installed and strictly verified the public adapter and returned five nonblank SPARK issue rows. This maintainer-run, API-backed read-only check does not satisfy the two independent-user trials in Issue #33 or the browser-generation acceptance target.
+
 ## [0.16.369] - 2026-10-03
 
 ### Fixed
@@ -3306,7 +3317,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.369...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.370...HEAD
+[0.16.370]: https://github.com/pearjelly/cliany.site/compare/v0.16.369...v0.16.370
 [0.16.369]: https://github.com/pearjelly/cliany.site/compare/v0.16.368...v0.16.369
 [0.16.368]: https://github.com/pearjelly/cliany.site/compare/v0.16.367...v0.16.368
 [0.16.367]: https://github.com/pearjelly/cliany.site/compare/v0.16.366...v0.16.367
