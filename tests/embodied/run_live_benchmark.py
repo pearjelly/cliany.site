@@ -284,6 +284,7 @@ def _safe_explore_timing(stderr: bytes, *, ended_at: float) -> dict[str, Any] | 
     waits: list[float] = []
     attempt_starts: dict[tuple[int, int], float] = {}
     attempt_seconds: list[float] = []
+    attempt_outcomes: list[str] = []
     retry_count = 0
     scheduled_backoff_seconds = 0.0
     for line in stderr.splitlines():
@@ -321,6 +322,9 @@ def _safe_explore_timing(stderr: bytes, *, ended_at: float) -> dict[str, Any] | 
                         or not math.isfinite(elapsed) or elapsed < 0):
                     continue
                 attempt_seconds.append(round(float(elapsed) / 1000, 2))
+                attempt_outcomes.append(
+                    outcome if isinstance(outcome, str) and outcome in {"success", "retry", "error"} else "unknown"
+                )
                 if (outcome == "retry" and isinstance(backoff, (int, float))
                         and not isinstance(backoff, bool) and math.isfinite(backoff) and backoff >= 0):
                     retry_count += 1
@@ -333,6 +337,7 @@ def _safe_explore_timing(stderr: bytes, *, ended_at: float) -> dict[str, Any] | 
         summary["inflight_llm_seconds"] = round(max(0.0, ended_at - latest), 2)
     if attempt_seconds or attempt_starts:
         summary["attempt_seconds"] = attempt_seconds[:20]
+        summary["attempt_outcomes"] = attempt_outcomes[:20]
         summary["retry_count"] = retry_count
         summary["scheduled_backoff_seconds"] = round(scheduled_backoff_seconds, 2)
     if attempt_starts:

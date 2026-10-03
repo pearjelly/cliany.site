@@ -191,6 +191,7 @@ def test_progress_timing_summarizes_attempts_without_private_content():
     ])
     summary = benchmark._safe_explore_timing(stderr, ended_at=106)
     assert summary["attempt_seconds"] == [1.5, 2.5]
+    assert summary["attempt_outcomes"] == ["retry", "success"]
     assert summary["retry_count"] == 1
     assert summary["scheduled_backoff_seconds"] == 2.0
 
@@ -204,6 +205,17 @@ def test_progress_timing_keeps_inflight_attempt_without_content():
     assert summary["inflight_attempt_seconds"] == 8.0
     assert summary["inflight_llm_seconds"] == 9.0
     assert summary["retry_count"] == 0
+    assert "private" not in json.dumps(summary)
+
+
+def test_progress_timing_drops_unrecognized_attempt_outcome():
+    stderr = b"\n".join([
+        b'{"event":"explore_llm_attempt_start","step":0,"attempt":1,"ts":100}',
+        b'{"event":"explore_llm_attempt_done","step":0,"attempt":1,"ts":101,'
+        b'"elapsed_ms":1000,"outcome":"private response"}',
+    ])
+    summary = benchmark._safe_explore_timing(stderr, ended_at=101)
+    assert summary["attempt_outcomes"] == ["unknown"]
     assert "private" not in json.dumps(summary)
     assert "private" not in json.dumps(summary)
 
