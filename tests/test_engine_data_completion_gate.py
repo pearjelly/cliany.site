@@ -329,14 +329,33 @@ async def test_partition_repair_changes_only_ownership_without_replaying_actions
 @pytest.mark.asyncio
 @pytest.mark.parametrize("action_steps", [[], [0]])
 async def test_no_action_command_fails_without_partition_repair(mocker, tmp_home, action_steps):
-    invoke = _prepare(mocker, [{
+    response = {
         "actions": [], "commands": [{"name": "inspect-beta", "action_steps": action_steps}], "done": True,
-    }], [[]])
+    }
+    invoke = _prepare(mocker, [response, response], [[], []])
 
     with pytest.raises(RuntimeError, match="命令动作分区无效"):
         await WorkflowExplorer().explore("https://example.com/search", "检查按钮", record=False)
 
-    assert invoke.await_count == 1
+    assert invoke.await_count == 2
+    assert "未录制任何页面动作" in invoke.await_args_list[1].args[1]
+
+
+@pytest.mark.asyncio
+async def test_no_action_command_gets_one_action_planning_retry(mocker, tmp_home):
+    invoke = _prepare(mocker, [
+        {"actions": [], "commands": [{"name": "inspect-beta", "action_steps": [0]}], "done": True},
+        {"actions": [{"type": "click", "ref": "1"}],
+         "commands": [{"name": "inspect-beta", "action_steps": [0]}], "done": True},
+    ], [[], []])
+    execute = mocker.patch("cliany_site.explorer.engine.execute_action_steps", new_callable=AsyncMock)
+
+    result = await WorkflowExplorer().explore("https://example.com/search", "检查按钮", record=False)
+
+    assert invoke.await_count == 2
+    assert result.commands[0].action_steps == [0]
+    assert result.partition_repair_attempts == 0
+    assert [call.args[1] for call in execute.await_args_list if call.args[1]] == [[{"type": "click", "ref": "1"}]]
 
 
 @pytest.mark.asyncio

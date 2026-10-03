@@ -328,7 +328,7 @@ async def test_action_replay_changes_real_page_only_outside_dry_run(
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "entrypoint", ["sdk", "http", "cli", "workflow", "batch", "batch_requested_parallel",
-                   "explore_cli", "explore_cli_missing_command"],
+                   "explore_cli", "explore_cli_missing_command", "explore_cli_no_action"],
 )
 async def test_generated_adapter_returns_real_form_data(
     local_server, headless_browser_cdp_url, fallback_browser, tmp_home, entrypoint, monkeypatch
@@ -350,7 +350,7 @@ async def test_generated_adapter_returns_real_form_data(
         pages=[PageInfo(url, "Browser command fixture")], actions=actions,
         commands=[CommandSuggestion("read-name", "Read form result", [{"name": "name", "required": True}], [0, 1, 2])],
     )
-    if entrypoint in ("explore_cli", "explore_cli_missing_command"):
+    if entrypoint in ("explore_cli", "explore_cli_missing_command", "explore_cli_no_action"):
         from types import SimpleNamespace
 
         from cliany_site.explorer import engine
@@ -369,16 +369,24 @@ async def test_generated_adapter_returns_real_form_data(
 
             async def ainvoke(self, prompt):
                 self.calls += 1
-                if self.calls == 2:
-                    assert entrypoint == "explore_cli_missing_command"
-                    assert '"value": "Ada"' not in prompt
-                    assert '"target_name": "Name"' in prompt
+                if entrypoint == "explore_cli_no_action" and self.calls == 1:
                     return SimpleNamespace(content=json.dumps({
                         "actions": [], "done": True,
-                        "commands": [{"name": "read-name", "description": "Read form result",
-                                      "args": [], "action_steps": [0, 1, 2]}],
+                        "commands": [{"name": "read-name", "action_steps": [0, 1, 2]}],
                     }))
-                assert self.calls == 1
+                if self.calls == 2:
+                    if entrypoint == "explore_cli_missing_command":
+                        assert '"value": "Ada"' not in prompt
+                        assert '"target_name": "Name"' in prompt
+                        return SimpleNamespace(content=json.dumps({
+                            "actions": [], "done": True,
+                            "commands": [{"name": "read-name", "description": "Read form result",
+                                          "args": [], "action_steps": [0, 1, 2]}],
+                        }))
+                    assert entrypoint == "explore_cli_no_action"
+                    assert "未录制任何页面动作" in prompt
+                else:
+                    assert self.calls == 1
                 nodes = observed[-1]["selector_map"]
                 name_ref = next(ref for ref, node in nodes.items() if node["name"] == "Name" and node["role"] == "textbox")
                 apply_ref = next(ref for ref, node in nodes.items() if node["name"] == "Apply" and node["role"] == "button")
@@ -402,7 +410,7 @@ async def test_generated_adapter_returns_real_form_data(
         result = await engine.WorkflowExplorer(cdp_url=headless_browser_cdp_url).explore(
             url, "Enter Ada, apply, and extract the resulting name as a reusable command", record=False,
         )
-        assert model.calls == (2 if entrypoint == "explore_cli_missing_command" else 1)
+        assert model.calls == (1 if entrypoint == "explore_cli" else 2)
         assert result.partition_repair_attempts == (1 if entrypoint == "explore_cli_missing_command" else 0)
         assert [action.action_type for action in result.actions] == ["type", "click", "extract"]
         assert result.actions[0].target_name == "Name"

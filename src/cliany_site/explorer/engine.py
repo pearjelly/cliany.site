@@ -853,7 +853,8 @@ class WorkflowExplorer:
             all_extraction_results: list = []
             data_completion_repairs = 0
             partition_repairs = 0
-            data_completion_feedback = ""
+            empty_completion_retries = 0
+            completion_feedback = ""
 
             for step_num in range(cfg.explore_max_steps):
                 step_start = time.monotonic()
@@ -892,8 +893,8 @@ class WorkflowExplorer:
                     completed_action_count=len(result.actions),
                 )
 
-                if data_completion_feedback:
-                    prompt_text = f"{prompt_text}\n\n{data_completion_feedback}"
+                if completion_feedback:
+                    prompt_text = f"{prompt_text}\n\n{completion_feedback}"
 
                 atom_inventory = build_atom_inventory_section(domain)
                 if atom_inventory:
@@ -1145,6 +1146,16 @@ class WorkflowExplorer:
                             "完成响应中的 commands 必须为命令列表，请重新探索",
                             reason="command_list_invalid",
                         )
+                    if (interactive_ctrl is None and commands_data and not result.actions
+                            and empty_completion_retries == 0
+                            and step_num + 1 < cfg.explore_max_steps):
+                        empty_completion_retries = 1
+                        completion_feedback = (
+                            "上一轮未录制任何页面动作，不能生成可复用命令。"
+                            "请根据当前页面的 AX 引用实际执行工作流动作；"
+                            "只有动作录制完成后才能声明 commands，不要猜测 URL 或动作结果。"
+                        )
+                        continue
                     if result.actions or commands_data:
                         try:
                             if result.actions and not commands_data:
@@ -1220,7 +1231,7 @@ class WorkflowExplorer:
                         }
                         if can_repair:
                             data_completion_repairs += 1
-                            data_completion_feedback = _data_completion_feedback(completion_failures)
+                            completion_feedback = _data_completion_feedback(completion_failures)
                             logger.info(
                                 "步骤 %d 的数据命令未通过完成门禁，发起第 %d 次修正",
                                 step_num + 1,
