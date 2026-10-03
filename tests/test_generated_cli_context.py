@@ -49,8 +49,9 @@ def test_recorded_type_replaces_existing_field_value(monkeypatch):
     ("[]", []),
     ("[malformed", "[malformed"),
 ])
-async def test_structured_extract_decodes_browser_json(raw, expected):
+async def test_structured_extract_decodes_browser_json(raw, expected, mocker):
     page = SimpleNamespace(evaluate=AsyncMock(return_value=raw))
     session = SimpleNamespace(get_current_page=AsyncMock(return_value=page))
+    mocker.patch("cliany_site.commands.browser.extract._wait_for_list_settle", new=AsyncMock(return_value=True))
     result = await _do_structured_extract(session, "output", "list", {"name": ""})
     assert result == expected

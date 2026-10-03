@@ -25,6 +25,11 @@ def runner():
 
 
 class TestBrowserExtract:
+    @pytest.fixture(autouse=True)
+    def settled_lists(self):
+        with patch("cliany_site.commands.browser.extract._wait_for_list_settle", AsyncMock(return_value=True)):
+            yield
+
     def test_extract_success(self, no_llm, runner):
         mock_page = MagicMock()
         mock_page.evaluate = AsyncMock(return_value=json.dumps({"found": True, "content": "Hello World"}))

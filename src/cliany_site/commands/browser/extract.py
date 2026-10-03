@@ -11,7 +11,7 @@ from cliany_site.browser.cdp import cdp_from_context
 from cliany_site.commands.browser import browser_group
 from cliany_site.commands.browser._common import print_envelope
 from cliany_site.envelope import Envelope, ErrorCode, err, ok
-from cliany_site.extract import _coerce_json_like_extract_data, build_extract_js
+from cliany_site.extract import _coerce_json_like_extract_data, _wait_for_list_settle, build_extract_js
 from cliany_site.extract_quality import evaluate_extract_quality
 
 
@@ -176,6 +176,14 @@ async def _do_structured_extract(
                 code=ErrorCode.E_PARSE_FAILED,
                 message="无法获取当前页面",
                 details={"selector": selector, "mode": mode},
+            )
+        if mode in {"list", "table"} and not await _wait_for_list_settle(page, selector):
+            return err(
+                command="browser extract",
+                code=ErrorCode.E_PAGE_NOT_READY,
+                message="列表结果未稳定，停止提取以免返回不完整数据",
+                details={"selector": selector, "mode": mode, "reason": "list_unsettled"},
+                source="builtin",
             )
         return cast(object, _coerce_json_like_extract_data(await page.evaluate(js_expr)))
     except (OSError, RuntimeError, ValueError) as exc:

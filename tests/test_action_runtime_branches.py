@@ -6,9 +6,9 @@ import pytest
 from cliany_site.action_runtime import (
     _attempt_adaptive_repair,
     _resolve_action_node,
-    _wait_for_list_settle,
     execute_action_steps,
 )
+from cliany_site.extract import _wait_for_list_settle
 
 
 class _AwaitableEvent:
@@ -55,7 +55,7 @@ async def test_list_settle_probe_failure_does_not_accept_partial_result():
 @pytest.mark.asyncio
 async def test_list_settle_timeout_does_not_accept_loading_result(monkeypatch):
     ticks = iter([0.0, 0.0, 11.0])
-    monkeypatch.setattr("cliany_site.action_runtime.time", SimpleNamespace(monotonic=lambda: next(ticks)))
+    monkeypatch.setattr("cliany_site.extract.time", SimpleNamespace(monotonic=lambda: next(ticks)))
     page = SimpleNamespace(evaluate=mock.AsyncMock(return_value='{"count":3,"loading":true}'))
 
     assert await _wait_for_list_settle(page, "li.result") is False

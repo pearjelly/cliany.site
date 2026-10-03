@@ -1,7 +1,6 @@
 import asyncio
 import contextlib
 import copy
-import json
 import logging
 import re
 import time
@@ -16,7 +15,7 @@ from cliany_site.capability import ApiEndpoint, route_action
 from cliany_site.config import get_config
 from cliany_site.envelope import ErrorCode
 from cliany_site.errors import ClanySiteError
-from cliany_site.extract import _coerce_json_like_extract_data, build_extract_js
+from cliany_site.extract import _coerce_json_like_extract_data, _wait_for_list_settle, build_extract_js
 from cliany_site.progress import NullProgressReporter, ProgressReporter
 
 logger = logging.getLogger(__name__)
@@ -72,41 +71,6 @@ def _get_resolve_max_retries() -> int:
 
 def _get_adaptive_repair_max_attempts() -> int:
     return get_config().adaptive_repair_max_attempts
-
-
-async def _wait_for_list_settle(page: Any, selector: str) -> bool:
-    script = f"""() => {{
-        const rows = document.querySelectorAll({json.dumps(selector)});
-        const first = rows[0];
-        const scope = first?.closest('ul, ol, table')?.parentElement || first?.parentElement || document.body;
-        const busy = scope.querySelector('[aria-busy="true"], [role="progressbar"]') !== null;
-        const loading = [...scope.querySelectorAll('h1, h2, h3, h4, [role="status"]')].some(node => {{
-            const label = (node.textContent || '').trim().toLowerCase().replace(/[.\\s…。]+$/g, '');
-            return ['searching', 'loading', 'fetching', '正在搜索', '加载中'].includes(label);
-        }});
-        return {{count: rows.length, loading: busy || loading}};
-    }}"""
-    deadline = time.monotonic() + 10.0
-    previous: tuple[int, bool] | None = None
-    stable_since = time.monotonic()
-    while True:
-        try:
-            state = _coerce_json_like_extract_data(await page.evaluate(script))
-        except Exception as exc:
-            logger.debug("list settle probe unavailable: %s", exc)
-            return False
-        if not isinstance(state, dict) or "count" not in state or "loading" not in state:
-            return False
-        current = (int(state["count"]), bool(state["loading"]))
-        now = time.monotonic()
-        if current != previous or current[1]:
-            stable_since = now
-        elif now - stable_since >= 1.0:
-            return True
-        if now >= deadline:
-            return False
-        previous = current
-        await asyncio.sleep(0.25)
 
 
 def _adaptive_repair_enabled() -> bool:
