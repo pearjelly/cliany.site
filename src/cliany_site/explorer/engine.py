@@ -962,15 +962,6 @@ class WorkflowExplorer:
                 parsed = _parse_llm_response(response_text)
 
                 actions_data = _sanitize_actions_data(parsed.get("actions", []), tree.get("url", ""))
-                if "extract_candidates" in tree:
-                    for action_data in actions_data:
-                        if action_data.get("type") == "extract" and not is_grounded_extract_selector(
-                            str(action_data.get("selector") or ""), selector_map, tree["extract_candidates"]
-                        ):
-                            raise ExploreContractError(
-                                "提取选择器未在当前页面的 AX 候选中证实；请重新探索",
-                                reason="extract_selector_ungrounded",
-                            )
                 reporter.on_explore_llm_done(step_num, len(actions_data))
 
                 if interactive_ctrl is not None:
@@ -1054,8 +1045,21 @@ class WorkflowExplorer:
                     completed_steps_text = "\n".join(f"{i}. {desc}" for i, desc in enumerate(completed_steps))
 
                 _extraction_results: list = []
+                async def validate_extract(session: Any, action_data: dict[str, Any], _index: int) -> None:
+                    snapshot = await capture_axtree(session)
+                    if not is_grounded_extract_selector(
+                        str(action_data.get("selector") or ""),
+                        snapshot.get("selector_map") or {},
+                        snapshot.get("extract_candidates") or [],
+                    ):
+                        raise ExploreContractError(
+                            "提取选择器未在当前页面的 AX 候选中证实；请重新探索",
+                            reason="extract_selector_ungrounded",
+                        )
+
                 await execute_action_steps(
-                    browser_session, actions_data, continue_on_error=True, extraction_results=_extraction_results
+                    browser_session, actions_data, continue_on_error=True,
+                    extraction_results=_extraction_results, before_extract=validate_extract,
                 )
                 for extraction_result in _extraction_results:
                     if not isinstance(extraction_result, dict):

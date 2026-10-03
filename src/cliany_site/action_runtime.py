@@ -578,6 +578,7 @@ async def execute_action_steps(
     dry_run: bool = False,
     extraction_results: list | None = None,
     metadata: dict | None = None,
+    before_extract: Callable[[Any, dict[str, Any], int], Awaitable[None]] | None = None,
 ) -> None:
     import importlib
     from datetime import datetime
@@ -660,6 +661,9 @@ async def execute_action_steps(
                 logger.debug("跳过已完成步骤 %d (start_index=%d)", idx, start_index)
                 completed_indices.append(idx)
                 continue
+
+            if action_type == "extract" and not dry_run and before_extract is not None:
+                await before_extract(browser_session, action_data, idx)
 
             step_start = time.monotonic()
             step_page_url = ""

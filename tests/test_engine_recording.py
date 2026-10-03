@@ -140,12 +140,20 @@ class TestWorkflowExplorerRecording:
         mocks["capture_axtree"].return_value["extract_candidates"] = [
             {"role": "list", "selectors": ["#results"]}
         ]
+        evaluated = False
+
+        async def execute(session, actions, *, before_extract, **_kwargs):
+            nonlocal evaluated
+            await before_extract(session, actions[0], 0)
+            evaluated = True
+
+        mocks["execute"].side_effect = execute
 
         with pytest.raises(ExploreContractError) as error:
             await WorkflowExplorer().explore("https://example.com/start", "读取结果")
 
         assert error.value.reason == "extract_selector_ungrounded"
-        mocks["execute"].assert_not_awaited()
+        assert not evaluated
 
     @pytest.mark.asyncio
     async def test_step_limit_finalizes_recording_as_incomplete(self, mocker, tmp_home):

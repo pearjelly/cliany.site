@@ -18,6 +18,26 @@ class _BrowserSession:
 
 
 @pytest.mark.asyncio
+async def test_extract_preflight_failure_propagates_with_continue_on_error(mocker):
+    page = mocker.AsyncMock()
+    session = mocker.AsyncMock()
+    session.get_current_page.return_value = page
+
+    async def reject(_session, _action, _index):
+        raise ValueError("selector not grounded")
+
+    with pytest.raises(ValueError, match="selector not grounded"):
+        await execute_action_steps(
+            session,
+            [{"type": "extract", "selector": "#guessed", "extract_mode": "text"}],
+            continue_on_error=True,
+            before_extract=reject,
+        )
+
+    page.evaluate.assert_not_awaited()
+
+
+@pytest.mark.asyncio
 async def test_extract_failure_is_recorded_when_continue_on_error(mocker):
     mocker.patch("cliany_site.action_runtime.asyncio.sleep", new=mocker.AsyncMock())
     extraction_results: list[dict] = []

@@ -19,6 +19,60 @@ def _pick_free_port() -> int:
 
 
 @pytest.mark.embodied
+@pytest.mark.asyncio
+async def test_extract_selector_is_grounded_after_preceding_click(
+    local_server, headless_browser_cdp_url, tmp_home, monkeypatch,
+):
+    from types import SimpleNamespace
+
+    from cliany_site.explorer import engine
+
+    url = f"{local_server}/delayed_extract.html"
+    snapshots = []
+    capture = engine.capture_axtree
+
+    async def observe(session):
+        tree = await capture(session)
+        snapshots.append(tree)
+        return tree
+
+    class ScriptedModel:
+        model = "offline-delayed-extract"
+
+        async def ainvoke(self, _prompt):
+            button_ref = next(
+                ref for ref, node in snapshots[0]["selector_map"].items()
+                if node["name"] == "Show result" and node["role"] == "button"
+            )
+            return SimpleNamespace(content=json.dumps({
+                "actions": [
+                    {"type": "click", "ref": button_ref},
+                    {"type": "extract", "selector": "#dynamic-result", "extract_mode": "text"},
+                ],
+                "commands": [{"name": "read-status", "description": "Read result", "args": [], "action_steps": [0, 1]}],
+                "done": True,
+            }))
+
+    monkeypatch.setattr(engine, "capture_axtree", observe)
+    monkeypatch.setattr(engine, "_get_llm", lambda **_kwargs: ScriptedModel())
+
+    result = await engine.WorkflowExplorer(cdp_url=headless_browser_cdp_url).explore(
+        url, "Click Show result and read the new status", record=False,
+    )
+
+    assert all(
+        "#dynamic-result" not in item.get("selectors", [])
+        for item in snapshots[0]["extract_candidates"]
+    )
+    assert any(
+        "#dynamic-result" in item.get("selectors", [])
+        for item in snapshots[-1]["extract_candidates"]
+    )
+    assert [action.action_type for action in result.actions] == ["click", "extract"]
+    assert result.commands[0].name == "read-status"
+
+
+@pytest.mark.embodied
 def test_generated_command_reuses_auto_launched_chrome(local_server, tmp_home, monkeypatch):
     import os
     import pwd
