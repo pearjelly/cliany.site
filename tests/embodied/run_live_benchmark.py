@@ -198,6 +198,15 @@ def _safe_explore_quality_diagnostics(error: dict[str, Any]) -> dict[str, Any] |
         mode = item.get("extract_mode")
         if isinstance(mode, str) and mode in {"text", "attribute", "list", "table"}:
             row["extract_mode"] = mode
+        if reason == "extraction_execution_failed":
+            execution_error = item.get("error")
+            if isinstance(execution_error, dict):
+                code = execution_error.get("code")
+                if isinstance(code, str) and code in {"E_PARSE_FAILED", "E_SELECTOR_NOT_FOUND"}:
+                    row["error_code"] = code
+                if "selector" in execution_error:
+                    selector = execution_error["selector"]
+                    row["selector_present"] = isinstance(selector, str) and bool(selector.strip())
         quality = item.get("quality")
         if isinstance(quality, dict):
             status = quality.get("status")

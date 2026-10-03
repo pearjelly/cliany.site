@@ -80,6 +80,15 @@ def test_allowed_zero_match_does_not_hide_empty_count_text():
     assert _data_command_completion_failures(command, actions, evidence) == []
 
 
+def test_extract_execution_failure_keeps_mode_for_safe_diagnostics():
+    actions = [ActionStep("extract", "https://example.com/search", extract_mode="list")]
+    command = [_data_command([0], expects_nonempty=False)]
+    evidence = [{"action_index": 0, "ok": False, "error": {"code": "E_PARSE_FAILED"}}]
+    failures = _data_command_completion_failures(command, actions, evidence)
+    assert failures[0]["reason"] == "extraction_execution_failed"
+    assert failures[0]["extract_mode"] == "list"
+
+
 @pytest.mark.asyncio
 async def test_prefixed_ref_keeps_recorded_semantics_for_replay(mocker, tmp_home):
     _prepare(

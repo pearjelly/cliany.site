@@ -87,6 +87,37 @@ def test_explore_quality_diagnostics_keep_structure_without_page_content():
     assert "private" not in json.dumps(summary)
 
 
+def test_explore_execution_failure_exposes_only_safe_error_shape():
+    error = {
+        "code": "E_EMPTY_RESULT",
+        "details": {
+            "repair_attempts": 1,
+            "data_commands": [{
+                "reason": "extraction_execution_failed",
+                "action_index": 3,
+                "extract_mode": "list",
+                "error": {
+                    "code": "E_PARSE_FAILED",
+                    "message": "private page text",
+                    "selector": "#private-selector",
+                },
+            }],
+        },
+    }
+    summary = benchmark._safe_explore_quality_diagnostics(error)
+    assert summary == {
+        "repair_attempts": 1,
+        "failures": [{
+            "reason": "extraction_execution_failed",
+            "action_index": 3,
+            "extract_mode": "list",
+            "error_code": "E_PARSE_FAILED",
+            "selector_present": True,
+        }],
+    }
+    assert "private" not in json.dumps(summary)
+
+
 def test_replay_quality_diagnostics_keep_modes_without_page_content():
     error = {
         "code": "E_EMPTY_RESULT",

@@ -173,6 +173,7 @@ def _data_command_completion_failures(
                         **base_failure,
                         "reason": "extraction_execution_failed",
                         "action_index": action_index,
+                        "extract_mode": actions[action_index].extract_mode,
                         "error": latest_evidence.get("error"),
                     }
                 )
