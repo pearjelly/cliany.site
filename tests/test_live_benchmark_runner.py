@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import importlib.util
 import json
 import subprocess
@@ -151,6 +152,48 @@ def test_replay_quality_diagnostics_keep_modes_without_page_content():
         ],
     }
     assert "private" not in json.dumps(summary)
+
+
+def test_progress_timing_excludes_raw_stderr_content():
+    stderr = b"\n".join([
+        b'{"event":"explore_start","url":"private url","workflow":"private workflow","ts":100}',
+        b'{"event":"explore_llm_start","step":0,"ts":101}',
+        b'private page text',
+        b'{"event":"explore_llm_done","step":0,"actions_count":2,"ts":104.5}',
+        b'{"event":"explore_llm_start","step":1,"ts":106}',
+    ])
+    summary = benchmark._safe_explore_timing(stderr, ended_at=109)
+    assert summary == {"llm_wait_seconds": [3.5], "inflight_llm_seconds": 3.0}
+    assert "private" not in json.dumps(summary)
+
+
+@pytest.mark.asyncio
+async def test_timeout_keeps_only_safe_inflight_timing(tmp_home, monkeypatch):
+    class HangingProcess:
+        def __init__(self):
+            self.stopped = asyncio.Event()
+
+        async def communicate(self):
+            await self.stopped.wait()
+            return b"private stdout", (
+                f'{{"event":"explore_llm_start","step":0,"ts":{benchmark.time.time() - 1}}}\n'
+                "private page text"
+            ).encode()
+
+        def kill(self):
+            self.stopped.set()
+
+    process = HangingProcess()
+
+    async def launch(*_args, **_kwargs):
+        return process
+
+    monkeypatch.setattr(benchmark.asyncio, "create_subprocess_exec", launch)
+    result, _ = await benchmark._run_cli(tmp_home, ["explore"], timeout=0.01)
+    assert result["error"]["code"] == "BENCHMARK_TIMEOUT"
+    assert result["benchmark_timing"]["llm_wait_seconds"] == []
+    assert 1 <= result["benchmark_timing"]["inflight_llm_seconds"] < 2
+    assert "private" not in json.dumps(result)
 
 
 @pytest.mark.asyncio

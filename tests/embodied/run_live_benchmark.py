@@ -6,6 +6,7 @@ import argparse
 import asyncio
 import importlib.metadata
 import json
+import math
 import os
 import re
 import socket
@@ -261,6 +262,34 @@ def _safe_replay_quality_diagnostics(error: dict[str, Any]) -> dict[str, Any] | 
     return {"status": overall_status, "extracts": extracts}
 
 
+def _safe_explore_timing(stderr: bytes, *, ended_at: float) -> dict[str, Any] | None:
+    starts: dict[int, float] = {}
+    waits: list[float] = []
+    for line in stderr.splitlines():
+        try:
+            event = json.loads(line)
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            continue
+        if not isinstance(event, dict) or event.get("event") not in {"explore_llm_start", "explore_llm_done"}:
+            continue
+        step, ts = event.get("step"), event.get("ts")
+        if type(step) is not int or step < 0 or not isinstance(ts, (int, float)) or isinstance(ts, bool):
+            continue
+        if not math.isfinite(ts):
+            continue
+        if event["event"] == "explore_llm_start":
+            starts[step] = float(ts)
+        elif step in starts and ts >= starts[step]:
+            waits.append(round(float(ts) - starts.pop(step), 2))
+    if not waits and not starts:
+        return None
+    summary: dict[str, Any] = {"llm_wait_seconds": waits[:20]}
+    if starts:
+        latest = max(starts.values())
+        summary["inflight_llm_seconds"] = round(max(0.0, ended_at - latest), 2)
+    return summary
+
+
 async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tuple[dict[str, Any], float]:
     env = os.environ.copy()
     env["CLIANY_NO_AGENT_MD"] = "1"
@@ -278,13 +307,19 @@ async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tup
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
+    communication = asyncio.create_task(process.communicate())
     try:
-        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=timeout)
+        stdout, stderr = await asyncio.wait_for(asyncio.shield(communication), timeout=timeout)
     except TimeoutError:
         process.kill()
-        await process.communicate()
-        return {"ok": False, "error": {"code": "BENCHMARK_TIMEOUT"}}, time.monotonic() - start
+        _, stderr = await communication
+        timing = _safe_explore_timing(stderr, ended_at=time.time())
+        result = {"ok": False, "error": {"code": "BENCHMARK_TIMEOUT"}}
+        if timing is not None:
+            result["benchmark_timing"] = timing
+        return result, time.monotonic() - start
     elapsed = time.monotonic() - start
+    timing = _safe_explore_timing(stderr, ended_at=time.time())
     try:
         payload = json.loads(stdout)
     except (UnicodeDecodeError, json.JSONDecodeError):
@@ -298,7 +333,12 @@ async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tup
         safe_error = {"code": code or "CLI_FAILED"}
         if summary is not None:
             safe_error["quality_diagnostics"] = summary
-        return {"ok": False, "error": safe_error}, elapsed
+        result = {"ok": False, "error": safe_error}
+        if timing is not None:
+            result["benchmark_timing"] = timing
+        return result, elapsed
+    if timing is not None:
+        payload["benchmark_timing"] = timing
     return payload, elapsed
 
 
@@ -345,6 +385,8 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
             timeout=300,
         )
         outcome["explore_seconds"] = round(elapsed, 2)
+        if "benchmark_timing" in explore:
+            outcome["timing"] = explore["benchmark_timing"]
     finally:
         await browser.close()
     if not explore.get("ok"):
