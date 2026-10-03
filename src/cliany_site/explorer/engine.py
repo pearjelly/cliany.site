@@ -133,20 +133,30 @@ def _apply_partition_repair(
             reason="command_partition_invalid",
         )
     replacements = repaired.get("commands")
-    if not isinstance(replacements, list) or len(replacements) != len(commands):
+    if not isinstance(replacements, list) or len(replacements) != (len(commands) or 1):
         raise ExploreContractError(
-            "命令动作分区无效：修正响应必须保留原命令",
+            "命令动作分区无效：修正响应必须保留原命令，或为缺失命令创建一个命令",
             reason="command_partition_invalid",
         )
     merged: list[object] = []
-    for original, replacement in zip(commands, replacements, strict=True):
-        if (not isinstance(original, dict) or not isinstance(replacement, dict)
-                or replacement.get("name") != original.get("name")):
+    if not commands:
+        replacement = replacements[0]
+        name = replacement.get("name") if isinstance(replacement, dict) else None
+        if not isinstance(name, str) or not name.strip():
             raise ExploreContractError(
-                "命令动作分区无效：修正响应不得更改命令名称",
+                "命令动作分区无效：缺失命令的修正响应必须声明命令名称",
                 reason="command_partition_invalid",
             )
-        merged.append({**original, "action_steps": replacement.get("action_steps")})
+        merged.append(replacement)
+    else:
+        for original, replacement in zip(commands, replacements, strict=True):
+            if (not isinstance(original, dict) or not isinstance(replacement, dict)
+                    or replacement.get("name") != original.get("name")):
+                raise ExploreContractError(
+                    "命令动作分区无效：修正响应不得更改命令名称",
+                    reason="command_partition_invalid",
+                )
+            merged.append({**original, "action_steps": replacement.get("action_steps")})
     _validate_command_partition(merged, action_count)
     for command in merged:
         if not isinstance(command, dict):
@@ -1135,14 +1145,13 @@ class WorkflowExplorer:
                             "完成响应中的 commands 必须为命令列表，请重新探索",
                             reason="command_list_invalid",
                         )
-                    if result.actions and not commands_data:
-                        raise ExploreContractError(
-                            "已录制动作但未声明可复用命令，不会自动生成回退命令；请重新探索",
-                            reason="missing_commands",
-                        )
-
-                    if commands_data:
+                    if result.actions or commands_data:
                         try:
+                            if result.actions and not commands_data:
+                                raise ExploreContractError(
+                                    "已录制动作但未声明可复用命令，请修正命令定义",
+                                    reason="missing_commands",
+                                )
                             _validate_command_partition(commands_data, len(result.actions))
                         except ExploreContractError:
                             if not result.actions or partition_repairs >= _MAX_PARTITION_REPAIRS:
@@ -1162,10 +1171,18 @@ class WorkflowExplorer:
                                 {"name": command.get("name"), "action_steps": command.get("action_steps")}
                                 for command in commands_data if isinstance(command, dict)
                             ]
+                            repair_task = (
+                                "只修正现有命令的 action_steps 索引，不新增命令或参数；"
+                                "commands 必须保留原命令名称和顺序。"
+                                if commands_data else
+                                "根据工作流与已录制动作声明一个可复用命令及其参数；"
+                                "若不确定参数默认值，设置 args=[] 由本地录制动作推断；"
+                                "不得猜测或新增页面动作。"
+                            )
                             repair_prompt = (
-                                "页面动作已经执行完毕。只修正现有命令的 action_steps 索引，不操作页面，"
-                                "不新增动作、命令或参数。只返回 JSON 对象：actions=[]、done=true、commands 列表。"
-                                "commands 必须保留原命令名称和顺序；每个 action_steps 按录制顺序排列，"
+                                "页面动作已经执行完毕。不要操作页面。"
+                                "只返回 JSON 对象：actions=[]、done=true、commands 列表。"
+                                f"{repair_task}每个 action_steps 按录制顺序排列，"
                                 f"所有命令恰好覆盖索引 {list(range(len(result.actions)))}，每个索引只出现一次。\n"
                                 f"工作流：{workflow_description}\n"
                                 f"已录制动作摘要：{json.dumps(recorded_actions, ensure_ascii=False)}\n"

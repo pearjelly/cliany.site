@@ -377,7 +377,7 @@ async def test_explicit_uneven_partition_preserves_command_ownership(mocker, tmp
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("commands", [[], None, {}, "run-workflow"])
+@pytest.mark.parametrize("commands", [None, {}, "run-workflow"])
 async def test_completed_actions_require_explicit_commands(mocker, tmp_home, commands):
     _prepare(mocker, [{
         "actions": [{"type": "click", "ref": "1", "description": "打开页面"}],
@@ -386,6 +386,60 @@ async def test_completed_actions_require_explicit_commands(mocker, tmp_home, com
 
     with pytest.raises(RuntimeError, match="命令"):
         await WorkflowExplorer().explore("https://example.com/search", "读取数据", record=False)
+
+
+@pytest.mark.asyncio
+async def test_missing_command_gets_one_nonexecuting_repair(mocker, tmp_home):
+    actions = [
+        {"type": "type", "ref": "1", "value": "private-input-value", "description": "输入搜索词"},
+        {"type": "extract", "selector": "output", "extract_mode": "text", "description": "读取结果"},
+    ]
+    repaired = {"actions": [], "done": True, "commands": [{
+        "name": "search-example", "description": "搜索", "action_steps": [0, 1], "args": [],
+    }]}
+    invoke = _prepare(mocker, [
+        {"actions": actions, "commands": [], "done": True},
+        repaired,
+    ], [[]])
+
+    async def execute_actions(_session, _actions, *, extraction_results, **_kwargs):
+        extraction_results.append({"step_index": 1, "extract_mode": "text", "data": {"text": "Result"}})
+
+    execute = mocker.patch("cliany_site.explorer.engine.execute_action_steps", side_effect=execute_actions)
+
+    result = await WorkflowExplorer().explore("https://example.com/search", "搜索词", record=False)
+
+    assert [(command.name, command.action_steps) for command in result.commands] == [("search-example", [0, 1])]
+    assert result.commands[0].args[0]["default"] == "private-input-value"
+    assert result.partition_repair_attempts == 1
+    assert invoke.await_count == 2
+    assert "private-input-value" not in invoke.await_args_list[1].args[1]
+    execute.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("repaired", [
+    {"actions": [], "done": True, "commands": []},
+    {"actions": [{"type": "click", "ref": "1"}], "done": True,
+     "commands": [{"name": "run-workflow", "action_steps": [0]}]},
+    {"actions": [], "done": True,
+     "commands": [{"name": "run-workflow", "action_steps": [0],
+                   "args": [{"name": "bad", "action_index": 1}]}]},
+    {"actions": [], "done": True, "commands": [{"name": 123, "action_steps": [0]}]},
+])
+async def test_missing_command_repair_fails_closed(mocker, tmp_home, repaired):
+    _prepare(mocker, [
+        {"actions": [{"type": "click", "ref": "1"}], "commands": [], "done": True},
+        repaired,
+    ], [[]])
+    save = mocker.patch("cliany_site.explorer.engine.save_adapter")
+    execute = mocker.patch("cliany_site.explorer.engine.execute_action_steps", new_callable=AsyncMock)
+
+    with pytest.raises(RuntimeError, match="命令动作分区无效"):
+        await WorkflowExplorer().explore("https://example.com/search", "打开搜索", record=False)
+
+    execute.assert_awaited_once()
+    save.assert_not_called()
 
 
 @pytest.mark.asyncio
