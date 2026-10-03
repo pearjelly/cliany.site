@@ -3,8 +3,9 @@
 - **Updated:** 2026-10-03
 - **Current baseline:** v0.16.369
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
+- **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
-cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap focuses on making that path more reliable, easier to try, and easier to share.
+cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap below records earlier work; the October plan prioritizes verified first use and reliable real workflows.
 
 September 28 navigation follow-up: a real crates.io attempt reached browser navigation timeouts, while a direct request from the maintainer network returned HTTP 403. `explore` now identifies both the browser's 20-second `Page.navigate()` timeout and the event bus's 30-second navigation-handler timeout as page-readiness failures, with no claim that a model or generated adapter succeeded. The crates.io case remains a candidate until its normal search page can be reached and the read-only workflow can be verified.
 

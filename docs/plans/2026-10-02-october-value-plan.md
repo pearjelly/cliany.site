@@ -1,0 +1,34 @@
+# October 2026 Value Plan
+
+**Decision date:** 2026-10-02. **Updated:** 2026-10-03. **Published baseline:** v0.16.369. The [v0.16.369 release](https://github.com/pearjelly/cliany.site/releases/tag/v0.16.369) passed final-master CI, GitHub Release, PyPI, website alias, and fresh-clone distribution checks. The controlled explore/replay study is in draft [PR #31](https://github.com/pearjelly/cliany.site/pull/31), [PR #34](https://github.com/pearjelly/cliany.site/pull/34), and [Issue #30](https://github.com/pearjelly/cliany.site/issues/30), not part of the published package.
+
+## Product outcome
+
+A new user should be able to install the public package, obtain one useful read-only result, and trust a command generated from a browser workflow enough to reuse it with a changed input. Count success only when a fresh environment and an independent business-result check agree; passing tests, a generated adapter file, or a successful JSON envelope alone are insufficient.
+
+## Evidence at the decision point
+
+- Four maintained active cases exist. Published-package, fresh-HOME demos have returned nonempty Jira and Confluence results; the Jenkins first-result path also passed a published-package check. A maintainer installed PyPI v0.16.369 into a clean Python 3.11 environment and obtained five Jira issue rows. The merged [doctor first-result change](https://github.com/pearjelly/cliany.site/pull/42) then suggested one `demo` command, which also installed the adapter and returned five rows in an isolated HOME. These are maintained read-only integrations and maintainer checks, not independent-user acceptance or proof that a live model discovered a public browser workflow.
+- The early 8/9 controlled sample checked replay page state but not returned extract values, so it is not an end-to-end data-command score. Later strict output-plus-DOM matrices on draft v0.16.370 commits varied from 4/9 to 9/9. The predeclared fixed-commit study of 10 fresh trials per task scored **25/30**, below the 27/30 target: four explorations timed out at 300 seconds, and one semantic command partition remained invalid after its one correction. All 34 changed-input replays from the 25 successful trials matched returned values and independent DOM; no silent wrong success was observed. Exploration p50 was 103.41 seconds and nearest-rank p95 was 300.03 seconds. Reliability and generation latency remain open; [PR #34](https://github.com/pearjelly/cliany.site/pull/34) retains the detailed evidence.
+- PyPI search reached `Client Challenge`; npm reached a Cloudflare challenge; crates.io timed out or returned HTTP 403 from the maintainer network. Their cases remain candidates. Do not bypass site restrictions or promote them on package verification alone.
+- No independent first-time user's end-to-end quickstart result has been recorded. The historical Q3 plan's 1.0-alpha checkpoint is therefore not evidence of alpha readiness.
+
+## Ordered work
+
+| Priority | Deliverable | Acceptance evidence | Stop or downgrade when |
+| --- | --- | --- | --- |
+| 0. Close the release loop (done) | v0.16.369 was released from final master `648f6b4` on 2026-10-03. | Ordinary and embodied CI, strict target and tagged readiness, GitHub Release notes/assets, PyPI exact-version install, `www.cliany.site` production alias, and fresh-clone remote distribution audit passed. | Keep the same gates for each later version; a passing tag workflow alone does not prove the website or first-use path. |
+| 1. Prove first use | Ask at least two people who did not build the case adapters to run the public quickstart in clean runtime homes, using a published package. | Record OS, package version, elapsed time, commands, the first failure, strict adapter verification, and an independent nonempty result. At least one person must complete the install-to-result path without maintainer intervention; fix the most common blocker before calling the path self-service. | A maintainer-only run or an existing adapter directory is the sole evidence; report the task as unverified instead of expanding marketing claims. |
+| 2. Measure generated-command reliability | After v0.16.369, finish review of #31 and repeat controlled fresh explore/replay runs with changed replay inputs. | Predeclare the same three task oracles; run at least 10 fresh trials per task on a fixed commit/provider, recording phase, latency, correction count, and wrong-success count. Target at least 27/30 correct independent replays and zero silent wrong successes before using reliability language beyond "controlled sample." | Provider availability, harness defects, or missing oracle data make a trial uninterpretable; exclude it explicitly and rerun, never count it as success. |
+| 3. Prove one real browser use case | Select a third-party read-only page that serves normal content without a challenge from a fresh browser, then generate, package, and replay one useful command. | Public package URL and SHA-256, fresh-HOME install, strict verify, three fresh normal-site explore/replay trials with changed inputs, and an independent nonempty result. Keep API-backed demos and browser-generated evidence separate. | Normal page access fails or requires bypassing an access challenge. Keep the case candidate and select another legitimate target. |
+| 4. Audit alpha contract | Reconcile the CLI/JSON, adapter schema, Python SDK, and HTTP surfaces against the successful user paths above. | Publish an alpha-readiness report listing stable surfaces, migration and security limits, unsupported concurrency/localStorage behavior, and open blockers. | Any core first-use or real browser task remains unverified; do not declare 1.0 alpha ready. |
+
+The independent first-use trial is open as [Issue #33](https://github.com/pearjelly/cliany.site/issues/33). It asks for a published-package, read-only run and sanitized phase-level feedback, never credentials or an unsanitized local log.
+
+## Release discipline
+
+Keep the user-requested daily verified release cadence, with at most three public releases on a Shanghai calendar day. A release is complete only after GitHub Release, PyPI, and the production website agree on the exact version and a fresh remote audit succeeds. Work waiting behind the daily cap stays in reviewed PRs, not as an unverified tag. Default PR CI remains offline with no real LLM key; live-provider and third-party runs are explicit, bounded evidence tasks.
+
+## Next review
+
+The 30-trial controlled study is complete at 25/30; review this plan after the first independent quickstart attempt or by 2026-10-16, whichever comes first. Re-rank work based on observed user failures, not on the number of releases or tests alone.
