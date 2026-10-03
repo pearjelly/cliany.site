@@ -119,3 +119,22 @@ def test_summarize_extract_quality_propagates_partial_field_blank_rows():
 
     assert quality["status"] == "partial"
     assert quality["extracts"][0]["field_blank_rows"] == {"url": [2]}
+
+
+def test_empty_count_text_is_not_covered_by_allowed_empty_list():
+    action_steps = [
+        {"type": "extract", "extract_mode": "text", "description": "结果数量"},
+        {"type": "extract", "extract_mode": "list", "fields": {"name": ""}},
+    ]
+    results = [
+        {"ok": True, "command": "browser extract", "data": {"content": {"text": ""}}},
+        {"ok": True, "command": "browser extract", "data": {"content": []}},
+    ]
+    quality = runtime_helpers.summarize_extract_quality(results, action_steps)
+    assert quality["status"] == "partial"
+    assert quality["extracts"][0]["extract_mode"] == "text"
+
+    results[0]["data"]["content"] = {"text": "0 matches"}
+    quality = runtime_helpers.summarize_extract_quality(results, action_steps)
+    assert quality["status"] == "empty"
+    assert quality["extracts"][1]["extract_mode"] == "list"

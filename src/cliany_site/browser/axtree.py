@@ -13,7 +13,7 @@ import os
 from typing import TYPE_CHECKING, Any
 
 from cliany_site.browser.axtree_pruning import prune_selector_map
-from cliany_site.browser.selector import enrich_selector_map
+from cliany_site.browser.selector import collect_read_only_extract_candidates, enrich_selector_map
 
 if TYPE_CHECKING:
     pass
@@ -55,7 +55,7 @@ async def capture_axtree(browser_session: Any) -> dict:
         max_iframes=cfg.max_iframes,
         max_iframe_depth=cfg.max_iframe_depth,
     )
-    serialized, _enhanced_tree, _timing = await dom_service.get_serialized_dom_tree()
+    serialized, enhanced_tree, _timing = await dom_service.get_serialized_dom_tree()
 
     if hasattr(serialized, "selector_map") and serialized.selector_map:
         browser_session.update_cached_selector_map(serialized.selector_map)
@@ -104,6 +104,7 @@ async def capture_axtree(browser_session: Any) -> dict:
                 selector_map[str(ref_id)] = {"ref": str(ref_id)}
 
     selector_map = enrich_selector_map(selector_map)
+    extract_candidates = collect_read_only_extract_candidates(enhanced_tree)
 
     if os.environ.get("CLIANY_AXTREE_PRUNE", "1") != "0":
         selector_map, pruning_meta = prune_selector_map(selector_map)
@@ -144,6 +145,7 @@ async def capture_axtree(browser_session: Any) -> dict:
     return {
         "element_tree": element_tree_text,
         "selector_map": selector_map,
+        "extract_candidates": extract_candidates,
         "url": url,
         "title": title,
         "iframe_count": nested_stats["iframe_count"],

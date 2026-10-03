@@ -63,7 +63,12 @@ def explore_cmd(
             save_adapter,
         )
         from cliany_site.codegen.merger import AdapterMerger
-        from cliany_site.errors import DataCommandQualityError, LlmUnavailableError
+        from cliany_site.errors import (
+            DataCommandQualityError,
+            ExploreContractError,
+            LlmResponseFormatError,
+            LlmUnavailableError,
+        )
         from cliany_site.explorer.engine import (
             WorkflowExplorer,
             _load_dotenv,
@@ -206,6 +211,15 @@ def explore_cmd(
                 hint="请重新探索并确认数据命令的 extract 返回完整结果。",
                 details=e.details,
             )
+        except (LlmResponseFormatError, ExploreContractError) as e:
+            phase = "llm_response" if isinstance(e, LlmResponseFormatError) else "completion"
+            return err(
+                "explore",
+                ErrorCode.E_UNKNOWN,
+                f"探索失败: {e}",
+                hint="请检查 URL 是否可访问，LLM 配置是否正确",
+                details={"reason": e.reason, "phase": phase},
+            )
         except ValueError as e:
             if "CLIANY_QA_FAKE_LLM_RESPONSES" in str(e):
                 return err(
@@ -320,6 +334,7 @@ def explore_cmd(
                     "commands_total": len(commands_list),
                     "pages_explored": len(explore_result.pages),
                     "actions_found": len(explore_result.actions),
+                    "partition_repair_attempts": explore_result.partition_repair_attempts,
                     "post_analysis": post_analysis,
                 },
             )
@@ -352,6 +367,7 @@ def explore_cmd(
                 "commands_total": merge_result.total_count,
                 "pages_explored": len(explore_result.pages),
                 "actions_found": len(explore_result.actions),
+                "partition_repair_attempts": explore_result.partition_repair_attempts,
                 "post_analysis": post_analysis,
             }
             if merge_result.conflicts_resolved:

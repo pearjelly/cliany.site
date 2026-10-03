@@ -18,11 +18,20 @@ from cliany_site.action_runtime import execute_action_steps, normalize_navigatio
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.browser.screenshot import capture_screenshot
-from cliany_site.browser.selector import format_selector_candidates_section
+from cliany_site.browser.selector import (
+    format_read_only_extract_candidates,
+    format_selector_candidates_section,
+    is_grounded_extract_selector,
+)
 from cliany_site.capability import sniff_api_endpoints
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
 from cliany_site.config import get_config
-from cliany_site.errors import DataCommandQualityError, LlmUnavailableError
+from cliany_site.errors import (
+    DataCommandQualityError,
+    ExploreContractError,
+    LlmResponseFormatError,
+    LlmUnavailableError,
+)
 from cliany_site.explorer.models import (
     ActionStep,
     CommandSuggestion,
@@ -41,6 +50,7 @@ from cliany_site.extract_writer import save_extract_markdown
 from cliany_site.progress import NullProgressReporter, ProgressReporter
 
 logger = logging.getLogger(__name__)
+_EXTRACT_GROUNDING_TIMEOUT_SECONDS = 8.0
 
 
 def _to_snake_case(value: str) -> str:
@@ -76,6 +86,7 @@ _GENERIC_COMMAND_NAMES = frozenset(
 
 _DATA_COMMAND_PREFIXES = ("list-", "search-", "read-", "extract-")
 _MAX_DATA_COMPLETION_REPAIRS = 1
+_MAX_PARTITION_REPAIRS = 1
 
 
 def _is_data_command_name(value: object) -> bool:
@@ -91,16 +102,77 @@ def _valid_action_indices(raw_indices: object, action_count: int) -> list[int]:
 
 def _validate_command_partition(commands: list[object], action_count: int) -> None:
     """Validate ownership before filtering indices can hide invalid model output."""
+    if commands and action_count == 0:
+        raise ExploreContractError(
+            "命令动作分区无效：没有录制动作，不能生成可复用命令",
+            reason="command_partition_invalid",
+        )
     assigned: list[int] = []
     for command in commands:
         indices = command.get("action_steps") if isinstance(command, dict) else None
         if (not isinstance(indices, list) or (action_count > 0 and not indices)
                 or any(type(index) is not int or not 0 <= index < action_count for index in indices)
                 or indices != sorted(indices)):
-            raise RuntimeError("命令动作分区无效：每个命令须按录制顺序声明有效动作索引；请重新探索")
+            raise ExploreContractError(
+                "命令动作分区无效：每个命令须按录制顺序声明有效动作索引；请重新探索",
+                reason="command_partition_invalid",
+            )
         assigned.extend(indices)
     if sorted(assigned) != list(range(action_count)):
-        raise RuntimeError("命令动作分区无效：每个动作须恰好归属一个命令，不允许遗漏或重复；请重新探索")
+        raise ExploreContractError(
+            "命令动作分区无效：每个动作须恰好归属一个命令，不允许遗漏或重复；请重新探索",
+            reason="command_partition_invalid",
+        )
+
+
+def _apply_partition_repair(
+    commands: list[object], repaired: dict[str, Any], action_count: int,
+) -> list[object]:
+    if repaired.get("done") is not True or repaired.get("actions") != []:
+        raise ExploreContractError(
+            "命令动作分区无效：修正响应不得新增动作",
+            reason="command_partition_invalid",
+        )
+    replacements = repaired.get("commands")
+    if not isinstance(replacements, list) or len(replacements) != (len(commands) or 1):
+        raise ExploreContractError(
+            "命令动作分区无效：修正响应必须保留原命令，或为缺失命令创建一个命令",
+            reason="command_partition_invalid",
+        )
+    merged: list[object] = []
+    if not commands:
+        replacement = replacements[0]
+        name = replacement.get("name") if isinstance(replacement, dict) else None
+        if not isinstance(name, str) or not name.strip():
+            raise ExploreContractError(
+                "命令动作分区无效：缺失命令的修正响应必须声明命令名称",
+                reason="command_partition_invalid",
+            )
+        merged.append(replacement)
+    else:
+        for original, replacement in zip(commands, replacements, strict=True):
+            if (not isinstance(original, dict) or not isinstance(replacement, dict)
+                    or replacement.get("name") != original.get("name")):
+                raise ExploreContractError(
+                    "命令动作分区无效：修正响应不得更改命令名称",
+                    reason="command_partition_invalid",
+                )
+            merged.append({**original, "action_steps": replacement.get("action_steps")})
+    _validate_command_partition(merged, action_count)
+    for command in merged:
+        if not isinstance(command, dict):
+            continue
+        indices = command["action_steps"]
+        args = command.get("args")
+        for arg in args if isinstance(args, list) else []:
+            if isinstance(arg, dict) and "action_index" in arg:
+                index = arg["action_index"]
+                if type(index) is not int or index not in indices:
+                    raise ExploreContractError(
+                        "命令动作分区无效：参数索引不属于修正后的命令",
+                        reason="command_partition_invalid",
+                    )
+    return merged
 
 
 def _data_command_completion_failures(
@@ -173,6 +245,7 @@ def _data_command_completion_failures(
                         **base_failure,
                         "reason": "extraction_execution_failed",
                         "action_index": action_index,
+                        "extract_mode": actions[action_index].extract_mode,
                         "error": latest_evidence.get("error"),
                     }
                 )
@@ -185,13 +258,19 @@ def _data_command_completion_failures(
                 latest_evidence.get("data"),
                 fields_map,
             )
-            accepts_empty = not requires_nonempty and quality.status == "empty"
+            accepts_empty = (
+                not requires_nonempty
+                and action.extract_mode in {"list", "table"}
+                and quality.status == "empty"
+                and not quality.field_blank_rows
+            )
             if not quality.ok and not accepts_empty:
                 failures.append(
                     {
                         **base_failure,
                         "reason": "extract_quality_failed",
                         "action_index": action_index,
+                        "extract_mode": action.extract_mode,
                         "quality": quality.to_dict(),
                     }
                 )
@@ -215,6 +294,9 @@ def _data_completion_feedback(failures: list[dict[str, Any]]) -> str:
         name = failure.get("name") or f"command-{failure.get('command_index', 0) + 1}"
         reason = failure.get("reason", "unknown")
         lines.append(f"- {name}: {reason}")
+        quality = failure.get("quality")
+        if isinstance(quality, dict) and quality.get("issues") == ["empty text"]:
+            lines.append("  空文本不是合法零匹配证据；请定位页面真实的数量或状态文本后重新提取。")
     return "\n".join(lines)
 
 
@@ -465,9 +547,9 @@ def _parse_llm_response(text: str) -> dict:
         try:
             result = json.loads(text)
         except json.JSONDecodeError as exc:
-            raise ValueError("LLM 响应解析失败，不能确认探索完成") from exc
+            raise LlmResponseFormatError("LLM 响应解析失败，不能确认探索完成", reason="llm_invalid_json") from exc
     if not isinstance(result, dict) or type(result.get("done", False)) is not bool:
-        raise ValueError("LLM 响应须为 JSON 对象，done 必须为布尔值")
+        raise LlmResponseFormatError("LLM 响应须为 JSON 对象，done 必须为布尔值", reason="llm_invalid_shape")
     return result
 
 
@@ -545,17 +627,34 @@ async def _invoke_llm_with_retry(
     max_attempts: int = 3,
     base_delay: float = 2.0,
     backoff_factor: float = 2.0,
+    progress: ProgressReporter | None = None,
+    step: int = 0,
 ) -> Any:
     """带指数退避重试的 LLM 调用。支持纯文本和多模态消息。"""
     for attempt in range(max_attempts):
+        if progress is not None:
+            progress.on_explore_llm_attempt_start(step, attempt + 1)
+        attempt_started = time.monotonic()
         try:
             if isinstance(prompt, str):
-                return await llm.ainvoke(prompt)
+                response = await llm.ainvoke(prompt)
             else:
                 messages = [prompt] if not isinstance(prompt, list) else prompt
-                return await llm.ainvoke(messages)
+                response = await llm.ainvoke(messages)
+            if progress is not None:
+                progress.on_explore_llm_attempt_done(
+                    step, attempt + 1, (time.monotonic() - attempt_started) * 1000, "success", 0,
+                )
+            return response
         except Exception as exc:
             retryable = _is_retryable_error(exc)
+            will_retry = retryable and attempt < max_attempts - 1
+            delay = base_delay * (backoff_factor**attempt) if will_retry else 0.0
+            if progress is not None:
+                progress.on_explore_llm_attempt_done(
+                    step, attempt + 1, (time.monotonic() - attempt_started) * 1000,
+                    "retry" if will_retry else "error", delay * 1000,
+                )
             if retryable and attempt >= max_attempts - 1:
                 raise LlmUnavailableError(
                     _llm_error_summary(exc),
@@ -564,7 +663,6 @@ async def _invoke_llm_with_retry(
                 ) from exc
             if not retryable:
                 raise
-            delay = base_delay * (backoff_factor**attempt)
             logger.warning(
                 "LLM 调用失败 (第 %d/%d 次): %s — %.1f 秒后重试",
                 attempt + 1,
@@ -755,7 +853,9 @@ class WorkflowExplorer:
             final_step_count = 0
             all_extraction_results: list = []
             data_completion_repairs = 0
-            data_completion_feedback = ""
+            partition_repairs = 0
+            empty_completion_retries = 0
+            completion_feedback = ""
 
             for step_num in range(cfg.explore_max_steps):
                 step_start = time.monotonic()
@@ -781,6 +881,9 @@ class WorkflowExplorer:
 
                 element_tree_text = serialize_axtree(tree)
                 selector_candidates_text = format_selector_candidates_section(selector_map)
+                read_only_candidates = format_read_only_extract_candidates(tree.get("extract_candidates") or [])
+                if read_only_candidates:
+                    selector_candidates_text += "\n只读 AX 语义元素（供 extract 使用）：\n" + read_only_candidates
                 prompt_text = EXPLORE_PROMPT_TEMPLATE.format(
                     url=tree.get("url", ""),
                     title=tree.get("title", ""),
@@ -791,8 +894,8 @@ class WorkflowExplorer:
                     completed_action_count=len(result.actions),
                 )
 
-                if data_completion_feedback:
-                    prompt_text = f"{prompt_text}\n\n{data_completion_feedback}"
+                if completion_feedback:
+                    prompt_text = f"{prompt_text}\n\n{completion_feedback}"
 
                 atom_inventory = build_atom_inventory_section(domain)
                 if atom_inventory:
@@ -855,6 +958,8 @@ class WorkflowExplorer:
                         max_attempts=cfg.llm_retry_max_attempts,
                         base_delay=cfg.llm_retry_base_delay,
                         backoff_factor=cfg.llm_retry_backoff_factor,
+                        progress=reporter,
+                        step=step_num,
                     )
                     logger.debug("步骤 %d: LLM 响应已收到", step_num + 1)
                 except AttributeError as e:
@@ -904,7 +1009,7 @@ class WorkflowExplorer:
                         continue
                     action_type = action_data.get("type", "unknown")
                     target_ref = str(action_data.get("ref", "") or "")
-                    selector = selector_map.get(target_ref, {})
+                    selector = selector_map.get(target_ref.removeprefix("@"), {})
                     if not isinstance(selector, dict):
                         selector = {}
 
@@ -952,8 +1057,26 @@ class WorkflowExplorer:
                     completed_steps_text = "\n".join(f"{i}. {desc}" for i, desc in enumerate(completed_steps))
 
                 _extraction_results: list = []
+                async def validate_extract(session: Any, action_data: dict[str, Any], _index: int) -> None:
+                    deadline = time.monotonic() + _EXTRACT_GROUNDING_TIMEOUT_SECONDS
+                    while True:
+                        snapshot = await capture_axtree(session)
+                        if is_grounded_extract_selector(
+                            str(action_data.get("selector") or ""),
+                            snapshot.get("selector_map") or {},
+                            snapshot.get("extract_candidates") or [],
+                        ):
+                            return
+                        if time.monotonic() >= deadline:
+                            raise ExploreContractError(
+                                "提取选择器未在当前页面的 AX 候选中证实；请重新探索",
+                                reason="extract_selector_ungrounded",
+                            )
+                        await asyncio.sleep(0.5)
+
                 await execute_action_steps(
-                    browser_session, actions_data, continue_on_error=True, extraction_results=_extraction_results
+                    browser_session, actions_data, continue_on_error=True,
+                    extraction_results=_extraction_results, before_extract=validate_extract,
                 )
                 for extraction_result in _extraction_results:
                     if not isinstance(extraction_result, dict):
@@ -1025,12 +1148,78 @@ class WorkflowExplorer:
 
                     commands_data = parsed.get("commands", [])
                     if not isinstance(commands_data, list):
-                        raise RuntimeError("完成响应中的 commands 必须为命令列表，请重新探索")
-                    if result.actions and not commands_data:
-                        raise RuntimeError("已录制动作但未声明可复用命令，不会自动生成回退命令；请重新探索")
-
-                    if commands_data:
-                        _validate_command_partition(commands_data, len(result.actions))
+                        raise ExploreContractError(
+                            "完成响应中的 commands 必须为命令列表，请重新探索",
+                            reason="command_list_invalid",
+                        )
+                    if (interactive_ctrl is None and commands_data and not result.actions
+                            and empty_completion_retries == 0
+                            and step_num + 1 < cfg.explore_max_steps):
+                        empty_completion_retries = 1
+                        completion_feedback = (
+                            "上一轮未录制任何页面动作，不能生成可复用命令。"
+                            "请根据当前页面的 AX 引用实际执行工作流动作；"
+                            "只有动作录制完成后才能声明 commands，不要猜测 URL 或动作结果。"
+                        )
+                        continue
+                    if result.actions or commands_data:
+                        try:
+                            if result.actions and not commands_data:
+                                raise ExploreContractError(
+                                    "已录制动作但未声明可复用命令，请修正命令定义",
+                                    reason="missing_commands",
+                                )
+                            _validate_command_partition(commands_data, len(result.actions))
+                        except ExploreContractError:
+                            if not result.actions or partition_repairs >= _MAX_PARTITION_REPAIRS:
+                                raise
+                            partition_repairs += 1
+                            result.partition_repair_attempts += 1
+                            recorded_actions = [
+                                {
+                                    "index": index,
+                                    "type": action.action_type,
+                                    "target_name": action.target_name,
+                                    "target_role": action.target_role,
+                                }
+                                for index, action in enumerate(result.actions)
+                            ]
+                            command_summaries = [
+                                {"name": command.get("name"), "action_steps": command.get("action_steps")}
+                                for command in commands_data if isinstance(command, dict)
+                            ]
+                            repair_task = (
+                                "只修正现有命令的 action_steps 索引，不新增命令或参数；"
+                                "commands 必须保留原命令名称和顺序。"
+                                if commands_data else
+                                "根据工作流与已录制动作声明一个可复用命令及其参数；"
+                                "若不确定参数默认值，设置 args=[] 由本地录制动作推断；"
+                                "不得猜测或新增页面动作。"
+                            )
+                            repair_prompt = (
+                                "页面动作已经执行完毕。不要操作页面。"
+                                "只返回 JSON 对象：actions=[]、done=true、commands 列表。"
+                                f"{repair_task}每个 action_steps 按录制顺序排列，"
+                                f"所有命令恰好覆盖索引 {list(range(len(result.actions)))}，每个索引只出现一次。\n"
+                                f"工作流：{workflow_description}\n"
+                                f"已录制动作摘要：{json.dumps(recorded_actions, ensure_ascii=False)}\n"
+                                f"原命令摘要：{json.dumps(command_summaries, ensure_ascii=False)}"
+                            )
+                            reporter.on_explore_llm_start(step_num)
+                            repair_response = await _invoke_llm_with_retry(
+                                llm,
+                                repair_prompt,
+                                max_attempts=cfg.llm_retry_max_attempts,
+                                base_delay=cfg.llm_retry_base_delay,
+                                backoff_factor=cfg.llm_retry_backoff_factor,
+                                progress=reporter,
+                                step=step_num,
+                            )
+                            reporter.on_explore_llm_done(step_num, 0)
+                            repaired = _parse_llm_response(_to_text(repair_response.content))
+                            commands_data = _apply_partition_repair(
+                                commands_data, repaired, len(result.actions),
+                            )
 
                     completion_failures = _data_command_completion_failures(
                         commands_data,
@@ -1048,7 +1237,7 @@ class WorkflowExplorer:
                         }
                         if can_repair:
                             data_completion_repairs += 1
-                            data_completion_feedback = _data_completion_feedback(completion_failures)
+                            completion_feedback = _data_completion_feedback(completion_failures)
                             logger.info(
                                 "步骤 %d 的数据命令未通过完成门禁，发起第 %d 次修正",
                                 step_num + 1,
@@ -1113,9 +1302,10 @@ class WorkflowExplorer:
                     with contextlib.suppress(OSError, RuntimeError, TimeoutError):
                         await browser_session.navigate_to(next_url, new_tab=False)
             else:
-                raise RuntimeError(
+                raise ExploreContractError(
                     f"探索达到 {cfg.explore_max_steps} 步上限但尚未确认完成；"
-                    "不会将部分动作生成为可复用命令，请缩小任务范围后重新探索"
+                    "不会将部分动作生成为可复用命令，请缩小任务范围后重新探索",
+                    reason="explore_step_limit",
                 )
 
             saved_path = save_extract_markdown(

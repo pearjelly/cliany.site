@@ -6,7 +6,9 @@ import argparse
 import asyncio
 import importlib.metadata
 import json
+import math
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -167,6 +169,182 @@ def _summarize_trials(trials: list[dict[str, Any]], task_ids: list[str]) -> dict
     }
 
 
+_SAFE_FIELD_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_-]{0,79}\Z")
+_QUALITY_REASONS = frozenset({
+    "extract_quality_failed", "missing_extraction_evidence",
+    "extraction_execution_failed", "missing_replay_prerequisites",
+})
+_CONTRACT_REASONS = frozenset({
+    "llm_invalid_json", "llm_invalid_shape", "command_partition_invalid", "extract_selector_ungrounded",
+    "command_list_invalid", "missing_commands", "explore_step_limit",
+})
+
+
+def _safe_explore_contract_diagnostics(error: dict[str, Any]) -> dict[str, str] | None:
+    if error.get("code") != "E_UNKNOWN":
+        return None
+    details = error.get("details")
+    if not isinstance(details, dict):
+        return None
+    reason, phase = details.get("reason"), details.get("phase")
+    if (isinstance(reason, str) and reason in _CONTRACT_REASONS
+            and isinstance(phase, str) and phase in {"llm_response", "completion"}):
+        return {"reason": reason, "phase": phase}
+    return None
+
+
+def _safe_explore_quality_diagnostics(error: dict[str, Any]) -> dict[str, Any] | None:
+    if error.get("code") != "E_EMPTY_RESULT":
+        return None
+    details = error.get("details")
+    if not isinstance(details, dict):
+        return None
+    if "data_commands" not in details and "repair_attempts" not in details:
+        return None
+    failures = []
+    commands = details.get("data_commands")
+    for item in commands[:10] if isinstance(commands, list) else []:
+        if not isinstance(item, dict):
+            continue
+        row: dict[str, Any] = {}
+        reason = item.get("reason")
+        if isinstance(reason, str) and reason in _QUALITY_REASONS:
+            row["reason"] = reason
+        index = item.get("action_index")
+        if type(index) is int and index >= 0:
+            row["action_index"] = index
+        mode = item.get("extract_mode")
+        if isinstance(mode, str) and mode in {"text", "attribute", "list", "table"}:
+            row["extract_mode"] = mode
+        if reason == "extraction_execution_failed":
+            execution_error = item.get("error")
+            if isinstance(execution_error, dict):
+                code = execution_error.get("code")
+                if isinstance(code, str) and code in {"E_PARSE_FAILED", "E_SELECTOR_NOT_FOUND"}:
+                    row["error_code"] = code
+                if "selector" in execution_error:
+                    selector = execution_error["selector"]
+                    row["selector_present"] = isinstance(selector, str) and bool(selector.strip())
+        quality = item.get("quality")
+        if isinstance(quality, dict):
+            status = quality.get("status")
+            if isinstance(status, str) and status in {"empty", "partial", "ok"}:
+                row["quality_status"] = status
+            count = quality.get("row_count")
+            if type(count) is int and count >= 0:
+                row["row_count"] = count
+            blank_rows = quality.get("field_blank_rows")
+            if isinstance(blank_rows, dict):
+                row["blank_fields"] = [
+                    name for name in list(blank_rows)[:5]
+                    if isinstance(name, str) and _SAFE_FIELD_NAME.fullmatch(name)
+                ]
+        if row:
+            failures.append(row)
+    repairs = details.get("repair_attempts")
+    return {
+        "repair_attempts": repairs if type(repairs) is int and 0 <= repairs <= 10 else None,
+        "failures": failures,
+    }
+
+
+def _safe_replay_quality_diagnostics(error: dict[str, Any]) -> dict[str, Any] | None:
+    if error.get("code") != "E_EMPTY_RESULT":
+        return None
+    details = error.get("details")
+    if not isinstance(details, dict):
+        return None
+    overall_status = details.get("status")
+    if not isinstance(overall_status, str) or overall_status not in {"empty", "partial", "ok", "not_applicable"}:
+        return None
+    extracts = []
+    for item in details.get("extracts", [])[:10] if isinstance(details.get("extracts"), list) else []:
+        if not isinstance(item, dict):
+            continue
+        row: dict[str, Any] = {}
+        mode = item.get("extract_mode")
+        if isinstance(mode, str) and mode in {"text", "attribute", "list", "table"}:
+            row["mode"] = mode
+        status = item.get("status")
+        if isinstance(status, str) and status in {"empty", "partial", "ok"}:
+            row["status"] = status
+        count = item.get("row_count")
+        if type(count) is int and count >= 0:
+            row["row_count"] = count
+        index = item.get("step_index")
+        if type(index) is int and index >= 0:
+            row["step_index"] = index
+        if row:
+            extracts.append(row)
+    return {"status": overall_status, "extracts": extracts}
+
+
+def _safe_explore_timing(stderr: bytes, *, ended_at: float) -> dict[str, Any] | None:
+    starts: dict[int, float] = {}
+    waits: list[float] = []
+    attempt_starts: dict[tuple[int, int], float] = {}
+    attempt_seconds: list[float] = []
+    attempt_outcomes: list[str] = []
+    retry_count = 0
+    scheduled_backoff_seconds = 0.0
+    for line in stderr.splitlines():
+        try:
+            event = json.loads(line)
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            continue
+        if not isinstance(event, dict) or event.get("event") not in {
+            "explore_llm_start", "explore_llm_done",
+            "explore_llm_attempt_start", "explore_llm_attempt_done",
+        }:
+            continue
+        step, ts = event.get("step"), event.get("ts")
+        if type(step) is not int or step < 0 or not isinstance(ts, (int, float)) or isinstance(ts, bool):
+            continue
+        if not math.isfinite(ts):
+            continue
+        if event["event"] == "explore_llm_start":
+            starts[step] = float(ts)
+        elif event["event"] == "explore_llm_done" and step in starts and ts >= starts[step]:
+            waits.append(round(float(ts) - starts.pop(step), 2))
+        else:
+            attempt = event.get("attempt")
+            if type(attempt) is not int or not 1 <= attempt <= 20:
+                continue
+            key = (step, attempt)
+            if event["event"] == "explore_llm_attempt_start":
+                attempt_starts[key] = float(ts)
+            elif event["event"] == "explore_llm_attempt_done" and key in attempt_starts:
+                attempt_starts.pop(key)
+                elapsed = event.get("elapsed_ms")
+                backoff = event.get("backoff_ms")
+                outcome = event.get("outcome")
+                if (not isinstance(elapsed, (int, float)) or isinstance(elapsed, bool)
+                        or not math.isfinite(elapsed) or elapsed < 0):
+                    continue
+                attempt_seconds.append(round(float(elapsed) / 1000, 2))
+                attempt_outcomes.append(
+                    outcome if isinstance(outcome, str) and outcome in {"success", "retry", "error"} else "unknown"
+                )
+                if (outcome == "retry" and isinstance(backoff, (int, float))
+                        and not isinstance(backoff, bool) and math.isfinite(backoff) and backoff >= 0):
+                    retry_count += 1
+                    scheduled_backoff_seconds += float(backoff) / 1000
+    if not waits and not starts and not attempt_seconds and not attempt_starts:
+        return None
+    summary: dict[str, Any] = {"llm_wait_seconds": waits[:20]}
+    if starts:
+        latest = max(starts.values())
+        summary["inflight_llm_seconds"] = round(max(0.0, ended_at - latest), 2)
+    if attempt_seconds or attempt_starts:
+        summary["attempt_seconds"] = attempt_seconds[:20]
+        summary["attempt_outcomes"] = attempt_outcomes[:20]
+        summary["retry_count"] = retry_count
+        summary["scheduled_backoff_seconds"] = round(scheduled_backoff_seconds, 2)
+    if attempt_starts:
+        summary["inflight_attempt_seconds"] = round(max(0.0, ended_at - max(attempt_starts.values())), 2)
+    return summary
+
+
 async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tuple[dict[str, Any], float]:
     env = os.environ.copy()
     env["CLIANY_NO_AGENT_MD"] = "1"
@@ -184,13 +362,19 @@ async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tup
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
+    communication = asyncio.create_task(process.communicate())
     try:
-        stdout, _ = await asyncio.wait_for(process.communicate(), timeout=timeout)
+        stdout, stderr = await asyncio.wait_for(asyncio.shield(communication), timeout=timeout)
     except TimeoutError:
         process.kill()
-        await process.communicate()
-        return {"ok": False, "error": {"code": "BENCHMARK_TIMEOUT"}}, time.monotonic() - start
+        _, stderr = await communication
+        timing = _safe_explore_timing(stderr, ended_at=time.time())
+        result = {"ok": False, "error": {"code": "BENCHMARK_TIMEOUT"}}
+        if timing is not None:
+            result["benchmark_timing"] = timing
+        return result, time.monotonic() - start
     elapsed = time.monotonic() - start
+    timing = _safe_explore_timing(stderr, ended_at=time.time())
     try:
         payload = json.loads(stdout)
     except (UnicodeDecodeError, json.JSONDecodeError):
@@ -198,7 +382,21 @@ async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tup
     if not isinstance(payload, dict) or process.returncode != 0 or payload.get("ok") is not True:
         error = payload.get("error") if isinstance(payload, dict) else None
         code = error.get("code") if isinstance(error, dict) else None
-        return {"ok": False, "error": {"code": code or "CLI_FAILED"}}, elapsed
+        summary = _safe_explore_quality_diagnostics(error) if isinstance(error, dict) else None
+        if summary is None and isinstance(error, dict):
+            summary = _safe_replay_quality_diagnostics(error)
+        safe_error = {"code": code or "CLI_FAILED"}
+        if summary is not None:
+            safe_error["quality_diagnostics"] = summary
+        contract = _safe_explore_contract_diagnostics(error) if isinstance(error, dict) else None
+        if contract is not None:
+            safe_error["contract_diagnostics"] = contract
+        result = {"ok": False, "error": safe_error}
+        if timing is not None:
+            result["benchmark_timing"] = timing
+        return result, elapsed
+    if timing is not None:
+        payload["benchmark_timing"] = timing
     return payload, elapsed
 
 
@@ -245,13 +443,24 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
             timeout=300,
         )
         outcome["explore_seconds"] = round(elapsed, 2)
+        if "benchmark_timing" in explore:
+            outcome["timing"] = explore["benchmark_timing"]
     finally:
         await browser.close()
     if not explore.get("ok"):
         outcome["error_code"] = explore.get("error", {}).get("code")
+        diagnostics = explore.get("error", {}).get("quality_diagnostics")
+        if diagnostics is not None:
+            outcome["quality_diagnostics"] = diagnostics
+        contract = explore.get("error", {}).get("contract_diagnostics")
+        if contract is not None:
+            outcome["contract_diagnostics"] = contract
         return outcome
 
     data = explore.get("data", {})
+    repairs = data.get("partition_repair_attempts") if isinstance(data, dict) else None
+    if type(repairs) is int and repairs >= 0:
+        outcome["partition_repair_attempts"] = repairs
     group = data.get("command_group")
     if not isinstance(group, str) or not group:
         outcome.update(phase="generation", error_code="MISSING_COMMAND_GROUP")
@@ -269,6 +478,12 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
         return outcome
 
     outcome["command"] = command
+    for command_index, definition in enumerate(metadata.get("commands", [])):
+        name = definition.get("name") if isinstance(definition, dict) else None
+        if isinstance(name, str) and to_command_name(name, command_index) == command:
+            if isinstance(definition.get("expects_nonempty"), bool):
+                outcome["expects_nonempty"] = definition["expects_nonempty"]
+            break
     outcome["replays"] = []
     for replay in case["replays"]:
         port = _free_port()
@@ -283,6 +498,9 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
             contents = _extract_contents(result)
             if not result.get("ok") or not contents:
                 row.update(ok=False, phase="replay", error_code=result.get("error", {}).get("code") or "NO_EXTRACT")
+                diagnostics = result.get("error", {}).get("quality_diagnostics")
+                if diagnostics is not None:
+                    row["quality_diagnostics"] = diagnostics
             else:
                 try:
                     oracle_ok = await _inspect_page(playwright, port, case, replay)

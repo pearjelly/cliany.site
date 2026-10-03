@@ -465,12 +465,18 @@ class ClanySite:
                 {
                     **evaluate_extract_quality(item["extract_mode"], item["data"], item.get("fields")).to_dict(),
                     "step_index": item["step_index"],
+                    "extract_mode": item["extract_mode"],
                 }
                 for item in extraction_results if "data" in item
             ]
             quality_status = (
                 "not_applicable" if not extracts else
-                "partial" if any(item["status"] == "partial" or item.get("field_blank_rows") for item in extracts) else
+                "partial" if any(
+                    item["status"] == "partial"
+                    or item.get("field_blank_rows")
+                    or (item["status"] == "empty" and item["extract_mode"] not in {"list", "table"})
+                    for item in extracts
+                ) else
                 "empty" if any(item["status"] == "empty" for item in extracts) else "ok"
             )
             quality = {"ok": quality_status in ("ok", "not_applicable"), "status": quality_status, "extracts": extracts}

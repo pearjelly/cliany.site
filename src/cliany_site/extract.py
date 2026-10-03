@@ -6,7 +6,9 @@ extract.py — 将 extract action 参数转换为可在 Page.evaluate() 中执�
 
 from __future__ import annotations
 
+import asyncio
 import json
+import time
 from typing import Any
 
 SUPPORTED_EXTRACT_MODES = ("text", "list", "table", "attribute")
@@ -24,6 +26,40 @@ def _coerce_json_like_extract_data(raw_result: Any) -> Any:
         return json.loads(text)
     except (json.JSONDecodeError, TypeError, ValueError):
         return raw_result
+
+
+async def _wait_for_list_settle(page: Any, selector: str) -> bool:
+    script = f"""() => {{
+        const rows = document.querySelectorAll({json.dumps(selector)});
+        const first = rows[0];
+        const scope = first?.closest('ul, ol, table')?.parentElement || first?.parentElement || document.body;
+        const busy = scope.querySelector('[aria-busy="true"], [role="progressbar"]') !== null;
+        const loading = [...scope.querySelectorAll('h1, h2, h3, h4, [role="status"]')].some(node => {{
+            const label = (node.textContent || '').trim().toLowerCase().replace(/[.\\s…。]+$/g, '');
+            return ['searching', 'loading', 'fetching', '正在搜索', '加载中'].includes(label);
+        }});
+        return {{count: rows.length, loading: busy || loading}};
+    }}"""
+    deadline = time.monotonic() + 10.0
+    previous: tuple[int, bool] | None = None
+    stable_since = time.monotonic()
+    while True:
+        try:
+            state = _coerce_json_like_extract_data(await page.evaluate(script))
+        except Exception:
+            return False
+        if not isinstance(state, dict) or "count" not in state or "loading" not in state:
+            return False
+        current = (int(state["count"]), bool(state["loading"]))
+        now = time.monotonic()
+        if current != previous or current[1]:
+            stable_since = now
+        elif now - stable_since >= 1.0:
+            return True
+        if now >= deadline:
+            return False
+        previous = current
+        await asyncio.sleep(0.25)
 
 
 def _escape_selector(selector: str) -> str:
@@ -108,18 +144,24 @@ def _build_attribute_js(selector: str, fields_map: dict | None = None) -> str:
 def _build_list_js(selector: str, fields_map: dict | None) -> str:
     escaped_selector = _escape_selector(selector)
     normalized_fields = _normalize_fields_map(fields_map)
+    items_js = (
+        f"const selected = Array.from(document.querySelectorAll('{escaped_selector}')); "
+        "const items = (selected.length === 1 && ['UL', 'OL'].includes(selected[0].tagName) "
+        "? Array.from(selected[0].children).filter(el => el.tagName === 'LI') "
+        ": selected).slice(0, 100); "
+    )
 
     if not normalized_fields:
         return (
             "() => { "
-            + f"const items = Array.from(document.querySelectorAll('{escaped_selector}')).slice(0, 100); "
+            + items_js
             + "return items.map(el => (el.textContent ? el.textContent.trim() : '')); "
             + "}"
         )
 
     lines = [
         "() => {",
-        f"  const items = Array.from(document.querySelectorAll('{escaped_selector}')).slice(0, 100);",
+        f"  {items_js}",
         "  return items.map(el => ({",
     ]
 

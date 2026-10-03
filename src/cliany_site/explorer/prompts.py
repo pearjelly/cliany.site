@@ -25,7 +25,7 @@ commands 字段说明（仅当 done=true 时填写）：
 - 如果工作流只有一个命令，action_steps 应包含所有动作的索引
 - 每个生成命令都会从来源 URL 重新导航并独立执行；若读取结果依赖此前的输入、选择或点击，必须把这些动作和 extract 放在同一个命令，不能拆成先操作后读取的两个命令
 - 每个命令的 args 字段用于声明可参数化的 CLI 选项（详见下方参数化规则）
-- 每个命令必须显式写出 expects_nonempty（true/false）。默认用 true：空结果表示该数据命令没有得到预期数据。只有工作流本身是在确认“某项是否不存在”且零匹配是合法业务结果时才设为 false；false 不能用于掩盖字段缺失、部分提取或页面结构变化。
+- 每个命令必须显式写出 expects_nonempty（true/false）。默认用 true：空结果表示该数据命令没有得到预期数据。搜索、筛选或确认“某项是否不存在”的工作流若明确允许零匹配，设为 false；例如用户要求搜索命令在无匹配时返回空列表。false 不能用于掩盖字段缺失、部分提取或页面结构变化。
 - 命名为 list-、search-、read- 或 extract- 的数据命令必须在其 action_steps 中包含至少一个 extract 动作，并返回实际提取的数据；若无法识别稳定 selector 或字段，不得把该读取任务标记为 done=true。
 
 参数化规则（关键 — 必须严格遵守）：
@@ -90,17 +90,17 @@ actions 中每个操作的字段定义：
 - description: 操作的简要描述（中文）
 - reuse_atom: 仅 reuse_atom 操作时使用，格式为 {"reuse_atom": "atom_id", "parameters": {"key": "value"}}。当已有原子操作与当前步骤语义匹配时，优先使用此格式替代逐步操作。
 - extract: 仅 extract 操作时使用。需提供以下字段：
-  - selector: CSS 选择器，定位要提取的元素。使用稳定的结构化选择器（如 article.result、.search-result-item），避免含有随机哈希值的类名（如 .sc-abc123）
+  - selector: CSS 选择器，定位要提取的元素。必须使用当前页面提供的候选；列表/表格可在已给出的容器候选后加空格与 li/tr（例如 #results li）。不得猜测类名或 ID。
   - extract_mode: 提取模式，必须是 text / list / table / attribute 之一：
     - text: 提取单个元素的文本内容
     - list: 提取多个同类元素，每个提取 fields 中定义的字段（最多 100 项）
     - table: 提取表格数据（最多 500 行）
     - attribute: 提取元素的属性值。selector 为纯 CSS 选择器（如 "a.link"），默认返回所有属性。可通过 fields 指定要提取的属性（如 {"href": "@href", "class": "@class"}）
   - fields: 仅 list/table 模式使用。key 为字段名，value 为子元素 CSS 选择器。支持 "@attr" 语法提取属性（如 {"url": "a@href", "title": "h3"}）。
-    - 处理搜索结果/资讯列表时，默认必须包含这三个字段：
-      - title: 标题文本（例如 "a.title" 或 "h3"）
-      - url: 详情链接（优先用 "@href" 或 "a@href"）
-      - snippet: 正文摘要（例如 ".desc"、".content"、"p"，若页面无摘要可用空字符串）
+    - 字段必须有当前页面可观察到的对应内容或属性；不要仅因是搜索/筛选结果就添加不存在的 url、snippet 等字段，也不要用空字符串伪造字段。
+    - 有详情链接和摘要的搜索结果/资讯列表，提取 title（可读标题文本）、url（真实 href）和 snippet（实际摘要）；若某字段在页面上不存在，就省略该字段。
+    - 搜索/筛选命令若允许零匹配，可变化的结果集合应使用 list 或 table 提取；不要把某个结果项当作 text 提取，因为零匹配时该标量会消失。稳定显示的结果计数可另用 text 提取。expects_nonempty=false 不允许空 text 掩盖提取错误。
+    - 若列表项自身文本就是目标数据（例如每个 li 的名称），list 模式省略 fields 或使用空对象 {}，直接返回字符串数组；不要虚构子元素选择器或用不存在的 @name 属性提取文本。
     - 严禁把 title 映射成 "a@href" 这类属性值；title 必须返回可读文本。
 
 示例 — 在搜索框中搜索 "browser-use"：

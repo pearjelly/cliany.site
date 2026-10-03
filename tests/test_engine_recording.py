@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from cliany_site.errors import ExploreContractError
 from cliany_site.explorer.engine import WorkflowExplorer
 
 
@@ -71,7 +72,7 @@ def _prepare_explore_mocks(
     )
 
     invoke_responses = [SimpleNamespace(content=f"response-{idx}") for idx, _ in enumerate(parse_results)]
-    mocker.patch(
+    invoke_mock = mocker.patch(
         "cliany_site.explorer.engine._invoke_llm_with_retry",
         new_callable=AsyncMock,
         side_effect=invoke_responses,
@@ -99,6 +100,7 @@ def _prepare_explore_mocks(
         "capture_screenshot": capture_screenshot_mock,
         "recording_class": recording_class_mock,
         "execute": execute_mock,
+        "invoke": invoke_mock,
     }
 
 
@@ -127,6 +129,62 @@ def _one_step_done_result() -> list[dict]:
 
 
 class TestWorkflowExplorerRecording:
+    @pytest.mark.asyncio
+    async def test_ungrounded_extract_is_rejected_before_page_execution(self, mocker, tmp_home):
+        mocks = _prepare_explore_mocks(
+            mocker,
+            parse_results=[{"actions": [
+                {"type": "extract", "selector": "#guessed li", "extract_mode": "list"}
+            ], "done": False}],
+        )
+        mocks["capture_axtree"].return_value["extract_candidates"] = [
+            {"role": "list", "selectors": ["#results"]}
+        ]
+        mocker.patch("cliany_site.explorer.engine._EXTRACT_GROUNDING_TIMEOUT_SECONDS", 0.0)
+        evaluated = False
+
+        async def execute(session, actions, *, before_extract, **_kwargs):
+            nonlocal evaluated
+            await before_extract(session, actions[0], 0)
+            evaluated = True
+
+        mocks["execute"].side_effect = execute
+
+        with pytest.raises(ExploreContractError) as error:
+            await WorkflowExplorer().explore("https://example.com/start", "读取结果")
+
+        assert error.value.reason == "extract_selector_ungrounded"
+        assert not evaluated
+
+    @pytest.mark.asyncio
+    async def test_extract_waits_for_transient_ax_candidate(self, mocker, tmp_home):
+        mocks = _prepare_explore_mocks(
+            mocker,
+            parse_results=[{"actions": [
+                {"type": "extract", "selector": "#results li", "extract_mode": "list"}
+            ], "done": False}],
+        )
+        tree = _make_tree()
+        ready_tree = _make_tree()
+        ready_tree["extract_candidates"] = [{"role": "list", "selectors": ["#results li"]}]
+        mocks["capture_axtree"].side_effect = [tree, tree, ready_tree]
+        sleep = mocker.patch("cliany_site.explorer.engine.asyncio.sleep", new_callable=AsyncMock)
+
+        class StopAfterValidation(Exception):
+            pass
+
+        async def execute(session, actions, *, before_extract, **_kwargs):
+            await before_extract(session, actions[0], 0)
+            raise StopAfterValidation
+
+        mocks["execute"].side_effect = execute
+
+        with pytest.raises(StopAfterValidation):
+            await WorkflowExplorer().explore("https://example.com/start", "读取结果")
+
+        assert mocks["capture_axtree"].await_count >= 3
+        sleep.assert_awaited_with(0.5)
+
     @pytest.mark.asyncio
     async def test_step_limit_finalizes_recording_as_incomplete(self, mocker, tmp_home):
         manager = MagicMock()
@@ -239,6 +297,19 @@ class TestWorkflowExplorerRecording:
 
         mocks["recording_class"].assert_not_called()
         assert mocks["capture_screenshot"].await_count == 0
+
+    @pytest.mark.asyncio
+    async def test_prompt_includes_grounded_read_only_extract_candidates(self, mocker):
+        mocks = _prepare_explore_mocks(mocker, parse_results=_one_step_done_result())
+        mocks["capture_axtree"].return_value["extract_candidates"] = [
+            {"role": "status", "name": "", "text": "1 matches", "selectors": ["#summary"]},
+        ]
+
+        await WorkflowExplorer().explore("https://example.com/start", "读取结果数量", record=False)
+
+        prompt = mocks["invoke"].await_args.args[1]
+        assert "只读 AX 语义元素（供 extract 使用）" in prompt
+        assert '[status "" text="1 matches"] → #summary' in prompt
 
     @pytest.mark.asyncio
     async def test_exception_path_finalize_completed_false(self, mocker):

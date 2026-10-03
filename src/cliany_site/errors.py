@@ -44,6 +44,22 @@ class DataCommandQualityError(ExplorerError):
         self.details = details
 
 
+class LlmResponseFormatError(ValueError):
+    """Model response cannot be used as a completed exploration step."""
+
+    def __init__(self, message: str, *, reason: str) -> None:
+        super().__init__(message)
+        self.reason = reason
+
+
+class ExploreContractError(RuntimeError):
+    """Recorded actions and suggested commands cannot form a valid adapter."""
+
+    def __init__(self, message: str, *, reason: str) -> None:
+        super().__init__(message)
+        self.reason = reason
+
+
 class CodegenError(ClanySiteError):
     """代码生成（adapter 输出 / 模板渲染）相关异常"""
 

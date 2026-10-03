@@ -15,7 +15,7 @@ from cliany_site.capability import ApiEndpoint, route_action
 from cliany_site.config import get_config
 from cliany_site.envelope import ErrorCode
 from cliany_site.errors import ClanySiteError
-from cliany_site.extract import _coerce_json_like_extract_data, build_extract_js
+from cliany_site.extract import _coerce_json_like_extract_data, _wait_for_list_settle, build_extract_js
 from cliany_site.progress import NullProgressReporter, ProgressReporter
 
 logger = logging.getLogger(__name__)
@@ -578,6 +578,7 @@ async def execute_action_steps(
     dry_run: bool = False,
     extraction_results: list | None = None,
     metadata: dict | None = None,
+    before_extract: Callable[[Any, dict[str, Any], int], Awaitable[None]] | None = None,
 ) -> None:
     import importlib
     from datetime import datetime
@@ -660,6 +661,9 @@ async def execute_action_steps(
                 logger.debug("跳过已完成步骤 %d (start_index=%d)", idx, start_index)
                 completed_indices.append(idx)
                 continue
+
+            if action_type == "extract" and not dry_run and before_extract is not None:
+                await before_extract(browser_session, action_data, idx)
 
             step_start = time.monotonic()
             step_page_url = ""
@@ -755,13 +759,35 @@ async def execute_action_steps(
                     await event.event_result(raise_if_any=True, raise_if_none=False)
 
                 elif action_type == "extract":
-                    await asyncio.sleep(1.5)
-
                     raw_selector = action_data.get("selector")
                     selector = raw_selector.strip() if isinstance(raw_selector, str) else ""
                     extract_mode = str(action_data.get("extract_mode", "text")).strip()
                     fields = action_data.get("fields", {}) or {}
                     description = str(action_data.get("description", ""))
+
+                    if extract_mode == "list" and selector:
+                        page = await browser_session.get_current_page()
+                        if page is not None and not await _wait_for_list_settle(page, selector):
+                            message = "列表结果未稳定，停止提取以免返回不完整数据"
+                            if extraction_results is not None:
+                                extraction_results.append({
+                                    "ok": False,
+                                    "error": {
+                                        "code": ErrorCode.E_PAGE_NOT_READY,
+                                        "message": message,
+                                        "step_index": idx,
+                                        "selector": selector,
+                                    },
+                                })
+                            raise ActionExecutionError(
+                                error_type="page_not_ready",
+                                action_index=idx,
+                                action=action_data,
+                                message=f"提取步骤失败: {message}",
+                                suggestion="等待页面完成加载后重试",
+                            )
+                    else:
+                        await asyncio.sleep(1.5)
 
                     if not selector:
                         message = "extract 动作缺少 selector"
