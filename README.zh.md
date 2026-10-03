@@ -22,7 +22,7 @@ cliany-site cases
 cliany-site demo --case-id apache-jira-issues --json
 ```
 
-`doctor` 会给出下一步建议；`cliany-site cases --status active` 列出维护中的公开案例。`demo` 仅在本地没有目标 adapter 时按固定哈希安装，严格校验后运行只读查询，并要求至少返回一条结果；Jira 和 Confluence 可用，需要登录或尚未发布的案例不可用。首次运行的前提条件见 [10 分钟成功路径](docs/quickstart-10min.md)；准备自动化自己的站点时，再配置 Chrome/CDP 与 LLM。
+`doctor` 会给出下一步建议；`cliany-site cases --status active` 列出维护中的公开案例。`demo` 仅在本地没有目标 adapter 时按固定哈希安装，严格校验后运行只读查询，并要求至少返回一条结果；Jira、Confluence 和 Jenkins 可用，需要登录或尚未发布的案例不可用。首次运行的前提条件见 [10 分钟成功路径](docs/quickstart-10min.md)；准备自动化自己的站点时，再配置 Chrome/CDP 与 LLM。
 
 ### 告诉我们结果
 
@@ -39,7 +39,7 @@ cliany-site demo --case-id apache-jira-issues --json
 - **LLM 调用重试机制** — 网络抖动时自动重试，提升探索成功率
 - **可重试 LLM 上游故障信号** — `explore --json` 会把网关、限流或服务不可用归类为 `E_LLM_UNAVAILABLE`，返回清洗后的重试详情，而不是原始 HTML。
 - **统一 JSON 信封** — 所有命令支持 `--json`，输出机器可读的 `{ok, data, error, meta}` 信封 (v1)
-- **持久化 Session** — 跨命令保持 Cookie / LocalStorage 登录状态
+- **持久化 Session** — 跨命令恢复适用于目标主机的 Cookie；暂不支持恢复 LocalStorage
 - **动态适配器加载** — 按域名自动注册 CLI 子命令，随时扩展
 - **自动浏览器管理** — 自动管理 Chrome 调试实例或实验性 Obscura 二进制文件
 - **带质量信号的数据抽取** — 支持从页面提取结构化数据、保存 Markdown 报告，并持续通过 `data.quality` 暴露空结果与字段缺失；生成的数据命令必须返回真实提取结果，除非明确声明零匹配本来合法
@@ -330,6 +330,9 @@ cliany-site demo.suiteondemand.com list-accounts --limit 5 --json
 ```
 
 ### ASF Jira (任务追踪)
+
+已发布的 PyPI v0.16.368 CLI 在全新 HOME 重复固定哈希首跑，返回 5 条只读 Spark issue；第二次运行复用已校验的 adapter。详见[日期化审计](docs/user-evidence/2026-10-02-jira-pypi-demo-audit.md)。第三方站点可用性与 issue 总数可能变化。
+
 ```bash
 cliany-site market install https://github.com/pearjelly/cliany.site/releases/download/v0.14.1/issues.apache.org-0.14.1.cliany-adapter.tar.gz --sha256 ad5867d361f372914c536fb59c8f26837af96ed407859cf69dc8464922f05319
 cliany-site verify issues.apache.org --strict --json
