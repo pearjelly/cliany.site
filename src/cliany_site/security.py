@@ -15,11 +15,14 @@ from __future__ import annotations
 import json
 import logging
 import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
+import portalocker
+
 from cliany_site.config import get_config
-from cliany_site.errors import SessionError
+from cliany_site.errors import LOCK_TIMEOUT, SessionError
 
 logger = logging.getLogger(__name__)
 
@@ -84,11 +87,21 @@ def _save_key_to_file(key: bytes) -> None:
     """将密钥写入 ~/.cliany-site/.keyfile，权限 600"""
     path = _keyfile_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(key)
-    import contextlib
+    _atomic_write_bytes(path, key)
 
-    with contextlib.suppress(OSError):
-        os.chmod(path, 0o600)
+
+def _atomic_write_bytes(path: Path, data: bytes) -> None:
+    fd, temp_path = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "wb") as output:
+            output.write(data)
+            output.flush()
+            os.fsync(output.fileno())
+        os.replace(temp_path, path)
+    except Exception:
+        if os.path.exists(temp_path):
+            os.unlink(temp_path)
+        raise
 
 
 def get_encryption_key() -> bytes:
@@ -105,9 +118,15 @@ def get_encryption_key() -> bytes:
         _save_key_to_keyring(key)
         return key
 
-    key = _generate_fernet_key()
-    if not _save_key_to_keyring(key):
-        _save_key_to_file(key)
+    key_path = _keyfile_path()
+    key_path.parent.mkdir(parents=True, exist_ok=True)
+    with portalocker.Lock(str(key_path.with_suffix(".lock")), timeout=10, mode="a"):
+        key = _load_key_from_keyring() or _load_key_from_file()
+        if key:
+            return key
+        key = _generate_fernet_key()
+        if not _save_key_to_keyring(key):
+            _save_key_to_file(key)
     logger.info("已生成 Session 加密密钥")
     return key
 
@@ -183,9 +202,19 @@ def save_encrypted_session(domain: str, data: dict[str, Any]) -> str:
     }
     plaintext = json.dumps(payload, ensure_ascii=False, indent=2)
     encrypted = encrypt_data(plaintext)
-    path.write_bytes(encrypted)
+    _write_session_bytes(path, encrypted)
     logger.info("Session 已加密保存: domain=%s path=%s", domain, path)
     return str(path)
+
+
+def _write_session_bytes(path: Path, encrypted: bytes) -> None:
+    try:
+        with portalocker.Lock(str(path.with_suffix(".lock")), timeout=10, mode="a"):
+            _atomic_write_bytes(path, encrypted)
+    except portalocker.LockException as exc:
+        error = SessionError(f"获取 session 锁超时，请稍后重试: {exc}")
+        error.error_code = LOCK_TIMEOUT
+        raise error from exc
 
 
 def load_encrypted_session(domain: str) -> dict[str, Any] | None:
@@ -215,25 +244,31 @@ def load_encrypted_session(domain: str) -> dict[str, Any] | None:
     try:
         data: dict[str, Any] = json.loads(raw.decode("utf-8"))
         # 自动迁移为加密格式
-        _migrate_to_encrypted(domain, data, path)
-        return data
+        if _migrate_to_encrypted(domain, data, path, raw):
+            return data
+        return None
     except (json.JSONDecodeError, UnicodeDecodeError):
         return None
 
 
-def _migrate_to_encrypted(domain: str, data: dict[str, Any], path: Path) -> None:
+def _migrate_to_encrypted(domain: str, data: dict[str, Any], path: Path, original: bytes) -> bool:
     """将明文 Session 文件迁移为加密格式"""
     try:
         plaintext = json.dumps(data, ensure_ascii=False, indent=2)
         encrypted = encrypt_data(plaintext)
-        path.write_bytes(encrypted)
+        with portalocker.Lock(str(path.with_suffix(".lock")), timeout=10, mode="a"):
+            if path.read_bytes() != original:
+                return False
+            _atomic_write_bytes(path, encrypted)
         logger.info("Session 已自动迁移为加密格式: domain=%s", domain)
-    except Exception:  # noqa: BLE001
-        logger.debug("Session 加密迁移失败: domain=%s", domain)
+        return True
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Session 加密迁移失败，拒绝使用明文: domain=%s error=%s", domain, exc)
+        return False
 
 
 def _session_path(domain: str) -> Path:
     sessions_dir = get_config().sessions_dir
     sessions_dir.mkdir(parents=True, exist_ok=True)
-    safe_domain = domain.replace("/", "_").replace(":", "_")
+    safe_domain = domain.replace("/", "_").replace("\\", "_").replace(":", "_")
     return sessions_dir / f"{safe_domain}.json"

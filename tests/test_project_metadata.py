@@ -32,6 +32,22 @@ def test_project_has_open_source_metadata_files():
         assert (ROOT / filename).exists(), f"{filename} is required for open source readiness"
 
 
+def test_direct_runtime_imports_are_declared_as_dependencies():
+    data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    dependencies = data["project"]["dependencies"]
+
+    assert "aiohttp" in dependencies
+    assert "PyYAML" in dependencies
+
+
+def test_security_policy_tracks_latest_stable_release():
+    policy = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
+
+    assert "Latest stable release" in policy
+    assert "Earlier releases" in policy
+    assert "0.6.x" not in policy
+
+
 def test_readmes_have_open_source_entrypoints():
     for filename in ("README.md", "README.zh.md"):
         text = (ROOT / filename).read_text(encoding="utf-8")

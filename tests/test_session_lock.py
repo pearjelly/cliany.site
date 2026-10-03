@@ -25,23 +25,26 @@ def test_concurrent_save_session_no_corruption(tmp_path: Path) -> None:
 
     mock_cfg = MagicMock()
     mock_cfg.sessions_dir = sessions_dir
+    mock_cfg.home_dir = tmp_path
 
     with (
         patch("cliany_site.session.get_config", return_value=mock_cfg),
-        patch(
-            "cliany_site.security.save_encrypted_session",
-            side_effect=RuntimeError("no key in test"),
-        ),
+        patch("cliany_site.security.get_config", return_value=mock_cfg),
+        patch("cliany_site.security._load_key_from_keyring", return_value=None),
+        patch("cliany_site.security._save_key_to_keyring", return_value=False),
     ):
         ctx = multiprocessing.get_context("fork")
         with ctx.Pool(5) as pool:
             pool.map(_save_session_worker, [(domain, i) for i in range(5)])
 
-    session_file = sessions_dir / f"{domain}.json"
-    assert session_file.exists()
-    data = json.loads(session_file.read_text(encoding="utf-8"))
-    assert isinstance(data, dict)
-    assert "cookies" in data
+        from cliany_site.security import decrypt_data, is_encrypted
+
+        session_file = sessions_dir / f"{domain}.json"
+        raw = session_file.read_bytes()
+        assert is_encrypted(raw)
+        data = json.loads(decrypt_data(raw))
+        assert data["cookies"][0]["name"] in {f"c{i}" for i in range(5)}
+        assert (tmp_path / ".keyfile").stat().st_mode & 0o777 == 0o600
 
 
 def test_atomic_read_json_logs_parse_error(tmp_path: Path) -> None:

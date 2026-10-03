@@ -49,6 +49,36 @@ def test_execute_steps_routes_submit_without_a_target_to_enter(monkeypatch):
     assert calls == [["browser", "submit"]]
 
 
+def test_navigation_uses_saved_session_only_when_file_exists(monkeypatch, tmp_home):
+    from cliany_site.session import _session_path
+
+    calls: list[str | None] = []
+
+    def fake_run_atom(command: list[str], session: str | None = None, heal_on_failure: bool = False):
+        assert command[:2] == ["browser", "navigate"]
+        assert heal_on_failure is False
+        calls.append(session)
+        return {"ok": True, "command": "browser navigate", "data": {}}
+
+    monkeypatch.setattr(runtime_helpers, "run_atom", fake_run_atom)
+
+    runtime_helpers.execute_steps_via_atoms(
+        [{"type": "navigate", "url": "https://example.test/next"}],
+        source_url="https://example.test",
+        domain="example.test",
+    )
+
+    path = _session_path("example.test")
+    path.write_text("unreadable", encoding="utf-8")
+    runtime_helpers.execute_steps_via_atoms(
+        [{"type": "navigate", "url": "https://example.test/next"}],
+        source_url="https://example.test",
+        domain="example.test",
+    )
+
+    assert calls == [None, None, "example.test", "example.test"]
+
+
 def test_execute_steps_sandbox_blocks_cross_domain_before_atoms(monkeypatch):
     def unexpected_atom(*_args, **_kwargs):
         raise AssertionError("sandbox preflight must run before atoms")
@@ -127,7 +157,11 @@ def test_partial_extract_does_not_retry(monkeypatch):
         return {"ok": True, "data": {"content": [{"title": ""}], "quality": {"status": "partial"}}}
 
     monkeypatch.setattr(runtime_helpers, "run_atom", fake_run_atom)
-    monkeypatch.setattr(runtime_helpers.time, "sleep", lambda _: (_ for _ in ()).throw(AssertionError("unexpected retry")))
+    monkeypatch.setattr(
+        runtime_helpers.time,
+        "sleep",
+        lambda _: (_ for _ in ()).throw(AssertionError("unexpected retry")),
+    )
 
     runtime_helpers.execute_steps_via_atoms(
         [{"type": "extract", "selector": "a.result", "extract_mode": "list"}],
