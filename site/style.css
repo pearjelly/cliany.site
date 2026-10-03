@@ -399,6 +399,7 @@ html.no-js .lang-toggle {
 .feature-card {
   background: var(--color-white);
   padding: 2.5rem 2rem;
+  min-width: 0;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   transition: transform var(--transition), opacity 0.6s ease-out;
@@ -717,7 +718,7 @@ html.js .qs-grid.visible .qs-card {
   left: 0;
 }
 
-.obscura-list code {
+.obscura-note code {
   background: var(--color-bg);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
@@ -1036,7 +1037,15 @@ html.js .reveal.visible {
 
 @media (max-width: 768px) {
   .features-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .features-grid .feature-card:last-child:nth-child(2n+1) {
+    grid-column: auto;
+  }
+
+  .feature-card {
+    overflow-wrap: anywhere;
   }
 
   .feature-card-focus {
