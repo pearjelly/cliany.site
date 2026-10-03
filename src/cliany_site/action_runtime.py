@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import copy
+import json
 import logging
 import re
 import time
@@ -71,6 +72,41 @@ def _get_resolve_max_retries() -> int:
 
 def _get_adaptive_repair_max_attempts() -> int:
     return get_config().adaptive_repair_max_attempts
+
+
+async def _wait_for_list_settle(page: Any, selector: str) -> bool:
+    script = f"""() => {{
+        const rows = document.querySelectorAll({json.dumps(selector)});
+        const first = rows[0];
+        const scope = first?.closest('ul, ol, table')?.parentElement || first?.parentElement || document.body;
+        const busy = scope.querySelector('[aria-busy="true"], [role="progressbar"]') !== null;
+        const loading = [...scope.querySelectorAll('h1, h2, h3, h4, [role="status"]')].some(node => {{
+            const label = (node.textContent || '').trim().toLowerCase().replace(/[.\\s…。]+$/g, '');
+            return ['searching', 'loading', 'fetching', '正在搜索', '加载中'].includes(label);
+        }});
+        return {{count: rows.length, loading: busy || loading}};
+    }}"""
+    deadline = time.monotonic() + 10.0
+    previous: tuple[int, bool] | None = None
+    stable_since = time.monotonic()
+    while True:
+        try:
+            state = _coerce_json_like_extract_data(await page.evaluate(script))
+        except Exception as exc:
+            logger.debug("list settle probe unavailable: %s", exc)
+            return False
+        if not isinstance(state, dict) or "count" not in state or "loading" not in state:
+            return False
+        current = (int(state["count"]), bool(state["loading"]))
+        now = time.monotonic()
+        if current != previous or current[1]:
+            stable_since = now
+        elif now - stable_since >= 1.0:
+            return True
+        if now >= deadline:
+            return False
+        previous = current
+        await asyncio.sleep(0.25)
 
 
 def _adaptive_repair_enabled() -> bool:
@@ -759,13 +795,35 @@ async def execute_action_steps(
                     await event.event_result(raise_if_any=True, raise_if_none=False)
 
                 elif action_type == "extract":
-                    await asyncio.sleep(1.5)
-
                     raw_selector = action_data.get("selector")
                     selector = raw_selector.strip() if isinstance(raw_selector, str) else ""
                     extract_mode = str(action_data.get("extract_mode", "text")).strip()
                     fields = action_data.get("fields", {}) or {}
                     description = str(action_data.get("description", ""))
+
+                    if extract_mode == "list" and selector:
+                        page = await browser_session.get_current_page()
+                        if page is not None and not await _wait_for_list_settle(page, selector):
+                            message = "列表结果未稳定，停止提取以免返回不完整数据"
+                            if extraction_results is not None:
+                                extraction_results.append({
+                                    "ok": False,
+                                    "error": {
+                                        "code": ErrorCode.E_PAGE_NOT_READY,
+                                        "message": message,
+                                        "step_index": idx,
+                                        "selector": selector,
+                                    },
+                                })
+                            raise ActionExecutionError(
+                                error_type="page_not_ready",
+                                action_index=idx,
+                                action=action_data,
+                                message=f"提取步骤失败: {message}",
+                                suggestion="等待页面完成加载后重试",
+                            )
+                    else:
+                        await asyncio.sleep(1.5)
 
                     if not selector:
                         message = "extract 动作缺少 selector"

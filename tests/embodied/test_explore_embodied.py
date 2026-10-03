@@ -73,6 +73,25 @@ async def test_extract_selector_is_grounded_after_preceding_click(
 
 
 @pytest.mark.embodied
+@pytest.mark.asyncio
+async def test_list_extract_waits_for_incremental_results(local_server, headless_browser_cdp_url, tmp_home):
+    from cliany_site.action_runtime import execute_action_steps
+    from cliany_site.browser.cdp import CDPConnection
+
+    cdp = CDPConnection(cdp_url=headless_browser_cdp_url)
+    try:
+        session = await cdp.connect()
+        await session.navigate_to(f"{local_server}/incremental_results.html", new_tab=False)
+        extracts = []
+        await execute_action_steps(session, [{
+            "type": "extract", "selector": "#results li", "extract_mode": "list", "fields": {"title": ""},
+        }], extraction_results=extracts)
+        assert extracts[0]["data"] == [{"title": f"Result {index}"} for index in range(1, 9)]
+    finally:
+        await cdp.disconnect()
+
+
+@pytest.mark.embodied
 def test_generated_command_reuses_auto_launched_chrome(local_server, tmp_home, monkeypatch):
     import os
     import pwd

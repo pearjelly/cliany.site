@@ -40,6 +40,7 @@ async def test_extract_preflight_failure_propagates_with_continue_on_error(mocke
 @pytest.mark.asyncio
 async def test_extract_failure_is_recorded_when_continue_on_error(mocker):
     mocker.patch("cliany_site.action_runtime.asyncio.sleep", new=mocker.AsyncMock())
+    mocker.patch("cliany_site.action_runtime._wait_for_list_settle", new=mocker.AsyncMock(return_value=True))
     extraction_results: list[dict] = []
 
     await execute_action_steps(
@@ -56,6 +57,7 @@ async def test_extract_failure_is_recorded_when_continue_on_error(mocker):
 @pytest.mark.asyncio
 async def test_extract_failure_raises_without_continue_on_error(mocker):
     mocker.patch("cliany_site.action_runtime.asyncio.sleep", new=mocker.AsyncMock())
+    mocker.patch("cliany_site.action_runtime._wait_for_list_settle", new=mocker.AsyncMock(return_value=True))
 
     with pytest.raises(ActionExecutionError, match="提取步骤失败"):
         await execute_action_steps(
@@ -63,6 +65,21 @@ async def test_extract_failure_raises_without_continue_on_error(mocker):
             [{"type": "extract", "selector": "article.result", "extract_mode": "list"}],
             extraction_results=[],
         )
+
+
+@pytest.mark.asyncio
+async def test_list_settle_failure_is_recorded_as_page_not_ready():
+    extraction_results: list[dict] = []
+
+    await execute_action_steps(
+        _BrowserSession(),
+        [{"type": "extract", "selector": "article.result", "extract_mode": "list"}],
+        continue_on_error=True,
+        extraction_results=extraction_results,
+    )
+
+    assert extraction_results[0]["ok"] is False
+    assert extraction_results[0]["error"]["code"] == ErrorCode.E_PAGE_NOT_READY
 
 
 @pytest.mark.asyncio
