@@ -327,6 +327,19 @@ async def test_partition_repair_changes_only_ownership_without_replaying_actions
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("action_steps", [[], [0]])
+async def test_no_action_command_fails_without_partition_repair(mocker, tmp_home, action_steps):
+    invoke = _prepare(mocker, [{
+        "actions": [], "commands": [{"name": "inspect-beta", "action_steps": action_steps}], "done": True,
+    }], [[]])
+
+    with pytest.raises(RuntimeError, match="命令动作分区无效"):
+        await WorkflowExplorer().explore("https://example.com/search", "检查按钮", record=False)
+
+    assert invoke.await_count == 1
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(("repair_actions", "repair_name"), [
     ([{"type": "click", "ref": "1"}], "open"),
     ([], "other"),

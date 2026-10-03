@@ -205,7 +205,8 @@ class TestWorkflowExplorerExtendDomain:
 
             explorer = WorkflowExplorer(extend_domain="example.com")
 
-            asyncio.run(explorer.explore("https://example.com", "测试工作流", record=False))
+            with pytest.raises(RuntimeError, match="命令动作分区无效"):
+                asyncio.run(explorer.explore("https://example.com", "测试工作流", record=False))
 
         assert len(captured_prompts) >= 1
         prompt_text = captured_prompts[0]

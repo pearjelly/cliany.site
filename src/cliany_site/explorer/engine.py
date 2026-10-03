@@ -97,6 +97,11 @@ def _valid_action_indices(raw_indices: object, action_count: int) -> list[int]:
 
 def _validate_command_partition(commands: list[object], action_count: int) -> None:
     """Validate ownership before filtering indices can hide invalid model output."""
+    if commands and action_count == 0:
+        raise ExploreContractError(
+            "命令动作分区无效：没有录制动作，不能生成可复用命令",
+            reason="command_partition_invalid",
+        )
     assigned: list[int] = []
     for command in commands:
         indices = command.get("action_steps") if isinstance(command, dict) else None
@@ -1105,7 +1110,7 @@ class WorkflowExplorer:
                         try:
                             _validate_command_partition(commands_data, len(result.actions))
                         except ExploreContractError:
-                            if partition_repairs >= _MAX_PARTITION_REPAIRS:
+                            if not result.actions or partition_repairs >= _MAX_PARTITION_REPAIRS:
                                 raise
                             partition_repairs += 1
                             result.partition_repair_attempts += 1
