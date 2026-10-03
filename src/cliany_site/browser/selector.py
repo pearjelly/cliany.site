@@ -141,6 +141,63 @@ def enrich_selector_map(selector_map: dict[str, dict]) -> dict[str, dict]:
     return selector_map
 
 
+_READ_ONLY_EXTRACT_ROLES = frozenset({"status", "alert", "list", "table"})
+
+
+def collect_read_only_extract_candidates(root: Any, limit: int = 20) -> list[dict[str, Any]]:
+    """Ground extract selectors in visible AX semantics and observed DOM attributes."""
+    if root is None or limit <= 0:
+        return []
+
+    candidates: list[dict[str, Any]] = []
+    pending = [root]
+    visited = 0
+    while pending and len(candidates) < limit and visited < 5000:
+        node = pending.pop()
+        visited += 1
+        if getattr(node, "is_visible", None) is False:
+            continue
+        pending.extend(reversed(getattr(node, "children_nodes", None) or []))
+
+        ax_node = getattr(node, "ax_node", None)
+        role = _to_text(getattr(ax_node, "role", "")).lower()
+        if role not in _READ_ONLY_EXTRACT_ROLES:
+            continue
+        tag = _to_text(getattr(node, "tag_name", "")).lower()
+        attributes = getattr(node, "attributes", None)
+        if not isinstance(attributes, dict):
+            continue
+        selectors = [
+            selector
+            for selector in compute_selector_candidates(tag, attributes)
+            if selector.startswith(("#", '[data-testid="', '[aria-label="'))
+        ][:2]
+        if not selectors:
+            continue
+        name = _to_text(getattr(ax_node, "name", ""))
+        text = _to_text(node.get_all_children_text()) if hasattr(node, "get_all_children_text") else ""
+        if not name and not text and role not in {"list", "table"}:
+            continue
+        candidates.append({"role": role, "name": name[:80], "text": text[:120], "selectors": selectors})
+    return candidates
+
+
+def format_read_only_extract_candidates(candidates: list[dict[str, Any]], max_chars: int = 2000) -> str:
+    lines: list[str] = []
+    for item in candidates:
+        role = _to_text(item.get("role"))
+        name = _to_text(item.get("name")).replace("\n", " ").replace("\r", " ").replace('"', '\\"')
+        text = _to_text(item.get("text")).replace("\n", " ").replace("\r", " ").replace('"', '\\"')
+        selectors = item.get("selectors")
+        if not role or not isinstance(selectors, list) or not selectors:
+            continue
+        line = f'[{role} "{name}" text="{text}"] → {", ".join(str(value) for value in selectors)}'
+        if len("\n".join([*lines, line])) > max_chars:
+            break
+        lines.append(line)
+    return "\n".join(lines)
+
+
 def format_selector_candidates_section(selector_map: dict[str, dict], max_chars: int = 3000) -> str:
     if not isinstance(selector_map, dict):
         return ""

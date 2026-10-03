@@ -7,7 +7,12 @@ from unittest.mock import AsyncMock
 import pytest
 
 from cliany_site.errors import DataCommandQualityError
-from cliany_site.explorer.engine import WorkflowExplorer
+from cliany_site.explorer.engine import (
+    WorkflowExplorer,
+    _data_command_completion_failures,
+    _data_completion_feedback,
+)
+from cliany_site.explorer.models import ActionStep
 
 
 def _config() -> SimpleNamespace:
@@ -52,6 +57,45 @@ def _extract_action() -> dict:
         "fields": {"title": "h2", "url": "a@href", "snippet": ".snippet"},
         "description": "提取搜索结果",
     }
+
+
+def test_allowed_zero_match_does_not_hide_empty_count_text():
+    actions = [
+        ActionStep("extract", "https://example.com/search", extract_mode="text"),
+        ActionStep("extract", "https://example.com/search", extract_mode="list"),
+    ]
+    command = [_data_command([0, 1], expects_nonempty=False)]
+    evidence = [
+        {"action_index": 0, "ok": True, "data": {"text": ""}},
+        {"action_index": 1, "ok": True, "data": []},
+    ]
+    failures = _data_command_completion_failures(command, actions, evidence)
+    assert [(failure["reason"], failure["action_index"]) for failure in failures] == [
+        ("extract_quality_failed", 0)
+    ]
+    assert "空文本不是合法零匹配证据" in _data_completion_feedback(failures)
+
+    evidence[0]["data"] = {"text": "0 matches"}
+    assert _data_command_completion_failures(command, actions, evidence) == []
+
+
+@pytest.mark.asyncio
+async def test_prefixed_ref_keeps_recorded_semantics_for_replay(mocker, tmp_home):
+    _prepare(
+        mocker,
+        [{
+            "actions": [{"type": "click", "ref": "@1", "description": "点击 Search"}],
+            "commands": [{"name": "inspect", "action_steps": [0], "args": []}],
+            "done": True,
+        }],
+        [[]],
+    )
+
+    result = await WorkflowExplorer().explore("https://example.com/search", "点击 Search", record=False)
+
+    assert result.actions[0].target_ref == "@1"
+    assert result.actions[0].target_name == "Search"
+    assert result.actions[0].target_role == "button"
 
 
 def _prepare(mocker, parse_results: list[dict], extraction_payloads: list[list[dict]]):

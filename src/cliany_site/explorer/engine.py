@@ -18,7 +18,7 @@ from cliany_site.action_runtime import execute_action_steps, normalize_navigatio
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.browser.screenshot import capture_screenshot
-from cliany_site.browser.selector import format_selector_candidates_section
+from cliany_site.browser.selector import format_read_only_extract_candidates, format_selector_candidates_section
 from cliany_site.capability import sniff_api_endpoints
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
 from cliany_site.config import get_config
@@ -185,7 +185,12 @@ def _data_command_completion_failures(
                 latest_evidence.get("data"),
                 fields_map,
             )
-            accepts_empty = not requires_nonempty and quality.status == "empty"
+            accepts_empty = (
+                not requires_nonempty
+                and action.extract_mode in {"list", "table"}
+                and quality.status == "empty"
+                and not quality.field_blank_rows
+            )
             if not quality.ok and not accepts_empty:
                 failures.append(
                     {
@@ -215,6 +220,9 @@ def _data_completion_feedback(failures: list[dict[str, Any]]) -> str:
         name = failure.get("name") or f"command-{failure.get('command_index', 0) + 1}"
         reason = failure.get("reason", "unknown")
         lines.append(f"- {name}: {reason}")
+        quality = failure.get("quality")
+        if isinstance(quality, dict) and quality.get("issues") == ["empty text"]:
+            lines.append("  空文本不是合法零匹配证据；请定位页面真实的数量或状态文本后重新提取。")
     return "\n".join(lines)
 
 
@@ -781,6 +789,9 @@ class WorkflowExplorer:
 
                 element_tree_text = serialize_axtree(tree)
                 selector_candidates_text = format_selector_candidates_section(selector_map)
+                read_only_candidates = format_read_only_extract_candidates(tree.get("extract_candidates") or [])
+                if read_only_candidates:
+                    selector_candidates_text += "\n只读 AX 语义元素（供 extract 使用）：\n" + read_only_candidates
                 prompt_text = EXPLORE_PROMPT_TEMPLATE.format(
                     url=tree.get("url", ""),
                     title=tree.get("title", ""),
@@ -904,7 +915,7 @@ class WorkflowExplorer:
                         continue
                     action_type = action_data.get("type", "unknown")
                     target_ref = str(action_data.get("ref", "") or "")
-                    selector = selector_map.get(target_ref, {})
+                    selector = selector_map.get(target_ref.removeprefix("@"), {})
                     if not isinstance(selector, dict):
                         selector = {}
 
