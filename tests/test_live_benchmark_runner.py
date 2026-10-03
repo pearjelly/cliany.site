@@ -52,6 +52,84 @@ def test_extract_evidence_must_be_successful_result():
     ]}}) == []
 
 
+def test_explore_quality_diagnostics_keep_structure_without_page_content():
+    error = {
+        "code": "E_EMPTY_RESULT",
+        "message": "private page text",
+        "details": {
+            "repair_attempts": 1,
+            "data_commands": [{
+                "name": "private command name",
+                "reason": "extract_quality_failed",
+                "action_index": 4,
+                "extract_mode": "text",
+                "quality": {
+                    "status": "empty",
+                    "row_count": 1,
+                    "field_blank_rows": {"url": [1], "private value\nsecret": [1]},
+                    "issues": ["private page text"],
+                },
+            }],
+        },
+    }
+    summary = benchmark._safe_explore_quality_diagnostics(error)
+    assert summary == {
+        "repair_attempts": 1,
+        "failures": [{
+            "reason": "extract_quality_failed",
+            "action_index": 4,
+            "extract_mode": "text",
+            "quality_status": "empty",
+            "row_count": 1,
+            "blank_fields": ["url"],
+        }],
+    }
+    assert "private" not in json.dumps(summary)
+
+
+@pytest.mark.asyncio
+async def test_failed_cli_report_drops_raw_quality_details(tmp_home, monkeypatch):
+    class FailedProcess:
+        returncode = 1
+
+        async def communicate(self):
+            return json.dumps({
+                "ok": False,
+                "error": {
+                    "code": "E_EMPTY_RESULT",
+                    "message": "private page text",
+                    "details": {
+                        "repair_attempts": 1,
+                        "data_commands": [{
+                            "reason": "extract_quality_failed",
+                            "action_index": 2,
+                            "extract_mode": "text",
+                            "quality": {"status": "empty", "issues": ["private page text"]},
+                        }],
+                    },
+                },
+            }).encode(), b"private stderr"
+
+    async def launch(*_args, **_kwargs):
+        return FailedProcess()
+
+    monkeypatch.setattr(benchmark.asyncio, "create_subprocess_exec", launch)
+    result, _ = await benchmark._run_cli(tmp_home, ["explore"], timeout=1)
+    assert result["error"] == {
+        "code": "E_EMPTY_RESULT",
+        "quality_diagnostics": {
+            "repair_attempts": 1,
+            "failures": [{
+                "reason": "extract_quality_failed",
+                "action_index": 2,
+                "extract_mode": "text",
+                "quality_status": "empty",
+            }],
+        },
+    }
+    assert "private" not in json.dumps(result)
+
+
 def test_benchmark_requires_returned_count_and_rows_not_just_correct_page():
     positive = _case("filter-catalog")["replays"][0]
     zero = _case("filter-catalog")["replays"][1]

@@ -73,6 +73,7 @@ def test_allowed_zero_match_does_not_hide_empty_count_text():
     assert [(failure["reason"], failure["action_index"]) for failure in failures] == [
         ("extract_quality_failed", 0)
     ]
+    assert failures[0]["extract_mode"] == "text"
     assert "空文本不是合法零匹配证据" in _data_completion_feedback(failures)
 
     evidence[0]["data"] = {"text": "0 matches"}

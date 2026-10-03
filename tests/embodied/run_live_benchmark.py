@@ -7,6 +7,7 @@ import asyncio
 import importlib.metadata
 import json
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -167,6 +168,57 @@ def _summarize_trials(trials: list[dict[str, Any]], task_ids: list[str]) -> dict
     }
 
 
+_SAFE_FIELD_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_-]{0,79}\Z")
+_QUALITY_REASONS = frozenset({
+    "extract_quality_failed", "missing_extraction_evidence",
+    "extraction_execution_failed", "missing_replay_prerequisites",
+})
+
+
+def _safe_explore_quality_diagnostics(error: dict[str, Any]) -> dict[str, Any] | None:
+    if error.get("code") != "E_EMPTY_RESULT":
+        return None
+    details = error.get("details")
+    if not isinstance(details, dict):
+        return None
+    failures = []
+    commands = details.get("data_commands")
+    for item in commands[:10] if isinstance(commands, list) else []:
+        if not isinstance(item, dict):
+            continue
+        row: dict[str, Any] = {}
+        reason = item.get("reason")
+        if isinstance(reason, str) and reason in _QUALITY_REASONS:
+            row["reason"] = reason
+        index = item.get("action_index")
+        if type(index) is int and index >= 0:
+            row["action_index"] = index
+        mode = item.get("extract_mode")
+        if isinstance(mode, str) and mode in {"text", "attribute", "list", "table"}:
+            row["extract_mode"] = mode
+        quality = item.get("quality")
+        if isinstance(quality, dict):
+            status = quality.get("status")
+            if isinstance(status, str) and status in {"empty", "partial", "ok"}:
+                row["quality_status"] = status
+            count = quality.get("row_count")
+            if type(count) is int and count >= 0:
+                row["row_count"] = count
+            blank_rows = quality.get("field_blank_rows")
+            if isinstance(blank_rows, dict):
+                row["blank_fields"] = [
+                    name for name in list(blank_rows)[:5]
+                    if isinstance(name, str) and _SAFE_FIELD_NAME.fullmatch(name)
+                ]
+        if row:
+            failures.append(row)
+    repairs = details.get("repair_attempts")
+    return {
+        "repair_attempts": repairs if type(repairs) is int and 0 <= repairs <= 10 else None,
+        "failures": failures,
+    }
+
+
 async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tuple[dict[str, Any], float]:
     env = os.environ.copy()
     env["CLIANY_NO_AGENT_MD"] = "1"
@@ -198,7 +250,11 @@ async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tup
     if not isinstance(payload, dict) or process.returncode != 0 or payload.get("ok") is not True:
         error = payload.get("error") if isinstance(payload, dict) else None
         code = error.get("code") if isinstance(error, dict) else None
-        return {"ok": False, "error": {"code": code or "CLI_FAILED"}}, elapsed
+        summary = _safe_explore_quality_diagnostics(error) if isinstance(error, dict) else None
+        safe_error = {"code": code or "CLI_FAILED"}
+        if summary is not None:
+            safe_error["quality_diagnostics"] = summary
+        return {"ok": False, "error": safe_error}, elapsed
     return payload, elapsed
 
 
@@ -249,6 +305,9 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
         await browser.close()
     if not explore.get("ok"):
         outcome["error_code"] = explore.get("error", {}).get("code")
+        diagnostics = explore.get("error", {}).get("quality_diagnostics")
+        if diagnostics is not None:
+            outcome["quality_diagnostics"] = diagnostics
         return outcome
 
     data = explore.get("data", {})

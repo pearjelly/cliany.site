@@ -197,6 +197,7 @@ def _data_command_completion_failures(
                         **base_failure,
                         "reason": "extract_quality_failed",
                         "action_index": action_index,
+                        "extract_mode": action.extract_mode,
                         "quality": quality.to_dict(),
                     }
                 )
