@@ -99,6 +99,7 @@ actions 中每个操作的字段定义：
   - fields: 仅 list/table 模式使用。key 为字段名，value 为子元素 CSS 选择器。支持 "@attr" 语法提取属性（如 {"url": "a@href", "title": "h3"}）。
     - 字段必须有当前页面可观察到的对应内容或属性；不要仅因是搜索/筛选结果就添加不存在的 url、snippet 等字段，也不要用空字符串伪造字段。
     - 有详情链接和摘要的搜索结果/资讯列表，提取 title（可读标题文本）、url（真实 href）和 snippet（实际摘要）；若某字段在页面上不存在，就省略该字段。
+    - 搜索/筛选命令若允许零匹配，可变化的结果集合应使用 list 或 table 提取；不要把某个结果项当作 text 提取，因为零匹配时该标量会消失。稳定显示的结果计数可另用 text 提取。expects_nonempty=false 不允许空 text 掩盖提取错误。
     - 严禁把 title 映射成 "a@href" 这类属性值；title 必须返回可读文本。
 
 示例 — 在搜索框中搜索 "browser-use"：
