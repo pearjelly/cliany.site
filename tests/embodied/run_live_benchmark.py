@@ -345,6 +345,28 @@ def _safe_explore_timing(stderr: bytes, *, ended_at: float) -> dict[str, Any] | 
     return summary
 
 
+def _safe_provider_context(preflight: dict[str, Any]) -> dict[str, str]:
+    context = {"provider": "unknown", "endpoint_type": "unknown"}
+    data = preflight.get("data")
+    checks = data.get("checks") if isinstance(data, dict) else None
+    if not isinstance(checks, list):
+        return context
+    for check in checks:
+        if not isinstance(check, dict) or not isinstance(check.get("details"), dict):
+            continue
+        details = check["details"]
+        provider = details.get("provider")
+        if check.get("name") == "llm_provider" and isinstance(provider, str) and provider in {"openai", "anthropic"}:
+            context["provider"] = provider
+        elif check.get("name") == "openai_base_url":
+            base_url = details.get("base_url")
+            if base_url is None or isinstance(base_url, str):
+                context["endpoint_type"] = "custom" if base_url and base_url.strip() else "default"
+    if context["provider"] != "openai":
+        context["endpoint_type"] = "not_reported" if context["provider"] == "anthropic" else "unknown"
+    return context
+
+
 async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tuple[dict[str, Any], float]:
     env = os.environ.copy()
     env["CLIANY_NO_AGENT_MD"] = "1"
@@ -535,7 +557,8 @@ async def _run(args: argparse.Namespace, tasks: list[dict[str, Any]]) -> dict[st
         "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
         "git_dirty": bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT, text=True).strip()),
         "package_version": importlib.metadata.version("cliany-site"),
-        "provider": os.getenv("CLIANY_LLM_PROVIDER", "resolved by cliany-site"),
+        "provider": "unknown",
+        "endpoint_type": "unknown",
         "browser_mode": "fresh headless Chromium via CDP for explore and each replay",
         "task_ids": [task["id"] for task in tasks],
         "trials_requested": args.trials,
@@ -556,6 +579,7 @@ async def _run(args: argparse.Namespace, tasks: list[dict[str, Any]]) -> dict[st
                     timeout=120,
                 )
                 report["preflight"] = {"ok": preflight.get("ok") is True, "seconds": round(elapsed, 2)}
+                report.update(_safe_provider_context(preflight))
                 if not preflight.get("ok"):
                     report["preflight"]["error_code"] = preflight.get("error", {}).get("code")
                     return report
