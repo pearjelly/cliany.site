@@ -13,6 +13,13 @@ def test_site_docs_explain_jev_consent_and_session_boundary():
     assert "当前不支持恢复 LocalStorage" in docs
 
 
+def test_advanced_homepage_notes_are_collapsed_by_default():
+    index = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
+    assert index.count('<details class="obscura-note reveal">') == 3
+    for key in ("qs.contribute.title", "qs.maintainer.title", "obscura.title"):
+        assert f'<summary class="obscura-title" data-i18n="{key}">' in index
+
+
 def test_sdk_examples_include_an_async_entrypoint():
     for path in (ROOT / "README.md", ROOT / "README.zh.md", ROOT / "site" / "docs" / "index.html"):
         text = path.read_text(encoding="utf-8")

@@ -691,6 +691,20 @@ html.js .qs-grid.visible .qs-card {
   color: var(--color-accent);
 }
 
+summary.obscura-title {
+  cursor: pointer;
+  margin-bottom: 0;
+}
+
+details[open] > summary.obscura-title {
+  margin-bottom: 0.5rem;
+}
+
+summary.obscura-title:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
 .obscura-desc {
   color: var(--color-text-muted);
   margin-bottom: 1rem;
