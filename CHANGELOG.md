@@ -7,6 +7,8 @@
 
 ## [Unreleased]
 
+## [0.16.375] - 2026-10-05
+
 ### Fixed
 
 - Website quickstart Copy controls no longer overlap commands. Narrow quickstart cards use a single column, and the longer `explore` example is readable on screen without changing its executable copy payload.
@@ -3369,7 +3371,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.374...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.375...HEAD
+[0.16.375]: https://github.com/pearjelly/cliany.site/compare/v0.16.374...v0.16.375
 [0.16.374]: https://github.com/pearjelly/cliany.site/compare/v0.16.373...v0.16.374
 [0.16.373]: https://github.com/pearjelly/cliany.site/compare/v0.16.372...v0.16.373
 [0.16.372]: https://github.com/pearjelly/cliany.site/compare/v0.16.371...v0.16.372
