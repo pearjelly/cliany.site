@@ -54,6 +54,21 @@ def test_get_llm_qa_offline_missing_path_raises(monkeypatch):
         _get_llm()
 
 
+def test_openai_client_bounds_request_without_hidden_retries(tmp_home, clean_env, monkeypatch):
+    from cliany_site.explorer.engine import _get_llm
+
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("CLIANY_OPENAI_API_KEY", "test-key")
+    monkeypatch.setattr("cliany_site.explorer.engine._load_dotenv", lambda: None)
+
+    llm = _get_llm()
+    assert llm.request_timeout == 120.0
+    assert llm.max_retries == 0
+    assert llm.root_client.timeout == 120.0
+    assert llm.root_client.max_retries == 0
+    assert llm.model_kwargs["response_format"] == {"type": "json_object"}
+
+
 def test_explore_qa_offline_missing_fake_llm_error(monkeypatch):
     monkeypatch.setenv("CLIANY_QA_OFFLINE", "1")
     monkeypatch.delenv("CLIANY_QA_FAKE_LLM_RESPONSES", raising=False)
@@ -135,6 +150,38 @@ async def test_llm_retry_reports_attempts_without_error_text():
     )
     events = [json.loads(line) for line in stream.getvalue().splitlines()]
     assert result == "ok"
+    assert [event["outcome"] for event in events if event["event"] == "explore_llm_attempt_done"] == [
+        "retry", "success",
+    ]
+    assert "private" not in stream.getvalue()
+
+
+@pytest.mark.asyncio
+async def test_llm_request_timeout_uses_visible_outer_retry():
+    import io
+
+    from cliany_site.explorer.engine import _invoke_llm_with_retry
+    from cliany_site.progress import NdjsonProgressReporter
+
+    class SlowLLM:
+        def __init__(self):
+            self.calls = 0
+
+        async def ainvoke(self, _prompt):
+            self.calls += 1
+            if self.calls == 1:
+                raise TimeoutError("request timed out: private endpoint")
+            return "ok"
+
+    llm = SlowLLM()
+    stream = io.StringIO()
+    result = await _invoke_llm_with_retry(
+        llm, "private prompt", max_attempts=2, base_delay=0,
+        progress=NdjsonProgressReporter(file=stream),
+    )
+    events = [json.loads(line) for line in stream.getvalue().splitlines()]
+    assert result == "ok"
+    assert llm.calls == 2
     assert [event["outcome"] for event in events if event["event"] == "explore_llm_attempt_done"] == [
         "retry", "success",
     ]

@@ -51,6 +51,7 @@ from cliany_site.progress import NullProgressReporter, ProgressReporter
 
 logger = logging.getLogger(__name__)
 _EXTRACT_GROUNDING_TIMEOUT_SECONDS = 8.0
+_OPENAI_REQUEST_TIMEOUT_SECONDS = 120.0
 
 
 def _to_snake_case(value: str) -> str:
@@ -490,7 +491,14 @@ def _get_llm(role: str = "explore"):
         try:
             chat_openai = importlib.import_module("langchain_openai")
             ChatOpenAI = chat_openai.ChatOpenAI
-            kwargs: dict = {"model": model, "temperature": 0, "api_key": api_key}
+            # Let the outer retry loop account for each attempt instead of hiding SDK retries.
+            kwargs: dict = {
+                "model": model,
+                "temperature": 0,
+                "api_key": api_key,
+                "timeout": _OPENAI_REQUEST_TIMEOUT_SECONDS,
+                "max_retries": 0,
+            }
             if base_url:
                 kwargs["base_url"] = base_url
 
