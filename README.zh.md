@@ -174,7 +174,7 @@ export CLIANY_OPENAI_API_KEY="sk-..."
 
 启动 CLI 前设置 `CLIANY_RUNTIME_HOME`，可把试跑的 adapter、Session、缓存和录制放到独立目录；`demo` 的安装、验证与查询子进程会使用同一目录。默认仍是 `~/.cliany-site`，Chrome 的 OS HOME 和系统凭据不随之改变。示例见[隔离运行数据](docs/quickstart-10min.md#可选隔离运行数据)。
 
-也支持 `.env` 文件配置，查找顺序：`~/.config/cliany-site/.env` → `~/.cliany-site/.env` → 项目目录 `.env` → 环境变量。
+也支持 `.env` 文件配置，查找顺序：`~/.config/cliany-site/.env` → 所选运行目录的 `.env`（默认 `~/.cliany-site/.env`）→ 项目目录 `.env` → 环境变量。
 
 如果 `explore --json` 返回 `E_LLM_UNAVAILABLE`，表示 LLM provider 返回了可重试的上游故障，例如 `502 Bad Gateway`、限流或服务暂不可用。JSON 信封会包含 `details.retryable`、`details.status_code` 和 `details.phase`；请稍后重试，或切换 `CLIANY_LLM_PROVIDER` / `CLIANY_OPENAI_BASE_URL`。这不代表生成的 adapter 或 AXTree selector map 已损坏。
 

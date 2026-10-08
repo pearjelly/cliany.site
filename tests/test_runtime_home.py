@@ -93,27 +93,37 @@ def test_demo_subprocesses_use_selected_runtime_and_preserve_default(tmp_home, m
     assert os.environ.get("HOME") == parent_home
 
 
-def test_benchmark_runner_reads_only_selected_manifest(tmp_home, monkeypatch):
+def test_benchmark_runner_propagates_runtime_to_fresh_cli(tmp_home, monkeypatch):
+    from tests.embodied import benchmark_cli
+
     default = tmp_home / ".cliany-site"
     _adapter(default, "DEFAULT-1")
     (default / "cli-manifest.json").write_text("default manifest", encoding="utf-8")
     before = _snapshot(default)
     selected = tmp_home / "selected-runtime"
     _adapter(selected, "ISOLATED-1")
-    (selected / "cli-manifest.json").write_text("{}", encoding="utf-8")
-    monkeypatch.setenv("CLIANY_CDP_URL", "http://127.0.0.1:1")
-    monkeypatch.setenv("CLIANY_CDP_PORT", "1")
+    monkeypatch.setenv("CLIANY_RUNTIME_HOME", str(selected))
+    config.reset_config()
+    import cliany_site.cli as cli_module
 
-    result = subprocess.run(
-        [sys.executable, str(ROOT / "tests" / "embodied" / "benchmark_cli.py"),
-         "--runtime-home", str(selected), "--", "doctor", "--require-capability", "manage_adapters", "--json"],
-        capture_output=True, text=True, timeout=30, check=False,
-    )
+    captured = []
 
-    assert result.returncode == 0, result.stderr
-    payload = json.loads(result.stdout)
-    assert payload["data"]["manifest_status"] == "ok"
-    assert next(check for check in payload["data"]["checks"] if check["name"] == "cdp")["status"] == "fail"
+    def invoke_child(*, args, prog_name):
+        result = subprocess.run(
+            [sys.executable, "-m", "cliany_site", *args],
+            capture_output=True, text=True, timeout=30, check=False,
+        )
+        assert result.returncode == 0, result.stderr
+        captured.append(json.loads(result.stdout))
+
+    monkeypatch.setattr(cli_module, "cli", invoke_child)
+    monkeypatch.setenv("CLIANY_RUNTIME_HOME", str(default))
+    monkeypatch.setattr(sys, "argv", [
+        "benchmark_cli", "--runtime-home", str(selected), "--", "list", "--detail", "--json",
+    ])
+    benchmark_cli.main()
+
+    assert captured[0]["data"]["adapters"][0]["commands"][0]["description"] == "ISOLATED-1"
     assert _snapshot(default) == before
 
 

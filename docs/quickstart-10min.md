@@ -123,7 +123,7 @@ unset CLIANY_RUNTIME_HOME
 
 在启动 CLI 前设置 `CLIANY_RUNTIME_HOME`；相对路径和 `~` 会转换为绝对路径。未设置或为空时仍使用 `~/.cliany-site`。adapter、Session 文件、命令索引、包与备份、修复缓存、录制、默认截图和日志都使用所选目录；一键 `demo` 的安装、严格校验和只读查询子进程也使用它。显式 `--out` 或构造器路径仍以调用方指定为准。
 
-这个设置只选择 cliany-site 的运行文件目录。Chrome 的 OS `HOME`、用户自行指定的浏览器 profile、XDG 模型配置和系统 Keychain 不随之迁移。恢复默认目录后，试跑生成的文件仍保留在试跑目录；已有同名 adapter 的严格校验与禁止自动覆盖规则照常生效。
+这个设置选择 cliany-site 的运行文件目录，旧版用户 `.env` 也从该目录读取；复用模型配置可使用 XDG 配置或真实环境变量。Chrome 的 OS `HOME`、用户自行指定的浏览器 profile、XDG 模型配置和系统 Keychain 不随之迁移。恢复默认目录后，试跑生成的文件仍保留在试跑目录；已有同名 adapter 的严格校验与禁止自动覆盖规则照常生效。
 
 ## 可选：试用浏览器生成的 Python 文档候选命令
 
