@@ -178,7 +178,9 @@ export CLIANY_OPENAI_API_KEY="sk-..."
 # export CLIANY_BROWSER_PROVIDER=obscura
 ```
 
-Also supports `.env` file configuration. Search order: `~/.config/cliany-site/.env` → `~/.cliany-site/.env` → project directory `.env` → environment variables.
+Set `CLIANY_RUNTIME_HOME` before starting the CLI to keep a trial's adapters, sessions, caches and recordings in a separate directory. `demo` uses that same directory in its install, verify and query subprocesses. The default remains `~/.cliany-site`; Chrome's OS home and system credentials are unchanged. See the [isolated runtime example](docs/quickstart-10min.md#可选隔离运行数据).
+
+Also supports `.env` file configuration. Search order: `~/.config/cliany-site/.env` → the selected runtime directory's `.env` (default `~/.cliany-site/.env`) → project directory `.env` → environment variables.
 
 If `explore --json` returns `E_LLM_UNAVAILABLE`, the LLM provider returned a retryable upstream outage such as `502 Bad Gateway`, rate limiting, provider connection failure, or service unavailable. The JSON envelope includes `details.retryable`, `details.status_code`, and `details.phase`; retry later or switch `CLIANY_LLM_PROVIDER` / `CLIANY_OPENAI_BASE_URL`. This does not mean the generated adapter or AXTree selector map is broken.
 

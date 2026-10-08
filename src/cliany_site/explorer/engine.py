@@ -744,7 +744,7 @@ def load_existing_adapter_context(domain: str) -> dict:
     Raises:
         FileNotFoundError: 若该 domain 的适配器不存在
     """
-    adapter_path = Path.home() / ".cliany-site" / "adapters" / domain / "metadata.json"
+    adapter_path = get_config().adapters_dir / domain / "metadata.json"
     if not adapter_path.exists():
         raise FileNotFoundError(f"域名 '{domain}' 的适配器不存在: {adapter_path}")
 

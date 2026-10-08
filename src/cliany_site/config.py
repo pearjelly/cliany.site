@@ -138,6 +138,7 @@ class ClanySiteConfig:
 
 
 def load_config() -> ClanySiteConfig:
+    runtime_home = os.environ.get("CLIANY_RUNTIME_HOME")
     return ClanySiteConfig(
         cdp_port=_env_int("CLIANY_CDP_PORT", 9222),
         cdp_timeout=_env_float("CLIANY_CDP_TIMEOUT", 2.0),
@@ -167,6 +168,7 @@ def load_config() -> ClanySiteConfig:
         obscura_version=os.environ.get("CLIANY_OBSCURA_VERSION", ""),
         obscura_ready_timeout=_env_float("CLIANY_OBSCURA_READY_TIMEOUT", 30.0),
         obscura_auto_upgrade=_env_bool("CLIANY_OBSCURA_AUTO_UPGRADE", False),
+        home_dir=Path(runtime_home).expanduser().resolve() if runtime_home else Path.home() / ".cliany-site",
     )
 
 

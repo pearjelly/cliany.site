@@ -111,6 +111,20 @@ uv run --extra dev --frozen python scripts/capture_active_demo_evidence.py \
 
 完整的本轮输出和边界说明见 [active demo evidence snapshot](user-evidence/2026-08-17-issues-apache-spark.md)；它不代表 candidate adapter package、live LLM 或第三方服务的持续可用性。捕获器只运行 active case manifest 声明的严格校验和只读 JSON 命令；严格校验失败时会跳过只读命令并返回非零。
 
+## 可选：隔离运行数据
+
+试跑时可以选择一个独立目录，保留现有 adapter 和 Session：
+
+```bash
+export CLIANY_RUNTIME_HOME="$HOME/.cliany-site/trials/first-result"
+cliany-site demo --case-id apache-jira-issues --json
+unset CLIANY_RUNTIME_HOME
+```
+
+在启动 CLI 前设置 `CLIANY_RUNTIME_HOME`；相对路径和 `~` 会转换为绝对路径。未设置或为空时仍使用 `~/.cliany-site`。adapter、Session 文件、命令索引、包与备份、修复缓存、录制、默认截图和日志都使用所选目录；一键 `demo` 的安装、严格校验和只读查询子进程也使用它。显式 `--out` 或构造器路径仍以调用方指定为准。
+
+这个设置选择 cliany-site 的运行文件目录，旧版用户 `.env` 也从该目录读取；复用模型配置可使用 XDG 配置或真实环境变量。Chrome 的 OS `HOME`、用户自行指定的浏览器 profile、XDG 模型配置和系统 Keychain 不随之迁移。恢复默认目录后，试跑生成的文件仍保留在试跑目录；已有同名 adapter 的严格校验与禁止自动覆盖规则照常生效。
+
 ## 可选：试用浏览器生成的 Python 文档候选命令
 
 这是公开的只读 browser-generated adapter，尚未晋级维护中的 active 案例。需要 Chrome 和可访问的 `docs.python.org`，运行已有命令不需要 LLM key。先在全新虚拟环境安装 PyPI 的 `cliany-site`，再按顺序执行：

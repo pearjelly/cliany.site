@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import replace
+import os
 from pathlib import Path
 
 from cliany_site import config
@@ -18,7 +18,8 @@ def main() -> None:
     if not cli_args:
         parser.error("a cliany-site command is required")
 
-    config._config = replace(config.get_config(), home_dir=args.runtime_home)
+    os.environ["CLIANY_RUNTIME_HOME"] = str(args.runtime_home.expanduser().resolve())
+    config.reset_config()
     from cliany_site.cli import cli
 
     cli(args=cli_args, prog_name="cliany-site")

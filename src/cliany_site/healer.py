@@ -9,6 +9,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, cast
 
+from cliany_site.config import get_config
+
 logger = logging.getLogger(__name__)
 
 
@@ -24,7 +26,7 @@ class HealResult:
 
 
 def _heal_cache_path(domain: str) -> Path:
-    return Path.home() / ".cliany-site" / "adapters" / domain / "heal-cache.json"
+    return get_config().adapters_dir / domain / "heal-cache.json"
 
 
 def _heal_cache_load(domain: str) -> dict:

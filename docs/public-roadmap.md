@@ -1,11 +1,13 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-10-08
-- **Current baseline:** v0.16.375
+- **Current baseline:** v0.16.376
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap below records earlier work; the October plan prioritizes verified first use and reliable real workflows.
+
+The v0.16.376 runtime isolation change lets first-use trials select `CLIANY_RUNTIME_HOME` without replacing Chrome's OS HOME. Demo subprocesses and persisted runtime artifacts now share that directory. A [maintainer's public Jira check](user-evidence/2026-10-08-runtime-home-isolation.md) installed the pinned adapter, returned five real issues and reused the installation; independent first-user acceptance remains open.
 
 September 28 navigation follow-up: a real crates.io attempt reached browser navigation timeouts, while a direct request from the maintainer network returned HTTP 403. `explore` now identifies both the browser's 20-second `Page.navigate()` timeout and the event bus's 30-second navigation-handler timeout as page-readiness failures, with no claim that a model or generated adapter succeeded. The crates.io case remains a candidate until its normal search page can be reached and the read-only workflow can be verified.
 

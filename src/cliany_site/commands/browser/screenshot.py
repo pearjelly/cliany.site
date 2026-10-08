@@ -85,7 +85,7 @@ async def _run_screenshot(cdp, out: str | None, full_page: bool) -> Envelope:
         )
 
     if out is None:
-        snapshots_dir = Path.home() / ".cliany-site" / "snapshots"
+        snapshots_dir = get_config().home_dir / "snapshots"
         snapshots_dir.mkdir(parents=True, exist_ok=True)
         out_path = snapshots_dir / f"{int(time.time())}.png"
     else:

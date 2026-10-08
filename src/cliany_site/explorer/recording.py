@@ -9,13 +9,14 @@ from typing import Any
 
 from cliany_site.browser.console_capture import ConsoleCapture, start_console_capture, stop_console_capture
 from cliany_site.browser.network_capture import NetworkCapture, start_network_capture, stop_network_capture
+from cliany_site.config import get_config
 from cliany_site.explorer.models import RecordingManifest, StepRecord
 
 
 class RecordingManager:
     def __init__(self, base_dir: Path | None = None):
         if base_dir is None:
-            base_dir = Path.home() / ".cliany-site" / "recordings"
+            base_dir = get_config().home_dir / "recordings"
         self.base_dir = base_dir
         self._net_cap: NetworkCapture | None = None
         self._con_cap: ConsoleCapture | None = None

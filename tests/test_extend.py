@@ -127,8 +127,8 @@ class TestWorkflowExplorerExtendDomain:
         explorer = WorkflowExplorer()
         assert explorer._extend_context is None
 
-    def test_explore_prompt_contains_existing_commands(self, tmp_path: Path):
-        adapter_dir = tmp_path / ".cliany-site" / "adapters" / "example.com"
+    def test_explore_prompt_contains_existing_commands(self, tmp_home: Path):
+        adapter_dir = tmp_home / ".cliany-site" / "adapters" / "example.com"
         adapter_dir.mkdir(parents=True)
         metadata = {
             "domain": "example.com",
@@ -180,7 +180,7 @@ class TestWorkflowExplorerExtendDomain:
         mock_cdp.connect = AsyncMock(return_value=mock_browser_session)
 
         with (
-            patch("pathlib.Path.home", return_value=tmp_path),
+            patch("pathlib.Path.home", return_value=tmp_home),
             patch("cliany_site.explorer.engine._get_llm", return_value=mock_llm),
             patch("cliany_site.explorer.engine.CDPConnection", return_value=mock_cdp),
             patch("cliany_site.explorer.engine.capture_axtree", AsyncMock(return_value=mock_tree)),
@@ -195,6 +195,8 @@ class TestWorkflowExplorerExtendDomain:
             patch("cliany_site.explorer.engine.get_config") as mock_cfg,
         ):
             cfg = MagicMock()
+            cfg.home_dir = tmp_home / ".cliany-site"
+            cfg.adapters_dir = cfg.home_dir / "adapters"
             cfg.cdp_port = 9222
             cfg.explore_max_steps = 1
             cfg.vision_enabled = False

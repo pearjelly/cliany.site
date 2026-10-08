@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TypedDict, cast
 
 from cliany_site.atomic_io import atomic_read_json, atomic_write_json
+from cliany_site.config import get_config
 
 
 class RepairCacheEntry(TypedDict):
@@ -16,7 +17,7 @@ class RepairCacheEntry(TypedDict):
 
 
 def cache_path(domain: str) -> Path:
-    return Path.home() / ".cliany-site" / "adapters" / domain / "repair-cache.json"
+    return get_config().adapters_dir / domain / "repair-cache.json"
 
 
 def load(domain: str) -> dict:
