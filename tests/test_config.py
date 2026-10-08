@@ -136,10 +136,11 @@ class TestLoadConfig:
         assert cfg.explore_max_steps == 20
         assert cfg.adaptive_repair_enabled is True
 
-    def test_load_config_uses_defaults_when_no_env(self, clean_env):
+    def test_load_config_uses_defaults_when_no_env(self, clean_env, tmp_home):
         cfg = load_config()
         assert cfg.cdp_port == 9222
         assert cfg.cdp_timeout == pytest.approx(2.0)
+        assert cfg.home_dir == tmp_home / ".cliany-site"
 
     def test_load_config_ignores_invalid_env(self, monkeypatch, clean_env):
         monkeypatch.setenv("CLIANY_CDP_PORT", "not_a_port")

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import shlex
 import subprocess
@@ -25,7 +26,8 @@ def _command_argv(command: str, prefix: list[str]) -> list[str]:
 
 def _run_step(argv: list[str]) -> tuple[bool, dict[str, Any] | None]:
     try:
-        completed = subprocess.run(argv, capture_output=True, text=True, timeout=90, check=False)
+        env = {**os.environ, "CLIANY_RUNTIME_HOME": str(get_config().home_dir.resolve())}
+        completed = subprocess.run(argv, capture_output=True, text=True, timeout=90, check=False, env=env)
         payload = json.loads(completed.stdout)
     except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
         return False, None

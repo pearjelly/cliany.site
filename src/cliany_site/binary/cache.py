@@ -9,6 +9,7 @@ import zipfile
 from pathlib import Path
 
 from cliany_site.binary.releases import ArtifactSpec
+from cliany_site.config import get_config
 from cliany_site.envelope import ErrorCode
 from cliany_site.errors import ClanySiteError
 
@@ -106,7 +107,7 @@ class CacheManager:
 
     def __init__(self, cache_root: Path | None = None):
         if cache_root is None:
-            cache_root = Path.home() / ".cliany-site" / "bin" / "obscura"
+            cache_root = get_config().home_dir / "bin" / "obscura"
         self.cache_root = cache_root
 
     def install(self, artifact_spec: ArtifactSpec, archive_bytes: bytes) -> Path:

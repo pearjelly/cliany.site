@@ -14,6 +14,7 @@ from typing import cast
 
 import portalocker
 
+from cliany_site.config import get_config
 from cliany_site.envelope import ErrorCode
 from cliany_site.errors import ClanySiteError
 
@@ -49,7 +50,7 @@ class CleanupResult:
 
 class ProcessManager:
     def __init__(self, pid_file: Path | None = None):
-        self.pid_file = pid_file or Path.home() / ".cliany-site" / "run" / "obscura.pid"
+        self.pid_file = pid_file or get_config().home_dir / "run" / "obscura.pid"
 
     def _write_pid_file(self, pid: int) -> None:
         self.pid_file.parent.mkdir(parents=True, exist_ok=True)

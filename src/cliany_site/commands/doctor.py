@@ -999,7 +999,7 @@ async def _run_checks(
     data["schema_version"] = 3
 
     # manifest_status
-    manifest_path = Path.home() / ".cliany-site" / "cli-manifest.json"
+    manifest_path = cfg.home_dir / "cli-manifest.json"
     if not manifest_path.exists():
         data["manifest_status"] = "missing"
     else:

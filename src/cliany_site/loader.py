@@ -323,7 +323,7 @@ class LazyAdapterRegistry:
 
 
 def manifest_path() -> Path:
-    return Path.home() / ".cliany-site" / "cli-manifest.json"
+    return get_config().home_dir / "cli-manifest.json"
 
 
 def build_manifest(registry: LazyAdapterRegistry) -> dict[str, Any]:
