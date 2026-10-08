@@ -220,6 +220,25 @@ def test_progress_timing_drops_unrecognized_attempt_outcome():
     assert "private" not in json.dumps(summary)
 
 
+def test_provider_context_uses_doctor_checks_without_leaking_endpoint():
+    payload = {"data": {"checks": [
+        {"name": "llm_provider", "details": {"provider": "openai"}},
+        {"name": "openai_base_url", "details": {"base_url": "https://private.example/v1?key=secret"}},
+    ]}}
+    context = benchmark._safe_provider_context(payload)
+    assert context == {"provider": "openai", "endpoint_type": "custom"}
+    assert "private" not in json.dumps(context)
+    assert "secret" not in json.dumps(context)
+
+    payload["data"]["checks"][1]["details"]["base_url"] = None
+    assert benchmark._safe_provider_context(payload) == {"provider": "openai", "endpoint_type": "default"}
+    payload["data"]["checks"][0]["details"]["provider"] = "anthropic"
+    assert benchmark._safe_provider_context(payload) == {"provider": "anthropic", "endpoint_type": "not_reported"}
+    payload["data"]["checks"][0]["details"]["provider"] = "private-provider"
+    assert benchmark._safe_provider_context(payload) == {"provider": "unknown", "endpoint_type": "unknown"}
+    assert benchmark._safe_provider_context({}) == {"provider": "unknown", "endpoint_type": "unknown"}
+
+
 @pytest.mark.asyncio
 async def test_timeout_keeps_only_safe_inflight_timing(tmp_home, monkeypatch):
     class HangingProcess:
