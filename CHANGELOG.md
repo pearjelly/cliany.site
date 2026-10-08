@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Documentation fragment headings leave native scroll space below the sticky header. Direct links, sidebar mouse/keyboard navigation, reload and browser history retain the existing anchors and command text.
+
 ## [0.16.377] - 2026-10-08
 
 ### Changed
