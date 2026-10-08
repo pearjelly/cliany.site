@@ -2,6 +2,8 @@
 
 PR #67 tested a 120-second OpenAI-compatible SDK request timeout with SDK-internal retries disabled. The existing cliany-site outer retry loop remains responsible for attempt progress and backoff. The first three controlled runs used clean code commit `f37115c92a6152da6ee2d8b7a61ae73441050609`; all runs used the configured `deepseek-v4.1-flash` model through an OpenAI-compatible endpoint and isolated cliany runtime data outside the repository. PR-triggered CI used offline QA, not a real LLM key.
 
+The timeout is a network-operation setting, not a 120-second end-to-end exploration deadline. HTTPX applies separate connect, read, write and pool timeouts; receiving response chunks can extend total request time. See the [HTTPX timeout contract](https://www.python-httpx.org/advanced/timeouts/). The existing outer attempts, backoff and workflow stages can extend total time, and retries may incur additional model cost. No cost estimate is available from these samples.
+
 | Predeclared run | Explore acceptance | Changed-input replay acceptance | Explore timing and retries |
 | --- | ---: | ---: | --- |
 | `filter-catalog`, 3 trials | 3/3 | 6/6 returned-value plus independent DOM | 14.32-75.76s; no retries |
