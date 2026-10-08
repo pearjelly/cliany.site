@@ -104,7 +104,7 @@
 
       <main>
         <h1>cliany-site 文档</h1>
-        <p class="intro-meta">v0.16.376 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
+        <p class="intro-meta">v0.16.377 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
 
         <p>cliany-site 基于 LLM 和 Chrome CDP 协议，将任意网页操作自动化为可重复调用的 CLI 命令。核心流程：<strong>explore（探索）→ generate（生成适配器）→ run（执行）</strong>。</p>
         <p>v0.16.365 提供维护中的 ASF Confluence 只读关键词搜索包。公开资产已按固定 SHA-256 在隔离环境完成安装、严格校验与只读查询验收，案例现为 active；已有 adapter 不会自动覆盖。安装命令见 <a href="https://github.com/pearjelly/cliany.site#asf-confluence-wiki">README</a>。</p>
@@ -133,8 +133,9 @@ export CLIANY_ANTHROPIC_API_KEY="sk-ant-..."
 # OpenAI GPT-4o
 export CLIANY_LLM_PROVIDER=openai
 export CLIANY_OPENAI_API_KEY="sk-..."</code></pre>
-        <p>也可以写入 <code>.env</code> 文件，查找顺序：<code>~/.config/cliany-site/.env</code> → <code>~/.cliany-site/.env</code> → 项目目录 <code>.env</code> → 系统环境变量。</p>
+        <p>也可以写入 <code>.env</code> 文件，查找顺序：<code>~/.config/cliany-site/.env</code> → 所选运行目录的 <code>.env</code>（默认 <code>~/.cliany-site/.env</code>）→ 项目目录 <code>.env</code> → 系统环境变量。</p>
         <p><code>explore --json</code> 遇到 LLM 网关、限流或服务暂不可用时会返回 <code>E_LLM_UNAVAILABLE</code>，并在 <code>details.retryable</code>、<code>details.status_code</code> 和 <code>details.phase</code> 中给出可重试上下文；错误消息会清洗原始 HTML 网关页。</p>
+        <p>OpenAI 兼容客户端使用 120 秒网络操作超时，并关闭 SDK 内部重试。探索保留可见的外层尝试与退避；doctor 只做一次显式预检。这不是整个流程的总时限，响应分块和重试可延长耗时，重试也可能产生额外模型费用。</p>
 
         <h2 id="quickstart">10 分钟成功路径</h2>
         <p>先检查本机，再运行一个无需登录的公开只读案例。<code>demo</code> 只在本地没有同名 adapter 时按固定 SHA-256 安装，始终先运行 <code>verify --strict</code>，通过后才查询，并要求至少一条结果。失败会非零退出，不覆盖已有 adapter，不执行 candidate 或需要登录的案例。不需要先配置 LLM key 或 Chrome/CDP；Jira、Confluence 和 Jenkins 案例仍依赖 GitHub 发布资产和第三方站点可达。准备生成自己的命令时，再进入 <a href="#config">配置 LLM</a> 和 <a href="#explore">explore</a>。</p>

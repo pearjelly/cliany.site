@@ -178,6 +178,8 @@ export CLIANY_OPENAI_API_KEY="sk-..."
 
 如果 `explore --json` 返回 `E_LLM_UNAVAILABLE`，表示 LLM provider 返回了可重试的上游故障，例如 `502 Bad Gateway`、限流或服务暂不可用。JSON 信封会包含 `details.retryable`、`details.status_code` 和 `details.phase`；请稍后重试，或切换 `CLIANY_LLM_PROVIDER` / `CLIANY_OPENAI_BASE_URL`。这不代表生成的 adapter 或 AXTree selector map 已损坏。
 
+OpenAI 兼容客户端使用 120 秒网络操作超时，并关闭 SDK 内部重试。探索仍通过现有外层循环重试，JSON 模式在 stderr 输出尝试与退避事件；doctor 只做一次显式预检。这不是整个流程的 120 秒总时限：响应分块、重试和多个工作流阶段都可能延长耗时，重试也可能产生额外模型费用。验证结果与限制见[集成证据](docs/user-evidence/2026-10-08-request-budget-integration.md)。
+
 ### 实验性：Obscura 浏览器提供者
 
 Obscura 是一个轻量级浏览器提供者，目前处于**实验性**阶段。探索功能仍默认使用 Chrome。

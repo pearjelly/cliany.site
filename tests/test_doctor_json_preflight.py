@@ -39,7 +39,7 @@ async def test_openai_preflight_satisfies_json_mode(tmp_home, clean_env, monkeyp
     original = langchain_openai.ChatOpenAI
     async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
         monkeypatch.setattr(langchain_openai, "ChatOpenAI", lambda **kwargs: original(
-            **kwargs, http_async_client=client, max_retries=0,
+            **kwargs, http_async_client=client,
         ))
         result = await _run_llm_live_check(True, "openai")
 

@@ -54,6 +54,23 @@ def test_get_llm_qa_offline_missing_path_raises(monkeypatch):
         _get_llm()
 
 
+def test_openai_client_bounds_request_without_hidden_retries(tmp_home, clean_env, monkeypatch):
+    from cliany_site.explorer.engine import _get_llm
+
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("CLIANY_OPENAI_API_KEY", "test-key")
+    monkeypatch.setattr("cliany_site.explorer.engine._load_dotenv", lambda: None)
+
+    llm = _get_llm()
+    assert llm.request_timeout == 120.0
+    assert llm.max_retries == 0
+    assert llm.root_client.timeout == 120.0
+    assert llm.root_client.max_retries == 0
+    assert llm.root_async_client.timeout == 120.0
+    assert llm.root_async_client.max_retries == 0
+    assert llm.model_kwargs["response_format"] == {"type": "json_object"}
+
+
 def test_explore_qa_offline_missing_fake_llm_error(monkeypatch):
     monkeypatch.setenv("CLIANY_QA_OFFLINE", "1")
     monkeypatch.delenv("CLIANY_QA_FAKE_LLM_RESPONSES", raising=False)
@@ -138,6 +155,100 @@ async def test_llm_retry_reports_attempts_without_error_text():
     assert [event["outcome"] for event in events if event["event"] == "explore_llm_attempt_done"] == [
         "retry", "success",
     ]
+    assert "private" not in stream.getvalue()
+
+
+@pytest.mark.asyncio
+async def test_llm_request_timeout_uses_visible_outer_retry():
+    import io
+
+    from cliany_site.explorer.engine import _invoke_llm_with_retry
+    from cliany_site.progress import NdjsonProgressReporter
+
+    class SlowLLM:
+        def __init__(self):
+            self.calls = 0
+
+        async def ainvoke(self, _prompt):
+            self.calls += 1
+            if self.calls == 1:
+                raise TimeoutError("request timed out: private endpoint")
+            return "ok"
+
+    llm = SlowLLM()
+    stream = io.StringIO()
+    result = await _invoke_llm_with_retry(
+        llm, "private prompt", max_attempts=2, base_delay=0,
+        progress=NdjsonProgressReporter(file=stream),
+    )
+    events = [json.loads(line) for line in stream.getvalue().splitlines()]
+    assert result == "ok"
+    assert llm.calls == 2
+    assert [event["outcome"] for event in events if event["event"] == "explore_llm_attempt_done"] == [
+        "retry", "success",
+    ]
+    assert "private" not in stream.getvalue()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("recover", [True, False])
+async def test_openai_transport_timeout_matches_visible_attempts(tmp_home, clean_env, monkeypatch, recover):
+    import io
+
+    import httpx
+    import langchain_openai
+    from openai import APITimeoutError
+
+    from cliany_site.errors import LlmUnavailableError
+    from cliany_site.explorer.engine import _get_llm, _invoke_llm_with_retry
+    from cliany_site.progress import NdjsonProgressReporter
+
+    requests = []
+
+    def respond(request):
+        requests.append(request)
+        if len(requests) == 1 or not recover:
+            raise httpx.ReadTimeout("private transport details", request=request)
+        return httpx.Response(200, json={
+            "id": "chatcmpl-timeout-test",
+            "object": "chat.completion",
+            "created": 0,
+            "model": "test-model",
+            "choices": [{"index": 0, "finish_reason": "stop", "message": {
+                "role": "assistant", "content": '{"status":"ok"}',
+            }}],
+        })
+
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("CLIANY_OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("CLIANY_OPENAI_BASE_URL", "https://private.invalid/v1")
+    monkeypatch.setattr("cliany_site.explorer.engine._load_dotenv", lambda: None)
+    original = langchain_openai.ChatOpenAI
+    stream = io.StringIO()
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond), trust_env=False) as client:
+        monkeypatch.setattr(langchain_openai, "ChatOpenAI", lambda **kwargs: original(
+            **kwargs, http_async_client=client,
+        ))
+        llm = _get_llm()
+        call = _invoke_llm_with_retry(
+            llm, "private prompt: return JSON", max_attempts=2, base_delay=0,
+            progress=NdjsonProgressReporter(file=stream),
+        )
+        if recover:
+            assert (await call).content == '{"status":"ok"}'
+        else:
+            with pytest.raises(LlmUnavailableError) as exc_info:
+                await call
+            assert exc_info.value.retryable is True
+            assert isinstance(exc_info.value.__cause__, APITimeoutError)
+
+    assert len(requests) == 2
+    for request in requests:
+        assert request.extensions["timeout"] == dict.fromkeys(("connect", "read", "write", "pool"), 120.0)
+    events = [json.loads(line) for line in stream.getvalue().splitlines()]
+    attempts = [event for event in events if event["event"] == "explore_llm_attempt_done"]
+    assert [event["attempt"] for event in attempts] == [1, 2]
+    assert [event["outcome"] for event in attempts] == ["retry", "success" if recover else "error"]
     assert "private" not in stream.getvalue()
 
 
