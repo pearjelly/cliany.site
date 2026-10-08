@@ -543,7 +543,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiohttp" },
-    { name = "browser-use" },
+    { name = "browser-use", specifier = "==0.12.4" },
     { name = "click" },
     { name = "cryptography", specifier = ">=46.0.5" },
     { name = "httpx", specifier = ">=0.28.1" },
