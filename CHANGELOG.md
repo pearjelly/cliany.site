@@ -7,6 +7,18 @@
 
 ## [Unreleased]
 
+## [0.16.377] - 2026-10-08
+
+### Changed
+
+- OpenAI-compatible clients use a 120-second network-operation timeout and no SDK-internal retries. Exploration keeps its existing visible outer attempts and backoff; doctor retains one explicit preflight attempt. This is not a hard end-to-end deadline, and retries can incur model cost. Anthropic configuration, CLI arguments, JSON and adapter formats are unchanged.
+- Opt-in controlled benchmark reports retain only whitelisted provider and endpoint categories from structured doctor checks, not configured URLs, keys, prompts or page content.
+
+### Evidence and limits
+
+- The retained fixed-commit full controlled study scored 29/30 with one timeout and all 38 changed-input output/DOM checks passing. A fresh integration smoke passed 9/9 and 12/12 replays, including recovery after one 121.35-second attempt; two earlier failed preflight-only starts are recorded separately. These are same-provider maintainer samples, not a causal or population latency improvement.
+- A fresh Python documentation browser exploration and strict verification passed. Changed pathlib replay returned 100 capped rows with the independently observed first title/link; a zero-match query failed closed against an independently empty page. The case remains candidate; long waits, intermittent preflight availability and independent first-user acceptance remain open.
+
 ## [0.16.376] - 2026-10-08
 
 ### Fixed
@@ -3383,7 +3395,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.376...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.377...HEAD
+[0.16.377]: https://github.com/pearjelly/cliany.site/compare/v0.16.376...v0.16.377
 [0.16.376]: https://github.com/pearjelly/cliany.site/compare/v0.16.375...v0.16.376
 [0.16.375]: https://github.com/pearjelly/cliany.site/compare/v0.16.374...v0.16.375
 [0.16.374]: https://github.com/pearjelly/cliany.site/compare/v0.16.373...v0.16.374

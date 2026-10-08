@@ -184,6 +184,8 @@ Also supports `.env` file configuration. Search order: `~/.config/cliany-site/.e
 
 If `explore --json` returns `E_LLM_UNAVAILABLE`, the LLM provider returned a retryable upstream outage such as `502 Bad Gateway`, rate limiting, provider connection failure, or service unavailable. The JSON envelope includes `details.retryable`, `details.status_code`, and `details.phase`; retry later or switch `CLIANY_LLM_PROVIDER` / `CLIANY_OPENAI_BASE_URL`. This does not mean the generated adapter or AXTree selector map is broken.
 
+OpenAI-compatible clients use a 120-second network-operation timeout with SDK-internal retries disabled. Exploration keeps the existing outer retry loop and emits attempt/backoff events on stderr in JSON mode; doctor performs one explicit preflight attempt. This is not a 120-second end-to-end deadline: response chunks, retries and workflow stages can extend elapsed time, and retries may incur additional model cost. See the [integration evidence and limits](docs/user-evidence/2026-10-08-request-budget-integration.md).
+
 ### Server and Docker Browser Setup
 
 `--headless` and `--cdp-url` are root CLI options, so they must appear before the command they configure, including `explore` and `serve`.
