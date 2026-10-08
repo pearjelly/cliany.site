@@ -7,8 +7,11 @@
 
 ## [Unreleased]
 
+## [0.16.375] - 2026-10-08
+
 ### Fixed
 
+- Clean installs now use the verified `browser-use==0.12.4` dependency. An unconstrained fresh resolve could select 0.11.13 with MCP 2.3.0 and fail before CLI startup with missing `pydantic_settings`; the locked development environment did not expose this failure.
 - Website quickstart Copy controls no longer overlap commands. Narrow quickstart cards use a single column, and the longer `explore` example is readable on screen without changing its executable copy payload.
 - The extended feature grid stays within narrow phone viewports and becomes visible instead of creating an implicit second column and unusually tall cards. Long inline diagnostic identifiers wrap without page-wide horizontal scrolling.
 - Advanced contribution, maintainer, and experimental-provider notes on the homepage now start collapsed, keeping the feedback path closer to the quickstart while preserving their content and keyboard access.
@@ -3369,7 +3372,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.374...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.375...HEAD
+[0.16.375]: https://github.com/pearjelly/cliany.site/compare/v0.16.374...v0.16.375
 [0.16.374]: https://github.com/pearjelly/cliany.site/compare/v0.16.373...v0.16.374
 [0.16.373]: https://github.com/pearjelly/cliany.site/compare/v0.16.372...v0.16.373
 [0.16.372]: https://github.com/pearjelly/cliany.site/compare/v0.16.371...v0.16.372
