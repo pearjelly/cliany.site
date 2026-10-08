@@ -200,7 +200,7 @@ cliany-site --cdp-url "ws://chrome:9222" explore "https://github.com" "Search re
 
 Choose the path that matches how Chrome is managed. With `--cdp-url`, cliany-site connects to that existing browser; `--headless` applies when cliany-site launches Chrome itself.
 
-On one macOS maintainer host, launching Chrome with an empty temporary OS `HOME` allowed CDP discovery but stalled even local HTTP navigation. When isolating a browser test, keep Chrome's normal OS `HOME`, use a temporary browser profile, and connect a separately isolated cliany CLI through loopback `--cdp-url`. See the [bounded CDP controls](docs/user-evidence/2026-10-04-synthetic-home-cdp-controls.md); the exact Chrome cause is still under investigation.
+On one macOS maintainer host, launching Chrome with an empty temporary OS `HOME` allowed CDP discovery but stalled even local HTTP navigation. Keep the normal OS `HOME` and select an empty cliany runtime directory with `CLIANY_RUNTIME_HOME` (available since v0.16.376); isolate the browser profile separately and connect only its dedicated loopback `--cdp-url` when managing Chrome yourself. The runtime setting does not isolate an existing CDP browser, XDG model configuration or system credentials. See the [bounded CDP controls](docs/user-evidence/2026-10-04-synthetic-home-cdp-controls.md); the exact Chrome cause and independent first-user acceptance remain open.
 
 ### Experimental: Obscura Browser Provider
 

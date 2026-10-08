@@ -180,6 +180,8 @@ export CLIANY_OPENAI_API_KEY="sk-..."
 
 OpenAI 兼容客户端使用 120 秒网络操作超时，并关闭 SDK 内部重试。探索仍通过现有外层循环重试，JSON 模式在 stderr 输出尝试与退避事件；doctor 只做一次显式预检。这不是整个流程的 120 秒总时限：响应分块、重试和多个工作流阶段都可能延长耗时，重试也可能产生额外模型费用。验证结果与限制见[集成证据](docs/user-evidence/2026-10-08-request-budget-integration.md)。
 
+一台 macOS 维护机上，空的临时 OS `HOME` 会让 Chrome 的 CDP 探测成功、HTTP 导航却超时。保留正常 OS `HOME`，用 v0.16.376 起提供的 `CLIANY_RUNTIME_HOME` 选择空的 CLI 运行目录；浏览器 profile 须另行隔离，手动管理 Chrome 时只连接该测试实例专用的 loopback `--cdp-url`。这个目录设置不会隔离已有 CDP 浏览器、XDG 模型配置或系统凭据。见[有界 CDP 对照](docs/user-evidence/2026-10-04-synthetic-home-cdp-controls.md)；具体 Chrome 原因和独立首次用户验收仍未完成。
+
 ### 实验性：Obscura 浏览器提供者
 
 Obscura 是一个轻量级浏览器提供者，目前处于**实验性**阶段。探索功能仍默认使用 Chrome。
