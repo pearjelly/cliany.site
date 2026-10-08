@@ -93,7 +93,7 @@ def test_demo_subprocesses_use_selected_runtime_and_preserve_default(tmp_home, m
     assert os.environ.get("HOME") == parent_home
 
 
-def test_benchmark_runner_reads_only_selected_manifest(tmp_home):
+def test_benchmark_runner_reads_only_selected_manifest(tmp_home, monkeypatch):
     default = tmp_home / ".cliany-site"
     _adapter(default, "DEFAULT-1")
     (default / "cli-manifest.json").write_text("default manifest", encoding="utf-8")
@@ -101,15 +101,19 @@ def test_benchmark_runner_reads_only_selected_manifest(tmp_home):
     selected = tmp_home / "selected-runtime"
     _adapter(selected, "ISOLATED-1")
     (selected / "cli-manifest.json").write_text("{}", encoding="utf-8")
+    monkeypatch.setenv("CLIANY_CDP_URL", "http://127.0.0.1:1")
+    monkeypatch.setenv("CLIANY_CDP_PORT", "1")
 
     result = subprocess.run(
         [sys.executable, str(ROOT / "tests" / "embodied" / "benchmark_cli.py"),
-         "--runtime-home", str(selected), "--", "doctor", "--json"],
+         "--runtime-home", str(selected), "--", "doctor", "--require-capability", "manage_adapters", "--json"],
         capture_output=True, text=True, timeout=30, check=False,
     )
 
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout)["data"]["manifest_status"] == "ok"
+    payload = json.loads(result.stdout)
+    assert payload["data"]["manifest_status"] == "ok"
+    assert next(check for check in payload["data"]["checks"] if check["name"] == "cdp")["status"] == "fail"
     assert _snapshot(default) == before
 
 
