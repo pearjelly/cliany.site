@@ -7,6 +7,17 @@
 
 ## [Unreleased]
 
+## [0.16.376] - 2026-10-08
+
+### Fixed
+
+- `CLIANY_RUNTIME_HOME` selects a separate runtime directory while preserving Chrome's OS HOME. Command indexes, repair/heal caches, existing-adapter context, recordings, default screenshots and Obscura cache/PID files now follow the same configured directory as adapters and sessions.
+- `demo` propagates its selected runtime directory to install, strict verify and read-only query subprocesses. An isolated parent no longer encounters an unrelated adapter in the default directory; fixed-hash installation, refusal to overwrite and nonzero failures remain enforced. The benchmark runner now uses the inheritable setting.
+
+### Evidence and limits
+
+- A maintainer's fresh isolated Jira demo installed and strictly verified its unchanged public archive, returned five SPARK issues, then reused the installation on a second run. One returned issue's title and status matched a separate direct API check. This is an API-backed maintainer check, not independent first-user acceptance or browser-generation evidence.
+
 ## [0.16.375] - 2026-10-08
 
 ### Fixed
@@ -3372,7 +3383,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.375...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.376...HEAD
+[0.16.376]: https://github.com/pearjelly/cliany.site/compare/v0.16.375...v0.16.376
 [0.16.375]: https://github.com/pearjelly/cliany.site/compare/v0.16.374...v0.16.375
 [0.16.374]: https://github.com/pearjelly/cliany.site/compare/v0.16.373...v0.16.374
 [0.16.373]: https://github.com/pearjelly/cliany.site/compare/v0.16.372...v0.16.373
