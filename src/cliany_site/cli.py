@@ -6,7 +6,7 @@ from typing import NoReturn
 import click
 
 from cliany_site.config import get_config
-from cliany_site.envelope import Envelope, ErrorCode
+from cliany_site.envelope import Envelope, ErrorCode, command_timing
 from cliany_site.envelope import err as envelope_err
 from cliany_site.logging_config import (
     LEVEL_DEBUG,
@@ -129,31 +129,32 @@ class SafeGroup(click.Group):
         windows_expand_args: bool = True,
         **extra: object,
     ) -> NoReturn:
-        argv = list(args) if args is not None else sys.argv[1:]
-        _print_startup_banner(_is_json_mode(argv))
-        try:
-            result = super().main(
-                args=args,
-                prog_name=prog_name,
-                complete_var=complete_var,
-                standalone_mode=False,
-                windows_expand_args=windows_expand_args,
-                **extra,
-            )
-        except click.exceptions.Exit as exc:
-            raise SystemExit(exc.exit_code) from exc
-        except SystemExit:
-            raise
-        except click.ClickException as exc:
-            _render_error(exc, json_mode=_is_json_mode(argv))
-            raise SystemExit(1) from exc
-        except Exception as exc:
-            _render_error(exc, json_mode=_is_json_mode(argv))
-            raise SystemExit(1) from exc
+        with command_timing():
+            argv = list(args) if args is not None else sys.argv[1:]
+            _print_startup_banner(_is_json_mode(argv))
+            try:
+                result = super().main(
+                    args=args,
+                    prog_name=prog_name,
+                    complete_var=complete_var,
+                    standalone_mode=False,
+                    windows_expand_args=windows_expand_args,
+                    **extra,
+                )
+            except click.exceptions.Exit as exc:
+                raise SystemExit(exc.exit_code) from exc
+            except SystemExit:
+                raise
+            except click.ClickException as exc:
+                _render_error(exc, json_mode=_is_json_mode(argv))
+                raise SystemExit(1) from exc
+            except Exception as exc:
+                _render_error(exc, json_mode=_is_json_mode(argv))
+                raise SystemExit(1) from exc
 
-        if isinstance(result, int):
-            raise SystemExit(result)
-        raise SystemExit(0)
+            if isinstance(result, int):
+                raise SystemExit(result)
+            raise SystemExit(0)
 
 
 @click.group(cls=SafeGroup, invoke_without_command=True)
