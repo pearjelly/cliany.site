@@ -1,5 +1,9 @@
 import time
-from typing import Any, Literal, TypedDict
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import dataclass
+from typing import Any, Literal, NotRequired, TypedDict
 
 
 # TypedDict 定义
@@ -11,6 +15,7 @@ class ErrorObj(TypedDict):
 
 class EnvelopeMeta(TypedDict):
     duration_ms: int
+    duration_measured: NotRequired[bool]
     source: str  # "builtin"|"atom"|"adapter"
 
 class SuccessEnvelope(TypedDict):
@@ -102,24 +107,45 @@ class ErrorCode:
 
         return cls.E_UNKNOWN
 
-# 全局 start times 追踪（基于 command str）
-_start_times: dict[str, float] = {}
+@dataclass
+class _CommandTimer:
+    started_ns: int | None
+
+
+_command_timer: ContextVar[_CommandTimer | None] = ContextVar("command_timer", default=None)
+
+
+@contextmanager
+def command_timing() -> Iterator[None]:
+    """为本次调用建立单调时钟，嵌套调用独立计时。"""
+    timer = _CommandTimer(time.monotonic_ns())
+    token = _command_timer.set(timer)
+    try:
+        yield
+    finally:
+        # 已结束的调用不能为继承此 context 的后台任务继续计时。
+        timer.started_ns = None
+        _command_timer.reset(token)
+
+
+def _meta(source: str) -> EnvelopeMeta:
+    timer = _command_timer.get()
+    started_ns = timer.started_ns if timer is not None else None
+    return {
+        "duration_ms": (time.monotonic_ns() - started_ns) // 1_000_000 if started_ns is not None else 0,
+        "duration_measured": started_ns is not None,
+        "source": source,
+    }
 
 def ok(command: str, data: Any, source: str = "builtin") -> SuccessEnvelope:
-    """返回成功 Envelope，自动计算 duration_ms"""
-    start_time = _start_times.pop(command, time.time())
-    duration_ms = int((time.time() - start_time) * 1000)
-
+    """返回成功 Envelope；无调用时钟时明确标记耗时未测量。"""
     return {
         "ok": True,
         "version": "1",
         "command": command,
         "data": data,
         "error": None,
-        "meta": {
-            "duration_ms": duration_ms,
-            "source": source,
-        },
+        "meta": _meta(source),
     }
 
 def err(
@@ -135,9 +161,6 @@ def err(
     if not code:
         raise ValueError("code is required")
 
-    start_time = _start_times.pop(command, time.time())
-    duration_ms = int((time.time() - start_time) * 1000)
-
     return {
         "ok": False,
         "version": "1",
@@ -149,8 +172,5 @@ def err(
             "hint": hint,
             "details": details,
         },
-        "meta": {
-            "duration_ms": duration_ms,
-            "source": source,
-        },
+        "meta": _meta(source),
     }

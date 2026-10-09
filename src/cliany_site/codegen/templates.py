@@ -784,7 +784,7 @@ def {function_name}({function_signature}):
             "ok": failed is None,
             "data": {{"results": results, "quality": quality, "command": "{command_name}", "args": {args_payload}, "expects_nonempty": {command.expects_nonempty!r}}},
             "error": (failed or {{}}).get("error"),
-            "meta": {{"source": "adapter"}},
+            "meta": ok("{command_name}", None, source="adapter")["meta"],
         }}, ensure_ascii=False))
         if failed is not None:
             ctx.exit(1)
@@ -819,7 +819,7 @@ def run_workflow(ctx: click.Context, json_mode: bool | None):
             "ok": failed is None,
             "data": {"results": results, "quality": quality, "command": "run-workflow", "args": {}},
             "error": (failed or {}).get("error"),
-            "meta": {"source": "adapter"},
+            "meta": ok("run-workflow", None, source="adapter")["meta"],
         }, ensure_ascii=False))
         if failed is not None:
             ctx.exit(1)

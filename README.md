@@ -186,6 +186,8 @@ If `explore --json` returns `E_LLM_UNAVAILABLE`, the LLM provider returned a ret
 
 OpenAI-compatible clients use a 120-second network-operation timeout with SDK-internal retries disabled. Exploration keeps the existing outer retry loop and emits attempt/backoff events on stderr in JSON mode; doctor performs one explicit preflight attempt. This is not a 120-second end-to-end deadline: response chunks, retries and workflow stages can extend elapsed time, and retries may incur additional model cost. See the [integration evidence and limits](docs/user-evidence/2026-10-08-request-budget-integration.md).
 
+Unreleased timing correction: [command-envelope timing](docs/command-envelope-timing.md) defines the proposed `meta.duration_measured` flag. Published v0.16.377 does not provide that flag; do not interpret its `duration_ms: 0` as measured latency. SDK/HTTP envelopes retain their separate legacy shape.
+
 ### Server and Docker Browser Setup
 
 `--headless` and `--cdp-url` are root CLI options, so they must appear before the command they configure, including `explore` and `serve`.
