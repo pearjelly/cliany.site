@@ -126,6 +126,7 @@ jobs:
             tests/test_agent_md.py ^
             tests/test_atomic_io.py ^
             tests/test_cli_integration.py ^
+            tests/test_command_duration.py ^
             tests/test_codegen_v2.py ^
             tests/test_config.py ^
             tests/test_cross_platform_lock.py ^

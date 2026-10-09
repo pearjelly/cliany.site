@@ -56,6 +56,7 @@
     main { min-width: 0; }
     h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; line-height: 1.25; }
     h2 { font-size: 1.4rem; font-weight: 600; margin: 2.5rem 0 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border); }
+    h2[id] { scroll-margin-top: 5rem; }
     h3 { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.5rem; }
     p { margin-bottom: 1rem; }
     pre { background: var(--dark); color: #D3C6AA; padding: 1rem 1.25rem; border-radius: var(--radius); overflow-x: auto; margin: 1rem 0; font-family: var(--mono); font-size: 0.875rem; line-height: 1.6; }
@@ -104,7 +105,7 @@
 
       <main>
         <h1>cliany-site 文档</h1>
-        <p class="intro-meta">v0.16.377 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
+        <p class="intro-meta">v0.16.378 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
 
         <p>cliany-site 基于 LLM 和 Chrome CDP 协议，将任意网页操作自动化为可重复调用的 CLI 命令。核心流程：<strong>explore（探索）→ generate（生成适配器）→ run（执行）</strong>。</p>
         <p>v0.16.365 提供维护中的 ASF Confluence 只读关键词搜索包。公开资产已按固定 SHA-256 在隔离环境完成安装、严格校验与只读查询验收，案例现为 active；已有 adapter 不会自动覆盖。安装命令见 <a href="https://github.com/pearjelly/cliany.site#asf-confluence-wiki">README</a>。</p>
@@ -220,6 +221,10 @@ cliany-site github.com search --query "browser automation" --json
 cliany-site github.com search --query "browser automation" --resume --json</code></pre>
         <h3>数据命令的提取质量语义</h3>
         <p>生成的 <code>list-</code>、<code>search-</code>、<code>read-</code> 和 <code>extract-</code> 命令，以及包含 <code>extract</code> action 的任何命令，默认使用 <code>expects_nonempty=true</code>。零条数据、关键字段缺失和 partial 结果都会返回 <code>E_EMPTY_RESULT</code>，而不是只完成点击后报告成功。只有某个工作流的零匹配本来就是合法结果时，命令才可声明 <code>expects_nonempty=false</code>：零匹配仍返回 <code>ok=true</code>，同时继续提供 <code>data.quality</code> 作为行数和数据质量信号。失败的结构化对象行会额外在 <code>data.quality.field_blank_rows</code> 中按字段给出缺失或空白值的 1 起始结果行号，帮助定位字段映射或页面内容；成功结果不会增加该字段。重新 explore 某个命令会应用这条规则到新生成的代码，但不会静默改写已安装的旧 adapter；即使允许零匹配，关键字段缺失或 partial 结果仍然失败。</p>
+
+        <h3>命令计时元数据</h3>
+        <p>从 v0.16.378 起，CLI 信封的 <code>meta.duration_measured=true</code> 才表示 <code>duration_ms</code> 是实测值。有效的亚毫秒调用可向下取整为 0；<code>false</code> 表示未测量，此时 0 仅是兼容占位。旧版或手工构造的元数据没有该标记时，也不能据其数值判断延迟。</p>
+        <p>计时从根 CLI 入口、参数解析之前开始，到构造该元数据的时点为止，不包括之前的模块导入和之后的输出、清理，也不是 CPU 或纯 LLM 耗时。嵌套原子调用独立计时，父调用包含子调用执行。旧生成文件不自动改写；SDK/HTTP 顶层仍保留各自的旧信封格式，doctor 的单项检查耗时不变。这不代表工作流变快或浏览器支持并发。</p>
 
         <h2 id="sdk">Python SDK</h2>
         <pre><code>from cliany_site.sdk import ClanySite

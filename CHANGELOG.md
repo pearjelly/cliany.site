@@ -7,6 +7,19 @@
 
 ## [Unreleased]
 
+## [0.16.378] - 2026-10-09
+
+### Fixed
+
+- Command-envelope timing uses a monotonic per-invocation context instead of an unpopulated process-global command map. Nested CLI calls retain separate child spans while the parent includes those calls; completed spans cannot be reused by copied contexts. Success and rendered error envelopes share the same boundary.
+- `meta.duration_measured` distinguishes an actual integer millisecond sample from the compatible zero sentinel outside an active timer. The optional field extends envelope v1 without changing its other fields or the legacy SDK/HTTP envelope. Newly generated adapter metadata uses the shared snapshot; existing generated modules are not rewritten. See [timing semantics](docs/command-envelope-timing.md).
+- Documentation fragment headings leave native scroll space below the sticky header. Direct links, sidebar mouse/keyboard navigation, reload and browser history retain the existing anchors and command text.
+
+### Documentation and evidence
+
+- First-use guidance selects an empty `CLIANY_RUNTIME_HOME` while preserving normal OS HOME and separately isolating browser profiles. The unchanged public Python docs archive passed published v0.16.377 install, strict verification and explicit/automatic browser replay; all 100 returned rows matched an independent 131-result page's ordered prefix. This remains capped maintainer evidence, not independent first use or case promotion.
+- The alpha contract audit keeps CLI and legacy SDK/HTTP envelopes distinct and retains migration, local-only HTTP, browser concurrency, localStorage and independent-user blockers. Correct timing metadata is not a workflow speed or alpha-readiness claim.
+
 ## [0.16.377] - 2026-10-08
 
 ### Changed
@@ -3395,7 +3408,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.377...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.378...HEAD
+[0.16.378]: https://github.com/pearjelly/cliany.site/compare/v0.16.377...v0.16.378
 [0.16.377]: https://github.com/pearjelly/cliany.site/compare/v0.16.376...v0.16.377
 [0.16.376]: https://github.com/pearjelly/cliany.site/compare/v0.16.375...v0.16.376
 [0.16.375]: https://github.com/pearjelly/cliany.site/compare/v0.16.374...v0.16.375

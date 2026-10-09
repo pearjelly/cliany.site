@@ -59,6 +59,10 @@
           "type": "integer",
           "minimum": 0
         },
+        "duration_measured": {
+          "type": "boolean",
+          "description": "True only when duration_ms is sampled from an active CLI invocation timer. False or absent means duration is unavailable."
+        },
         "source": {
           "type": "string",
           "enum": ["builtin", "atom", "adapter"]
