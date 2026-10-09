@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Newly generated extracts retain observed AX semantic targets and resolve them against the current page before reading data. A renamed result region can be found by its semantic identity; a missing, ambiguous or non-unique mapped region fails instead of becoming a successful empty result. Empty matches remain valid only when the intended semantic container exists and the command allows them. Existing generated adapters are not rewritten; semantic-target adapters require a supporting runtime and cannot silently fall back on an older one. Grounding is recorded from the live snapshot, not model-provided selector-pool claims.
+
 ## [0.16.379] - 2026-10-09
 
 ### Fixed

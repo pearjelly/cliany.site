@@ -21,7 +21,7 @@ from cliany_site.browser.screenshot import capture_screenshot
 from cliany_site.browser.selector import (
     format_read_only_extract_candidates,
     format_selector_candidates_section,
-    is_grounded_extract_selector,
+    ground_extract_target,
 )
 from cliany_site.capability import sniff_api_endpoints
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
@@ -1065,15 +1065,24 @@ class WorkflowExplorer:
                     completed_steps_text = "\n".join(f"{i}. {desc}" for i, desc in enumerate(completed_steps))
 
                 _extraction_results: list = []
-                async def validate_extract(session: Any, action_data: dict[str, Any], _index: int) -> None:
+
+                async def validate_extract(
+                    session: Any,
+                    action_data: dict[str, Any],
+                    _index: int,
+                    action_start: int = turn_snapshot.actions_before_count,
+                ) -> None:
                     deadline = time.monotonic() + _EXTRACT_GROUNDING_TIMEOUT_SECONDS
                     while True:
                         snapshot = await capture_axtree(session)
-                        if is_grounded_extract_selector(
+                        target = ground_extract_target(
                             str(action_data.get("selector") or ""),
                             snapshot.get("selector_map") or {},
                             snapshot.get("extract_candidates") or [],
-                        ):
+                        )
+                        if target is not None:
+                            action_data["extract_target"] = target
+                            result.actions[action_start + _index].extract_target = target
                             return
                         if time.monotonic() >= deadline:
                             raise ExploreContractError(

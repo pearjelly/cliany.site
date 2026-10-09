@@ -20,6 +20,13 @@ class Node:
         return self.text
 
 
+def legacy_candidates(root):
+    return [
+        {key: item[key] for key in ("role", "name", "text", "selectors")}
+        for item in collect_read_only_extract_candidates(root)
+    ]
+
+
 def test_read_only_candidates_use_observed_semantic_nodes_and_stable_attributes():
     root = Node("body", "generic", "", children=[
         Node("output", "status", "1 matches", {"id": "summary"}),
@@ -34,7 +41,7 @@ def test_read_only_candidates_use_observed_semantic_nodes_and_stable_attributes(
 
     candidates = collect_read_only_extract_candidates(root)
 
-    assert candidates == [
+    assert legacy_candidates(root) == [
         {"role": "status", "name": "", "text": "1 matches", "selectors": ["#summary"]},
         {
             "role": "list", "name": "", "text": "Beta runner",
@@ -45,18 +52,21 @@ def test_read_only_candidates_use_observed_semantic_nodes_and_stable_attributes(
     assert '[status "" text="1 matches"] → #summary' in rendered
     assert '[list "" text="Beta runner"] → #results' in rendered
     assert "hidden" not in rendered.lower()
+    assert candidates[1]["semantic_name"] == "Package results"
+    assert candidates[1]["anchor_attributes"] == {"id": "results", "aria-label": "Package results"}
+    assert candidates[1]["root_selector"] == "#results"
 
 
 def test_empty_semantic_list_remains_addressable():
     root = Node("ul", "list", "", {"id": "results"})
-    assert collect_read_only_extract_candidates(root) == [
+    assert legacy_candidates(root) == [
         {"role": "list", "name": "", "text": "", "selectors": ["#results"]}
     ]
 
 
 def test_unique_semantic_output_without_id_is_a_candidate():
     root = Node("body", "generic", "", children=[Node("output", "status", "Ready")])
-    assert collect_read_only_extract_candidates(root) == [
+    assert legacy_candidates(root) == [
         {"role": "status", "name": "", "text": "Ready", "selectors": ["output"]}
     ]
     root.children_nodes.append(Node("output", "generic", "Other"))
@@ -68,10 +78,11 @@ def test_list_can_use_observed_unique_parent_anchor():
     parent = Node("div", "generic", "pathlib", {"id": "search-results"}, children=[result_list])
     root = Node("body", "generic", "", children=[Node("ul", "list", "sidebar"), parent])
 
-    assert collect_read_only_extract_candidates(root) == [
+    assert legacy_candidates(root) == [
         {"role": "list", "name": "", "text": "pathlib", "selectors": ["#search-results li"]}
     ]
     assert is_grounded_extract_selector("#search-results li", {}, collect_read_only_extract_candidates(root))
+    assert collect_read_only_extract_candidates(root)[0]["root_selector"] == "#search-results > ul"
 
     parent.children_nodes.append(Node("ul", "list", "other"))
     assert collect_read_only_extract_candidates(root) == []
@@ -82,7 +93,7 @@ def test_table_can_use_observed_unique_parent_anchor():
     parent = Node("section", "generic", "Ada", {"data-testid": "records"}, children=[table])
     root = Node("body", "generic", "", children=[Node("table", "table", "sidebar"), parent])
 
-    assert collect_read_only_extract_candidates(root) == [
+    assert legacy_candidates(root) == [
         {"role": "table", "name": "", "text": "Ada", "selectors": ['[data-testid="records"] tr']}
     ]
 

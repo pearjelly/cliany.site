@@ -280,6 +280,7 @@ class AdapterMerger:
                         "selector": action.selector,
                         "extract_mode": action.extract_mode,
                         "fields_map": action.fields_map,
+                        **({"extract_target": action.extract_target} if action.extract_target else {}),
                     }
                 )
 
@@ -332,6 +333,9 @@ class AdapterMerger:
                             selector=str(raw_action.get("selector") or ""),
                             extract_mode=str(raw_action.get("extract_mode") or "text"),
                             fields_map=raw_action.get("fields_map", {}),
+                            extract_target=raw_action.get("extract_target", {})
+                            if isinstance(raw_action.get("extract_target", {}), dict)
+                            else {},
                         )
                     )
                     action_count += 1

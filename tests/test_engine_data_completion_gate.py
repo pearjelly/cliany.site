@@ -160,6 +160,31 @@ def _prepare(mocker, parse_results: list[dict], extraction_payloads: list[list[d
 
 
 @pytest.mark.asyncio
+async def test_live_extract_hook_records_observed_target_not_model_claim(mocker, tmp_home):
+    action = {"type": "extract", "selector": "#results", "extract_mode": "list", "fields": {"name": ""},
+              "extract_target": {"role": "alert", "name": "Model invention"}}
+    _prepare(mocker, [{"actions": [action], "commands": [_data_command([0])], "done": True}], [[]])
+    observed = {**_tree(), "extract_candidates": [{
+        "role": "list", "name": "Beta runner", "semantic_name": "Package results",
+        "text": "Beta runner", "selectors": ["#results"], "root_selector": "#results",
+        "anchor_attributes": {"id": "results", "aria-label": "Package results"},
+    }]}
+    mocker.patch("cliany_site.explorer.engine.capture_axtree", new=AsyncMock(side_effect=[_tree(), observed]))
+
+    async def execute(session, actions, *, extraction_results, before_extract, **kwargs):
+        await before_extract(session, actions[0], 0)
+        assert actions[0]["extract_target"]["role"] == "list"
+        extraction_results.append({"step_index": 0, "data": [{"name": "Beta runner"}]})
+
+    mocker.patch("cliany_site.explorer.engine.execute_action_steps", side_effect=execute)
+    result = await WorkflowExplorer().explore("https://example.com/search", "读取结果", record=False)
+    assert result.actions[0].extract_target == {
+        "role": "list", "name": "Package results",
+        "attributes": {"id": "results", "aria-label": "Package results"}, "suffix": "",
+    }
+
+
+@pytest.mark.asyncio
 async def test_data_command_repairs_missing_owned_extract_before_completion(mocker):
     parse_results = [
         {

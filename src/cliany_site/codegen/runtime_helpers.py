@@ -164,6 +164,10 @@ def execute_steps_via_atoms(
                 proc.wait(timeout=5)
 
 
+# New adapters import this capability name so older runtimes cannot silently ignore targets.
+execute_semantic_steps_via_atoms = execute_steps_via_atoms
+
+
 def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
     from cliany_site.envelope import ErrorCode
     from cliany_site.envelope import err as _err
@@ -247,6 +251,8 @@ def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
                 source="builtin",
             )
         args.extend(["--selector", selector])
+        if step.get("extract_target"):
+            args.extend(["--target-json", json.dumps(step["extract_target"], ensure_ascii=False)])
         mode = step.get("extract_mode")
         if mode:
             args.extend(["--mode", str(mode)])
@@ -366,6 +372,7 @@ def diagnose_if_enabled(ctx, failure_context: dict) -> dict:
 __all__ = [
     "run_atom",
     "execute_steps_via_atoms",
+    "execute_semantic_steps_via_atoms",
     "_execute_single_step",
     "summarize_extract_quality",
     "diagnose_if_enabled",

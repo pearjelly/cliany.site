@@ -5,6 +5,7 @@ import importlib.util
 import json
 import subprocess
 import sys
+import urllib.request
 from pathlib import Path
 
 import pytest
@@ -15,6 +16,30 @@ SPEC = importlib.util.spec_from_file_location("run_live_benchmark", SCRIPT)
 assert SPEC and SPEC.loader
 benchmark = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(benchmark)
+
+
+def test_shifted_filter_fixture_changes_result_ids_but_preserves_semantic_labels():
+    state = {"shift": False}
+    with benchmark._serve_pages(state) as url:
+        with urllib.request.urlopen(f"{url}/filter_catalog.html") as response:
+            original = response.read().decode()
+        state["shift"] = True
+        with urllib.request.urlopen(f"{url}/filter_catalog.html") as response:
+            changed = response.read().decode()
+    assert 'id="summary"' in original and 'id="matched-packages"' not in original
+    assert 'id="match-total"' in changed and 'id="matched-packages"' in changed
+    assert 'aria-label="Package results"' in changed
+    assert 'id="results" aria-label="Favorites"' in changed
+    assert "document.getElementById('matched-packages')" in changed
+    assert "Other control" in changed
+
+
+def test_layout_shift_cannot_claim_a_filter_review_for_other_tasks(monkeypatch, tmp_path):
+    monkeypatch.delenv("CLIANY_QA_OFFLINE", raising=False)
+    monkeypatch.delenv("CLIANY_QA_FAKE_LLM_RESPONSES", raising=False)
+    with pytest.raises(SystemExit):
+        benchmark.main(["--allow-live-llm", "--case", "form-result", "--shift-filter-layout",
+                        "--report", str(tmp_path / "report.json")])
 
 
 def _case(case_id: str) -> dict:
