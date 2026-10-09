@@ -1,4 +1,5 @@
 import asyncio
+import importlib.util
 import json
 import os
 import sys
@@ -17,6 +18,43 @@ from cliany_site.extract import build_semantic_extract_js
 
 playwright_api = pytest.importorskip("playwright.async_api")
 BROWSER_HOME = {key: os.environ[key] for key in ("HOME", "USERPROFILE", "HOMEDRIVE", "HOMEPATH") if key in os.environ}
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
+async def test_fresh_browser_replay_invalidates_observed_backend_refs(tmp_home, clean_env, no_llm, monkeypatch):
+    spec = importlib.util.spec_from_file_location(
+        "semantic_benchmark", Path(__file__).with_name("run_live_benchmark.py")
+    )
+    assert spec and spec.loader
+    benchmark = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(benchmark)
+    for key, value in BROWSER_HOME.items():
+        monkeypatch.setenv(key, value)
+    state = {"shift": True}
+    with benchmark._serve_pages(state) as base:
+        async with playwright_api.async_playwright() as playwright:
+            port = benchmark._free_port()
+            browser = await playwright.chromium.launch(headless=True, args=[f"--remote-debugging-port={port}"])
+            cdp = CDPConnection(cdp_url=f"ws://127.0.0.1:{port}")
+            try:
+                url = f"{base}/filter_catalog.html"
+                await benchmark._prime_filter_replay(browser, port, url, state)
+                session = await cdp.connect()
+                original = await capture_axtree(session)
+                await session.navigate_to(url, new_tab=False)
+                page = browser.contexts[-1].pages[-1]
+                await page.get_by_label("Filter packages").fill("gamma")
+                await page.get_by_role("button", name="Search", exact=True).click()
+                changed = await capture_axtree(session)
+                def search_ref(tree):
+                    return next(k for k, v in tree["selector_map"].items() if v.get("name") == "Search")
+                assert search_ref(original) != search_ref(changed)
+                assert any(c["root_selector"] == "#matched-packages" for c in changed["extract_candidates"]), changed
+                assert state["shift"] is True
+            finally:
+                await cdp.disconnect()
+                await browser.close()
 
 
 @pytest.fixture

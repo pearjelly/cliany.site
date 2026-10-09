@@ -7,6 +7,8 @@ import subprocess
 import sys
 import urllib.request
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -22,6 +24,7 @@ def test_shifted_filter_fixture_changes_result_ids_but_preserves_semantic_labels
     state = {"shift": False}
     with benchmark._serve_pages(state) as url:
         with urllib.request.urlopen(f"{url}/filter_catalog.html") as response:
+            assert response.headers["Cache-Control"] == "no-store"
             original = response.read().decode()
         state["shift"] = True
         with urllib.request.urlopen(f"{url}/filter_catalog.html") as response:
@@ -40,6 +43,35 @@ def test_layout_shift_cannot_claim_a_filter_review_for_other_tasks(monkeypatch, 
     with pytest.raises(SystemExit):
         benchmark.main(["--allow-live-llm", "--case", "form-result", "--shift-filter-layout",
                         "--report", str(tmp_path / "report.json")])
+
+
+@pytest.mark.parametrize("capture_fails", [False, True])
+def test_replay_primes_original_dom_and_restores_layout_even_on_capture_error(monkeypatch, capture_fails):
+    state = {"shift": True}
+    events = []
+
+    async def goto(url):
+        events.append(("navigate", state["shift"], url))
+
+    async def capture(session):
+        events.append(("capture", state["shift"], session))
+        if capture_fails:
+            raise RuntimeError("capture failed")
+        return {}
+
+    session = object()
+    cdp = SimpleNamespace(connect=AsyncMock(return_value=session), disconnect=AsyncMock())
+    monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", lambda **kwargs: cdp)
+    monkeypatch.setattr("cliany_site.browser.axtree.capture_axtree", capture)
+    browser = SimpleNamespace(new_page=AsyncMock(return_value=SimpleNamespace(goto=goto)))
+    if capture_fails:
+        with pytest.raises(RuntimeError, match="capture failed"):
+            asyncio.run(benchmark._prime_filter_replay(browser, 9222, "https://fixture.test/", state))
+    else:
+        asyncio.run(benchmark._prime_filter_replay(browser, 9222, "https://fixture.test/", state))
+    assert events == [("navigate", False, "https://fixture.test/"), ("capture", False, session)]
+    assert state == {"shift": True}
+    cdp.disconnect.assert_awaited_once()
 
 
 def _case(case_id: str) -> dict:

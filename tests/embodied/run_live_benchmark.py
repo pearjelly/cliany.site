@@ -39,6 +39,10 @@ def _serve_pages(layout_state: dict[str, bool] | None = None):
     sequence = count(1)
 
     class Handler(SimpleHTTPRequestHandler):
+        def end_headers(self):
+            self.send_header("Cache-Control", "no-store")
+            super().end_headers()
+
         def do_GET(self):
             path = self.path.split("?", 1)[0]
             if path == "/filter_catalog.html" and layout_state and layout_state["shift"]:
@@ -501,6 +505,23 @@ async def _inspect_page(
         await browser.close()
 
 
+async def _prime_filter_replay(browser: Any, cdp_port: int, url: str, layout_state: dict[str, bool]) -> None:
+    from cliany_site.browser.axtree import capture_axtree
+    from cliany_site.browser.cdp import CDPConnection
+
+    # Backend node IDs can coincide in fresh browsers; invalidate an observed DOM before replay.
+    layout_state["shift"] = False
+    cdp = CDPConnection(cdp_url=f"ws://127.0.0.1:{cdp_port}")
+    try:
+        page = await browser.new_page()
+        await page.goto(url)
+        session = await cdp.connect()
+        await capture_axtree(session)
+    finally:
+        await cdp.disconnect()
+        layout_state["shift"] = True
+
+
 async def _trial(
     playwright: Any, server_url: str, case: dict[str, Any], runtime_home: Path, index: int,
     layout_state: dict[str, bool] | None = None,
@@ -579,6 +600,8 @@ async def _trial(
         port = _free_port()
         browser = await playwright.chromium.launch(headless=True, args=[f"--remote-debugging-port={port}"])
         try:
+            if shifted:
+                await _prime_filter_replay(browser, port, url, layout_state)
             cli_args = ["--cdp-url", f"ws://127.0.0.1:{port}", group, command]
             for name, value in replay["args"].items():
                 cli_args.extend([f"--{name.replace('_', '-')}", str(value)])
@@ -596,6 +619,8 @@ async def _trial(
                 row["ref_changed"] = (
                     recorded_click_ref is not None and replay_ref is not None and recorded_click_ref != replay_ref
                 )
+                row["recorded_click_ref"] = recorded_click_ref
+                row["replay_click_ref"] = replay_ref
                 row["layout_shifted"] = True
                 row["oracle_kind"] = "independent_browser"
             contents = _extract_contents(result)
