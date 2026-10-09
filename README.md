@@ -190,6 +190,8 @@ From v0.16.378, [command-envelope timing](docs/command-envelope-timing.md) defin
 
 From v0.16.379, a new `explore` preserves the observed starting URL and model when only auxiliary extract/snapshot files exist. It generates a new adapter instead of incorrectly merging into an empty one. Existing adapters are not rewritten. The [returned-value and first-generation review](docs/user-evidence/2026-10-09-returned-value-and-first-generation-review.md) separates this fix from capped results, provider latency and independent-user acceptance.
 
+From v0.16.380, newly generated extracts retain observed semantic targets and resolve the current page before reading. A renamed result region can be found without treating a missing region as valid zero matches. New semantic adapters require a supporting runtime; existing adapters are not automatically migrated. Native list/table support, unresolved identities and the 100-row cap remain explicit limits. See [semantic extract targets](docs/semantic-extract-targets.md).
+
 ### Server and Docker Browser Setup
 
 `--headless` and `--cdp-url` are root CLI options, so they must appear before the command they configure, including `explore` and `serve`.
