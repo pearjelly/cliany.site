@@ -373,6 +373,70 @@ def test_benchmark_requires_returned_form_and_semantic_values():
     assert not benchmark._matches_expected_extracts([{"text": "Alpha"}], semantic)
 
 
+@pytest.mark.parametrize("rows", [
+    ["Gamma toolkit", "Alpha toolkit"],
+    ["Gamma toolkit", "Gamma toolkit"],
+    [{"name": "Gamma toolkit"}, {"name": "Alpha toolkit"}],
+    [{"name": "Gamma toolkit"}, {"name": "Gamma toolkit"}],
+])
+def test_benchmark_rejects_additional_and_duplicate_rows(rows):
+    positive = _case("filter-catalog")["replays"][0]
+    assert not benchmark._matches_expected_extracts([{"text": "1 matches"}, rows], positive)
+
+
+@pytest.mark.parametrize("contents", [
+    ["0 matches", [], ["Alpha toolkit"]],
+    [{"summary": "0 matches", "rows": [], "other_rows": [{"name": "Alpha toolkit"}]}],
+    ["1 matches", [{"name": "Gamma toolkit"}], []],
+    ["1 matches", "Gamma toolkit", [{"name": "Alpha toolkit"}]],
+    ["1 matches", "Gamma toolkit"],
+])
+def test_benchmark_rejects_missing_or_contradictory_row_collections(contents):
+    replays = _case("filter-catalog")["replays"]
+    expected = replays[1] if "0 matches" in json.dumps(contents) else replays[0]
+    assert not benchmark._matches_expected_extracts(contents, expected)
+
+
+@pytest.mark.parametrize("contents", [
+    ["1 matches", ["Gamma toolkit"]],
+    [{"text": "1 matches"}, [{"name": "Gamma toolkit", "code": "gamma"}]],
+    [{"summary": "1 matches", "packages": [{"label": "Gamma toolkit"}]}],
+    [[{"summary": "1 matches", "name": "Gamma toolkit"}]],
+    [{"summary": "0 matches", "packages": []}],
+])
+def test_benchmark_accepts_exact_row_collections_with_flexible_field_names(contents):
+    replays = _case("filter-catalog")["replays"]
+    expected = replays[1] if "0 matches" in json.dumps(contents) else replays[0]
+    assert benchmark._matches_expected_extracts(contents, expected)
+
+
+def test_benchmark_checks_row_order_and_each_row():
+    expected = {"expected_summary": "2 matches", "expected_rows": ["Alpha toolkit", "Gamma toolkit"]}
+    assert benchmark._matches_expected_extracts(["2 matches", ["Alpha toolkit", "Gamma toolkit"]], expected)
+    assert not benchmark._matches_expected_extracts(["2 matches", ["Gamma toolkit", "Alpha toolkit"]], expected)
+    assert not benchmark._matches_expected_extracts(
+        ["2 matches", [{"names": ["Alpha toolkit", "Gamma toolkit"]}, {"name": "Other toolkit"}]], expected
+    )
+
+
+@pytest.mark.parametrize("contents", [
+    ["1 matches", "0 matches", ["Gamma toolkit"]],
+    [{"summary": "1 matches", "stale_summary": "0 matches", "rows": ["Gamma toolkit"]}],
+])
+def test_benchmark_rejects_conflicting_summary_values(contents):
+    positive = _case("filter-catalog")["replays"][0]
+    assert not benchmark._matches_expected_extracts(contents, positive)
+
+
+@pytest.mark.parametrize("case_id,correct,wrong", [
+    ("form-result", "Grace:Red", "Ada:Blue"),
+    ("semantic-reorder", "Beta", "Alpha"),
+])
+def test_benchmark_rejects_conflicting_scalar_extracts(case_id, correct, wrong):
+    replay = _case(case_id)["replays"][0]
+    assert not benchmark._matches_expected_extracts([{"text": correct}, {"text": wrong}], replay)
+
+
 def test_summary_counts_failures_by_task():
     trials = [
         {"case_id": "form-result", "ok": True},
@@ -393,6 +457,24 @@ def test_live_runner_requires_explicit_opt_in_and_rejects_offline(tmp_home, monk
     with pytest.raises(SystemExit, match="2"):
         benchmark.main(["--allow-live-llm", "--report", str(report)])
     assert not report.exists()
+
+
+def test_failed_benchmark_start_reports_oracle_without_private_error(tmp_home, monkeypatch):
+    report = tmp_home / "failed-report.json"
+    monkeypatch.delenv("CLIANY_QA_OFFLINE", raising=False)
+    monkeypatch.delenv("CLIANY_QA_FAKE_LLM_RESPONSES", raising=False)
+
+    def fail(coroutine):
+        coroutine.close()
+        raise RuntimeError("private browser diagnostic")
+
+    monkeypatch.setattr(benchmark.asyncio, "run", fail)
+    assert benchmark.main(["--allow-live-llm", "--report", str(report)]) == 1
+    payload = json.loads(report.read_text())
+    assert payload["output_oracle"] == "per-row-v2"
+    assert payload["error"] == "RuntimeError"
+    assert payload["trials"] == []
+    assert "private" not in json.dumps(payload)
 
 
 def test_benchmark_cli_uses_isolated_runtime_home(tmp_home):
