@@ -7,10 +7,17 @@
 
 ## [Unreleased]
 
+## [0.16.379] - 2026-10-09
+
 ### Fixed
 
 - A fresh `explore` checks for adapter core files rather than treating an auxiliary-only directory as an installed adapter. Extract/snapshot artifacts no longer send first generation through the merge path and discard the observed starting URL or model provenance. Existing core artifacts, including partial files and symbolic links, still follow the existing merge handling; no historical generated module is rewritten by this change.
 - The opt-in controlled browser benchmark checks returned row cardinality and order instead of accepting a response merely because it contains an expected name. Extra, duplicate and contradictory row collections, conflicting count strings and conflicting single-value text extracts fail acceptance. New reports identify the `per-row-v2` oracle; historical privacy-safe summaries cannot be rescored and are not evidence under this stricter boundary. CLI runtime behavior and generated adapters are unchanged.
+
+### Evidence and limits
+
+- A fresh public-v0.16.378 controlled matrix passed 9/9 explorations and 12/12 changed-input output/DOM checks under `per-row-v2`; one exploration still took 264.62 seconds after two provider timeouts. Three public Python docs generations reproduced the first-install metadata bug. All six positive replays matched each independently observed 100-row prefix, not complete collection. One negative probe's hardcoded expectation was wrong for a command declaring `expects_nonempty=false`; its original failed probe record is retained. See [the review](docs/user-evidence/2026-10-09-returned-value-and-first-generation-review.md).
+- The fixed source passed a fresh live generation, strict verification, changed-query prefix comparison and declared-empty failure check. Public-v0.16.379 acceptance remains a separate post-publication gate; neither maintainer evidence nor stricter checks establish independent first use or alpha readiness.
 
 ## [0.16.378] - 2026-10-09
 
@@ -3413,7 +3420,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.378...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.379...HEAD
+[0.16.379]: https://github.com/pearjelly/cliany.site/compare/v0.16.378...v0.16.379
 [0.16.378]: https://github.com/pearjelly/cliany.site/compare/v0.16.377...v0.16.378
 [0.16.377]: https://github.com/pearjelly/cliany.site/compare/v0.16.376...v0.16.377
 [0.16.376]: https://github.com/pearjelly/cliany.site/compare/v0.16.375...v0.16.376

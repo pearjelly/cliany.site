@@ -188,6 +188,8 @@ OpenAI-compatible clients use a 120-second network-operation timeout with SDK-in
 
 From v0.16.378, [command-envelope timing](docs/command-envelope-timing.md) defines the optional `meta.duration_measured` flag. Only an explicit `true` identifies a measured invocation span; older or manually assembled metadata without the flag is unavailable for timing decisions. SDK/HTTP envelopes retain their separate legacy shape. This is timing correctness, not faster workflows.
 
+From v0.16.379, a new `explore` preserves the observed starting URL and model when only auxiliary extract/snapshot files exist. It generates a new adapter instead of incorrectly merging into an empty one. Existing adapters are not rewritten. The [returned-value and first-generation review](docs/user-evidence/2026-10-09-returned-value-and-first-generation-review.md) separates this fix from capped results, provider latency and independent-user acceptance.
+
 ### Server and Docker Browser Setup
 
 `--headless` and `--cdp-url` are root CLI options, so they must appear before the command they configure, including `explore` and `serve`.

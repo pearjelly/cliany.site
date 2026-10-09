@@ -182,6 +182,8 @@ OpenAI 兼容客户端使用 120 秒网络操作超时，并关闭 SDK 内部重
 
 从 v0.16.378 起，[命令信封计时](docs/command-envelope-timing.md)定义可选的 `meta.duration_measured` 标记。只有显式 `true` 才表示已测量调用时段；旧版或手工构造的元数据没有该标记时，不能用于延迟判断。SDK/HTTP 继续使用各自的旧信封格式。这是计时正确性修正，不代表工作流变快。
 
+从 v0.16.379 起，首次 `explore` 遇到仅有提取/快照辅助文件的目录时，会保留实测起始 URL 和模型并新建 adapter，不再误走空 adapter 合并。不会重写已有 adapter。[返回值与首次生成复核](docs/user-evidence/2026-10-09-returned-value-and-first-generation-review.md)分别记录该修复、结果上限、provider 长等待与尚未完成的独立用户验收。
+
 一台 macOS 维护机上，空的临时 OS `HOME` 会让 Chrome 的 CDP 探测成功、HTTP 导航却超时。保留正常 OS `HOME`，用 v0.16.376 起提供的 `CLIANY_RUNTIME_HOME` 选择空的 CLI 运行目录；浏览器 profile 须另行隔离，手动管理 Chrome 时只连接该测试实例专用的 loopback `--cdp-url`。这个目录设置不会隔离已有 CDP 浏览器、XDG 模型配置或系统凭据。见[有界 CDP 对照](docs/user-evidence/2026-10-04-synthetic-home-cdp-controls.md)；具体 Chrome 原因和独立首次用户验收仍未完成。
 
 ### 实验性：Obscura 浏览器提供者

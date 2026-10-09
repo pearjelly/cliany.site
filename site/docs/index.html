@@ -105,7 +105,7 @@
 
       <main>
         <h1>cliany-site 文档</h1>
-        <p class="intro-meta">v0.16.378 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
+        <p class="intro-meta">v0.16.379 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
 
         <p>cliany-site 基于 LLM 和 Chrome CDP 协议，将任意网页操作自动化为可重复调用的 CLI 命令。核心流程：<strong>explore（探索）→ generate（生成适配器）→ run（执行）</strong>。</p>
         <p>v0.16.365 提供维护中的 ASF Confluence 只读关键词搜索包。公开资产已按固定 SHA-256 在隔离环境完成安装、严格校验与只读查询验收，案例现为 active；已有 adapter 不会自动覆盖。安装命令见 <a href="https://github.com/pearjelly/cliany.site#asf-confluence-wiki">README</a>。</p>
@@ -224,6 +224,7 @@ cliany-site github.com search --query "browser automation" --resume --json</code
 
         <h3>命令计时元数据</h3>
         <p>从 v0.16.378 起，CLI 信封的 <code>meta.duration_measured=true</code> 才表示 <code>duration_ms</code> 是实测值。有效的亚毫秒调用可向下取整为 0；<code>false</code> 表示未测量，此时 0 仅是兼容占位。旧版或手工构造的元数据没有该标记时，也不能据其数值判断延迟。</p>
+        <p>从 v0.16.379 起，首次探索只在发现 <code>commands.py</code> 或 <code>metadata.json</code> 核心文件时沿用合并路径。仅有提取/快照辅助文件不会再丢失新生成命令的实测起始 URL 或模型；已有 adapter 不会自动重写。</p>
         <p>计时从根 CLI 入口、参数解析之前开始，到构造该元数据的时点为止，不包括之前的模块导入和之后的输出、清理，也不是 CPU 或纯 LLM 耗时。嵌套原子调用独立计时，父调用包含子调用执行。旧生成文件不自动改写；SDK/HTTP 顶层仍保留各自的旧信封格式，doctor 的单项检查耗时不变。这不代表工作流变快或浏览器支持并发。</p>
 
         <h2 id="sdk">Python SDK</h2>
