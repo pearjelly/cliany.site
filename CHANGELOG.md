@@ -7,9 +7,16 @@
 
 ## [Unreleased]
 
+## [0.16.380] - 2026-10-09
+
 ### Fixed
 
 - Newly generated extracts retain observed AX semantic targets and resolve them against the current page before reading data. A renamed result region can be found by its semantic identity; a missing, ambiguous or non-unique mapped region fails instead of becoming a successful empty result. Empty matches remain valid only when the intended semantic container exists and the command allows them. Existing generated adapters are not rewritten; semantic-target adapters require a supporting runtime and cannot silently fall back on an older one. Grounding is recorded from the live snapshot, not model-provided selector-pool claims.
+
+### Evidence and limits
+
+- Three fresh live source filter explorations passed 3/3, with all six changed-layout positive/zero-match returned-value and independent-browser checks passing and actual control refs changing. The earlier 0/3 ref-validation study is retained, not rescored. Explore times of 121.23 and 130.42 seconds and a visible retry remain; this is not a latency or general reliability claim. See [the review](docs/user-evidence/2026-10-09-semantic-extract-layout-review.md).
+- Native list/table shapes, resolvable semantic identities and the existing row cap bound this change. Historical generated files are not migrated. Final-master, installed public-package and production gates remain separate; candidate statuses and independent-user/alpha acceptance do not change.
 
 ## [0.16.379] - 2026-10-09
 
@@ -3424,7 +3431,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.379...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.380...HEAD
+[0.16.380]: https://github.com/pearjelly/cliany.site/compare/v0.16.379...v0.16.380
 [0.16.379]: https://github.com/pearjelly/cliany.site/compare/v0.16.378...v0.16.379
 [0.16.378]: https://github.com/pearjelly/cliany.site/compare/v0.16.377...v0.16.378
 [0.16.377]: https://github.com/pearjelly/cliany.site/compare/v0.16.376...v0.16.377

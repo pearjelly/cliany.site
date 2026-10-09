@@ -184,6 +184,8 @@ OpenAI 兼容客户端使用 120 秒网络操作超时，并关闭 SDK 内部重
 
 从 v0.16.379 起，首次 `explore` 遇到仅有提取/快照辅助文件的目录时，会保留实测起始 URL 和模型并新建 adapter，不再误走空 adapter 合并。不会重写已有 adapter。[返回值与首次生成复核](docs/user-evidence/2026-10-09-returned-value-and-first-generation-review.md)分别记录该修复、结果上限、provider 长等待与尚未完成的独立用户验收。
 
+从 v0.16.380 起，新生成的提取会保存实测语义目标，回放时先查找当前页面再读取。结果区域改名后可按语义重新定位；缺失区域不能冒充合法零匹配。新语义 adapter 需要支持该能力的运行时，已有 adapter 不会自动迁移。原生列表/表格支持、无法消除的定位歧义及 100 行上限仍是明确边界。见[语义提取目标](docs/semantic-extract-targets.md)。
+
 一台 macOS 维护机上，空的临时 OS `HOME` 会让 Chrome 的 CDP 探测成功、HTTP 导航却超时。保留正常 OS `HOME`，用 v0.16.376 起提供的 `CLIANY_RUNTIME_HOME` 选择空的 CLI 运行目录；浏览器 profile 须另行隔离，手动管理 Chrome 时只连接该测试实例专用的 loopback `--cdp-url`。这个目录设置不会隔离已有 CDP 浏览器、XDG 模型配置或系统凭据。见[有界 CDP 对照](docs/user-evidence/2026-10-04-synthetic-home-cdp-controls.md)；具体 Chrome 原因和独立首次用户验收仍未完成。
 
 ### 实验性：Obscura 浏览器提供者

@@ -105,7 +105,7 @@
 
       <main>
         <h1>cliany-site 文档</h1>
-        <p class="intro-meta">v0.16.379 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
+        <p class="intro-meta">v0.16.380 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
 
         <p>cliany-site 基于 LLM 和 Chrome CDP 协议，将任意网页操作自动化为可重复调用的 CLI 命令。核心流程：<strong>explore（探索）→ generate（生成适配器）→ run（执行）</strong>。</p>
         <p>v0.16.365 提供维护中的 ASF Confluence 只读关键词搜索包。公开资产已按固定 SHA-256 在隔离环境完成安装、严格校验与只读查询验收，案例现为 active；已有 adapter 不会自动覆盖。安装命令见 <a href="https://github.com/pearjelly/cliany.site#asf-confluence-wiki">README</a>。</p>
@@ -222,6 +222,8 @@ cliany-site github.com search --query "browser automation" --resume --json</code
         <h3>数据命令的提取质量语义</h3>
         <p>生成的 <code>list-</code>、<code>search-</code>、<code>read-</code> 和 <code>extract-</code> 命令，以及包含 <code>extract</code> action 的任何命令，默认使用 <code>expects_nonempty=true</code>。零条数据、关键字段缺失和 partial 结果都会返回 <code>E_EMPTY_RESULT</code>，而不是只完成点击后报告成功。只有某个工作流的零匹配本来就是合法结果时，命令才可声明 <code>expects_nonempty=false</code>：零匹配仍返回 <code>ok=true</code>，同时继续提供 <code>data.quality</code> 作为行数和数据质量信号。失败的结构化对象行会额外在 <code>data.quality.field_blank_rows</code> 中按字段给出缺失或空白值的 1 起始结果行号，帮助定位字段映射或页面内容；成功结果不会增加该字段。重新 explore 某个命令会应用这条规则到新生成的代码，但不会静默改写已安装的旧 adapter；即使允许零匹配，关键字段缺失或 partial 结果仍然失败。</p>
 
+        <h3>语义提取目标</h3>
+        <p>从 v0.16.380 起，新生成的提取保存实测 AX 语义目标，读取前在当前页面重新定位并检查唯一 DOM 区域。缺失或无法消除歧义的目标返回 <code>E_SELECTOR_NOT_FOUND</code>，不能冒充合法零匹配；已存在区域且声明 <code>expects_nonempty=false</code> 时仍可返回零条结果。生成的原子调用通过 <code>browser extract --target-json</code> 传递实测记录，而不是猜测 CSS。原生列表/表格支持和 100 行上限仍保留；已有 adapter 不会自动迁移，新语义 adapter 需要 v0.16.380 或更新的支持运行时。见 <a href="https://github.com/pearjelly/cliany.site/blob/master/docs/semantic-extract-targets.md">语义提取目标与兼容性</a>。</p>
         <h3>命令计时元数据</h3>
         <p>从 v0.16.378 起，CLI 信封的 <code>meta.duration_measured=true</code> 才表示 <code>duration_ms</code> 是实测值。有效的亚毫秒调用可向下取整为 0；<code>false</code> 表示未测量，此时 0 仅是兼容占位。旧版或手工构造的元数据没有该标记时，也不能据其数值判断延迟。</p>
         <p>从 v0.16.379 起，首次探索只在发现 <code>commands.py</code> 或 <code>metadata.json</code> 核心文件时沿用合并路径。仅有提取/快照辅助文件不会再丢失新生成命令的实测起始 URL 或模型；已有 adapter 不会自动重写。</p>
