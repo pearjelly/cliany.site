@@ -133,6 +133,7 @@ jobs:
             tests/test_doctor.py ^
             tests/test_doctor_checks.py ^
             tests/test_doctor_v3.py ^
+            tests/test_explore_first_install.py ^
             tests/test_generated_orchestration.py ^
             tests/test_generator_v3.py ^
             tests/test_healer.py ^
