@@ -1,11 +1,13 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-10-08
-- **Current baseline:** v0.16.377
+- **Updated:** 2026-10-09
+- **Current baseline:** v0.16.378 (release target; public availability requires the release gates)
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap below records earlier work; the October plan prioritizes verified first use and reliable real workflows.
+
+The v0.16.378 target adds [explicit command-timing availability](command-envelope-timing.md), native documentation anchor spacing and first-use isolation guidance. The [alpha audit](plans/2026-10-04-alpha-readiness-audit.md) still concludes not ready. An [unchanged public Python docs archive check](user-evidence/2026-10-08-public-python-docs-archive-replay.md) matched all 100 returned rows to an independent 131-result page's prefix; the case remains candidate. Final-commit CI, the public installed package and production anchors must pass before publication acceptance. Timing correctness is not a speed claim.
 
 The v0.16.376 runtime isolation change lets first-use trials select `CLIANY_RUNTIME_HOME` without replacing Chrome's OS HOME. Demo subprocesses and persisted runtime artifacts now share that directory. A [maintainer's public Jira check](user-evidence/2026-10-08-runtime-home-isolation.md) installed the pinned adapter, returned five real issues and reused the installation; independent first-user acceptance remains open.
 

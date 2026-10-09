@@ -1,6 +1,6 @@
 # Command Envelope Timing
 
-**Status: unreleased.** The proposed timing fields below are not available in the published v0.16.377 package. That package's `meta.duration_ms` values must not be treated as measured command latency. This change addresses [Issue #69](https://github.com/pearjelly/cliany.site/issues/69), not workflow performance or alpha readiness.
+**Available from v0.16.378.** v0.16.377 and older packages do not provide the availability flag below; their `meta.duration_ms` values must not be treated as measured command latency. This contract addresses [Issue #69](https://github.com/pearjelly/cliany.site/issues/69), not workflow performance or alpha readiness.
 
 ## Reading Metadata
 
@@ -40,4 +40,4 @@ The SDK and HTTP `success/data/error` envelopes keep their existing shape and ga
 
 ## Verification
 
-Deterministic tests cover success and rendered errors, parse errors and explicit exits, submillisecond zero, multiple snapshots, overlapping same-command threads and async contexts, expired copied contexts, generated parent/child success and failure, schema compatibility and unchanged SDK/HTTP doctor responses. Existing browser, LLM and data-quality gates remain independent. Publication and a fresh installed-package repeat are still required before presenting this behavior as shipped.
+Deterministic tests cover success and rendered errors, parse errors and explicit exits, submillisecond zero, multiple snapshots, overlapping same-command threads and async contexts, expired copied contexts, generated parent/child success and failure, schema compatibility and unchanged SDK/HTTP doctor responses. Existing browser, LLM and data-quality gates remain independent. Release acceptance requires exact-final-commit CI and a fresh installed-package repeat; the publication record is tracked in Issue #69. A source checkout or an earlier PR's green checks alone do not prove public availability.
