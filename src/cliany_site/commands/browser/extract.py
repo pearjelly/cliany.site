@@ -16,6 +16,8 @@ from cliany_site.extract import (
     _coerce_json_like_extract_data,
     _wait_for_list_settle,
     build_extract_js,
+    build_semantic_extract_js,
+    prepare_semantic_extract_selector,
 )
 from cliany_site.extract_quality import evaluate_extract_quality
 
@@ -36,6 +38,7 @@ from cliany_site.extract_quality import evaluate_extract_quality
     help="结构化提取模式（text/list/table/attribute），生成 adapter 使用",
 )
 @click.option("--fields-json", default=None, help="结构化字段映射 JSON，仅用于 list/table/attribute")
+@click.option("--target-json", default=None, help="已观测的 AX 语义目标 JSON，生成 adapter 使用")
 @click.option("--strict-quality", is_flag=True, default=False, help="结构化提取质量未通过时返回 E_EMPTY_RESULT")
 @click.option("--session", default=None, help="会话名称")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出模式")
@@ -46,6 +49,7 @@ def extract(
     fmt: str,
     mode: str | None,
     fields_json: str | None,
+    target_json: str | None,
     strict_quality: bool,
     session: str | None,
     json_mode: bool | None,
@@ -59,10 +63,48 @@ def extract(
         print_envelope(cast(Envelope, parsed_fields), effective_json)
         ctx.exit(1)
     fields = cast(dict[str, Any] | None, parsed_fields)
-    result = asyncio.run(_run_extract(cdp, selector, fmt, mode, fields, strict_quality=strict_quality))
+    target = _parse_target_json(target_json)
+    if isinstance(target, dict) and target.get("ok") is False:
+        print_envelope(cast(Envelope, target), effective_json)
+        ctx.exit(1)
+    result = asyncio.run(
+        _run_extract(cdp, selector, fmt, mode, fields, strict_quality=strict_quality, extract_target=target)
+    )
     print_envelope(result, effective_json)
     if not result.get("ok"):
         ctx.exit(1)
+
+
+def _parse_target_json(target_json: str | None) -> dict[str, Any] | None:
+    if target_json is None:
+        return None
+    try:
+        target = json.loads(target_json)
+    except (json.JSONDecodeError, TypeError):
+        target = None
+    valid = (
+        isinstance(target, dict)
+        and not (set(target) - {"role", "name", "attributes", "suffix"})
+        and isinstance(target.get("role"), str)
+        and bool(target["role"].strip())
+        and isinstance(target.get("name", ""), str)
+        and isinstance(target.get("attributes", {}), dict)
+        and all(isinstance(key, str) and isinstance(value, str) for key, value in target.get("attributes", {}).items())
+        and isinstance(target.get("suffix", ""), str)
+        and target.get("suffix", "") in {"", " li", " tr"}
+        and (not target.get("suffix") or target["role"] == {" li": "list", " tr": "table"}[target["suffix"]])
+    )
+    if not valid:
+        return cast(
+            dict[str, Any],
+            err(
+                command="browser extract",
+                code=ErrorCode.E_INVALID_PARAM,
+                message="--target-json 必须包含非空 role、文本 name、文本属性对象和有效语义后缀",
+                source="builtin",
+            ),
+        )
+    return cast(dict[str, Any], target)
 
 
 def _parse_fields_json(fields_json: str | None) -> dict[str, Any] | None | Envelope:
@@ -94,6 +136,7 @@ async def _run_extract(
     mode: str | None = None,
     fields: dict | None = None,
     strict_quality: bool = False,
+    extract_target: dict[str, Any] | None = None,
 ) -> Envelope:
     if not await cdp.check_available():
         return err(
@@ -105,8 +148,34 @@ async def _run_extract(
     try:
         browser_session = await cdp.connect()
         try:
+            if extract_target is not None:
+                resolved, resolution_error = await prepare_semantic_extract_selector(
+                    browser_session, extract_target, mode,
+                )
+                if resolved is None:
+                    unsettled = resolution_error == ErrorCode.E_PAGE_NOT_READY
+                    return err(
+                        command="browser extract",
+                        code=resolution_error or ErrorCode.E_SELECTOR_NOT_FOUND,
+                        message=(
+                            "语义提取区域尚未稳定" if unsettled
+                            else "无法唯一定位当前页面的 AX 语义提取区域；不会将缺失区域当作零匹配"
+                        ),
+                        hint=(
+                            "等待页面完成加载后重试" if unsettled
+                            else "检查当前页面并重新 explore；不会尝试猜测 CSS 选择器"
+                        ),
+                        details={
+                            "reason": "extract_target_unsettled" if unsettled else "extract_target_unresolved",
+                            "target": extract_target,
+                        },
+                        source="builtin",
+                    )
+                selector = resolved
             if mode:
-                content = await _do_structured_extract(browser_session, selector, mode, fields)
+                content = await _do_structured_extract(
+                    browser_session, selector, mode, fields, extract_target=extract_target,
+                )
                 if mode in {"list", "table"} and content == []:
                     title = None
                     try:
@@ -167,6 +236,7 @@ async def _do_structured_extract(
     selector: str | None,
     mode: str,
     fields: dict | None,
+    *, extract_target: dict[str, Any] | None = None,
 ) -> object | Envelope:
     if not selector:
         return err(
@@ -176,7 +246,10 @@ async def _do_structured_extract(
             source="builtin",
         )
     try:
-        js_expr = build_extract_js(selector, mode, fields)
+        js_expr = (
+            build_semantic_extract_js(selector, mode, fields, extract_target)
+            if extract_target else build_extract_js(selector, mode, fields)
+        )
         page = await browser_session.get_current_page()
         if page is None:
             return err(
@@ -185,7 +258,7 @@ async def _do_structured_extract(
                 message="无法获取当前页面",
                 details={"selector": selector, "mode": mode},
             )
-        if mode in {"list", "table"} and not await _wait_for_list_settle(page, selector):
+        if not extract_target and mode in {"list", "table"} and not await _wait_for_list_settle(page, selector):
             return err(
                 command="browser extract",
                 code=ErrorCode.E_PAGE_NOT_READY,
@@ -193,7 +266,20 @@ async def _do_structured_extract(
                 details={"selector": selector, "mode": mode, "reason": "list_unsettled"},
                 source="builtin",
             )
-        return cast(object, _coerce_json_like_extract_data(await page.evaluate(js_expr)))
+        data = _coerce_json_like_extract_data(await page.evaluate(js_expr))
+        if extract_target and data == {"__cliany_extract_target_missing__": True}:
+            return err(
+                command="browser extract", code=ErrorCode.E_SELECTOR_NOT_FOUND,
+                message="读取时语义提取区域已消失或不唯一；不会当作零匹配",
+                details={"reason": "extract_root_changed", "selector": selector}, source="builtin",
+            )
+        if extract_target and data == {"__cliany_extract_mode_mismatch__": True}:
+            return err(
+                command="browser extract", code=ErrorCode.E_PARSE_FAILED,
+                message="当前语义区域不是受支持的原生列表或表格；不会当作零匹配",
+                details={"reason": "extract_mode_target_mismatch", "mode": mode}, source="builtin",
+            )
+        return cast(object, data)
     except (OSError, RuntimeError, ValueError) as exc:
         return err(
             command="browser extract",

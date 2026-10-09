@@ -23,6 +23,7 @@ class ActionStep:
     selector: str = ""
     extract_mode: str = "text"
     fields_map: dict = field(default_factory=dict)
+    extract_target: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

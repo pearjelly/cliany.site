@@ -141,6 +141,9 @@ jobs:
             tests/test_loader_legacy.py ^
             tests/test_manifest.py ^
             tests/test_runtime_home.py ^
+            tests/test_semantic_extract_target.py ^
+            tests/test_semantic_extract_runtime.py ^
+            tests/test_semantic_extract_pipeline.py ^
             tests/test_migrate.py ^
             tests/test_obscura_binary_models.py ^
             tests/test_obscura_cache_manager.py ^

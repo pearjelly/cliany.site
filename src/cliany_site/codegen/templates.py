@@ -527,6 +527,8 @@ def render_action_data_literal(
             entry["selector"] = action.selector
             entry["extract_mode"] = action.extract_mode
             entry["fields"] = action.fields_map
+            if action.extract_target:
+                entry["extract_target"] = action.extract_target
         payload.append(entry)
     return json.dumps(payload, ensure_ascii=False)
 

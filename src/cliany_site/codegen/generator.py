@@ -61,6 +61,18 @@ class AdapterGenerator:
         has_reuse_atom = self._has_reuse_atom_actions(explore_result)
         has_parameterized_args = any(cmd.args for cmd in explore_result.commands)
         has_param_placeholders = any(re.search(r"\{\{\w+\}\}", action.value or "") for action in explore_result.actions)
+        semantic_targets = any(action.extract_target for action in explore_result.actions)
+        if has_reuse_atom and not semantic_targets:
+            reused_ids = {action.target_ref for action in explore_result.actions if action.action_type == "reuse_atom"}
+            semantic_targets = any(
+                action.get("extract_target") for atom in load_atoms(domain)
+                if atom.atom_id in reused_ids for action in atom.actions
+            )
+        execution_import = (
+            "execute_semantic_steps_via_atoms as execute_steps_via_atoms"
+            if semantic_targets
+            else "execute_steps_via_atoms"
+        )
 
         command_blocks: list[str] = []
         for index, command in enumerate(explore_result.commands):
@@ -115,7 +127,7 @@ def _normalize_atom_actions(actions):
 
 import json
 import click
-from cliany_site.codegen.runtime_helpers import execute_steps_via_atoms, summarize_extract_quality, diagnose_if_enabled
+from cliany_site.codegen.runtime_helpers import {execution_import}, summarize_extract_quality, diagnose_if_enabled
 from cliany_site.envelope import ok, err, ErrorCode{atom_imports}{substitute_import}
 
 DOMAIN = {domain!r}
@@ -157,6 +169,11 @@ if __name__ == "__main__":
         domain_doc = self._sanitize_docstring_text(domain)
         source_url = f"https://{domain}"
         atoms = load_atoms(domain)
+        action_execution_import = (
+            "execute_semantic_action_steps as execute_action_steps"
+            if any(action.get("extract_target") for atom in atoms for action in atom.actions)
+            else "execute_action_steps"
+        )
 
         if not atoms:
             code = f'''# 自动生成 — DO NOT EDIT
@@ -189,7 +206,7 @@ if __name__ == "__main__":
 
 import asyncio
 import click
-from cliany_site.action_runtime import execute_action_steps, substitute_parameters
+from cliany_site.action_runtime import {action_execution_import}, substitute_parameters
 from cliany_site.atoms.storage import {load_atom_name}
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.session import load_session_data
@@ -420,6 +437,8 @@ def save_adapter(
                             "fields_map": action.fields_map,
                         }
                     )
+                    if action.extract_target:
+                        cmd_actions[-1]["extract_target"] = action.extract_target
                     if action.action_type == "reuse_atom" and action.target_ref:
                         atom_id = action.target_ref
                         if atom_id not in atom_refs:

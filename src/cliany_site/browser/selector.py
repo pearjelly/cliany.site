@@ -144,6 +144,14 @@ def enrich_selector_map(selector_map: dict[str, dict]) -> dict[str, dict]:
 _READ_ONLY_EXTRACT_ROLES = frozenset({"status", "alert", "list", "table"})
 
 
+def _extract_identity_attributes(attributes: dict[str, Any]) -> dict[str, str]:
+    return {
+        key: value
+        for key in ("id", "data-testid", "aria-label", "name", "placeholder", "title")
+        if (value := _to_text(attributes.get(key)))
+    }
+
+
 def collect_read_only_extract_candidates(root: Any, limit: int = 20) -> list[dict[str, Any]]:
     """Ground extract selectors in visible AX semantics and observed DOM attributes."""
     if root is None or limit <= 0:
@@ -180,10 +188,14 @@ def collect_read_only_extract_candidates(root: Any, limit: int = 20) -> list[dic
             for selector in compute_selector_candidates(tag, attributes)
             if selector.startswith(("#", '[data-testid="', '[aria-label="'))
         ][:2]
+        anchor_attributes = _extract_identity_attributes(attributes)
+        root_selector = selectors[0] if selectors else ""
         if tag == "output" and tag_counts[tag] == 1:
             selectors.append(tag)
+            root_selector = root_selector or tag
         elif not selectors and tag in {"ul", "ol", "table"} and tag_counts[tag] == 1:
             selectors = [tag]
+            root_selector = tag
         if not selectors and parent is not None and tag in {"ul", "ol", "table"}:
             siblings = getattr(parent, "children_nodes", None) or []
             same_kind = sum(
@@ -200,14 +212,132 @@ def collect_read_only_extract_candidates(root: Any, limit: int = 20) -> list[dic
                     ]
                     child_tag = "tr" if tag == "table" else "li"
                     selectors = [f"{anchor} {child_tag}" for anchor in anchors[:2]]
+                    if anchors:
+                        root_selector = f"{anchors[0]} > {tag}"
+                        anchor_attributes = _extract_identity_attributes(parent_attrs)
         if not selectors:
             continue
         name = _to_text(getattr(ax_node, "name", ""))
         text = _to_text(node.get_all_children_text()) if hasattr(node, "get_all_children_text") else ""
         if not name and not text and role not in {"list", "table"}:
             continue
-        candidates.append({"role": role, "name": name[:80], "text": text[:120], "selectors": selectors})
+        candidates.append(
+            {
+                "role": role,
+                "name": name[:80],
+                "text": text[:120],
+                "selectors": selectors,
+                "semantic_name": _to_text(attributes.get("aria-label")),
+                "anchor_attributes": anchor_attributes,
+                "root_selector": root_selector,
+            }
+        )
     return candidates
+
+
+def _extract_semantic_entries(selector_map: dict[str, dict], extract_candidates: list[dict]) -> list[dict[str, Any]]:
+    entries = []
+    for item in extract_candidates:
+        if isinstance(item, dict) and item.get("role"):
+            entries.append(
+                {
+                    **item,
+                    "name": item.get("semantic_name", item.get("name", "")),
+                    "attributes": item.get("anchor_attributes", {}),
+                }
+            )
+    for item in selector_map.values():
+        if isinstance(item, dict) and item.get("role"):
+            entries.append(
+                {
+                    **item,
+                    "selectors": item.get("css_candidates", []),
+                    "attributes": _extract_identity_attributes(item.get("attributes") or {}),
+                }
+            )
+    return entries
+
+
+def ground_extract_target(
+    selector: str, selector_map: dict[str, dict], extract_candidates: list[dict]
+) -> dict[str, Any] | None:
+    """Record identity only from the current AX node and its observed DOM mapping."""
+    matches = []
+    for item in _extract_semantic_entries(selector_map, extract_candidates):
+        role = _to_text(item.get("role"))
+        for root in item.get("selectors") or []:
+            if not isinstance(root, str) or not root:
+                continue
+            suffix = ""
+            if selector == root:
+                if item.get("root_selector") != root and root.endswith((" li", " tr")):
+                    suffix = root[-3:]
+            elif role == "list" and selector == f"{root} li":
+                suffix = " li"
+            elif role == "table" and selector == f"{root} tr":
+                suffix = " tr"
+            else:
+                continue
+            target = {
+                "role": role,
+                "name": _to_text(item.get("name")),
+                "attributes": dict(item.get("attributes") or {}),
+                "suffix": suffix,
+            }
+            matches.append(target)
+            break
+    return matches[0] if len(matches) == 1 else None
+
+
+def resolve_extract_target(
+    target: dict[str, Any], selector_map: dict[str, dict], extract_candidates: list[dict]
+) -> tuple[str, str] | None:
+    """Resolve by live semantic identity; ambiguous targets have no CSS fallback."""
+    if not isinstance(target, dict) or not isinstance(target.get("attributes", {}), dict):
+        return None
+    role = _to_text(target.get("role")).casefold()
+    suffix = target.get("suffix", "")
+    if (
+        not role
+        or not isinstance(suffix, str)
+        or suffix not in {"", " li", " tr"}
+        or (suffix and role != {" li": "list", " tr": "table"}[suffix])
+    ):
+        return None
+    name = re.sub(r"\s+", " ", _to_text(target.get("name"))).casefold()
+    attributes = target.get("attributes") or {}
+    best_score = 0
+    best_root = ""
+    tied = False
+    for item in _extract_semantic_entries(selector_map, extract_candidates):
+        if _to_text(item.get("role")).casefold() != role:
+            continue
+        current_name = re.sub(r"\s+", " ", _to_text(item.get("name"))).casefold()
+        if name and (not current_name or (name not in current_name and current_name not in name)):
+            continue
+        roots = item.get("selectors") or []
+        root = item.get("root_selector") or (roots[0] if roots else "")
+        if not isinstance(root, str) or not root:
+            continue
+        score = 1 + (40 if name and name == current_name else 20 if name else 0)
+        current_attributes = item.get("attributes") or {}
+        score += sum(
+            weight
+            for key, weight in {
+                "id": 30,
+                "data-testid": 30,
+                "aria-label": 30,
+                "name": 20,
+                "placeholder": 18,
+                "title": 12,
+            }.items()
+            if attributes.get(key) and attributes.get(key) == current_attributes.get(key)
+        )
+        if score > best_score:
+            best_score, best_root, tied = score, root, False
+        elif score == best_score:
+            tied = True
+    return (best_root, suffix) if best_root and not tied else None
 
 
 def format_read_only_extract_candidates(candidates: list[dict[str, Any]], max_chars: int = 2000) -> str:

@@ -11,8 +11,70 @@ import json
 import time
 from typing import Any
 
+from cliany_site.browser.axtree import capture_axtree
+from cliany_site.browser.selector import resolve_extract_target
+from cliany_site.config import get_config
+
 SUPPORTED_EXTRACT_MODES = ("text", "list", "table", "attribute")
 LIST_EXTRACT_LIMIT = 100
+
+
+async def resolve_semantic_extract_selector(browser_session: Any, target: dict[str, Any]) -> str | None:
+    cfg = get_config()
+    for attempt in range(cfg.resolve_max_retries + 1):
+        tree = await capture_axtree(browser_session)
+        resolved = resolve_extract_target(target, tree.get("selector_map") or {}, tree.get("extract_candidates") or [])
+        if resolved is not None:
+            root, suffix = resolved
+            page = await browser_session.get_current_page()
+            if page is not None:
+                count = await page.evaluate(f"() => document.querySelectorAll({json.dumps(root)}).length")
+                if count in (1, "1"):
+                    return root + suffix
+        if attempt < cfg.resolve_max_retries:
+            await asyncio.sleep(cfg.resolve_retry_delay)
+    return None
+
+
+async def prepare_semantic_extract_selector(
+    browser_session: Any, target: dict[str, Any], mode: str | None,
+) -> tuple[str | None, str | None]:
+    selector = await resolve_semantic_extract_selector(browser_session, target)
+    if selector is None:
+        return None, "E_SELECTOR_NOT_FOUND"
+    if mode not in {"list", "table"} and not (mode == "text" and target.get("role") == "status"):
+        return selector, None
+    for _ in range(2):
+        page = await browser_session.get_current_page()
+        if page is None or not await _wait_for_list_settle(page, selector):
+            return None, "E_PAGE_NOT_READY"
+        current = await resolve_semantic_extract_selector(browser_session, target)
+        if current is None:
+            return None, "E_SELECTOR_NOT_FOUND"
+        if current == selector:
+            return current, None
+        selector = current
+    return None, "E_PAGE_NOT_READY"
+
+
+def build_semantic_extract_js(selector: str, mode: str, fields: dict | None, target: dict[str, Any]) -> str:
+    suffix = target.get("suffix", "")
+    root = selector[:-len(suffix)] if suffix else selector
+    expression = build_extract_js(root if mode == "table" else selector, mode, fields)
+    shape_guard = ""
+    if mode == "table":
+        shape_guard = "if (region.tagName !== 'TABLE') return {__cliany_extract_mode_mismatch__: true}; "
+    elif mode == "list" and target.get("role") == "list":
+        shape_guard = "if (!['UL', 'OL'].includes(region.tagName)) return {__cliany_extract_mode_mismatch__: true}; "
+    return (
+        "() => { "
+        f"const regions = document.querySelectorAll({json.dumps(root)}); "
+        "if (regions.length !== 1) "
+        "return {__cliany_extract_target_missing__: true}; "
+        "const region = regions[0]; "
+        + shape_guard
+        + f"return ({expression})(); }}"
+    )
 
 
 def _coerce_json_like_extract_data(raw_result: Any) -> Any:

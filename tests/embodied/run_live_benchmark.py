@@ -24,6 +24,7 @@ from threading import Thread
 from typing import Any
 from urllib.parse import urlparse
 
+from cliany_site.action_runtime import _parse_ref_to_index
 from cliany_site.codegen.naming import to_command_name
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -34,15 +35,27 @@ OUTPUT_ORACLE = "per-row-v2"
 
 
 @contextmanager
-def _serve_pages():
+def _serve_pages(layout_state: dict[str, bool] | None = None):
     sequence = count(1)
 
     class Handler(SimpleHTTPRequestHandler):
+        def end_headers(self):
+            self.send_header("Cache-Control", "no-store")
+            super().end_headers()
+
         def do_GET(self):
-            if self.path.split("?", 1)[0] != "/semantic_reorder.html":
+            path = self.path.split("?", 1)[0]
+            if path == "/filter_catalog.html" and layout_state and layout_state["shift"]:
+                page = (PAGES / "filter_catalog.html").read_text()
+                page = page.replace("'results'", "'matched-packages'").replace('id="results"', 'id="matched-packages"')
+                page = page.replace("'summary'", "'match-total'").replace('id="summary"', 'id="match-total"')
+                body = page.replace("<body>", '<body><button>Other control</button>'
+                                    '<ul id="results" aria-label="Favorites"><li>Unrelated favorite</li></ul>').encode()
+            elif path == "/semantic_reorder.html":
+                page = (PAGES / "semantic_reorder.html").read_bytes()
+                body = page.replace(b"__SHIFT__", str(next(sequence)).encode("ascii"))
+            else:
                 return super().do_GET()
-            page = (PAGES / "semantic_reorder.html").read_bytes()
-            body = page.replace(b"__SHIFT__", str(next(sequence)).encode("ascii"))
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -436,7 +449,9 @@ async def _run_cli(runtime_home: Path, cli_args: list[str], timeout: int) -> tup
     return payload, elapsed
 
 
-async def _inspect_page(playwright: Any, cdp_port: int, case: dict[str, Any], replay: dict[str, Any]) -> bool:
+async def _inspect_page(
+    playwright: Any, cdp_port: int, case: dict[str, Any], replay: dict[str, Any], *, shifted: bool = False,
+) -> bool:
     browser = await playwright.chromium.connect_over_cdp(f"http://127.0.0.1:{cdp_port}")
     try:
         pages = [
@@ -449,6 +464,29 @@ async def _inspect_page(playwright: Any, cdp_port: int, case: dict[str, Any], re
             return False
         page = pages[-1]
         if case["id"] == "filter-catalog":
+            if shifted:
+                actual_ok = (
+                    await page.get_by_role("status").text_content() == replay["expected_summary"]
+                    and await page.get_by_role("list", name="Package results").locator("li").all_text_contents()
+                    == replay["expected_rows"]
+                )
+                oracle_browser = await playwright.chromium.launch(headless=True)
+                try:
+                    oracle = await oracle_browser.new_page()
+                    await oracle.goto(page.url)
+                    await oracle.get_by_label("Filter packages").fill(replay["args"]["query"])
+                    await oracle.get_by_role("button", name="Search", exact=True).click()
+                    return bool(
+                        actual_ok
+                        and await oracle.get_by_role("status").text_content() == replay["expected_summary"]
+                        and await oracle.get_by_role("list", name="Package results").locator("li").all_text_contents()
+                        == replay["expected_rows"]
+                        and await oracle.get_by_role("list", name="Package results").locator("li").evaluate_all(
+                            "rows => rows.map(row => row.dataset.code)"
+                        ) == replay["expected_codes"]
+                    )
+                finally:
+                    await oracle_browser.close()
             return bool(
                 await page.locator("#summary").text_content() == replay["expected_summary"]
                 and await page.locator("#results li").all_text_contents() == replay["expected_rows"]
@@ -467,8 +505,31 @@ async def _inspect_page(playwright: Any, cdp_port: int, case: dict[str, Any], re
         await browser.close()
 
 
-async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime_home: Path, index: int) -> dict:
+async def _prime_filter_replay(browser: Any, cdp_port: int, url: str, layout_state: dict[str, bool]) -> None:
+    from cliany_site.browser.axtree import capture_axtree
+    from cliany_site.browser.cdp import CDPConnection
+
+    # Backend node IDs can coincide in fresh browsers; invalidate an observed DOM before replay.
+    layout_state["shift"] = False
+    cdp = CDPConnection(cdp_url=f"ws://127.0.0.1:{cdp_port}")
+    try:
+        page = await browser.new_page()
+        await page.goto(url)
+        session = await cdp.connect()
+        await capture_axtree(session)
+    finally:
+        await cdp.disconnect()
+        layout_state["shift"] = True
+
+
+async def _trial(
+    playwright: Any, server_url: str, case: dict[str, Any], runtime_home: Path, index: int,
+    layout_state: dict[str, bool] | None = None,
+) -> dict:
     outcome: dict[str, Any] = {"case_id": case["id"], "trial": index, "ok": False, "phase": "explore"}
+    shifted = layout_state is not None and case["id"] == "filter-catalog"
+    if layout_state is not None:
+        layout_state["shift"] = False
     url = f"{server_url}{case['path']}"
     port = _free_port()
     browser = await playwright.chromium.launch(headless=True, args=[f"--remote-debugging-port={port}"])
@@ -514,23 +575,54 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
         return outcome
 
     outcome["command"] = command
+    recorded_click_ref = None
     for command_index, definition in enumerate(metadata.get("commands", [])):
         name = definition.get("name") if isinstance(definition, dict) else None
         if isinstance(name, str) and to_command_name(name, command_index) == command:
             if isinstance(definition.get("expects_nonempty"), bool):
                 outcome["expects_nonempty"] = definition["expects_nonempty"]
+            if shifted:
+                extracts = [a for a in definition.get("actions", []) if a.get("action_type") == "extract"]
+                targets = [a.get("extract_target") for a in extracts]
+                if not targets or not all(isinstance(target, dict) and target.get("role") for target in targets):
+                    outcome.update(phase="generation", error_code="MISSING_EXTRACT_TARGET")
+                    return outcome
+                outcome["extract_targets"] = targets
+                recorded_click_ref = next(
+                    (_parse_ref_to_index(a.get("target_ref", "")) for a in definition.get("actions", [])
+                     if a.get("action_type") == "click" and a.get("target_name") == "Search"), None,
+                )
             break
+    if shifted:
+        layout_state["shift"] = True
     outcome["replays"] = []
     for replay in case["replays"]:
         port = _free_port()
         browser = await playwright.chromium.launch(headless=True, args=[f"--remote-debugging-port={port}"])
         try:
+            if shifted:
+                await _prime_filter_replay(browser, port, url, layout_state)
             cli_args = ["--cdp-url", f"ws://127.0.0.1:{port}", group, command]
             for name, value in replay["args"].items():
                 cli_args.extend([f"--{name.replace('_', '-')}", str(value)])
             cli_args.append("--json")
             result, elapsed = await _run_cli(runtime_home, cli_args, timeout=120)
             row: dict[str, Any] = {"args": replay["args"], "seconds": round(elapsed, 2)}
+            if shifted:
+                replay_ref = next(
+                    (
+                        _parse_ref_to_index(child.get("data", {}).get("ref", ""))
+                        for child in result.get("data", {}).get("results", [])
+                        if child.get("command") == "browser click" and child.get("data", {}).get("name") == "Search"
+                    ), None,
+                )
+                row["ref_changed"] = (
+                    recorded_click_ref is not None and replay_ref is not None and recorded_click_ref != replay_ref
+                )
+                row["recorded_click_ref"] = recorded_click_ref
+                row["replay_click_ref"] = replay_ref
+                row["layout_shifted"] = True
+                row["oracle_kind"] = "independent_browser"
             contents = _extract_contents(result)
             if not result.get("ok") or not contents:
                 row.update(ok=False, phase="replay", error_code=result.get("error", {}).get("code") or "NO_EXTRACT")
@@ -539,19 +631,22 @@ async def _trial(playwright: Any, server_url: str, case: dict[str, Any], runtime
                     row["quality_diagnostics"] = diagnostics
             else:
                 try:
-                    oracle_ok = await _inspect_page(playwright, port, case, replay)
+                    oracle_ok = await _inspect_page(playwright, port, case, replay, shifted=shifted)
                 except Exception as exc:
                     oracle_ok = False
                     row["error_code"] = type(exc).__name__
                 output_ok = _matches_expected_extracts(contents, replay)
                 row.update(
-                    ok=oracle_ok and output_ok,
+                    ok=oracle_ok and output_ok and (not shifted or row["ref_changed"]),
                     oracle_ok=oracle_ok,
                     output_ok=output_ok,
-                    phase="oracle" if not oracle_ok else "output" if not output_ok else "complete",
+                    phase=("oracle" if not oracle_ok else "output" if not output_ok
+                           else "references" if shifted and not row["ref_changed"] else "complete"),
                 )
                 if not output_ok:
                     row["error_code"] = "EXTRACT_MISMATCH"
+                elif shifted and not row["ref_changed"]:
+                    row["error_code"] = "REF_DID_NOT_CHANGE"
             outcome["replays"].append(row)
         finally:
             await browser.close()
@@ -579,7 +674,12 @@ async def _run(args: argparse.Namespace, tasks: list[dict[str, Any]]) -> dict[st
         "trials_requested": args.trials,
         "trials": [],
     }
-    with tempfile.TemporaryDirectory(prefix="cliany-explore-benchmark-") as temporary, _serve_pages() as server_url:
+    layout_state = {"shift": False} if getattr(args, "shift_filter_layout", False) else None
+    report["filter_layout"] = "renamed_ids_with_control_and_favorites_noise" if layout_state else "unchanged"
+    with (
+        tempfile.TemporaryDirectory(prefix="cliany-explore-benchmark-") as temporary,
+        _serve_pages(layout_state) as server_url,
+    ):
         runtime_root = Path(temporary)
         async with async_playwright() as playwright:
             port = _free_port()
@@ -603,11 +703,19 @@ async def _run(args: argparse.Namespace, tasks: list[dict[str, Any]]) -> dict[st
             for task in tasks:
                 for index in range(1, args.trials + 1):
                     runtime_home = runtime_root / task["id"] / str(index)
-                    report["trials"].append(await _trial(playwright, server_url, task, runtime_home, index))
+                    report["trials"].append(
+                        await _trial(playwright, server_url, task, runtime_home, index, layout_state)
+                    )
     report["success_count"] = sum(trial["ok"] for trial in report["trials"])
     report["total_count"] = len(report["trials"])
     report["by_task"] = _summarize_trials(report["trials"], report["task_ids"])
     report["eligible_for_issue_acceptance"] = args.trials >= 3 and len(tasks) == 3
+    filter_trials = [trial for trial in report["trials"] if trial["case_id"] == "filter-catalog"]
+    report["eligible_for_grounding_review"] = bool(
+        layout_state and args.trials >= 3
+        and len(filter_trials) == args.trials
+        and all(trial["ok"] for trial in filter_trials)
+    )
     return report
 
 
@@ -616,6 +724,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--allow-live-llm", action="store_true", help="Acknowledge real provider calls and cost.")
     parser.add_argument("--case", action="append", help="Run one named task; omit to run all three.")
     parser.add_argument("--trials", type=int, default=3, help="Fresh explorations per task (default: 3).")
+    parser.add_argument(
+        "--shift-filter-layout", action="store_true",
+        help="Rename filter result regions and shift controls before replay; check an independent browser.",
+    )
     parser.add_argument("--report", type=Path, required=True, help="JSON report path outside the repository.")
     args = parser.parse_args(argv)
     if not args.allow_live_llm or os.getenv("CLIANY_QA_OFFLINE") == "1" or os.getenv("CLIANY_QA_FAKE_LLM_RESPONSES"):
@@ -628,6 +740,8 @@ def main(argv: list[str] | None = None) -> int:
     tasks = [task for task in spec["tasks"] if not args.case or task["id"] in args.case]
     if not tasks or (args.case and len(tasks) != len(set(args.case))):
         parser.error("--case must name existing distinct tasks")
+    if args.shift_filter_layout and not any(task["id"] == "filter-catalog" for task in tasks):
+        parser.error("--shift-filter-layout requires filter-catalog")
     try:
         report = asyncio.run(_run(args, tasks))
     except (OSError, RuntimeError, TimeoutError) as exc:

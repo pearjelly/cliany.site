@@ -15,7 +15,13 @@ from cliany_site.capability import ApiEndpoint, route_action
 from cliany_site.config import get_config
 from cliany_site.envelope import ErrorCode
 from cliany_site.errors import ClanySiteError
-from cliany_site.extract import _coerce_json_like_extract_data, _wait_for_list_settle, build_extract_js
+from cliany_site.extract import (
+    _coerce_json_like_extract_data,
+    _wait_for_list_settle,
+    build_extract_js,
+    build_semantic_extract_js,
+    prepare_semantic_extract_selector,
+)
 from cliany_site.progress import NullProgressReporter, ProgressReporter
 
 logger = logging.getLogger(__name__)
@@ -765,7 +771,33 @@ async def execute_action_steps(
                     fields = action_data.get("fields", {}) or {}
                     description = str(action_data.get("description", ""))
 
-                    if extract_mode == "list" and selector:
+                    if action_data.get("extract_target"):
+                        resolved, resolution_error = await prepare_semantic_extract_selector(
+                            browser_session, action_data["extract_target"], extract_mode,
+                        )
+                        if resolved is None:
+                            message = "无法唯一定位当前页面的 AX 语义提取区域；不会将缺失区域当作零匹配"
+                            if extraction_results is not None:
+                                extraction_results.append(
+                                    {
+                                        "ok": False,
+                                        "error": {
+                                            "code": resolution_error or ErrorCode.E_SELECTOR_NOT_FOUND,
+                                            "message": message,
+                                            "step_index": idx,
+                                        },
+                                    }
+                                )
+                            raise ActionExecutionError(
+                                error_type="extract_target_unresolved",
+                                action_index=idx,
+                                action=action_data,
+                                message=message,
+                                suggestion="检查当前页面并重新 explore",
+                            )
+                        selector = resolved
+
+                    if extract_mode == "list" and selector and not action_data.get("extract_target"):
                         page = await browser_session.get_current_page()
                         if page is not None and not await _wait_for_list_settle(page, selector):
                             message = "列表结果未稳定，停止提取以免返回不完整数据"
@@ -786,7 +818,7 @@ async def execute_action_steps(
                                 message=f"提取步骤失败: {message}",
                                 suggestion="等待页面完成加载后重试",
                             )
-                    else:
+                    elif not action_data.get("extract_target"):
                         await asyncio.sleep(1.5)
 
                     if not selector:
@@ -816,7 +848,13 @@ async def execute_action_steps(
                         data: dict[str, str] | list[Any] | Any
                         _eval_exc: Exception | None = None
                         try:
-                            js_expr = build_extract_js(selector, extract_mode, fields if fields else None)
+                            js_expr = (
+                                build_semantic_extract_js(
+                                    selector, extract_mode, fields if fields else None, action_data["extract_target"],
+                                )
+                                if action_data.get("extract_target")
+                                else build_extract_js(selector, extract_mode, fields if fields else None)
+                            )
                             page = await browser_session.get_current_page()
                             if page is None:
                                 logger.warning("extract 执行失败 (selector=%s): 无法获取当前页面", selector)
@@ -831,6 +869,22 @@ async def execute_action_steps(
                             )
                             _eval_exc = exc
                             raw_result = None
+
+                        if action_data.get("extract_target") and _coerce_json_like_extract_data(raw_result) == {
+                            "__cliany_extract_target_missing__": True,
+                        }:
+                            raise ActionExecutionError(
+                                error_type="extract_target_unresolved", action_index=idx, action=action_data,
+                                message="读取时语义提取区域已消失或不唯一", suggestion="检查当前页面并重新 explore",
+                            )
+                        if action_data.get("extract_target") and _coerce_json_like_extract_data(raw_result) == {
+                            "__cliany_extract_mode_mismatch__": True,
+                        }:
+                            raise ActionExecutionError(
+                                error_type="extract_target_unresolved", action_index=idx, action=action_data,
+                                message="当前语义区域不是受支持的原生列表或表格",
+                                suggestion="检查提取模式并重新 explore",
+                            )
 
                         if extraction_results is not None:
                             if _eval_exc is not None:
@@ -912,7 +966,10 @@ async def execute_action_steps(
                 )
                 reporter.on_execute_step_done(idx, len(effective_actions), False, step_elapsed_err, str(exc))
 
-                if not continue_on_error and not dry_run:
+                fatal_target_error = (
+                    isinstance(exc, ActionExecutionError) and exc.error_type == "extract_target_unresolved"
+                )
+                if (not continue_on_error or fatal_target_error) and not dry_run:
                     if resolved_domain and command_name:
                         try:
                             save_checkpoint(resolved_domain, command_name, actions_data, completed_indices, params)
@@ -1004,3 +1061,6 @@ async def execute_action_steps(
             if failed == 0 and resolved_domain and command_name:
                 with contextlib.suppress(OSError, ValueError, TypeError):
                     clear_checkpoint(resolved_domain, command_name)
+
+
+execute_semantic_action_steps = execute_action_steps
