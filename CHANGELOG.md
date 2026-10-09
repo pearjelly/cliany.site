@@ -9,6 +9,7 @@
 
 ### Fixed
 
+- A fresh `explore` checks for adapter core files rather than treating an auxiliary-only directory as an installed adapter. Extract/snapshot artifacts no longer send first generation through the merge path and discard the observed starting URL or model provenance. Existing core artifacts, including partial files and symbolic links, still follow the existing merge handling; no historical generated module is rewritten by this change.
 - The opt-in controlled browser benchmark checks returned row cardinality and order instead of accepting a response merely because it contains an expected name. Extra, duplicate and contradictory row collections, conflicting count strings and conflicting single-value text extracts fail acceptance. New reports identify the `per-row-v2` oracle; historical privacy-safe summaries cannot be rescored and are not evidence under this stricter boundary. CLI runtime behavior and generated adapters are unchanged.
 
 ## [0.16.378] - 2026-10-09

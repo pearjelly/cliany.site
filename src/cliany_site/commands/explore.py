@@ -297,7 +297,11 @@ def explore_cmd(
 
         from cliany_site.activity_log import write_log
 
-        if force or not adapter_dir.exists():
+        adapter_has_core_files = any(
+            path.exists() or path.is_symlink()
+            for path in (adapter_dir / "commands.py", adapter_dir / "metadata.json")
+        )
+        if force or not adapter_has_core_files:
             gen = AdapterGenerator()
             code = gen.generate(explore_result, domain)
             metadata = {
