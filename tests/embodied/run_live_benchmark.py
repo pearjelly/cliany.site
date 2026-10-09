@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[2]
 PAGES = Path(__file__).resolve().parent / "pages"
 CASES = Path(__file__).with_name("explore_benchmark_cases.json")
 CLI_ENTRY = Path(__file__).with_name("benchmark_cli.py")
+OUTPUT_ORACLE = "per-row-v2"
 
 
 @contextmanager
@@ -142,19 +143,32 @@ def _text_values(value: Any) -> list[str]:
     return []
 
 
+def _row_lists(value: Any) -> list[list[Any]]:
+    if isinstance(value, list):
+        return [value]
+    if isinstance(value, dict):
+        return [rows for child in value.values() for rows in _row_lists(child)]
+    return []
+
+
 def _matches_expected_extracts(contents: list[Any], replay: dict[str, Any]) -> bool:
     values = [text for content in contents for text in _text_values(content)]
     expected_text = replay.get("expected_text")
-    if isinstance(expected_text, str) and expected_text not in values:
+    if isinstance(expected_text, str) and (not values or any(value != expected_text for value in values)):
         return False
     expected_summary = replay.get("expected_summary")
-    if isinstance(expected_summary, str) and expected_summary not in values:
-        return False
+    if isinstance(expected_summary, str):
+        summaries = [value for value in values if re.fullmatch(r"\d+ matches", value)]
+        if not summaries or any(summary != expected_summary for summary in summaries):
+            return False
     expected_rows = replay.get("expected_rows")
     if isinstance(expected_rows, list):
-        if any(row not in values for row in expected_rows):
-            return False
-        if not expected_rows and not any(content == [] for content in contents):
+        row_lists = [rows for content in contents for rows in _row_lists(content)]
+        if not row_lists or any(
+            len(rows) != len(expected_rows)
+            or any(expected not in _text_values(row) for expected, row in zip(expected_rows, rows, strict=True))
+            for rows in row_lists
+        ):
             return False
     return bool(contents)
 
@@ -557,6 +571,7 @@ async def _run(args: argparse.Namespace, tasks: list[dict[str, Any]]) -> dict[st
         "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
         "git_dirty": bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT, text=True).strip()),
         "package_version": importlib.metadata.version("cliany-site"),
+        "output_oracle": OUTPUT_ORACLE,
         "provider": "unknown",
         "endpoint_type": "unknown",
         "browser_mode": "fresh headless Chromium via CDP for explore and each replay",
@@ -616,7 +631,10 @@ def main(argv: list[str] | None = None) -> int:
     try:
         report = asyncio.run(_run(args, tasks))
     except (OSError, RuntimeError, TimeoutError) as exc:
-        report = {"schema_version": 1, "error": type(exc).__name__, "trials": [], "success_count": 0, "total_count": 0}
+        report = {
+            "schema_version": 1, "output_oracle": OUTPUT_ORACLE,
+            "error": type(exc).__name__, "trials": [], "success_count": 0, "total_count": 0,
+        }
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({

@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- The opt-in controlled browser benchmark checks returned row cardinality and order instead of accepting a response merely because it contains an expected name. Extra, duplicate and contradictory row collections, conflicting count strings and conflicting single-value text extracts fail acceptance. New reports identify the `per-row-v2` oracle; historical privacy-safe summaries cannot be rescored and are not evidence under this stricter boundary. CLI runtime behavior and generated adapters are unchanged.
+
 ## [0.16.378] - 2026-10-09
 
 ### Fixed

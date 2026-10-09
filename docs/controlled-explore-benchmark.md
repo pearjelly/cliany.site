@@ -2,6 +2,10 @@
 
 The opt-in runner uses three local browser tasks: a parameterized form, a filter with positive and zero-match results, and a button whose AXTree ref changes between loads while its role and name stay stable. Each trial explores with a fresh cliany-site runtime directory and a fresh headless Chromium CDP browser. Each generated command is then replayed with changed inputs in another browser. A trial passes only when the returned extract values and an independent page-state oracle both match.
 
+Reports marked `output_oracle=per-row-v2` require every returned row collection to have the expected cardinality and ordered names, including an empty collection for zero matches. Finding the expected name somewhere in an otherwise wrong response is insufficient: extra, duplicate, reordered or contradictory collections fail. Rows may be strings or objects with flexible field labels; each row must contain its own expected name, and additional unrequested object fields are not exhaustively validated. A summary may be separate or embedded, but conflicting count strings fail. Single-value form and semantic tasks reject conflicting returned text values. These checks concern the controlled fixtures, not arbitrary schemas or third-party sites.
+
+Earlier reports used a presence-based output oracle and lack this marker. Their saved privacy-safe summaries do not retain the raw returned values needed for rescoring. Preserve those observations and failures, but do not treat them as proof under the new oracle or as evidence that no extra returned rows existed. Run a fresh predeclared sample before making a new acceptance claim.
+
 Run from a clean checkout with a configured live provider and Playwright Chromium:
 
 ```bash
