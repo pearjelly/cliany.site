@@ -11,6 +11,7 @@
 
 - Command-envelope timing uses a monotonic per-invocation context instead of an unpopulated process-global command map. Nested CLI calls retain separate child spans while the parent includes those calls; completed spans cannot be reused by copied contexts. Success and rendered error envelopes share the same boundary.
 - `meta.duration_measured` distinguishes an actual integer millisecond sample from the compatible zero sentinel outside an active timer. The optional field extends envelope v1 without changing its other fields or the legacy SDK/HTTP envelope. Newly generated adapter metadata uses the shared snapshot; existing generated modules are not rewritten. See [timing semantics](docs/command-envelope-timing.md).
+- Documentation fragment headings leave native scroll space below the sticky header. Direct links, sidebar mouse/keyboard navigation, reload and browser history retain the existing anchors and command text.
 
 ## [0.16.377] - 2026-10-08
 
