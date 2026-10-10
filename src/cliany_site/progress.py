@@ -17,6 +17,18 @@ from rich.live import Live
 from rich.table import Table
 from rich.text import Text
 
+_LLM_FAILURE_LABELS = {
+    "authentication_failed": "认证失败，请检查服务密钥和权限",
+    "rate_limited": "服务限流",
+    "upstream_http_error": "上游 HTTP 故障",
+    "request_rejected": "请求被拒绝，请检查服务配置",
+    "http_error": "HTTP 响应异常",
+    "timeout": "连接或响应超时",
+    "connection_error": "服务连接失败",
+    "upstream_unavailable": "上游服务不可用",
+    "unknown": "调用失败，原因未确认",
+}
+
 # ── 回调协议 ──────────────────────────────────────────────
 
 
@@ -67,6 +79,11 @@ class NullProgressReporter:
 
     def on_explore_llm_attempt_done(
         self, step: int, attempt: int, elapsed_ms: float, outcome: str, backoff_ms: float,
+    ) -> None:
+        pass
+
+    def on_explore_llm_attempt_error(
+        self, step: int, attempt: int, reason: str, status_code: int | None, retryable: bool,
     ) -> None:
         pass
 
@@ -138,12 +155,19 @@ class RichProgressReporter:
         self._update_explore_live()
 
     def on_explore_llm_attempt_start(self, step: int, attempt: int) -> None:
-        pass
+        self._explore_phase = f"LLM 分析中，第 {attempt} 次尝试"
+        self._update_explore_live()
 
     def on_explore_llm_attempt_done(
         self, step: int, attempt: int, elapsed_ms: float, outcome: str, backoff_ms: float,
     ) -> None:
         pass
+
+    def on_explore_llm_attempt_error(
+        self, step: int, attempt: int, reason: str, status_code: int | None, retryable: bool,
+    ) -> None:
+        self._explore_phase = _LLM_FAILURE_LABELS.get(reason, _LLM_FAILURE_LABELS["unknown"])
+        self._update_explore_live()
 
     def on_explore_step_done(self, step: int, actions_count: int, elapsed_ms: float) -> None:
         self._explore_steps.append(
@@ -321,6 +345,16 @@ class NdjsonProgressReporter:
         self._emit(
             "explore_llm_attempt_done", step=step, attempt=attempt,
             elapsed_ms=round(elapsed_ms, 1), outcome=outcome, backoff_ms=round(backoff_ms, 1),
+        )
+
+    def on_explore_llm_attempt_error(
+        self, step: int, attempt: int, reason: str, status_code: int | None, retryable: bool,
+    ) -> None:
+        self._emit(
+            "explore_llm_attempt_error", step=step, attempt=attempt,
+            reason=reason if reason in _LLM_FAILURE_LABELS else "unknown",
+            status_code=status_code if type(status_code) is int and 100 <= status_code <= 599 else None,
+            retryable=retryable if type(retryable) is bool else False,
         )
 
     def on_explore_step_done(self, step: int, actions_count: int, elapsed_ms: float) -> None:

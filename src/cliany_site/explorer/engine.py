@@ -8,11 +8,13 @@ import re
 import time
 import warnings
 from datetime import UTC, datetime
+from http import HTTPStatus
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
 import click
+import httpx
 
 from cliany_site.action_runtime import execute_action_steps, normalize_navigation_url
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
@@ -569,11 +571,11 @@ def _extract_status_code(exc: Exception) -> int | None:
         if target is None:
             continue
         status_code = getattr(target, "status_code", None)
-        if isinstance(status_code, int):
+        if type(status_code) is int and 100 <= status_code <= 599:
             return status_code
         response = getattr(target, "response", None)
         response_status = getattr(response, "status_code", None)
-        if isinstance(response_status, int):
+        if type(response_status) is int and 100 <= response_status <= 599:
             return response_status
     return None
 
@@ -597,35 +599,50 @@ def _looks_like_llm_gateway_error(message: str) -> bool:
     )
 
 
-def _llm_error_summary(exc: Exception) -> str:
-    raw_message = str(exc).strip()
+def _llm_failure_reason(exc: Exception) -> str:
     status_code = _extract_status_code(exc)
-
-    title_match = re.search(r"<title>\s*([^<]+?)\s*</title>", raw_message, flags=re.IGNORECASE | re.DOTALL)
-    if title_match:
-        title = re.sub(r"\s+", " ", title_match.group(1)).strip()
-        if status_code is not None and str(status_code) not in title:
-            return f"LLM upstream returned HTTP {status_code}: {title}"
-        return f"LLM upstream returned {title}"
-
+    if status_code in {401, 403}:
+        return "authentication_failed"
+    if status_code == 429:
+        return "rate_limited"
+    if status_code is not None and status_code >= 500:
+        return "upstream_http_error"
+    if status_code is not None and status_code >= 400:
+        return "request_rejected"
     if status_code is not None:
-        return f"LLM upstream returned HTTP {status_code}"
+        return "http_error"
+    current: BaseException | None = exc
+    seen: set[int] = set()
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        if isinstance(current, (TimeoutError, httpx.TimeoutException)):
+            return "timeout"
+        if isinstance(current, (ConnectionError, httpx.NetworkError)):
+            return "connection_error"
+        current = current.__cause__ or current.__context__
+    return "upstream_unavailable" if _looks_like_llm_gateway_error(str(exc)) else "unknown"
 
-    if _looks_like_llm_gateway_error(raw_message):
-        compact = re.sub(r"\s+", " ", raw_message)
-        compact = re.sub(r"<[^>]+>", " ", compact)
-        compact = re.sub(r"\s+", " ", compact).strip()
-        if compact:
-            return f"LLM upstream unavailable: {compact[:160]}"
 
-    return "LLM upstream unavailable after retries"
+def _llm_error_summary(exc: Exception) -> str:
+    """Never echo response bodies, URLs or exception text into retry diagnostics."""
+    status_code = _extract_status_code(exc)
+    if status_code is not None:
+        try:
+            label = HTTPStatus(status_code).phrase
+        except ValueError:
+            label = ""
+        return f"LLM upstream returned HTTP {status_code} {label}".rstrip()
+    return {
+        "timeout": "LLM request timed out",
+        "connection_error": "LLM service connection failed",
+    }.get(_llm_failure_reason(exc), "LLM upstream unavailable")
 
 
 def _is_retryable_error(exc: Exception) -> bool:
     status_code = _extract_status_code(exc)
-    if isinstance(status_code, int) and status_code in _RETRYABLE_STATUS_CODES:
-        return True
-    return _looks_like_llm_gateway_error(str(exc))
+    if status_code is not None:
+        return status_code in _RETRYABLE_STATUS_CODES
+    return _llm_failure_reason(exc) in {"timeout", "connection_error", "upstream_unavailable"}
 
 
 async def _invoke_llm_with_retry(
@@ -655,19 +672,24 @@ async def _invoke_llm_with_retry(
                 )
             return response
         except Exception as exc:
+            elapsed_ms = (time.monotonic() - attempt_started) * 1000
+            status_code = _extract_status_code(exc)
             retryable = _is_retryable_error(exc)
             will_retry = retryable and attempt < max_attempts - 1
             delay = base_delay * (backoff_factor**attempt) if will_retry else 0.0
             if progress is not None:
+                report_error = getattr(progress, "on_explore_llm_attempt_error", None)
+                if callable(report_error):
+                    report_error(step, attempt + 1, _llm_failure_reason(exc), status_code, retryable)
                 progress.on_explore_llm_attempt_done(
-                    step, attempt + 1, (time.monotonic() - attempt_started) * 1000,
+                    step, attempt + 1, elapsed_ms,
                     "retry" if will_retry else "error", delay * 1000,
                 )
-            if retryable and attempt >= max_attempts - 1:
+            if not will_retry and (retryable or (status_code is not None and status_code >= 400)):
                 raise LlmUnavailableError(
                     _llm_error_summary(exc),
-                    status_code=_extract_status_code(exc),
-                    retryable=True,
+                    status_code=status_code,
+                    retryable=retryable,
                 ) from exc
             if not retryable:
                 raise

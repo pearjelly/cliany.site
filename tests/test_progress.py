@@ -86,6 +86,18 @@ class TestNdjsonProgressReporter:
         assert e["total_commands"] == 2
         assert e["elapsed_ms"] == 5000.0
 
+    def test_llm_attempt_error_uses_only_known_categories(self):
+        r, buf = self._make_reporter()
+        r.on_explore_llm_attempt_error(0, 1, "timeout", None, True)
+        r.on_explore_llm_attempt_error(0, 2, "private response", True, False)
+        events = self._parse_lines(buf)
+        assert events[0]["reason"] == "timeout"
+        assert events[0]["retryable"] is True
+        assert events[1]["reason"] == "unknown"
+        assert events[1]["status_code"] is None
+        assert set(events[0]) == {"event", "ts", "step", "attempt", "reason", "status_code", "retryable"}
+        assert "private" not in buf.getvalue()
+
     def test_execute_start_emits_event(self):
         r, buf = self._make_reporter()
         r.on_execute_start(5, "github.com", "search")
@@ -169,6 +181,18 @@ class TestNdjsonProgressReporter:
 
 
 class TestRichProgressReporter:
+    def test_llm_attempt_display_has_safe_failure_and_attempt_number(self):
+        from rich.console import Console
+
+        buf = io.StringIO()
+        r = RichProgressReporter(console=Console(file=buf, width=120))
+        r.on_explore_llm_attempt_start(0, 2)
+        assert "第 2 次尝试" in r._explore_phase
+        r.on_explore_llm_attempt_error(0, 2, "authentication_failed", 401, False)
+        assert "认证失败" in r._explore_phase
+        r.on_explore_llm_attempt_error(0, 2, "private response", None, False)
+        assert "private" not in r._explore_phase
+
     def test_explore_lifecycle_no_crash(self):
         from rich.console import Console
 

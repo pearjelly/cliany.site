@@ -265,6 +265,28 @@ def test_progress_timing_keeps_inflight_attempt_without_content():
     assert "private" not in json.dumps(summary)
 
 
+def test_progress_timing_keeps_only_safe_failure_fields_for_started_attempts():
+    stderr = b"\n".join([
+        b'{"event":"explore_llm_attempt_error","step":1,"attempt":1,"ts":99,"reason":"timeout"}',
+        b'{"event":"explore_llm_attempt_start","step":0,"attempt":1,"ts":100}',
+        b'{"event":"explore_llm_attempt_error","step":0,"attempt":1,"ts":101,'
+        b'"reason":"timeout","status_code":null,"retryable":true,"message":"private token"}',
+        b'{"event":"explore_llm_attempt_done","step":0,"attempt":1,"ts":101,'
+        b'"elapsed_ms":1000,"outcome":"retry","backoff_ms":2000}',
+        b'{"event":"explore_llm_attempt_start","step":0,"attempt":2,"ts":103}',
+        b'{"event":"explore_llm_attempt_error","step":0,"attempt":2,"ts":104,'
+        b'"reason":"private body","status_code":true,"retryable":"private"}',
+        b'{"event":"explore_llm_attempt_done","step":0,"attempt":2,"ts":104,'
+        b'"elapsed_ms":1000,"outcome":"error","backoff_ms":0}',
+    ])
+    summary = benchmark._safe_explore_timing(stderr, ended_at=104)
+    assert summary["attempt_errors"] == [
+        {"step": 0, "attempt": 1, "reason": "timeout", "status_code": None, "retryable": True},
+        {"step": 0, "attempt": 2, "reason": "unknown", "status_code": None, "retryable": None},
+    ]
+    assert "private" not in json.dumps(summary)
+
+
 def test_progress_timing_drops_unrecognized_attempt_outcome():
     stderr = b"\n".join([
         b'{"event":"explore_llm_attempt_start","step":0,"attempt":1,"ts":100}',

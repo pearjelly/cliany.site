@@ -312,6 +312,7 @@ def _safe_explore_timing(stderr: bytes, *, ended_at: float) -> dict[str, Any] | 
     attempt_starts: dict[tuple[int, int], float] = {}
     attempt_seconds: list[float] = []
     attempt_outcomes: list[str] = []
+    attempt_errors: list[dict[str, Any]] = []
     retry_count = 0
     scheduled_backoff_seconds = 0.0
     for line in stderr.splitlines():
@@ -322,6 +323,7 @@ def _safe_explore_timing(stderr: bytes, *, ended_at: float) -> dict[str, Any] | 
         if not isinstance(event, dict) or event.get("event") not in {
             "explore_llm_start", "explore_llm_done",
             "explore_llm_attempt_start", "explore_llm_attempt_done",
+            "explore_llm_attempt_error",
         }:
             continue
         step, ts = event.get("step"), event.get("ts")
@@ -340,6 +342,21 @@ def _safe_explore_timing(stderr: bytes, *, ended_at: float) -> dict[str, Any] | 
             key = (step, attempt)
             if event["event"] == "explore_llm_attempt_start":
                 attempt_starts[key] = float(ts)
+            elif (event["event"] == "explore_llm_attempt_error" and key in attempt_starts
+                  and ts >= attempt_starts[key]):
+                reason = event.get("reason")
+                status = event.get("status_code")
+                retryable = event.get("retryable")
+                attempt_errors.append({
+                    "step": step, "attempt": attempt,
+                    "reason": reason if isinstance(reason, str) and reason in {
+                        "authentication_failed", "rate_limited", "upstream_http_error",
+                        "request_rejected", "http_error", "timeout", "connection_error",
+                        "upstream_unavailable", "unknown",
+                    } else "unknown",
+                    "status_code": status if type(status) is int and 100 <= status <= 599 else None,
+                    "retryable": retryable if type(retryable) is bool else None,
+                })
             elif event["event"] == "explore_llm_attempt_done" and key in attempt_starts:
                 attempt_starts.pop(key)
                 elapsed = event.get("elapsed_ms")
@@ -369,6 +386,8 @@ def _safe_explore_timing(stderr: bytes, *, ended_at: float) -> dict[str, Any] | 
         summary["scheduled_backoff_seconds"] = round(scheduled_backoff_seconds, 2)
     if attempt_starts:
         summary["inflight_attempt_seconds"] = round(max(0.0, ended_at - max(attempt_starts.values())), 2)
+    if attempt_errors:
+        summary["attempt_errors"] = attempt_errors[:20]
     return summary
 
 
