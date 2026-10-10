@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-10-10
-- **Current baseline:** v0.16.381 (release target; public availability requires the release gates)
+- **Current baseline:** [v0.16.381](https://github.com/pearjelly/cliany.site/releases/tag/v0.16.381), with [verified public publication](https://github.com/pearjelly/cliany.site/pull/82#issuecomment-6094736906)
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
@@ -9,7 +9,9 @@ cliany-site turns real browser workflows into reusable CLI commands. The Q3 road
 
 Published v0.16.380 completed [fresh installed-package semantic replay acceptance](https://github.com/pearjelly/cliany.site/issues/37#issuecomment-6076273211) and [three-end publication](https://github.com/pearjelly/cliany.site/pull/81#issuecomment-6076272643). Three fresh public-package explorations and six changed-layout output/independent-browser checks passed; Issue 37 is closed for the native semantic scope only. The retained source studies and 273.46-second public wait are not general reliability, latency, complete-collection or independent first-use evidence.
 
-The v0.16.381 target stops rejected model HTTP requests without retries caused by gateway-body keywords, preserves CLI/live doctor authentication failures and adds safe attempt-error diagnostics. The [review](user-evidence/2026-10-10-safe-llm-retries.md) retains a failed real preflight with no matrix trials started. Final CI, publication and public-package checks remain required; Issue 38 stays open.
+Published v0.16.381 stops rejected model HTTP requests without retries caused by gateway-body keywords, preserves CLI/live doctor authentication failures and adds safe attempt-error diagnostics. Final-master 3,363 tests, ordinary/Chromium CI, matching GitHub/PyPI assets, production inspection and fresh installed-package checks passed. The [review](user-evidence/2026-10-10-safe-llm-retries.md) retains a failed real preflight with no matrix trials started; Issue 38 stays open.
+
+The next unreleased [SDK/HTTP first-generation correction](user-evidence/2026-10-10-sdk-first-generation.md) preserves starting URL and model provenance when exploration has already saved an auxiliary directory. It passed deterministic and real Chromium checks, not real-model or independent-user acceptance. [Issue 84](https://github.com/pearjelly/cliany.site/issues/84) separately tracks uncaught typed model errors at the SDK/HTTP boundary; this candidate does not fix that gap or promise full response parity.
 
 Published v0.16.379 completed [first-generation installed-package acceptance](https://github.com/pearjelly/cliany.site/issues/77#issuecomment-6074014750). The [returned-value review](user-evidence/2026-10-09-returned-value-and-first-generation-review.md) records the stronger `per-row-v2` oracle and capped public-site prefixes. Historical scores cannot be rescored; correct prefixes are not complete collection. The [alpha audit](plans/2026-10-04-alpha-readiness-audit.md) still concludes not ready, and independent first use and the browser case remain open.
 
