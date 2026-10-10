@@ -13,6 +13,20 @@ def test_site_docs_explain_jev_consent_and_session_boundary():
     assert "当前不支持恢复 LocalStorage" in docs
 
 
+def test_site_keeps_safe_retry_scope_and_provider_availability_limits():
+    index = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
+    script = (ROOT / "site" / "script.js").read_text(encoding="utf-8")
+    docs = (ROOT / "site" / "docs" / "index.html").read_text(encoding="utf-8")
+    assert 'data-i18n="qs.maintainer.safeRetries"' in index
+    assert "HTTP rejections stop without repeating" in script
+    assert "不回显上游正文" in script
+    assert "independent first use remain unverified" in index
+    assert "explore_llm_attempt_error" in docs
+    assert "retryable=false" in docs
+    assert "其他旧进度事件仍可能含 workflow URL" in docs
+    assert "llm-retry-diagnostics.md" in docs
+
+
 def test_advanced_homepage_notes_are_collapsed_by_default():
     index = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
     assert index.count('<details class="obscura-note reveal">') == 3
@@ -145,7 +159,7 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
         "--doctor-json /tmp/cliany-doctor-preflight.json"
     ) in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.380" in index
+    assert "Current baseline: v0.16.381" in index
     assert 'data-i18n="qs.maintainer.firstGeneration"' in index
     assert "'qs.maintainer.firstGeneration'" in script
     assert "preserves the observed starting URL and model" in script
@@ -167,7 +181,7 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
     assert "HTTP write endpoints reject unknown JSON fields" in index
     assert "Dependabot now groups GitHub Actions upgrades" in index
     assert "actions/setup-python@v7" in index
-    assert "当前基线：v0.16.380" in script
+    assert "当前基线：v0.16.381" in script
     assert "重复布尔键同样返回" in script
     assert "重复 <code>require_capability</code> 与 <code>domain</code> 键也返回" in script
     assert "POST /explore、POST /execute 与 POST /login 现在要求必填文本字段为非空字符串" in script
@@ -191,8 +205,8 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
     assert "truthy 字符串意外启动 live preflight" in docs
     assert "Dependabot 现在将 GitHub Actions 升级合并为一个可审阅提案" in script
     assert "actions/setup-python@v7" in script
-    assert 'en: "Current baseline: v0.16.380.' in script
-    assert "en: 'Current baseline: v0.16.380." not in script
+    assert 'en: "Current baseline: v0.16.381.' in script
+    assert "en: 'Current baseline: v0.16.381." not in script
     assert "adapter package is runnable" in index
     assert "adapter package 是否可运行" in script
     assert "source-safety scan" in index
@@ -247,7 +261,7 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.380 · Python" in docs
+    assert "v0.16.381 · Python" in docs
     assert "GET /adapters?detail=" in docs
     assert "BAD_REQUEST" in docs
     assert "各只能出现一次" in docs

@@ -7,6 +7,18 @@
 
 ## [Unreleased]
 
+## [0.16.381] - 2026-10-10
+
+### Fixed
+
+- LLM HTTP failures now use the observed status before gateway-body heuristics. Rejected requests stop without repeating; CLI and live doctor preserve `E_LLM_AUTH_FAILED` for HTTP 401/403. Typed request timeouts and network errors retain bounded outer retries.
+- Retry warnings and HTTP failure messages use fixed summaries rather than upstream titles, response text or private endpoints. Optional `explore_llm_attempt_error` progress events record a safe category, status and retryability; existing attempt callbacks remain compatible.
+
+### Evidence and limits
+
+- Real SDK mock transports verify one request for authentication/request rejection, timeout recovery and visible attempt counts. The controlled benchmark retains only whitelisted failure fields alongside timing.
+- The [review](docs/user-evidence/2026-10-10-safe-llm-retries.md) retains a failed live preflight: no model exploration started. This change does not establish better general latency, provider availability, independent first use or candidate promotion. Existing browser/output quality gates and the 120-second OpenAI network timeout are unchanged.
+
 ## [0.16.380] - 2026-10-09
 
 ### Fixed
@@ -3431,7 +3443,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.380...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.381...HEAD
+[0.16.381]: https://github.com/pearjelly/cliany.site/compare/v0.16.380...v0.16.381
 [0.16.380]: https://github.com/pearjelly/cliany.site/compare/v0.16.379...v0.16.380
 [0.16.379]: https://github.com/pearjelly/cliany.site/compare/v0.16.378...v0.16.379
 [0.16.378]: https://github.com/pearjelly/cliany.site/compare/v0.16.377...v0.16.378

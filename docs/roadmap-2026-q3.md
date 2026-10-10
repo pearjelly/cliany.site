@@ -1,8 +1,8 @@
 # cliany-site 2026 Q3 路线图
 
 - **制定日期：** 2026-06-10
-- **校准日期：** 2026-10-09
-- **基线版本：** v0.16.380
+- **校准日期：** 2026-10-10
+- **基线版本：** v0.16.381
 - **目标周期：** 滚动维护（2026-09-08 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -13,11 +13,13 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 已完成校准
 
-v0.16.380 目标让新生成提取在读取前重新查找实测语义区域，拒绝把区域缺失当成合法零匹配。[布局回放复核](user-evidence/2026-10-09-semantic-extract-layout-review.md)记录三次真实源探索与六次变布局返回值/独立浏览器核验、保留的早期 0/3 ref 检查及 121.23/130.42 秒等待。新语义 adapter 需要支持运行时，旧 adapter 不自动迁移。最终提交、公开安装包及三端发布门禁通过前不关闭 #37；不据此宣称任意站点、完整收集或延迟改善。
+已发布 v0.16.380 完成[新鲜公开包语义回放验收](https://github.com/pearjelly/cliany.site/issues/37#issuecomment-6076273211)和[三端发布](https://github.com/pearjelly/cliany.site/pull/81#issuecomment-6076272643)：三次真实公开包探索、六次变布局返回值/独立浏览器检查通过，#37 仅按原生语义范围结案。保留源 study 及公开包 273.46 秒等待；不据此声明普遍可靠、完整收集、延迟改善或独立首次使用。
+
+v0.16.381 目标修复 HTTP 拒绝被正文网关关键词误判为重试，并提供不回显上游内容的失败类别。CLI/live doctor 保留认证失败，旧进度 callback 不变。[复核](user-evidence/2026-10-10-safe-llm-retries.md)保留真实预检失败、未开始矩阵试验的记录；最终提交和三端/公开包门禁仍须通过。#38、独立首次用户及 Chrome 环境问题仍分别验收。
 
 已发布 v0.16.379 已完成[首次生成公开包验收](https://github.com/pearjelly/cliany.site/issues/77#issuecomment-6074014750)。[返回值复核](user-evidence/2026-10-09-returned-value-and-first-generation-review.md)记录逐行规则和公开站点的有界前缀；历史分数不能重计，100 行前缀不等于完整收集。[Alpha 契约审核](plans/2026-10-04-alpha-readiness-audit.md)仍判定未就绪，独立用户、迁移、并发、localStorage 与 HTTP 安全承诺仍有开放项。
 
-2026-06-10 的原始路线图以 v0.14.2 为基线；当前候选为 v0.16.380，正式发布前公开版本仍以 PyPI 和 GitHub Release 为准。v0.16.357 加入真实浏览器端到端回归覆盖的执行修复、Cookie 主机范围保存，以及显式授权的 Jev 只读意图定位；v0.16.358 使实时模型连接故障的 JSON 建议更具体；v0.16.359 区分当前 provider 的密钥和不可重试的认证失败。新配置的 OpenAI 兼容模型已通过 live preflight；PyPI adapter 的公开资产安装和严格验证已完成，正常搜索页的只读 online smoke 仍待验证。crates.io 从维护者网络返回 HTTP 403，浏览器及事件总线的导航超时现报告页面就绪错误而非泛用未知错误，案例尚未晋级。Jev 的真实准确率也未测量。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
+2026-06-10 的原始路线图以 v0.14.2 为基线；当前候选为 v0.16.381，正式发布前公开版本仍以 PyPI 和 GitHub Release 为准。v0.16.357 加入真实浏览器端到端回归覆盖的执行修复、Cookie 主机范围保存，以及显式授权的 Jev 只读意图定位；v0.16.358 使实时模型连接故障的 JSON 建议更具体；v0.16.359 区分当前 provider 的密钥和不可重试的认证失败。新配置的 OpenAI 兼容模型已通过 live preflight；PyPI adapter 的公开资产安装和严格验证已完成，正常搜索页的只读 online smoke 仍待验证。crates.io 从维护者网络返回 HTTP 403，浏览器及事件总线的导航超时现报告页面就绪错误而非泛用未知错误，案例尚未晋级。Jev 的真实准确率也未测量。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
 
 - 首次成功路径：README、README.zh、官网和 `doctor` 输出已经围绕 10 分钟路径、真实 demo、LLM live preflight 和可执行下一步重新组织。
 - v0.16.365 的 [Confluence 维护包](user-evidence/2026-10-01-confluence-public-package-audit.md) 已从公开 Release 资产按固定 SHA-256 在隔离 HOME 中完成安装、严格校验和只读回放；维护版案例晋级 active，不修改用户已有 adapter，历史 v0.14.1 包仍不可用。
