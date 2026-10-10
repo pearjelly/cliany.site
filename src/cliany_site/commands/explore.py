@@ -192,11 +192,16 @@ def explore_cmd(
             )
             explore_result = await explorer.explore(url, workflow_description, progress=reporter, record=record)
         except LlmUnavailableError as e:
+            auth_failed = e.status_code in {401, 403}
             return err(
                 "explore",
-                ErrorCode.E_LLM_UNAVAILABLE,
-                f"LLM 上游暂不可用: {e}",
-                hint="请稍后重试；如果持续失败，请切换 CLIANY_LLM_PROVIDER 或检查 CLIANY_OPENAI_BASE_URL。",
+                ErrorCode.E_LLM_AUTH_FAILED if auth_failed else ErrorCode.E_LLM_UNAVAILABLE,
+                f"LLM 调用失败: {e}",
+                hint=(
+                    "请检查所选 LLM 服务的密钥、账户权限和 API 地址。" if auth_failed
+                    else "请检查请求与服务配置。" if not e.retryable
+                    else "请稍后重试；如果持续失败，请检查服务地址和上游状态。"
+                ),
                 details={
                     "retryable": e.retryable,
                     "status_code": e.status_code,

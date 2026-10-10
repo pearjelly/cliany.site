@@ -695,13 +695,14 @@ async def _run_llm_live_check(has_llm: bool, provider: str) -> dict[str, Any]:
     except LlmUnavailableError as exc:
         duration_ms = int((time.monotonic() - t0) * 1000)
         transport = _transport_failure_details(exc)
+        auth_failed = exc.status_code in {401, 403}
         return {
             "name": "llm_live",
             "status": "warning",
             "duration_ms": duration_ms,
             "details": {
                 "provider": provider,
-                "error_code": ErrorCode.E_LLM_UNAVAILABLE,
+                "error_code": ErrorCode.E_LLM_AUTH_FAILED if auth_failed else ErrorCode.E_LLM_UNAVAILABLE,
                 "message": "LLM 服务连接失败" if transport else str(exc),
                 "retryable": exc.retryable,
                 "status_code": exc.status_code,

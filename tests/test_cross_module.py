@@ -46,8 +46,10 @@ class TestSDKIntegration:
 class TestSecurityIntegration:
     """安全模块跨组件集成"""
 
-    def test_encrypt_decrypt_roundtrip(self, tmp_path, monkeypatch):
+    def test_encrypt_decrypt_roundtrip(self, tmp_path, tmp_home, monkeypatch):
         monkeypatch.setenv("CLIANY_HOME", str(tmp_path))
+        monkeypatch.setattr("cliany_site.security._load_key_from_keyring", lambda: None)
+        monkeypatch.setattr("cliany_site.security._save_key_to_keyring", lambda _key: False)
         reset_config()
 
         from cliany_site.security import decrypt_data, encrypt_data
@@ -61,8 +63,10 @@ class TestSecurityIntegration:
         decrypted = json.loads(decrypted_str)
         assert decrypted == original
 
-    def test_encrypted_data_has_header(self, tmp_path, monkeypatch):
+    def test_encrypted_data_has_header(self, tmp_path, tmp_home, monkeypatch):
         monkeypatch.setenv("CLIANY_HOME", str(tmp_path))
+        monkeypatch.setattr("cliany_site.security._load_key_from_keyring", lambda: None)
+        monkeypatch.setattr("cliany_site.security._save_key_to_keyring", lambda _key: False)
         reset_config()
 
         from cliany_site.security import encrypt_data, is_encrypted
