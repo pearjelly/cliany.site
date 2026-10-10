@@ -20,6 +20,12 @@ The first browser-test draft produced two failures because its assertion expecte
 
 The full offline run then passed **3,383 tests with no skips** in 281.51 seconds on Python 3.11.14. Source/scoped-test Ruff, Mypy (125 source files), eight-case/four-active-package validation and website JavaScript syntax passed. Runtime state remained under `tmp_home` or explicitly isolated directories; the per-process null keyring backend was not a system setting. Exact candidate CI, final-master and public-package checks are still separate gates.
 
+## Real Source Follow-Up
+
+Clean `5cab9625d4dd29776fb924e3102cc333268f7447` then passed strict real capability preflight in 3.73 seconds and one new source SDK Python docs generation in 48.46 seconds. Original starting path, actual model and extract Markdown were preserved, and strict verification passed. Six actual SDK/HTTP changed-query checks matched all returned titles/links against independent 100-row prefixes of 134/403 normal-page results and an empty normal page. Both negatives returned the declared `E_EMPTY_RESULT`; HTTP used 422. Some page-readiness warnings and an initially mislocated after-replay verification command are retained in the [receipt](https://github.com/pearjelly/cliany.site/pull/85#issuecomment-6094943992). All owned browsers and loopback servers were closed.
+
+Exact-head ordinary CI and Chromium CI passed; the latter executed both new tests and passed 56 marked checks. This is one real source SDK generation, not a real HTTP-generation study, complete collection or v0.16.382 public installation. Version 382 must repeat its own final-master and installed-package gates.
+
 ## Boundaries and Next Evidence
 
 Keep CLI `ok` and SDK/HTTP `success` envelopes distinct. This candidate does not resolve every SDK exploration error mapping, promise browser concurrency or improve provider latency. A separate deterministic probe reproduced uncaught `LlmUnavailableError` in SDK and HTTP 500 `text/plain` rather than JSON; [Issue 84](https://github.com/pearjelly/cliany.site/issues/84) tracks that concrete gap without sending invalid real credentials. The first-generation change preserves the existing partial-core merge policy rather than claiming arbitrary symlink artifacts are safe. Existing generated files are not silently migrated; users with already incorrect provenance need a deliberate regeneration decision.

@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-10-10
-- **Current baseline:** [v0.16.381](https://github.com/pearjelly/cliany.site/releases/tag/v0.16.381), with [verified public publication](https://github.com/pearjelly/cliany.site/pull/82#issuecomment-6094736906)
+- **Current baseline:** v0.16.382 (release target; public availability requires its own gates)
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
@@ -11,7 +11,7 @@ Published v0.16.380 completed [fresh installed-package semantic replay acceptanc
 
 Published v0.16.381 stops rejected model HTTP requests without retries caused by gateway-body keywords, preserves CLI/live doctor authentication failures and adds safe attempt-error diagnostics. Final-master 3,363 tests, ordinary/Chromium CI, matching GitHub/PyPI assets, production inspection and fresh installed-package checks passed. The [review](user-evidence/2026-10-10-safe-llm-retries.md) retains a failed real preflight with no matrix trials started; Issue 38 stays open.
 
-The next unreleased [SDK/HTTP first-generation correction](user-evidence/2026-10-10-sdk-first-generation.md) preserves starting URL and model provenance when exploration has already saved an auxiliary directory. It passed deterministic and real Chromium checks, not real-model or independent-user acceptance. [Issue 84](https://github.com/pearjelly/cliany.site/issues/84) separately tracks uncaught typed model errors at the SDK/HTTP boundary; this candidate does not fix that gap or promise full response parity.
+The v0.16.382 target includes the [SDK/HTTP first-generation correction](user-evidence/2026-10-10-sdk-first-generation.md) and [typed provider-error boundary](user-evidence/2026-10-10-sdk-provider-errors.md). A clean source SDK public generation and six SDK/HTTP replays passed against independently observed capped prefixes and an empty normal page. Deterministic transport failures verify safe JSON instead of uncaught exceptions/plain-text 500; upstream authentication uses HTTP 503, not a caller-login challenge. Issue 84 requires final release and public-package acceptance before closure. This is not full response parity, general provider availability or independent-user evidence.
 
 Published v0.16.379 completed [first-generation installed-package acceptance](https://github.com/pearjelly/cliany.site/issues/77#issuecomment-6074014750). The [returned-value review](user-evidence/2026-10-09-returned-value-and-first-generation-review.md) records the stronger `per-row-v2` oracle and capped public-site prefixes. Historical scores cannot be rescored; correct prefixes are not complete collection. The [alpha audit](plans/2026-10-04-alpha-readiness-audit.md) still concludes not ready, and independent first use and the browser case remain open.
 
