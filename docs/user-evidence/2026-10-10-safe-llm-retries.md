@@ -20,6 +20,8 @@ The next preparation run passed 3,306 checks but skipped five browser modules be
 
 The localhost homepage and docs showed v0.16.381. Chinese and English failure notes fit a 390-pixel viewport with no horizontal overflow; the expanded English paragraph was visually inspected. Production publication and alias checks are separate later gates.
 
+Before any tag, review reproduced three additional failures with real SDK `APIStatusError` objects whose HTTPX response carried standard `HTTPStatus` enums. HTTP 400/401 repeated and HTTP 429 lost its status because the first guard accepted only exact `int`. The correction preserves integer subclasses, rejects booleans and normalizes accepted statuses to plain integers. The new regressions verify rejection attempt counts and error-event status retention; the earlier 3,360-pass run and PR 82 CI are not substituted for the corrected final commit's gates.
+
 ## Retained live preflight failure
 
 The predeclared three-task, three-trial matrix started on clean `52ad115906fe721f754b7c387eb2a7ccae7572af`, development package version 0.16.380, with `per-row-v2` and normal OS HOME. Each runtime directory and browser profile was isolated outside the repository. Its real `doctor --llm-live --require-capability generate_adapters --json` returned `E_LLM_UNAVAILABLE` in 6.44 seconds. No exploration or replay trial started. The sanitized report does not retain the provider or transport cause, so neither is inferred.

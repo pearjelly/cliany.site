@@ -1,6 +1,7 @@
 import io
 import json
 import logging
+from http import HTTPStatus
 
 import httpx
 import pytest
@@ -123,6 +124,38 @@ def test_cyclic_unrecognized_failure_is_not_guessed_from_private_text(tmp_home):
     failure = RuntimeError("private certificate details")
     failure.__cause__ = failure
     assert _llm_failure_reason(failure) == "unknown"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status", [HTTPStatus.BAD_REQUEST, HTTPStatus.UNAUTHORIZED, HTTPStatus.TOO_MANY_REQUESTS])
+async def test_sdk_http_status_enum_is_normalized_before_body_heuristics(tmp_home, status):
+    from openai import APIStatusError
+
+    response = httpx.Response(status, request=httpx.Request("POST", "https://fixture.invalid"))
+    failure = APIStatusError("private Bad Gateway", response=response, body={})
+
+    class LLM:
+        calls = 0
+
+        async def ainvoke(self, _prompt):
+            self.calls += 1
+            raise failure
+
+    model = LLM()
+    stream = io.StringIO()
+    with pytest.raises(LlmUnavailableError) as caught:
+        await _invoke_llm_with_retry(
+            model, "prompt", max_attempts=2, base_delay=0,
+            progress=NdjsonProgressReporter(file=stream),
+        )
+    assert model.calls == (2 if status == HTTPStatus.TOO_MANY_REQUESTS else 1)
+    assert caught.value.status_code == int(status)
+    assert type(caught.value.status_code) is int
+    assert caught.value.retryable is (status == HTTPStatus.TOO_MANY_REQUESTS)
+    events = [json.loads(line) for line in stream.getvalue().splitlines()]
+    errors = [event for event in events if event["event"] == "explore_llm_attempt_error"]
+    assert all(event["status_code"] == int(status) for event in errors)
+    assert "private" not in stream.getvalue()
 
 
 @pytest.mark.asyncio
