@@ -283,7 +283,7 @@ cliany-site replay github.com --step
 
 从 v0.16.382 起，SDK/HTTP 首次生成按核心文件识别已有 adapter，辅助提取目录不再丢失起始 URL 路径与模型记录。结构化模型服务异常返回安全的 `E_LLM_AUTH_FAILED` 或 `E_LLM_UNAVAILABLE` 信封，保留 retryability/status；HTTP 对上游依赖返回 503，不代表调用者登录失败。重试前先读取 `retryable`，旧生成文件和信封形状不自动改写。见[限定范围的失败契约](docs/llm-retry-diagnostics.md#sdk-and-http-from-v016382)。
 
-未发布源码还会在浏览器工作前以 `E_INVALID_PARAM`（HTTP JSON 400）拒绝生成命令未声明的参数名，包含 dry-run。请使用录制的原始参数名，拼错不能静默改用默认值；详情只列出 `unknown_params` 与 `allowed_params` 名称，不回显参数值。公开 v0.16.382 尚未包含此修正；旧 `command_defs` 与参数值转换保持不变。见[输入完整性复现](docs/user-evidence/2026-10-10-sdk-parameter-integrity.md)。
+从 v0.16.383 起，SDK/HTTP 在浏览器工作前以 `E_INVALID_PARAM`（HTTP JSON 400）拒绝生成命令未声明的参数名，包含 dry-run。请使用录制的原始参数名，拼错不能静默改用默认值；详情只列出 `unknown_params` 与 `allowed_params` 名称，不回显参数值。旧 `command_defs` 与参数值转换保持不变。见[输入完整性复现](docs/user-evidence/2026-10-10-sdk-parameter-integrity.md)。
 
 ```python
 import asyncio

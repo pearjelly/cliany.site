@@ -7,9 +7,15 @@
 
 ## [Unreleased]
 
+## [0.16.383] - 2026-10-10
+
 ### Fixed
 
 - Generated-command SDK execution rejects undeclared parameter names before browser/session work, including dry-run. A misspelled input no longer silently replays a recorded default; `E_INVALID_PARAM` reports unknown/accepted names without values, and HTTP returns JSON 400. Declared defaults and auto-detected value placeholders retain their existing behavior; legacy `command_defs` and parameter value conversion are unchanged. See [the reproduction and scope](docs/user-evidence/2026-10-10-sdk-parameter-integrity.md).
+
+### Evidence and limits
+
+- Published v0.16.382 SDK and HTTP returned success for `qurey=asyncio` while actually searching recorded `typing`. The correction retains 36 baseline failing regressions and 12 passing controls; source full regression passed 3,461 tests, ordinary/Chromium CI and 16 no-browser rejection checks. Four correctly spelled source replays against unchanged public adapters matched all 100 returned titles/links against an independently observed 403-result page. These are maintainer source checks, not installed v0.16.383 acceptance, independent first use or complete collection; final publication gates remain separate.
 
 ## [0.16.382] - 2026-10-10
 
@@ -3459,7 +3465,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.382...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.383...HEAD
+[0.16.383]: https://github.com/pearjelly/cliany.site/compare/v0.16.382...v0.16.383
 [0.16.382]: https://github.com/pearjelly/cliany.site/compare/v0.16.381...v0.16.382
 [0.16.381]: https://github.com/pearjelly/cliany.site/compare/v0.16.380...v0.16.381
 [0.16.380]: https://github.com/pearjelly/cliany.site/compare/v0.16.379...v0.16.380
