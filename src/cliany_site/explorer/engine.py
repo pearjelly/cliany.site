@@ -571,12 +571,12 @@ def _extract_status_code(exc: Exception) -> int | None:
         if target is None:
             continue
         status_code = getattr(target, "status_code", None)
-        if type(status_code) is int and 100 <= status_code <= 599:
-            return status_code
+        if isinstance(status_code, int) and not isinstance(status_code, bool) and 100 <= status_code <= 599:
+            return int(status_code)
         response = getattr(target, "response", None)
         response_status = getattr(response, "status_code", None)
-        if type(response_status) is int and 100 <= response_status <= 599:
-            return response_status
+        if isinstance(response_status, int) and not isinstance(response_status, bool) and 100 <= response_status <= 599:
+            return int(response_status)
     return None
 
 
