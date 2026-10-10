@@ -7,13 +7,17 @@
 
 ## [Unreleased]
 
+## [0.16.382] - 2026-10-10
+
 ### Fixed
 
 - Python SDK `explore` and HTTP `POST /explore` check adapter core files before merging. A first extraction's Markdown directory no longer discards the observed starting URL path or model provenance. Existing complete/partial core artifacts and symbolic links still follow merge handling; explicit `force` remains the replacement path. CLI behavior, response formats and historical generated files are unchanged.
+- SDK exploration handles typed model-service failures as legacy JSON error envelopes instead of uncaught exceptions. Authentication rejection preserves `E_LLM_AUTH_FAILED`; other typed provider failures use `E_LLM_UNAVAILABLE` with safe status/retryability/phase details. HTTP returns JSON with 503 for unavailable upstream dependencies, not caller authentication or plain-text 500. Fixed messages exclude upstream response text; existing budgets and retry policy are unchanged.
 
 ### Evidence and limits
 
 - Six SDK/HTTP first-generation regressions failed on published v0.16.381 source. The correction passes isolated directory/core/force checks and real Chromium generation, strict verification and changed-input returned-value plus DOM checks with a deterministic model. See [the review](docs/user-evidence/2026-10-10-sdk-first-generation.md). This is not live-model discovery, complete entrypoint parity or independent first-user evidence; final release and installed-package checks remain separate.
+- A separate clean-source SDK public generation preserved provenance and passed six SDK/HTTP changed-query checks against independent capped prefixes and an empty normal page. Typed-error regressions retain 26 baseline failures and two successful retry recoveries; actual SDK mock transports check rejection/exhaustion counts without real invalid credentials. See [the failure review](docs/user-evidence/2026-10-10-sdk-provider-errors.md). Maintainer observations are not general provider availability, latency or independent-user acceptance.
 
 ## [0.16.381] - 2026-10-10
 
@@ -3451,7 +3455,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.381...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.382...HEAD
+[0.16.382]: https://github.com/pearjelly/cliany.site/compare/v0.16.381...v0.16.382
 [0.16.381]: https://github.com/pearjelly/cliany.site/compare/v0.16.380...v0.16.381
 [0.16.380]: https://github.com/pearjelly/cliany.site/compare/v0.16.379...v0.16.380
 [0.16.379]: https://github.com/pearjelly/cliany.site/compare/v0.16.378...v0.16.379

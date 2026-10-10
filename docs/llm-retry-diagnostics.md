@@ -20,6 +20,14 @@ The new error event and retry warning exclude prompts, model response text, exce
 
 The controlled benchmark stores bounded `attempt_errors` with step, attempt, category, status and retryability. Historical reports without those events cannot identify the cause of old long waits and are not rescored. Unknown or malformed event values are not copied into reports.
 
+## SDK and HTTP from v0.16.382
+
+`ClanySite.explore()` keeps the legacy `success/data/error` envelope. Typed provider failures return `E_LLM_AUTH_FAILED` for observed upstream HTTP 401/403, or `E_LLM_UNAVAILABLE` otherwise. `error.details` retains only `retryable`, `status_code` and `phase="llm_invoke"`; fixed messages and repair hints do not copy the exception body or configured endpoint. Failed generation does not write adapter core files, including when `force=True` was requested.
+
+The local HTTP API returns the same JSON envelope and HTTP **503** for these unavailable upstream dependencies. Upstream authentication rejection is not an HTTP caller-login challenge and does not add an authentication layer to the experimental local server. Do not automatically retry every 503: `retryable=false` requires repairing the selected upstream credentials or request configuration. A final transient failure can still report `retryable=true` after its attempt budget is exhausted.
+
+This handling is scoped to typed provider failures, not a blanket guarantee for every SDK exception or log. Existing `OSError` and non-provider error paths retain their earlier contracts. CLI `ok` and SDK/HTTP `success` are not interchangeable; HTTP, SDK and CLI do not promise identical envelopes or full behavioral parity.
+
 ## Before live exploration
 
 ```bash

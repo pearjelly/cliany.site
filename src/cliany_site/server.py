@@ -49,6 +49,7 @@ _UNAVAILABLE_ERROR_CODES = frozenset(
         "E_CDP_UNAVAILABLE",
         "E_PAGE_NOT_READY",
         "E_LLM_UNAVAILABLE",
+        "E_LLM_AUTH_FAILED",
         "E_MISSING_CAPABILITY",
     }
 )

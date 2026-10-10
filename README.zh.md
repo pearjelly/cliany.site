@@ -281,6 +281,8 @@ cliany-site replay github.com --step
 
 ### Python SDK
 
+从 v0.16.382 起，SDK/HTTP 首次生成按核心文件识别已有 adapter，辅助提取目录不再丢失起始 URL 路径与模型记录。结构化模型服务异常返回安全的 `E_LLM_AUTH_FAILED` 或 `E_LLM_UNAVAILABLE` 信封，保留 retryability/status；HTTP 对上游依赖返回 503，不代表调用者登录失败。重试前先读取 `retryable`，旧生成文件和信封形状不自动改写。见[限定范围的失败契约](docs/llm-retry-diagnostics.md#sdk-and-http-from-v016382)。
+
 ```python
 import asyncio
 

@@ -43,6 +43,7 @@ from cliany_site.errors import (
     LLM_UNAVAILABLE,
     CdpError,
     DataCommandQualityError,
+    LlmUnavailableError,
 )
 from cliany_site.response import error_response, success_response
 from cliany_site.url_validation import is_safe_http_url, is_safe_session_domain
@@ -171,6 +172,18 @@ class ClanySite:
                 headless=self._headless,
             )
             explore_result = await explorer.explore(url, workflow_description, port=self._port)
+        except LlmUnavailableError as e:
+            auth_failed = e.status_code in {401, 403}
+            return error_response(
+                "E_LLM_AUTH_FAILED" if auth_failed else "E_LLM_UNAVAILABLE",
+                "LLM 服务认证失败。" if auth_failed else "LLM 服务调用失败。",
+                (
+                    "请检查所选 LLM 服务的密钥、账户权限和 API 地址。" if auth_failed
+                    else "请检查请求与服务配置。" if not e.retryable
+                    else "请稍后重试；如果持续失败，请检查服务地址和上游状态。"
+                ),
+                details={"retryable": e.retryable, "status_code": e.status_code, "phase": "llm_invoke"},
+            )
         except ConnectionError as e:
             return error_response(CDP_UNAVAILABLE, str(e), "请确保 Chrome CDP 可用")
         except DataCommandQualityError as e:
