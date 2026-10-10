@@ -7,6 +7,14 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Python SDK `explore` and HTTP `POST /explore` check adapter core files before merging. A first extraction's Markdown directory no longer discards the observed starting URL path or model provenance. Existing complete/partial core artifacts and symbolic links still follow merge handling; explicit `force` remains the replacement path. CLI behavior, response formats and historical generated files are unchanged.
+
+### Evidence and limits
+
+- Six SDK/HTTP first-generation regressions failed on published v0.16.381 source. The correction passes isolated directory/core/force checks and real Chromium generation, strict verification and changed-input returned-value plus DOM checks with a deterministic model. See [the review](docs/user-evidence/2026-10-10-sdk-first-generation.md). This is not live-model discovery, complete entrypoint parity or independent first-user evidence; final release and installed-package checks remain separate.
+
 ## [0.16.381] - 2026-10-10
 
 ### Fixed

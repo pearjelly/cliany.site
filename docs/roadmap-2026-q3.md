@@ -15,7 +15,9 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 已发布 v0.16.380 完成[新鲜公开包语义回放验收](https://github.com/pearjelly/cliany.site/issues/37#issuecomment-6076273211)和[三端发布](https://github.com/pearjelly/cliany.site/pull/81#issuecomment-6076272643)：三次真实公开包探索、六次变布局返回值/独立浏览器检查通过，#37 仅按原生语义范围结案。保留源 study 及公开包 273.46 秒等待；不据此声明普遍可靠、完整收集、延迟改善或独立首次使用。
 
-v0.16.381 目标修复 HTTP 拒绝被正文网关关键词误判为重试，并提供不回显上游内容的失败类别。CLI/live doctor 保留认证失败，旧进度 callback 不变。[复核](user-evidence/2026-10-10-safe-llm-retries.md)保留真实预检失败、未开始矩阵试验的记录；最终提交和三端/公开包门禁仍须通过。#38、独立首次用户及 Chrome 环境问题仍分别验收。
+已发布 v0.16.381 修复 HTTP 拒绝被正文网关关键词误判为重试，并提供不回显上游内容的失败类别。CLI/live doctor 保留认证失败，旧进度 callback 不变。[公开验收](https://github.com/pearjelly/cliany.site/pull/82#issuecomment-6094736906)记录最终 master 的 3,363 项测试、普通/Chromium CI、资产一致的 GitHub/PyPI 与生产官网及新鲜公开包检查。[复核](user-evidence/2026-10-10-safe-llm-retries.md)保留真实预检失败、未开始矩阵试验的记录；#38、独立首次用户及 Chrome 环境问题仍分别验收。
+
+下一未发布候选修复 [SDK/HTTP 首次生成](user-evidence/2026-10-10-sdk-first-generation.md)将辅助目录误作已有 adapter 而丢失起始 URL 和模型记录的问题。确定性模型及真实浏览器检查不替代真实模型、独立用户或公开包验收；[Issue 84](https://github.com/pearjelly/cliany.site/issues/84)另行跟踪 SDK/HTTP 未捕获结构化模型错误，不宣称完整入口一致性。
 
 已发布 v0.16.379 已完成[首次生成公开包验收](https://github.com/pearjelly/cliany.site/issues/77#issuecomment-6074014750)。[返回值复核](user-evidence/2026-10-09-returned-value-and-first-generation-review.md)记录逐行规则和公开站点的有界前缀；历史分数不能重计，100 行前缀不等于完整收集。[Alpha 契约审核](plans/2026-10-04-alpha-readiness-audit.md)仍判定未就绪，独立用户、迁移、并发、localStorage 与 HTTP 安全承诺仍有开放项。
 

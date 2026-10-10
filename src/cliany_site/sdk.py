@@ -191,7 +191,11 @@ class ClanySite:
         domain = parsed.netloc or parsed.path
         adapter_dir = get_config().adapters_dir / _safe_domain(domain)
 
-        if force or not adapter_dir.exists():
+        adapter_has_core_files = any(
+            path.exists() or path.is_symlink()
+            for path in (adapter_dir / "commands.py", adapter_dir / "metadata.json")
+        )
+        if force or not adapter_has_core_files:
             gen = AdapterGenerator()
             code = gen.generate(explore_result, domain)
             metadata = {"source_url": url, "workflow": workflow_description}
