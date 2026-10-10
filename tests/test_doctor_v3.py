@@ -833,7 +833,7 @@ def test_doctor_llm_live_connection_error_is_llm_unavailable(tmp_home, no_llm, m
         "action": "无法连接 OpenAI 兼容服务。请检查网络和 CLIANY_OPENAI_BASE_URL 后重试。",
         "provider": "openai",
         "error_code": "E_LLM_UNAVAILABLE",
-        "message": "LLM upstream unavailable: Connection error.",
+        "message": "LLM service connection failed",
         "retryable": True,
         "status_code": None,
         "phase": "llm_preflight",
