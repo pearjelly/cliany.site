@@ -407,6 +407,19 @@ class ClanySite:
             indices = list(range(len(recorded_actions)))
             command_args = cmd_def.get("args") or auto_detect_params_from_actions(indices, recorded_actions)
 
+            allowed_params = sorted({
+                arg["name"] for arg in command_args
+                if isinstance(arg, dict) and isinstance(arg.get("name"), str)
+            })
+            unknown_params = sorted(str(name) for name in (params or {}) if name not in allowed_params)
+            if unknown_params:
+                return error_response(
+                    "E_INVALID_PARAM",
+                    f"不支持的命令参数: {', '.join(unknown_params)}",
+                    f"可用参数: {', '.join(allowed_params)}" if allowed_params else "该命令不接受参数。",
+                    details={"unknown_params": unknown_params, "allowed_params": allowed_params},
+                )
+
             effective_params = {
                 arg["name"]: arg["default"] for arg in command_args
                 if isinstance(arg, dict) and arg.get("name") and arg.get("default") is not None

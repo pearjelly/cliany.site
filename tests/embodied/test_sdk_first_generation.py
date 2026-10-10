@@ -122,6 +122,30 @@ async def test_sdk_first_generation_and_changed_input_replay(tmp_home, monkeypat
                 assert replay["data"]["results"][-1]["data"] == {"text": "Grace:Red"}
                 page = next(page for page in context.pages if page.url == url)
                 assert await page.locator("#result").inner_text() == "Grace:Red"
+                core_before = {name: (adapter_dir / name).read_bytes() for name in ("commands.py", "metadata.json")}
+                for params in (
+                    {"nmae": "private-value-do-not-reflect", "color": "Blue"},
+                    {"name": "Ada", "color": "Blue", "nmae": "private-value-do-not-reflect"},
+                ):
+                    for dry_run in (False, True):
+                        if client is None:
+                            invalid = await sdk.execute(domain, "apply-and-read", params=params, dry_run=dry_run)
+                        else:
+                            response = await client.post("/execute", json={
+                                "domain": domain, "command": "apply-and-read", "params": params, "dry_run": dry_run,
+                            })
+                            invalid = await response.json()
+                            assert response.status == 400, invalid
+                        assert invalid["success"] is False, invalid
+                        assert invalid["error"]["code"] == "E_INVALID_PARAM"
+                        assert invalid["error"]["details"] == {
+                            "unknown_params": ["nmae"], "allowed_params": ["color", "name"],
+                        }
+                        assert "private-value-do-not-reflect" not in json.dumps(invalid)
+                        assert await page.locator("#result").inner_text() == "Grace:Red"
+                        assert await page.get_by_label("Name", exact=True).input_value() == "Grace"
+                        assert await page.get_by_label("Color", exact=True).input_value() == "Red"
+                assert core_before == {name: (adapter_dir / name).read_bytes() for name in core_before}
         finally:
             if client is not None:
                 await client.close()

@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-10-10
-- **Current baseline:** v0.16.382 (release target; public availability requires its own gates)
+- **Current baseline:** v0.16.383 (release target; last verified public package is [v0.16.382](https://github.com/pearjelly/cliany.site/pull/86#issuecomment-6095641288))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
@@ -11,7 +11,9 @@ Published v0.16.380 completed [fresh installed-package semantic replay acceptanc
 
 Published v0.16.381 stops rejected model HTTP requests without retries caused by gateway-body keywords, preserves CLI/live doctor authentication failures and adds safe attempt-error diagnostics. Final-master 3,363 tests, ordinary/Chromium CI, matching GitHub/PyPI assets, production inspection and fresh installed-package checks passed. The [review](user-evidence/2026-10-10-safe-llm-retries.md) retains a failed real preflight with no matrix trials started; Issue 38 stays open.
 
-The v0.16.382 target includes the [SDK/HTTP first-generation correction](user-evidence/2026-10-10-sdk-first-generation.md) and [typed provider-error boundary](user-evidence/2026-10-10-sdk-provider-errors.md). A clean source SDK public generation and six SDK/HTTP replays passed against independently observed capped prefixes and an empty normal page. Deterministic transport failures verify safe JSON instead of uncaught exceptions/plain-text 500; upstream authentication uses HTTP 503, not a caller-login challenge. Issue 84 requires final release and public-package acceptance before closure. This is not full response parity, general provider availability or independent-user evidence.
+Published v0.16.382 includes the [SDK/HTTP first-generation correction](user-evidence/2026-10-10-sdk-first-generation.md) and [typed provider-error boundary](user-evidence/2026-10-10-sdk-provider-errors.md). Final master passed 3,413 offline tests and ordinary/Chromium CI; GitHub/PyPI hashes, production aliases and final distribution audit passed. Fresh public-package strict real doctor, one SDK generation, six capped/empty SDK/HTTP replays and six controlled model-error checks passed. Issue 84 is closed for its typed-failure boundary. This is not full response parity, general provider availability or independent-user evidence; [the receipt](https://github.com/pearjelly/cliany.site/pull/86#issuecomment-6095641288) retains the scope and earlier warnings/failures.
+
+The v0.16.383 [parameter-integrity target](user-evidence/2026-10-10-sdk-parameter-integrity.md) addresses [Issue 87](https://github.com/pearjelly/cliany.site/issues/87): published SDK/HTTP can report successful data for a recorded default when the caller misspells an argument. The candidate rejects undeclared generated-command parameter names before replay, with names-only `E_INVALID_PARAM` and HTTP JSON 400. The [source receipt](https://github.com/pearjelly/cliany.site/pull/88#issuecomment-6095820688) records 3,461 tests, exact-head ordinary/Chromium CI, 16 no-browser rejections and four correct capped-prefix replays. Public v0.16.382 does not include this correction; versioned final-source and installed-package gates remain required.
 
 Published v0.16.379 completed [first-generation installed-package acceptance](https://github.com/pearjelly/cliany.site/issues/77#issuecomment-6074014750). The [returned-value review](user-evidence/2026-10-09-returned-value-and-first-generation-review.md) records the stronger `per-row-v2` oracle and capped public-site prefixes. Historical scores cannot be rescored; correct prefixes are not complete collection. The [alpha audit](plans/2026-10-04-alpha-readiness-audit.md) still concludes not ready, and independent first use and the browser case remain open.
 
