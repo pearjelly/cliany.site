@@ -820,7 +820,7 @@ def test_doctor_llm_live_connection_error_is_llm_unavailable(tmp_home, no_llm, m
     assert live_check["details"]["retryable"] is True
     assert live_check["details"]["status_code"] is None
     assert live_check["details"]["phase"] == "llm_preflight"
-    assert live_check["details"]["message"] == "LLM upstream unavailable: Connection error."
+    assert live_check["details"]["message"] == "LLM service connection failed"
 
     summary = data["data"]["summary"]
     assert summary["ready_for_explore"] is False

@@ -620,7 +620,10 @@ def _llm_failure_reason(exc: Exception) -> str:
         if isinstance(current, (ConnectionError, httpx.NetworkError)):
             return "connection_error"
         current = current.__cause__ or current.__context__
-    return "upstream_unavailable" if _looks_like_llm_gateway_error(str(exc)) else "unknown"
+    message = str(exc).lower()
+    if any(marker in message for marker in ("connection error", "connection refused", "connection reset")):
+        return "connection_error"
+    return "upstream_unavailable" if _looks_like_llm_gateway_error(message) else "unknown"
 
 
 def _llm_error_summary(exc: Exception) -> str:
