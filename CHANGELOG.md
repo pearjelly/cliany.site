@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Generated-command SDK execution rejects undeclared parameter names before browser/session work, including dry-run. A misspelled input no longer silently replays a recorded default; `E_INVALID_PARAM` reports unknown/accepted names without values, and HTTP returns JSON 400. Declared defaults and auto-detected value placeholders retain their existing behavior; legacy `command_defs` and parameter value conversion are unchanged. See [the reproduction and scope](docs/user-evidence/2026-10-10-sdk-parameter-integrity.md).
+
 ## [0.16.382] - 2026-10-10
 
 ### Fixed
