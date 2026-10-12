@@ -7,6 +7,16 @@
 
 ## [Unreleased]
 
+## [0.16.384] - 2026-10-12
+
+### Fixed
+
+- SDK `execute`, `login`, `save_session`, `navigate` and `get_page_info` return the existing `CDP_UNAVAILABLE` JSON envelope when browser acquisition raises a typed CDP, connection or timeout error. Details identify `phase=browser_connect` and offer a doctor repair path without reflecting a private endpoint or exception body. Existing HTTP execute/login routes use JSON 503 instead of an uncaught plain-text server error. Unexpected errors and cancellation remain distinct; action-phase handling, retries, generated files and browser infrastructure are unchanged.
+
+### Evidence and limits
+
+- Published v0.16.383 reproduced five uncaught SDK errors and two HTTP plain-text 500s against an actually unavailable owned CDP endpoint. The source correction retains 26 failing baseline regressions and 10 passing controls; two real Chromium checks cover same-instance recovery, changed-input semantic replay, navigation, page observation and encrypted cookie persistence. The probe transition in those two recovery checks is scripted, not proof of automatic reconnection or public-site/model reliability. See [the scoped review](docs/user-evidence/2026-10-12-sdk-browser-errors.md). Final-master and fresh installed-package publication checks remain separate.
+
 ## [0.16.383] - 2026-10-10
 
 ### Fixed
@@ -3465,7 +3475,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.383...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.384...HEAD
+[0.16.384]: https://github.com/pearjelly/cliany.site/compare/v0.16.383...v0.16.384
 [0.16.383]: https://github.com/pearjelly/cliany.site/compare/v0.16.382...v0.16.383
 [0.16.382]: https://github.com/pearjelly/cliany.site/compare/v0.16.381...v0.16.382
 [0.16.381]: https://github.com/pearjelly/cliany.site/compare/v0.16.380...v0.16.381

@@ -51,6 +51,15 @@ from cliany_site.url_validation import is_safe_http_url, is_safe_session_domain
 logger = logging.getLogger(__name__)
 
 
+def _browser_unavailable_response() -> dict[str, Any]:
+    return error_response(
+        CDP_UNAVAILABLE,
+        "无法建立浏览器 CDP 会话。",
+        "请检查 Chrome 是否运行以及 CDP 地址和端口配置；运行 cliany-site doctor --json 后重试。",
+        details={"phase": "browser_connect"},
+    )
+
+
 # ---------------------------------------------------------------------------
 # 核心异步上下文管理器
 # ---------------------------------------------------------------------------
@@ -470,7 +479,10 @@ class ClanySite:
                     details={"domain": domain, **first},
                 )
 
-        browser_session = await self._ensure_browser_session()
+        try:
+            browser_session = await self._ensure_browser_session()
+        except (CdpError, ConnectionError, TimeoutError):
+            return _browser_unavailable_response()
 
         try:
             await load_session(domain, browser_session)
@@ -564,7 +576,10 @@ class ClanySite:
         parsed = urlparse(url)
         domain = parsed.netloc or parsed.path
 
-        browser_session = await self._ensure_browser_session()
+        try:
+            browser_session = await self._ensure_browser_session()
+        except (CdpError, ConnectionError, TimeoutError):
+            return _browser_unavailable_response()
 
         try:
             try:
@@ -750,7 +765,10 @@ class ClanySite:
 
         from cliany_site.session import save_session as _save
 
-        browser_session = await self._ensure_browser_session()
+        try:
+            browser_session = await self._ensure_browser_session()
+        except (CdpError, ConnectionError, TimeoutError):
+            return _browser_unavailable_response()
         try:
             path, count = await _save(domain, browser_session)
             return success_response(
@@ -780,7 +798,10 @@ class ClanySite:
                 "url 必须是不含空白、带 host 的 http 或 https URL",
             )
 
-        browser_session = await self._ensure_browser_session()
+        try:
+            browser_session = await self._ensure_browser_session()
+        except (CdpError, ConnectionError, TimeoutError):
+            return _browser_unavailable_response()
         try:
             await browser_session.navigate_to(url, new_tab=False)
             return success_response({"url": url, "status": "navigated"})
@@ -806,7 +827,10 @@ class ClanySite:
         """
         from cliany_site.browser.axtree import capture_axtree
 
-        browser_session = await self._ensure_browser_session()
+        try:
+            browser_session = await self._ensure_browser_session()
+        except (CdpError, ConnectionError, TimeoutError):
+            return _browser_unavailable_response()
         try:
             tree = await capture_axtree(browser_session)
             selector_map = tree.get("selector_map", {})
