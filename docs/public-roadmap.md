@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-10-12
-- **Current baseline:** v0.16.384 (published and [verified across all three ends](https://github.com/pearjelly/cliany.site/pull/90#issuecomment-6118610345))
+- **Current baseline:** v0.16.385 (semantic-planning release candidate; last verified public version is [v0.16.384](https://github.com/pearjelly/cliany.site/pull/90#issuecomment-6118610345))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
@@ -17,7 +17,7 @@ Published v0.16.383 completed [three-end and installed-package acceptance](https
 
 Published v0.16.384 completed [browser-acquisition three-end and installed-package acceptance](https://github.com/pearjelly/cliany.site/pull/90#issuecomment-6118610345). Final master passed 3,500 tests and ordinary/Chromium CI; fresh official-package checks covered five actual unavailable-endpoint SDK operations, two HTTP JSON 503 routes and two real browser/encrypted-cookie groups. Issue 89 is closed for that scope only; the recovery probe transition was scripted and no case was promoted.
 
-The [semantic-planning candidate](user-evidence/2026-10-12-semantic-plan-review.md) remains unmerged and unpublished. It rejects currently ambiguous targets before side effects and permits one bounded correction. Source full regression passed 3,505 tests and real Chromium recovery; a new wide public-site study passed only 2/3 generations, retaining one extraction-grounding failure. Six source changed-input checks passed, but neither those capped results nor narrow regressions authorize a release or independent-user acceptance.
+The [v0.16.385 semantic-planning review](user-evidence/2026-10-12-semantic-plan-review.md) retains the earlier 2/3 source study and unrecoverable failed-turn selector. An inspectable follow-up selected an observed class-only list without unique semantic identity. Before execution/recording, extract-only turns with current read-only AX candidates now share the interactive gate's one bounded correction. Native browser recovery and 3,510 source tests pass; a declared fresh study passed 3/3 generations and 9/9 changed-query/independent-browser checks. Capped maintainer results are not independent first use, case promotion or published-package acceptance; versioned/final-master and three-end publication gates remain separate.
 
 Published v0.16.379 completed [first-generation installed-package acceptance](https://github.com/pearjelly/cliany.site/issues/77#issuecomment-6074014750). The [returned-value review](user-evidence/2026-10-09-returned-value-and-first-generation-review.md) records the stronger `per-row-v2` oracle and capped public-site prefixes. Historical scores cannot be rescored; correct prefixes are not complete collection. The [alpha audit](plans/2026-10-04-alpha-readiness-audit.md) still concludes not ready, and independent first use and the browser case remain open.
 

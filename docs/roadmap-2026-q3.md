@@ -2,7 +2,7 @@
 
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-10-12
-- **基线版本：** v0.16.384（已完成三端与公开包验收）
+- **基线版本：** v0.16.385（语义规划发布候选；最后验证的公开版本仍为 v0.16.384）
 - **目标周期：** 滚动维护（2026-09-08 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -23,7 +23,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 已发布 v0.16.384 完成[浏览器连接故障三端与公开包验收](https://github.com/pearjelly/cliany.site/pull/90#issuecomment-6118610345)。最终 master 的 3,500 项回归与普通/Chromium CI 通过；公开包五项实际连接失败、两条 HTTP JSON 503 及两项真实浏览器/加密会话检查通过。恢复探测转换为确定性模拟，#89 仅按该范围结案，案例不晋级。
 
-当前[语义规划源码候选](user-evidence/2026-10-12-semantic-plan-review.md)在副作用前拒绝歧义目标、最多纠正一次；3,505 项完整源码回归和真实 Chromium 回归通过。公开页面宽屏生成仅 2/3 成功，保留第三次提取目标不具 AX 证据的失败；六次换输入检查不是完整案例或发布门禁通过。候选保持草案，不授权合并/tag。
+当前 [v0.16.385 语义规划候选](user-evidence/2026-10-12-semantic-plan-review.md)保留原 2/3 失败及无法恢复的第三回合选择器；后续真实诊断抓到仅类名列表缺少唯一语义身份的失败。纯提取回合有当前只读 AX 候选时，执行/录制前的唯一身份检查与控件检查共用一次有限修正。新增真实 Chromium 与 3,510 项源码回归通过；声明的新研究 3/3 生成及 9/9 换输入/独立浏览器检查通过。结果仍受 100 行上限约束，不晋级案例，不替代版本化门禁、最终 master、三端公开包或独立首次使用验收。
 
 已发布 v0.16.379 已完成[首次生成公开包验收](https://github.com/pearjelly/cliany.site/issues/77#issuecomment-6074014750)。[返回值复核](user-evidence/2026-10-09-returned-value-and-first-generation-review.md)记录逐行规则和公开站点的有界前缀；历史分数不能重计，100 行前缀不等于完整收集。[Alpha 契约审核](plans/2026-10-04-alpha-readiness-audit.md)仍判定未就绪，独立用户、迁移、并发、localStorage 与 HTTP 安全承诺仍有开放项。
 

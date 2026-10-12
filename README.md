@@ -192,6 +192,8 @@ From v0.16.379, a new `explore` preserves the observed starting URL and model wh
 
 From v0.16.380, newly generated extracts retain observed semantic targets and resolve the current page before reading. A renamed result region can be found without treating a missing region as valid zero matches. New semantic adapters require a supporting runtime; existing adapters are not automatically migrated. Native list/table support, unresolved identities and the 100-row cap remain explicit limits. See [semantic extract targets](docs/semantic-extract-targets.md).
 
+From v0.16.385, exploration rejects currently ambiguous interactive plans before execution or recording. Extract-only turns with current read-only AX candidates also require an observed, uniquely resolvable target. Both checks share one correction within the original step budget, without recording rejected actions or changing command indices. Corrections can add model cost; mixed navigation/extract turns retain their existing live validation, and future layout changes or old adapters are not automatically repaired. See [the failure investigation and real workflow checks](docs/user-evidence/2026-10-12-semantic-plan-review.md).
+
 From v0.16.381, observed HTTP failures take precedence over gateway-body keywords, so rejected model requests do not repeat. CLI/live doctor preserve authentication failures, and retry warnings and optional attempt-error events use fixed summaries without upstream response text. See [failure and retry diagnostics](docs/llm-retry-diagnostics.md); this does not establish faster successful requests or provider availability.
 
 ### Server and Docker Browser Setup

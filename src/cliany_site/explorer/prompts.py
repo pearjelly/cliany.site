@@ -92,6 +92,7 @@ actions 中每个操作的字段定义：
 - reuse_atom: 仅 reuse_atom 操作时使用，格式为 {"reuse_atom": "atom_id", "parameters": {"key": "value"}}。当已有原子操作与当前步骤语义匹配时，优先使用此格式替代逐步操作。
 - extract: 仅 extract 操作时使用。需提供以下字段：
   - selector: CSS 选择器，定位要提取的元素。必须使用当前页面提供的候选；列表/表格可在已给出的容器候选后加空格与 li/tr（例如 #results li）。不得猜测类名或 ID。
+  - 提取列表/表格时优先选择只读 AX 语义候选。可交互元素中的类名候选不代表可唯一回放的语义身份；不能用无名称、无稳定身份属性的列表目标在多个列表间打破平分。
   - extract_mode: 提取模式，必须是 text / list / table / attribute 之一：
     - text: 提取单个元素的文本内容
     - list: 提取多个同类元素，每个提取 fields 中定义的字段（最多 100 项）

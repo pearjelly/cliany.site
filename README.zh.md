@@ -186,6 +186,8 @@ OpenAI 兼容客户端使用 120 秒网络操作超时，并关闭 SDK 内部重
 
 从 v0.16.380 起，新生成的提取会保存实测语义目标，回放时先查找当前页面再读取。结果区域改名后可按语义重新定位；缺失区域不能冒充合法零匹配。新语义 adapter 需要支持该能力的运行时，已有 adapter 不会自动迁移。原生列表/表格支持、无法消除的定位歧义及 100 行上限仍是明确边界。见[语义提取目标](docs/semantic-extract-targets.md)。
 
+从 v0.16.385 起，探索会在执行和录制前拒绝当前页面的歧义控件计划。有当前只读 AX 候选时，纯提取回合也必须使用实测且可唯一重定位的目标；两项检查共用原步数预算内的一次规划修正，不录制拒绝动作，不改变命令动作索引。修正可能增加模型费用；导航与提取混合回合仍使用原有实时校验，未来布局变化和旧 adapter 不会自动修复。见[失败定位与真实工作流检查](docs/user-evidence/2026-10-12-semantic-plan-review.md)。
+
 从 v0.16.381 起，实测 HTTP 状态优先于正文中的网关关键词，被拒绝的模型请求不再重复调用。CLI/live doctor 保留认证失败类型；重试警告和可选的单次错误事件使用固定摘要，不回显上游正文。见[失败与重试诊断](docs/llm-retry-diagnostics.md)；这不代表成功请求提速或 provider 持续可用。
 
 一台 macOS 维护机上，空的临时 OS `HOME` 会让 Chrome 的 CDP 探测成功、HTTP 导航却超时。保留正常 OS `HOME`，用 v0.16.376 起提供的 `CLIANY_RUNTIME_HOME` 选择空的 CLI 运行目录；浏览器 profile 须另行隔离，手动管理 Chrome 时只连接该测试实例专用的 loopback `--cdp-url`。这个目录设置不会隔离已有 CDP 浏览器、XDG 模型配置或系统凭据。见[有界 CDP 对照](docs/user-evidence/2026-10-04-synthetic-home-cdp-controls.md)；具体 Chrome 原因和独立首次用户验收仍未完成。

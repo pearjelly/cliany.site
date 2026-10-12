@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Search Results</title></head>
+<body>
+  <nav aria-label="Related"><ul><li><a href="/index.html">Home</a></li></ul></nav>
+  <form>
+    <label for="query">Query</label><input id="query" name="query">
+    <button type="submit">Search</button>
+  </form>
+  <div id="results"><ul class="search"><li><a href="/docs/Initial.html">Initial</a></li></ul></div>
+  <script>
+    document.querySelector('form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const value = document.getElementById('query').value;
+      const row = document.createElement('li');
+      const link = document.createElement('a');
+      link.textContent = value;
+      link.setAttribute('href', '/docs/' + encodeURIComponent(value) + '.html');
+      row.appendChild(link);
+      document.querySelector('#results ul').replaceChildren(row);
+    });
+  </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Semantic Planning Review
 
-**Observed:** 2026-10-12. **Verified public baseline:** PyPI v0.16.384, final tag/master `b71e7bd0`. **Candidate:** unversioned source planning change, metadata still v0.16.384; not installed-public-package acceptance. [Issue 91](https://github.com/pearjelly/cliany.site/issues/91).
+**Observed:** 2026-10-12. **Verified public baseline at review:** PyPI v0.16.384, final tag/master `b71e7bd0`. **Candidate:** v0.16.385 semantic planning; the studies below ran unreleased source with metadata still v0.16.384, not installed-public-package acceptance. [Issue 91](https://github.com/pearjelly/cliany.site/issues/91), [PR 92](https://github.com/pearjelly/cliany.site/pull/92).
 
 ## Public Evidence And Failed Probes
 
@@ -30,8 +30,22 @@ The second source trial exercised the bounded repair: four successful model atte
 
 The third generation failed after 41.31 seconds with `extract_selector_ungrounded`, exposed as CLI `E_UNKNOWN`. Its last completed snapshot already listed the observed `#search-results li` candidate. The failed turn's model plan was not recorded, so the exact selector and cause cannot be asserted from these artifacts. Do not attribute the failure to the provider or page timing without stronger evidence, relax grounding, or claim 3/3 success.
 
-## Next Gate
+## Inspectable Follow-Up
 
-Keep this change as an unmerged draft candidate. First obtain inspectable failed-turn evidence and resolve or explicitly bound the remaining extraction-grounding failure, then validate the complete declared public workflow before a next release. Versioned full regression, cases/builds, final-SHA ordinary/Chromium CI, readiness, fresh online Shanghai capacity and three-end installed-package acceptance remain separate requirements. The source study failed its complete-workflow acceptance; do not tag on the strength of narrow checks.
+Three bounded diagnostic cohorts each ran a fresh strict real doctor and three new wide generations with read-only instrumentation of parsed plans and grounding outputs. **7/9 generated**; one failed command partition validation, and one selected `ul.search li`. The latter was observed in the interactive selector map, but grounding produced an unnamed list identity with no stable attributes. Multiple actual native lists tied in semantic resolution, and extraction failed closed. No model HTTP retry occurred. The original third generation's missing selector is still unrecoverable: this later failure is not retroactively claimed to be its exact cause. Generation-only diagnostics are not complete workflow acceptance.
+
+Four new deterministic regressions fail before correction: observed-but-unresolved class-only extraction, an invented selector, repeated rejection and exhausted step budget. A native Chromium regression also fails on released source with `E_SELECTOR_NOT_FOUND` for an unnamed class-only list among multiple lists. The correction extends the existing one shared planning repair budget to extract-only turns **when current read-only AX candidates exist**. Grounding and current semantic resolution must both succeed before recording or execution. Rejected actions do not consume action indices; persistent rejection fails. Mixed navigation/extract turns and absent/transient candidates retain existing live validation. No selector normalization, guessed CSS fallback or arbitrary tie-break is added.
+
+Related regression passes **57 tests**; the new native browser test passes generation, strict verification and changed-input SDK output plus independent DOM. Complete unversioned corrected source passes **3,510 tests in 352.04 seconds**; Ruff and Mypy (125 source files) pass. These do not establish versioned final-head or publication acceptance.
+
+## Complete Corrected Source Workflow
+
+A fresh strict real doctor passed in **3.46 seconds**. Exactly three fresh 1280-pixel generations used the same functional task as the earlier failed source study: **3/3 passed**, in **34.23, 42.09 and 71.88 seconds**. All commands require `query`, retain the observed starting URL/model, verify strictly and preserve generated core files after replay. All nine model attempts succeeded with no outer retries. This passing sample did not exercise live extraction replanning; that repair is demonstrated by deterministic native-browser regression, not claimed as a live event.
+
+All **9/9** changed-input SDK and independent completed-browser checks pass. Six positive outputs match every ordered title/link in the independent first 100 rows; completed pages contained 134 pathlib and 403 asyncio results. Three zero-match inputs return `E_EMPTY_RESULT` as declared. Correct capped prefixes are not complete collection. The prior 2/3 source study, 7/9 public replay result, observer errors and both new diagnostic failures remain retained, not rescored.
+
+## Release Gates
+
+Corrected source passed its declared workflow study. Versioned full regression, cases/packages/builds, exact-head ordinary/Chromium CI and target readiness must pass before merge. Final master independently passes its checks before a tag is pushed; tagged readiness, fresh online Shanghai capacity, exact GitHub/PyPI artifacts, production aliases, installed-package acceptance and final distribution audit remain separate gates. This source review does not prove public v0.16.385 publication.
 
 No candidate is promoted. Independent first use, future responsive duplication absent during generation, delayed extraction readiness, concurrent browser use, localStorage and alpha readiness remain open. Owned browsers were closed; normal OS HOME was retained, runtime directories were isolated, generated artifacts were not manually changed and PR tests use no real model key.
