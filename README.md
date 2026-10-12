@@ -321,6 +321,8 @@ From v0.16.382, first SDK/HTTP generation distinguishes core adapter files from 
 
 From v0.16.383, SDK/HTTP reject undeclared generated-command parameter names before browser work with `E_INVALID_PARAM` (HTTP JSON 400), including dry-run. Use the recorded raw argument names: a typo must not silently select the recorded default. Error details list `unknown_params` and `allowed_params`, not values. Legacy `command_defs` and value conversion are unchanged. See [the input-integrity review](docs/user-evidence/2026-10-10-sdk-parameter-integrity.md).
 
+From v0.16.384, typed CDP/connection/timeout failures while acquiring a browser for SDK `execute`, `login`, `save_session`, `navigate` or `get_page_info` return `CDP_UNAVAILABLE` with `phase=browser_connect` and a doctor repair hint. Existing HTTP execute/login routes return JSON 503. This boundary does not reflect exception text or private endpoints; it adds no retry, automatic reconnection or new HTTP routes. Cancellation, unexpected errors and later action failures retain their existing behavior. See [the browser-failure review](docs/user-evidence/2026-10-12-sdk-browser-errors.md).
+
 The synchronous `save_session(domain, cdp_url=..., headless=...)` helper has the same host validation and browser configuration path as `await ClanySite(...).save_session(domain)`; it does not bypass Chrome or session safeguards.
 
 ## Try Real Demos
