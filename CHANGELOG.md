@@ -7,6 +7,20 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
+
+## [0.16.385] - 2026-10-12
+
+### Fixed
+
+- Exploration rejects currently ambiguous interactive plans before execution or recording using the existing replay semantic scorer. When current read-only AX candidates exist, an extract-only plan must also have an observed, uniquely resolvable semantic target. A guessed or class-only ambiguous extract cannot enter action history. Both checks share one bounded planning correction within the original step budget; persistent rejection fails closed. An observed unique route is allowed only when the user has not required a specific widget. Runtime grounding, tie refusal, old adapters and response formats are unchanged; mixed navigation/extract turns retain their existing live validation.
+
+### Evidence and limits
+
+- The [review](docs/user-evidence/2026-10-12-semantic-plan-review.md) retains the earlier 2/3 source study, its missing failed-turn plan, observer mistakes and two subsequent diagnostic failures. An inspectable real model selected `ul.search li`, producing an attribute-free list identity that could not uniquely resolve; four deterministic checks and a native Chromium regression fail before the extraction correction and pass afterward. New strict real doctor, three fresh wide public-site generations and all nine changed-input SDK/independent-browser checks passed. Six returned collections match ordered 100-row prefixes, not complete collection; three declared empty-result errors are correct. These are maintainer source checks, not independent first use or public-package acceptance. No case is promoted; corrections can add model cost, and final publication gates remain separate.
+
 ## [0.16.384] - 2026-10-12
 
 ### Fixed
@@ -3475,7 +3489,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.384...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.385...HEAD
+[0.16.385]: https://github.com/pearjelly/cliany.site/compare/v0.16.384...v0.16.385
 [0.16.384]: https://github.com/pearjelly/cliany.site/compare/v0.16.383...v0.16.384
 [0.16.383]: https://github.com/pearjelly/cliany.site/compare/v0.16.382...v0.16.383
 [0.16.382]: https://github.com/pearjelly/cliany.site/compare/v0.16.381...v0.16.382

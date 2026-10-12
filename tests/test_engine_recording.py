@@ -140,6 +140,7 @@ class TestWorkflowExplorerRecording:
         mocks["capture_axtree"].return_value["extract_candidates"] = [
             {"role": "list", "selectors": ["#results"]}
         ]
+        mocker.patch("cliany_site.explorer.engine.get_config", return_value=_make_config(1))
         mocker.patch("cliany_site.explorer.engine._EXTRACT_GROUNDING_TIMEOUT_SECONDS", 0.0)
         evaluated = False
 

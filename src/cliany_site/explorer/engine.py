@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 import click
 import httpx
 
-from cliany_site.action_runtime import execute_action_steps, normalize_navigation_url
+from cliany_site.action_runtime import _score_candidate, execute_action_steps, normalize_navigation_url
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.browser.screenshot import capture_screenshot
@@ -24,6 +24,7 @@ from cliany_site.browser.selector import (
     format_read_only_extract_candidates,
     format_selector_candidates_section,
     ground_extract_target,
+    resolve_extract_target,
 )
 from cliany_site.capability import sniff_api_endpoints
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
@@ -90,6 +91,47 @@ _GENERIC_COMMAND_NAMES = frozenset(
 _DATA_COMMAND_PREFIXES = ("list-", "search-", "read-", "extract-")
 _MAX_DATA_COMPLETION_REPAIRS = 1
 _MAX_PARTITION_REPAIRS = 1
+_MAX_SEMANTIC_PLAN_REPAIRS = 1
+
+
+def _ambiguous_action_targets(
+    actions: list[dict[str, Any]], selector_map: dict[str, dict], current_url: str,
+) -> list[dict[str, int]]:
+    failures: list[dict[str, int]] = []
+    for index, action in enumerate(actions):
+        if action.get("type") not in {"click", "type", "select", "submit"}:
+            continue
+        selected = selector_map.get(str(action.get("ref", "")).removeprefix("@"))
+        if not isinstance(selected, dict):
+            continue
+        recorded = {
+            "target_name": str(selected.get("name", "") or ""),
+            "target_role": str(selected.get("role", "") or ""),
+            "target_attributes": dict(selected.get("attributes", {}) or {}),
+        }
+        scores = [
+            _score_candidate(recorded, candidate, current_url)
+            for candidate in selector_map.values() if isinstance(candidate, dict)
+        ]
+        best = max(scores, default=0)
+        count = scores.count(best)
+        if best > 0 and count > 1:
+            failures.append({"action_index": index, "candidate_count": count})
+    return failures
+
+
+def _invalid_extract_only_targets(actions: list[dict[str, Any]], tree: dict[str, Any]) -> list[dict[str, int]]:
+    # Mixed plans may navigate before extracting; only validate this already-observed read-only turn.
+    if not actions or any(action.get("type") != "extract" for action in actions) or not tree.get("extract_candidates"):
+        return []
+    selector_map = tree.get("selector_map") or {}
+    candidates = tree.get("extract_candidates") or []
+    failures = []
+    for index, action in enumerate(actions):
+        target = ground_extract_target(str(action.get("selector") or ""), selector_map, candidates)
+        if target is None or resolve_extract_target(target, selector_map, candidates) is None:
+            failures.append({"action_index": index})
+    return failures
 
 
 def _is_data_command_name(value: object) -> bool:
@@ -887,6 +929,8 @@ class WorkflowExplorer:
             all_extraction_results: list = []
             data_completion_repairs = 0
             partition_repairs = 0
+            semantic_plan_repairs = 0
+            semantic_plan_feedback = ""
             empty_completion_retries = 0
             completion_feedback = ""
 
@@ -929,6 +973,8 @@ class WorkflowExplorer:
 
                 if completion_feedback:
                     prompt_text = f"{prompt_text}\n\n{completion_feedback}"
+                if semantic_plan_feedback:
+                    prompt_text = f"{prompt_text}\n\n{semantic_plan_feedback}"
 
                 atom_inventory = build_atom_inventory_section(domain)
                 if atom_inventory:
@@ -1036,6 +1082,34 @@ class WorkflowExplorer:
                             click.echo("⚠️ 已在第一步，无法继续回退", err=True)
                         reporter.on_explore_step_done(step_num, 0, 0)
                         continue
+
+                ambiguous_targets = _ambiguous_action_targets(actions_data, selector_map, tree.get("url", ""))
+                invalid_extract_targets = _invalid_extract_only_targets(actions_data, tree)
+                if ambiguous_targets or invalid_extract_targets:
+                    if semantic_plan_repairs >= _MAX_SEMANTIC_PLAN_REPAIRS or step_num + 1 >= cfg.explore_max_steps:
+                        raise ExploreContractError(
+                            "动作目标缺少唯一实测语义身份；请重新规划可唯一重定位的目标",
+                            reason=(
+                                "extract_selector_ungrounded" if invalid_extract_targets else "action_target_ambiguous"
+                            ),
+                        )
+                    semantic_plan_repairs += 1
+                    semantic_plan_feedback = (
+                        "上一步提取尚未执行，也未录制。以下提取缺少可唯一重定位的当前 AX 语义身份："
+                        f"{json.dumps(invalid_extract_targets, ensure_ascii=False)}。"
+                        "请从当前只读 AX 语义候选选择目标，不得猜测类名或 ID，也不能靠 ref 顺序打破平分。"
+                        "这次修正不新增已完成动作，累计动作索引不变。"
+                    ) if invalid_extract_targets else (
+                        "上一步动作尚未执行，也未录制。以下动作的最高语义匹配分数相同："
+                        f"{json.dumps(ambiguous_targets, ensure_ascii=False)}。"
+                        "请按当前 AXTree 选择可由角色、名称和实测属性唯一重定位的目标，不能靠 ref 顺序打破平分。"
+                        "若用户未限制具体控件，可通过已观察到的唯一链接进入独立表单；不能猜测 URL。"
+                        "这次修正不新增已完成动作，累计动作索引不变。"
+                    )
+                    logger.warning("步骤 %d 的目标缺少唯一实测语义身份，发起一次有限规划修正", step_num + 1)
+                    reporter.on_explore_step_done(step_num, 0, (time.monotonic() - step_start) * 1000)
+                    continue
+                semantic_plan_feedback = ""
 
                 for action_data in actions_data:
                     if not isinstance(action_data, dict):

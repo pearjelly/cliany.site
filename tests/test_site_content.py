@@ -173,7 +173,7 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
         "--doctor-json /tmp/cliany-doctor-preflight.json"
     ) in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.384" in index
+    assert "Current baseline: v0.16.385" in index
     assert 'data-i18n="qs.maintainer.firstGeneration"' in index
     assert "'qs.maintainer.firstGeneration'" in script
     assert "preserves the observed starting URL and model" in script
@@ -181,6 +181,9 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
     assert "'qs.maintainer.semanticExtract'" in script
     assert "missing regions cannot masquerade as valid zero matches" in script
     assert "new semantic adapters require a supporting runtime" in index
+    assert 'data-i18n="qs.maintainer.semanticPlan"' in index
+    assert "One shared correction stays within the original step budget" in script
+    assert "类名候选不代表唯一语义身份" in docs
     assert "browser extract --target-json" in docs
     assert "新语义 adapter 需要 v0.16.380" in docs
     assert "首次探索只在发现" in docs
@@ -195,7 +198,7 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
     assert "HTTP write endpoints reject unknown JSON fields" in index
     assert "Dependabot now groups GitHub Actions upgrades" in index
     assert "actions/setup-python@v7" in index
-    assert "当前基线：v0.16.384" in script
+    assert "当前基线：v0.16.385" in script
     assert "重复布尔键同样返回" in script
     assert "重复 <code>require_capability</code> 与 <code>domain</code> 键也返回" in script
     assert "POST /explore、POST /execute 与 POST /login 现在要求必填文本字段为非空字符串" in script
@@ -219,8 +222,8 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
     assert "truthy 字符串意外启动 live preflight" in docs
     assert "Dependabot 现在将 GitHub Actions 升级合并为一个可审阅提案" in script
     assert "actions/setup-python@v7" in script
-    assert 'en: "Current baseline: v0.16.384.' in script
-    assert "en: 'Current baseline: v0.16.384." not in script
+    assert 'en: "Current baseline: v0.16.385.' in script
+    assert "en: 'Current baseline: v0.16.385." not in script
     assert "adapter package is runnable" in index
     assert "adapter package 是否可运行" in script
     assert "source-safety scan" in index
@@ -275,7 +278,7 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.384 · Python" in docs
+    assert "v0.16.385 · Python" in docs
     assert "GET /adapters?detail=" in docs
     assert "BAD_REQUEST" in docs
     assert "各只能出现一次" in docs
