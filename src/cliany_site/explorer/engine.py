@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 import click
 import httpx
 
-from cliany_site.action_runtime import execute_action_steps, normalize_navigation_url
+from cliany_site.action_runtime import _score_candidate, execute_action_steps, normalize_navigation_url
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.browser.screenshot import capture_screenshot
@@ -90,6 +90,33 @@ _GENERIC_COMMAND_NAMES = frozenset(
 _DATA_COMMAND_PREFIXES = ("list-", "search-", "read-", "extract-")
 _MAX_DATA_COMPLETION_REPAIRS = 1
 _MAX_PARTITION_REPAIRS = 1
+_MAX_SEMANTIC_PLAN_REPAIRS = 1
+
+
+def _ambiguous_action_targets(
+    actions: list[dict[str, Any]], selector_map: dict[str, dict], current_url: str,
+) -> list[dict[str, int]]:
+    failures: list[dict[str, int]] = []
+    for index, action in enumerate(actions):
+        if action.get("type") not in {"click", "type", "select", "submit"}:
+            continue
+        selected = selector_map.get(str(action.get("ref", "")).removeprefix("@"))
+        if not isinstance(selected, dict):
+            continue
+        recorded = {
+            "target_name": str(selected.get("name", "") or ""),
+            "target_role": str(selected.get("role", "") or ""),
+            "target_attributes": dict(selected.get("attributes", {}) or {}),
+        }
+        scores = [
+            _score_candidate(recorded, candidate, current_url)
+            for candidate in selector_map.values() if isinstance(candidate, dict)
+        ]
+        best = max(scores, default=0)
+        count = scores.count(best)
+        if best > 0 and count > 1:
+            failures.append({"action_index": index, "candidate_count": count})
+    return failures
 
 
 def _is_data_command_name(value: object) -> bool:
@@ -887,6 +914,8 @@ class WorkflowExplorer:
             all_extraction_results: list = []
             data_completion_repairs = 0
             partition_repairs = 0
+            semantic_plan_repairs = 0
+            semantic_plan_feedback = ""
             empty_completion_retries = 0
             completion_feedback = ""
 
@@ -929,6 +958,8 @@ class WorkflowExplorer:
 
                 if completion_feedback:
                     prompt_text = f"{prompt_text}\n\n{completion_feedback}"
+                if semantic_plan_feedback:
+                    prompt_text = f"{prompt_text}\n\n{semantic_plan_feedback}"
 
                 atom_inventory = build_atom_inventory_section(domain)
                 if atom_inventory:
@@ -1036,6 +1067,26 @@ class WorkflowExplorer:
                             click.echo("⚠️ 已在第一步，无法继续回退", err=True)
                         reporter.on_explore_step_done(step_num, 0, 0)
                         continue
+
+                ambiguous_targets = _ambiguous_action_targets(actions_data, selector_map, tree.get("url", ""))
+                if ambiguous_targets:
+                    if semantic_plan_repairs >= _MAX_SEMANTIC_PLAN_REPAIRS or step_num + 1 >= cfg.explore_max_steps:
+                        raise ExploreContractError(
+                            "动作目标缺少唯一语义身份；请重新规划可唯一重定位的控件",
+                            reason="action_target_ambiguous",
+                        )
+                    semantic_plan_repairs += 1
+                    semantic_plan_feedback = (
+                        "上一步动作尚未执行，也未录制。以下动作的最高语义匹配分数相同："
+                        f"{json.dumps(ambiguous_targets, ensure_ascii=False)}。"
+                        "请按当前 AXTree 选择可由角色、名称和实测属性唯一重定位的目标，不能靠 ref 顺序打破平分。"
+                        "若用户未限制具体控件，可通过已观察到的唯一链接进入独立表单；不能猜测 URL。"
+                        "这次修正不新增已完成动作，累计动作索引不变。"
+                    )
+                    logger.warning("步骤 %d 的目标存在语义歧义，发起一次有限规划修正", step_num + 1)
+                    reporter.on_explore_step_done(step_num, 0, (time.monotonic() - step_start) * 1000)
+                    continue
+                semantic_plan_feedback = ""
 
                 for action_data in actions_data:
                     if not isinstance(action_data, dict):

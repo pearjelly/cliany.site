@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Full Search</title></head>
+<body>
+  <h1>Full Search</h1>
+  <form id="search-form">
+    <label for="query">Query</label><input id="query" name="query">
+    <button type="submit">Search</button>
+  </form>
+  <ul id="results" aria-label="Matches"></ul>
+  <script>
+    document.getElementById('search-form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      const value = document.getElementById('query').value;
+      const row = document.createElement('li');
+      const label = document.createElement('span');
+      label.textContent = value;
+      row.appendChild(label);
+      document.getElementById('results').replaceChildren(row);
+    });
+  </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-10-12
-- **Current baseline:** v0.16.384 (release target; last verified public package is [v0.16.383](https://github.com/pearjelly/cliany.site/pull/88#issuecomment-6096183398))
+- **Current baseline:** v0.16.384 (published and [verified across all three ends](https://github.com/pearjelly/cliany.site/pull/90#issuecomment-6118610345))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
@@ -15,7 +15,9 @@ Published v0.16.382 includes the [SDK/HTTP first-generation correction](user-evi
 
 Published v0.16.383 completed [three-end and installed-package acceptance](https://github.com/pearjelly/cliany.site/pull/88#issuecomment-6096183398) for [parameter integrity](user-evidence/2026-10-10-sdk-parameter-integrity.md). Final-master 3,462 tests and ordinary/Chromium CI passed; fresh public-package checks rejected 16 misspelled inputs before browser work and retained correct capped-prefix replays. Issue 87 is closed only for this scope. Maintainer checks are not independent first use or complete collection.
 
-The v0.16.384 [browser-acquisition target](user-evidence/2026-10-12-sdk-browser-errors.md) addresses [Issue 89](https://github.com/pearjelly/cliany.site/issues/89): published v0.16.383 throws five uncaught SDK CDP errors and returns two HTTP plain-text 500s against an actually unavailable owned endpoint. The candidate returns safe `CDP_UNAVAILABLE` envelopes and HTTP JSON 503. Source recovery checks include real semantic replay and encrypted session persistence, with a scripted probe transition. Final versioned, CI and fresh installed-package gates remain required; no case is promoted.
+Published v0.16.384 completed [browser-acquisition three-end and installed-package acceptance](https://github.com/pearjelly/cliany.site/pull/90#issuecomment-6118610345). Final master passed 3,500 tests and ordinary/Chromium CI; fresh official-package checks covered five actual unavailable-endpoint SDK operations, two HTTP JSON 503 routes and two real browser/encrypted-cookie groups. Issue 89 is closed for that scope only; the recovery probe transition was scripted and no case was promoted.
+
+The [semantic-planning candidate](user-evidence/2026-10-12-semantic-plan-review.md) remains unmerged and unpublished. It rejects currently ambiguous targets before side effects and permits one bounded correction. Source full regression passed 3,505 tests and real Chromium recovery; a new wide public-site study passed only 2/3 generations, retaining one extraction-grounding failure. Six source changed-input checks passed, but neither those capped results nor narrow regressions authorize a release or independent-user acceptance.
 
 Published v0.16.379 completed [first-generation installed-package acceptance](https://github.com/pearjelly/cliany.site/issues/77#issuecomment-6074014750). The [returned-value review](user-evidence/2026-10-09-returned-value-and-first-generation-review.md) records the stronger `per-row-v2` oracle and capped public-site prefixes. Historical scores cannot be rescored; correct prefixes are not complete collection. The [alpha audit](plans/2026-10-04-alpha-readiness-audit.md) still concludes not ready, and independent first use and the browser case remain open.
 

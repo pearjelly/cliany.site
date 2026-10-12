@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Source candidate rejects currently ambiguous interactive plans before execution or recording using the existing replay semantic scorer. One planning correction can use an observed unique route when the user has not required a specific widget; repeated ambiguity fails within the original step budget. Runtime tie refusal, adapters and response formats remain unchanged. This is not published: the [public-site study](docs/user-evidence/2026-10-12-semantic-plan-review.md) retains a 2/3 source-generation result and an unresolved extraction-grounding failure; no next tag is authorized by these source checks alone.
+
 ## [0.16.384] - 2026-10-12
 
 ### Fixed
