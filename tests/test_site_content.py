@@ -211,7 +211,10 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
     assert "直接调用 SDK <code>doctor()</code> 时，<code>llm_live</code> 必须是实际布尔值" in script
     assert "Direct SDK <code>explore()</code> requires a non-blank workflow description" in index
     assert "workflow 必须是非空文本" in script
-    assert "malformed <code>force</code>, <code>params</code>, <code>dry_run</code>, <code>sandbox</code>, or <code>detail</code> values" in script
+    assert (
+        "malformed <code>force</code>, <code>params</code>, <code>dry_run</code>, "
+        "<code>sandbox</code>, or <code>detail</code> values"
+    ) in script
     assert "save_session(domain)</code> validates a host before opening Chrome" in script
     assert "Synchronous <code>save_session(domain, cdp_url=..., headless=...)</code>" in index
     assert "同步 <code>save_session(domain, cdp_url=..., headless=...)</code>" in script
@@ -244,7 +247,10 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
     assert "<code>404</code> 表示 adapter 或命令不存在" in docs
     assert "<code>503</code> 表示 Chrome 或 LLM 依赖暂不可用" in docs
     assert "params</code> 必须是对象" in docs
-    assert "必填 <code>url</code>、<code>workflow</code>、<code>domain</code> 与 <code>command</code> 必须是非空字符串" in docs
+    assert (
+        "必填 <code>url</code>、<code>workflow</code>、<code>domain</code> "
+        "与 <code>command</code> 必须是非空字符串"
+    ) in docs
     assert "不会让畸形 JSON 变成意外服务端错误" in docs
     assert "写操作端点只接受已声明字段，未知字段会在进入 SDK 前返回" in docs
     assert "不含空白、带 host 的 <code>http</code> 或 <code>https</code> URL" in docs
