@@ -179,4 +179,7 @@ def test_step_rejects_non_json_output(monkeypatch):
     monkeypatch.setattr(subprocess, "run", lambda *args, **kwargs: SimpleNamespace(
         returncode=0, stdout="done", stderr="",
     ))
-    assert demo._run_step(["x"]) == (False, None)
+    passed, payload = demo._run_step(["x"])
+    assert passed is False
+    assert payload["error"]["code"] == "E_PARSE_FAILED"
+    assert payload["error"]["details"] == {"reason": "invalid_json", "returncode": 0}
