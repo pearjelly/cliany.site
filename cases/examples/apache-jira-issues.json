@@ -6,24 +6,16 @@
       "project": "SPARK",
       "limit": 5
     },
-    "results": [
+    "issues": [
       {
-        "ok": true,
-        "action": "extract",
-        "data": {
-          "issues": [
-            {
-              "key": "SPARK-00001",
-              "summary": "Example issue summary",
-              "status": "Open"
-            },
-            {
-              "key": "SPARK-00002",
-              "summary": "Another example issue",
-              "status": "In Progress"
-            }
-          ]
-        }
+        "key": "SPARK-00001",
+        "summary": "Example issue summary",
+        "status": "Open"
+      },
+      {
+        "key": "SPARK-00002",
+        "summary": "Another example issue",
+        "status": "In Progress"
       }
     ],
     "quality": {

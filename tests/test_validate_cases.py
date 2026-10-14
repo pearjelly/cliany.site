@@ -18,6 +18,34 @@ assert SPEC.loader is not None
 sys.modules[SPEC.name] = validate_cases
 SPEC.loader.exec_module(validate_cases)
 
+
+@pytest.mark.parametrize("rows,expected", [
+    ([{"name": "Public item"}], True),
+    ([{"name": ""}], False),
+    ([{"unrelated": "private-value"}], False),
+    ([{"name": 0}], False),
+    ([{"name": "Public item"}, {"name": " \t"}], False),
+    ([], False),
+])
+def test_example_matches_declared_row_contract_not_generic_results(tmp_home, rows, expected):
+    case = _case("demo-case")
+    case["validation"]["expected_rows"] = {
+        "path": ["data", "items"], "min_count": 1, "required_fields": ["name"],
+    }
+    _write_cases(tmp_home, [case])
+    path = tmp_home / case["example_output"]
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload["data"]["items"] = rows
+    if expected:
+        payload["data"].pop("results", None)
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    report = validate_cases.build_report(tmp_home)
+    assert report.ok is expected
+    if not expected:
+        assert any("expected_rows" in issue for issue in report.cases[0].issues)
+        assert "private" not in json.dumps(report.cases[0].issues)
+
+
 DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE = {
     field: "<paste from doctor --llm-live --require-capability generate_adapters --json>"
     for field in validate_cases.DOCTOR_PREFLIGHT_EVIDENCE_FIELDS
@@ -1305,7 +1333,10 @@ def test_cases_report_writes_markdown_report(tmp_path):
     assert "| `summary.llm_live_preflight` |" in text
     assert "| `checks[llm_live].details.error_code` |" in text
     assert "## Candidate Primary Runbook" in text
-    assert "| `llm_live_preflight` | `cliany-site doctor --llm-live --require-capability generate_adapters --json` | `true` |" in text
+    assert (
+        "| `llm_live_preflight` | `cliany-site doctor --llm-live "
+        "--require-capability generate_adapters --json` | `true` |"
+    ) in text
     assert (
         "| `adapter_package` | No command. | `false` | "
         "No executable command declared for `adapter_package`; Generate the adapter package. |"
@@ -1320,7 +1351,10 @@ def test_cases_report_writes_markdown_report(tmp_path):
     ) in text
     assert "## Candidate Promotion Command Plan Summary" in text
     assert "| command_count | `4` |" in text
-    assert "- `llm_live_preflight`: `cliany-site doctor --llm-live --require-capability generate_adapters --json`" in text
+    assert (
+        "- `llm_live_preflight`: `cliany-site doctor --llm-live "
+        "--require-capability generate_adapters --json`"
+    ) in text
     assert "| missing_command_count | `1` |" in text
     assert "| all_declared | `false` |" in text
     assert "| `candidate-case` | `adapter_package` |" in text

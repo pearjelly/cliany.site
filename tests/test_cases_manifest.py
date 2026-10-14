@@ -80,7 +80,25 @@ def test_active_jenkins_case_requires_public_package_and_rows():
         case["docs"]
         == "docs/user-evidence/2026-10-02-jenkins-public-package-audit.md"
     )
-    assert case["validation"]["expected_rows"] == {"path": ["data", "jobs"], "min_count": 1}
+    assert case["validation"]["expected_rows"] == {
+        "path": ["data", "jobs"], "min_count": 1, "required_fields": ["name", "url"],
+    }
+
+
+def test_first_result_cases_declare_nonblank_text_fields_and_examples_match():
+    expected = {"apache-jira-issues": ["key", "summary"],
+                "apache-confluence-search": ["id", "title"], "apache-jenkins-jobs": ["name", "url"]}
+    for case in _load_cases():
+        if case["id"] not in expected:
+            continue
+        contract = case["validation"]["expected_rows"]
+        assert contract["required_fields"] == expected[case["id"]]
+        rows = json.loads((ROOT / case["example_output"]).read_text(encoding="utf-8"))
+        for key in contract["path"]:
+            rows = rows[key]
+        for row in rows:
+            for field in contract["required_fields"]:
+                assert isinstance(row[field], str) and row[field].strip()
 
 
 def test_cases_manifest_docs_links_exist_locally():

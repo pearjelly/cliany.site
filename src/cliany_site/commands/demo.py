@@ -11,6 +11,7 @@ from typing import Any, cast
 
 import click
 
+from cliany_site.case_results import check_case_rows
 from cliany_site.commands.cases import _active_case_quickstart_commands, _load_cases_manifest
 from cliany_site.config import get_config
 from cliany_site.envelope import Envelope, ErrorCode, err, ok
@@ -60,20 +61,16 @@ def _run_step(argv: list[str]) -> tuple[bool, dict[str, Any] | None]:
     return completed.returncode == 0 and succeeded, payload
 
 
-def _row_count(payload: dict[str, Any], validation: dict[str, Any]) -> tuple[int, int]:
+def _check_rows(payload: dict[str, Any], validation: dict[str, Any]) -> dict[str, Any]:
     expected = validation.get("expected_rows")
     if not isinstance(expected, dict):
         raise ValueError("案例缺少结果行数验收定义")
-    path, minimum = expected.get("path"), expected.get("min_count")
-    if (not isinstance(path, list) or not path or not all(isinstance(key, str) and key for key in path)
-            or type(minimum) is not int or minimum < 1):
+    minimum = expected.get("min_count")
+    if type(minimum) is not int or minimum < 1:
         raise ValueError("案例结果行数验收定义无效")
-    rows: Any = payload
-    for key in path:
-        rows = rows.get(key) if isinstance(rows, dict) else None
-    if not isinstance(rows, list) or not all(isinstance(row, dict) and row for row in rows):
-        return 0, minimum
-    return len(rows), minimum
+    if "required_fields" not in expected:
+        raise ValueError("案例缺少有效的非空文本字段验收定义")
+    return check_case_rows(payload, expected)
 
 
 def run_demo(case_id: str) -> Envelope:
@@ -102,7 +99,7 @@ def run_demo(case_id: str) -> Envelope:
         install_argv = _command_argv(install + " --json", ["cliany-site", "market", "install"])
         verify_argv = _command_argv(verify, ["cliany-site", "verify", domain, "--strict"])
         query_argv = _command_argv(query, ["cliany-site", domain])
-        _row_count({}, validation)
+        _check_rows({}, validation)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         return err("demo", ErrorCode.E_INVALID_PARAM, str(exc),
                    hint="运行 cliany-site cases --status active 查看可用案例")
@@ -125,11 +122,18 @@ def run_demo(case_id: str) -> Envelope:
         return err("demo", ErrorCode.E_UNKNOWN, "只读查询失败",
                    hint=f"检查公开 {domain} 服务是否可达，稍后重试；安装和校验不会因此重做",
                    details={"stage": "query", "upstream_error": (payload or {}).get("error")})
-    row_count, minimum = _row_count(payload, validation)
-    if row_count < minimum:
-        return err("demo", ErrorCode.E_EMPTY_RESULT, "只读查询未达到案例结果门槛",
-                   hint=f"查询成功但没有足够的结果；检查 {domain} 返回内容和案例条件",
-                   details={"stage": "oracle", "row_count": row_count, "min_count": minimum})
+    row_check = _check_rows(payload, validation)
+    row_count, minimum = row_check.get("row_count") or 0, row_check["min_count"]
+    invalid_fields = row_check.get("field_invalid_rows")
+    if not row_check["ok"]:
+        details: dict[str, Any] = {"stage": "oracle", "row_count": row_count, "min_count": minimum}
+        if invalid_fields:
+            details["field_invalid_rows"] = invalid_fields
+        message = "只读查询含缺失、空白或非文本的关键字段" if invalid_fields else "只读查询未达到案例结果门槛"
+        hint = (f"检查 {domain} 返回内容和错误行号；关键字段未通过，不能当作业务成功" if invalid_fields
+                else f"查询成功但没有足够的结果；检查 {domain} 返回内容和案例条件")
+        return err("demo", ErrorCode.E_EMPTY_RESULT, message,
+                   hint=hint, details=details)
     return ok("demo", {"case_id": case_id, "adapter_domain": domain, "installed_now": not installed,
                        "row_count": row_count, "result": payload})
 

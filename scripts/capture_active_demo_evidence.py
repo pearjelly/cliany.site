@@ -14,6 +14,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from cliany_site.case_results import check_case_rows
+
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "cases" / "manifest.json"
 
@@ -131,17 +133,7 @@ def check_expected_rows(case: dict[str, Any], result: CommandResult) -> dict[str
         return {"ok": True, "status": "not_configured"}
     if not isinstance(expectation, dict):
         raise ValueError("expected_rows must be an object")
-    path, minimum = expectation.get("path"), expectation.get("min_count")
-    if (not isinstance(path, list) or not path or not all(isinstance(key, str) and key for key in path)
-            or type(minimum) is not int or minimum < 0):
-        raise ValueError("expected_rows requires a key path and nonnegative integer min_count")
-    rows = result.payload
-    for key in path:
-        rows = rows.get(key) if isinstance(rows, dict) else None
-    if not isinstance(rows, list) or not all(isinstance(row, dict) and row for row in rows):
-        return {"ok": False, "status": "invalid_rows", "row_count": None, "min_count": minimum}
-    return {"ok": len(rows) >= minimum, "status": "ok" if len(rows) >= minimum else "too_few_rows",
-            "row_count": len(rows), "min_count": minimum}
+    return check_case_rows(result.payload, expectation)
 
 
 def capture_case(

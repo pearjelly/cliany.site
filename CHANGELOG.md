@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- The read-only first-result `demo` checks every required text field in every returned row, not just object cardinality. Missing, whitespace-only or non-text Jira key/summary, Confluence id/title and Jenkins name/url values fail with `E_EMPTY_RESULT`, `stage=oracle` and 1-based `field_invalid_rows`, without copying result values into the new failure. The case evidence capture and declared example validation use the same row oracle. Existing pinned adapter files, successful response shapes, optional fields, timeout, strict verification and no-overwrite are unchanged. This is an unreleased correction; independent first-use acceptance remains open. See the [controlled reproduction and limits](docs/user-evidence/2026-10-14-demo-row-integrity.md).
+
 ### Changed
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.

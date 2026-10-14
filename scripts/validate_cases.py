@@ -15,6 +15,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote
 
+from cliany_site.case_results import check_case_rows
+
 ROOT = Path(__file__).resolve().parents[1]
 ALLOWED_STATUSES = {"active", "candidate", "degraded", "known-gap", "retired"}
 INSTALL_RE = re.compile(r"^cliany-site market install (?P<path>\S+)")
@@ -417,6 +419,7 @@ def _validate_example_output(
     case_id: str,
     example_output: str,
     expected_commands: set[str],
+    expected_rows: Any = None,
 ) -> list[str]:
     path = Path(example_output)
     if path.is_absolute() or ".." in path.parts:
@@ -454,9 +457,20 @@ def _validate_example_output(
     if not isinstance(data, dict):
         issues.append("example_output.data must be an object")
     else:
-        results = data.get("results")
-        if not isinstance(results, list) or not results:
-            issues.append("example_output.data.results must be a non-empty list")
+        if expected_rows is None:
+            results = data.get("results")
+            if not isinstance(results, list) or not results:
+                issues.append("example_output.data.results must be a non-empty list")
+        elif not isinstance(expected_rows, dict):
+            issues.append("expected_rows must be an object")
+        else:
+            try:
+                row_check = check_case_rows(payload, expected_rows)
+            except ValueError as exc:
+                issues.append(f"expected_rows is invalid: {exc}")
+            else:
+                if not row_check["ok"]:
+                    issues.append(f"example_output does not satisfy expected_rows: {json.dumps(row_check)}")
         command_name = str(data.get("command") or "")
         if not command_name:
             issues.append("example_output.data.command is required")
@@ -764,7 +778,8 @@ def _check_case(
     expected_commands = _adapter_command_names(commands)
     example_output = str(case.get("example_output") or "")
     if example_output:
-        check.issues.extend(_validate_example_output(root, case_id, example_output, expected_commands))
+        expected_rows = validation.get("expected_rows") if isinstance(validation, dict) else None
+        check.issues.extend(_validate_example_output(root, case_id, example_output, expected_commands, expected_rows))
     if status == "active":
         if not adapter_domain:
             check.issues.append("active case requires adapter_domain")

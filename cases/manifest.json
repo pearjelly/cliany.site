@@ -42,7 +42,7 @@
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
       ],
       "online": "read-only issue listing returns a JSON envelope with issue rows",
-      "expected_rows": {"path": ["data", "issues"], "min_count": 1}
+      "expected_rows": {"path": ["data", "issues"], "min_count": 1, "required_fields": ["key", "summary"]}
     }
   },
   {
@@ -65,7 +65,7 @@
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
       ],
       "online": "read-only wiki search returns a JSON envelope with page rows",
-      "expected_rows": {"path": ["data", "results"], "min_count": 1}
+      "expected_rows": {"path": ["data", "results"], "min_count": 1, "required_fields": ["id", "title"]}
     }
   },
   {
@@ -88,7 +88,7 @@
         "python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --strict"
       ],
       "online": "read-only job listing returns a JSON envelope with build rows",
-      "expected_rows": {"path": ["data", "jobs"], "min_count": 1}
+      "expected_rows": {"path": ["data", "jobs"], "min_count": 1, "required_fields": ["name", "url"]}
     }
   },
   {

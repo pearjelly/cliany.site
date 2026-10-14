@@ -110,3 +110,39 @@ def test_capture_requires_declared_rows_even_with_successful_envelope(rows, expe
 def test_false_ok_cannot_be_overridden_by_legacy_success():
     result = capture.CommandResult("test", 0, '{"ok": false, "success": true}', "")
     assert result.ok is False
+
+
+@pytest.mark.parametrize("value", [None, "", " \t", 0, False, {"private": "value"}])
+def test_capture_checks_declared_required_text_fields(tmp_home, value):
+    case = _case()
+    case["validation"]["expected_rows"] = {
+        "path": ["data", "results"], "min_count": 1, "required_fields": ["title"],
+    }
+    payload = {"ok": True, "data": {"results": [{"title": "Page"}, {"title": value}]}}
+    result = capture.CommandResult("test", 0, json.dumps(payload), "")
+    check = capture.check_expected_rows(case, result)
+    assert check == {"ok": False, "status": "invalid_fields", "row_count": 2, "min_count": 1,
+                     "field_invalid_rows": {"title": [2]}}
+    assert "private" not in json.dumps(check)
+
+
+def test_capture_keeps_valid_declared_fields_and_ignores_optional_blanks(tmp_home):
+    case = _case()
+    case["validation"]["expected_rows"] = {
+        "path": ["data", "results"], "min_count": 1, "required_fields": ["title"],
+    }
+    payload = {"ok": True, "data": {"results": [{"title": "Public page", "optional": None}]}}
+    result = capture.CommandResult("test", 0, json.dumps(payload), "")
+    assert capture.check_expected_rows(case, result) == {
+        "ok": True, "status": "ok", "row_count": 1, "min_count": 1,
+    }
+
+
+@pytest.mark.parametrize("fields", [None, [], "title", [""], ["title", "title"], [False], [["title"]]])
+def test_capture_rejects_malformed_declared_field_contract(tmp_home, fields):
+    case = _case()
+    case["validation"]["expected_rows"] = {"path": ["data", "results"], "min_count": 1,
+                                             "required_fields": fields}
+    result = capture.CommandResult("test", 0, '{"ok":true,"data":{"results":[{"title":"Page"}]}}', "")
+    with pytest.raises(ValueError, match="required_fields"):
+        capture.check_expected_rows(case, result)
