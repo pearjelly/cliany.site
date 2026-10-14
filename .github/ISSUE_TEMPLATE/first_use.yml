@@ -1,0 +1,88 @@
+name: "First Use Trial"
+description: "首次试用结果或失败 / First-use result or failure (no raw logs)"
+title: "[First use] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先看 [固定版本试用步骤](https://github.com/pearjelly/cliany.site/blob/master/docs/first-use-trial.md)。
+        Jira 对应 #33，Python 文档浏览器案例对应 #55。失败和未计时也可以提交，不需要排障到成功。
+        不要上传密钥、Cookie、环境变量、完整个人路径或原始终端/doctor/AXTree 日志。
+        保留首次失败；修复后的重试另记，不改写原记录。两条路径请分别提交。
+  - type: textarea
+    id: environment
+    attributes:
+      label: "日期与版本 / Date and versions"
+      description: "只填写版本，不附环境变量或本地路径。安装失败时写未安装。"
+      placeholder: "日期及时区；OS；Python；cliany-site（安装失败时未安装）；浏览器路径另记 Chrome"
+    validations:
+      required: true
+  - type: dropdown
+    id: track
+    attributes:
+      label: "试用路径 / Trial path"
+      options:
+        - "A - Jira 只读 API 首跑 (#33)"
+        - "B - Python 文档浏览器候选 (#55)"
+    validations:
+      required: true
+  - type: dropdown
+    id: independence
+    attributes:
+      label: "是否参与本项目开发或构建 adapter / Participation"
+      options:
+        - "否 / No"
+        - "是 / Yes (maintainer evidence only)"
+        - "不确定 / Unsure"
+    validations:
+      required: true
+  - type: dropdown
+    id: help
+    attributes:
+      label: "是否得到维护者帮助 / Maintainer help"
+      options:
+        - "无 / None"
+        - "首次尝试前已获得帮助 / Before first attempt"
+        - "首次失败后获得帮助 / After first failure"
+    validations:
+      required: true
+  - type: textarea
+    id: first_attempt
+    attributes:
+      label: "首次尝试及首次失败 / First attempt and first failure"
+      description: "失败可以提交；只分享公开试用命令和脱敏错误码/短提示，不粘贴原始输出。帮助内容也写在这里。"
+      placeholder: |
+        到达的阶段与公开命令：
+        首次失败阶段 / 无：
+        退出码、脱敏错误码 / 未获得：
+        第一处看不懂的说明 / 无：
+        外部墙钟耗时 / 未测量：
+        帮助的内容与时机 / 无：
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: "成功后的独立核对（可选）/ Independent result check"
+      description: "仅 ok=true 或安装成功不算业务成功。没有完成可留空，API 成功不能计为浏览器成功。"
+      placeholder: |
+        严格验证 verdict、返回行数：
+        首条公开 key/summary 或 title/link：
+        单独打开正常站点核对：一致 / 不一致 / 未完成
+        A：两次 installed_now；B：limit_reached、改为 asyncio 后的独立核对：
+    validations:
+      required: false
+  - type: textarea
+    id: retries
+    attributes:
+      label: "重试（可选）/ Later attempts"
+      description: "保留原记录，每次重试另记日期、版本、所改内容、帮助和结果；不要用最终成功替换首次失败。"
+    validations:
+      required: false
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: "公开分享边界 / Privacy"
+      options:
+        - label: "我检查了内容，不含凭据、Cookie、环境变量、个人路径、原始日志或浏览器状态。"
+          required: true
