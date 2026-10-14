@@ -29,7 +29,7 @@ def test_first_use_form_collects_failures_without_requiring_success_or_logs():
 def test_trial_guide_pins_public_baseline_and_keeps_runtime_and_browser_separate():
     text = GUIDE.read_text(encoding="utf-8")
     for snippet in (
-        "cliany-site==0.16.385", "python3 -m venv", "py -3 -m venv",
+        "cliany-site==0.16.386", "python3 -m venv", "py -3 -m venv",
         "CLIANY_RUNTIME_HOME", "HOME", "USERPROFILE", "不需要 LLM key",
         "cliany-site demo --case-id apache-jira-issues --json",
         "cliany-site verify issues.apache.org --strict --json",

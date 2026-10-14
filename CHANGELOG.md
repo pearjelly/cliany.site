@@ -11,6 +11,16 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
+## [0.16.386] - 2026-10-14
+
+### Fixed
+
+- The first-result `demo` retains the failing install/verify/query stage when its child cannot start, times out or returns malformed UTF-8, JSON or a non-object envelope. Fixed local diagnostics add a reason, the existing 90-second timeout when relevant and an available exit code, without reflecting child arguments, exception text or raw output. Python children and the parent reader explicitly use UTF-8. Existing top-level stage error codes, valid upstream error forwarding, timeout, no-overwrite and stop-before-later-steps behavior remain unchanged.
+
+### First Use
+
+- Add a pinned public-package trial guide and failure-first feedback form, separating no-key Jira API results from the Python docs browser candidate, independent people from maintainers, and original failures from assisted retries. Independent participants remain 0/2; neither preparation nor controlled fault injection closes that gap. See the [diagnostic evidence and limits](docs/user-evidence/2026-10-14-demo-step-failures.md). No model discovery, case promotion, general privacy guarantee for historical upstream errors or browser reliability claim is made.
+
 ## [0.16.385] - 2026-10-12
 
 ### Fixed
@@ -3489,7 +3499,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.385...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.386...HEAD
+[0.16.386]: https://github.com/pearjelly/cliany.site/compare/v0.16.385...v0.16.386
 [0.16.385]: https://github.com/pearjelly/cliany.site/compare/v0.16.384...v0.16.385
 [0.16.384]: https://github.com/pearjelly/cliany.site/compare/v0.16.383...v0.16.384
 [0.16.383]: https://github.com/pearjelly/cliany.site/compare/v0.16.382...v0.16.383

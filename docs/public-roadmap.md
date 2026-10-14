@@ -1,11 +1,15 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-10-12
-- **Current baseline:** v0.16.385 (semantic-planning release candidate; last verified public version is [v0.16.384](https://github.com/pearjelly/cliany.site/pull/90#issuecomment-6118610345))
+- **Updated:** 2026-10-14
+- **Current baseline:** v0.16.386 (first-use diagnostic release candidate; last verified public version is [v0.16.385](https://github.com/pearjelly/cliany.site/pull/92#issuecomment-6121504202))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap below records earlier work; the October plan prioritizes verified first use and reliable real workflows.
+
+The [v0.16.386 first-use correction](user-evidence/2026-10-14-demo-step-failures.md) keeps install/verify/query stages and fixed local reasons when a demo child fails to start, times out or returns malformed output, without echoing raw streams, arguments or exception bodies. Python child I/O explicitly uses UTF-8. Published v0.16.385 controlled subprocesses reproduced the lost reason and decoding escape; deterministic regressions cover the correction. The fixed-version guide and failure-first form remain preparation: independent people are still 0/2, existing failure records are retained and no browser case is promoted. Complete versioned, final-master and three-end release gates before publication.
+
+Published v0.16.385 completed [final-master and three-end installed-package acceptance](https://github.com/pearjelly/cliany.site/pull/92#issuecomment-6121504202): 3,510 offline tests, exact-SHA ordinary/Chromium CI, three fresh public-package generations and nine changed-query independent-browser checks passed. This does not replace the independent first-user gap below.
 
 Published v0.16.380 completed [fresh installed-package semantic replay acceptance](https://github.com/pearjelly/cliany.site/issues/37#issuecomment-6076273211) and [three-end publication](https://github.com/pearjelly/cliany.site/pull/81#issuecomment-6076272643). Three fresh public-package explorations and six changed-layout output/independent-browser checks passed; Issue 37 is closed for the native semantic scope only. The retained source studies and 273.46-second public wait are not general reliability, latency, complete-collection or independent first-use evidence.
 
