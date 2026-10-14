@@ -173,7 +173,7 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
         "--doctor-json /tmp/cliany-doctor-preflight.json"
     ) in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.385" in index
+    assert "Current baseline: v0.16.386" in index
     assert 'data-i18n="qs.maintainer.firstGeneration"' in index
     assert "'qs.maintainer.firstGeneration'" in script
     assert "preserves the observed starting URL and model" in script
@@ -222,8 +222,8 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
     assert "truthy 字符串意外启动 live preflight" in docs
     assert "Dependabot 现在将 GitHub Actions 升级合并为一个可审阅提案" in script
     assert "actions/setup-python@v7" in script
-    assert 'en: "Current baseline: v0.16.385.' in script
-    assert "en: 'Current baseline: v0.16.385." not in script
+    assert 'en: "Current baseline: v0.16.386.' in script
+    assert "en: 'Current baseline: v0.16.386." not in script
     assert "adapter package is runnable" in index
     assert "adapter package 是否可运行" in script
     assert "source-safety scan" in index
