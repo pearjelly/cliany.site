@@ -24,15 +24,38 @@ def _command_argv(command: str, prefix: list[str]) -> list[str]:
     return [sys.executable, "-m", "cliany_site", *parts[1:]]
 
 
+def _step_failure(
+    code: str, message: str, reason: str, returncode: int | None = None,
+) -> tuple[bool, dict[str, Any]]:
+    details: dict[str, Any] = {"reason": reason}
+    if reason == "timeout":
+        details["timeout_seconds"] = 90
+    if returncode is not None:
+        details["returncode"] = returncode
+    return False, cast(dict[str, Any], err("demo step", code, message, details=details))
+
+
 def _run_step(argv: list[str]) -> tuple[bool, dict[str, Any] | None]:
     try:
-        env = {**os.environ, "CLIANY_RUNTIME_HOME": str(get_config().home_dir.resolve())}
-        completed = subprocess.run(argv, capture_output=True, text=True, timeout=90, check=False, env=env)
+        env = {**os.environ, "CLIANY_RUNTIME_HOME": str(get_config().home_dir.resolve()),
+               "PYTHONUTF8": "1", "PYTHONIOENCODING": "utf-8"}
+        completed = subprocess.run(
+            argv, capture_output=True, text=True, encoding="utf-8", timeout=90, check=False, env=env,
+        )
+    except subprocess.TimeoutExpired:
+        return _step_failure(ErrorCode.E_TIMEOUT, "首跑子命令超过 90 秒；未继续后续步骤", "timeout")
+    except OSError:
+        return _step_failure(ErrorCode.E_UNKNOWN, "首跑子命令无法启动或读取；检查本机 Python 环境", "start_failed")
+    except UnicodeError:
+        return _step_failure(ErrorCode.E_PARSE_FAILED, "首跑子命令输出不是有效 UTF-8；未读取业务结果", "invalid_utf8")
+    try:
         payload = json.loads(completed.stdout)
-    except (OSError, subprocess.TimeoutExpired, json.JSONDecodeError):
-        return False, None
+    except json.JSONDecodeError:
+        return _step_failure(ErrorCode.E_PARSE_FAILED, "首跑子命令未返回有效 JSON；不要把日志当作结果",
+                             "invalid_json", completed.returncode)
     if not isinstance(payload, dict):
-        return False, None
+        return _step_failure(ErrorCode.E_PARSE_FAILED, "首跑子命令未返回 JSON 对象信封；未读取业务结果",
+                             "invalid_envelope", completed.returncode)
     succeeded = payload.get("ok", payload.get("success")) is True
     return completed.returncode == 0 and succeeded, payload
 
