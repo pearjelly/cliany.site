@@ -76,7 +76,7 @@ def test_demo_subprocesses_use_selected_runtime_and_preserve_default(tmp_home, m
         "adapter_domain": DOMAIN,
         "commands": commands,
         "validation": {"online": "read-only fixture", "expected_rows": {
-            "path": ["data", "issues"], "min_count": 1,
+            "path": ["data", "issues"], "min_count": 1, "required_fields": ["key"],
         }},
     }
     monkeypatch.setattr(demo, "_load_cases_manifest", lambda: ([case], ROOT, []))

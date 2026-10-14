@@ -13,11 +13,17 @@ The first 54 deterministic checks retained **51 failures and 3 passing controls*
 ## Correction and scope
 
 - The three runnable no-login cases declare `expected_rows.required_fields`: Jira `key`/`summary`, Confluence `id`/`title`, Jenkins `name`/`url`. All declared values must be strings with non-whitespace content in every row. Optional assignee, color or other fields do not become mandatory.
-- Shared `check_case_rows` evaluates the declared row path, minimum count, object shape and text fields for the CLI, evidence recorder and case-example validator. Historical recorder/example cases without text-field declarations keep their previous shape checks; they do not inherit an unsupported first-result claim. The CLI requires an explicit valid field contract before installation.
+- Shared `check_case_rows` evaluates the declared row path, minimum count, object shape and text fields for the CLI and evidence recorder. The catalog/example validator remains standard-library-only, checks the same contract and has parity regressions against the runtime oracle. Historical recorder/example cases without text-field declarations keep their previous shape checks; they do not inherit an unsupported first-result claim. The CLI requires an explicit valid field contract before installation.
 - A bad business row returns existing `E_EMPTY_RESULT`, `error.details.stage=oracle`, actual row count/minimum and `field_invalid_rows` with 1-based offending row numbers. The new diagnostic contains field names and positions, not copied values or raw query output. Existing upstream errors retain their prior behavior; this is not a blanket privacy guarantee.
 - Valid upstream result payloads and successful outer envelopes are unchanged. Invalid row shapes, empty results, candidate/login rejection, fixed package hashes, strict verification, no overwrite, stopped later steps and the existing 90-second child budget remain intact. No retry or generated-file migration is introduced.
 
 Nonblank text does not prove factual correctness, URL safety, complete results, schema parity across entrypoints or continuing third-party availability. The separately opened normal-page check is still required; this does not replace semantic browser quality gates or validate every directly invoked old adapter.
+
+## Retained first candidate gate failures
+
+Frozen commit `83e33c6f1ba9902c79f7ff7cc6537c5aedf98ea1` passed 167 focused checks, lint/type/case/build checks, a repeated real workflow study and local built-wheel controlled probes, but the full local run was **1 failed / 3,608 passed**. An old runtime-home fixture lacked an explicit field declaration; its custom case now declares its existing key field without changing generated fixture code, payloads or isolation assertions. Windows/ordinary CI exposed the same fixture problem.
+
+Ordinary CI also failed the release-readiness job because importing the application oracle into `validate_cases.py` broke the required uninstalled, standard-library-only bootstrap. That first abstraction was rejected; the catalog now remains standalone, with two no-site-packages bootstrap regressions and explicit oracle parity checks. No workflow, conftest, snapshot, global import path or package alias workaround was added. The first failed run and cancelled matrix siblings remain historical gates; they are not green CI or a failure of the published package. Later snapshots require new full and exact-head receipts.
 
 ## Preliminary real workflow checks
 

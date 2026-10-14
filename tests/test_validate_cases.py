@@ -1,13 +1,17 @@
 import hashlib
 import importlib.util
 import json
+import os
 import shlex
+import subprocess
 import sys
 import tarfile
 from io import BytesIO
 from pathlib import Path
 
 import pytest
+
+from cliany_site.case_results import check_case_rows
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "validate_cases.py"
@@ -44,6 +48,27 @@ def test_example_matches_declared_row_contract_not_generic_results(tmp_home, row
     if not expected:
         assert any("expected_rows" in issue for issue in report.cases[0].issues)
         assert "private" not in json.dumps(report.cases[0].issues)
+
+
+@pytest.mark.parametrize("script", ["validate_cases.py", "release_readiness.py"])
+def test_case_tools_bootstrap_without_installed_package(tmp_home, script):
+    env = {**os.environ, "CLIANY_QA_OFFLINE": "1"}
+    env.pop("PYTHONPATH", None)
+    args = [sys.executable, "-S", str(ROOT / "scripts" / script), "--json"]
+    if script == "validate_cases.py":
+        args.append("--strict")
+    result = subprocess.run(args, cwd=tmp_home, env=env, capture_output=True, text=True, timeout=30)
+    assert result.returncode == 0, result.stderr
+    assert isinstance(json.loads(result.stdout), dict)
+
+
+@pytest.mark.parametrize("rows", [None, {}, [], [{}], ["value"], [{"name": ""}], [{"name": False}],
+                                 [{"name": 0}], [{"name": "Public item"}],
+                                 [{"name": "Public item"}, {"name": " \t\u2003"}]])
+def test_standalone_example_oracle_matches_runtime_oracle(tmp_home, rows):
+    expected = {"path": ["data", "items"], "min_count": 1, "required_fields": ["name"]}
+    payload = {"ok": True, "data": {"items": rows}}
+    assert (not validate_cases._check_example_rows(payload, expected)) is check_case_rows(payload, expected)["ok"]
 
 
 DOCTOR_PREFLIGHT_EVIDENCE_TEMPLATE = {

@@ -15,8 +15,6 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import unquote
 
-from cliany_site.case_results import check_case_rows
-
 ROOT = Path(__file__).resolve().parents[1]
 ALLOWED_STATUSES = {"active", "candidate", "degraded", "known-gap", "retired"}
 INSTALL_RE = re.compile(r"^cliany-site market install (?P<path>\S+)")
@@ -414,6 +412,35 @@ def _validate_docs_link(root: Path, docs: str) -> list[str]:
     return []
 
 
+def _check_example_rows(payload: dict[str, Any], expected: Any) -> list[str]:
+    if not isinstance(expected, dict):
+        return ["expected_rows must be an object"]
+    path, minimum = expected.get("path"), expected.get("min_count")
+    if (not isinstance(path, list) or not path or not all(isinstance(key, str) and key for key in path)
+            or type(minimum) is not int or minimum < 0):
+        return ["expected_rows requires a key path and nonnegative integer min_count"]
+    fields = expected.get("required_fields", [])
+    if "required_fields" in expected and (
+        not isinstance(fields, list) or not fields
+        or not all(isinstance(field, str) and field.strip() for field in fields)
+        or len(fields) != len(set(fields))
+    ):
+        return ["expected_rows.required_fields must declare unique nonempty text field names"]
+    rows: Any = payload
+    for key in path:
+        rows = rows.get(key) if isinstance(rows, dict) else None
+    if not isinstance(rows, list) or not all(isinstance(row, dict) and row for row in rows) or len(rows) < minimum:
+        return ["example_output does not satisfy expected_rows: invalid or insufficient rows"]
+    invalid_fields = {}
+    for field_name in fields:
+        invalid_rows = [index + 1 for index, row in enumerate(rows)
+                        if not isinstance(row.get(field_name), str) or not row[field_name].strip()]
+        if invalid_rows:
+            invalid_fields[field_name] = invalid_rows
+    return ([f"example_output does not satisfy expected_rows: field_invalid_rows={json.dumps(invalid_fields)}"]
+            if invalid_fields else [])
+
+
 def _validate_example_output(
     root: Path,
     case_id: str,
@@ -461,16 +488,8 @@ def _validate_example_output(
             results = data.get("results")
             if not isinstance(results, list) or not results:
                 issues.append("example_output.data.results must be a non-empty list")
-        elif not isinstance(expected_rows, dict):
-            issues.append("expected_rows must be an object")
         else:
-            try:
-                row_check = check_case_rows(payload, expected_rows)
-            except ValueError as exc:
-                issues.append(f"expected_rows is invalid: {exc}")
-            else:
-                if not row_check["ok"]:
-                    issues.append(f"example_output does not satisfy expected_rows: {json.dumps(row_check)}")
+            issues.extend(_check_example_rows(payload, expected_rows))
         command_name = str(data.get("command") or "")
         if not command_name:
             issues.append("example_output.data.command is required")
