@@ -7,13 +7,19 @@
 
 ## [Unreleased]
 
-### Fixed
-
-- The read-only first-result `demo` checks every required text field in every returned row, not just object cardinality. Missing, whitespace-only or non-text Jira key/summary, Confluence id/title and Jenkins name/url values fail with `E_EMPTY_RESULT`, `stage=oracle` and 1-based `field_invalid_rows`, without copying result values into the new failure. The CLI and case evidence capture share a row oracle; the standalone catalog checks the same declared contract with parity regressions. Existing pinned adapter files, successful response shapes, optional fields, timeout, strict verification and no-overwrite are unchanged. This is an unreleased correction; independent first-use acceptance remains open. See the [controlled reproduction and limits](docs/user-evidence/2026-10-14-demo-row-integrity.md).
-
 ### Changed
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
+
+## [0.16.387] - 2026-10-15
+
+### Fixed
+
+- The read-only first-result `demo` checks every required text field in every returned row, not just object cardinality. Missing, whitespace-only or non-text Jira key/summary, Confluence id/title and Jenkins name/url values fail with `E_EMPTY_RESULT`, `stage=oracle` and 1-based `field_invalid_rows`, without copying result values into the new failure. The CLI and case evidence capture share a row oracle; the standalone catalog checks the same declared contract with parity regressions. Existing pinned adapter files, successful response shapes, optional fields, timeout, strict verification and no-overwrite are unchanged. See the [controlled reproduction and limits](docs/user-evidence/2026-10-14-demo-row-integrity.md).
+
+### Evidence And Limits
+
+- Retain six wrong successes from controlled child results on published v0.16.386, failing baseline regressions, the first candidate's fixture/bootstrap CI failures and subsequent corrected-source checks. Two synthetic examples now match the declared maintained-package row paths. These are maintainer checks, not independent users or observed third-party failures. Independent first-use acceptance remains 0/2; nonblank fields alone do not establish factual correctness, URL safety, complete results, model availability or case promotion. Final-master and public-package acceptance remain separate publication gates.
 
 ## [0.16.386] - 2026-10-14
 
@@ -3503,7 +3509,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.386...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.387...HEAD
+[0.16.387]: https://github.com/pearjelly/cliany.site/compare/v0.16.386...v0.16.387
 [0.16.386]: https://github.com/pearjelly/cliany.site/compare/v0.16.385...v0.16.386
 [0.16.385]: https://github.com/pearjelly/cliany.site/compare/v0.16.384...v0.16.385
 [0.16.384]: https://github.com/pearjelly/cliany.site/compare/v0.16.383...v0.16.384

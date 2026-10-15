@@ -34,3 +34,9 @@ These are maintainer source checks preceding the final frozen snapshot, not inde
 ## Human acceptance remains open
 
 The actual current #33/#55 reports still contain no independent participant. The user has been asked to invite two people who did not develop/build the adapters, with at least one unaided install-to-result success and independent business-result comparison. Original first failures, help and later retries stay separate. Keep the published trial fixed while this correction is reviewed; no calendar-only version or case promotion is justified by this controlled work.
+
+## October 15 release preparation
+
+The resumed task first re-read the actual PR head and completed runs. Corrected source `aa606a3f5a504c014769c32a081b5a10d804a671` passed **3,621 tests in 338.61 seconds**, all 14 jobs in [ordinary CI](https://github.com/pearjelly/cliany.site/actions/runs/38504477589) and [real Chromium CI](https://github.com/pearjelly/cliany.site/actions/runs/38504477566), completed at 2026-10-14T03:11:30Z. The prior pause stopped only a local observer, not the remote job; its final success is now verified, not assumed or obtained by rerunning it. The earlier candidate failures remain above.
+
+Remote master/tag and exact/latest PyPI still resolve to published v0.16.386. Production home/docs show that baseline. The fresh online Shanghai actual-publication check on October 15 initially reports 0/3 releases; that is not the final pre-tag gate. The versioned correction targets v0.16.387 and must repeat final-snapshot checks, exact-head CI and all publication gates. The updated trial requires confirmed PyPI publication first and links to the immutable v0.16.386 guide for people already using it; their first attempts are never rescored. Current independent reports remain 0/2. Final-master and new public-package acceptance require a separate dated receipt.
