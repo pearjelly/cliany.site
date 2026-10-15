@@ -24,6 +24,8 @@ cliany-site demo --case-id apache-jira-issues --json
 
 从 v0.16.386 起，`demo` 的子命令启动、超时或输出格式失败会在原 `error.details.stage` 下保留 `upstream_error.details.reason`，新增本地诊断不回显原始输出、参数或异常正文；有效上游错误仍按原约定转发。子进程统一 UTF-8，不改终端设置。受邀首跑请用[独立试用步骤](docs/first-use-trial.md)，分别记录首次失败、帮助和重试；维护者检查不计为独立用户。
 
+从 v0.16.387 起，`demo` 逐行检查案例声明的非空文本字段：Jira 的 key/summary、Confluence 的 id/title、Jenkins 的 name/url。缺失、纯空白或非文本值返回 `E_EMPTY_RESULT`、`stage=oracle` 与从 1 起始的 `error.details.field_invalid_rows`，不回显错误值；成功信封和可选字段不变。这只是本地存在性与类型检查，不证明事实正确或 URL 安全，仍须打开正常公开页面独立核对。
+
 `doctor` 会给出下一步建议；`cliany-site cases --status active` 列出维护中的公开案例。`demo` 仅在本地没有目标 adapter 时按固定哈希安装，严格校验后运行只读查询，并要求至少返回一条结果；Jira、Confluence 和 Jenkins 可用，需要登录或尚未发布的案例不可用。首次运行的前提条件见 [10 分钟成功路径](docs/quickstart-10min.md)；准备自动化自己的站点时，再配置 Chrome/CDP 与 LLM。
 
 ### 告诉我们结果

@@ -2,25 +2,19 @@
   "ok": true,
   "data": {
     "command": "list-jobs",
-    "args": {},
-    "results": [
+    "args": {"limit": 5},
+    "count": 2,
+    "total": 2,
+    "jobs": [
       {
-        "ok": true,
-        "action": "extract",
-        "data": {
-          "jobs": [
-            {
-              "name": "example-main",
-              "status": "passing",
-              "last_build": "#1024"
-            },
-            {
-              "name": "example-nightly",
-              "status": "unstable",
-              "last_build": "#512"
-            }
-          ]
-        }
+        "name": "example-main",
+        "url": "https://ci-builds.apache.org/job/example-main/",
+        "color": "blue"
+      },
+      {
+        "name": "example-nightly",
+        "url": "https://ci-builds.apache.org/job/example-nightly/",
+        "color": "yellow"
       }
     ],
     "quality": {

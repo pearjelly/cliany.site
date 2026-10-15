@@ -29,7 +29,7 @@ def test_first_use_form_collects_failures_without_requiring_success_or_logs():
 def test_trial_guide_pins_public_baseline_and_keeps_runtime_and_browser_separate():
     text = GUIDE.read_text(encoding="utf-8")
     for snippet in (
-        "cliany-site==0.16.386", "python3 -m venv", "py -3 -m venv",
+        "cliany-site==0.16.387", "python3 -m venv", "py -3 -m venv",
         "CLIANY_RUNTIME_HOME", "HOME", "USERPROFILE", "不需要 LLM key",
         "cliany-site demo --case-id apache-jira-issues --json",
         "cliany-site verify issues.apache.org --strict --json",
@@ -55,3 +55,13 @@ def test_trial_maintainer_policy_does_not_rescore_failed_first_attempts():
     text = GUIDE.read_text(encoding="utf-8")
     for snippet in ("0/2", "独立用户", "脱敏", "不可重写", "另增", "第三方", "未复现", "不晋级"):
         assert snippet in text
+
+
+def test_first_result_row_gate_docs_keep_independent_check_and_error_boundaries():
+    for path in (GUIDE, ROOT / "README.md", ROOT / "README.zh.md", ROOT / "site/docs/index.html"):
+        text = path.read_text(encoding="utf-8")
+        for snippet in ("v0.16.387", "field_invalid_rows", "E_EMPTY_RESULT", "stage=oracle"):
+            assert snippet in text
+    guide = GUIDE.read_text(encoding="utf-8")
+    assert "blob/v0.16.386/docs/first-use-trial.md" in guide
+    assert "不包含错误值" in guide and "正常公开 Jira issue" in guide

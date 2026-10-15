@@ -1,6 +1,6 @@
 # 独立用户首次试用
 
-**固定试用版本：** `cliany-site==0.16.386`，确认 PyPI 已公开该版本后再开始；发布前可用[历史 0.16.385 说明](https://github.com/pearjelly/cliany.site/blob/dae14e0bc330178afc430e909d0c8511422193af/docs/first-use-trial.md)。两条路径都不需要 LLM key，不运行模型探索，不登录账号，也不写入第三方业务数据。请按顺序逐步运行，不要整段执行后只报告最后一次结果。
+**固定试用版本：** `cliany-site==0.16.387`，确认 PyPI 已公开该版本后再开始；发布前可用[历史 0.16.386 说明](https://github.com/pearjelly/cliany.site/blob/v0.16.386/docs/first-use-trial.md)。已开始旧版本试用的人保留原版本和原始结果，升级或求助后的重试另记，不重计首次尝试。两条路径都不需要 LLM key，不运行模型探索，不登录账号，也不写入第三方业务数据。请按顺序逐步运行，不要整段执行后只报告最后一次结果。
 
 ## 开始前
 
@@ -18,7 +18,7 @@ cd "$trial_dir"
 python3 -m venv .venv
 . .venv/bin/activate
 export CLIANY_RUNTIME_HOME="$trial_dir/runtime"
-python -m pip install --index-url https://pypi.org/simple cliany-site==0.16.386
+python -m pip install --index-url https://pypi.org/simple cliany-site==0.16.387
 cliany-site --version
 ```
 
@@ -33,11 +33,11 @@ Set-Location $trialDir
 py -3 -m venv .venv
 $env:Path = "$(Join-Path $trialDir '.venv\Scripts');$env:Path"
 $env:CLIANY_RUNTIME_HOME = Join-Path $trialDir 'runtime'
-python -m pip install --index-url https://pypi.org/simple cliany-site==0.16.386
+python -m pip install --index-url https://pypi.org/simple cliany-site==0.16.387
 cliany-site --version
 ```
 
-预期版本为 `0.16.386`。保留正常 OS `HOME` / `USERPROFILE`，新建运行目录只隔离 cliany 文件，不隔离 XDG 配置、系统凭据或浏览器。后续在同一终端继续；退出后保留试用目录，不覆盖原有 adapter，不上传完整目录。
+预期版本为 `0.16.387`。保留正常 OS `HOME` / `USERPROFILE`，新建运行目录只隔离 cliany 文件，不隔离 XDG 配置、系统凭据或浏览器。后续在同一终端继续；退出后保留试用目录，不覆盖原有 adapter，不上传完整目录。
 
 ## 路径 A：无需浏览器的 Jira 首个结果
 
@@ -47,6 +47,8 @@ cliany-site demo --case-id apache-jira-issues --json
 ```
 
 预期 `ok=true`、`data.installed_now=true`、`data.row_count >= 1`，并且 `data.result.data.issues` 中有非空的 key 和 summary。只看到案例列表或安装成功不算业务成功。独立打开至少一条结果对应的正常公开 Jira issue 页面，对照 key 与 summary；如页面打不开，记为独立核对未完成，不靠 `ok=true` 补分。
+
+从 v0.16.387 起，`demo` 逐行检查案例要求的文本字段。缺失、纯空白或非文本值会返回 `E_EMPTY_RESULT` 与 `error.details.stage=oracle`；`error.details.field_invalid_rows` 只记录字段名和从 1 起始的错误行号，不包含错误值。这个门禁不能证明事实正确、URL 安全或完整收集，仍须完成上面的独立页面核对。
 
 成功后继续：
 
@@ -87,7 +89,7 @@ cliany-site --headless --cdp-url http://127.0.0.1:19223 docs.python.org search-p
 
 ## 留下结果或首次失败
 
-在 [Jira 首跑 Issue #33](https://github.com/pearjelly/cliany.site/issues/33) 或 [浏览器试用 Issue #55](https://github.com/pearjelly/cliany.site/issues/55) 留言即可，不必等待成功。也可用 `First Use Trial` 反馈表（`first_use.yml`，合并到默认分支后可用）。两条路径的结果分别记录；不会把 Jira API 结果算成浏览器验证。
+在 [Jira 首跑 Issue #33](https://github.com/pearjelly/cliany.site/issues/33) 或 [浏览器试用 Issue #55](https://github.com/pearjelly/cliany.site/issues/55) 留言即可，不必等待成功。也可用 [First Use Trial 反馈表](https://github.com/pearjelly/cliany.site/issues/new?template=first_use.yml)（`first_use.yml`）。两条路径的结果分别记录；不会把 Jira API 结果算成浏览器验证。
 
 ```text
 日期、OS、Python、cliany-site 版本；浏览器路径另记 Chrome 版本：
@@ -96,6 +98,7 @@ cliany-site --headless --cdp-url http://127.0.0.1:19223 docs.python.org search-p
 路径 A 或 B；首次达到的阶段、所用公开命令：
 首次失败的阶段、退出码、脱敏错误码/提示；没有失败写“无”：
 demo 的子命令失败时，另记 error.details.stage 与 error.details.upstream_error.details.reason（有则记录）：
+demo 的 oracle 失败时，另记 error.details.field_invalid_rows 的字段名与行号，不附错误值：
 墙钟耗时；未计时写“未测量”：
 若成功：严格验证、返回行数、首条公开结果、独立页面核对是否一致；A 另记两次 installed_now，B 另记 limit_reached：
 重试：日期、版本、改了什么、结果；未重试写“无”：
@@ -105,7 +108,7 @@ demo 的子命令失败时，另记 error.details.stage 与 error.details.upstre
 
 ## 维护者验收规则
 
-截至 2026-10-14，独立用户已记录 **0/2**；准备说明、自动化或维护者复测不算试用者，不先填成功率。需要至少两位未构建 adapter 的人提交首次尝试，且至少一位不经维护者介入完成公开包安装、严格校验及独立非空结果核对。A 与 B 分开统计，浏览器案例保持 candidate，直到其独立用户证据满足条件。
+截至 2026-10-15，独立用户已记录 **0/2**；准备说明、自动化或维护者复测不算试用者，不先填成功率。需要至少两位未构建 adapter 的人提交首次尝试，且至少一位不经维护者介入完成公开包安装、严格校验及独立非空结果核对。A 与 B 分开统计，浏览器案例保持 candidate，直到其独立用户证据满足条件。
 
 每个反馈保留原链接和首次尝试的版本/阶段，修复与复测必须**另增**记录，原失败不可重写或删除。第三方故障、安装/CLI 缺陷、说明不清和未完成独立核对分别标注；未复现就明确写“未复现”，不推测根因。仅脱敏后的记录进入公开证据文档，不提交用户数据。
 

@@ -10,7 +10,8 @@ from cliany_site.config import get_config
 
 
 def _result(rows=None):
-    return {"success": True, "data": {"issues": rows if rows is not None else [{"key": "SPARK-1"}]}, "error": None}
+    rows = rows if rows is not None else [{"key": "SPARK-1", "summary": "Public issue"}]
+    return {"success": True, "data": {"issues": rows}, "error": None}
 
 
 def test_demo_runs_pinned_install_verify_and_read_only_query(tmp_home, monkeypatch):

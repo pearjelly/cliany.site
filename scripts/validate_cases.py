@@ -412,11 +412,41 @@ def _validate_docs_link(root: Path, docs: str) -> list[str]:
     return []
 
 
+def _check_example_rows(payload: dict[str, Any], expected: Any) -> list[str]:
+    if not isinstance(expected, dict):
+        return ["expected_rows must be an object"]
+    path, minimum = expected.get("path"), expected.get("min_count")
+    if (not isinstance(path, list) or not path or not all(isinstance(key, str) and key for key in path)
+            or type(minimum) is not int or minimum < 0):
+        return ["expected_rows requires a key path and nonnegative integer min_count"]
+    fields = expected.get("required_fields", [])
+    if "required_fields" in expected and (
+        not isinstance(fields, list) or not fields
+        or not all(isinstance(field, str) and field.strip() for field in fields)
+        or len(fields) != len(set(fields))
+    ):
+        return ["expected_rows.required_fields must declare unique nonempty text field names"]
+    rows: Any = payload
+    for key in path:
+        rows = rows.get(key) if isinstance(rows, dict) else None
+    if not isinstance(rows, list) or not all(isinstance(row, dict) and row for row in rows) or len(rows) < minimum:
+        return ["example_output does not satisfy expected_rows: invalid or insufficient rows"]
+    invalid_fields = {}
+    for field_name in fields:
+        invalid_rows = [index + 1 for index, row in enumerate(rows)
+                        if not isinstance(row.get(field_name), str) or not row[field_name].strip()]
+        if invalid_rows:
+            invalid_fields[field_name] = invalid_rows
+    return ([f"example_output does not satisfy expected_rows: field_invalid_rows={json.dumps(invalid_fields)}"]
+            if invalid_fields else [])
+
+
 def _validate_example_output(
     root: Path,
     case_id: str,
     example_output: str,
     expected_commands: set[str],
+    expected_rows: Any = None,
 ) -> list[str]:
     path = Path(example_output)
     if path.is_absolute() or ".." in path.parts:
@@ -454,9 +484,12 @@ def _validate_example_output(
     if not isinstance(data, dict):
         issues.append("example_output.data must be an object")
     else:
-        results = data.get("results")
-        if not isinstance(results, list) or not results:
-            issues.append("example_output.data.results must be a non-empty list")
+        if expected_rows is None:
+            results = data.get("results")
+            if not isinstance(results, list) or not results:
+                issues.append("example_output.data.results must be a non-empty list")
+        else:
+            issues.extend(_check_example_rows(payload, expected_rows))
         command_name = str(data.get("command") or "")
         if not command_name:
             issues.append("example_output.data.command is required")
@@ -764,7 +797,8 @@ def _check_case(
     expected_commands = _adapter_command_names(commands)
     example_output = str(case.get("example_output") or "")
     if example_output:
-        check.issues.extend(_validate_example_output(root, case_id, example_output, expected_commands))
+        expected_rows = validation.get("expected_rows") if isinstance(validation, dict) else None
+        check.issues.extend(_validate_example_output(root, case_id, example_output, expected_commands, expected_rows))
     if status == "active":
         if not adapter_domain:
             check.issues.append("active case requires adapter_domain")
