@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -39,6 +39,7 @@ def _cdp_with_node() -> tuple[MagicMock, MagicMock]:
     cdp.disconnect = AsyncMock()
     session = MagicMock()
     session.get_element_by_index = AsyncMock(return_value=object())
+    session.get_current_page = AsyncMock(return_value=SimpleNamespace(evaluate=AsyncMock(return_value={"ready": True})))
     session.event_bus.dispatch.side_effect = lambda event: event
     cdp.connect = AsyncMock(return_value=session)
     return cdp, session

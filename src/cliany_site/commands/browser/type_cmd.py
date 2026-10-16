@@ -15,6 +15,24 @@ from cliany_site.envelope import Envelope, ErrorCode, err, ok
 _TYPE_TARGET_TIMEOUT_SECONDS = 10.0
 
 
+async def _document_initialized(browser_session) -> bool:
+    page = await browser_session.get_current_page()
+    if page is None:
+        return False
+    state = await page.evaluate("""() => {
+        const navigation = performance.getEntriesByType('navigation')[0];
+        return {ready: document.readyState === 'complete' ||
+            (document.readyState === 'interactive' &&
+             typeof navigation?.domContentLoadedEventEnd === 'number' && navigation.domContentLoadedEventEnd > 0)};
+    }""")
+    if isinstance(state, str):
+        try:
+            state = json.loads(state)
+        except (ValueError, TypeError):
+            return False
+    return isinstance(state, dict) and state.get("ready") is True
+
+
 def _print_envelope(result: Envelope, json_mode: bool) -> None:
     if json_mode:
         click.echo(json.dumps(result, ensure_ascii=False, indent=2))
@@ -92,6 +110,8 @@ async def _run_type(
         try:
             tree: dict = {}
             node = None
+            initialization_pending = False
+            needs_ready_snapshot = ref is None
             deadline = time.monotonic() + _TYPE_TARGET_TIMEOUT_SECONDS
             try:
                 # Observe readiness before dispatch; never repeat a typing event or reuse a stale ref.
@@ -120,6 +140,23 @@ async def _run_type(
                                 found_ref = results[0]["ref"]
                                 element = resolve_ref(selector_map, found_ref)
                         if element is not None:
+                            if ref is None:
+                                initialization_pending = True
+                                initialized = await _document_initialized(browser_session)
+                                if time.monotonic() >= deadline:
+                                    element = None
+                                    break
+                                initialization_pending = not initialized
+                                if not initialized:
+                                    needs_ready_snapshot = True
+                                    element = None
+                                    await asyncio.sleep(get_config().resolve_retry_delay)
+                                    continue
+                                if needs_ready_snapshot:
+                                    # Initializers can replace controls; resolve again after DOMContentLoaded.
+                                    needs_ready_snapshot = False
+                                    element = None
+                                    continue
                             assert found_ref is not None
                             node = await browser_session.get_element_by_index(int(found_ref))
                             if time.monotonic() >= deadline:
@@ -135,6 +172,13 @@ async def _run_type(
                 challenge = site_challenge_error("browser type", tree)
                 if challenge is not None:
                     return challenge
+                if initialization_pending:
+                    return err(
+                        command="browser type", code=ErrorCode.E_PAGE_NOT_READY,
+                        message="页面尚未完成 DOM 初始化，未执行输入",
+                        hint="等待页面初始化完成后检查目标；不会自动重复输入或提交",
+                        details={"reason": "document_not_ready"}, source="builtin",
+                    )
                 return err(
                     command="browser type",
                     code=ErrorCode.E_SELECTOR_NOT_FOUND,
