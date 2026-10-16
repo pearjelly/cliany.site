@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-10-17
-- **Current baseline:** v0.16.390 (unpublished candidate; last verified publication remains [v0.16.389](https://github.com/pearjelly/cliany.site/pull/99#issuecomment-6221489071))
+- **Current baseline:** v0.16.390 (release source; last verified publication receipt before this source freeze: [v0.16.389](https://github.com/pearjelly/cliany.site/pull/99#issuecomment-6221489071))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
