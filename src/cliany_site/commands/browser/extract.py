@@ -258,12 +258,20 @@ async def _do_structured_extract(
                 message="无法获取当前页面",
                 details={"selector": selector, "mode": mode},
             )
-        if not extract_target and mode in {"list", "table"} and not await _wait_for_list_settle(page, selector):
+        settle_details: dict[str, str] = {}
+        if not extract_target and mode in {"list", "table"} and not await _wait_for_list_settle(
+            page, selector, diagnostics=settle_details,
+        ):
+            reason = settle_details.get("reason", "list_unsettled")
             return err(
                 command="browser extract",
                 code=ErrorCode.E_PAGE_NOT_READY,
-                message="列表结果未稳定，停止提取以免返回不完整数据",
-                details={"selector": selector, "mode": mode, "reason": "list_unsettled"},
+                message=(
+                    "列表结果未稳定，停止提取以免返回不完整数据" if reason == "list_unsettled"
+                    else "无法确认列表就绪状态，停止提取以免返回不完整数据"
+                ),
+                hint="检查页面加载和浏览器连接后重试；探针失败不表示零匹配",
+                details={"selector": selector, "mode": mode, "reason": reason},
                 source="builtin",
             )
         data = _coerce_json_like_extract_data(await page.evaluate(js_expr))

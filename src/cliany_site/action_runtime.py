@@ -799,8 +799,15 @@ async def execute_action_steps(
 
                     if extract_mode == "list" and selector and not action_data.get("extract_target"):
                         page = await browser_session.get_current_page()
-                        if page is not None and not await _wait_for_list_settle(page, selector):
-                            message = "列表结果未稳定，停止提取以免返回不完整数据"
+                        settle_details: dict[str, str] = {}
+                        if page is not None and not await _wait_for_list_settle(
+                            page, selector, diagnostics=settle_details,
+                        ):
+                            reason = settle_details.get("reason", "list_unsettled")
+                            message = (
+                                "列表结果未稳定，停止提取以免返回不完整数据" if reason == "list_unsettled"
+                                else "无法确认列表就绪状态，停止提取以免返回不完整数据"
+                            )
                             if extraction_results is not None:
                                 extraction_results.append({
                                     "ok": False,
@@ -809,6 +816,7 @@ async def execute_action_steps(
                                         "message": message,
                                         "step_index": idx,
                                         "selector": selector,
+                                        "reason": reason,
                                     },
                                 })
                             raise ActionExecutionError(

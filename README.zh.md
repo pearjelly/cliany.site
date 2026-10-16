@@ -28,6 +28,10 @@ cliany-site demo --case-id apache-jira-issues --json
 
 `doctor` 会给出下一步建议；`cliany-site cases --status active` 列出维护中的公开案例。`demo` 仅在本地没有目标 adapter 时按固定哈希安装，严格校验后运行只读查询，并要求至少返回一条结果；Jira、Confluence 和 Jenkins 可用，需要登录或尚未发布的案例不可用。首次运行的前提条件见 [10 分钟成功路径](docs/quickstart-10min.md)；准备自动化自己的站点时，再配置 Chrome/CDP 与 LLM。
 
+从 v0.16.388 起，原有列表就绪等待的 10 秒预算也覆盖正在等待的浏览器探针，截止后到达的稳定结果不能变成成功。旧 atom/回放失败会区分 `settle_probe_failed`、`settle_probe_invalid` 与 `settle_probe_timeout`，不附探针值或异常正文。这是协作式就绪预算，不是整个命令的总期限或自动重试；100 行上限、语义目标检查与生成文件不变。独立试用仍固定为已发布 0.16.387，既有首次失败与后续重试分别保留。
+
+本轮另捕获并修复了空 body 探针异常：缺少文档 scope 时继续在原预算内等待；body 始终不出现仍失败，不返回空成功。
+
 ### 告诉我们结果
 
 - 安装、探索或回放不符合预期？请[提交 Bug](https://github.com/pearjelly/cliany.site/issues/new?template=bug_report.yml)。

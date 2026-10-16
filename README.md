@@ -184,6 +184,10 @@ From v0.16.386, `demo` also retains child startup, timeout and malformed-output 
 
 From v0.16.387, every `demo` row must have the case's declared nonblank text fields: Jira key/summary, Confluence id/title, or Jenkins name/url. Missing, whitespace-only or non-text values fail with `E_EMPTY_RESULT`, `stage=oracle` and 1-based `error.details.field_invalid_rows`, without copying the offending values. Successful responses and optional fields are unchanged. This is a local presence/type check, not proof of factual correctness or URL safety; independently compare the result with the normal public page.
 
+From v0.16.388, the existing ten-second list-readiness budget also covers the awaited browser probe; late stable responses cannot become successes. Legacy atom/replay failures distinguish `settle_probe_failed`, `settle_probe_invalid` and `settle_probe_timeout` without exception bodies or probe values. This is a cooperative readiness budget, not an entire command deadline or a retry; the 100-row cap, semantic target checks and generated files are unchanged. The independent trial remains pinned to published 0.16.387, with original failures separate from later attempts.
+
+A captured null-body probe failure is also fixed: a missing document scope stays loading within the same budget. If the body never appears, extraction still fails instead of reporting an empty success.
+
 Also supports `.env` file configuration. Search order: `~/.config/cliany-site/.env` → the selected runtime directory's `.env` (default `~/.cliany-site/.env`) → project directory `.env` → environment variables.
 
 If `explore --json` returns `E_LLM_UNAVAILABLE`, the LLM provider returned a retryable upstream outage such as `502 Bad Gateway`, rate limiting, provider connection failure, or service unavailable. The JSON envelope includes `details.retryable`, `details.status_code`, and `details.phase`; retry later or switch `CLIANY_LLM_PROVIDER` / `CLIANY_OPENAI_BASE_URL`. This does not mean the generated adapter or AXTree selector map is broken.
