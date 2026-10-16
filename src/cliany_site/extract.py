@@ -17,6 +17,7 @@ from cliany_site.config import get_config
 
 SUPPORTED_EXTRACT_MODES = ("text", "list", "table", "attribute")
 LIST_EXTRACT_LIMIT = 100
+_LIST_SETTLE_TIMEOUT_SECONDS = 10.0
 
 
 async def resolve_semantic_extract_selector(browser_session: Any, target: dict[str, Any]) -> str | None:
@@ -91,7 +92,9 @@ def _coerce_json_like_extract_data(raw_result: Any) -> Any:
         return raw_result
 
 
-async def _wait_for_list_settle(page: Any, selector: str) -> bool:
+async def _wait_for_list_settle(
+    page: Any, selector: str, *, diagnostics: dict[str, str] | None = None,
+) -> bool:
     script = f"""() => {{
         const rows = document.querySelectorAll({json.dumps(selector)});
         const first = rows[0];
@@ -103,26 +106,45 @@ async def _wait_for_list_settle(page: Any, selector: str) -> bool:
         }});
         return {{count: rows.length, loading: busy || loading}};
     }}"""
-    deadline = time.monotonic() + 10.0
+    failure = diagnostics if diagnostics is not None else {}
+    failure["reason"] = "list_unsettled"
+    deadline = time.monotonic() + _LIST_SETTLE_TIMEOUT_SECONDS
     previous: tuple[int, bool] | None = None
     stable_since = time.monotonic()
-    while True:
-        try:
-            state = _coerce_json_like_extract_data(await page.evaluate(script))
-        except Exception:
-            return False
-        if not isinstance(state, dict) or "count" not in state or "loading" not in state:
-            return False
-        current = (int(state["count"]), bool(state["loading"]))
-        now = time.monotonic()
-        if current != previous or current[1]:
-            stable_since = now
-        elif now - stable_since >= 1.0:
-            return True
-        if now >= deadline:
-            return False
-        previous = current
-        await asyncio.sleep(0.25)
+    probing = False
+    try:
+        # The budget includes a stalled CDP probe, not just time between polls.
+        async with asyncio.timeout(_LIST_SETTLE_TIMEOUT_SECONDS):
+            while True:
+                try:
+                    probing = True
+                    state = _coerce_json_like_extract_data(await page.evaluate(script))
+                    probing = False
+                except Exception:
+                    failure["reason"] = "settle_probe_failed"
+                    return False
+                if (
+                    not isinstance(state, dict)
+                    or type(state.get("count")) is not int
+                    or state["count"] < 0
+                    or type(state.get("loading")) is not bool
+                ):
+                    failure["reason"] = "settle_probe_invalid"
+                    return False
+                current = (state["count"], state["loading"])
+                now = time.monotonic()
+                if now >= deadline:
+                    return False
+                if current != previous or current[1]:
+                    stable_since = now
+                elif now - stable_since >= 1.0:
+                    return True
+                previous = current
+                await asyncio.sleep(0.25)
+    except TimeoutError:
+        if probing:
+            failure["reason"] = "settle_probe_timeout"
+        return False
 
 
 def _escape_selector(selector: str) -> str:

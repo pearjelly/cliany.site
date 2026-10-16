@@ -98,6 +98,60 @@ async def test_list_extract_waits_for_incremental_results(local_server, headless
 
 
 @pytest.mark.embodied
+@pytest.mark.asyncio
+@pytest.mark.parametrize("extractor", ["atom", "action_runtime"])
+@pytest.mark.parametrize("budget", [0.05, 10.0])
+async def test_real_cdp_probe_is_included_in_settle_budget(
+    local_server, headless_browser_cdp_url, tmp_home, monkeypatch, extractor, budget,
+):
+    from cliany_site import extract
+    from cliany_site.action_runtime import ActionExecutionError, execute_action_steps
+    from cliany_site.browser.cdp import CDPConnection
+    from cliany_site.commands.browser.extract import _do_structured_extract
+
+    cdp = CDPConnection(cdp_url=headless_browser_cdp_url)
+    try:
+        session = await cdp.connect()
+        await session.navigate_to(f"{local_server}/action_replay.html", new_tab=False)
+        page = await session.get_current_page()
+        assert page is not None
+        evaluate = page.evaluate
+
+        async def delayed_probe(script):
+            return await evaluate(
+                "() => new Promise(resolve => setTimeout(() => resolve((" + script + ")()), "
+                + str(round((budget + 0.5) * 1000)) + "))"
+            )
+
+        monkeypatch.setattr(extract, "_LIST_SETTLE_TIMEOUT_SECONDS", budget)
+        monkeypatch.setattr(page, "evaluate", delayed_probe)
+        async def current_page(_session):
+            return page
+
+        monkeypatch.setattr(type(session), "get_current_page", current_page)
+
+        if extractor == "atom":
+            result = await asyncio.wait_for(
+                _do_structured_extract(session, "li", "list", {"title": ""}), budget + 2.0,
+            )
+            assert result["ok"] is False
+            error = result["error"]["details"]
+            assert result["error"]["code"] == "E_PAGE_NOT_READY"
+        else:
+            extracts = []
+            with pytest.raises(ActionExecutionError):
+                await asyncio.wait_for(execute_action_steps(session, [{
+                    "type": "extract", "selector": "li", "extract_mode": "list", "fields": {"title": ""},
+                }], extraction_results=extracts), budget + 2.0)
+            assert extracts[0]["ok"] is False
+            error = extracts[0]["error"]
+            assert error["code"] == "E_PAGE_NOT_READY"
+        assert error["reason"] == "settle_probe_timeout"
+    finally:
+        await cdp.disconnect()
+
+
+@pytest.mark.embodied
 def test_generated_command_reuses_auto_launched_chrome(local_server, tmp_home, monkeypatch):
     import os
     import pwd

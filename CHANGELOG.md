@@ -11,6 +11,13 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
+## [0.16.388] - 2026-10-17
+
+### Fixed
+
+- The existing ten-second list-readiness budget now includes the awaited browser probe. A stalled probe cannot wait indefinitely, and a stable response arriving after the deadline cannot be accepted. Invalid count/loading types fail closed instead of being coerced. Cancellation remains cancellation; no action, navigation or model retry is added.
+- Legacy atom extraction and action replay distinguish fixed `settle_probe_failed`, `settle_probe_invalid` and `settle_probe_timeout` reasons from `list_unsettled`, without copying probe results or exception bodies. Existing error codes, successful payloads, semantic target checks, row limits and generated archives remain unchanged. The earlier public browser failure stays failed; its precise subcause is not recoverable. See the [budget and diagnostic evidence](docs/user-evidence/2026-10-17-list-settle-budget.md). The independent-user guide stays pinned to published 0.16.387; no participant is rescored or case promoted.
+
 ## [0.16.387] - 2026-10-15
 
 ### Fixed
@@ -3509,7 +3516,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.387...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.388...HEAD
+[0.16.388]: https://github.com/pearjelly/cliany.site/compare/v0.16.387...v0.16.388
 [0.16.387]: https://github.com/pearjelly/cliany.site/compare/v0.16.386...v0.16.387
 [0.16.386]: https://github.com/pearjelly/cliany.site/compare/v0.16.385...v0.16.386
 [0.16.385]: https://github.com/pearjelly/cliany.site/compare/v0.16.384...v0.16.385
