@@ -34,6 +34,8 @@ cliany-site demo --case-id apache-jira-issues --json
 
 从 v0.16.389 起，远程 `market install` 失败会给出 `error.details.stage=download`、固定 `reason` 和可用的数字 HTTP `status_code`。资产缺失、访问被拒与证书信任分别提示下一步，不再统一要求检查安装包格式；诊断不附 URL 登录凭据、query/fragment、异常正文或响应体。`demo` 保留上游分类并在验证/查询前停止。哈希、TLS 校验、禁止覆盖及原超时/重试策略不变，不增加自动重试。旧失败未捕获的原因不能倒推；独立试用继续固定在 0.16.387。
 
+从 v0.16.390 起，命名输入在原有 10 秒准备预算内等待文档初始化，并重新观察语义引用后只输入一次，不等待慢图片。延迟出现的命名字段及列表/表格/状态区域可在各自既有预算内就绪；缺失区域仍报错，不冒充零匹配。这不是整个工作流的总时限，也不重复输入、提交、导航或模型调用。[证据记录](docs/user-evidence/2026-10-17-semantic-workflow-readiness.md)保留旧失败及另外三次真实探索、九次逐行对照；100 行前缀不等于完整收集，独立试用仍固定为已发布 0.16.387。
+
 ### 告诉我们结果
 
 - 安装、探索或回放不符合预期？请[提交 Bug](https://github.com/pearjelly/cliany.site/issues/new?template=bug_report.yml)。

@@ -11,6 +11,17 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
+## [0.16.390] - 2026-10-17
+
+### Fixed
+
+- Named browser input observes delayed semantic targets and document initialization within one ten-second preparation budget, then refreshes references before dispatching once. This prevents the captured DOMContentLoaded initializer from clearing an already typed query. An interactive document with completed DOMContentLoaded is sufficient; slow images do not hold input. Stalled/late initialization returns `E_PAGE_NOT_READY / document_not_ready` without typing. Explicit refs, equal-score refusal, challenge handling, cancellation and clear/Enter behavior retain their existing boundaries.
+- Semantic list/table/status extraction includes initial target resolution, settling and recapture in the same existing ten-second budget instead of restarting it. A delayed observed region can become ready, while missing/ambiguous regions and late responses still fail. No guessed CSS, action/navigation/model retry, generated-core edit, row-limit increase or case promotion is introduced.
+
+### Evidence And Limits
+
+- Preserve the official v0.16.389 public study (1/3 workflows, 6/9 replays), first fixed-source study (1/3, 7/9), separate diagnostic failures and native red reproductions. A new clean-source real study passed 3/3 generations and 9/9 changed-query comparisons against independent completed pages; six positive outputs are correct 100-row prefixes, not complete collections. Its pre-version regression passed 3,734 tests and exact-SHA ordinary/Chromium CI. Final version/master and public-package gates remain separate. See the [dated evidence](docs/user-evidence/2026-10-17-semantic-workflow-readiness.md). Independent reports remain 0/2 and the human trial stays fixed at published 0.16.387; no general reliability or arbitrary SPA-readiness claim follows.
+
 ## [0.16.389] - 2026-10-17
 
 ### Fixed
@@ -3524,7 +3535,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.389...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.390...HEAD
+[0.16.390]: https://github.com/pearjelly/cliany.site/compare/v0.16.389...v0.16.390
 [0.16.389]: https://github.com/pearjelly/cliany.site/compare/v0.16.388...v0.16.389
 [0.16.388]: https://github.com/pearjelly/cliany.site/compare/v0.16.387...v0.16.388
 [0.16.387]: https://github.com/pearjelly/cliany.site/compare/v0.16.386...v0.16.387

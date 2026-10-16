@@ -31,7 +31,7 @@ def test_remote_install_site_and_readmes_keep_trial_fixed():
     script = (ROOT / "site/script.js").read_text()
     assert 'data-i18n="qs.downloadDiagnostics"' in index
     assert "'qs.downloadDiagnostics':" in script
-    assert "script.js?v=20261017b" in index
+    assert "script.js?v=20261017c" in index
     trial = (ROOT / "docs/first-use-trial.md").read_text()
     assert "cliany-site==0.16.387" in trial
     assert "cliany-site==0.16.389" not in trial
@@ -40,5 +40,5 @@ def test_remote_install_site_and_readmes_keep_trial_fixed():
 def test_remote_install_changelog_has_reviewed_range():
     changelog = (ROOT / "CHANGELOG.md").read_text()
     assert "## [0.16.389] - 2026-10-17" in changelog
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.389...HEAD" in changelog
+    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.390...HEAD" in changelog
     assert "[0.16.389]: https://github.com/pearjelly/cliany.site/compare/v0.16.388...v0.16.389" in changelog
