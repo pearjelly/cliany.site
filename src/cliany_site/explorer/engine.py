@@ -24,6 +24,7 @@ from cliany_site.browser.selector import (
     format_read_only_extract_candidates,
     format_selector_candidates_section,
     ground_extract_target,
+    replayable_extract_selectors,
     resolve_extract_target,
 )
 from cliany_site.capability import sniff_api_endpoints
@@ -1028,8 +1029,14 @@ class WorkflowExplorer:
                     result.pages.append(page_info)
 
                 element_tree_text = serialize_axtree(tree)
-                selector_candidates_text = format_selector_candidates_section(selector_map)
-                read_only_candidates = format_read_only_extract_candidates(tree.get("extract_candidates") or [])
+                extract_candidates = tree.get("extract_candidates") or []
+                allowed_extract_selectors = replayable_extract_selectors(selector_map, extract_candidates)
+                selector_candidates_text = format_selector_candidates_section(
+                    selector_map, allowed_selectors=allowed_extract_selectors,
+                )
+                read_only_candidates = format_read_only_extract_candidates(
+                    extract_candidates, allowed_selectors=allowed_extract_selectors,
+                )
                 if read_only_candidates:
                     selector_candidates_text += "\n只读 AX 语义元素（供 extract 使用）：\n" + read_only_candidates
                 prompt_text = EXPLORE_PROMPT_TEMPLATE.format(
