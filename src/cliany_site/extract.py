@@ -99,6 +99,7 @@ async def _wait_for_list_settle(
         const rows = document.querySelectorAll({json.dumps(selector)});
         const first = rows[0];
         const scope = first?.closest('ul, ol, table')?.parentElement || first?.parentElement || document.body;
+        if (!scope) return {{count: rows.length, loading: true}};
         const busy = scope.querySelector('[aria-busy="true"], [role="progressbar"]') !== null;
         const loading = [...scope.querySelectorAll('h1, h2, h3, h4, [role="status"]')].some(node => {{
             const label = (node.textContent || '').trim().toLowerCase().replace(/[.\\s…。]+$/g, '');

@@ -13,6 +13,8 @@ def test_budget_release_documents_bound_scope_and_retained_failures():
     assert "not a complete-command deadline" in notes
     assert "prior coarser error contract" in notes
     assert "v0.16.387..HEAD" in draft
+    for heading in ("## 案例库映射", "## 风险与兼容性", "## 发版前验证", "## 发版步骤"):
+        assert heading in draft
     assert "0/2" in notes and "0/2" in draft
     assert "10" in evidence and "failed" in evidence
     assert "no release was backdated" in evidence

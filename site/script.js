@@ -208,8 +208,8 @@ const I18N = {
     en: 'Invited to try cliany-site? Use the <a href="https://github.com/pearjelly/cliany.site/blob/master/docs/first-use-trial.md">fixed-version trial</a> and keep first failures separate from assisted retries. From v0.16.387, demo rejects any row with missing, blank or non-text required fields and reports row numbers without copying bad values. Still check the normal page independently; independent-user acceptance remains open.'
   },
   'qs.settleBudget': {
-    zh: 'v0.16.388 将浏览器就绪探针纳入原有 10 秒列表等待预算，过期结果不再被接受；失败分类不附异常正文。独立试用仍固定为已发布 0.16.387，原始失败与后续重试分别保留。',
-    en: 'v0.16.388 includes the browser readiness probe in the existing ten-second list budget and rejects late results. Failure categories omit exception bodies. The independent trial stays pinned to published 0.16.387; original failures and later retries remain separate.'
+    zh: 'v0.16.388 将浏览器就绪探针纳入原有 10 秒列表等待预算，过期结果不再被接受；body 尚未出现时继续等待，预算耗尽仍失败。失败分类不附异常正文。独立试用仍固定为已发布 0.16.387，原始失败与后续重试分别保留。',
+    en: 'v0.16.388 includes the browser readiness probe in the existing ten-second list budget and rejects late results. A missing body stays loading; an exhausted budget still fails. Failure categories omit exception bodies. The independent trial stays pinned to published 0.16.387; original failures and later retries remain separate.'
   },
   'qs.maintainer.safeRetries': {
     zh: '从 v0.16.381 起，模型请求被 HTTP 拒绝时不再因正文含网关关键词而重复调用。CLI/live doctor 保留认证失败类型；重试警告和可选单次错误事件使用固定摘要，不回显上游正文。成功请求延迟、provider 持续可用性及独立首次使用仍待验证。',

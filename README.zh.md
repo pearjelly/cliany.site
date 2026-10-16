@@ -30,6 +30,8 @@ cliany-site demo --case-id apache-jira-issues --json
 
 从 v0.16.388 起，原有列表就绪等待的 10 秒预算也覆盖正在等待的浏览器探针，截止后到达的稳定结果不能变成成功。旧 atom/回放失败会区分 `settle_probe_failed`、`settle_probe_invalid` 与 `settle_probe_timeout`，不附探针值或异常正文。这是协作式就绪预算，不是整个命令的总期限或自动重试；100 行上限、语义目标检查与生成文件不变。独立试用仍固定为已发布 0.16.387，既有首次失败与后续重试分别保留。
 
+本轮另捕获并修复了空 body 探针异常：缺少文档 scope 时继续在原预算内等待；body 始终不出现仍失败，不返回空成功。
+
 ### 告诉我们结果
 
 - 安装、探索或回放不符合预期？请[提交 Bug](https://github.com/pearjelly/cliany.site/issues/new?template=bug_report.yml)。

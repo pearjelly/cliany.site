@@ -6,6 +6,8 @@
 
 **October 17 candidate:** [v0.16.388 list-readiness budget](../user-evidence/2026-10-17-list-settle-budget.md). A confirmed local defect leaves awaited probes outside the intended budget and can accept a stable response after the deadline. Include the probe in the same ten-second cooperative budget, reject invalid probe states and retain fixed failure categories without raw exception text. A new real public probe raised a JavaScript evaluation exception; its detailed subcause and the earlier failed attempt remain unknown. No automatic retry, new model exploration or case promotion is justified. Complete final-source, final-master and publication gates before treating the candidate as released. The trial version and original first attempts stay fixed; do not make a calendar-only version bump.
 
+**Later October 17 diagnosis:** a separate captured public replay failure identified `querySelector` on a null document body in the readiness probe. Missing scope now remains loading inside the same budget, rather than throwing or becoming empty success. Native regressions cover body restoration and permanent absence. That captured cause does not reconstruct the earlier unrecorded exceptions; all original attempts remain separate. No navigation or action retry was added.
+
 A new user should be able to install the public package, obtain one useful read-only result, and trust a command generated from a browser workflow enough to reuse it with a changed input. Count success only when a fresh environment and an independent business-result check agree; passing tests, a generated adapter file, or a successful JSON envelope alone are insufficient.
 
 ## Evidence at the decision point

@@ -15,6 +15,8 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 当前 [v0.16.388 列表就绪预算候选](user-evidence/2026-10-17-list-settle-budget.md)将正在等待的 CDP 探针纳入原有 10 秒预算，拒绝截止后成功和无效探针状态，并提供不附异常正文的固定失败类别。不增加重试、不修改生成文件，也不声称找回了旧浏览器失败的精确根因。源码与最终 master 的完整门禁及三端公开包验收仍须完成；独立试用继续固定在已发布 0.16.387，人次仍为 0/2，不晋级案例。
 
+新的公开回放诊断已捕获空 body 上调用 querySelector 的异常。缺少 scope 现在继续在原预算内等待；真实 Chromium 检查分别覆盖 body 随后出现和始终不出现。既有失败保持失败，不由后续成功改分。
+
 已发布 v0.16.387 完成[最终 master、三端及公开安装包验收](https://github.com/pearjelly/cliany.site/pull/97#issuecomment-6188983342)：3,622 项回归、精确 SHA 普通/Chromium CI、GitHub/PyPI 文件一致、正确生产部署与最终严格分发审计通过。[逐行字段修复](user-evidence/2026-10-14-demo-row-integrity.md)保留 v0.16.386 的六项受控错误成功和所有源码门禁失败。Jenkins 的超时/503 与首次正式包浏览器 list_unsettled 失败保持原分，后续恢复和单独的有界浏览器复核不计为首次成功或独立用户。
 
 已发布 v0.16.386 完成[最终 master、三端与公开包验收](https://github.com/pearjelly/cliany.site/pull/95#issuecomment-6159679381)：3,526 项离线回归、精确 SHA 普通/Chromium CI、GitHub/PyPI/官网别名、新鲜公开包 API/浏览器与受控故障检查通过。[首跑诊断修复](user-evidence/2026-10-14-demo-step-failures.md)和公开反馈表不替代独立用户验收，旧邀请版本与原失败继续保留。

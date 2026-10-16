@@ -16,6 +16,7 @@
 ### Fixed
 
 - The existing ten-second list-readiness budget now includes the awaited browser probe. A stalled probe cannot wait indefinitely, and a stable response arriving after the deadline cannot be accepted. Invalid count/loading types fail closed instead of being coerced. Cancellation remains cancellation; no action, navigation or model retry is added.
+- A captured public Python Docs probe failure dereferenced a missing document body. Missing scope now remains loading within the existing budget; a body that never appears still fails rather than returning an empty success. The original and diagnostic failures remain separate from later checks.
 - Legacy atom extraction and action replay distinguish fixed `settle_probe_failed`, `settle_probe_invalid` and `settle_probe_timeout` reasons from `list_unsettled`, without copying probe results or exception bodies. Existing error codes, successful payloads, semantic target checks, row limits and generated archives remain unchanged. The earlier public browser failure stays failed; its precise subcause is not recoverable. See the [budget and diagnostic evidence](docs/user-evidence/2026-10-17-list-settle-budget.md). The independent-user guide stays pinned to published 0.16.387; no participant is rescored or case promoted.
 
 ## [0.16.387] - 2026-10-15
