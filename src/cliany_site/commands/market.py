@@ -4,6 +4,7 @@ import click
 
 from cliany_site.errors import ADAPTER_NOT_FOUND, ERROR_FIX_HINTS, EXECUTION_FAILED, INSTALL_FAILED
 from cliany_site.marketplace import (
+    AdapterDownloadError,
     get_adapter_info,
     inspect_adapter_package,
     install_adapter,
@@ -41,6 +42,21 @@ def _install_fix_hint(message: str) -> str:
             "确保 manifest.files 与 file_hashes 覆盖所有载荷文件。"
         )
     return ERROR_FIX_HINTS[INSTALL_FAILED]
+
+
+def _download_fix_hint(details: dict[str, object]) -> str:
+    reason = details["reason"]
+    if reason == "http_error":
+        if details.get("status_code") == 404:
+            return "确认该版本的发布资产存在且 URL 正确；保留 --sha256，--force 不能修复远程 404。"
+        if details.get("status_code") in {401, 403}:
+            return "确认发布资产的访问权限；保留 --sha256，不要用 --force 跳过校验。"
+        return "检查下载服务的 HTTP 状态，恢复后再手动重试；保留 --sha256。"
+    if reason == "tls_certificate_error":
+        return "检查系统时间和 CA/代理证书信任；不要关闭 TLS 证书校验，保留 --sha256。"
+    if reason in {"tls_error", "network_error", "incomplete_response", "timeout"}:
+        return "检查网络、HTTPS 连接和下载服务，恢复后再手动重试；保留 --sha256，不会自动重试。"
+    return "检查远程来源、网络连接及本地写入权限；保留 --sha256，--force 不能修复下载失败。"
 
 
 @click.group("market", help="适配器市场：打包/安装/卸载/回滚")
@@ -103,6 +119,8 @@ def install_cmd(
             else:
                 manifest = install_adapter(pack_path, force=force)
                 resp = success_response(manifest.to_dict())
+    except AdapterDownloadError as exc:
+        resp = error_response(INSTALL_FAILED, str(exc), _download_fix_hint(exc.details), details=exc.details)
     except (FileNotFoundError, FileExistsError, ValueError) as exc:
         resp = error_response(INSTALL_FAILED, str(exc), _install_fix_hint(str(exc)))
     except OSError as exc:

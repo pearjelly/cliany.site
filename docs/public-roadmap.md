@@ -1,13 +1,15 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-10-17
-- **Current baseline:** v0.16.388 (list-readiness budget candidate; last verified public version is [v0.16.387](https://github.com/pearjelly/cliany.site/pull/97#issuecomment-6188983342))
+- **Current baseline:** v0.16.389 (remote-install diagnostics candidate; last verified public version is [v0.16.388](https://github.com/pearjelly/cliany.site/pull/98#issuecomment-6220439464))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap below records earlier work; the October plan prioritizes verified first use and reliable real workflows.
 
-The [v0.16.388 budget candidate](user-evidence/2026-10-17-list-settle-budget.md) includes awaited CDP probes in the existing ten-second readiness budget, rejects late successes and invalid probe states, and distinguishes safe failure categories. It does not add retries, change generated files or prove the precise cause of the earlier browser failure. Final source/master and publication gates remain required. The independent trial stays pinned to published 0.16.387; participant reports remain 0/2 and no case is promoted.
+The [v0.16.389 diagnostics candidate](user-evidence/2026-10-17-remote-install-diagnostics.md) preserves safe remote-install categories and useful repair hints, rather than blaming archive format for a transport failure. URL login credentials and upstream bodies are omitted. Real controlled HTTPS failures and preserved public download failures are separate evidence; timeout/retry, hash and TLS policy stay unchanged. Full final-source/master and publication gates remain required; no calendar-only release or case promotion. The independent trial stays pinned to published 0.16.387; reports remain 0/2.
+
+Published v0.16.388 completed [final-master, three-end and official installed-package acceptance](https://github.com/pearjelly/cliany.site/pull/98#issuecomment-6220439464): 3,650 full tests, exact-SHA ordinary/Chromium CI, matching GitHub/PyPI bytes, correct production and strict remote distribution audit. Its [budget correction](user-evidence/2026-10-17-list-settle-budget.md) includes awaited CDP probes in the existing ten-second readiness budget and fixes a captured missing-body failure. Initial source/official-package download failures remain failed; separate rechecks are not independent users or a continuing availability guarantee.
 
 A new captured public replay failure identified a null document body in the readiness probe. Missing scope now stays loading within the same budget, with native checks for later body restoration and permanent absence; earlier failures remain recorded, not rescored.
 

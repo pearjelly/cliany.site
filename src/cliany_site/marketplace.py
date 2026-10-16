@@ -13,16 +13,19 @@ import json
 import logging
 import os
 import shutil
+import ssl
 import tarfile
 import tempfile
 import urllib.request
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from http.client import IncompleteRead
 from importlib import resources
 from io import BytesIO
 from pathlib import Path, PureWindowsPath
 from typing import Any
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit, urlunsplit
 
 from cliany_site.config import get_config
@@ -36,15 +39,41 @@ MAX_REMOTE_PACKAGE_SIZE = 64 * 1024 * 1024
 _REMOTE_READ_CHUNK_SIZE = 64 * 1024
 
 
+class AdapterDownloadError(ValueError):
+    """Remote source failure with fixed, public-safe diagnostic fields."""
+
+    def __init__(self, display_source: str, cause: Exception) -> None:
+        super().__init__(f"远程安装包下载失败: {display_source}")
+        reason = cause.reason if isinstance(cause, URLError) else cause
+        self.details: dict[str, Any] = {"stage": "download"}
+        if isinstance(cause, HTTPError):
+            category = "http_error"
+            if type(cause.code) is int and 100 <= cause.code <= 599:
+                self.details["status_code"] = cause.code
+        elif isinstance(reason, TimeoutError):
+            category = "timeout"
+        elif isinstance(reason, ssl.SSLCertVerificationError):
+            category = "tls_certificate_error"
+        elif isinstance(reason, ssl.SSLError):
+            category = "tls_error"
+        elif isinstance(reason, IncompleteRead):
+            category = "incomplete_response"
+        elif isinstance(cause, URLError) or isinstance(reason, ConnectionError):
+            category = "network_error"
+        else:
+            category = "download_failed"
+        self.details["reason"] = category
+
+
 def _display_source(source: str) -> str:
-    """Return a source suitable for user-facing errors without URL secrets."""
+    """Omit URL credentials, query and fragment from user-facing sources."""
     try:
         parsed = urlsplit(source)
     except ValueError:
-        return source.split("?", 1)[0].split("#", 1)[0]
+        return "<invalid URL>"
     if not parsed.scheme:
         return source
-    return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
+    return urlunsplit((parsed.scheme, parsed.netloc.rsplit("@", 1)[-1], parsed.path, "", ""))
 
 
 def _validate_remote_sha256(expected_sha256: str | None) -> str:
@@ -160,11 +189,11 @@ def resolve_adapter_source(
                         f"(期望 {expected_digest}，实际 {actual_digest})"
                     )
                     raise ValueError(msg)
-        except ValueError:
-            raise
         except Exception as exc:
-            msg = f"远程安装包下载失败: {display_source}"
-            raise ValueError(msg) from exc
+            # Certificate verification errors also inherit ValueError.
+            if isinstance(exc, ValueError) and not isinstance(exc, ssl.SSLError):
+                raise
+            raise AdapterDownloadError(display_source, exc) from exc
 
         assert temp_path is not None
         try:

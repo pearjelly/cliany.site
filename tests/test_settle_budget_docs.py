@@ -30,7 +30,7 @@ def test_budget_website_and_readmes_keep_trial_version_fixed():
     script = (ROOT / "site/script.js").read_text()
     assert 'data-i18n="qs.settleBudget"' in index
     assert "'qs.settleBudget':" in script
-    assert "script.js?v=20261017a" in index
+    assert "script.js?v=20261017b" in index
     guide = (ROOT / "docs/first-use-trial.md").read_text()
     assert "cliany-site==0.16.387" in guide
     assert "cliany-site==0.16.388" not in guide

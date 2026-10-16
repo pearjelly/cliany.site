@@ -11,6 +11,13 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
+## [0.16.389] - 2026-10-17
+
+### Fixed
+
+- Remote adapter installation retains fixed download failure categories and a valid numeric HTTP status in `error.details`, with repair hints for missing assets, access rejection, certificate trust, connection/read failures and timeouts instead of treating every failure as an archive-format problem. `INSTALL_FAILED`, nonzero exit, dry-run/no-overwrite, fixed SHA-256, TLS verification and existing timeout/retry policies remain unchanged; `demo` preserves the upstream category and stops before verification/query.
+- Download errors omit URL login credentials, query and fragment, raw exception/response/header content and incomplete response bytes. Certificate verification errors are classified before the ordinary `ValueError` validation boundary; corrupt packages, hash mismatches, size checks and redirect rejection retain their existing validation behavior. See the [failure evidence and limits](docs/user-evidence/2026-10-17-remote-install-diagnostics.md). Earlier observed failures are not reclassified retrospectively; independent reports remain 0/2 and the human trial stays fixed at published 0.16.387.
+
 ## [0.16.388] - 2026-10-17
 
 ### Fixed
@@ -3517,7 +3524,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.388...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.389...HEAD
+[0.16.389]: https://github.com/pearjelly/cliany.site/compare/v0.16.388...v0.16.389
 [0.16.388]: https://github.com/pearjelly/cliany.site/compare/v0.16.387...v0.16.388
 [0.16.387]: https://github.com/pearjelly/cliany.site/compare/v0.16.386...v0.16.387
 [0.16.386]: https://github.com/pearjelly/cliany.site/compare/v0.16.385...v0.16.386
