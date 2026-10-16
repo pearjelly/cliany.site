@@ -1,6 +1,22 @@
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+PROJECT_VERSION = str(tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])
+
+
+def test_site_explains_recorded_workflow_fidelity_without_patching_old_adapters():
+    index = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
+    script = (ROOT / "site" / "script.js").read_text(encoding="utf-8")
+    docs = (ROOT / "site" / "docs" / "index.html").read_text(encoding="utf-8")
+    assert 'data-i18n="qs.workflowFidelity"' in index
+    assert "A runtime upgrade does not patch old CLI files" in index
+    assert "运行时升级不会改写旧 CLI" in script
+    assert "A runtime upgrade does not patch old CLI files" in script
+    assert "运行时升级不会改写旧 CLI" in docs
+    for text in ("action_index", "action_indices", "probe", "baseline", "0.16.387", "0/2"):
+        assert text in index and text in script and text in docs
+    assert "JSON422" in docs and "E_VERIFY_STATIC" in docs
 
 
 def test_site_explains_generated_parameter_integrity_without_legacy_promise():
@@ -173,7 +189,7 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
         "--doctor-json /tmp/cliany-doctor-preflight.json"
     ) in docs
     assert "1-3 releases/day loop" in index
-    assert "Current baseline: v0.16.390" in index
+    assert f"Current baseline: v{PROJECT_VERSION}" in index
     assert 'data-i18n="qs.maintainer.firstGeneration"' in index
     assert "'qs.maintainer.firstGeneration'" in script
     assert "preserves the observed starting URL and model" in script
@@ -198,7 +214,7 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
     assert "HTTP write endpoints reject unknown JSON fields" in index
     assert "Dependabot now groups GitHub Actions upgrades" in index
     assert "actions/setup-python@v7" in index
-    assert "当前基线：v0.16.390" in script
+    assert f"当前基线：v{PROJECT_VERSION}" in script
     assert "重复布尔键同样返回" in script
     assert "重复 <code>require_capability</code> 与 <code>domain</code> 键也返回" in script
     assert "POST /explore、POST /execute 与 POST /login 现在要求必填文本字段为非空字符串" in script
@@ -225,8 +241,8 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
     assert "truthy 字符串意外启动 live preflight" in docs
     assert "Dependabot 现在将 GitHub Actions 升级合并为一个可审阅提案" in script
     assert "actions/setup-python@v7" in script
-    assert 'en: "Current baseline: v0.16.390.' in script
-    assert "en: 'Current baseline: v0.16.390." not in script
+    assert f'en: "Current baseline: v{PROJECT_VERSION}.' in script
+    assert f"en: 'Current baseline: v{PROJECT_VERSION}." not in script
     assert "adapter package is runnable" in index
     assert "adapter package 是否可运行" in script
     assert "source-safety scan" in index
@@ -284,7 +300,7 @@ def test_site_quickstart_matches_current_ten_minute_success_path():
     assert "market publish" in index
     assert "package_sha256" in index
     assert "lowercase 64-character hexadecimal SHA-256 of the completed archive" in index
-    assert "v0.16.390 · Python" in docs
+    assert f"v{PROJECT_VERSION} · Python" in docs
     assert "GET /adapters?detail=" in docs
     assert "BAD_REQUEST" in docs
     assert "各只能出现一次" in docs

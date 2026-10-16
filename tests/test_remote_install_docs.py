@@ -1,6 +1,8 @@
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+PROJECT_VERSION = str(tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])
 
 
 def test_remote_install_release_preserves_scope_and_published_baseline():
@@ -40,5 +42,5 @@ def test_remote_install_site_and_readmes_keep_trial_fixed():
 def test_remote_install_changelog_has_reviewed_range():
     changelog = (ROOT / "CHANGELOG.md").read_text()
     assert "## [0.16.389] - 2026-10-17" in changelog
-    assert "[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.390...HEAD" in changelog
+    assert f"[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v{PROJECT_VERSION}...HEAD" in changelog
     assert "[0.16.389]: https://github.com/pearjelly/cliany.site/compare/v0.16.388...v0.16.389" in changelog
