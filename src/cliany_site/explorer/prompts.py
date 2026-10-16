@@ -27,6 +27,7 @@ commands 字段说明（仅当 done=true 时填写）：
 - 每个命令的 args 字段用于声明可参数化的 CLI 选项（详见下方参数化规则）
 - 每个命令必须显式写出 expects_nonempty（true/false）。默认用 true：空结果表示该数据命令没有得到预期数据。搜索、筛选或确认“某项是否不存在”的工作流若明确允许零匹配，设为 false；例如用户要求搜索命令在无匹配时返回空列表。false 不能用于掩盖字段缺失、部分提取或页面结构变化。
 - 命名为 list-、search-、read- 或 extract- 的数据命令必须在其 action_steps 中包含至少一个 extract 动作，并返回实际提取的数据；若无法识别稳定 selector 或字段，不得把该读取任务标记为 done=true。
+- 同一页面已成功提取的集合就是已有数据证据。没有新的页面交互且语义目标与字段未变时，不要为了结束探索再次 extract；可用 actions=[]、done=true 和完整 action_steps 直接完成命令。不同页面、目标、字段或交互后的提取仍应保留。
 
 参数化规则（关键 — 必须严格遵守）：
 - 重要前提：探索过程中返回的 actions 会被直接在浏览器上执行，因此 done=false 时 actions 的 value 必须使用真实文本，绝对不能使用 {{param_name}} 占位符

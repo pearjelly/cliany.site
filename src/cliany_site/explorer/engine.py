@@ -134,6 +134,40 @@ def _invalid_extract_only_targets(actions: list[dict[str, Any]], tree: dict[str,
     return failures
 
 
+def _repeated_completed_extracts(
+    actions: list[dict[str, Any]], tree: dict[str, Any], recorded: list[ActionStep], evidence: list[object],
+) -> list[dict[str, int]]:
+    if not actions or any(action.get("type") != "extract" for action in actions) or not recorded:
+        return []
+    previous = recorded[-1]
+    if (previous.action_type != "extract" or previous.extract_mode not in {"list", "table"}
+            or not previous.extract_target):
+        return []
+    old_url, current_url = urlparse(previous.page_url), urlparse(str(tree.get("url") or ""))
+    # A form submission can update the query after the preceding turn's URL was captured.
+    if (not current_url.scheme or not current_url.netloc
+            or (old_url.scheme, old_url.netloc, old_url.path)
+            != (current_url.scheme, current_url.netloc, current_url.path)):
+        return []
+    previous_index = len(recorded) - 1
+    latest = next((item for item in reversed(evidence) if isinstance(item, dict)
+                   and type(item.get("action_index")) is int and item["action_index"] == previous_index), None)
+    fields = previous.fields_map if isinstance(previous.fields_map, dict) else {}
+    if (latest is None or latest.get("ok") is False
+            or not evaluate_extract_quality(previous.extract_mode, latest.get("data"), fields).ok):
+        return []
+    selector_map, candidates = tree.get("selector_map") or {}, tree.get("extract_candidates") or []
+    failures = []
+    for index, action in enumerate(actions):
+        if action.get("extract_mode", "text") != previous.extract_mode or (action.get("fields") or {}) != fields:
+            continue
+        target = ground_extract_target(str(action.get("selector") or ""), selector_map, candidates)
+        if (target is not None and target == previous.extract_target
+                and resolve_extract_target(target, selector_map, candidates) is not None):
+            failures.append({"action_index": index, "completed_action_index": previous_index})
+    return failures
+
+
 def _is_data_command_name(value: object) -> bool:
     name = str(value or "").strip().lower()
     return name.startswith(_DATA_COMMAND_PREFIXES)
@@ -1085,16 +1119,28 @@ class WorkflowExplorer:
 
                 ambiguous_targets = _ambiguous_action_targets(actions_data, selector_map, tree.get("url", ""))
                 invalid_extract_targets = _invalid_extract_only_targets(actions_data, tree)
-                if ambiguous_targets or invalid_extract_targets:
+                repeated_extracts = (
+                    _repeated_completed_extracts(actions_data, tree, result.actions, all_extraction_results)
+                    if interactive_ctrl is None else []
+                )
+                if ambiguous_targets or invalid_extract_targets or repeated_extracts:
                     if semantic_plan_repairs >= _MAX_SEMANTIC_PLAN_REPAIRS or step_num + 1 >= cfg.explore_max_steps:
                         raise ExploreContractError(
+                            "已有成功集合被重复提取；请复用已有证据完成命令" if repeated_extracts else
                             "动作目标缺少唯一实测语义身份；请重新规划可唯一重定位的目标",
                             reason=(
+                                "duplicate_completed_extract" if repeated_extracts else
                                 "extract_selector_ungrounded" if invalid_extract_targets else "action_target_ambiguous"
                             ),
                         )
                     semantic_plan_repairs += 1
                     semantic_plan_feedback = (
+                        "已有成功集合，本轮纯提取计划重复了相同页面、实测语义身份与字段："
+                        f"{json.dumps(repeated_extracts, ensure_ascii=False)}。"
+                        "拟重复动作尚未执行，也未录制，累计动作索引不变。"
+                        "请复用已有提取证据；若已满足工作流，以 actions=[]、done=true 和完整 commands 结束。"
+                        "不要为了完成标记再次提取同一集合；仍需新范围时只规划不同目标或字段。"
+                    ) if repeated_extracts else (
                         "上一步提取尚未执行，也未录制。以下提取缺少可唯一重定位的当前 AX 语义身份："
                         f"{json.dumps(invalid_extract_targets, ensure_ascii=False)}。"
                         "请从当前只读 AX 语义候选选择目标，不得猜测类名或 ID，也不能靠 ref 顺序打破平分。"
@@ -1106,7 +1152,10 @@ class WorkflowExplorer:
                         "若用户未限制具体控件，可通过已观察到的唯一链接进入独立表单；不能猜测 URL。"
                         "这次修正不新增已完成动作，累计动作索引不变。"
                     )
-                    logger.warning("步骤 %d 的目标缺少唯一实测语义身份，发起一次有限规划修正", step_num + 1)
+                    logger.warning(
+                        "步骤 %d 的集合提取重复已完成证据，发起一次有限规划修正" if repeated_extracts else
+                        "步骤 %d 的目标缺少唯一实测语义身份，发起一次有限规划修正", step_num + 1,
+                    )
                     reporter.on_explore_step_done(step_num, 0, (time.monotonic() - step_start) * 1000)
                     continue
                 semantic_plan_feedback = ""

@@ -1,6 +1,8 @@
 # Semantic Workflow Readiness
 
-**Verified public baseline:** [v0.16.389](https://github.com/pearjelly/cliany.site/pull/99#issuecomment-6221489071), master/tag `50dbbcc4c68399dc7320a610d2664e595d5b547f`. **Current work:** unpublished v0.16.390 candidate for [Issue 100](https://github.com/pearjelly/cliany.site/issues/100). Both fixed-source studies below ran with 0.16.389 metadata before version preparation; neither is official-package acceptance of this correction. Independent first-use reports remain 0/2, with the invitation fixed to published 0.16.387.
+**Pre-release public baseline:** [v0.16.389](https://github.com/pearjelly/cliany.site/pull/99#issuecomment-6221489071), master/tag `50dbbcc4c68399dc7320a610d2664e595d5b547f`. **Recorded source work:** the readiness correction prepared for v0.16.390 and [Issue 100](https://github.com/pearjelly/cliany.site/issues/100). Both fixed-source studies below ran with 0.16.389 metadata before version preparation; neither is official-package acceptance. Independent first-use reports remain 0/2, with the invitation fixed to published 0.16.387.
+
+**Post-publication update:** v0.16.390 completed [three-end distribution verification](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791), but a separate fresh official study passed only 2/3 workflows and 6/9 returned-value checks: one generated command repeats a collection. [Issue 102 and its evidence](2026-10-17-duplicate-terminal-collections.md) retain that new failure and an unpublished successor correction. It does not rescore the studies below, reconstruct their missing failed-turn causes or establish independent first use.
 
 ## Preserved Public Failure
 

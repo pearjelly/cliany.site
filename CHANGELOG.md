@@ -11,6 +11,10 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
+### Fixed
+
+- Unpublished: automatic exploration refuses a repeated pure collection read after successful evidence for the same observed semantic target and fields, before execution or recording. It uses the existing shared single planning correction, preserves action indices, and fails persistent repetition with `duplicate_completed_extract`. Different scopes/intervening actions and explicitly confirmed interactive reads retain their policies. No history/output deduplication, generated-file rewrite, retry-budget increase or case promotion. The [official v0.16.390 failure and native reproduction](docs/user-evidence/2026-10-17-duplicate-terminal-collections.md) remain failed; this correction is not in the published package.
+
 ## [0.16.390] - 2026-10-17
 
 ### Fixed
