@@ -40,21 +40,36 @@ async def resolve_semantic_extract_selector(browser_session: Any, target: dict[s
 async def prepare_semantic_extract_selector(
     browser_session: Any, target: dict[str, Any], mode: str | None,
 ) -> tuple[str | None, str | None]:
-    selector = await resolve_semantic_extract_selector(browser_session, target)
-    if selector is None:
-        return None, "E_SELECTOR_NOT_FOUND"
     if mode not in {"list", "table"} and not (mode == "text" and target.get("role") == "status"):
-        return selector, None
-    for _ in range(2):
-        page = await browser_session.get_current_page()
-        if page is None or not await _wait_for_list_settle(page, selector):
-            return None, "E_PAGE_NOT_READY"
-        current = await resolve_semantic_extract_selector(browser_session, target)
-        if current is None:
-            return None, "E_SELECTOR_NOT_FOUND"
-        if current == selector:
-            return current, None
-        selector = current
+        selector = await resolve_semantic_extract_selector(browser_session, target)
+        return selector, None if selector is not None else "E_SELECTOR_NOT_FOUND"
+    selector = None
+    deadline = time.monotonic() + _LIST_SETTLE_TIMEOUT_SECONDS
+    try:
+        # Initial AX availability, settling and recapture share one cooperative budget.
+        async with asyncio.timeout(_LIST_SETTLE_TIMEOUT_SECONDS):
+            while selector is None:
+                selector = await resolve_semantic_extract_selector(browser_session, target)
+                if time.monotonic() >= deadline:
+                    return None, "E_SELECTOR_NOT_FOUND"
+                if selector is None:
+                    await asyncio.sleep(get_config().resolve_retry_delay)
+            for _ in range(2):
+                page = await browser_session.get_current_page()
+                if page is None or time.monotonic() >= deadline or not await _wait_for_list_settle(page, selector):
+                    return None, "E_PAGE_NOT_READY"
+                if time.monotonic() >= deadline:
+                    return None, "E_PAGE_NOT_READY"
+                current = await resolve_semantic_extract_selector(browser_session, target)
+                if time.monotonic() >= deadline:
+                    return None, "E_PAGE_NOT_READY"
+                if current is None:
+                    return None, "E_SELECTOR_NOT_FOUND"
+                if current == selector:
+                    return current, None
+                selector = current
+    except TimeoutError:
+        return None, "E_SELECTOR_NOT_FOUND" if selector is None else "E_PAGE_NOT_READY"
     return None, "E_PAGE_NOT_READY"
 
 

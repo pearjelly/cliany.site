@@ -3,12 +3,34 @@ from __future__ import annotations
 import asyncio
 import importlib
 import json
+import time
 
 import click
 
 from cliany_site.browser.cdp import cdp_from_context
 from cliany_site.commands.browser import browser_group
+from cliany_site.config import get_config
 from cliany_site.envelope import Envelope, ErrorCode, err, ok
+
+_TYPE_TARGET_TIMEOUT_SECONDS = 10.0
+
+
+async def _document_initialized(browser_session) -> bool:
+    page = await browser_session.get_current_page()
+    if page is None:
+        return False
+    state = await page.evaluate("""() => {
+        const navigation = performance.getEntriesByType('navigation')[0];
+        return {ready: document.readyState === 'complete' ||
+            (document.readyState === 'interactive' &&
+             typeof navigation?.domContentLoadedEventEnd === 'number' && navigation.domContentLoadedEventEnd > 0)};
+    }""")
+    if isinstance(state, str):
+        try:
+            state = json.loads(state)
+        except (ValueError, TypeError):
+            return False
+    return isinstance(state, dict) and state.get("ready") is True
 
 
 def _print_envelope(result: Envelope, json_mode: bool) -> None:
@@ -86,22 +108,77 @@ async def _run_type(
     try:
         browser_session = await cdp.connect()
         try:
-            tree = await capture_axtree(browser_session)
-            selector_map = tree.get("selector_map", {})
-
-            if ref is not None:
-                element = resolve_ref(selector_map, ref)
-                found_ref = ref
-            elif text is not None:
-                results = fuzzy_find_by_text(selector_map, text, limit=1, role=role)
-                if results:
-                    found_ref = results[0]["ref"]
-                    element = resolve_ref(selector_map, found_ref)
+            tree: dict = {}
+            node = None
+            initialization_pending = False
+            needs_ready_snapshot = ref is None
+            deadline = time.monotonic() + _TYPE_TARGET_TIMEOUT_SECONDS
+            try:
+                # Observe readiness before dispatch; never repeat a typing event or reuse a stale ref.
+                async with asyncio.timeout(_TYPE_TARGET_TIMEOUT_SECONDS):
+                    while True:
+                        tree = await capture_axtree(browser_session)
+                        if time.monotonic() >= deadline:
+                            break
+                        challenge = site_challenge_error("browser type", tree)
+                        if challenge is not None:
+                            return challenge
+                        selector_map = tree.get("selector_map", {})
+                        if ref is not None:
+                            element = resolve_ref(selector_map, ref)
+                            found_ref = ref
+                        elif text is not None:
+                            results = fuzzy_find_by_text(selector_map, text, limit=2, role=role)
+                            if len(results) > 1 and results[0]["score"] == results[1]["score"]:
+                                return err(
+                                    command="browser type", code=ErrorCode.E_SELECTOR_NOT_FOUND,
+                                    message="多个元素具有相同语义匹配分数，未执行输入",
+                                    hint="请提供可唯一定位的角色与名称，或重新运行 browser find",
+                                    details={"reason": "target_ambiguous"}, source="builtin",
+                                )
+                            if results:
+                                found_ref = results[0]["ref"]
+                                element = resolve_ref(selector_map, found_ref)
+                        if element is not None:
+                            if ref is None:
+                                initialization_pending = True
+                                initialized = await _document_initialized(browser_session)
+                                if time.monotonic() >= deadline:
+                                    element = None
+                                    break
+                                initialization_pending = not initialized
+                                if not initialized:
+                                    needs_ready_snapshot = True
+                                    element = None
+                                    await asyncio.sleep(get_config().resolve_retry_delay)
+                                    continue
+                                if needs_ready_snapshot:
+                                    # Initializers can replace controls; resolve again after DOMContentLoaded.
+                                    needs_ready_snapshot = False
+                                    element = None
+                                    continue
+                            assert found_ref is not None
+                            node = await browser_session.get_element_by_index(int(found_ref))
+                            if time.monotonic() >= deadline:
+                                element, node = None, None
+                            break
+                        if ref is not None or text is None:
+                            break
+                        await asyncio.sleep(get_config().resolve_retry_delay)
+            except TimeoutError:
+                element, node = None, None
 
             if element is None:
                 challenge = site_challenge_error("browser type", tree)
                 if challenge is not None:
                     return challenge
+                if initialization_pending:
+                    return err(
+                        command="browser type", code=ErrorCode.E_PAGE_NOT_READY,
+                        message="页面尚未完成 DOM 初始化，未执行输入",
+                        hint="等待页面初始化完成后检查目标；不会自动重复输入或提交",
+                        details={"reason": "document_not_ready"}, source="builtin",
+                    )
                 return err(
                     command="browser type",
                     code=ErrorCode.E_SELECTOR_NOT_FOUND,
@@ -111,7 +188,6 @@ async def _run_type(
                 )
 
             assert found_ref is not None
-            node = await browser_session.get_element_by_index(int(found_ref))
             if node is None:
                 return err(
                     command="browser type",

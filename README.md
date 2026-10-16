@@ -28,6 +28,8 @@ cliany-site demo --case-id apache-jira-issues --json
 
 `doctor` gives you a human-readable next step. `cliany-site cases --status active` lists maintained public cases; `demo` installs a pinned no-login adapter only if absent, verifies it strictly, then runs a read-only query and requires at least one result row. Jira, Confluence, and Jenkins are supported; login-required and candidate cases are not. Follow the [10-minute success path](docs/quickstart-10min.md) for prerequisites, or configure Chrome/CDP and an LLM when you are ready to generate a command for your own site.
 
+From v0.16.390, named browser input observes document initialization and refreshes semantic refs before typing once, without waiting for slow images. Delayed named fields and list/table/status regions share their existing ten-second preparation budgets; missing regions still fail rather than becoming empty success. This is not an entire workflow deadline or an action retry. The [evidence](docs/user-evidence/2026-10-17-semantic-workflow-readiness.md) preserves earlier failures and a separate three-generation/nine-replay source check; 100-row prefixes are not complete collection, and the independent trial stays fixed at published 0.16.387.
+
 ### Tell us what happened
 
 - [Report a bug](https://github.com/pearjelly/cliany.site/issues/new?template=bug_report.yml) if installation, exploration, or replay did not behave as expected.
