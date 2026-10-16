@@ -7,6 +7,15 @@ from cliany_site.codegen.dedup import action_fingerprint
 from cliany_site.explorer.models import ActionStep
 
 
+class ParameterBindingError(ValueError):
+    def __init__(self, action_index: int, action_type: str):
+        self.action_index = action_index
+        self.action_type = action_type
+        super().__init__(
+            f"参数绑定无效：动作 {action_index} ({action_type}) 不执行参数化 value；请绑定实测输入或选择动作"
+        )
+
+
 def auto_detect_params_from_actions(
     step_indices: list[int],
     all_actions: list[ActionStep],
@@ -68,6 +77,9 @@ def build_param_overrides(
         if primary_idx is None:
             continue
 
+        if 0 <= primary_idx < len(all_actions) and all_actions[primary_idx].action_type not in {"type", "select"}:
+            raise ParameterBindingError(primary_idx, all_actions[primary_idx].action_type)
+
         overrides[primary_idx] = placeholder
 
         if 0 <= primary_idx < len(all_actions):
@@ -82,6 +94,7 @@ def build_param_overrides(
 
 
 __all__ = [
+    "ParameterBindingError",
     "auto_detect_params_from_actions",
     "build_param_overrides",
 ]

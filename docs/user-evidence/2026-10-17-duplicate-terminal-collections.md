@@ -30,4 +30,6 @@ Reviewed coverage passed **77 related unit/action-completion controls in 1.05 se
 
 ## Remaining Gates
 
+The first frozen source `b7fe64d1702814dd7777812a47c43fe38c2580d0` passed 3,774 full tests and exact-head ordinary/native CI, but its strict real study still failed **2/3 workflows, 7/9 replays**. No duplicate appeared; a fixed navigation URL ignored changed inputs in trial 2. [Issue 104 and the separate evidence](2026-10-17-parameter-binding-execution.md) preserve that source failure and its next correction. It does not replace the official v390 assessment above or establish a real duplicate-repair invocation. PR103 remains draft pending a new combined-source study.
+
 Freeze a clean source commit, run fresh strict real doctor and a new predeclared three-generation/nine-replay study against independently completed normal-page rows, then full offline/static/case/package/build and exact-head ordinary/native CI. Retain every failure. No merge/publication follows merely from a passing source study: the Shanghai formal budget is already exhausted. A later successor requires fresh online capacity, version/changelog/roadmaps/site/notes, final-source/master gates, target/tagged readiness, precise GitHub/PyPI bytes, correct Vercel production/aliases, fresh official-package workflows and final distribution audit. Independent first use stays separately 0/2.

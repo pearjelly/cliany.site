@@ -28,6 +28,7 @@ from cliany_site.browser.selector import (
 )
 from cliany_site.capability import sniff_api_endpoints
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
+from cliany_site.codegen.params import ParameterBindingError, build_param_overrides
 from cliany_site.config import get_config
 from cliany_site.errors import (
     DataCommandQualityError,
@@ -171,6 +172,41 @@ def _repeated_completed_extracts(
 def _is_data_command_name(value: object) -> bool:
     name = str(value or "").strip().lower()
     return name.startswith(_DATA_COMMAND_PREFIXES)
+
+
+def _invalid_command_parameter_bindings(
+    parsed: dict[str, Any], pending: list[dict[str, Any]], recorded: list[ActionStep],
+    required_names: set[str],
+) -> list[dict[str, Any]]:
+    if parsed.get("done") is not True:
+        return []
+    actions = [*recorded, *(ActionStep(
+        action_type=str(action.get("type", "")), page_url="", value=str(action.get("value") or ""),
+    ) for action in pending if isinstance(action, dict))]
+    failures: list[dict[str, Any]] = []
+    declared: set[str] = set()
+    commands = parsed.get("commands")
+    for position, command in enumerate(commands if isinstance(commands, list) else []):
+        if not isinstance(command, dict):
+            continue
+        indices = _valid_action_indices(command.get("action_steps"), len(actions))
+        args = command.get("args")
+        for arg in args if isinstance(args, list) else []:
+            if not isinstance(arg, dict):
+                continue
+            name = str(arg.get("name") or "").strip()
+            declared.add(name)
+            try:
+                build_param_overrides([arg], indices, actions)
+            except ParameterBindingError as exc:
+                failures.append({"command_index": position, "parameter_name": name,
+                                 "action_index": exc.action_index, "action_type": exc.action_type})
+            except ValueError:
+                # Invalid ownership remains the existing command-partition gate's responsibility.
+                pass
+    failures.extend({"parameter_name": name, "reason": "declared_parameter_removed"}
+                    for name in sorted(required_names - declared))
+    return failures
 
 
 def _valid_action_indices(raw_indices: object, action_count: int) -> list[int]:
@@ -964,6 +1000,7 @@ class WorkflowExplorer:
             data_completion_repairs = 0
             partition_repairs = 0
             semantic_plan_repairs = 0
+            required_parameter_names: set[str] = set()
             semantic_plan_feedback = ""
             empty_completion_retries = 0
             completion_feedback = ""
@@ -1123,18 +1160,33 @@ class WorkflowExplorer:
                     _repeated_completed_extracts(actions_data, tree, result.actions, all_extraction_results)
                     if interactive_ctrl is None else []
                 )
-                if ambiguous_targets or invalid_extract_targets or repeated_extracts:
+                invalid_bindings = _invalid_command_parameter_bindings(
+                    parsed, actions_data, result.actions, required_parameter_names,
+                )
+                if ambiguous_targets or invalid_extract_targets or repeated_extracts or invalid_bindings:
                     if semantic_plan_repairs >= _MAX_SEMANTIC_PLAN_REPAIRS or step_num + 1 >= cfg.explore_max_steps:
                         raise ExploreContractError(
+                            "命令参数绑定不影响实际执行；请使用实测输入或选择动作" if invalid_bindings else
                             "已有成功集合被重复提取；请复用已有证据完成命令" if repeated_extracts else
                             "动作目标缺少唯一实测语义身份；请重新规划可唯一重定位的目标",
                             reason=(
+                                "parameter_binding_invalid" if invalid_bindings else
                                 "duplicate_completed_extract" if repeated_extracts else
                                 "extract_selector_ungrounded" if invalid_extract_targets else "action_target_ambiguous"
                             ),
                         )
                     semantic_plan_repairs += 1
+                    required_parameter_names.update(
+                        str(failure["parameter_name"]) for failure in invalid_bindings if failure.get("parameter_name")
+                    )
                     semantic_plan_feedback = (
+                        "命令参数绑定门禁：以下参数不会影响对应动作的实际执行："
+                        f"{json.dumps(invalid_bindings, ensure_ascii=False)}。"
+                        "本轮动作尚未执行，也未录制，累计动作索引不变。"
+                        "action_index 只替换 type/select 的 value，不能改变 navigate 的固定 URL。"
+                        "请保留已声明参数，从当前 AX 实测输入框或选择控件规划可重放动作；"
+                        "不得猜测 URL 或参数映射，也不得删除参数来伪装修正。"
+                    ) if invalid_bindings else (
                         "已有成功集合，本轮纯提取计划重复了相同页面、实测语义身份与字段："
                         f"{json.dumps(repeated_extracts, ensure_ascii=False)}。"
                         "拟重复动作尚未执行，也未录制，累计动作索引不变。"
@@ -1153,6 +1205,7 @@ class WorkflowExplorer:
                         "这次修正不新增已完成动作，累计动作索引不变。"
                     )
                     logger.warning(
+                        "步骤 %d 的参数绑定不影响实际执行，发起一次有限规划修正" if invalid_bindings else
                         "步骤 %d 的集合提取重复已完成证据，发起一次有限规划修正" if repeated_extracts else
                         "步骤 %d 的目标缺少唯一实测语义身份，发起一次有限规划修正", step_num + 1,
                     )

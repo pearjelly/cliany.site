@@ -13,6 +13,8 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 已完成校准
 
+未发布 PR103 的首个固定源码通过 3,774 项完整回归与精确 SHA 普通/Chromium CI，但真实研究仍只有 **2/3 完整工作流、7/9 回放**：声明的 query 被写入导航 value，固定 URL 却没有改变。[Issue 104 证据](user-evidence/2026-10-17-parameter-binding-execution.md)保留原失败及真实浏览器红绿对照；下一修正于执行前拒绝不可执行绑定，共享原有一次语义规划修正，不猜测 URL 映射、不删除参数绕过。仍需新的组合源码真实研究和完整门禁，不增加独立人次、不发布今天第四版。
+
 已发布 v0.16.390 的[收据](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791)完成 3,739 项最终 master 回归、精确 SHA 普通/Chromium CI、GitHub/PyPI 实际字节一致、正确生产与严格远端分发审计；正式包独立研究却只有 **2/3 完整工作流、6/9 返回值检查**，即使九次 CLI 都成功。一组命令在无中间页面动作时重复同一集合，正向各返回两个相同的 100 行数组。[Issue 102](https://github.com/pearjelly/cliany.site/issues/102) 与[证据](user-evidence/2026-10-17-duplicate-terminal-collections.md)保留原失败、真实 Chromium 六行对三行复现及未发布的有限规划修正。定向源码通过不替代新真实模型研究或后续发布门禁；今天已达 3/3，不再推 tag。独立用户仍 0/2，试用固定 0.16.387，不晋级案例。
 
 已发布 [v0.16.389 远程安装诊断](user-evidence/2026-10-17-remote-install-diagnostics.md)完成[三端与公开安装包验收](https://github.com/pearjelly/cliany.site/pull/99#issuecomment-6221489071)：3,698 项最终 master 回归、精确 SHA 普通/Chromium CI、GitHub/PyPI 字节一致、正确生产与严格远端审计通过。固定诊断不回显 URL 登录凭据或上游正文；受控 HTTPS 故障与旧公开下载失败分别保留，超时、重试、哈希和 TLS 策略不变。独立试用仍固定 0.16.387，人次为 0/2，不晋级案例。

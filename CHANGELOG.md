@@ -13,6 +13,7 @@
 
 ### Fixed
 
+- Unpublished: generated value parameters must bind to executable type/select steps, not fixed navigation URLs or non-value actions. Exploration refuses invalid completion plans before execution/recording and uses the existing shared single semantic-plan correction; removing the advertised parameter cannot bypass it. Code generation also fails closed. No invented URL mapping, generated-file edit, retry increase or case promotion. The [ignored-input evidence](docs/user-evidence/2026-10-17-parameter-binding-execution.md) retains the failed source study separately from official v390 and independent first use.
 - Unpublished: automatic exploration refuses a repeated pure collection read after successful evidence for the same observed semantic target and fields, before execution or recording. It uses the existing shared single planning correction, preserves action indices, and fails persistent repetition with `duplicate_completed_extract`. Different scopes/intervening actions and explicitly confirmed interactive reads retain their policies. No history/output deduplication, generated-file rewrite, retry-budget increase or case promotion. The [official v0.16.390 failure and native reproduction](docs/user-evidence/2026-10-17-duplicate-terminal-collections.md) remain failed; this correction is not in the published package.
 
 ## [0.16.390] - 2026-10-17
