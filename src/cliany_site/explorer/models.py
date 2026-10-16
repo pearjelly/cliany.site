@@ -59,7 +59,7 @@ def exploration_history(actions: list[ActionStep], commands: list[CommandSuggest
     import dataclasses
 
     return {"actions": [dataclasses.asdict(action) for action in actions],
-            "commands": [{"name": command.name, "action_steps": list(command.action_steps)} for command in commands]}
+            "commands": [dataclasses.asdict(command) for command in commands]}
 
 
 @dataclass

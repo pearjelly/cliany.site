@@ -38,6 +38,7 @@ commands 字段说明（仅当 done=true 时填写）：
   - description: 参数描述（中文）
   - required: 是否必填
   - action_index: 该参数对应的累积 actions 列表中的索引号（整数），指明哪个 action 的 value 应被参数化
+  - 同一参数需要影响多个录制输入时，改用 action_indices（非空、无重复的整数列表），与 action_index 二选一。必须显式列出全部属于本命令的 type/select 索引；单索引不扩散到同名控件，默认值匹配多个动作时不会猜测。固定基线的输入不得列入可变查询绑定。
   - action_index 只能指向本命令实际执行 value 的 type/select 动作；navigate 的固定 URL 不会被它替换。搜索词应绑定实测表单输入，不能以固定搜索 URL 冒充可换词命令，也不能猜测 URL 参数映射。
   - 每个声明参数在最终替换后必须仍影响实际执行字段；仅保留 name/default 不算绑定，多个参数也不能覆盖同一步 value 使前一个参数失效。参数修正不得靠取消绑定来绕过门禁。
   - default: 探索时使用的真实值（用于生成默认值）

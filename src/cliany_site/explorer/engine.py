@@ -30,7 +30,7 @@ from cliany_site.browser.selector import (
 from cliany_site.capability import sniff_api_endpoints
 from cliany_site.codegen.collection_scope import CollectionScopeError, validate_collection_scope
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
-from cliany_site.codegen.params import ParameterBindingError, build_param_overrides
+from cliany_site.codegen.params import ParameterBindingError, build_param_overrides, declared_parameter_indices
 from cliany_site.config import get_config
 from cliany_site.errors import (
     DataCommandQualityError,
@@ -298,13 +298,14 @@ def _apply_partition_repair(
         indices = command["action_steps"]
         args = command.get("args")
         for arg in args if isinstance(args, list) else []:
-            if isinstance(arg, dict) and "action_index" in arg:
-                index = arg["action_index"]
-                if type(index) is not int or index not in indices:
+            if isinstance(arg, dict):
+                try:
+                    declared_parameter_indices(arg, indices)
+                except ValueError as exc:
                     raise ExploreContractError(
                         "命令动作分区无效：参数索引不属于修正后的命令",
                         reason="command_partition_invalid",
-                    )
+                    ) from exc
     return merged
 
 
@@ -1214,6 +1215,8 @@ class WorkflowExplorer:
                         f"{json.dumps(invalid_bindings, ensure_ascii=False)}。"
                         "本轮动作尚未执行，也未录制，累计动作索引不变。"
                         "action_index 只替换 type/select 的 value，不能改变 navigate 的固定 URL。"
+                        "需要同一参数影响多次输入时，显式使用 action_indices 列出全部实测索引；"
+                        "单索引不会扩散到相同控件，默认值匹配多个动作时必须明确绑定。"
                         "请保留已声明参数，从当前 AX 实测输入框或选择控件规划可重放动作；"
                         "不得猜测 URL 或参数映射，也不得删除参数来伪装修正。"
                     ) if invalid_bindings else (

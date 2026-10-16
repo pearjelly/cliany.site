@@ -360,10 +360,14 @@ class AdapterMerger:
                     and len(set(original_indices)) == action_count):
                 rebased = dict(zip(original_indices, range(action_start, action_start + action_count), strict=True))
                 for arg in args:
-                    if isinstance(arg, dict) and type(arg.get("action_index")) is int:
-                        index = arg["action_index"]
-                        if index in rebased:
-                            arg["action_index"] = rebased[index]
+                    if not isinstance(arg, dict):
+                        continue
+                    if "action_index" in arg:
+                        value = arg["action_index"]
+                        arg["action_index"] = rebased.get(value) if type(value) is int else None
+                    if isinstance(arg.get("action_indices"), list):
+                        arg["action_indices"] = [rebased.get(value) if type(value) is int else None
+                                                 for value in arg["action_indices"]]
             all_commands.append(
                 CommandSuggestion(
                     name=name,
