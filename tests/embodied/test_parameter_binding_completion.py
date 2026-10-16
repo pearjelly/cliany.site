@@ -163,3 +163,68 @@ async def test_fixed_navigation_binding_is_replanned_to_real_changed_and_zero_in
             assert result.commands[0].args[0]["action_index"] == 0
         finally:
             await context.close()
+
+
+@pytest.mark.embodied
+@pytest.mark.parametrize("correction", ["unbind", "clobber"])
+async def test_shared_repair_cannot_keep_a_dead_or_overwritten_query(
+    correction, tmp_home, clean_env, no_llm, monkeypatch, parameter_search, unused_tcp_port,
+):
+    from cliany_site.errors import ExploreContractError
+
+    for key, value in BROWSER_HOME.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.setenv("CLIANY_RUNTIME_HOME", str(tmp_home / "runtime"))
+    monkeypatch.setenv("CLIANY_QA_OFFLINE", "1")
+    cfg = replace(get_config(), explore_max_steps=4, llm_retry_max_attempts=1, vision_enabled=False)
+    monkeypatch.setattr("cliany_site.explorer.engine.get_config", lambda: cfg)
+    snapshots = []
+
+    async def capture(session):
+        tree = await capture_axtree(session)
+        snapshots.append(tree)
+        return tree
+
+    monkeypatch.setattr("cliany_site.explorer.engine.capture_axtree", capture)
+    calls = 0
+
+    async def respond(_messages):
+        nonlocal calls
+        calls += 1
+        assert calls <= 2
+        def element(name, role):
+            return next((key, value) for key, value in snapshots[-1]["selector_map"].items()
+                        if value.get("name") == name and value.get("role") == role)
+        from urllib.parse import urljoin
+
+        _, link = element("Alpha results", "link")
+        actions = [{"type": "navigate", "url": urljoin(parameter_search, link["attributes"]["href"])}]
+        args = [{"name": "query", "required": True, "action_index": 0, "default": "Alpha"}]
+        if calls == 2 and correction == "unbind":
+            args = [{"name": "query", "required": True}]
+        elif calls == 2:
+            actions = [{"type": "type", "ref": element("Search", "textbox")[0], "value": "Alpha"},
+                       {"type": "click", "ref": element("Search", "button")[0]}]
+            args.append({"name": "other", "action_index": 0})
+        return SimpleNamespace(content=json.dumps({"done": True, "actions": actions, "commands": [{
+            "name": "open-results", "action_steps": list(range(len(actions))), "args": args,
+        }]}))
+
+    model = SimpleNamespace(model="deterministic-fixture", ainvoke=AsyncMock(side_effect=respond))
+    monkeypatch.setattr("cliany_site.explorer.engine._get_llm", lambda **_kwargs: model)
+    endpoint = f"http://127.0.0.1:{unused_tcp_port}"
+    async with playwright_api.async_playwright() as playwright:
+        context = await playwright.chromium.launch_persistent_context(
+            str(tmp_home / "profile"), headless=True, env={**os.environ, **BROWSER_HOME},
+            args=[f"--remote-debugging-port={unused_tcp_port}"],
+        )
+        try:
+            with pytest.raises(ExploreContractError) as caught:
+                await WorkflowExplorer(cdp_url=endpoint).explore(parameter_search, "Open results", record=False)
+            assert caught.value.reason == "parameter_binding_invalid" and calls == 2
+            page = next(page for page in context.pages if page.url == parameter_search)
+            assert await page.get_by_role("textbox", name="Search").input_value() == ""
+            assert await page.locator("body").get_attribute("data-submits") is None
+            assert not (tmp_home / "runtime" / "adapters").exists()
+        finally:
+            await context.close()

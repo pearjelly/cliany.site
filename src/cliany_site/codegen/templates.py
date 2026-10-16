@@ -11,6 +11,7 @@ from cliany_site.codegen.dedup import (
     remove_redundant_duplicate_actions,
 )
 from cliany_site.codegen.naming import (
+    argument_parameter_names,
     sanitize_docstring_text,
     sanitize_inline_text,
     to_command_name,
@@ -375,15 +376,14 @@ def render_substitute_params_code(
 def render_argument_decorators(args: list[dict[str, Any]]) -> tuple[list[str], list[str]]:
     decorators: list[str] = []
     parameters: list[str] = []
-    used_names = {"json_mode", "ctx"}
+    parameter_names = iter(argument_parameter_names(args or []))
 
     for index, arg in enumerate(args or []):
         if not isinstance(arg, dict):
             continue
 
         raw_name = str(arg.get("name") or arg.get("key") or f"arg_{index + 1}")
-        parameter_name = unique_parameter_name(to_parameter_name(raw_name), used_names)
-        used_names.add(parameter_name)
+        parameter_name = next(parameter_names)
         parameters.append(parameter_name)
 
         positional = bool(arg.get("positional", False)) or str(arg.get("kind", "")).lower() in {

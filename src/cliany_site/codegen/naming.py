@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 
 def to_command_name(name: str, index: int) -> str:
@@ -54,6 +55,19 @@ def unique_parameter_name(base_name: str, used_names: set[str]) -> str:
     return f"{base_name}_{index}"
 
 
+def argument_parameter_names(args: list[dict[str, Any]]) -> list[str]:
+    names: list[str] = []
+    used = {"json_mode", "ctx"}
+    for index, arg in enumerate(args):
+        if not isinstance(arg, dict):
+            continue
+        raw = str(arg.get("name") or arg.get("key") or f"arg_{index + 1}")
+        name = unique_parameter_name(to_parameter_name(raw), used)
+        names.append(name)
+        used.add(name)
+    return names
+
+
 def sanitize_inline_text(value: str) -> str:
     """清洗行内文本：去除换行、首尾空白。"""
     return str(value or "").replace("\n", " ").replace("\r", " ").strip()
@@ -69,6 +83,7 @@ __all__ = [
     "to_function_name",
     "to_parameter_name",
     "unique_parameter_name",
+    "argument_parameter_names",
     "sanitize_inline_text",
     "sanitize_docstring_text",
 ]

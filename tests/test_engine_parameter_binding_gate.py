@@ -30,7 +30,7 @@ async def test_unsupported_binding_is_replanned_before_execution(kind, mocker, m
     cdp.disconnect.assert_awaited_once()
 
 
-@pytest.mark.parametrize("second", ["repeat", "remove", "ambiguity"])
+@pytest.mark.parametrize("second", ["repeat", "remove", "ambiguity", "unbind", "clobber"])
 async def test_one_shared_repair_cannot_be_reset_or_drop_the_advertised_parameter(
     second, mocker, monkeypatch, tmp_home, no_llm,
 ):
@@ -40,6 +40,11 @@ async def test_one_shared_repair_cannot_be_reset_or_drop_the_advertised_paramete
     elif second == "ambiguity":
         correction = _binding_plan("type")
         correction["actions"][0]["ref"] = "1"
+    elif second == "unbind":
+        correction["commands"][0]["args"] = [{"name": "query", "required": True}]
+    elif second == "clobber":
+        correction = _binding_plan("type")
+        correction["commands"][0]["args"].append({"name": "other", "action_index": 0})
     model, execute, _ = _prepare(mocker, monkeypatch, [_binding_plan(), correction], steps=5)
     with pytest.raises(ExploreContractError) as caught:
         await WorkflowExplorer().explore("https://plan.example.test/", "Enter a query", record=False)

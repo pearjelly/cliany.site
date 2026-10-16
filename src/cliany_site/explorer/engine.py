@@ -177,13 +177,26 @@ def _is_data_command_name(value: object) -> bool:
 
 def _invalid_command_parameter_bindings(
     parsed: dict[str, Any], pending: list[dict[str, Any]], recorded: list[ActionStep],
-    required_names: set[str],
+    required_names: set[str], tree: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     if parsed.get("done") is not True:
         return []
-    actions = [*recorded, *(ActionStep(
-        action_type=str(action.get("type", "")), page_url="", value=str(action.get("value") or ""),
-    ) for action in pending if isinstance(action, dict))]
+    actions = list(recorded)
+    tree = tree or {}
+    for action in pending:
+        if not isinstance(action, dict):
+            continue
+        kind, ref = str(action.get("type", "")), str(action.get("ref") or "")
+        selected = (tree.get("selector_map") or {}).get(ref.removeprefix("@")) or {}
+        attributes = action.get("parameters") if kind == "reuse_atom" else selected.get("attributes")
+        actions.append(ActionStep(
+            action_type=kind, page_url=tree.get("url", ""), target_ref=ref,
+            value=str(action.get("value") or ""), target_url=str(action.get("url") or ""),
+            target_name=str(selected.get("name") or ""), target_role=str(selected.get("role") or ""),
+            target_attributes=attributes if isinstance(attributes, dict) else {},
+            # Successful explorer reads are grounded before generation; raw selector parameters cannot bind them.
+            extract_target={"pending": True} if kind == "extract" else {},
+        ))
     failures: list[dict[str, Any]] = []
     declared: set[str] = set()
     commands = parsed.get("commands")
@@ -192,19 +205,16 @@ def _invalid_command_parameter_bindings(
             continue
         indices = _valid_action_indices(command.get("action_steps"), len(actions))
         args = command.get("args")
-        for arg in args if isinstance(args, list) else []:
-            if not isinstance(arg, dict):
-                continue
-            name = str(arg.get("name") or "").strip()
-            declared.add(name)
-            try:
-                build_param_overrides([arg], indices, actions)
-            except ParameterBindingError as exc:
-                failures.append({"command_index": position, "parameter_name": name,
-                                 "action_index": exc.action_index, "action_type": exc.action_type})
-            except ValueError:
-                # Invalid ownership remains the existing command-partition gate's responsibility.
-                pass
+        args = args if isinstance(args, list) else []
+        declared.update(str(arg.get("name") or "").strip() for arg in args if isinstance(arg, dict))
+        try:
+            build_param_overrides(args, indices, actions)
+        except ParameterBindingError as exc:
+            failures.append({"command_index": position, "parameter_name": exc.parameter_name,
+                             "action_index": exc.action_index, "action_type": exc.action_type})
+        except ValueError:
+            # Invalid ownership remains the existing command-partition gate's responsibility.
+            pass
     failures.extend({"parameter_name": name, "reason": "declared_parameter_removed"}
                     for name in sorted(required_names - declared))
     return failures
@@ -1168,7 +1178,7 @@ class WorkflowExplorer:
                     if interactive_ctrl is None else []
                 )
                 invalid_bindings = _invalid_command_parameter_bindings(
-                    parsed, actions_data, result.actions, required_parameter_names,
+                    parsed, actions_data, result.actions, required_parameter_names, tree,
                 )
                 if ambiguous_targets or invalid_extract_targets or repeated_extracts or invalid_bindings:
                     if semantic_plan_repairs >= _MAX_SEMANTIC_PLAN_REPAIRS or step_num + 1 >= cfg.explore_max_steps:

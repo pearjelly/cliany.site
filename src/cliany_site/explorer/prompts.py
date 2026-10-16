@@ -38,6 +38,7 @@ commands 字段说明（仅当 done=true 时填写）：
   - required: 是否必填
   - action_index: 该参数对应的累积 actions 列表中的索引号（整数），指明哪个 action 的 value 应被参数化
   - action_index 只能指向本命令实际执行 value 的 type/select 动作；navigate 的固定 URL 不会被它替换。搜索词应绑定实测表单输入，不能以固定搜索 URL 冒充可换词命令，也不能猜测 URL 参数映射。
+  - 每个声明参数在最终替换后必须仍影响实际执行字段；仅保留 name/default 不算绑定，多个参数也不能覆盖同一步 value 使前一个参数失效。参数修正不得靠取消绑定来绕过门禁。
   - default: 探索时使用的真实值（用于生成默认值）
 - 固定不变的操作值（如固定的网站名、导航路径）不需要参数化
 - 参数名必须是合法的 Python 标识符（字母、数字、下划线，snake_case 风格）
