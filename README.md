@@ -188,6 +188,8 @@ From v0.16.388, the existing ten-second list-readiness budget also covers the aw
 
 A captured null-body probe failure is also fixed: a missing document scope stays loading within the same budget. If the body never appears, extraction still fails instead of reporting an empty success.
 
+From v0.16.389, failed remote `market install` reports `error.details.stage=download` and a fixed `reason`, with a numeric `status_code` for a valid HTTP error. Missing assets, access rejection and certificate trust problems have different repair hints; a download failure no longer asks you to fix the archive format. Diagnostics omit URL login credentials, query/fragment, raw exceptions and response bodies. `demo` keeps this upstream detail and stops before verification/query. Hashes, TLS verification, no-overwrite and existing timeout/retry policies are unchanged; no automatic retry is added. Older failures without a captured cause cannot be reclassified. The independent trial remains at 0.16.387.
+
 Also supports `.env` file configuration. Search order: `~/.config/cliany-site/.env` → the selected runtime directory's `.env` (default `~/.cliany-site/.env`) → project directory `.env` → environment variables.
 
 If `explore --json` returns `E_LLM_UNAVAILABLE`, the LLM provider returned a retryable upstream outage such as `502 Bad Gateway`, rate limiting, provider connection failure, or service unavailable. The JSON envelope includes `details.retryable`, `details.status_code`, and `details.phase`; retry later or switch `CLIANY_LLM_PROVIDER` / `CLIANY_OPENAI_BASE_URL`. This does not mean the generated adapter or AXTree selector map is broken.
