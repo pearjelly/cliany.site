@@ -2,7 +2,7 @@
 
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-10-17
-- **基线版本：** v0.16.389（远程安装诊断候选；最后验证的公开版本为 v0.16.388）
+- **基线版本：** v0.16.389（已完成三端与公开安装包验收）
 - **目标周期：** 滚动维护（2026-09-08 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
 - **配套节奏：** [release-cadence.md](release-cadence.md)、[每周维护者循环](weekly-maintainer-loop.md)
@@ -13,7 +13,9 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 已完成校准
 
-当前 [v0.16.389 远程安装诊断候选](user-evidence/2026-10-17-remote-install-diagnostics.md)保留固定失败类别与下一步提示，不再将下载失败统一当作安装包格式错误，也不回显 URL 登录凭据或上游正文。受控真实 HTTPS 故障与旧公开下载失败分别记录；超时、重试、哈希和 TLS 策略不变。最终源码/master 与完整发布门禁仍须完成，不为凑版本发版。独立试用继续固定在 0.16.387，人次仍为 0/2，不晋级案例。
+已发布 [v0.16.389 远程安装诊断](user-evidence/2026-10-17-remote-install-diagnostics.md)完成[三端与公开安装包验收](https://github.com/pearjelly/cliany.site/pull/99#issuecomment-6221489071)：3,698 项最终 master 回归、精确 SHA 普通/Chromium CI、GitHub/PyPI 字节一致、正确生产与严格远端审计通过。固定诊断不回显 URL 登录凭据或上游正文；受控 HTTPS 故障与旧公开下载失败分别保留，超时、重试、哈希和 TLS 策略不变。独立试用仍固定 0.16.387，人次为 0/2，不晋级案例。
+
+当前未发布的[语义就绪修复](user-evidence/2026-10-17-semantic-workflow-readiness.md)推进 Issue 100：新鲜正式包受控样本为 9/9，公开完整工作流却只有 1/3，三次提取失败和另一次搜索框缺失失败分别保留。四秒延迟的真实 Chromium 控件/列表场景复现了受控缺陷；源码只等待语义观察，不重复输入或提交。后续须在固定源码上重新通过真实模型/公开页面与完整发布门禁，不由后续成功重计原失败，不为用满第三个发布名额而发版。
 
 已发布 v0.16.388 完成[最终 master、三端与公开安装包验收](https://github.com/pearjelly/cliany.site/pull/98#issuecomment-6220439464)：3,650 项全量测试、精确 SHA 普通/Chromium CI、GitHub/PyPI 字节一致、正确生产和严格远端分发审计通过。[就绪预算修复](user-evidence/2026-10-17-list-settle-budget.md)纳入 CDP 探针并修复本轮捕获的空 body 条件；源码和正式包首次下载失败仍单独保留，复查不改分，也不替代独立用户。
 
@@ -39,7 +41,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 已发布 v0.16.379 已完成[首次生成公开包验收](https://github.com/pearjelly/cliany.site/issues/77#issuecomment-6074014750)。[返回值复核](user-evidence/2026-10-09-returned-value-and-first-generation-review.md)记录逐行规则和公开站点的有界前缀；历史分数不能重计，100 行前缀不等于完整收集。[Alpha 契约审核](plans/2026-10-04-alpha-readiness-audit.md)仍判定未就绪，独立用户、迁移、并发、localStorage 与 HTTP 安全承诺仍有开放项。
 
-2026-06-10 的原始路线图以 v0.14.2 为基线；当前已验证公开版本为 v0.16.387，未发布源码候选仍须独立通过门禁。v0.16.357 加入真实浏览器端到端回归覆盖的执行修复、Cookie 主机范围保存，以及显式授权的 Jev 只读意图定位；v0.16.358 使实时模型连接故障的 JSON 建议更具体；v0.16.359 区分当前 provider 的密钥和不可重试的认证失败。新配置的 OpenAI 兼容模型已通过 live preflight；PyPI adapter 的公开资产安装和严格验证已完成，正常搜索页的只读 online smoke 仍待验证。crates.io 从维护者网络返回 HTTP 403，浏览器及事件总线的导航超时现报告页面就绪错误而非泛用未知错误，案例尚未晋级。Jev 的真实准确率也未测量。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
+2026-06-10 的原始路线图以 v0.14.2 为基线；当前已验证公开版本为 v0.16.389，未发布源码候选仍须独立通过门禁。v0.16.357 加入真实浏览器端到端回归覆盖的执行修复、Cookie 主机范围保存，以及显式授权的 Jev 只读意图定位；v0.16.358 使实时模型连接故障的 JSON 建议更具体；v0.16.359 区分当前 provider 的密钥和不可重试的认证失败。新配置的 OpenAI 兼容模型已通过 live preflight；PyPI adapter 的公开资产安装和严格验证已完成，正常搜索页的只读 online smoke 仍待验证。crates.io 从维护者网络返回 HTTP 403，浏览器及事件总线的导航超时现报告页面就绪错误而非泛用未知错误，案例尚未晋级。Jev 的真实准确率也未测量。过去几周的实际进展已经提前完成了原计划中的多项基础建设：
 
 - 首次成功路径：README、README.zh、官网和 `doctor` 输出已经围绕 10 分钟路径、真实 demo、LLM live preflight 和可执行下一步重新组织。
 - v0.16.365 的 [Confluence 维护包](user-evidence/2026-10-01-confluence-public-package-audit.md) 已从公开 Release 资产按固定 SHA-256 在隔离 HOME 中完成安装、严格校验和只读回放；维护版案例晋级 active，不修改用户已有 adapter，历史 v0.14.1 包仍不可用。
