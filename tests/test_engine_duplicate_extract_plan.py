@@ -163,6 +163,17 @@ def test_completed_collection_identity_is_grounded_after_query_update(mode):
     ]
 
 
+def test_probe_can_be_followed_by_business_read_without_discarding_history():
+    planned, tree, recorded, evidence = collection_history()
+    recorded[0].purpose = "probe"
+    assert _repeated_completed_extracts(planned, tree, recorded, evidence) == []
+    planned[0]["purpose"] = "probe"
+    assert _repeated_completed_extracts(planned, tree, recorded, evidence) == [
+        {"action_index": 0, "completed_action_index": 0}
+    ]
+    assert len(recorded) == 1 and recorded[0].purpose == "probe"
+
+
 @pytest.mark.parametrize("boundary", [
     "no_history", "intervening_action", "unobserved_previous", "new_path", "new_origin", "missing_url",
     "no_evidence", "failed", "empty", "blank_field", "boolean_index", "wrong_index", "latest_failure",

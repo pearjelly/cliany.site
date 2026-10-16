@@ -98,13 +98,13 @@ def build_param_overrides(
                 if 0 <= idx < len(all_actions) and action_fingerprint(all_actions[idx]) == fp:
                     overrides[idx] = placeholder
 
-    _validate_parameter_effects(args or [], step_indices, all_actions, overrides)
+    parameter_effect_action_indices(args or [], step_indices, all_actions, overrides)
     return overrides
 
 
-def _validate_parameter_effects(
+def parameter_effect_action_indices(
     args: list[dict[str, Any]], indices: list[int], actions: list[ActionStep], overrides: dict[int, str],
-) -> None:
+) -> dict[str, list[int]]:
     variables = argument_parameter_names(args)
     owners = dict(zip(variables, (index for index, arg in enumerate(args) if isinstance(arg, dict)), strict=True))
     substitutions: dict[str, int] = {}
@@ -117,7 +117,7 @@ def _validate_parameter_effects(
             substitutions[name] = owners[variables[index]]
             substitutions[variables[index]] = owners[variables[index]]
 
-    bound: set[int] = set()
+    effects: dict[int, set[int]] = {}
     for index in indices:
         if not 0 <= index < len(actions):
             continue
@@ -133,27 +133,30 @@ def _validate_parameter_effects(
             fields.append(action.selector)
         for value in fields:
             if isinstance(value, str):
-                bound.update(substitutions[token] for token in re.findall(r"\{\{(\w+)\}\}", value)
-                             if token in substitutions)
+                for token in re.findall(r"\{\{(\w+)\}\}", value):
+                    if token in substitutions:
+                        effects.setdefault(substitutions[token], set()).add(index)
         if action.action_type == "reuse_atom":
             for key, value in (action.target_attributes or {}).items():
                 key_var, value_var = to_parameter_name(str(key)), to_parameter_name(str(value))
                 if key_var in owners:
-                    bound.add(owners[key_var])
+                    effects.setdefault(owners[key_var], set()).add(index)
                 elif value_var in owners:
-                    bound.add(owners[value_var])
+                    effects.setdefault(owners[value_var], set()).add(index)
 
     for index, arg in enumerate(args):
-        if isinstance(arg, dict) and index not in bound:
+        if isinstance(arg, dict) and index not in effects:
             action_index = arg.get("action_index")
             raise ParameterBindingError(
                 action_index if type(action_index) is int else None, "",
                 parameter_name=str(arg.get("name") or ""), reason="parameter_unused",
             )
+    return {str(args[index].get("name") or ""): sorted(positions) for index, positions in effects.items()}
 
 
 __all__ = [
     "ParameterBindingError",
     "auto_detect_params_from_actions",
     "build_param_overrides",
+    "parameter_effect_action_indices",
 ]

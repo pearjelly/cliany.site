@@ -23,5 +23,7 @@ def test_explore_prompt_exposes_zero_based_action_boundary():
     assert "已录制 2 个动作" in prompt
     assert "本轮 actions 的第一个动作编号是 2" in prompt
     assert "0. Type query\n1. Submit search" in prompt
-    assert "commands.action_steps 必须覆盖此前及本轮的全部动作编号" in prompt
+    assert "commands.action_steps 必须覆盖此前及本轮的全部非 probe 动作编号" in prompt
+    assert "probe 原始编号永久保留在探索历史中" in prompt
+    assert "不得放入业务重放或事后修改用途" in prompt
     assert "json" in SYSTEM_PROMPT.lower()

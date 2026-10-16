@@ -13,6 +13,7 @@ from typing import Any
 from cliany_site.atoms.models import AtomCommand
 from cliany_site.atoms.storage import load_atom, load_atoms
 from cliany_site.audit import audit_source
+from cliany_site.codegen.collection_scope import validate_collection_scope, validate_discovery_purposes
 from cliany_site.codegen.naming import (
     sanitize_docstring_text,
     sanitize_inline_text,
@@ -28,7 +29,7 @@ from cliany_site.codegen.templates import (
 )
 from cliany_site.config import get_config
 from cliany_site.errors import SecurityError
-from cliany_site.explorer.models import ActionStep, ExploreResult
+from cliany_site.explorer.models import ActionStep, ExploreResult, exploration_history
 
 METADATA_SCHEMA_VERSION = 3
 
@@ -75,7 +76,9 @@ class AdapterGenerator:
         )
 
         command_blocks: list[str] = []
+        validate_discovery_purposes(explore_result.actions)
         for index, command in enumerate(explore_result.commands):
+            validate_collection_scope(command, explore_result.actions)
             command_blocks.append(render_command_block_v2(command, explore_result.actions, index))
 
         if not command_blocks:
@@ -384,6 +387,7 @@ def save_adapter(
                 "target_name": getattr(a, "target_name", None),
                 "target_url": a.target_url,
                 "description": getattr(a, "description", None),
+                **({"purpose": a.purpose} if a.purpose != "workflow" else {}),
             }
             for a in explore_result.actions
             if a.action_type
@@ -412,6 +416,12 @@ def save_adapter(
     base_metadata["signature"] = _sig
     if metadata:
         base_metadata.update(metadata)
+    if explore_result and any(action.purpose == "probe" for action in explore_result.actions):
+        history = base_metadata.get("exploration_history", [])
+        history = history if isinstance(history, list) else []
+        base_metadata["exploration_history"] = [
+            *history, exploration_history(explore_result.actions, explore_result.commands),
+        ]
 
     if explore_result:
         command_defs: list[dict[str, Any]] = []
@@ -435,6 +445,7 @@ def save_adapter(
                             "selector": action.selector,
                             "extract_mode": action.extract_mode,
                             "fields_map": action.fields_map,
+                            **({"purpose": action.purpose} if action.purpose != "workflow" else {}),
                         }
                     )
                     if action.extract_target:

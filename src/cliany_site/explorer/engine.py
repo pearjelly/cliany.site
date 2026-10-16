@@ -28,6 +28,7 @@ from cliany_site.browser.selector import (
     resolve_extract_target,
 )
 from cliany_site.capability import sniff_api_endpoints
+from cliany_site.codegen.collection_scope import CollectionScopeError, validate_collection_scope
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
 from cliany_site.codegen.params import ParameterBindingError, build_param_overrides
 from cliany_site.config import get_config
@@ -161,6 +162,8 @@ def _repeated_completed_extracts(
     selector_map, candidates = tree.get("selector_map") or {}, tree.get("extract_candidates") or []
     failures = []
     for index, action in enumerate(actions):
+        if previous.purpose == "probe" and action.get("purpose", "workflow") != "probe":
+            continue
         if action.get("extract_mode", "text") != previous.extract_mode or (action.get("fields") or {}) != fields:
             continue
         target = ground_extract_target(str(action.get("selector") or ""), selector_map, candidates)
@@ -226,9 +229,12 @@ def _valid_action_indices(raw_indices: object, action_count: int) -> list[int]:
     return [index for index in raw_indices if isinstance(index, int) and 0 <= index < action_count]
 
 
-def _validate_command_partition(commands: list[object], action_count: int) -> None:
+def _validate_command_partition(
+    commands: list[object], action_count: int, probe_indices: set[int] | None = None,
+) -> None:
     """Validate ownership before filtering indices can hide invalid model output."""
-    if commands and action_count == 0:
+    expected = set(range(action_count)) - (probe_indices or set())
+    if commands and not expected:
         raise ExploreContractError(
             "命令动作分区无效：没有录制动作，不能生成可复用命令",
             reason="command_partition_invalid",
@@ -244,7 +250,7 @@ def _validate_command_partition(commands: list[object], action_count: int) -> No
                 reason="command_partition_invalid",
             )
         assigned.extend(indices)
-    if sorted(assigned) != list(range(action_count)):
+    if sorted(assigned) != sorted(expected):
         raise ExploreContractError(
             "命令动作分区无效：每个动作须恰好归属一个命令，不允许遗漏或重复；请重新探索",
             reason="command_partition_invalid",
@@ -253,6 +259,7 @@ def _validate_command_partition(commands: list[object], action_count: int) -> No
 
 def _apply_partition_repair(
     commands: list[object], repaired: dict[str, Any], action_count: int,
+    probe_indices: set[int] | None = None,
 ) -> list[object]:
     if repaired.get("done") is not True or repaired.get("actions") != []:
         raise ExploreContractError(
@@ -284,7 +291,7 @@ def _apply_partition_repair(
                     reason="command_partition_invalid",
                 )
             merged.append({**original, "action_steps": replacement.get("action_steps")})
-    _validate_command_partition(merged, action_count)
+    _validate_command_partition(merged, action_count, probe_indices)
     for command in merged:
         if not isinstance(command, dict):
             continue
@@ -862,6 +869,12 @@ def _sanitize_actions_data(actions_data: Any, current_url: str) -> list[dict[str
             action_type = "type"
         if action_type:
             normalized["type"] = action_type
+        purpose = normalized.get("purpose", "workflow")
+        if (not isinstance(purpose, str) or purpose not in {"workflow", "probe", "baseline"}
+                or (purpose != "workflow" and action_type != "extract")):
+            raise ExploreContractError(
+                "只有只读 extract 可预先声明 probe/baseline 用途", reason="invalid_action_purpose",
+            )
 
         # value 字段归一化：LLM 可能用 text/content/query/keyword 代替 value
         current_value = str(normalized.get("value", "") or "").strip()
@@ -1272,6 +1285,7 @@ class WorkflowExplorer:
                             if action_type == "extract"
                             else "text",
                             fields_map=action_data.get("fields", {}) if action_type == "extract" else {},
+                            purpose=action_data.get("purpose", "workflow"),
                         )
                     result.actions.append(action)
 
@@ -1324,6 +1338,7 @@ class WorkflowExplorer:
                             local_index = error.get("step_index")
                     if isinstance(local_index, int) and 0 <= local_index < len(actions_data):
                         evidence["action_index"] = turn_snapshot.actions_before_count + local_index
+                        evidence["purpose"] = result.actions[evidence["action_index"]].purpose
                     all_extraction_results.append(evidence)
 
                 if recording_manager is not None and recording_manifest is not None:
@@ -1404,7 +1419,9 @@ class WorkflowExplorer:
                                     "已录制动作但未声明可复用命令，请修正命令定义",
                                     reason="missing_commands",
                                 )
-                            _validate_command_partition(commands_data, len(result.actions))
+                            probe_indices = {index for index, action in enumerate(result.actions)
+                                             if action.purpose == "probe"}
+                            _validate_command_partition(commands_data, len(result.actions), probe_indices)
                         except ExploreContractError:
                             if not result.actions or partition_repairs >= _MAX_PARTITION_REPAIRS:
                                 raise
@@ -1416,6 +1433,7 @@ class WorkflowExplorer:
                                     "type": action.action_type,
                                     "target_name": action.target_name,
                                     "target_role": action.target_role,
+                                    "purpose": action.purpose,
                                 }
                                 for index, action in enumerate(result.actions)
                             ]
@@ -1435,7 +1453,9 @@ class WorkflowExplorer:
                                 "页面动作已经执行完毕。不要操作页面。"
                                 "只返回 JSON 对象：actions=[]、done=true、commands 列表。"
                                 f"{repair_task}每个 action_steps 按录制顺序排列，"
-                                f"所有命令恰好覆盖索引 {list(range(len(result.actions)))}，每个索引只出现一次。\n"
+                                f"所有命令恰好覆盖非探测索引 "
+                                f"{[i for i, a in enumerate(result.actions) if a.purpose != 'probe']}，"
+                                "每个索引只出现一次；探测索引保留在历史中，不得重放或事后更改用途。\n"
                                 f"工作流：{workflow_description}\n"
                                 f"已录制动作摘要：{json.dumps(recorded_actions, ensure_ascii=False)}\n"
                                 f"原命令摘要：{json.dumps(command_summaries, ensure_ascii=False)}"
@@ -1454,6 +1474,7 @@ class WorkflowExplorer:
                             repaired = _parse_llm_response(_to_text(repair_response.content))
                             commands_data = _apply_partition_repair(
                                 commands_data, repaired, len(result.actions),
+                                {i for i, action in enumerate(result.actions) if action.purpose == "probe"},
                             )
 
                     completion_failures = _data_command_completion_failures(
@@ -1520,6 +1541,10 @@ class WorkflowExplorer:
                             better = _infer_command_name_from_description(cmd.description or workflow_description)
                             if better:
                                 cmd.name = better
+                        try:
+                            validate_collection_scope(cmd, result.actions)
+                        except CollectionScopeError as exc:
+                            raise ExploreContractError(str(exc), reason="collection_input_scope_invalid") from exc
 
                     _ca = parsed.get("canonical_actions", [])
                     result.canonical_actions = [a for a in _ca if isinstance(a, dict)]
