@@ -33,7 +33,7 @@ class AtomExtractor:
 
         workflow_name = self._derive_workflow_name(explore_result)
         actions_json = json.dumps(
-            [dataclasses.asdict(action) for action in explore_result.actions],
+            [dataclasses.asdict(action) for action in explore_result.actions if action.purpose != "probe"],
             ensure_ascii=False,
             indent=2,
         )
@@ -121,6 +121,8 @@ class AtomExtractor:
 
         actions_raw = atom_raw.get("actions", [])
         actions = actions_raw if isinstance(actions_raw, list) else []
+        if any(isinstance(action, dict) and action.get("purpose") == "probe" for action in actions):
+            return None
 
         return AtomCommand(
             atom_id=atom_id,

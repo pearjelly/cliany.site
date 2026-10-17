@@ -21,12 +21,14 @@ canonical_actions 和 selector_pool 字段为可选：若 LLM 无法生成，返
 
 commands 字段说明（仅当 done=true 时填写）：
 - 每个命令必须包含 action_steps 字段：一个 0-based 整数列表，指明该命令对应的动作编号（从探索过程所有步骤累积的 actions 列表中取，索引从 0 开始）
-- 所有命令的 action_steps 加起来必须覆盖全部动作索引（0 到 N-1），且每个索引只能出现在一个命令中
-- 如果工作流只有一个命令，action_steps 应包含所有动作的索引
+- 所有命令的 action_steps 加起来必须覆盖全部非 probe 动作索引（原始 0 到 N-1 中的非探测项），且每个索引只能出现在一个命令中；不能删除或重编号历史。
+- 如果工作流只有一个命令，action_steps 应包含所有非 probe 动作的原始索引。probe 索引只能留在探索历史，不能放入业务命令。
 - 每个生成命令都会从来源 URL 重新导航并独立执行；若读取结果依赖此前的输入、选择或点击，必须把这些动作和 extract 放在同一个命令，不能拆成先操作后读取的两个命令
 - 每个命令的 args 字段用于声明可参数化的 CLI 选项（详见下方参数化规则）
 - 每个命令必须显式写出 expects_nonempty（true/false）。默认用 true：空结果表示该数据命令没有得到预期数据。搜索、筛选或确认“某项是否不存在”的工作流若明确允许零匹配，设为 false；例如用户要求搜索命令在无匹配时返回空列表。false 不能用于掩盖字段缺失、部分提取或页面结构变化。
 - 命名为 list-、search-、read- 或 extract- 的数据命令必须在其 action_steps 中包含至少一个 extract 动作，并返回实际提取的数据；若无法识别稳定 selector 或字段，不得把该读取任务标记为 done=true。
+- 同一页面已成功提取的集合就是已有数据证据。没有新的页面交互且语义目标与字段未变时，不要为了结束探索再次 extract；可用 actions=[]、done=true 和完整 action_steps 直接完成命令。不同页面、目标、字段或交互后的提取仍应保留。
+- 可参数化命令的业务读取必须发生在真实参数生效之后；不能先提取固定查询结果，再追加输入来补参数绑定，导致业务返回混入旧数据。无法忠实完成时应停止，不能事后改标探测、丢弃数组或把单结果任务改成比较任务。
 
 参数化规则（关键 — 必须严格遵守）：
 - 重要前提：探索过程中返回的 actions 会被直接在浏览器上执行，因此 done=false 时 actions 的 value 必须使用真实文本，绝对不能使用 {{param_name}} 占位符
@@ -36,6 +38,9 @@ commands 字段说明（仅当 done=true 时填写）：
   - description: 参数描述（中文）
   - required: 是否必填
   - action_index: 该参数对应的累积 actions 列表中的索引号（整数），指明哪个 action 的 value 应被参数化
+  - 同一参数需要影响多个录制输入时，改用 action_indices（非空、无重复的整数列表），与 action_index 二选一。必须显式列出全部属于本命令的 type/select 索引；单索引不扩散到同名控件，默认值匹配多个动作时不会猜测。固定基线的输入不得列入可变查询绑定。
+  - action_index 只能指向本命令实际执行 value 的 type/select 动作；navigate 的固定 URL 不会被它替换。搜索词应绑定实测表单输入，不能以固定搜索 URL 冒充可换词命令，也不能猜测 URL 参数映射。
+  - 每个声明参数在最终替换后必须仍影响实际执行字段；仅保留 name/default 不算绑定，多个参数也不能覆盖同一步 value 使前一个参数失效。参数修正不得靠取消绑定来绕过门禁。
   - default: 探索时使用的真实值（用于生成默认值）
 - 固定不变的操作值（如固定的网站名、导航路径）不需要参数化
 - 参数名必须是合法的 Python 标识符（字母、数字、下划线，snake_case 风格）
@@ -89,6 +94,8 @@ actions 中每个操作的字段定义：
 - value: 【关键】对于 type 操作，value 必须是要输入的实际文本内容，不能为空字符串。对于 select 操作，value 是要选择的选项文本。
 - url: 仅 navigate 操作时使用，目标 URL
 - description: 操作的简要描述（中文）
+- purpose: 仅只读 extract 可以在执行前声明用途。默认 workflow：业务读取，进入命令重放及返回。probe：仅确认页面结构/字段的探索性读取，完整保留在历史和提取证据中，但不编入业务重放。baseline：只有用户明确要求固定基线/前后对比等独立业务数据时才用，仍须重放并返回；不能把普通搜索的旧结果标成 baseline 来绕过门禁。用途执行后不可更改。
+- 尚未建立真实参数化输入、只是试探固定 URL/列表结构时，读取必须预先标 purpose=probe。随后仍要真实录制 workflow 读取；不要把 probe 的旧数据当成业务结果，也不要伪造输入绑定。用户要求多个真实范围时保留各范围，不默认合并或去重。
 - reuse_atom: 仅 reuse_atom 操作时使用，格式为 {"reuse_atom": "atom_id", "parameters": {"key": "value"}}。当已有原子操作与当前步骤语义匹配时，优先使用此格式替代逐步操作。
 - extract: 仅 extract 操作时使用。需提供以下字段：
   - selector: CSS 选择器，定位要提取的元素。必须使用当前页面提供的候选；列表/表格可在已给出的容器候选后加空格与 li/tr（例如 #results li）。不得猜测类名或 ID。
@@ -246,6 +253,7 @@ URL: {url}
 
 ## 元素 CSS 选择器候选
 以下是页面元素对应的 CSS 选择器候选，当你需要使用 extract 动作时，请从候选中选择最稳定的选择器，不要自行编造：
+这里仅列出当前 AX 语义身份可唯一重定位的提取候选；完整 AXTree 中出现的 class、tag 或 ref 不等于可重放的提取身份，不要从中补回已排除的候选。操作仍使用完整 AXTree 中的真实 ref。
 {selector_candidates}
 
 ## 工作流描述
@@ -255,7 +263,7 @@ URL: {url}
 {completed_steps}
 
 已录制 {completed_action_count} 个动作。本轮 actions 的第一个动作编号是 {completed_action_count}。
-如果本轮设置 done=true，commands.action_steps 必须覆盖此前及本轮的全部动作编号，不能漏掉本轮新增的动作。
+如果本轮设置 done=true，commands.action_steps 必须覆盖此前及本轮的全部非 probe 动作编号，不能漏掉新增的业务动作；probe 原始编号永久保留在探索历史中，不得放入业务重放或事后修改用途。
 
 请分析页面，识别完成工作流的下一步操作。优先使用页面现有元素完成流程，只在拥有真实 URL 时才输出导航 URL。
 只有当已经完成 "{workflow_description}" 整个目标时，done 才能为 true；如果只是完成了中间某一步，done 必须为 false。以 JSON 格式回复。"""

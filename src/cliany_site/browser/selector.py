@@ -340,7 +340,22 @@ def resolve_extract_target(
     return (best_root, suffix) if best_root and not tied else None
 
 
-def format_read_only_extract_candidates(candidates: list[dict[str, Any]], max_chars: int = 2000) -> str:
+def replayable_extract_selectors(selector_map: dict[str, dict], extract_candidates: list[dict]) -> set[str]:
+    """Offer only observed selectors whose semantic identity resolves uniquely now."""
+    selectors = {
+        selector for item in _extract_semantic_entries(selector_map, extract_candidates)
+        for selector in item.get("selectors") or [] if isinstance(selector, str) and selector
+    }
+    return {
+        selector for selector in selectors
+        if (target := ground_extract_target(selector, selector_map, extract_candidates)) is not None
+        and resolve_extract_target(target, selector_map, extract_candidates) is not None
+    }
+
+
+def format_read_only_extract_candidates(
+    candidates: list[dict[str, Any]], max_chars: int = 2000, *, allowed_selectors: set[str] | None = None,
+) -> str:
     lines: list[str] = []
     for item in candidates:
         role = _to_text(item.get("role"))
@@ -349,6 +364,10 @@ def format_read_only_extract_candidates(candidates: list[dict[str, Any]], max_ch
         selectors = item.get("selectors")
         if not role or not isinstance(selectors, list) or not selectors:
             continue
+        if allowed_selectors is not None:
+            selectors = [value for value in selectors if value in allowed_selectors]
+            if not selectors:
+                continue
         line = f'[{role} "{name}" text="{text}"] → {", ".join(str(value) for value in selectors)}'
         if len("\n".join([*lines, line])) > max_chars:
             break
@@ -384,7 +403,9 @@ def is_grounded_extract_selector(selector: str, selector_map: dict[str, dict], e
     return False
 
 
-def format_selector_candidates_section(selector_map: dict[str, dict], max_chars: int = 3000) -> str:
+def format_selector_candidates_section(
+    selector_map: dict[str, dict], max_chars: int = 3000, *, allowed_selectors: set[str] | None = None,
+) -> str:
     if not isinstance(selector_map, dict):
         return ""
 
@@ -398,6 +419,8 @@ def format_selector_candidates_section(selector_map: dict[str, dict], max_chars:
             continue
 
         candidates = [_to_text(item) for item in raw_candidates if _to_text(item)]
+        if allowed_selectors is not None:
+            candidates = [value for value in candidates if value in allowed_selectors]
         if not candidates:
             continue
 

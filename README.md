@@ -30,7 +30,11 @@ cliany-site demo --case-id apache-jira-issues --json
 
 From v0.16.390, named browser input observes document initialization and refreshes semantic refs before typing once, without waiting for slow images. Delayed named fields and list/table/status regions share their existing ten-second preparation budgets; missing regions still fail rather than becoming empty success. This is not an entire workflow deadline or an action retry. The [evidence](docs/user-evidence/2026-10-17-semantic-workflow-readiness.md) preserves earlier failures and a separate three-generation/nine-replay source check; 100-row prefixes are not complete collection, and the independent trial stays fixed at published 0.16.387.
 
+Release preparation for **v0.16.391**, not published yet: newly generated commands preserve recorded stages and explicit input ownership. A fixed baseline is not a variable query; one input uses `action_index`, intentional repeated-input reuse uses `action_indices`, and ambiguous defaults fail instead of guessing. Structural `probe` reads retain full history without entering business replay; explicitly requested `baseline` data stays returned. Old saved CLI files are not patched by a runtime upgrade: regenerate or normally merge an explicit workflow. The [source evidence](docs/user-evidence/2026-10-17-recorded-workflow-fidelity.md) and [completed source receipt](https://github.com/pearjelly/cliany.site/issues/106#issuecomment-6226689026) do not replace final-version or official-package gates. Published distribution remains 0.16.390; independent reports remain 0/2 and the human trial stays fixed at 0.16.387.
+
 ### Tell us what happened
+
+The unpublished391 SDK/HTTP correction uses CLI-compatible internal parameter aliases; requests still use the original metadata argument names. The [alias review](docs/user-evidence/2026-10-17-generated-parameter-aliases.md) retains four wrong successes from the previous local391 wheel and requires fresh gates, not a rewrite of its earlier green sample.
 
 - [Report a bug](https://github.com/pearjelly/cliany.site/issues/new?template=bug_report.yml) if installation, exploration, or replay did not behave as expected.
 - [Request a feature or automation](https://github.com/pearjelly/cliany.site/issues/new?template=feature_request.yml) if a capability or workflow would make the tool more useful.
