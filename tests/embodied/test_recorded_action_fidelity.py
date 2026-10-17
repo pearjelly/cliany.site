@@ -70,7 +70,7 @@ def staged_search():
 
 
 @pytest.mark.embodied
-@pytest.mark.parametrize("scenario", ["wizard", "baseline", "repeat"])
+@pytest.mark.parametrize("scenario", ["wizard", "baseline", "repeat", "alias", "reserved_alias"])
 async def test_generated_cli_sdk_http_preserve_recorded_workflow(
     scenario, tmp_home, clean_env, no_llm, monkeypatch, staged_search, unused_tcp_port,
 ):
@@ -89,7 +89,12 @@ async def test_generated_cli_sdk_http_preserve_recorded_workflow(
                       fields_map={"name": "span"}, extract_target=target)
     field = ActionStep("type", url, target_ref="999", target_name="Search", target_role="textbox", value="Alpha")
     search = ActionStep("click", url, target_ref="998", target_name="Search", target_role="button")
-    if scenario == "wizard":
+    arg_name = "query"
+    if scenario in {"alias", "reserved_alias"}:
+        arg_name, alias = ("search-term", "search_term") if scenario == "alias" else ("json_mode", "json_mode_2")
+        actions = [replace(field, value="{{" + alias + "}}"), search, read]
+        arg = {"name": arg_name, "required": True}
+    elif scenario == "wizard":
         advance = ActionStep("click", url, target_ref="997", target_name="Continue", target_role="button")
         actions = [advance, replace(advance), field, search, read]
         arg = {"name": "query", "required": True, "action_index": 2, "default": "Alpha"}
@@ -153,13 +158,13 @@ async def test_generated_cli_sdk_http_preserve_recorded_workflow(
                     if scenario == "wizard":
                         for _ in range(2):
                             await page.get_by_role("button", name="Continue", exact=True).click()
-                    else:
+                    elif scenario not in {"alias", "reserved_alias"}:
                         expected.append(await search_page("Alpha" if scenario == "baseline" else query))
                         await page.get_by_role("button", name="Next group", exact=True).click()
                     expected.append(await search_page(query))
                     process = await asyncio.create_subprocess_exec(
                         sys.executable, "-m", "cliany_site", "--cdp-url", endpoint, domain, "search-groups",
-                        "--query", query, "--json", cwd=tmp_home, env=os.environ.copy(),
+                        "--" + arg_name.replace("_", "-"), query, "--json", cwd=tmp_home, env=os.environ.copy(),
                         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
                     )
                     try:
@@ -170,9 +175,9 @@ async def test_generated_cli_sdk_http_preserve_recorded_workflow(
                         raise
                     cli = json.loads(stdout)
                     (tmp_home / f"{scenario}-{query}-cli.json").write_bytes(stdout)
-                    sdk_result = await sdk.execute(domain, "search-groups", params={"query": query})
+                    sdk_result = await sdk.execute(domain, "search-groups", params={arg_name: query})
                     response = await client.post("/execute", json={
-                        "domain": domain, "command": "search-groups", "params": {"query": query},
+                        "domain": domain, "command": "search-groups", "params": {arg_name: query},
                     })
                     http = await response.json()
                     returned = {

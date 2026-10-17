@@ -406,6 +406,7 @@ class ClanySite:
         from cliany_site.action_runtime import substitute_parameters
 
         if generated_command:
+            from cliany_site.codegen.naming import argument_parameter_names
             from cliany_site.codegen.params import (
                 ParameterBindingError,
                 auto_detect_params_from_actions,
@@ -441,7 +442,15 @@ class ClanySite:
             for arg in command_args:
                 if arg.get("required") and effective_params.get(arg.get("name")) is None:
                     return error_response("E_INVALID_PARAM", f"缺少必填参数: {arg.get('name')}")
-            params = effective_params
+            # Match the generated CLI's ordered raw-name/variable alias precedence.
+            params = {}
+            aliases = argument_parameter_names(command_args)
+            for index, arg in enumerate(command_args):
+                raw_name = str(arg.get("name") or "").strip()
+                if raw_name and index < len(aliases) and arg.get("name") in effective_params:
+                    value = effective_params[arg["name"]]
+                    params[raw_name] = value
+                    params[aliases[index]] = value
 
             original_indices = cmd_def.get("action_steps", indices)
             arguments = []

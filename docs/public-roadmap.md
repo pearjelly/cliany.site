@@ -1,5 +1,7 @@
 # cliany-site Public Roadmap
 
+**New unpublished391 alias failure:** [Issue107 evidence](user-evidence/2026-10-17-generated-parameter-aliases.md) retains4 wrong-success SDK/HTTP comparisons on the previous391 local wheel, despite58f41331's scoped green CI and real study. Match CLI's existing internal parameter aliases; public accepted keys and static refusal stay unchanged. Repeat exact-new-head and actual-wheel gates. No fourth October17 publication or independent-user credit.
+
 - **Updated:** 2026-10-17
 - **Current baseline:** v0.16.391 (unpublished release preparation; not the public distribution)
 - **Last published baseline:** v0.16.390 ([distribution verified; fresh-generation acceptance failed](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791))

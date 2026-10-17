@@ -40,6 +40,8 @@ cliany-site demo --case-id apache-jira-issues --json
 
 ### 告诉我们结果
 
+未发布391的SDK/HTTP修复按CLI现有规则替换内部参数别名；请求仍使用元数据原始参数名。[别名证据](docs/user-evidence/2026-10-17-generated-parameter-aliases.md)保留旧391本地wheel的四项错误成功，须另做完整门禁，不重写原有通过样本。
+
 - 安装、探索或回放不符合预期？请[提交 Bug](https://github.com/pearjelly/cliany.site/issues/new?template=bug_report.yml)。
 - 想要某项能力或自动化流程？请[提交功能建议](https://github.com/pearjelly/cliany.site/issues/new?template=feature_request.yml)。
 - 有其他人也能安全运行的公开只读流程？请[提交案例建议](https://github.com/pearjelly/cliany.site/issues/new?template=case_proposal.yml)。

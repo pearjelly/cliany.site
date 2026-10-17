@@ -34,6 +34,8 @@ Release preparation for **v0.16.391**, not published yet: newly generated comman
 
 ### Tell us what happened
 
+The unpublished391 SDK/HTTP correction uses CLI-compatible internal parameter aliases; requests still use the original metadata argument names. The [alias review](docs/user-evidence/2026-10-17-generated-parameter-aliases.md) retains four wrong successes from the previous local391 wheel and requires fresh gates, not a rewrite of its earlier green sample.
+
 - [Report a bug](https://github.com/pearjelly/cliany.site/issues/new?template=bug_report.yml) if installation, exploration, or replay did not behave as expected.
 - [Request a feature or automation](https://github.com/pearjelly/cliany.site/issues/new?template=feature_request.yml) if a capability or workflow would make the tool more useful.
 - [Propose a public read-only workflow](https://github.com/pearjelly/cliany.site/issues/new?template=case_proposal.yml) if you have a safe scenario others can try.

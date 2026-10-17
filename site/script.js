@@ -223,6 +223,10 @@ const I18N = {
     zh: 'v0.16.391 发布准备，尚未发布：新生成命令保留录制阶段与显式参数所有权。单次输入使用 <code>action_index</code>，有意复用使用 <code>action_indices</code>；结构性 <code>probe</code> 保留历史但不进入业务回放，明确要求的 <code>baseline</code> 仍返回。运行时升级不会改写旧 CLI，需以明确工作流重新探索或正常合并。源码检查不算正式包或独立用户验收；人工试用仍固定在已发布 0.16.387，人次仍 0/2。',
     en: 'v0.16.391 release preparation, not published: newly generated commands preserve recorded stages and explicit input ownership. One input uses <code>action_index</code>; intentional reuse uses <code>action_indices</code>. Structural <code>probe</code> history stays separate from explicitly requested <code>baseline</code> results. A runtime upgrade does not patch old CLI files: regenerate or normally merge an explicit workflow. Source checks are not official-package or independent-user acceptance; the human trial remains fixed at published 0.16.387 and reports remain 0/2.'
   },
+  'qs.generatedAliases': {
+    zh: '391 候选的 SDK/HTTP 在内部按 CLI 同一规则替换规范化和保留名变量；请求仍使用元数据中的原始参数名。旧候选的四项错误成功继续保留，新版本须另做完整验证，尚未发布。',
+    en: 'The unpublished391 candidate uses CLI-compatible normalized and reserved-name substitutions inside SDK/HTTP replay. Requests still use original metadata argument keys. Four wrong successes from the previous candidate remain recorded; new full validation is required.'
+  },
   'qs.maintainer.safeRetries': {
     zh: '从 v0.16.381 起，模型请求被 HTTP 拒绝时不再因正文含网关关键词而重复调用。CLI/live doctor 保留认证失败类型；重试警告和可选单次错误事件使用固定摘要，不回显上游正文。成功请求延迟、provider 持续可用性及独立首次使用仍待验证。',
     en: 'From v0.16.381, model HTTP rejections stop without repeating because of gateway words in the body. CLI/live doctor preserve authentication failures; retry warnings and optional attempt-error events use fixed summaries without upstream response text. Successful-request latency, provider availability and independent first use remain unverified.'
