@@ -36,11 +36,11 @@ cliany-site demo --case-id apache-jira-issues --json
 
 从 v0.16.390 起，命名输入在原有 10 秒准备预算内等待文档初始化，并重新观察语义引用后只输入一次，不等待慢图片。延迟出现的命名字段及列表/表格/状态区域可在各自既有预算内就绪；缺失区域仍报错，不冒充零匹配。这不是整个工作流的总时限，也不重复输入、提交、导航或模型调用。[证据记录](docs/user-evidence/2026-10-17-semantic-workflow-readiness.md)保留旧失败及另外三次真实探索、九次逐行对照；100 行前缀不等于完整收集，独立试用仍固定为已发布 0.16.387。
 
-**v0.16.391 发布准备，尚未发布：** 新生成命令保留录制阶段与显式参数所有权。固定基线不是可变 query；单次输入使用 `action_index`，同一参数复用到多个输入需显式 `action_indices`，默认值匹配多个动作时不猜测。结构性 `probe` 保留完整历史但不进入业务回放；用户明确要求的 `baseline` 数据仍返回。运行时升级不会修复旧 CLI 已生成的步骤或占位符，需以明确工作流重新探索或正常合并。[源码证据](docs/user-evidence/2026-10-17-recorded-workflow-fidelity.md)及[已完成源码收据](https://github.com/pearjelly/cliany.site/issues/106#issuecomment-6226689026)不替代最终版本与正式包门禁。当前公开分发仍为 0.16.390，独立报告仍 0/2，人工试用固定 0.16.387。
+**v0.16.391：** 新生成命令保留录制阶段与显式参数所有权。固定基线不是可变 query；单次输入使用 `action_index`，同一参数复用到多个输入需显式 `action_indices`，默认值匹配多个动作时不猜测。结构性 `probe` 保留完整历史但不进入业务回放；用户明确要求的 `baseline` 数据仍返回。运行时升级不会修复旧 CLI 已生成的步骤或占位符，需以明确工作流重新探索或正常合并。[源码证据](docs/user-evidence/2026-10-17-recorded-workflow-fidelity.md)及[已完成源码收据](https://github.com/pearjelly/cliany.site/issues/106#issuecomment-6226689026)不替代最终版本与正式包门禁。正式分发以发布收据为准，不能由源码分支推定；独立报告仍 0/2，人工试用固定 0.16.387。
 
 ### 告诉我们结果
 
-未发布391的SDK/HTTP修复按CLI现有规则替换内部参数别名；请求仍使用元数据原始参数名。[别名证据](docs/user-evidence/2026-10-17-generated-parameter-aliases.md)保留旧391本地wheel的四项错误成功，须另做完整门禁，不重写原有通过样本。
+v0.16.391的SDK/HTTP修复按CLI现有规则替换内部参数别名；请求仍使用元数据原始参数名。[别名证据](docs/user-evidence/2026-10-17-generated-parameter-aliases.md)保留旧391本地wheel的四项错误成功，须另做完整门禁，不重写原有通过样本。
 
 - 安装、探索或回放不符合预期？请[提交 Bug](https://github.com/pearjelly/cliany.site/issues/new?template=bug_report.yml)。
 - 想要某项能力或自动化流程？请[提交功能建议](https://github.com/pearjelly/cliany.site/issues/new?template=feature_request.yml)。

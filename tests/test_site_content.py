@@ -5,6 +5,16 @@ ROOT = Path(__file__).resolve().parents[1]
 PROJECT_VERSION = str(tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])
 
 
+def test_final_release_copy_does_not_keep_current_preparation_banners():
+    for relative in ("README.md", "README.zh.md", "site/index.html", "site/script.js", "site/docs/index.html"):
+        text = (ROOT / relative).read_text(encoding="utf-8")
+        for stale in ("release preparation, not published", "The unpublished391 candidate", "not published yet",
+                      "Unpublished preparation; public distribution remains", "发布准备，尚未发布",
+                      "未发布准备，公开分发仍为", "未发布391的SDK/HTTP", "v0.16.391 候选准备"):
+            assert stale not in text, (relative, stale)
+        assert "0.16.387" in text and "0/2" in text
+
+
 def test_site_explains_recorded_workflow_fidelity_without_patching_old_adapters():
     index = (ROOT / "site" / "index.html").read_text(encoding="utf-8")
     script = (ROOT / "site" / "script.js").read_text(encoding="utf-8")

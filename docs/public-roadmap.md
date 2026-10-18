@@ -1,14 +1,20 @@
 # cliany-site Public Roadmap
 
-**New unpublished391 alias failure:** [Issue107 evidence](user-evidence/2026-10-17-generated-parameter-aliases.md) retains4 wrong-success SDK/HTTP comparisons on the previous391 local wheel, despite58f41331's scoped green CI and real study. Match CLI's existing internal parameter aliases; public accepted keys and static refusal stay unchanged. Repeat exact-new-head and actual-wheel gates. No fourth October17 publication or independent-user credit.
-
-- **Updated:** 2026-10-17
-- **Current baseline:** v0.16.391 (unpublished release preparation; not the public distribution)
-- **Last published baseline:** v0.16.390 ([distribution verified; fresh-generation acceptance failed](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791))
+- **Updated:** 2026-10-18
+- **Current baseline:** v0.16.391 (source baseline; official availability requires a publication receipt)
+- **Previously published baseline, October 17:** v0.16.390 ([distribution verified; fresh-generation acceptance failed](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap below records earlier work; the October plan prioritizes verified first use and reliable real workflows.
+
+## October 18 Source Finalization
+
+The meaningful391 corrections have an [October17 exact-head/local-wheel receipt](https://github.com/pearjelly/cliany.site/issues/107#issuecomment-6227361707):3,933 unique local/remote test IDs,30/30 controlled CLI/SDK/HTTP comparisons and a separate real3/3 generation/9/9 replay study. Original failures have a [persistent private archival receipt](https://github.com/pearjelly/cliany.site/issues/107#issuecomment-6227442566), not public raw logs. Today's initial actual online formal-release count is0/3 and clean-source strict target readiness passes. These snapshots do not waive fresh finalized-source, visual, final-master, tagged, three-end or official-package gates. New source copy no longer carries a current unpublished/cap-full banner; it is not itself proof of publication. Independent reports remain0/2 on fixed published387, with no case promotion.
+
+## October 17 Preparation History
+
+**Captured alias failure:** [Issue107 evidence](user-evidence/2026-10-17-generated-parameter-aliases.md) retains4 wrong-success SDK/HTTP comparisons on the previous391 local wheel, despite58f41331's scoped green CI and real study. Match CLI's existing internal parameter aliases; public accepted keys and static refusal stay unchanged. The latera10571d6 receipt above is separate; October17 had no fourth publication or independent-user credit.
 
 The [v0.16.391 draft](releases/v0.16.391-draft.md) prepares the meaningful successor without releasing a fourth October17 version. Pre-version9d0d0c0f passed3,902 full offline tests, exact-head ordinary/Chromium CI, an ordinary real3/3 generation/9/9 replay study, and a separate explicit fixed-baseline1/1 generation/3/3 diagnostic. [The completed source receipt](https://github.com/pearjelly/cliany.site/issues/106#issuecomment-6226689026) does not substitute for new versioned/local-wheel and final-master/publication gates. Existing adapters/archives and all failed reports stay unchanged; independent reports0/2 and fixed human trial0.16.387 remain separate. Finalize actual date and public copy only when fresh online capacity and all required gates permit publication.
 Prior3835349d source passed3,850 full tests, exact-head ordinary/Chromium CI and a separate uninstrumented3/3 generation,9/9 row study. A new [staged-workflow review](user-evidence/2026-10-17-recorded-workflow-fidelity.md), Issue106, nevertheless reproduces seven controlled wrong successes: replay cleanup deletes necessary repeated stages and scalar parameter binding alters a fixed baseline. The unpublished correction preserves recorded multiplicity and explicit input ownership, with an explicit multi-index form rather than target/default guessing. Native CLI/SDK/HTTP red/green is not fresh-model or independent-user acceptance; new full/CI/live gates remain required. Today remains3/3 releases, independent reports0/2, no old adapter patch or case promotion.

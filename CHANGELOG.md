@@ -13,8 +13,6 @@
 
 ## [0.16.391] - 2026-10-18
 
-Release preparation only, not published. The date is the earliest planned Shanghai publication day, not an actual release timestamp. Recheck the date, public copy and all publication gates before tagging; October 17 already has three formal releases.
-
 ### Fixed
 
 - Generated SDK/HTTP replay now supplies the same ordered raw-name/normalized-variable substitution aliases as generated CLI code, including reserved names, defaults and zero/false values. Public accepted keys and static ownership/clobber refusal stay unchanged. The [native alias review](docs/user-evidence/2026-10-17-generated-parameter-aliases.md) preserves four wrong-success comparisons from the previous local391 wheel; its earlier green narrower cohorts are not rescored.
@@ -27,6 +25,7 @@ Release preparation only, not published. The date is the earliest planned Shangh
 
 ### Evidence And Migration
 
+- The October 17 `a10571d6` receipt covers 3,933 unique test IDs through 3,915 local selected tests and 85 remote Chromium tests with 67 overlapping IDs, not one unrestricted local full run. Its non-editable391 wheel passed 30/30 CLI/SDK/HTTP controls and a separate real3/3 generation/9/9 capped-prefix study. The [receipt](https://github.com/pearjelly/cliany.site/issues/107#issuecomment-6227361707) and [private archival receipt](https://github.com/pearjelly/cliany.site/issues/107#issuecomment-6227442566) preserve original failures and provenance. October 18 source finalization and eventual final-master/official-package gates require fresh evidence; none of these maintainer cohorts is independent first use.
 - Pre-version source `9d0d0c0f` passed 3,902 full offline tests and exact-head ordinary/Chromium CI. A new uninstrumented real study passed 3/3 generations and 9/9 returned-row checks; a separately predeclared fixed-baseline comparison diagnostic passed 1/1 generation and 3/3 replays, preserving both requested result scopes. These are capped-prefix maintainer checks, not full collections, final-version/public-package acceptance or independent users. The [receipt](https://github.com/pearjelly/cliany.site/issues/106#issuecomment-6226689026) preserves seven controlled wrong successes and every earlier failed cohort, including official v0.16.390 at 2/3 workflows and 6/9 checks.
 - Existing generated command files and pinned archives are not patched. Regenerate or normally merge with an explicit workflow to receive new renderer behavior; a runtime upgrade does not repair old emitted CLI steps/placeholders. Scalar `action_index` no longer broadcasts to similar controls; intentional reuse requires `action_indices`. Ambiguous legacy SDK bindings fail with `E_VERIFY_STATIC` before browser work instead of being guessed. Independent first use stays 0/2 on fixed published 0.16.387; no case is promoted.
 
