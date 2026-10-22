@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- With exploration recording enabled, retain the planning-time AX, raw model response, prior turn trace and fixed failure reason in a private failure journal when exploration stops. Keep proposals distinct from execution receipts and preserve shared-repair/action indices, original errors and cancellation. No new observations, model calls or retries; no-record writes no journal. This is unpublished; [the recording evidence](docs/user-evidence/2026-10-22-rejected-plan-recordings.md) preserves the actual391 control failure separately from native source checks and independent first use.
+
 ### Changed
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.

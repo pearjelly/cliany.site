@@ -7,6 +7,7 @@ import os
 import re
 import time
 import warnings
+from copy import deepcopy
 from datetime import UTC, datetime
 from http import HTTPStatus
 from pathlib import Path
@@ -1069,6 +1070,8 @@ class WorkflowExplorer:
 
         explore_completed = False
         _recording_finalized = False
+        failure_turn: dict[str, Any] | None = None
+        failure_turns: list[dict[str, Any]] = []
 
         try:
             await browser_session.navigate_to(url, new_tab=False)
@@ -1088,6 +1091,14 @@ class WorkflowExplorer:
 
             for step_num in range(cfg.explore_max_steps):
                 step_start = time.monotonic()
+                if recording_manager is not None and recording_manifest is not None:
+                    failure_turn = {
+                        "schema_version": 1, "step_index": step_num, "phase": "observation",
+                        "dispatch_status": "not_started", "execution_receipt": False,
+                        "llm_response_raw": None, "planning_axtree": None,
+                        "actions_before_count": len(result.actions),
+                    }
+                    failure_turns.append(failure_turn)
                 reporter.on_explore_step_start(step_num, cfg.explore_max_steps)
 
                 turn_snapshot = TurnSnapshot(
@@ -1098,6 +1109,10 @@ class WorkflowExplorer:
                 )
 
                 tree = await capture_axtree(browser_session)
+                if failure_turn is not None:
+                    failure_turn["planning_axtree"] = deepcopy(
+                        {key: value for key, value in tree.items() if not isinstance(value, bytes)}
+                    )
                 selector_map = tree.get("selector_map") or {}
                 if (not selector_map and not tree.get("extract_candidates")
                         and not str(tree.get("element_tree") or "").strip()):
@@ -1198,6 +1213,8 @@ class WorkflowExplorer:
                         tree.get("url", ""),
                         bool(cfg.vision_enabled and screenshot_data),
                     )
+                    if failure_turn is not None:
+                        failure_turn["phase"] = "planning"
                     reporter.on_explore_llm_start(step_num)
                     response = await _invoke_llm_with_retry(
                         llm,
@@ -1218,6 +1235,8 @@ class WorkflowExplorer:
                         ) from e
                     raise
                 response_text = _to_text(response.content)
+                if failure_turn is not None:
+                    failure_turn["llm_response_raw"] = response_text
                 parsed = _parse_llm_response(response_text)
 
                 actions_data = _sanitize_actions_data(parsed.get("actions", []), tree.get("url", ""))
@@ -1429,6 +1448,9 @@ class WorkflowExplorer:
                             )
                         await asyncio.sleep(0.5)
 
+                if failure_turn is not None:
+                    failure_turn["phase"] = "execution"
+                    failure_turn["dispatch_status"] = "started"
                 try:
                     await execute_action_steps(
                         browser_session, actions_data, continue_on_error=False,
@@ -1441,6 +1463,9 @@ class WorkflowExplorer:
                         "工作流动作执行失败，探索未完成；不会生成包含失败动作的成功命令",
                         reason="action_execution_failed",
                     ) from exc
+                if failure_turn is not None:
+                    failure_turn["phase"] = "completion"
+                    failure_turn["dispatch_status"] = "completed"
                 for extraction_result in _extraction_results:
                     if not isinstance(extraction_result, dict):
                         continue
@@ -1586,7 +1611,10 @@ class WorkflowExplorer:
                                 step=step_num,
                             )
                             reporter.on_explore_llm_done(step_num, 0)
-                            repaired = _parse_llm_response(_to_text(repair_response.content))
+                            repair_text = _to_text(repair_response.content)
+                            if failure_turn is not None:
+                                failure_turn["completion_repair_response_raw"] = repair_text
+                            repaired = _parse_llm_response(repair_text)
                             commands_data = _apply_partition_repair(
                                 commands_data, repaired, len(result.actions),
                                 {i for i, action in enumerate(result.actions) if action.purpose == "probe"},
@@ -1706,9 +1734,21 @@ class WorkflowExplorer:
                     logger.warning("录像截断写入失败: %s", finalize_err)
             click.echo(f"探索被 Ctrl-C 中断，已保存 {n_commands} 个命令和录像", err=True)
             raise
-        except Exception as e:
+        except (Exception, asyncio.CancelledError) as e:
             logger.debug("探索异常，准备以失败态结束录像: %s", e)
             if recording_manager is not None and recording_manifest is not None:
+                if failure_turn is not None:
+                    try:
+                        reason = (
+                            e.reason if isinstance(e, (ExploreContractError, LlmResponseFormatError))
+                            else "exploration_cancelled" if isinstance(e, asyncio.CancelledError)
+                            else "exploration_failed"
+                        )
+                        recording_manager.save_failure(recording_manifest, {
+                            **failure_turn, "reason": reason, "preceding_turns": failure_turns[:-1],
+                        })
+                    except Exception:
+                        logger.warning("失败录像保存失败，保留原始探索错误")
                 try:
                     recording_manager.finalize(recording_manifest, completed=False)
                     _recording_finalized = True
