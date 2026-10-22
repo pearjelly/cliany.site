@@ -19,8 +19,9 @@ BROWSER_HOME = {key: os.environ[key] for key in ("HOME", "USERPROFILE", "HOMEDRI
 
 
 @pytest.mark.embodied
+@pytest.mark.parametrize("condition", ["pure", "mixed", "empty"])
 async def test_prompt_does_not_offer_class_only_collection_after_shared_repair(
-    tmp_home, monkeypatch, local_server, unused_tcp_port,
+    tmp_home, monkeypatch, local_server, unused_tcp_port, condition,
 ):
     for key, value in BROWSER_HOME.items():
         monkeypatch.setenv(key, value)
@@ -33,6 +34,8 @@ async def test_prompt_does_not_offer_class_only_collection_after_shared_repair(
 
     async def capture(session):
         tree = await capture_axtree(session)
+        if condition == "empty" and not snapshots:
+            tree = {"url": tree["url"], "element_tree": "", "selector_map": {}, "extract_candidates": []}
         snapshots.append(tree)
         return tree
 
@@ -42,6 +45,7 @@ async def test_prompt_does_not_offer_class_only_collection_after_shared_repair(
     async def respond(messages):
         nonlocal calls
         calls += 1
+        assert snapshots[-1]["selector_map"], "Do not plan from the injected empty AX observation"
         if calls == 2:
             def ref(name, role):
                 return next(key for key, value in snapshots[-1]["selector_map"].items()
@@ -54,6 +58,8 @@ async def test_prompt_does_not_offer_class_only_collection_after_shared_repair(
             selector = "ul.search li" if calls == 1 or bad_offered else "#results li"
             reply = {"actions": [{"type": "extract", "selector": selector, "extract_mode": "list",
                                   "fields": {"title": "a", "url": "a@href"}}], "done": calls == 3}
+            if calls == 1 and condition == "mixed":
+                reply["actions"].insert(0, {"type": "navigate", "url": url})
             if calls == 3:
                 reply["commands"] = [{"name": "search-docs", "action_steps": [0, 1, 2],
                                       "args": [{"name": "query", "required": True,

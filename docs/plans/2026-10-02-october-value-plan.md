@@ -2,6 +2,8 @@
 
 ## October 22 Release Revalidation
 
+Prioritize the [fresh planning-observation/mixed-extraction failure](../user-evidence/2026-10-22-planning-observation-and-extraction.md), not quota work. Old actual391-wheel ordinary acceptance remains2/3 workflows,6/9 planned comparisons passed,3 not run. Keep the separate blank-AX/guessed-navigation diagnostic and old unit/native red. The bounded correction needs new complete source/master/actual-package and real-provider gates; no acceptance or release is inferred from focused controls.
+
 Repeat exact-source and final-master gates with fresh online capacity, without reusing October18 results. Withdraw the extra human visual-feedback blocker introduced on October18: it is not required by the original release checklist. Candidate manual preview remains unperformed after tool denial, without an alternate route; disclose residual visual risk and retain production homepage/docs/alias checks. Automated results do not establish manual visual approval. Independent first use remains0/2 and requires two non-builders invited by the user; no maintainer cohort fills those slots.
 
 ## October 18 Source Finalization History

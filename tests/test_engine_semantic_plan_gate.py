@@ -79,3 +79,51 @@ async def test_observed_distinct_attributes_preserve_unique_plan(mocker, monkeyp
     execute.assert_awaited_once()
     assert result.actions[0].target_ref == "1"
     assert result.actions[0].target_attributes == {"id": "first"}
+
+
+async def test_empty_observation_is_recaptured_before_model_planning(mocker, monkeypatch, tmp_home, no_llm):
+    model, execute, _cdp = _prepare(mocker, monkeypatch, [_plan("3")])
+    capture = mocker.patch("cliany_site.explorer.engine.capture_axtree")
+    ready = {"url": "https://plan.example.test/", "element_tree": "Search controls",
+             "selector_map": {"3": {"role": "textbox", "name": "Search", "attributes": {}}}}
+    capture.side_effect = [{"url": ready["url"], "element_tree": "", "selector_map": {}}, ready]
+    result = await WorkflowExplorer().explore(ready["url"], "Enter a query", record=False)
+    assert capture.await_count == 2
+    model.ainvoke.assert_awaited_once()
+    execute.assert_awaited_once()
+    assert result.actions[0].target_name == "Search"
+
+
+async def test_persistent_empty_observation_never_calls_model(mocker, monkeypatch, tmp_home, no_llm):
+    model, execute, cdp = _prepare(mocker, monkeypatch, [_plan("3")])
+    capture = mocker.patch("cliany_site.explorer.engine.capture_axtree", AsyncMock(return_value={
+        "url": "https://plan.example.test/", "element_tree": "", "selector_map": {},
+    }))
+    with pytest.raises(ExploreContractError) as caught:
+        await WorkflowExplorer().explore("https://plan.example.test/", "Enter a query", record=False)
+    assert caught.value.reason == "page_observation_empty"
+    assert capture.await_count == 2
+    model.ainvoke.assert_not_awaited()
+    execute.assert_not_awaited()
+    cdp.disconnect.assert_awaited_once()
+
+
+async def test_last_empty_observation_does_not_add_a_step(mocker, monkeypatch, tmp_home, no_llm):
+    model, execute, _cdp = _prepare(mocker, monkeypatch, [_plan("3")], steps=1)
+    capture = mocker.patch("cliany_site.explorer.engine.capture_axtree", AsyncMock(return_value={}))
+    with pytest.raises(ExploreContractError, match="AX"):
+        await WorkflowExplorer().explore("https://plan.example.test/", "Enter a query", record=False)
+    capture.assert_awaited_once()
+    model.ainvoke.assert_not_awaited()
+    execute.assert_not_awaited()
+
+
+async def test_text_only_observation_is_not_treated_as_blank(mocker, monkeypatch, tmp_home, no_llm):
+    model, execute, _cdp = _prepare(mocker, monkeypatch, [_plan("3")], steps=1)
+    capture = mocker.patch("cliany_site.explorer.engine.capture_axtree", AsyncMock(return_value={
+        "url": "https://plan.example.test/", "element_tree": "Observed read-only page text", "selector_map": {},
+    }))
+    await WorkflowExplorer().explore("https://plan.example.test/", "Enter a query", record=False)
+    capture.assert_awaited_once()
+    model.ainvoke.assert_awaited_once()
+    execute.assert_awaited_once()

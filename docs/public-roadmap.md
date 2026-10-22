@@ -10,6 +10,8 @@ cliany-site turns real browser workflows into reusable CLI commands. The Q3 road
 
 ## October 22 Release Revalidation
 
+Fresh actual-wheel ordinary acceptance failed2/3 workflows (6/9 planned checks passed,3 not run). The [new evidence](user-evidence/2026-10-22-planning-observation-and-extraction.md) separates captured blank AX/model-guessed navigation from the unrecorded older selector cause. A bounded correction consumes existing steps on blank observations and preflights mixed extraction plans with the same shared repair. Unit/native red/green precedes new full/exact-head CI/live gates; retain all failed cohorts.
+
 Revalidate the current391 candidate rather than reusing October18 CI or quota. The extra manual visual-feedback blocker introduced on October18 was not part of the project release checklist and is withdrawn. Candidate manual preview remains unperformed after tool denial; do not route around it or count automated checks as manual approval. Record residual visual risk in release notes, retain required production homepage/docs/alias checks, and require fresh exact-source/master, package, CI, tagged and online-capacity gates. Independent first use stays0/2 on fixed published387.
 
 ## October 18 Source Finalization History

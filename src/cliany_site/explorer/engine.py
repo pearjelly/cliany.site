@@ -123,14 +123,15 @@ def _ambiguous_action_targets(
     return failures
 
 
-def _invalid_extract_only_targets(actions: list[dict[str, Any]], tree: dict[str, Any]) -> list[dict[str, int]]:
-    # Mixed plans may navigate before extracting; only validate this already-observed read-only turn.
-    if not actions or any(action.get("type") != "extract" for action in actions) or not tree.get("extract_candidates"):
+def _invalid_extract_targets(actions: list[dict[str, Any]], tree: dict[str, Any]) -> list[dict[str, int]]:
+    if not actions or not tree.get("extract_candidates"):
         return []
     selector_map = tree.get("selector_map") or {}
     candidates = tree.get("extract_candidates") or []
     failures = []
     for index, action in enumerate(actions):
+        if action.get("type") != "extract":
+            continue
         target = ground_extract_target(str(action.get("selector") or ""), selector_map, candidates)
         if target is None or resolve_extract_target(target, selector_map, candidates) is None:
             failures.append({"action_index": index})
@@ -1043,6 +1044,16 @@ class WorkflowExplorer:
 
                 tree = await capture_axtree(browser_session)
                 selector_map = tree.get("selector_map") or {}
+                if (not selector_map and not tree.get("extract_candidates")
+                        and not str(tree.get("element_tree") or "").strip()):
+                    # A blank observation is not evidence for guessing the next page or an empty result.
+                    reporter.on_explore_step_done(step_num, 0, (time.monotonic() - step_start) * 1000)
+                    if step_num + 1 >= cfg.explore_max_steps:
+                        raise ExploreContractError(
+                            "页面 AX 观察持续为空，探索未完成", reason="page_observation_empty",
+                        )
+                    await asyncio.sleep(cfg.resolve_retry_delay)
+                    continue
                 page_info = PageInfo(
                     url=tree.get("url", ""),
                     title=tree.get("title", ""),
@@ -1186,7 +1197,7 @@ class WorkflowExplorer:
                         continue
 
                 ambiguous_targets = _ambiguous_action_targets(actions_data, selector_map, tree.get("url", ""))
-                invalid_extract_targets = _invalid_extract_only_targets(actions_data, tree)
+                invalid_extract_targets = _invalid_extract_targets(actions_data, tree)
                 repeated_extracts = (
                     _repeated_completed_extracts(actions_data, tree, result.actions, all_extraction_results)
                     if interactive_ctrl is None else []
@@ -1229,6 +1240,7 @@ class WorkflowExplorer:
                         "上一步提取尚未执行，也未录制。以下提取缺少可唯一重定位的当前 AX 语义身份："
                         f"{json.dumps(invalid_extract_targets, ensure_ascii=False)}。"
                         "请从当前只读 AX 语义候选选择目标，不得猜测类名或 ID，也不能靠 ref 顺序打破平分。"
+                        "若目标只有在导航或提交后才可观察，本轮只规划前置动作，下一轮再选择提取目标。"
                         "这次修正不新增已完成动作，累计动作索引不变。"
                     ) if invalid_extract_targets else (
                         "上一步动作尚未执行，也未录制。以下动作的最高语义匹配分数相同："
