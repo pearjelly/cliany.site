@@ -67,8 +67,9 @@ def test_first_result_row_gate_docs_keep_independent_check_and_error_boundaries(
     assert "不包含错误值" in guide and "正常公开 Jira issue" in guide
 
 
-def test_post391_priorities_separate_publication_from_participant_acceptance():
-    receipt = "https://github.com/pearjelly/cliany.site/pull/109#issuecomment-6332109657"
+def test_current_priorities_separate_publication_from_participant_acceptance():
+    receipt = "https://github.com/pearjelly/cliany.site/pull/110#issuecomment-6333140966"
+    earlier_receipt = "https://github.com/pearjelly/cliany.site/pull/109#issuecomment-6332109657"
     for name, heading, history in (
         ("public-roadmap.md", "## October 22 Current Priorities", "## October 22 Prepublication History"),
         ("plans/2026-10-02-october-value-plan.md", "## October 22 Current Priorities",
@@ -78,5 +79,7 @@ def test_post391_priorities_separate_publication_from_participant_acceptance():
         text = (ROOT / "docs" / name).read_text(encoding="utf-8")
         current = text.split(heading, 1)[1].split(history, 1)[0]
         assert receipt in current and "0/2" in current and "387" in current
+        assert earlier_receipt in current and "2/3" in current
         assert "first-use-trial.md" in current
+        assert "2026-10-22-post392-issue-acceptance.md" in current
         assert text.index(heading) < text.index(history)
