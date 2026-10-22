@@ -1,6 +1,6 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-10-18
+- **Updated:** 2026-10-22
 - **Current baseline:** v0.16.391 (source baseline; official availability requires a publication receipt)
 - **Previously published baseline, October 17:** v0.16.390 ([distribution verified; fresh-generation acceptance failed](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
@@ -8,9 +8,13 @@
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap below records earlier work; the October plan prioritizes verified first use and reliable real workflows.
 
-## October 18 Source Finalization
+## October 22 Release Revalidation
 
-The meaningful391 corrections have an [October17 exact-head/local-wheel receipt](https://github.com/pearjelly/cliany.site/issues/107#issuecomment-6227361707):3,933 unique local/remote test IDs,30/30 controlled CLI/SDK/HTTP comparisons and a separate real3/3 generation/9/9 replay study. Original failures have a [persistent private archival receipt](https://github.com/pearjelly/cliany.site/issues/107#issuecomment-6227442566), not public raw logs. Today's initial actual online formal-release count is0/3 and clean-source strict target readiness passes. These snapshots do not waive fresh finalized-source, visual, final-master, tagged, three-end or official-package gates. New source copy no longer carries a current unpublished/cap-full banner; it is not itself proof of publication. Independent reports remain0/2 on fixed published387, with no case promotion.
+Revalidate the current391 candidate rather than reusing October18 CI or quota. The extra manual visual-feedback blocker introduced on October18 was not part of the project release checklist and is withdrawn. Candidate manual preview remains unperformed after tool denial; do not route around it or count automated checks as manual approval. Record residual visual risk in release notes, retain required production homepage/docs/alias checks, and require fresh exact-source/master, package, CI, tagged and online-capacity gates. Independent first use stays0/2 on fixed published387.
+
+## October 18 Source Finalization History
+
+The meaningful391 corrections have an [October17 exact-head/local-wheel receipt](https://github.com/pearjelly/cliany.site/issues/107#issuecomment-6227361707):3,933 unique local/remote test IDs,30/30 controlled CLI/SDK/HTTP comparisons and a separate real3/3 generation/9/9 replay study. Original failures have a [persistent private archival receipt](https://github.com/pearjelly/cliany.site/issues/107#issuecomment-6227442566), not public raw logs. October18's initial actual online formal-release count was0/3 and clean-source strict target readiness passed. These snapshots do not waive fresh finalized-source, final-master, tagged, three-end or official-package gates. New source copy no longer carries a current unpublished/cap-full banner; it is not itself proof of publication. Independent reports remain0/2 on fixed published387, with no case promotion.
 
 ## October 17 Preparation History
 

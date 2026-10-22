@@ -11,7 +11,7 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
-## [0.16.391] - 2026-10-18
+## [0.16.391] - 2026-10-22
 
 ### Fixed
 
@@ -24,6 +24,8 @@
 - Automatic exploration refuses a repeated pure collection read after successful evidence for the same observed semantic target and fields, before execution or recording. It uses the existing shared single planning correction, preserves action indices, and fails persistent repetition with `duplicate_completed_extract`. Different scopes/intervening actions and explicitly confirmed interactive reads retain their policies. No history/output deduplication, generated-file rewrite, retry-budget increase or case promotion. The [official v0.16.390 failure and native reproduction](docs/user-evidence/2026-10-17-duplicate-terminal-collections.md) remain failed; this correction is not in published v0.16.390.
 
 ### Evidence And Migration
+
+- Candidate-site manual visual preview was not performed after the tool denied access; no alternate preview route is used. Automated content and remote browser checks do not establish manual visual approval. The original production homepage/docs/alias checks remain required; this leaves residual visual risk, not an additional human-signoff release gate.
 
 - The October 17 `a10571d6` receipt covers 3,933 unique test IDs through 3,915 local selected tests and 85 remote Chromium tests with 67 overlapping IDs, not one unrestricted local full run. Its non-editable391 wheel passed 30/30 CLI/SDK/HTTP controls and a separate real3/3 generation/9/9 capped-prefix study. The [receipt](https://github.com/pearjelly/cliany.site/issues/107#issuecomment-6227361707) and [private archival receipt](https://github.com/pearjelly/cliany.site/issues/107#issuecomment-6227442566) preserve original failures and provenance. October 18 source finalization and eventual final-master/official-package gates require fresh evidence; none of these maintainer cohorts is independent first use.
 - Pre-version source `9d0d0c0f` passed 3,902 full offline tests and exact-head ordinary/Chromium CI. A new uninstrumented real study passed 3/3 generations and 9/9 returned-row checks; a separately predeclared fixed-baseline comparison diagnostic passed 1/1 generation and 3/3 replays, preserving both requested result scopes. These are capped-prefix maintainer checks, not full collections, final-version/public-package acceptance or independent users. The [receipt](https://github.com/pearjelly/cliany.site/issues/106#issuecomment-6226689026) preserves seven controlled wrong successes and every earlier failed cohort, including official v0.16.390 at 2/3 workflows and 6/9 checks.
