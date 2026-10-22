@@ -170,6 +170,7 @@ class TestWorkflowExplorerExtendDomain:
         mock_tree = {
             "url": "https://example.com",
             "title": "Example",
+            "element_tree": "Observed example page text",
             "selector_map": {},
             "screenshot": b"",
         }

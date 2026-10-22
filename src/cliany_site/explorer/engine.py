@@ -24,10 +24,13 @@ from cliany_site.browser.selector import (
     format_read_only_extract_candidates,
     format_selector_candidates_section,
     ground_extract_target,
+    replayable_extract_selectors,
     resolve_extract_target,
 )
 from cliany_site.capability import sniff_api_endpoints
+from cliany_site.codegen.collection_scope import CollectionScopeError, validate_collection_scope
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
+from cliany_site.codegen.params import ParameterBindingError, build_param_overrides, declared_parameter_indices
 from cliany_site.config import get_config
 from cliany_site.errors import (
     DataCommandQualityError,
@@ -120,17 +123,54 @@ def _ambiguous_action_targets(
     return failures
 
 
-def _invalid_extract_only_targets(actions: list[dict[str, Any]], tree: dict[str, Any]) -> list[dict[str, int]]:
-    # Mixed plans may navigate before extracting; only validate this already-observed read-only turn.
-    if not actions or any(action.get("type") != "extract" for action in actions) or not tree.get("extract_candidates"):
+def _invalid_extract_targets(actions: list[dict[str, Any]], tree: dict[str, Any]) -> list[dict[str, int]]:
+    if not actions or not tree.get("extract_candidates"):
         return []
     selector_map = tree.get("selector_map") or {}
     candidates = tree.get("extract_candidates") or []
     failures = []
     for index, action in enumerate(actions):
+        if action.get("type") != "extract":
+            continue
         target = ground_extract_target(str(action.get("selector") or ""), selector_map, candidates)
         if target is None or resolve_extract_target(target, selector_map, candidates) is None:
             failures.append({"action_index": index})
+    return failures
+
+
+def _repeated_completed_extracts(
+    actions: list[dict[str, Any]], tree: dict[str, Any], recorded: list[ActionStep], evidence: list[object],
+) -> list[dict[str, int]]:
+    if not actions or any(action.get("type") != "extract" for action in actions) or not recorded:
+        return []
+    previous = recorded[-1]
+    if (previous.action_type != "extract" or previous.extract_mode not in {"list", "table"}
+            or not previous.extract_target):
+        return []
+    old_url, current_url = urlparse(previous.page_url), urlparse(str(tree.get("url") or ""))
+    # A form submission can update the query after the preceding turn's URL was captured.
+    if (not current_url.scheme or not current_url.netloc
+            or (old_url.scheme, old_url.netloc, old_url.path)
+            != (current_url.scheme, current_url.netloc, current_url.path)):
+        return []
+    previous_index = len(recorded) - 1
+    latest = next((item for item in reversed(evidence) if isinstance(item, dict)
+                   and type(item.get("action_index")) is int and item["action_index"] == previous_index), None)
+    fields = previous.fields_map if isinstance(previous.fields_map, dict) else {}
+    if (latest is None or latest.get("ok") is False
+            or not evaluate_extract_quality(previous.extract_mode, latest.get("data"), fields).ok):
+        return []
+    selector_map, candidates = tree.get("selector_map") or {}, tree.get("extract_candidates") or []
+    failures = []
+    for index, action in enumerate(actions):
+        if previous.purpose == "probe" and action.get("purpose", "workflow") != "probe":
+            continue
+        if action.get("extract_mode", "text") != previous.extract_mode or (action.get("fields") or {}) != fields:
+            continue
+        target = ground_extract_target(str(action.get("selector") or ""), selector_map, candidates)
+        if (target is not None and target == previous.extract_target
+                and resolve_extract_target(target, selector_map, candidates) is not None):
+            failures.append({"action_index": index, "completed_action_index": previous_index})
     return failures
 
 
@@ -139,15 +179,63 @@ def _is_data_command_name(value: object) -> bool:
     return name.startswith(_DATA_COMMAND_PREFIXES)
 
 
+def _invalid_command_parameter_bindings(
+    parsed: dict[str, Any], pending: list[dict[str, Any]], recorded: list[ActionStep],
+    required_names: set[str], tree: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    if parsed.get("done") is not True:
+        return []
+    actions = list(recorded)
+    tree = tree or {}
+    for action in pending:
+        if not isinstance(action, dict):
+            continue
+        kind, ref = str(action.get("type", "")), str(action.get("ref") or "")
+        selected = (tree.get("selector_map") or {}).get(ref.removeprefix("@")) or {}
+        attributes = action.get("parameters") if kind == "reuse_atom" else selected.get("attributes")
+        actions.append(ActionStep(
+            action_type=kind, page_url=tree.get("url", ""), target_ref=ref,
+            value=str(action.get("value") or ""), target_url=str(action.get("url") or ""),
+            target_name=str(selected.get("name") or ""), target_role=str(selected.get("role") or ""),
+            target_attributes=attributes if isinstance(attributes, dict) else {},
+            # Successful explorer reads are grounded before generation; raw selector parameters cannot bind them.
+            extract_target={"pending": True} if kind == "extract" else {},
+        ))
+    failures: list[dict[str, Any]] = []
+    declared: set[str] = set()
+    commands = parsed.get("commands")
+    for position, command in enumerate(commands if isinstance(commands, list) else []):
+        if not isinstance(command, dict):
+            continue
+        indices = _valid_action_indices(command.get("action_steps"), len(actions))
+        args = command.get("args")
+        args = args if isinstance(args, list) else []
+        declared.update(str(arg.get("name") or "").strip() for arg in args if isinstance(arg, dict))
+        try:
+            build_param_overrides(args, indices, actions)
+        except ParameterBindingError as exc:
+            failures.append({"command_index": position, "parameter_name": exc.parameter_name,
+                             "action_index": exc.action_index, "action_type": exc.action_type})
+        except ValueError:
+            # Invalid ownership remains the existing command-partition gate's responsibility.
+            pass
+    failures.extend({"parameter_name": name, "reason": "declared_parameter_removed"}
+                    for name in sorted(required_names - declared))
+    return failures
+
+
 def _valid_action_indices(raw_indices: object, action_count: int) -> list[int]:
     if not isinstance(raw_indices, list):
         return []
     return [index for index in raw_indices if isinstance(index, int) and 0 <= index < action_count]
 
 
-def _validate_command_partition(commands: list[object], action_count: int) -> None:
+def _validate_command_partition(
+    commands: list[object], action_count: int, probe_indices: set[int] | None = None,
+) -> None:
     """Validate ownership before filtering indices can hide invalid model output."""
-    if commands and action_count == 0:
+    expected = set(range(action_count)) - (probe_indices or set())
+    if commands and not expected:
         raise ExploreContractError(
             "命令动作分区无效：没有录制动作，不能生成可复用命令",
             reason="command_partition_invalid",
@@ -163,7 +251,7 @@ def _validate_command_partition(commands: list[object], action_count: int) -> No
                 reason="command_partition_invalid",
             )
         assigned.extend(indices)
-    if sorted(assigned) != list(range(action_count)):
+    if sorted(assigned) != sorted(expected):
         raise ExploreContractError(
             "命令动作分区无效：每个动作须恰好归属一个命令，不允许遗漏或重复；请重新探索",
             reason="command_partition_invalid",
@@ -172,6 +260,7 @@ def _validate_command_partition(commands: list[object], action_count: int) -> No
 
 def _apply_partition_repair(
     commands: list[object], repaired: dict[str, Any], action_count: int,
+    probe_indices: set[int] | None = None,
 ) -> list[object]:
     if repaired.get("done") is not True or repaired.get("actions") != []:
         raise ExploreContractError(
@@ -203,20 +292,21 @@ def _apply_partition_repair(
                     reason="command_partition_invalid",
                 )
             merged.append({**original, "action_steps": replacement.get("action_steps")})
-    _validate_command_partition(merged, action_count)
+    _validate_command_partition(merged, action_count, probe_indices)
     for command in merged:
         if not isinstance(command, dict):
             continue
         indices = command["action_steps"]
         args = command.get("args")
         for arg in args if isinstance(args, list) else []:
-            if isinstance(arg, dict) and "action_index" in arg:
-                index = arg["action_index"]
-                if type(index) is not int or index not in indices:
+            if isinstance(arg, dict):
+                try:
+                    declared_parameter_indices(arg, indices)
+                except ValueError as exc:
                     raise ExploreContractError(
                         "命令动作分区无效：参数索引不属于修正后的命令",
                         reason="command_partition_invalid",
-                    )
+                    ) from exc
     return merged
 
 
@@ -781,6 +871,12 @@ def _sanitize_actions_data(actions_data: Any, current_url: str) -> list[dict[str
             action_type = "type"
         if action_type:
             normalized["type"] = action_type
+        purpose = normalized.get("purpose", "workflow")
+        if (not isinstance(purpose, str) or purpose not in {"workflow", "probe", "baseline"}
+                or (purpose != "workflow" and action_type != "extract")):
+            raise ExploreContractError(
+                "只有只读 extract 可预先声明 probe/baseline 用途", reason="invalid_action_purpose",
+            )
 
         # value 字段归一化：LLM 可能用 text/content/query/keyword 代替 value
         current_value = str(normalized.get("value", "") or "").strip()
@@ -930,6 +1026,7 @@ class WorkflowExplorer:
             data_completion_repairs = 0
             partition_repairs = 0
             semantic_plan_repairs = 0
+            required_parameter_names: set[str] = set()
             semantic_plan_feedback = ""
             empty_completion_retries = 0
             completion_feedback = ""
@@ -947,6 +1044,16 @@ class WorkflowExplorer:
 
                 tree = await capture_axtree(browser_session)
                 selector_map = tree.get("selector_map") or {}
+                if (not selector_map and not tree.get("extract_candidates")
+                        and not str(tree.get("element_tree") or "").strip()):
+                    # A blank observation is not evidence for guessing the next page or an empty result.
+                    reporter.on_explore_step_done(step_num, 0, (time.monotonic() - step_start) * 1000)
+                    if step_num + 1 >= cfg.explore_max_steps:
+                        raise ExploreContractError(
+                            "页面 AX 观察持续为空，探索未完成", reason="page_observation_empty",
+                        )
+                    await asyncio.sleep(cfg.resolve_retry_delay)
+                    continue
                 page_info = PageInfo(
                     url=tree.get("url", ""),
                     title=tree.get("title", ""),
@@ -957,8 +1064,14 @@ class WorkflowExplorer:
                     result.pages.append(page_info)
 
                 element_tree_text = serialize_axtree(tree)
-                selector_candidates_text = format_selector_candidates_section(selector_map)
-                read_only_candidates = format_read_only_extract_candidates(tree.get("extract_candidates") or [])
+                extract_candidates = tree.get("extract_candidates") or []
+                allowed_extract_selectors = replayable_extract_selectors(selector_map, extract_candidates)
+                selector_candidates_text = format_selector_candidates_section(
+                    selector_map, allowed_selectors=allowed_extract_selectors,
+                )
+                read_only_candidates = format_read_only_extract_candidates(
+                    extract_candidates, allowed_selectors=allowed_extract_selectors,
+                )
                 if read_only_candidates:
                     selector_candidates_text += "\n只读 AX 语义元素（供 extract 使用）：\n" + read_only_candidates
                 prompt_text = EXPLORE_PROMPT_TEMPLATE.format(
@@ -1084,20 +1197,50 @@ class WorkflowExplorer:
                         continue
 
                 ambiguous_targets = _ambiguous_action_targets(actions_data, selector_map, tree.get("url", ""))
-                invalid_extract_targets = _invalid_extract_only_targets(actions_data, tree)
-                if ambiguous_targets or invalid_extract_targets:
+                invalid_extract_targets = _invalid_extract_targets(actions_data, tree)
+                repeated_extracts = (
+                    _repeated_completed_extracts(actions_data, tree, result.actions, all_extraction_results)
+                    if interactive_ctrl is None else []
+                )
+                invalid_bindings = _invalid_command_parameter_bindings(
+                    parsed, actions_data, result.actions, required_parameter_names, tree,
+                )
+                if ambiguous_targets or invalid_extract_targets or repeated_extracts or invalid_bindings:
                     if semantic_plan_repairs >= _MAX_SEMANTIC_PLAN_REPAIRS or step_num + 1 >= cfg.explore_max_steps:
                         raise ExploreContractError(
+                            "命令参数绑定不影响实际执行；请使用实测输入或选择动作" if invalid_bindings else
+                            "已有成功集合被重复提取；请复用已有证据完成命令" if repeated_extracts else
                             "动作目标缺少唯一实测语义身份；请重新规划可唯一重定位的目标",
                             reason=(
+                                "parameter_binding_invalid" if invalid_bindings else
+                                "duplicate_completed_extract" if repeated_extracts else
                                 "extract_selector_ungrounded" if invalid_extract_targets else "action_target_ambiguous"
                             ),
                         )
                     semantic_plan_repairs += 1
+                    required_parameter_names.update(
+                        str(failure["parameter_name"]) for failure in invalid_bindings if failure.get("parameter_name")
+                    )
                     semantic_plan_feedback = (
+                        "命令参数绑定门禁：以下参数不会影响对应动作的实际执行："
+                        f"{json.dumps(invalid_bindings, ensure_ascii=False)}。"
+                        "本轮动作尚未执行，也未录制，累计动作索引不变。"
+                        "action_index 只替换 type/select 的 value，不能改变 navigate 的固定 URL。"
+                        "需要同一参数影响多次输入时，显式使用 action_indices 列出全部实测索引；"
+                        "单索引不会扩散到相同控件，默认值匹配多个动作时必须明确绑定。"
+                        "请保留已声明参数，从当前 AX 实测输入框或选择控件规划可重放动作；"
+                        "不得猜测 URL 或参数映射，也不得删除参数来伪装修正。"
+                    ) if invalid_bindings else (
+                        "已有成功集合，本轮纯提取计划重复了相同页面、实测语义身份与字段："
+                        f"{json.dumps(repeated_extracts, ensure_ascii=False)}。"
+                        "拟重复动作尚未执行，也未录制，累计动作索引不变。"
+                        "请复用已有提取证据；若已满足工作流，以 actions=[]、done=true 和完整 commands 结束。"
+                        "不要为了完成标记再次提取同一集合；仍需新范围时只规划不同目标或字段。"
+                    ) if repeated_extracts else (
                         "上一步提取尚未执行，也未录制。以下提取缺少可唯一重定位的当前 AX 语义身份："
                         f"{json.dumps(invalid_extract_targets, ensure_ascii=False)}。"
                         "请从当前只读 AX 语义候选选择目标，不得猜测类名或 ID，也不能靠 ref 顺序打破平分。"
+                        "若目标只有在导航或提交后才可观察，本轮只规划前置动作，下一轮再选择提取目标。"
                         "这次修正不新增已完成动作，累计动作索引不变。"
                     ) if invalid_extract_targets else (
                         "上一步动作尚未执行，也未录制。以下动作的最高语义匹配分数相同："
@@ -1106,7 +1249,11 @@ class WorkflowExplorer:
                         "若用户未限制具体控件，可通过已观察到的唯一链接进入独立表单；不能猜测 URL。"
                         "这次修正不新增已完成动作，累计动作索引不变。"
                     )
-                    logger.warning("步骤 %d 的目标缺少唯一实测语义身份，发起一次有限规划修正", step_num + 1)
+                    logger.warning(
+                        "步骤 %d 的参数绑定不影响实际执行，发起一次有限规划修正" if invalid_bindings else
+                        "步骤 %d 的集合提取重复已完成证据，发起一次有限规划修正" if repeated_extracts else
+                        "步骤 %d 的目标缺少唯一实测语义身份，发起一次有限规划修正", step_num + 1,
+                    )
                     reporter.on_explore_step_done(step_num, 0, (time.monotonic() - step_start) * 1000)
                     continue
                 semantic_plan_feedback = ""
@@ -1153,6 +1300,7 @@ class WorkflowExplorer:
                             if action_type == "extract"
                             else "text",
                             fields_map=action_data.get("fields", {}) if action_type == "extract" else {},
+                            purpose=action_data.get("purpose", "workflow"),
                         )
                     result.actions.append(action)
 
@@ -1205,6 +1353,7 @@ class WorkflowExplorer:
                             local_index = error.get("step_index")
                     if isinstance(local_index, int) and 0 <= local_index < len(actions_data):
                         evidence["action_index"] = turn_snapshot.actions_before_count + local_index
+                        evidence["purpose"] = result.actions[evidence["action_index"]].purpose
                     all_extraction_results.append(evidence)
 
                 if recording_manager is not None and recording_manifest is not None:
@@ -1285,7 +1434,9 @@ class WorkflowExplorer:
                                     "已录制动作但未声明可复用命令，请修正命令定义",
                                     reason="missing_commands",
                                 )
-                            _validate_command_partition(commands_data, len(result.actions))
+                            probe_indices = {index for index, action in enumerate(result.actions)
+                                             if action.purpose == "probe"}
+                            _validate_command_partition(commands_data, len(result.actions), probe_indices)
                         except ExploreContractError:
                             if not result.actions or partition_repairs >= _MAX_PARTITION_REPAIRS:
                                 raise
@@ -1297,6 +1448,7 @@ class WorkflowExplorer:
                                     "type": action.action_type,
                                     "target_name": action.target_name,
                                     "target_role": action.target_role,
+                                    "purpose": action.purpose,
                                 }
                                 for index, action in enumerate(result.actions)
                             ]
@@ -1316,7 +1468,9 @@ class WorkflowExplorer:
                                 "页面动作已经执行完毕。不要操作页面。"
                                 "只返回 JSON 对象：actions=[]、done=true、commands 列表。"
                                 f"{repair_task}每个 action_steps 按录制顺序排列，"
-                                f"所有命令恰好覆盖索引 {list(range(len(result.actions)))}，每个索引只出现一次。\n"
+                                f"所有命令恰好覆盖非探测索引 "
+                                f"{[i for i, a in enumerate(result.actions) if a.purpose != 'probe']}，"
+                                "每个索引只出现一次；探测索引保留在历史中，不得重放或事后更改用途。\n"
                                 f"工作流：{workflow_description}\n"
                                 f"已录制动作摘要：{json.dumps(recorded_actions, ensure_ascii=False)}\n"
                                 f"原命令摘要：{json.dumps(command_summaries, ensure_ascii=False)}"
@@ -1335,6 +1489,7 @@ class WorkflowExplorer:
                             repaired = _parse_llm_response(_to_text(repair_response.content))
                             commands_data = _apply_partition_repair(
                                 commands_data, repaired, len(result.actions),
+                                {i for i, action in enumerate(result.actions) if action.purpose == "probe"},
                             )
 
                     completion_failures = _data_command_completion_failures(
@@ -1401,6 +1556,10 @@ class WorkflowExplorer:
                             better = _infer_command_name_from_description(cmd.description or workflow_description)
                             if better:
                                 cmd.name = better
+                        try:
+                            validate_collection_scope(cmd, result.actions)
+                        except CollectionScopeError as exc:
+                            raise ExploreContractError(str(exc), reason="collection_input_scope_invalid") from exc
 
                     _ca = parsed.get("canonical_actions", [])
                     result.canonical_actions = [a for a in _ca if isinstance(a, dict)]

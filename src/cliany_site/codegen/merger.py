@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from cliany_site.codegen.collection_scope import validate_discovery_purposes
 from cliany_site.codegen.generator import AdapterGenerator, _safe_domain, save_adapter
 from cliany_site.config import get_config
 from cliany_site.explorer.models import (
@@ -14,6 +15,7 @@ from cliany_site.explorer.models import (
     CommandSuggestion,
     ExploreResult,
     PageInfo,
+    exploration_history,
 )
 
 
@@ -31,6 +33,7 @@ class MergeResult:
     conflicts_resolved: list[dict[str, Any]] = field(default_factory=list)
     added_count: int = 0
     total_count: int = 0
+    exploration_history: list[dict[str, Any]] = field(default_factory=list)
 
 
 class AdapterMerger:
@@ -76,6 +79,9 @@ class AdapterMerger:
         new_actions: list[ActionStep],
     ) -> MergeResult:
         result = MergeResult()
+        validate_discovery_purposes(new_actions)
+        if any(action.purpose == "probe" for action in new_actions):
+            result.exploration_history.append(exploration_history(new_actions, new_commands))
 
         existing_by_name: dict[str, dict[str, Any]] = {}
         for cmd in existing:
@@ -115,12 +121,16 @@ class AdapterMerger:
         generator = AdapterGenerator()
         code = generator.generate(explore_result, self.domain)
         existing_metadata = self._load_existing_metadata()
+        history = existing_metadata.get("exploration_history", [])
+        history = history if isinstance(history, list) else []
         save_adapter(
             self.domain,
             code,
             metadata={
                 "source_url": existing_metadata.get("source_url", f"https://{self.domain}"),
                 "workflow": workflow or existing_metadata.get("workflow", ""),
+                **({"exploration_history": [*history, *merge_result.exploration_history]}
+                   if history or merge_result.exploration_history else {}),
             },
             explore_result=explore_result,
         )
@@ -280,6 +290,7 @@ class AdapterMerger:
                         "selector": action.selector,
                         "extract_mode": action.extract_mode,
                         "fields_map": action.fields_map,
+                        **({"purpose": action.purpose} if action.purpose != "workflow" else {}),
                         **({"extract_target": action.extract_target} if action.extract_target else {}),
                     }
                 )
@@ -333,6 +344,7 @@ class AdapterMerger:
                             selector=str(raw_action.get("selector") or ""),
                             extract_mode=str(raw_action.get("extract_mode") or "text"),
                             fields_map=raw_action.get("fields_map", {}),
+                            purpose=str(raw_action.get("purpose") or "workflow"),
                             extract_target=raw_action.get("extract_target", {})
                             if isinstance(raw_action.get("extract_target", {}), dict)
                             else {},
@@ -341,6 +353,21 @@ class AdapterMerger:
                     action_count += 1
 
             args = cmd_def.get("args", [])
+            args = [dict(arg) if isinstance(arg, dict) else arg for arg in args] if isinstance(args, list) else []
+            original_indices = cmd_def.get("action_steps", [])
+            if (isinstance(original_indices, list) and len(original_indices) == action_count
+                    and all(type(index) is int for index in original_indices)
+                    and len(set(original_indices)) == action_count):
+                rebased = dict(zip(original_indices, range(action_start, action_start + action_count), strict=True))
+                for arg in args:
+                    if not isinstance(arg, dict):
+                        continue
+                    if "action_index" in arg:
+                        value = arg["action_index"]
+                        arg["action_index"] = rebased.get(value) if type(value) is int else None
+                    if isinstance(arg.get("action_indices"), list):
+                        arg["action_indices"] = [rebased.get(value) if type(value) is int else None
+                                                 for value in arg["action_indices"]]
             all_commands.append(
                 CommandSuggestion(
                     name=name,

@@ -62,19 +62,26 @@ def test_explore_classifies_navigation_timeout_without_hiding_other_errors(
 
 
 @pytest.mark.parametrize(
-    ("failure", "details"),
+    ("failure", "details", "code"),
     [
         (
             LlmResponseFormatError("private model response", reason="llm_invalid_json"),
             {"reason": "llm_invalid_json", "phase": "llm_response"},
+            "E_UNKNOWN",
         ),
         (
             ExploreContractError("private action content", reason="command_partition_invalid"),
             {"reason": "command_partition_invalid", "phase": "completion"},
+            "E_UNKNOWN",
+        ),
+        (
+            ExploreContractError("页面 AX 观察持续为空，探索未完成", reason="page_observation_empty"),
+            {"reason": "page_observation_empty", "phase": "observation"},
+            "E_PAGE_NOT_READY",
         ),
     ],
 )
-def test_explore_classifies_known_contract_errors(tmp_home, clean_env, monkeypatch, failure, details):
+def test_explore_classifies_known_contract_errors(tmp_home, clean_env, monkeypatch, failure, details, code):
     import cliany_site.browser.cdp as cdp_mod
     import cliany_site.explorer.engine as engine_mod
 
@@ -94,7 +101,7 @@ def test_explore_classifies_known_contract_errors(tmp_home, clean_env, monkeypat
     )
     assert result.exit_code == 1
     payload = json.loads(result.stdout)
-    assert payload["error"]["code"] == "E_UNKNOWN"
+    assert payload["error"]["code"] == code
     assert payload["error"]["details"] == details
 
 

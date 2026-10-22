@@ -218,9 +218,12 @@ def explore_cmd(
             )
         except (LlmResponseFormatError, ExploreContractError) as e:
             phase = "llm_response" if isinstance(e, LlmResponseFormatError) else "completion"
+            empty_observation = isinstance(e, ExploreContractError) and e.reason == "page_observation_empty"
+            if empty_observation:
+                phase = "observation"
             return err(
                 "explore",
-                ErrorCode.E_UNKNOWN,
+                ErrorCode.E_PAGE_NOT_READY if empty_observation else ErrorCode.E_UNKNOWN,
                 f"探索失败: {e}",
                 hint="请检查 URL 是否可访问，LLM 配置是否正确",
                 details={"reason": e.reason, "phase": phase},

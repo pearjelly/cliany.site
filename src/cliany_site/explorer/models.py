@@ -24,6 +24,7 @@ class ActionStep:
     extract_mode: str = "text"
     fields_map: dict = field(default_factory=dict)
     extract_target: dict[str, Any] = field(default_factory=dict)
+    purpose: str = "workflow"
 
 
 @dataclass
@@ -52,6 +53,13 @@ class ExploreResult:
         import dataclasses
 
         return dataclasses.asdict(self)
+
+
+def exploration_history(actions: list[ActionStep], commands: list[CommandSuggestion]) -> dict[str, Any]:
+    import dataclasses
+
+    return {"actions": [dataclasses.asdict(action) for action in actions],
+            "commands": [dataclasses.asdict(command) for command in commands]}
 
 
 @dataclass

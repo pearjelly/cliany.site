@@ -406,7 +406,12 @@ class ClanySite:
         from cliany_site.action_runtime import substitute_parameters
 
         if generated_command:
-            from cliany_site.codegen.params import auto_detect_params_from_actions, build_param_overrides
+            from cliany_site.codegen.naming import argument_parameter_names
+            from cliany_site.codegen.params import (
+                ParameterBindingError,
+                auto_detect_params_from_actions,
+                build_param_overrides,
+            )
             from cliany_site.explorer.models import ActionStep
 
             try:
@@ -437,19 +442,39 @@ class ClanySite:
             for arg in command_args:
                 if arg.get("required") and effective_params.get(arg.get("name")) is None:
                     return error_response("E_INVALID_PARAM", f"缺少必填参数: {arg.get('name')}")
-            params = effective_params
+            # Match the generated CLI's ordered raw-name/variable alias precedence.
+            params = {}
+            aliases = argument_parameter_names(command_args)
+            for index, arg in enumerate(command_args):
+                raw_name = str(arg.get("name") or "").strip()
+                if raw_name and index < len(aliases) and arg.get("name") in effective_params:
+                    value = effective_params[arg["name"]]
+                    params[raw_name] = value
+                    params[aliases[index]] = value
 
             original_indices = cmd_def.get("action_steps", indices)
             arguments = []
-            for arg in command_args:
-                item = dict(arg)
-                if "action_index" in item:
-                    item["action_index"] = (
-                        original_indices.index(item["action_index"])
-                        if item["action_index"] in original_indices else None
-                    )
-                arguments.append(item)
-            overrides = build_param_overrides(arguments, indices, recorded_actions)
+            try:
+                if (not isinstance(original_indices, list) or len(original_indices) != len(recorded_actions)
+                        or any(type(index) is not int for index in original_indices)
+                        or len(set(original_indices)) != len(original_indices)):
+                    raise ValueError("invalid original action index mapping")
+                rebased = dict(zip(original_indices, indices, strict=True))
+                for arg in command_args:
+                    item = dict(arg)
+                    if "action_index" in item:
+                        value = item["action_index"]
+                        item["action_index"] = rebased.get(value) if type(value) is int else None
+                    if isinstance(item.get("action_indices"), list):
+                        item["action_indices"] = [rebased.get(value) if type(value) is int else None
+                                                  for value in item["action_indices"]]
+                    arguments.append(item)
+                overrides = build_param_overrides(arguments, indices, recorded_actions)
+            except (TypeError, ValueError) as exc:
+                return error_response(
+                    "E_VERIFY_STATIC", "命令参数绑定无效，请重新 explore",
+                    details={"reason": exc.reason if isinstance(exc, ParameterBindingError) else "invalid_ownership"},
+                )
             actions_data = [
                 {
                     **action,
