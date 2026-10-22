@@ -1,14 +1,24 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-10-22
-- **Current baseline:** v0.16.391 (source baseline; official availability requires a publication receipt)
+- **Current baseline:** v0.16.391 ([published and verified](https://github.com/pearjelly/cliany.site/pull/109#issuecomment-6332109657))
 - **Previously published baseline, October 17:** v0.16.390 ([distribution verified; fresh-generation acceptance failed](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap below records earlier work; the October plan prioritizes verified first use and reliable real workflows.
 
-## October 22 Release Revalidation
+## October 22 Current Priorities
+
+Published391 completed exact-source/final-master gates, matching GitHub/PyPI artifacts, correct production homepage/docs/aliases and the final remote distribution audit. The [receipt](https://github.com/pearjelly/cliany.site/pull/109#issuecomment-6332109657) distinguishes3,900 local non-embodied and89 remote browser tests (all3,989 IDs, no missing/overlap) and separate source/master/public-package cohorts. Actual PyPI391 passed3/3 generations and9/9 returned-row checks. Capped100-row prefixes are not complete collections or general reliability; earlier failed cohorts remain failed.
+
+At03:42UTC, public comments on33/55 still contained maintainer evidence only; the First Use report-title search returned no reports. Independent first use remains0/2. The user needs to invite two non-builders using the unchanged fixed published387 [trial](first-use-trial.md), preferably with one trying browser path B. Require at least one unaided install-to-result success and separate normal-page comparison. Preserve first failures, help timing and retries; API path A does not satisfy browser acceptance. Do not silently repin trials or count maintainers as participants.
+
+Today already has one meaningful verified release. Prioritize first-attempt feedback, reproduce its most common blocker, then fix it with a failure regression. While waiting for people, existing reliability/latency evidence stays open; do not repeatedly revalidate old391 candidates or create quota-only versions. No alpha claim or case promotion follows from publication.
+
+## October 22 Prepublication History
+
+The following earlier candidates/blockers are dated history, not current distribution instructions. The publication receipt above does not rescore them.
 
 The latest candidate's [captured failed value action](user-evidence/2026-10-22-failed-value-actions.md) leaves1/3 workflows successful:3 planned replays passed,3 failed,3 did not run. Reject observed non-editable-link value actions before recording, stop on actual step failure, and statically refuse the known invalid legacy step. Native red/green and120 focused checks do not replace fresh complete source/master/package/live gates;391 remains unpublished and independent first use stays0/2.
 
