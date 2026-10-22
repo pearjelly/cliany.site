@@ -1,4 +1,6 @@
+import asyncio
 import json
+from copy import deepcopy
 from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
@@ -7,7 +9,7 @@ import pytest
 
 from cliany_site.config import get_config
 from cliany_site.errors import ExploreContractError
-from cliany_site.explorer.engine import WorkflowExplorer
+from cliany_site.explorer.engine import WorkflowExplorer, _observed_prefix_before_unobserved_extract
 
 
 def _plan(ref):
@@ -127,3 +129,121 @@ async def test_text_only_observation_is_not_treated_as_blank(mocker, monkeypatch
     capture.assert_awaited_once()
     model.ainvoke.assert_awaited_once()
     execute.assert_awaited_once()
+
+
+@pytest.fixture
+def unobserved_extract_tree():
+    return {"url": "https://plan.example.test/", "element_tree": "Observed entry",
+            "selector_map": {
+                "1": {"role": "link", "name": "Full Search", "attributes": {"href": "/next"}},
+                "3": {"role": "textbox", "name": "Query", "attributes": {"id": "query"}},
+            }, "extract_candidates": [
+                {"role": "list", "name": "Sections", "semantic_name": "Sections",
+                 "selectors": ["#sections"], "root_selector": "#sections", "anchor_attributes": {"id": "sections"}},
+                {"role": "list", "selectors": ["ul.search"], "root_selector": "ul.search"},
+                {"role": "list", "selectors": ["#other"], "root_selector": "#other"},
+            ]}
+
+
+@pytest.mark.parametrize(("prefix", "selector", "expected"), [
+    ([{"type": "click", "ref": "@1"}], "#future li", 1),
+    ([{"type": "navigate", "url": "https://plan.example.test/next"}], "#future li", 1),
+    ([{"type": "navigate", "url": "https://plan.example.test/"}], "#future li", 1),
+    ([{"type": "navigate", "url": "https://plan.example.test/next?q=guessed"}], "#future li", 0),
+    ([{"type": "click", "ref": "missing"}], "#future li", 0),
+    ([{"type": "submit"}], "#future li", 0),
+    ([{"type": "type", "ref": "3", "value": "Ada"}, {"type": "submit"}], "#future li", 2),
+    ([{"type": "extract", "selector": "#sections li"}], "#future li", 0),
+    ([{"type": "reuse_atom", "reuse_atom": "search"}], "#future li", 0),
+    ([{"type": "click", "ref": "1"}], "ul.search li", 0),
+    ([{"type": "click", "ref": "1"}], "#sections li", 0),
+    ([], "#future li", 0),
+])
+def test_repair_prefix_requires_observed_actions_and_an_unobserved_read(
+    unobserved_extract_tree, prefix, selector, expected,
+):
+    actions = [*prefix, {"type": "extract", "selector": selector, "extract_mode": "list"}]
+    original = deepcopy((actions, unobserved_extract_tree))
+    failures = [{"action_index": len(prefix)}]
+    assert _observed_prefix_before_unobserved_extract(actions, unobserved_extract_tree, failures) == expected
+    assert (actions, unobserved_extract_tree) == original
+
+
+@pytest.mark.parametrize("baseline_first", [False, True])
+def test_required_baseline_proposals_are_not_deferred(unobserved_extract_tree, baseline_first):
+    actions = [{"type": "click", "ref": "1"},
+               {"type": "extract", "selector": "#future li", "extract_mode": "list",
+                "purpose": "baseline" if baseline_first else "workflow"},
+               {"type": "extract", "selector": "#baseline li", "extract_mode": "list", "purpose": "baseline"}]
+    assert _observed_prefix_before_unobserved_extract(actions, unobserved_extract_tree, [{"action_index": 1}]) == 0
+
+
+@pytest.mark.parametrize(("done", "next_url", "executions"), [(False, "", 1), (True, "", 0), (False, "/next", 0)])
+async def test_deferred_read_still_consumes_the_one_shared_repair(
+    mocker, monkeypatch, tmp_home, no_llm, unobserved_extract_tree, done, next_url, executions,
+):
+    plan = {"actions": [{"type": "click", "ref": "1"},
+                        {"type": "extract", "selector": "#future li", "extract_mode": "list"}],
+            "done": done, "next_url": next_url}
+    model, execute, cdp = _prepare(mocker, monkeypatch, [plan, plan], steps=5)
+    mocker.patch("cliany_site.explorer.engine.capture_axtree", AsyncMock(return_value=unobserved_extract_tree))
+    with pytest.raises(ExploreContractError) as caught:
+        await WorkflowExplorer().explore(unobserved_extract_tree["url"], "Search", record=False)
+    assert caught.value.reason == "extract_selector_ungrounded"
+    assert model.ainvoke.await_count == 2
+    assert execute.await_count == executions
+    if executions:
+        assert execute.await_args.args[1] == [{"type": "click", "ref": "1"}]
+    cdp.disconnect.assert_awaited_once()
+
+
+async def test_link_input_plan_is_repaired_before_any_record_or_execution(mocker, monkeypatch, tmp_home, no_llm):
+    bad = {"actions": [{"type": "type", "ref": "1", "value": "private-input"}], "done": False}
+    model, execute, _cdp = _prepare(mocker, monkeypatch, [bad, _plan("3")])
+    tree = {"url": "https://plan.example.test/", "element_tree": "Observed controls", "selector_map": {
+        "1": {"role": "link", "name": "Full Search", "attributes": {"href": "/search"}},
+        "3": {"role": "textbox", "name": "Search", "attributes": {}},
+    }}
+    mocker.patch("cliany_site.explorer.engine.capture_axtree", AsyncMock(return_value=tree))
+    result = await WorkflowExplorer().explore("https://plan.example.test/", "Enter query", record=False)
+    assert model.ainvoke.await_count == 2 and len(result.actions) == 1
+    assert result.actions[0].target_role == "textbox"
+    assert execute.await_args.kwargs["continue_on_error"] is False
+    assert "private-input" not in str(model.ainvoke.await_args_list[1].args)
+
+
+async def test_failed_actual_action_aborts_with_fixed_safe_reason(mocker, monkeypatch, tmp_home, no_llm):
+    model, execute, cdp = _prepare(mocker, monkeypatch, [_plan("3")])
+    execute.side_effect = RuntimeError("private-runtime-input")
+    with pytest.raises(ExploreContractError) as caught:
+        await WorkflowExplorer().explore("https://plan.example.test/", "Enter query", record=False)
+    assert caught.value.reason == "action_execution_failed"
+    assert "private-runtime-input" not in str(caught.value)
+    assert execute.await_args.kwargs["continue_on_error"] is False
+    model.ainvoke.assert_awaited_once()
+    cdp.disconnect.assert_awaited_once()
+
+
+async def test_action_cancellation_remains_cancellation(mocker, monkeypatch, tmp_home, no_llm):
+    _model, execute, cdp = _prepare(mocker, monkeypatch, [_plan("3")])
+    execute.side_effect = asyncio.CancelledError()
+    with pytest.raises(asyncio.CancelledError):
+        await WorkflowExplorer().explore("https://plan.example.test/", "Enter query", record=False)
+    cdp.disconnect.assert_awaited_once()
+
+
+async def test_link_target_repair_cannot_remove_a_declared_parameter(mocker, monkeypatch, tmp_home, no_llm):
+    bad = {"actions": [{"type": "type", "ref": "1", "value": "private-input"}], "done": True,
+           "commands": [{"name": "enter-query", "action_steps": [0],
+                         "args": [{"name": "query", "required": True, "action_index": 0}]}]}
+    model, execute, _cdp = _prepare(mocker, monkeypatch, [bad, _plan("3")], steps=5)
+    tree = {"url": "https://plan.example.test/", "element_tree": "Observed controls", "selector_map": {
+        "1": {"role": "link", "name": "Full Search", "attributes": {"href": "/search"}},
+        "3": {"role": "textbox", "name": "Search", "attributes": {}},
+    }}
+    mocker.patch("cliany_site.explorer.engine.capture_axtree", AsyncMock(return_value=tree))
+    with pytest.raises(ExploreContractError) as caught:
+        await WorkflowExplorer().explore(tree["url"], "Enter query", record=False)
+    assert caught.value.reason == "parameter_binding_invalid"
+    assert model.ainvoke.await_count == 2
+    execute.assert_not_awaited()

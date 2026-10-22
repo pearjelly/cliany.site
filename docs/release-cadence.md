@@ -23,6 +23,7 @@
 3. 完成 `pyproject.toml`、CHANGELOG 的目标版本标题与 compare links、受影响的 README/官网入口和已审阅的 GitHub Release Notes；运行相关测试、`uv build` 与 `twine check`，提交后确保工作树干净。target-mode 接受项目版本已经 bump、上一版 tag 仍为 latest 的最终 CHANGELOG 状态；创建 tag 后必须改用 `--release-tag` 做严格校验。
 4. 在最终 HEAD 运行 `node --check site/script.js`、`python scripts/release_readiness.py --strict --target-version X.Y.Z --remote --remote-name origin` 和 `python scripts/validate_cases.py --strict`，并补充相关 `pytest` 或 `qa/*.sh`。master CI 与 tag Release Preflight 会重复网站 JavaScript 语法检查。
 5. 推送 `master`，等待 GitHub CI 与 Embodied CI 都成功；任一失败都不创建 tag。
+   若在线 runs/checks 确认最终 SHA 没有生成自动运行，可分别执行 `gh workflow run ci.yml --ref master` 与 `gh workflow run embodied-ci.yml --ref master`，不改现有 jobs。手动触发不是通过证明：仍须核对两项运行的精确 `headSha`、最终成功结果和实际测试覆盖；保留失败/缺失记录，不用 PR、旧 SHA 或观察器断连代替最终 master 门禁。已有运行仍在进行时不要重复触发，PR/普通 CI 仍保持离线、无真实 LLM 密钥。
 6. 仅在两项 CI 成功后创建本地 `vX.Y.Z` tag，运行 `python scripts/release_readiness.py --strict --release-tag vX.Y.Z --remote --remote-name origin`，只在该 gate 通过后推送 tag。
 7. 等待 `.github/workflows/release.yml` 使用仓库中已审阅的 `docs/releases/vX.Y.Z-github-release.md` 创建 GitHub Release 并发布 PyPI；再用 `gh release view vX.Y.Z --repo pearjelly/cliany.site --json body` 确认 body 不是只有自动生成的 `Full Changelog` compare 链接。严格 readiness 会在 tag 前检查该文件的版本标题和用户可读正文。
 8. 对官网有影响时按 `AGENTS.md` 的 Vercel 步骤在 `site/` 部署并 inspect；最后运行 `python scripts/check_release_publication.py --strict --remote --distribution --json`。

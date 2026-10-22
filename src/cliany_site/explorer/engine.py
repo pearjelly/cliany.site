@@ -30,7 +30,12 @@ from cliany_site.browser.selector import (
 from cliany_site.capability import sniff_api_endpoints
 from cliany_site.codegen.collection_scope import CollectionScopeError, validate_collection_scope
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
-from cliany_site.codegen.params import ParameterBindingError, build_param_overrides, declared_parameter_indices
+from cliany_site.codegen.params import (
+    ParameterBindingError,
+    build_param_overrides,
+    declared_parameter_indices,
+    value_action_on_noneditable_link,
+)
 from cliany_site.config import get_config
 from cliany_site.errors import (
     DataCommandQualityError,
@@ -136,6 +141,56 @@ def _invalid_extract_targets(actions: list[dict[str, Any]], tree: dict[str, Any]
         if target is None or resolve_extract_target(target, selector_map, candidates) is None:
             failures.append({"action_index": index})
     return failures
+
+
+def _invalid_value_action_targets(actions: list[dict[str, Any]], selector_map: dict[str, dict]) -> list[dict[str, Any]]:
+    failures = []
+    for index, action in enumerate(actions):
+        kind = str(action.get("type") or "")
+        selected = selector_map.get(str(action.get("ref") or "").removeprefix("@"))
+        if isinstance(selected, dict) and value_action_on_noneditable_link(
+            kind, str(selected.get("role") or ""), selected.get("attributes"),
+        ):
+            failures.append({"action_index": index, "action_type": kind, "target_role": "link"})
+    return failures
+
+
+def _observed_prefix_before_unobserved_extract(
+    actions: list[dict[str, Any]], tree: dict[str, Any], failures: list[dict[str, int]],
+) -> int:
+    split = min((failure["action_index"] for failure in failures), default=0)
+    if not split:
+        return 0
+    if any(action.get("type") == "extract" and action.get("purpose") == "baseline" for action in actions[split:]):
+        return 0
+    selector_map, candidates = tree.get("selector_map") or {}, tree.get("extract_candidates") or []
+    if ground_extract_target(str(actions[split].get("selector") or ""), selector_map, candidates) is not None:
+        return 0
+    current_url = str(tree.get("url") or "")
+    observed_urls = {normalize_navigation_url(current_url, current_url)}
+    for entry in selector_map.values():
+        attributes = entry.get("attributes") if isinstance(entry, dict) else None
+        href = attributes.get("href") if isinstance(attributes, dict) else None
+        if isinstance(href, str) and href:
+            observed_urls.add(normalize_navigation_url(href, current_url))
+    for index, action in enumerate(actions[:split]):
+        kind = action.get("type")
+        if kind == "navigate":
+            url = normalize_navigation_url(action.get("url", ""), current_url)
+            if not url or url not in observed_urls:
+                return 0
+        elif kind in {"click", "type", "select"}:
+            entry = selector_map.get(str(action.get("ref") or "").removeprefix("@"))
+            if not isinstance(entry, dict) or not entry.get("role"):
+                return 0
+            if value_action_on_noneditable_link(kind, str(entry.get("role") or ""), entry.get("attributes")):
+                return 0
+        elif kind == "submit":
+            if not any(previous.get("type") == "type" for previous in actions[:index]):
+                return 0
+        else:
+            return 0
+    return split
 
 
 def _repeated_completed_extracts(
@@ -1197,6 +1252,7 @@ class WorkflowExplorer:
                         continue
 
                 ambiguous_targets = _ambiguous_action_targets(actions_data, selector_map, tree.get("url", ""))
+                invalid_value_targets = _invalid_value_action_targets(actions_data, selector_map)
                 invalid_extract_targets = _invalid_extract_targets(actions_data, tree)
                 repeated_extracts = (
                     _repeated_completed_extracts(actions_data, tree, result.actions, all_extraction_results)
@@ -1205,13 +1261,17 @@ class WorkflowExplorer:
                 invalid_bindings = _invalid_command_parameter_bindings(
                     parsed, actions_data, result.actions, required_parameter_names, tree,
                 )
-                if ambiguous_targets or invalid_extract_targets or repeated_extracts or invalid_bindings:
+                deferred_actions: list[dict[str, Any]] = []
+                if (ambiguous_targets or invalid_value_targets or invalid_extract_targets
+                        or repeated_extracts or invalid_bindings):
                     if semantic_plan_repairs >= _MAX_SEMANTIC_PLAN_REPAIRS or step_num + 1 >= cfg.explore_max_steps:
                         raise ExploreContractError(
+                            "输入或选择动作指向不可输入的链接；请使用当前实测输入控件" if invalid_value_targets else
                             "命令参数绑定不影响实际执行；请使用实测输入或选择动作" if invalid_bindings else
                             "已有成功集合被重复提取；请复用已有证据完成命令" if repeated_extracts else
                             "动作目标缺少唯一实测语义身份；请重新规划可唯一重定位的目标",
                             reason=(
+                                "value_target_incompatible" if invalid_value_targets else
                                 "parameter_binding_invalid" if invalid_bindings else
                                 "duplicate_completed_extract" if repeated_extracts else
                                 "extract_selector_ungrounded" if invalid_extract_targets else "action_target_ambiguous"
@@ -1221,7 +1281,21 @@ class WorkflowExplorer:
                     required_parameter_names.update(
                         str(failure["parameter_name"]) for failure in invalid_bindings if failure.get("parameter_name")
                     )
+                    if invalid_value_targets:
+                        commands = parsed.get("commands")
+                        for command in commands if isinstance(commands, list) else []:
+                            if not isinstance(command, dict) or not isinstance(command.get("args"), list):
+                                continue
+                            required_parameter_names.update(
+                                str(arg.get("name") or "").strip() for arg in command["args"]
+                                if isinstance(arg, dict) and arg.get("name")
+                            )
                     semantic_plan_feedback = (
+                        "输入/选择目标门禁：以下动作指向不可输入的链接："
+                        f"{json.dumps(invalid_value_targets, ensure_ascii=False)}。"
+                        "本轮动作尚未执行，也未录制，累计动作索引不变。不要添加占位输入来凑动作编号。"
+                        "请保留已声明参数；先通过已观测的入口进入表单，再从新的 AX 选择真正的输入或选择控件。"
+                    ) if invalid_value_targets else (
                         "命令参数绑定门禁：以下参数不会影响对应动作的实际执行："
                         f"{json.dumps(invalid_bindings, ensure_ascii=False)}。"
                         "本轮动作尚未执行，也未录制，累计动作索引不变。"
@@ -1250,13 +1324,30 @@ class WorkflowExplorer:
                         "这次修正不新增已完成动作，累计动作索引不变。"
                     )
                     logger.warning(
+                        "步骤 %d 的值动作指向不可输入的链接，发起一次有限规划修正" if invalid_value_targets else
                         "步骤 %d 的参数绑定不影响实际执行，发起一次有限规划修正" if invalid_bindings else
                         "步骤 %d 的集合提取重复已完成证据，发起一次有限规划修正" if repeated_extracts else
                         "步骤 %d 的目标缺少唯一实测语义身份，发起一次有限规划修正", step_num + 1,
                     )
-                    reporter.on_explore_step_done(step_num, 0, (time.monotonic() - step_start) * 1000)
-                    continue
-                semantic_plan_feedback = ""
+                    prefix = (
+                        _observed_prefix_before_unobserved_extract(actions_data, tree, invalid_extract_targets)
+                        if (invalid_extract_targets and not ambiguous_targets and not repeated_extracts
+                            and not invalid_bindings and not invalid_value_targets
+                            and parsed.get("done", False) is False
+                            and not parsed.get("next_url")) else 0
+                    )
+                    if not prefix:
+                        reporter.on_explore_step_done(step_num, 0, (time.monotonic() - step_start) * 1000)
+                        continue
+                    # This still consumes the same shared repair; never execute the unobserved read.
+                    deferred_actions, actions_data = actions_data[prefix:], actions_data[:prefix]
+                    semantic_plan_feedback = (
+                        "本次有限修正只执行当前可唯一定位的已观测前置动作；后续提取尚未执行，也未录制。"
+                        "请根据新的 AX 观察确认前置动作结果，再选择实测提取目标，不得猜测未来选择器或 URL。"
+                        "累计动作索引只增加实际尝试的前置动作，不能把未完成提取当作零匹配。"
+                    )
+                else:
+                    semantic_plan_feedback = ""
 
                 for action_data in actions_data:
                     if not isinstance(action_data, dict):
@@ -1338,10 +1429,18 @@ class WorkflowExplorer:
                             )
                         await asyncio.sleep(0.5)
 
-                await execute_action_steps(
-                    browser_session, actions_data, continue_on_error=True,
-                    extraction_results=_extraction_results, before_extract=validate_extract,
-                )
+                try:
+                    await execute_action_steps(
+                        browser_session, actions_data, continue_on_error=False,
+                        extraction_results=_extraction_results, before_extract=validate_extract,
+                    )
+                except (ExploreContractError, DataCommandQualityError, LlmUnavailableError):
+                    raise
+                except Exception as exc:
+                    raise ExploreContractError(
+                        "工作流动作执行失败，探索未完成；不会生成包含失败动作的成功命令",
+                        reason="action_execution_failed",
+                    ) from exc
                 for extraction_result in _extraction_results:
                     if not isinstance(extraction_result, dict):
                         continue
@@ -1376,6 +1475,7 @@ class WorkflowExplorer:
                                 "actions": actions_data,
                                 "done": bool(parsed.get("done", False)),
                                 "next_url": str(parsed.get("next_url", "") or ""),
+                                **({"deferred_actions": deferred_actions} if deferred_actions else {}),
                             },
                             llm_response_raw=response_text,
                             timestamp=datetime.now(UTC).isoformat(),

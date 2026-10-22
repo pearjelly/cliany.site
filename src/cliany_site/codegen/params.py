@@ -7,6 +7,15 @@ from cliany_site.codegen.naming import argument_parameter_names, to_parameter_na
 from cliany_site.explorer.models import ActionStep
 
 
+def value_action_on_noneditable_link(action_type: str, role: str, attributes: Any) -> bool:
+    kind = str(action_type or "").strip().casefold()
+    if kind not in {"type", "select"} or str(role or "").strip().casefold() != "link":
+        return False
+    editable = (isinstance(attributes, dict) and "contenteditable" in attributes
+                and str(attributes["contenteditable"]).strip().casefold() in {"", "true", "plaintext-only"})
+    return kind == "select" or not editable
+
+
 class ParameterBindingError(ValueError):
     def __init__(
         self, action_index: int | None, action_type: str, *,
@@ -17,6 +26,8 @@ class ParameterBindingError(ValueError):
         self.parameter_name = parameter_name
         self.reason = reason
         super().__init__(
+            "命令动作无效：不可输入的链接不能接收输入或选择值；请重新 explore"
+            if reason == "value_target_incompatible" else
             "参数绑定无效：多个录制值匹配默认值；请显式声明 action_index 或 action_indices"
             if reason == "ambiguous_default" else
             "参数绑定无效：声明参数没有影响实际执行字段，或被其他参数覆盖；请绑定实测输入或选择动作"
@@ -69,6 +80,12 @@ def build_param_overrides(
     all_actions: list[ActionStep],
 ) -> dict[int, str]:
     overrides: dict[int, str] = {}
+
+    for index in step_indices:
+        if 0 <= index < len(all_actions):
+            action = all_actions[index]
+            if value_action_on_noneditable_link(action.action_type, action.target_role, action.target_attributes):
+                raise ParameterBindingError(index, action.action_type, reason="value_target_incompatible")
 
     for arg in args or []:
         if not isinstance(arg, dict):

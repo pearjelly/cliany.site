@@ -79,6 +79,11 @@ def test_explore_classifies_navigation_timeout_without_hiding_other_errors(
             {"reason": "page_observation_empty", "phase": "observation"},
             "E_PAGE_NOT_READY",
         ),
+        (
+            ExploreContractError("工作流动作执行失败，探索未完成", reason="action_execution_failed"),
+            {"reason": "action_execution_failed", "phase": "execution"},
+            "E_UNKNOWN",
+        ),
     ],
 )
 def test_explore_classifies_known_contract_errors(tmp_home, clean_env, monkeypatch, failure, details, code):

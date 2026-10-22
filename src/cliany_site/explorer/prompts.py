@@ -88,6 +88,8 @@ commands 字段说明（仅当 done=true 时填写）：
 ```
 
 actions 中每个操作的字段定义：
+- 本轮只能引用当前观察到的控件和提取目标。导航、展开新控件或提交查询后，先以 done=false 结束动作批次，下一轮重新观察再选择新目标；不能在同一轮追加依赖新页面的 extract。已观察到的输入和提交按钮可以在同一轮操作，当前页面的明确 baseline 读取仍按用户要求保留。
+- type/select 必须使用可编辑输入或选择控件，不能向不可输入的 link 写值。动作编号来自真实累计历史，不能添加占位动作来填补编号。
 - 输入、点击、选择或提交的目标必须能由实测角色、名称和属性唯一重定位，不能只靠 ref 编号选择同名同角色的重复控件。若用户未限制具体控件，可优先通过已观察到的唯一链接进入独立表单；例如完整搜索页通常比多处重复的快捷搜索框更适合复用。不得猜测入口 URL，也不得绕过用户明确要求的控件。
 - type: 操作类型，必须是 click / type / select / navigate / submit / reuse_atom / extract 之一
 - ref: 目标元素的 @ref 编号（字符串）
@@ -116,12 +118,22 @@ actions 中每个操作的字段定义：
 ```json
 {
   "actions": [
-    {"type": "click", "ref": "42", "description": "点击搜索按钮打开搜索框"},
-    {"type": "type", "ref": "58", "value": "browser-use", "description": "在搜索框输入 browser-use"},
-    {"type": "submit", "description": "提交搜索（搜索框无独立按钮，用回车提交）"}
+    {"type": "click", "ref": "42", "description": "点击当前已观察到的唯一搜索入口"}
   ],
   "done": false,
-  "reasoning": "先点击搜索按钮展开搜索框，然后输入搜索关键词并提交"
+  "reasoning": "先打开搜索表单，输入框尚未观察到，不预先引用它"
+}
+```
+
+下一轮观察到真实输入框 @58，且确认没有独立提交按钮后：
+```json
+{
+  "actions": [
+    {"type": "type", "ref": "58", "value": "browser-use", "description": "在实测搜索框输入 browser-use"},
+    {"type": "submit", "description": "无独立提交按钮，回车提交搜索"}
+  ],
+  "done": false,
+  "reasoning": "提交后再观察结果，不能在本轮猜测提取目标"
 }
 ```
 
@@ -182,33 +194,54 @@ actions 中每个操作的字段定义：
 }
 ```
 
-示例 — 提取搜索结果列表（extract list 模式，结合导航和搜索）：
+示例 — 提取搜索结果列表（当前已观察到输入 @18 和提交按钮 @20）：
 ```json
 {
   "actions": [
-    {"type": "navigate", "url": "https://example.com/search?q=browser", "description": "导航到搜索结果页"},
+    {"type": "type", "ref": "18", "value": "browser", "description": "输入搜索词"},
+    {"type": "click", "ref": "20", "description": "点击实测提交按钮"}
+  ],
+  "done": false,
+  "reasoning": "先提交真实表单，不猜测查询 URL 或结果选择器"
+}
+```
+
+下一轮观察到结果候选 #results，且实际行中有标题、链接与摘要后：
+```json
+{
+  "actions": [
     {
       "type": "extract",
-      "selector": ".search-result-item",
+      "selector": "#results li",
       "extract_mode": "list",
       "fields": {"title": "h3", "url": "a@href", "snippet": ".description"},
       "description": "提取搜索结果列表"
     }
   ],
   "done": false,
-  "reasoning": "导航到结果页后，使用 extract 动作抓取结构化列表数据。title 是文本字段，url 用 @href 提取链接，snippet 提取摘要文本"
+  "reasoning": "仅使用新观察中的候选和字段提取实际结果"
 }
 ```
 
-示例 — 提取资讯并保存 Markdown（title/url/snippet 三字段）：
+示例 — 提取资讯并保存 Markdown（已观察输入 @18，确认无独立提交按钮）：
 ```json
 {
   "actions": [
     {"type": "type", "ref": "18", "value": "AI 新闻", "description": "输入搜索词"},
-    {"type": "submit", "description": "提交搜索"},
+    {"type": "submit", "description": "提交搜索"}
+  ],
+  "done": false,
+  "reasoning": "先提交，等待下一轮观察结果页面"
+}
+```
+
+下一轮观察到结果候选 #news-results 及实际 title/url/snippet 字段后：
+```json
+{
+  "actions": [
     {
       "type": "extract",
-      "selector": ".result-item",
+      "selector": "#news-results li",
       "extract_mode": "list",
       "fields": {"title": ".title", "url": "a@href", "snippet": ".snippet"},
       "description": "提取结果标题、链接与摘要"

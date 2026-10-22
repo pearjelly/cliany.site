@@ -2,6 +2,10 @@
 
 ## October 22 Release Revalidation
 
+Prioritize the [captured failed value action](../user-evidence/2026-10-22-failed-value-actions.md): the latest candidate remains1/3 workflows with3 planned replays passed,3 failed and3 not run. Reject the observed non-editable-link placeholder before recording, stop actual action failures and statically refuse known invalid legacy steps. Retain the strict-verification false success;120 focused checks and native red/green do not waive fresh complete source/master/real-provider/package gates or fill independent-user slots.
+
+The [new final-master failure](../user-evidence/2026-10-22-observed-extract-prerequisites.md) blocks391 despite PR103's scoped pre-merge green. Keep2/3 workflows,6/9 planned checks passed,3 not run and unknown unrecorded selector cause. Advance only observed prerequisites within the same one repair; add only a manual ordinary-CI trigger for missing automatic final-SHA runs. No tag/publication or version-only bump; require new complete source/master/actual-package and real-provider gates.
+
 Prioritize the [fresh planning-observation/mixed-extraction failure](../user-evidence/2026-10-22-planning-observation-and-extraction.md), not quota work. Old actual391-wheel ordinary acceptance remains2/3 workflows,6/9 planned comparisons passed,3 not run. Keep the separate blank-AX/guessed-navigation diagnostic and old unit/native red. The bounded correction needs new complete source/master/actual-package and real-provider gates; no acceptance or release is inferred from focused controls.
 
 Repeat exact-source and final-master gates with fresh online capacity, without reusing October18 results. Withdraw the extra human visual-feedback blocker introduced on October18: it is not required by the original release checklist. Candidate manual preview remains unperformed after tool denial, without an alternate route; disclose residual visual risk and retain production homepage/docs/alias checks. Automated results do not establish manual visual approval. Independent first use remains0/2 and requires two non-builders invited by the user; no maintainer cohort fills those slots.

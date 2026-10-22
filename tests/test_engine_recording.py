@@ -180,9 +180,11 @@ class TestWorkflowExplorerRecording:
 
         mocks["execute"].side_effect = execute
 
-        with pytest.raises(StopAfterValidation):
+        with pytest.raises(ExploreContractError) as error:
             await WorkflowExplorer().explore("https://example.com/start", "读取结果")
 
+        assert error.value.reason == "action_execution_failed"
+        assert isinstance(error.value.__cause__, StopAfterValidation)
         assert mocks["capture_axtree"].await_count >= 3
         sleep.assert_awaited_with(0.5)
 
@@ -324,8 +326,11 @@ class TestWorkflowExplorerRecording:
         )
 
         explorer = WorkflowExplorer()
-        with pytest.raises(RuntimeError, match="执行动作失败"):
+        with pytest.raises(ExploreContractError) as error:
             await explorer.explore("https://example.com/start", "异常路径", record=True)
 
+        assert error.value.reason == "action_execution_failed"
+        assert isinstance(error.value.__cause__, RuntimeError)
+        assert str(error.value.__cause__) == "执行动作失败"
         recording_manager.finalize.assert_called_once()
         assert recording_manager.finalize.call_args.kwargs["completed"] is False

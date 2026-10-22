@@ -221,11 +221,15 @@ def explore_cmd(
             empty_observation = isinstance(e, ExploreContractError) and e.reason == "page_observation_empty"
             if empty_observation:
                 phase = "observation"
+            execution_failed = isinstance(e, ExploreContractError) and e.reason == "action_execution_failed"
+            if execution_failed:
+                phase = "execution"
             return err(
                 "explore",
                 ErrorCode.E_PAGE_NOT_READY if empty_observation else ErrorCode.E_UNKNOWN,
                 f"探索失败: {e}",
-                hint="请检查 URL 是否可访问，LLM 配置是否正确",
+                hint=("请检查当前页面和失败动作，基于最新 AX 重新探索" if execution_failed else
+                      "请检查 URL 是否可访问，LLM 配置是否正确"),
                 details={"reason": e.reason, "phase": phase},
             )
         except ValueError as e:
