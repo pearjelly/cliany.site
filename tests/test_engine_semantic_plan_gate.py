@@ -168,6 +168,15 @@ def test_repair_prefix_requires_observed_actions_and_an_unobserved_read(
     assert (actions, unobserved_extract_tree) == original
 
 
+@pytest.mark.parametrize("baseline_first", [False, True])
+def test_required_baseline_proposals_are_not_deferred(unobserved_extract_tree, baseline_first):
+    actions = [{"type": "click", "ref": "1"},
+               {"type": "extract", "selector": "#future li", "extract_mode": "list",
+                "purpose": "baseline" if baseline_first else "workflow"},
+               {"type": "extract", "selector": "#baseline li", "extract_mode": "list", "purpose": "baseline"}]
+    assert _observed_prefix_before_unobserved_extract(actions, unobserved_extract_tree, [{"action_index": 1}]) == 0
+
+
 @pytest.mark.parametrize(("done", "next_url", "executions"), [(False, "", 1), (True, "", 0), (False, "/next", 0)])
 async def test_deferred_read_still_consumes_the_one_shared_repair(
     mocker, monkeypatch, tmp_home, no_llm, unobserved_extract_tree, done, next_url, executions,

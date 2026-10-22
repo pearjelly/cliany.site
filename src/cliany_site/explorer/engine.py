@@ -144,6 +144,8 @@ def _observed_prefix_before_unobserved_extract(
     split = min((failure["action_index"] for failure in failures), default=0)
     if not split:
         return 0
+    if any(action.get("type") == "extract" and action.get("purpose") == "baseline" for action in actions[split:]):
+        return 0
     selector_map, candidates = tree.get("selector_map") or {}, tree.get("extract_candidates") or []
     if ground_extract_target(str(actions[split].get("selector") or ""), selector_map, candidates) is not None:
         return 0
