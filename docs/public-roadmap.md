@@ -10,6 +10,8 @@ cliany-site turns real browser workflows into reusable CLI commands. The Q3 road
 
 ## October 22 Release Revalidation
 
+The latest candidate's [captured failed value action](user-evidence/2026-10-22-failed-value-actions.md) leaves1/3 workflows successful:3 planned replays passed,3 failed,3 did not run. Reject observed non-editable-link value actions before recording, stop on actual step failure, and statically refuse the known invalid legacy step. Native red/green and120 focused checks do not replace fresh complete source/master/package/live gates;391 remains unpublished and independent first use stays0/2.
+
 PR103 merged after its scoped green gates, but the [new final-master ordinary study](user-evidence/2026-10-22-observed-extract-prerequisites.md) failed2/3 workflows (6/9 planned checks passed,3 not run). No391 tag/publication followed. A follow-up uses the same one repair to advance only observed prerequisites and adds only ordinary-CI manual dispatch for missing final-SHA automatic runs. Controlled72 tests/4 native cases are not fresh acceptance; repeat all new source/master/official-package gates.
 
 Fresh actual-wheel ordinary acceptance failed2/3 workflows (6/9 planned checks passed,3 not run). The [new evidence](user-evidence/2026-10-22-planning-observation-and-extraction.md) separates captured blank AX/model-guessed navigation from the unrecorded older selector cause. A bounded correction consumes existing steps on blank observations and preflights mixed extraction plans with the same shared repair. Unit/native red/green precedes new full/exact-head CI/live gates; retain all failed cohorts.

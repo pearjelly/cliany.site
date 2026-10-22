@@ -224,8 +224,8 @@ const I18N = {
     en: 'v0.16.391: newly generated commands preserve recorded stages and explicit input ownership. One input uses <code>action_index</code>; intentional reuse uses <code>action_indices</code>. Structural <code>probe</code> history stays separate from explicitly requested <code>baseline</code> results. A runtime upgrade does not patch old CLI files: regenerate or normally merge an explicit workflow. Source checks are not official-package or independent-user acceptance; the human trial remains fixed at published 0.16.387 and reports remain 0/2.'
   },
   'qs.generatedAliases': {
-    zh: 'v0.16.391 的 SDK/HTTP 在内部按 CLI 同一规则替换规范化和保留名变量；请求仍使用元数据中的原始参数名。旧候选的四项错误成功继续保留，源码与正式包验收分别记录。',
-    en: 'v0.16.391 uses CLI-compatible normalized and reserved-name substitutions inside SDK/HTTP replay. Requests still use original metadata argument keys. Four wrong successes from the previous candidate remain recorded; source and official-package acceptance stay separate.'
+    zh: 'v0.16.391 的 SDK/HTTP 按 CLI 同一规则替换参数变量，请求仍使用元数据原始键。探索拒绝向不可输入链接写值，并在实际动作失败时停止生成；静态回放校验也拒绝该类旧无效步骤。旧失败继续保留，源码、正式包与独立用户验收分别记录。',
+    en: 'v0.16.391 uses CLI-compatible parameter substitution in SDK/HTTP; requests still use original metadata keys. Exploration rejects value actions on non-editable links and stops generation on actual action failure. Static replay validation also refuses these invalid legacy steps. Earlier failures, source checks, official-package acceptance and independent users remain separate.'
   },
   'qs.maintainer.safeRetries': {
     zh: '从 v0.16.381 起，模型请求被 HTTP 拒绝时不再因正文含网关关键词而重复调用。CLI/live doctor 保留认证失败类型；重试警告和可选单次错误事件使用固定摘要，不回显上游正文。成功请求延迟、provider 持续可用性及独立首次使用仍待验证。',
