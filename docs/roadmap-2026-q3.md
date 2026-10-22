@@ -3,7 +3,7 @@
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-10-22
 
-- **源码基线：** v0.16.393；源码不是正式发布收据。[已核对392收据](https://github.com/pearjelly/cliany.site/pull/110#issuecomment-6333140966)
+- **基线版本：** v0.16.393；源码不是正式发布收据。[已核对392收据](https://github.com/pearjelly/cliany.site/pull/110#issuecomment-6333140966)
 - **10月17日的上一公开版本：** v0.16.390（三端分发已验证；正式包新生成验收仍失败）
 - **目标周期：** 滚动维护（2026-09-08 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
