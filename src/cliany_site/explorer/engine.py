@@ -138,6 +138,40 @@ def _invalid_extract_targets(actions: list[dict[str, Any]], tree: dict[str, Any]
     return failures
 
 
+def _observed_prefix_before_unobserved_extract(
+    actions: list[dict[str, Any]], tree: dict[str, Any], failures: list[dict[str, int]],
+) -> int:
+    split = min((failure["action_index"] for failure in failures), default=0)
+    if not split:
+        return 0
+    selector_map, candidates = tree.get("selector_map") or {}, tree.get("extract_candidates") or []
+    if ground_extract_target(str(actions[split].get("selector") or ""), selector_map, candidates) is not None:
+        return 0
+    current_url = str(tree.get("url") or "")
+    observed_urls = {normalize_navigation_url(current_url, current_url)}
+    for entry in selector_map.values():
+        attributes = entry.get("attributes") if isinstance(entry, dict) else None
+        href = attributes.get("href") if isinstance(attributes, dict) else None
+        if isinstance(href, str) and href:
+            observed_urls.add(normalize_navigation_url(href, current_url))
+    for index, action in enumerate(actions[:split]):
+        kind = action.get("type")
+        if kind == "navigate":
+            url = normalize_navigation_url(action.get("url", ""), current_url)
+            if not url or url not in observed_urls:
+                return 0
+        elif kind in {"click", "type", "select"}:
+            entry = selector_map.get(str(action.get("ref") or "").removeprefix("@"))
+            if not isinstance(entry, dict) or not entry.get("role"):
+                return 0
+        elif kind == "submit":
+            if not any(previous.get("type") == "type" for previous in actions[:index]):
+                return 0
+        else:
+            return 0
+    return split
+
+
 def _repeated_completed_extracts(
     actions: list[dict[str, Any]], tree: dict[str, Any], recorded: list[ActionStep], evidence: list[object],
 ) -> list[dict[str, int]]:
@@ -1205,6 +1239,7 @@ class WorkflowExplorer:
                 invalid_bindings = _invalid_command_parameter_bindings(
                     parsed, actions_data, result.actions, required_parameter_names, tree,
                 )
+                deferred_actions: list[dict[str, Any]] = []
                 if ambiguous_targets or invalid_extract_targets or repeated_extracts or invalid_bindings:
                     if semantic_plan_repairs >= _MAX_SEMANTIC_PLAN_REPAIRS or step_num + 1 >= cfg.explore_max_steps:
                         raise ExploreContractError(
@@ -1254,9 +1289,24 @@ class WorkflowExplorer:
                         "步骤 %d 的集合提取重复已完成证据，发起一次有限规划修正" if repeated_extracts else
                         "步骤 %d 的目标缺少唯一实测语义身份，发起一次有限规划修正", step_num + 1,
                     )
-                    reporter.on_explore_step_done(step_num, 0, (time.monotonic() - step_start) * 1000)
-                    continue
-                semantic_plan_feedback = ""
+                    prefix = (
+                        _observed_prefix_before_unobserved_extract(actions_data, tree, invalid_extract_targets)
+                        if (invalid_extract_targets and not ambiguous_targets and not repeated_extracts
+                            and not invalid_bindings and parsed.get("done", False) is False
+                            and not parsed.get("next_url")) else 0
+                    )
+                    if not prefix:
+                        reporter.on_explore_step_done(step_num, 0, (time.monotonic() - step_start) * 1000)
+                        continue
+                    # This still consumes the same shared repair; never execute the unobserved read.
+                    deferred_actions, actions_data = actions_data[prefix:], actions_data[:prefix]
+                    semantic_plan_feedback = (
+                        "本次有限修正只执行当前可唯一定位的已观测前置动作；后续提取尚未执行，也未录制。"
+                        "请根据新的 AX 观察确认前置动作结果，再选择实测提取目标，不得猜测未来选择器或 URL。"
+                        "累计动作索引只增加实际尝试的前置动作，不能把未完成提取当作零匹配。"
+                    )
+                else:
+                    semantic_plan_feedback = ""
 
                 for action_data in actions_data:
                     if not isinstance(action_data, dict):
@@ -1376,6 +1426,7 @@ class WorkflowExplorer:
                                 "actions": actions_data,
                                 "done": bool(parsed.get("done", False)),
                                 "next_url": str(parsed.get("next_url", "") or ""),
+                                **({"deferred_actions": deferred_actions} if deferred_actions else {}),
                             },
                             llm_response_raw=response_text,
                             timestamp=datetime.now(UTC).isoformat(),

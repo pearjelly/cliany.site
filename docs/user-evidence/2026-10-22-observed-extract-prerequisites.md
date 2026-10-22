@@ -1,0 +1,33 @@
+# Observed Prerequisites During Extraction Repair
+
+**Scope:** follow-up to merged [PR103](https://github.com/pearjelly/cliany.site/pull/103), related to [Issue108](https://github.com/pearjelly/cliany.site/issues/108). Metadata391 is still unpublished; no tag, GitHub Release, PyPI upload or production deployment has been made for it. Published390 and every earlier failed cohort keep their original scores. Independent first use stays0/2 on fixed published387, without maintainer credit or case promotion.
+
+## Final-Master Failure Stays Failed
+
+PR103 head813217a5 passed its [scoped pre-merge gates](https://github.com/pearjelly/cliany.site/pull/103#issuecomment-6330870558): all3,941 local/remote test IDs, exact-head ordinary/native CI,8 installed-wheel native cases/30 CLI/SDK/HTTP comparisons and a separate ordinary3/3 generation/9/9 replay study. Squashed master `0f7553c4e9dfcbc6fb5bea568b764853c5d9cc9c` has identical files and built identical wheel/sdist bytes. That equivalence did not guarantee another real-provider run would pass.
+
+The first master validation launcher failed a clean-checkout assertion before doctor or any model call; it did not retain the dirty-status snapshot. A later status check was clean, so the transient cause remains unknown. Its launcher/log and empty attempt directory are retained as a precondition/observer failure, not a model or product exploration result. After local checks ended, a separate launcher kept a clean-status witness and passed a new strict real capability doctor in7.08s.
+
+That new ordinary master study still passed only2/3 workflows:6/9 planned complete-row checks passed,3 did not run. The first exploration failed19.64s after two successful model calls, with `extract_selector_ungrounded` after the existing single shared repair was consumed. Its exact failed-turn AX/model plans were not retained; do not reconstruct the exact selector or prefix from a later diagnostic. Raw report SHA256 `47c5c1880776bb76f82d06f6316324423e84b89c2ab98d86d8e46b7b972e34f2`; assessment `974549946e03f46931feb848e2a5f89e2bf5bf4bb9ec9fa65a6c4c0b9323493d`. Successful outputs are matching100-row prefixes against completed134/403-row pages and an empty collection against a completed zero-match page, not full collections.
+
+A separate read-only AX/model diagnostic ran with extra private-file I/O. It records different trajectories, including observed-link navigation and later successful execution; that does not rescore the ordinary failure or establish its missing exact cause. Diagnostic report SHA256 `b761a5659c7a985c81a48f52810494a05c2bd99cecbd5a4bbf9a08b1118612bb`.
+
+## Controlled Progress Gap
+
+A native counterexample starts on a real local catalog with one uniquely observed Full Search link and a separate observed navigation list. The model proposes that link click followed by a future result read whose target is not yet observed. On the old actual391 wheel, the repair refuses the whole batch and the second model callback still sees the entry page. The controlled assertion fails18.97s; this is a behavior assertion about missing prerequisite progress, not an independently captured public selector cause or a browser outage. Its red log SHA256 is `ffde5dee0627559625f4624e5c27fb82e4a0f730ac8eabe00adac924b66bb0ed`.
+
+Within the same single shared repair, an unfinished plan may now attempt only the already-observed prerequisite prefix. The unobserved read and all later proposals remain unexecuted/unrecorded as actions; recording retains the deferred proposal separately and the original raw model response. The next existing exploration step observes the real page before choosing extraction. This is not a free correction: the repair is consumed first, and another invalid plan still fails after two total model calls. No step/model/action retry budget is raised.
+
+The prefix cannot contain a prior extraction or atom reuse. Click/type/select refs need current semantic entries; an explicit submission needs a preceding observed input. Navigation must equal the current or an observed-link URL, not a guessed query URL. Current ambiguous extraction identities still refuse, even with an observed prefix. Completed plans, separate next_url navigation, invalid bindings, repeated completed reads and ambiguous action targets do not enter this path. Actual action indices, parameter ownership and complete recorded history stay intact; no generated-file patch, posthoc output filtering, tie-order selection or CSS fallback.
+
+Corrected-source focused checks passed72 tests. The native suite passed4 cases in57.36s, including the original pure/mixed/blank-observation conditions and the new future-read condition. The latter records exactly four actual actions, binds query to the real second action, preserves generated-core hashes, and returns the correct changed Grace title/link through SDK replay. Native green JUnit SHA256 `0af1d7da81b623932c077f3099afee8f708d56c7b7dfea412220495fe03533d5`. These are controlled checks, not a fresh real-provider or official-package acceptance.
+
+## Exact-SHA CI Recovery
+
+After the merge, repeated online runs/check-runs/status checks showed no automatic ordinary or embodied runs for0f7553c4 for over14 minutes. Remote master matched that SHA, Actions were enabled and both workflows were active. The event cause is unknown; absence is not success. Keep those missing-run observations and do not borrow PR-head results as master permission.
+
+Add only workflow_dispatch to the ordinary CI's existing triggers; leave every job and offline policy unchanged. Embodied CI already supports dispatch. When authoritative checks show no run for the final SHA, maintainers can explicitly start the existing two workflows, then require exact headSha, completed success and full passed-ID coverage. Do not repeat an in-progress run, bypass a failure, inject real LLM keys into PR/ordinary jobs, or rewrite CI infrastructure.
+
+## Remaining Gates
+
+Freeze the follow-up source and repeat all applicable offline/static/case/package and exact-head ordinary/native CI gates, with zero missing collected IDs. Require a new strict real doctor and a separately declared actual-wheel ordinary study against fresh completed normal-page rows. Final master needs its own checks, exact-SHA CI and real workflow study before tag; only then run local tagged readiness and fresh strict online Asia/Shanghai publication capacity. Exact GitHub/PyPI, correct Vercel production homepage/docs/aliases, official-package work and strict final remote distribution audit remain pending. No manual candidate preview is claimed; its disclosed residual visual risk remains separate from mandatory production checks and independent human first use.

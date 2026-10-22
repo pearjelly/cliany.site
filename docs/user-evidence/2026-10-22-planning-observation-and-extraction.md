@@ -1,5 +1,7 @@
 # Planning Observation And Mixed Extraction
 
+**Later same-day follow-up:** PR103 was merged after its separate scoped green gates, but an additional final-master ordinary study failed again. The [new failure and controlled prerequisite-progress correction](2026-10-22-observed-extract-prerequisites.md) retain that separate result, the unrecorded-selector uncertainty and missing automatic master CI. No391 publication followed; the earlier cohorts below are not rescored.
+
 **Scope:** unpublished391 in draft [PR103](https://github.com/pearjelly/cliany.site/pull/103), tracked in [Issue108](https://github.com/pearjelly/cliany.site/issues/108). Published390 and its failed acceptance remain unchanged. Independent first use remains0/2 on fixed published387; maintainer work is not a participant report. No case promotion or generated-file patch.
 
 ## Fresh Ordinary Failure
