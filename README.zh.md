@@ -1,5 +1,7 @@
 # cliany-site
 
+**v0.16.392 源码基线：** 开启录像的探索失败时，将既有计划、AX观察和固定原因保留为独立私有失败记录，不冒充已执行步骤。关闭录像不新增记录，写入失败不替换原始错误。见[录像与隐私说明](docs/exploration-recordings.md)。已发布391不含此修复；392正式可用须以完整发布收据为准，独立用户仍0/2。
+
 [![PyPI version](https://img.shields.io/pypi/v/cliany-site)](https://pypi.org/project/cliany-site/)
 [![Python](https://img.shields.io/pypi/pyversions/cliany-site)](https://pypi.org/project/cliany-site/)
 [![CI](https://github.com/pearjelly/cliany.site/actions/workflows/ci.yml/badge.svg)](https://github.com/pearjelly/cliany.site/actions/workflows/ci.yml)

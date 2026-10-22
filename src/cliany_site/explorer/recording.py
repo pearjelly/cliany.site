@@ -32,7 +32,7 @@ class RecordingManager:
         session_id: str,
     ) -> RecordingManifest:
         rec_dir = self._recording_dir(domain, session_id)
-        rec_dir.mkdir(parents=True, exist_ok=True)
+        rec_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
         # 初始化 capture
         self._net_cap = start_network_capture(None) if os.environ.get("CLIANY_CAPTURE_NETWORK", "1") != "0" else None
         self._con_cap = start_console_capture(None) if os.environ.get("CLIANY_CAPTURE_CONSOLE", "1") != "0" else None
@@ -103,6 +103,13 @@ class RecordingManager:
 
         manifest.steps.append(step_record)
         self._write_manifest(manifest)
+
+    def save_failure(self, manifest: RecordingManifest, failure: dict[str, Any]) -> None:
+        target = self._recording_dir(manifest.domain, manifest.session_id) / "failure.json"
+        content = json.dumps(failure, ensure_ascii=False, indent=2)
+        fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            stream.write(content)
 
     def mark_rolled_back(self, manifest: RecordingManifest, step_index: int) -> None:
         for step in manifest.steps:
