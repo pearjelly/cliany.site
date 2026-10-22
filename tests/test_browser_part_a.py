@@ -63,12 +63,9 @@ class TestBrowserState:
 
 
 class TestBrowserNavigate:
-    def test_navigate_success(self, no_llm, runner, clean_env):
+    def test_navigate_success(self, no_llm, runner, clean_env, tmp_home):
         mock_session = MagicMock()
         mock_session.navigate_to = AsyncMock()
-        mock_page = MagicMock()
-        mock_page.wait_for_load_state = AsyncMock()
-        mock_session.get_current_page = AsyncMock(return_value=mock_page)
 
         with (
             patch(
@@ -129,12 +126,8 @@ class TestBrowserNavigate:
 
 
 class TestBrowserWait:
-    def test_wait_networkidle_success(self, no_llm, runner):
-        mock_page = MagicMock()
-        mock_page.wait_for_load_state = AsyncMock()
-        mock_page.wait_for_selector = AsyncMock()
+    def test_wait_networkidle_success(self, no_llm, runner, tmp_home):
         mock_session = MagicMock()
-        mock_session.get_current_page = AsyncMock(return_value=mock_page)
 
         with (
             patch(
@@ -146,6 +139,7 @@ class TestBrowserWait:
                 AsyncMock(return_value=mock_session),
             ),
             patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+            patch("cliany_site.commands.browser.wait.wait_for_current_page", AsyncMock()) as waited,
         ):
             result = runner.invoke(cli, ["browser", "wait", "--json"])
             assert result.exit_code == 0, result.output
@@ -153,12 +147,10 @@ class TestBrowserWait:
             assert data["ok"] is True
             assert data["data"]["waited"] is True
             assert "elapsed_ms" in data["data"]
+            waited.assert_awaited_once_with(mock_session, selector=None, state="networkidle", timeout=30)
 
-    def test_wait_selector_success(self, no_llm, runner):
-        mock_page = MagicMock()
-        mock_page.wait_for_selector = AsyncMock()
+    def test_wait_selector_success(self, no_llm, runner, tmp_home):
         mock_session = MagicMock()
-        mock_session.get_current_page = AsyncMock(return_value=mock_page)
 
         with (
             patch(
@@ -170,6 +162,7 @@ class TestBrowserWait:
                 AsyncMock(return_value=mock_session),
             ),
             patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
+            patch("cliany_site.commands.browser.wait.wait_for_current_page", AsyncMock()) as waited,
         ):
             result = runner.invoke(
                 cli, ["browser", "wait", "--selector", "button#submit", "--json"]
@@ -178,6 +171,7 @@ class TestBrowserWait:
             data = json.loads(result.output)
             assert data["ok"] is True
             assert data["data"]["selector"] == "button#submit"
+            waited.assert_awaited_once_with(mock_session, selector="button#submit", state="networkidle", timeout=30)
 
 
 class TestBrowserScreenshot:

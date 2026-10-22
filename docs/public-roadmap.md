@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-10-22
-- **Current baseline:** [v0.16.392, published and verified](https://github.com/pearjelly/cliany.site/pull/110#issuecomment-6333140966)
+- **Current baseline:** v0.16.393; source is not a publication receipt. [Captured published392 receipt](https://github.com/pearjelly/cliany.site/pull/110#issuecomment-6333140966)
 - **Previously published baseline, October 17:** v0.16.390 ([distribution verified; fresh-generation acceptance failed](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
@@ -9,6 +9,8 @@
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap below records earlier work; the October plan prioritizes verified first use and reliable real workflows.
 
 ## October 22 Current Priorities
+
+The393 source addresses [Issue113's captured actor-backend wait failure](user-evidence/2026-10-22-browser-wait-backend.md), not a cadence-only version. Keep official392's six native failures, the expanded prototype failures and source controls separate; repeat all exact-source/final-master, real-provider, package, CI, tagged, online-capacity and publication gates before claiming official393. Candidate access checks stopped before doctor/model work; no site is promoted. The392 publication/capacity statements below are captured prior receipts, not a claim that newer sources are published or a current online quota result.
 
 Published392 addresses the [captured failed-plan recording gap](user-evidence/2026-10-22-rejected-plan-recordings.md). Its [final receipt](https://github.com/pearjelly/cliany.site/pull/110#issuecomment-6333140966) verifies exact-source/final-master gates, all4,000 actual test IDs (3,909 local non-embodied+91 remote browser, no missing/overlap), matching GitHub/PyPI artifacts, correct production pages/aliases and final remote distribution audit. A separate actual PyPI392 default-recording cohort passed3/3 real generations and9/9 all-returned-row comparisons;12 installed-package Chromium controls and30 CLI/SDK/HTTP comparisons passed. Private failure journals are not execution receipts. Original failed cohorts, initial post-publication TLS/EOF failures and partial download remain preserved; these passes do not reconstruct old missing evidence or establish independent first use.
 

@@ -5,6 +5,7 @@ import time
 import click
 
 from cliany_site.browser.cdp import cdp_from_context
+from cliany_site.browser.waiting import wait_for_current_page
 from cliany_site.commands.browser import browser_group
 from cliany_site.envelope import Envelope, ErrorCode, err, ok
 
@@ -28,8 +29,11 @@ def _print_envelope(result: Envelope, json_mode: bool) -> None:
 
 @browser_group.command("wait")
 @click.option("--selector", default=None, help="等待该 CSS selector 可见")
-@click.option("--state", "wait_state", default="networkidle", help="等待加载状态（无 selector 时生效）")
-@click.option("--timeout", default=30, type=int, show_default=True, help="超时秒数")
+@click.option(
+    "--state", "wait_state", default="networkidle",
+    type=click.Choice(["load", "networkidle", "domcontentloaded"]), help="等待加载状态（无 selector 时生效）",
+)
+@click.option("--timeout", default=30, type=click.IntRange(min=1), show_default=True, help="超时秒数")
 @click.option("--session", default=None, help="会话名称")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出模式")
 @click.pass_context
@@ -62,18 +66,14 @@ async def _run_wait(cdp, selector: str | None, wait_state: str, timeout: int) ->
     try:
         browser_session = await cdp.connect()
         try:
-            page = await browser_session.get_current_page()
-            if selector:
-                await page.wait_for_selector(selector, timeout=timeout * 1000)
-            else:
-                await page.wait_for_load_state(wait_state, timeout=timeout * 1000)
+            await wait_for_current_page(browser_session, selector=selector, state=wait_state, timeout=timeout)
         finally:
             await cdp.disconnect()
-    except (OSError, RuntimeError, TimeoutError) as exc:
+    except (OSError, RuntimeError, TimeoutError):
         return err(
             command="browser wait",
             code=ErrorCode.E_TIMEOUT,
-            message=f"等待超时或失败: {exc}",
+            message="等待超时或页面暂不可用",
             source="builtin",
         )
     elapsed_ms = int((time.monotonic() - start) * 1000)

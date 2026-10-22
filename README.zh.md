@@ -1,6 +1,6 @@
 # cliany-site
 
-**v0.16.392 源码基线：** 开启录像的探索失败时，将既有计划、AX观察和固定原因保留为独立私有失败记录，不冒充已执行步骤。关闭录像不新增记录，写入失败不替换原始错误。见[录像与隐私说明](docs/exploration-recordings.md)。已发布391不含此修复；392正式可用须以完整发布收据为准，独立用户仍0/2。
+**v0.16.393 源码基线：** 修复显式浏览器等待与固定actor后端不兼容的问题，按当前目标页的真实生命周期或已有显式selector条件等待，不关闭页面或重新导航。[失败证据](docs/user-evidence/2026-10-22-browser-wait-backend.md)分别保留正式392失败与源码检查；393正式可用须以完整发布收据为准。392的私有失败计划记录保持，见[录像与隐私说明](docs/exploration-recordings.md)。独立用户仍0/2，人工试用固定387。
 
 [![PyPI version](https://img.shields.io/pypi/v/cliany-site)](https://pypi.org/project/cliany-site/)
 [![Python](https://img.shields.io/pypi/pyversions/cliany-site)](https://pypi.org/project/cliany-site/)
