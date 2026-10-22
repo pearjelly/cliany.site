@@ -4,6 +4,7 @@ import json
 import click
 
 from cliany_site.browser.cdp import cdp_from_context
+from cliany_site.browser.waiting import wait_for_current_page
 from cliany_site.commands.browser import browser_group
 from cliany_site.config import get_config
 from cliany_site.envelope import Envelope, ErrorCode, err, ok
@@ -39,7 +40,7 @@ def _print_envelope(result: Envelope, json_mode: bool) -> None:
     type=click.Choice(["load", "networkidle", "domcontentloaded"]),
     help="等待页面加载状态",
 )
-@click.option("--timeout", default=30, type=int, show_default=True, help="超时秒数")
+@click.option("--timeout", default=30, type=click.IntRange(min=1), show_default=True, help="超时秒数")
 @click.option("--session", default=None, help="会话名称")
 @click.option("--json", "json_mode", is_flag=True, default=None, help="JSON 输出模式")
 @click.pass_context
@@ -114,8 +115,7 @@ async def _run_navigate(cdp, url: str, wait_state: str, timeout: int, session: s
                 await browser_session._cdp_set_cookies(saved.get("cookies", []))
             await browser_session.navigate_to(url)
             if wait_state in ("networkidle", "domcontentloaded"):
-                page = await browser_session.get_current_page()
-                await page.wait_for_load_state(wait_state, timeout=timeout * 1000)
+                await wait_for_current_page(browser_session, state=wait_state, timeout=timeout)
             if can_capture_axtree:
                 from cliany_site.browser.axtree import capture_axtree
                 from cliany_site.commands.browser._common import site_challenge_error

@@ -11,6 +11,12 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
+## [0.16.393] - 2026-10-22
+
+### Fixed
+
+- Explicit `browser wait` and navigation's `--wait networkidle` / `domcontentloaded` now use the pinned actor backend instead of absent Playwright Page methods. Monitor the focused target's native main-frame/current-loader lifecycle over an owned CDP connection; pending requests cannot pass on a new observer's synthetic idle state. Existing explicit selector waits remain read-only conditions passed as data, never action-target fallbacks. Preserve the external page, cancellation and one positive wait budget; close only the owned monitor and omit backend exception content. Default navigation, semantic replay, model/action budgets and dependencies are unchanged. [Actual392 failures and subsequent source checks](docs/user-evidence/2026-10-22-browser-wait-backend.md) are separate; no candidate promotion or independent-user credit.
+
 ## [0.16.392] - 2026-10-22
 
 ### Fixed
@@ -3567,7 +3573,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.392...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.393...HEAD
+[0.16.393]: https://github.com/pearjelly/cliany.site/compare/v0.16.392...v0.16.393
 [0.16.392]: https://github.com/pearjelly/cliany.site/compare/v0.16.391...v0.16.392
 [0.16.391]: https://github.com/pearjelly/cliany.site/compare/v0.16.390...v0.16.391
 [0.16.390]: https://github.com/pearjelly/cliany.site/compare/v0.16.389...v0.16.390

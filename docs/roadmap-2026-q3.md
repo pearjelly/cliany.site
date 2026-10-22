@@ -3,7 +3,7 @@
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-10-22
 
-- **基线版本：** [v0.16.392，已发布并验证](https://github.com/pearjelly/cliany.site/pull/110#issuecomment-6333140966)
+- **源码基线：** v0.16.393；源码不是正式发布收据。[已核对392收据](https://github.com/pearjelly/cliany.site/pull/110#issuecomment-6333140966)
 - **10月17日的上一公开版本：** v0.16.390（三端分发已验证；正式包新生成验收仍失败）
 - **目标周期：** 滚动维护（2026-09-08 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
@@ -14,6 +14,8 @@
 cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API 能力」的开源项目，而不是只展示一次性浏览器自动化 demo 的玩具。
 
 ## 10月22日当前优先级
+
+393源码针对[Issue113真实捕获的actor等待故障](user-evidence/2026-10-22-browser-wait-backend.md)，不是为日历凑版本。正式392六项原生失败、扩展原型失败和后续源码控制分开保留；393须重新完成精确源码/最终master、真实provider、实际包、CI、tagged、在线限额及三端发布门禁。候选访问检查在doctor/模型前停止，不晋级案例。下方392发布及额度是当时收据，不证明后继源码已发布或当前在线余量。
 
 已发布392修复[失败当轮录像缺口](user-evidence/2026-10-22-rejected-plan-recordings.md)。[最终收据](https://github.com/pearjelly/cliany.site/pull/110#issuecomment-6333140966)已验证精确源码/最终master门禁、4000项实际测试ID（3909本地非浏览器+91远端浏览器，无遗漏/重叠）、GitHub/PyPI实际字节、正确生产首页/文档/别名及最终远端分发审计。正式PyPI392独立一批默认录像的真实3/3生成、9/9完整返回行对照通过；12项实际包Chromium控制、30次CLI/SDK/HTTP对照通过。私有失败计划不是执行回执；旧失败及发布后首次TLS/EOF、截断下载均保留，不重建旧缺失记录或增加独立人次。
 
