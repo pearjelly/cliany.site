@@ -1,6 +1,6 @@
 # Failed Exploration Recordings
 
-**Status: unpublished correction.** Published0.16.391 still has the [captured missing-failure-evidence gap](user-evidence/2026-10-22-rejected-plan-recordings.md). A source checkout or controlled check is not a release or independent-user acceptance.
+**Source baseline:0.16.392.** Published0.16.391 has the [captured missing-failure-evidence gap](user-evidence/2026-10-22-rejected-plan-recordings.md). Official392 availability requires its complete publication receipt; a source checkout or controlled check is not a release or independent-user acceptance.
 
 Exploration normally records locally. To opt out, use `explore ... --no-record`; the correction adds no failure-journal writes in that mode. Recording does not establish that the workflow succeeded.
 

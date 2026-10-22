@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-10-22
-- **Current baseline:** v0.16.391 ([published and verified](https://github.com/pearjelly/cliany.site/pull/109#issuecomment-6332109657))
+- **Current baseline:** v0.16.392 (source candidate; latest verified publication is [391](https://github.com/pearjelly/cliany.site/pull/109#issuecomment-6332109657))
 - **Previously published baseline, October 17:** v0.16.390 ([distribution verified; fresh-generation acceptance failed](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
@@ -9,6 +9,8 @@
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap below records earlier work; the October plan prioritizes verified first use and reliable real workflows.
 
 ## October 22 Current Priorities
+
+The392 candidate addresses the [captured failed-plan recording gap](user-evidence/2026-10-22-rejected-plan-recordings.md). It retains private existing observations without claiming proposed actions were executed. Source controls are not publication or independent-user acceptance; require the new full source/master/package and real-provider gates before merging/tagging.
 
 Published391 completed exact-source/final-master gates, matching GitHub/PyPI artifacts, correct production homepage/docs/aliases and the final remote distribution audit. The [receipt](https://github.com/pearjelly/cliany.site/pull/109#issuecomment-6332109657) distinguishes3,900 local non-embodied and89 remote browser tests (all3,989 IDs, no missing/overlap) and separate source/master/public-package cohorts. Actual PyPI391 passed3/3 generations and9/9 returned-row checks. Capped100-row prefixes are not complete collections or general reliability; earlier failed cohorts remain failed.
 

@@ -7,13 +7,16 @@
 
 ## [Unreleased]
 
-### Fixed
-
-- With exploration recording enabled, retain the planning-time AX, raw model response, prior turn trace and fixed failure reason in a private failure journal when exploration stops. Keep proposals distinct from execution receipts and preserve shared-repair/action indices, original errors and cancellation. No new observations, model calls or retries; no-record writes no journal. This is unpublished; [the recording evidence](docs/user-evidence/2026-10-22-rejected-plan-recordings.md) preserves the actual391 control failure separately from native source checks and independent first use.
-
 ### Changed
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
+
+## [0.16.392] - 2026-10-22
+
+### Fixed
+
+- With exploration recording enabled, retain the planning-time AX, raw model response, prior turn trace and fixed failure reason in a private failure journal when exploration stops. Keep proposals distinct from execution receipts and preserve shared-repair/action indices, original errors and cancellation. No new observations, model calls or retries; no-record writes no journal. The [recording evidence](docs/user-evidence/2026-10-22-rejected-plan-recordings.md) preserves the actual391 control failure separately from native source checks and independent first use. Raw evidence stays local/private; I/O failure never replaces the exploration error, and existing journals are not overwritten.
+- Reconcile published391 priorities separately from prepublication history. Independent first use remains0/2 on fixed387; no case promotion or alpha claim.
 
 ## [0.16.391] - 2026-10-22
 
@@ -3564,7 +3567,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.391...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.392...HEAD
+[0.16.392]: https://github.com/pearjelly/cliany.site/compare/v0.16.391...v0.16.392
 [0.16.391]: https://github.com/pearjelly/cliany.site/compare/v0.16.390...v0.16.391
 [0.16.390]: https://github.com/pearjelly/cliany.site/compare/v0.16.389...v0.16.390
 [0.16.389]: https://github.com/pearjelly/cliany.site/compare/v0.16.388...v0.16.389

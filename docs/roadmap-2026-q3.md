@@ -3,7 +3,7 @@
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-10-22
 
-- **基线版本：** v0.16.391（[三端发布及正式包验收已完成](https://github.com/pearjelly/cliany.site/pull/109#issuecomment-6332109657)）
+- **基线版本：** v0.16.392（源码候选；最新已验证分发仍为[391](https://github.com/pearjelly/cliany.site/pull/109#issuecomment-6332109657)）
 - **10月17日的上一公开版本：** v0.16.390（三端分发已验证；正式包新生成验收仍失败）
 - **目标周期：** 滚动维护（2026-09-08 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
@@ -14,6 +14,8 @@
 cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API 能力」的开源项目，而不是只展示一次性浏览器自动化 demo 的玩具。
 
 ## 10月22日当前优先级
+
+392候选修复[失败当轮录像缺口](user-evidence/2026-10-22-rejected-plan-recordings.md)，私有保存已有观察和计划，不把提案冒充执行。源码受控通过不是正式发布或独立用户验收；新完整源码、master、实际包及真实provider门禁通过后才合并、打tag。
 
 [391发布收据](https://github.com/pearjelly/cliany.site/pull/109#issuecomment-6332109657)已验证最终提交、GitHub/PyPI精确包、官网生产及别名和最终远端审计。3900项本地非浏览器加89项远端浏览器覆盖全部3989项，无遗漏或重叠；正式包独立一批真实3/3生成、9/9逐行回放通过。100行前缀不是完整集合或通用可靠性证明，旧失败保持原分。
 

@@ -186,7 +186,7 @@ export CLIANY_OPENAI_API_KEY="sk-..."
 
 Set `CLIANY_RUNTIME_HOME` before starting the CLI to keep a trial's adapters, sessions, caches and recordings in a separate directory. `demo` uses that same directory in its install, verify and query subprocesses. The default remains `~/.cliany-site`; Chrome's OS home and system credentials are unchanged. See the [isolated runtime example](docs/quickstart-10min.md#可选隔离运行数据).
 
-**Unreleased:** failed recorded explorations retain private planning evidence in a separate journal, without turning proposed actions into executed steps. See [exploration recordings](docs/exploration-recordings.md) for location, privacy and no-record behavior. Published0.16.391 does not contain this correction.
+**v0.16.392 source baseline:** failed recorded explorations retain private planning evidence in a separate journal, without turning proposed actions into executed steps. See [exploration recordings](docs/exploration-recordings.md) for location, privacy and no-record behavior. Published0.16.391 does not contain this correction; official392 availability requires a complete publication receipt.
 
 From v0.16.386, `demo` also retains child startup, timeout and malformed-output reasons under `error.details.upstream_error.details.reason`, alongside the existing `error.details.stage`. These new local diagnostics omit raw output, arguments and exception bodies; valid upstream errors retain their existing forwarding contract. Python children use UTF-8 without changing your shell settings. Use the [independent first-use trial](docs/first-use-trial.md) to report the original failure separately from assisted retries. Preparation and maintainer checks do not count as independent users.
 
