@@ -105,8 +105,9 @@
 
       <main>
         <h1>cliany-site 文档</h1>
-        <p class="intro-meta">v0.16.393 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
-        <p>这是 v0.16.393 的源码文档；正式分发以 GitHub、PyPI 与官网发布收据为准，不能从源码分支推定。最终版本与实际安装包须分别验证。独立报告仍为 0/2，人工试用固定在已发布 0.16.387。</p>
+        <p class="intro-meta">v0.16.394 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
+        <p>这是 v0.16.394 的源码文档；正式分发以 GitHub、PyPI 与官网发布收据为准，不能从源码分支推定。最终版本与实际安装包须分别验证。独立报告仍为 0/2，人工试用固定在已发布 0.16.387。</p>
+        <p>v0.16.394 检查本地 CDP 响应结构；端口被非浏览器服务占用时停止自动启动，<code>doctor</code> 返回浏览器不可用并提示检查端口。此检查不能排除并发端口竞争，也不能认证响应方身份；此前间歇性启动超时的原因仍待调查。<a href="https://github.com/pearjelly/cliany.site/blob/master/docs/user-evidence/2026-10-27-local-cdp-discovery.md">查看故障与验证记录</a>。</p>
         <p>v0.16.393 修复显式 <code>browser wait</code> 与导航 <code>--wait networkidle</code> / <code>domcontentloaded</code> 的后端兼容故障。按当前目标页真实生命周期或已有显式selector条件等待，不关闭页面、重复导航或增加模型预算；未完成请求不能误报就绪。<code>--timeout</code> 必须为正数，取消保持。见<a href="https://github.com/pearjelly/cliany.site/blob/master/docs/user-evidence/2026-10-22-browser-wait-backend.md">失败与验证边界</a>。392的私有失败录像保持，原始内容不要公开上传。</p>
         <p>生成命令的 SDK/HTTP 请求仍使用元数据原始参数名，例如 <code>search-term</code>；内部按 CLI 同样的分配和覆盖顺序替换 <code>search_term</code> 等规范化/保留名变量，避免把占位符原样输入浏览器。并非接受任意请求别名，静态所有权检查和默认值语义不变。旧391候选的四项错误成功保留，修复须重新验证。</p>
 

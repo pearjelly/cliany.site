@@ -1,5 +1,11 @@
 # October 2026 Value Plan
 
+## October 27 Current Priorities
+
+The next source candidate is v0.16.394, based on the published393 master. It fixes the [observed local CDP discovery and occupied-port failure](../user-evidence/2026-10-27-local-cdp-discovery.md); it does not claim the older intermittent Chrome startup timeout is solved. Source checks and maintainer retry evidence are not release, model-exploration or independent-user receipts. Complete fresh exact-source/final-master, CI, tagged readiness, online Shanghai capacity, GitHub/PyPI/website and final remote-audit gates before treating394 as published.
+
+Independent first use remains pending on fixed387. Invite two non-builders, preserve their first failures and help timing, and record retries separately; maintainer checks do not count. A fixed387 maintainer attempt failed downloading the Jira archive, then a separate retry succeeded after connectivity returned. Keep both results rather than scoring the retry as a first attempt.
+
 ## October 22 Current Priorities
 
 Source393 fixes [Issue113's actual actor wait incompatibility](../user-evidence/2026-10-22-browser-wait-backend.md). Six official392 native failures and the expanded prototype's failures remain separate from source green. This meaningful correction requires new full source/master/real-provider/package/CI/tagged/online-capacity/three-end gates; source393 is not published by this plan. Candidate access checks ended before doctor/model work, not successful discoveries. The392 baseline and capacity paragraphs below retain their earlier receipt date; verify current publication and quota online.

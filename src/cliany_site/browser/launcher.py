@@ -8,6 +8,7 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlparse
 
 from cliany_site.config import get_config
 
@@ -55,8 +56,17 @@ def detect_running_chrome(port: int | None = None) -> str | None:
         ) as response:
             if response.status == 200:
                 data = json.loads(response.read().decode())
-                result: str | None = data.get("webSocketDebuggerUrl")
-                return result
+                if not isinstance(data, dict):
+                    return None
+                product = data.get("Browser")
+                result = data.get("webSocketDebuggerUrl")
+                if (not isinstance(product, str) or not product.strip()
+                        or not isinstance(result, str) or any(char.isspace() for char in result)):
+                    return None
+                endpoint = urlparse(result)
+                if (endpoint.scheme in {"ws", "wss"} and endpoint.hostname
+                        and (endpoint.port is None or endpoint.port > 0)):
+                    return result
     except (urllib.error.URLError, OSError, ValueError, json.JSONDecodeError):
         pass
     return None
@@ -130,6 +140,9 @@ def ensure_chrome(port: int | None = None, headless: bool = False) -> tuple[str,
     ws_url = detect_running_chrome(port)
     if ws_url:
         return (ws_url, None)
+
+    if _tcp_port_open(port):
+        raise RuntimeError(f"CDP 端口 {port} 已被占用，但未检测到可用的 Chrome")
 
     proc = launch_chrome(port, headless=headless)
     ws_url = detect_running_chrome(port)

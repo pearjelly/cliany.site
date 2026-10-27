@@ -287,6 +287,7 @@ class TestEnsureChromeHeadless:
     def test_headless_passed_to_launch(self):
         with (
             patch("cliany_site.browser.launcher.detect_running_chrome", side_effect=[None, "ws://..."]),
+            patch("cliany_site.browser.launcher._tcp_port_open", return_value=False),
             patch("cliany_site.browser.launcher.launch_chrome") as mock_launch,
         ):
             mock_proc = MagicMock()
@@ -301,6 +302,7 @@ class TestEnsureChromeHeadless:
     def test_headless_false_by_default(self):
         with (
             patch("cliany_site.browser.launcher.detect_running_chrome", side_effect=[None, "ws://..."]),
+            patch("cliany_site.browser.launcher._tcp_port_open", return_value=False),
             patch("cliany_site.browser.launcher.launch_chrome") as mock_launch,
         ):
             mock_proc = MagicMock()
