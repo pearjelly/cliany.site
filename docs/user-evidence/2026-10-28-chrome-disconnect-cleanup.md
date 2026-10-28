@@ -25,6 +25,17 @@ The first complete offline run then retained3978 passes and one documentation
 failure: the docs version badge had not been updated to396. Correct that badge
 and repeat the complete run; no tests or version gate are weakened.
 
+An additional unchanged shell QA run failed8/1: its direct doctor helper saw
+an uninitialized isolated runtime. A separately initialized run still failed
+8/1 because it required obsolete top-level chrome_binary_path/auto-launch
+fields; neither the unchanged doctor source nor the published395 helper has
+those fields. Update only that diagnostic contract: inspect the single CDP
+check and summary in success data or failure details, validate the actual
+connection's boolean ownership flag, and always disconnect its owned process.
+Do not turn a failed diagnostic envelope into browser-availability success.
+Repeat all frozen-source/final-master gates after this QA-only correction;
+earlier396 passes remain separate, with no tag pushed.
+
 Source396 moves owned-process cleanup into disconnect's finally block and
 clears session/ownership state. Reuse the bounded cleanup from failed startup:
 terminate/wait5 seconds, kill/wait5 seconds on timeout. Preserve existing
