@@ -1,4 +1,6 @@
+import asyncio
 import socket
+import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -27,7 +29,7 @@ def test_chrome_launch_reports_early_exit(monkeypatch):
     with pytest.raises(RuntimeError, match=r"提前退出 \(exit=127, port=48792\)"):
         launcher.launch_chrome(48792, headless=True)
 
-    assert process.poll.call_count == 1
+    assert process.poll.call_count == 2
     process.terminate.assert_not_called()
 
 
@@ -68,7 +70,7 @@ def test_chrome_launch_reports_bound_port_without_exposing_browser_output(monkey
 
 def test_chrome_launch_reports_exit_at_timeout_boundary(monkeypatch):
     process = MagicMock()
-    process.poll.side_effect = [None] * 40 + [127]
+    process.poll.side_effect = [None] * 40 + [127, 127]
     monkeypatch.setattr(launcher, "find_chrome_binary", lambda: Path("/chrome"))
     monkeypatch.setattr(launcher.subprocess, "Popen", lambda *args, **kwargs: process)
     monkeypatch.setattr(launcher, "detect_running_chrome", lambda port: None)
@@ -93,3 +95,79 @@ def test_chrome_launch_accepts_slow_start_before_wait_limit(monkeypatch):
     assert launcher.launch_chrome(48795, headless=True) is process
     assert process.poll.call_count == 35
     process.terminate.assert_not_called()
+
+
+@pytest.mark.parametrize("exception_type", [KeyboardInterrupt, asyncio.CancelledError, RuntimeError])
+@pytest.mark.parametrize("stage", ["sleep", "discovery"])
+def test_cancelled_or_failed_launch_cleans_owned_process_and_preserves_error(monkeypatch, exception_type, stage):
+    process = MagicMock()
+    process.poll.return_value = None
+    failure = exception_type("original failure")
+    monkeypatch.setattr(launcher, "find_chrome_binary", lambda: Path("/chrome"))
+    monkeypatch.setattr(launcher.subprocess, "Popen", lambda *args, **kwargs: process)
+
+    def fail(*args):
+        raise failure
+
+    monkeypatch.setattr(launcher.time, "sleep", fail if stage == "sleep" else lambda seconds: None)
+    monkeypatch.setattr(launcher, "detect_running_chrome", fail if stage == "discovery" else lambda port: None)
+    with pytest.raises(exception_type) as observed:
+        launcher.launch_chrome(48797, headless=True)
+    assert observed.value is failure
+    process.terminate.assert_called_once_with()
+    process.wait.assert_called_once_with(timeout=5)
+
+
+def test_cancelled_launch_kills_owned_process_that_ignores_termination(monkeypatch):
+    process = MagicMock()
+    process.poll.return_value = None
+    process.wait.side_effect = [subprocess.TimeoutExpired("chrome", 5), 0]
+    failure = KeyboardInterrupt()
+    monkeypatch.setattr(launcher, "find_chrome_binary", lambda: Path("/chrome"))
+    monkeypatch.setattr(launcher.subprocess, "Popen", lambda *args, **kwargs: process)
+
+    def interrupt(seconds):
+        raise failure
+
+    monkeypatch.setattr(launcher.time, "sleep", interrupt)
+    with pytest.raises(KeyboardInterrupt) as observed:
+        launcher.launch_chrome(48798, headless=True)
+    assert observed.value is failure
+    process.terminate.assert_called_once_with()
+    process.kill.assert_called_once_with()
+    assert process.wait.call_count == 2
+
+
+@pytest.mark.parametrize("probe_result", [None, KeyboardInterrupt(), RuntimeError("probe failed")])
+def test_failed_postlaunch_discovery_cleans_owned_process(monkeypatch, probe_result):
+    process = MagicMock()
+    process.poll.return_value = None
+    monkeypatch.setattr(launcher, "detect_running_chrome", MagicMock(side_effect=[None, probe_result]))
+    monkeypatch.setattr(launcher, "_tcp_port_open", lambda port: False)
+    monkeypatch.setattr(launcher, "launch_chrome", lambda *args, **kwargs: process)
+    expected = type(probe_result) if isinstance(probe_result, BaseException) else RuntimeError
+    with pytest.raises(expected) as observed:
+        launcher.ensure_chrome(48799, headless=True)
+    if isinstance(probe_result, BaseException):
+        assert observed.value is probe_result
+    process.terminate.assert_called_once_with()
+    process.wait.assert_called_once_with(timeout=5)
+
+
+@pytest.mark.parametrize("cleanup_error", [OSError("private process details"), subprocess.TimeoutExpired("chrome", 5)])
+def test_startup_cleanup_error_does_not_replace_original_failure(monkeypatch, cleanup_error, caplog):
+    process = MagicMock()
+    process.poll.return_value = None
+    process.wait.side_effect = cleanup_error
+    failure = KeyboardInterrupt()
+    monkeypatch.setattr(launcher, "find_chrome_binary", lambda: Path("/chrome"))
+    monkeypatch.setattr(launcher.subprocess, "Popen", lambda *args, **kwargs: process)
+
+    def interrupt(seconds):
+        raise failure
+
+    monkeypatch.setattr(launcher.time, "sleep", interrupt)
+    with pytest.raises(KeyboardInterrupt) as observed:
+        launcher.launch_chrome(48800, headless=True)
+    assert observed.value is failure
+    assert "private process details" not in caplog.text

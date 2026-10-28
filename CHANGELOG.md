@@ -11,6 +11,12 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
+## [0.16.395] - 2026-10-28
+
+### Fixed
+
+- Clean up and reap only the Chrome process created by a failed or cancelled startup, including interruption during discovery and pending asyncio cancellation at the synchronous-to-async handoff. Preserve the original error/cancellation; reused browsers remain untouched. Normal startup timing and model budgets are unchanged. [Actual394 failure and staged repair evidence](docs/user-evidence/2026-10-28-chrome-startup-cancellation.md) retain the initially insufficient cleanup prototype and historical unknown timeouts separately.
+
 ## [0.16.394] - 2026-10-28
 
 ### Fixed
@@ -3581,7 +3587,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.394...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.395...HEAD
+[0.16.395]: https://github.com/pearjelly/cliany.site/compare/v0.16.394...v0.16.395
 [0.16.394]: https://github.com/pearjelly/cliany.site/compare/v0.16.393...v0.16.394
 [0.16.393]: https://github.com/pearjelly/cliany.site/compare/v0.16.392...v0.16.393
 [0.16.392]: https://github.com/pearjelly/cliany.site/compare/v0.16.391...v0.16.392

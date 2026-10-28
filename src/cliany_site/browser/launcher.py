@@ -1,5 +1,6 @@
 # src/cliany_site/browser/launcher.py
 import json
+import logging
 import os
 import shutil
 import socket
@@ -11,6 +12,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from cliany_site.config import get_config
+
+logger = logging.getLogger(__name__)
 
 
 class ChromeNotFoundError(Exception):
@@ -80,6 +83,19 @@ def _tcp_port_open(port: int) -> bool:
         return False
 
 
+def _stop_failed_launch(proc: subprocess.Popen) -> None:
+    try:
+        if proc.poll() is None:
+            proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait(timeout=5)
+    except (OSError, subprocess.SubprocessError):
+        logger.debug("清理未就绪 Chrome 进程失败")
+
+
 def launch_chrome(port: int | None = None, headless: bool = False) -> subprocess.Popen:
     if port is None:
         port = get_config().cdp_port
@@ -105,33 +121,31 @@ def launch_chrome(port: int | None = None, headless: bool = False) -> subprocess
         stderr=subprocess.DEVNULL,
     )
 
-    started_at = time.monotonic()
-    for _ in range(40):
-        time.sleep(0.5)
-        ws_url = detect_running_chrome(port)
-        if ws_url:
-            return proc
-        exit_code = proc.poll()
-        if exit_code is not None:
-            raise RuntimeError(f"Chrome 启动后提前退出 (exit={exit_code}, port={port})")
-
-    elapsed = time.monotonic() - started_at
-    port_open = _tcp_port_open(port)
-    profile_present = Path(user_data_dir).exists()
-    exit_code = proc.poll()
-    if exit_code is None:
-        proc.terminate()
     try:
-        proc.wait(timeout=5)
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        proc.wait(timeout=5)
-    process_at_timeout = "running" if exit_code is None else f"exit={exit_code}"
-    raise TimeoutError(
-        f"Chrome 启动后 20 秒内 CDP 端口 {port} 未就绪 "
-        f"(elapsed={elapsed:.1f}s, process_at_timeout={process_at_timeout}, tcp_open={port_open}, "
-        f"profile_present={profile_present})"
-    )
+        started_at = time.monotonic()
+        for _ in range(40):
+            time.sleep(0.5)
+            ws_url = detect_running_chrome(port)
+            if ws_url:
+                return proc
+            exit_code = proc.poll()
+            if exit_code is not None:
+                raise RuntimeError(f"Chrome 启动后提前退出 (exit={exit_code}, port={port})")
+
+        elapsed = time.monotonic() - started_at
+        port_open = _tcp_port_open(port)
+        profile_present = Path(user_data_dir).exists()
+        exit_code = proc.poll()
+        process_at_timeout = "running" if exit_code is None else f"exit={exit_code}"
+        raise TimeoutError(
+            f"Chrome 启动后 20 秒内 CDP 端口 {port} 未就绪 "
+            f"(elapsed={elapsed:.1f}s, process_at_timeout={process_at_timeout}, tcp_open={port_open}, "
+            f"profile_present={profile_present})"
+        )
+    except BaseException:
+        # Ownership transfers only when a ready process is returned to the caller.
+        _stop_failed_launch(proc)
+        raise
 
 
 def ensure_chrome(port: int | None = None, headless: bool = False) -> tuple[str, subprocess.Popen | None]:
@@ -145,8 +159,11 @@ def ensure_chrome(port: int | None = None, headless: bool = False) -> tuple[str,
         raise RuntimeError(f"CDP 端口 {port} 已被占用，但未检测到可用的 Chrome")
 
     proc = launch_chrome(port, headless=headless)
-    ws_url = detect_running_chrome(port)
-    if not ws_url:
-        proc.terminate()
-        raise RuntimeError(f"Chrome 已启动但无法获取 WebSocket URL (port {port})")
-    return (ws_url, proc)
+    try:
+        ws_url = detect_running_chrome(port)
+        if not ws_url:
+            raise RuntimeError(f"Chrome 已启动但无法获取 WebSocket URL (port {port})")
+        return (ws_url, proc)
+    except BaseException:
+        _stop_failed_launch(proc)
+        raise
