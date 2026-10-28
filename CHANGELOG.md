@@ -11,6 +11,14 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
+## [0.16.394] - 2026-10-28
+
+### Fixed
+
+- Local CDP discovery rejects invalid JSON shapes and invalid browser WebSocket endpoints. If the local port is occupied without a valid discovery response, do not launch another browser; `doctor --json` reports the existing `E_CDP_UNAVAILABLE` instead of an uncaught attribute error, with guidance to check port occupancy. This is an occupied-port guard, not a diagnosis of the intermittent Chrome startup timeout. [Failure evidence](docs/user-evidence/2026-10-27-local-cdp-discovery.md).
+- During Click command execution, cancellation now reports `E_CANCELLED` with a fixed nonempty message and a safe reason instead of an empty `E_UNKNOWN`. Direct keyboard interruption exits 130; EOF and explicit abort exit 1. Existing generated adapter wrappers preserve the error and stop later actions but retain their existing outer exit 1; optional healing does not run after cancellation. No generated files are rewritten; asynchronous task cancellation remains propagated. [Signal controls and limitations](https://github.com/pearjelly/cliany.site/issues/116).
+- Constrain test-only pytest dependencies below 9.2 after exact-head CI reproduced nine pytest-benchmark 5.3.0 fixture errors. The same nine tests pass with pytest 9.1.1. No performance tests, CI jobs or runtime dependency bounds are removed.
+
 ## [0.16.393] - 2026-10-22
 
 ### Fixed
@@ -3573,7 +3581,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.393...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.394...HEAD
+[0.16.394]: https://github.com/pearjelly/cliany.site/compare/v0.16.393...v0.16.394
 [0.16.393]: https://github.com/pearjelly/cliany.site/compare/v0.16.392...v0.16.393
 [0.16.392]: https://github.com/pearjelly/cliany.site/compare/v0.16.391...v0.16.392
 [0.16.391]: https://github.com/pearjelly/cliany.site/compare/v0.16.390...v0.16.391

@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 import click
 from click.testing import CliRunner
 
-from cliany_site.envelope import Envelope
+from cliany_site.envelope import Envelope, ErrorCode
 from cliany_site.extract_quality import evaluate_extract_quality
 
 _workflow_browser: ContextVar[dict[str, Any] | None] = ContextVar("workflow_browser", default=None)
@@ -30,7 +30,7 @@ def run_atom(
     if browser is not None:
         from cliany_site.browser.launcher import ChromeNotFoundError, ensure_chrome
         from cliany_site.config import get_config
-        from cliany_site.envelope import ErrorCode, err
+        from cliany_site.envelope import err
 
         cfg = get_config()
         requested_url = root_obj.get("cdp_url") if isinstance(root_obj, dict) else None
@@ -80,7 +80,7 @@ def run_atom(
             raise ValueError(f"命令以非零状态退出: {result.exit_code}")
         envelope = cast(Envelope, parsed)
     except ValueError as exc:
-        from cliany_site.envelope import ErrorCode, err
+        from cliany_site.envelope import err
 
         envelope = err(
             command=" ".join(command),
@@ -89,7 +89,9 @@ def run_atom(
             source="builtin",
         )
 
-    if not envelope.get("ok") and heal_on_failure:
+    failure = envelope.get("error")
+    if (not envelope.get("ok") and heal_on_failure
+            and (failure is None or failure["code"] != ErrorCode.E_CANCELLED)):
         from cliany_site.healer import Healer
 
         domain = session or ""

@@ -30,7 +30,8 @@ except ImportError:
 
 _CHECK_ACTIONS: dict[str, dict[str, str]] = {
     "cdp": {
-        "fail": "启动 Chrome/Chromium，并开放 CDP 调试端口；或使用 --cdp-url 指向可用浏览器。",
+        "fail": ("检查 CDP 端口是否被其他服务占用；启动 Chrome/Chromium 并开放调试端口，"
+                 "或使用 --cdp-url 指向可用浏览器。"),
         "ok": "Chrome/CDP 可用，可以执行 login、explore 和浏览器 replay。",
     },
     "llm": {

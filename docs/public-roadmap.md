@@ -1,12 +1,20 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-10-22
-- **Current baseline:** v0.16.393; source is not a publication receipt. [Captured published392 receipt](https://github.com/pearjelly/cliany.site/pull/110#issuecomment-6333140966)
+- **Updated:** 2026-10-27
+- **Current baseline:** v0.16.394 source; source is not a publication receipt. [Published393 receipt](https://github.com/pearjelly/cliany.site/pull/114#issuecomment-6334845129)
 - **Previously published baseline, October 17:** v0.16.390 ([distribution verified; fresh-generation acceptance failed](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap below records earlier work; the October plan prioritizes verified first use and reliable real workflows.
+
+## October 27 Current Priorities
+
+Published393 remains the verified distribution. Source394 addresses the [reproduced occupied-port discovery failure](user-evidence/2026-10-27-local-cdp-discovery.md): malformed local JSON no longer produces a generic exception, and a non-CDP listener is not automatically replaced with a new Chrome launch. Exact-source, final-master, real-workflow, package, CI, online release-capacity and publication gates remain separate. It does not resolve the intermittent startup timeout or authenticate an endpoint.
+
+During Click command execution, source394 also reports cancellation as `E_CANCELLED`; a direct keyboard interrupt exits 130, while existing generated wrappers preserve the error and retain outer exit 1. [Issue116](https://github.com/pearjelly/cliany.site/issues/116) keeps the original browser failure, a signal control reproducing the empty error, and a later timed-out post-change control with unknown signal delivery. No result rescoring or root-cause claim.
+
+The fixed387 maintainer first-use attempt failed during adapter download; a later retry succeeded. Preserve both observations, not a new first-use success rate. Two independent non-builders are still needed on the fixed [trial](first-use-trial.md); first attempts, assistance and retries remain separate, and A does not count as browser B. No candidate promotion or alpha claim.
 
 ## October 22 Current Priorities
 

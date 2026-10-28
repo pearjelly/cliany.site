@@ -145,6 +145,21 @@ class SafeGroup(click.Group):
                 raise SystemExit(exc.exit_code) from exc
             except SystemExit:
                 raise
+            except click.Abort as exc:
+                cause = exc.__cause__
+                interrupted = isinstance(cause, KeyboardInterrupt)
+                reason = "keyboard_interrupt" if interrupted else (
+                    "end_of_input" if isinstance(cause, EOFError) else "aborted"
+                )
+                if _is_json_mode(argv):
+                    print_response(
+                        envelope_err("cli", ErrorCode.E_CANCELLED, "操作已取消", details={"reason": reason}),
+                        json_mode=True,
+                        exit_on_error=False,
+                    )
+                else:
+                    click.echo("操作已取消", err=True)
+                raise SystemExit(130 if interrupted else 1) from exc
             except click.ClickException as exc:
                 _render_error(exc, json_mode=_is_json_mode(argv))
                 raise SystemExit(1) from exc
