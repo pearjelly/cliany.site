@@ -12,6 +12,7 @@ from browser_use.browser.session import BrowserSession
 
 from cliany_site.browser.launcher import (
     ChromeNotFoundError,
+    _stop_failed_launch,
     ensure_chrome,
 )
 from cliany_site.config import get_config
@@ -110,12 +111,21 @@ class CDPConnection:
                 or endpoint.query or endpoint.path not in {"", "/"}):
             return await self._probe_remote(host, resolved_port)
 
+        proc = None
         try:
             ws_url, proc = ensure_chrome(resolved_port, headless=self._headless)
             if proc is not None:
                 self._chrome_proc = proc
                 self._chrome_auto_launched = True
+            # Deliver cancellation requested while synchronous startup held the loop.
+            await asyncio.sleep(0)
             return True
+        except asyncio.CancelledError:
+            if proc is not None:
+                _stop_failed_launch(proc)
+                self._chrome_proc = None
+                self._chrome_auto_launched = False
+            raise
         except ChromeNotFoundError:
             return False
         except (RuntimeError, TimeoutError, OSError) as exc:

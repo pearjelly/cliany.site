@@ -2,6 +2,10 @@
 
 ## October 28 Current Priorities
 
+Published394 completed [source/master, official-package and three-end acceptance](https://github.com/pearjelly/cliany.site/pull/115#issuecomment-6460191229). Fresh online Shanghai actual-publication count is1/3; do not publish another version without real value. A new [actual394 startup-cancellation failure](../user-evidence/2026-10-28-chrome-startup-cancellation.md) leaves the owned browser alive after exit130. Prepare395 to clean failed startup and pending asyncio handoff cancellation, then require all new source/master/package/live/CI/tagged/online/three-end gates. Keep the initial prototype's native failures; no historical timeout cause is inferred. Independent reports remain0/2 on fixed387 and the acceptance workbook remains pending.
+
+## October 28 Prepublication History
+
 Fresh online checks still show published393 on GitHub/PyPI/production and zero October28 formal releases. PR115 is a draft; earlier exact-head CI and the October27 local-wheel3/3 generation/9/9 replay study cover the prior04cba7b5 snapshot only. The revised cancellation source requires new complete gates. Public33/55 feedback still contains no independent participant report; the existing two-participant acceptance workbook remains pending, not an invitation or first-use receipt.
 
 The next source candidate is v0.16.394, based on the published393 master. It fixes the [observed local CDP discovery and occupied-port failure](../user-evidence/2026-10-27-local-cdp-discovery.md); it does not claim the older intermittent Chrome startup timeout is solved. Source checks and maintainer retry evidence are not release, model-exploration or independent-user receipts. Complete fresh exact-source/final-master, CI, tagged readiness, online Shanghai capacity, GitHub/PyPI/website and final remote-audit gates before treating394 as published.
