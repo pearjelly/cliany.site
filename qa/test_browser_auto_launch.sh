@@ -128,22 +128,34 @@ print('OK')
   fi
 }
 
-test_doctor_chrome_fields() {
-  # Test that doctor output includes chrome fields
+test_doctor_cdp_check() {
+  # Doctor reports browser availability in checks, including failed envelopes.
   OUTPUT=$(uv run python3 -c "
 import asyncio
+from cliany_site.browser.cdp import CDPConnection
 from cliany_site.commands.doctor import _run_checks
-result = asyncio.run(_run_checks())
-data = result.get('data', result)
-assert 'chrome_binary_path' in data, f'missing chrome_binary_path in {list(data.keys())}'
-assert 'chrome_auto_launched' in data, f'missing chrome_auto_launched in {list(data.keys())}'
-print(f'binary={data[\"chrome_binary_path\"]}, launched={data[\"chrome_auto_launched\"]}')
+cdp = CDPConnection()
+try:
+    result = asyncio.run(_run_checks(cdp))
+    data = result.get('data') or (result.get('error') or {}).get('details')
+    assert isinstance(data, dict), 'missing doctor diagnostic payload'
+    checks = data.get('checks')
+    assert isinstance(checks, list), 'missing doctor checks'
+    browser_checks = [check for check in checks if check.get('name') == 'cdp']
+    assert len(browser_checks) == 1, 'missing or duplicate CDP check'
+    status = browser_checks[0].get('status')
+    assert status in ('ok', 'fail'), f'invalid CDP status: {status}'
+    assert isinstance(data.get('summary'), dict), 'missing doctor summary'
+    assert isinstance(cdp._chrome_auto_launched, bool), 'invalid Chrome ownership flag'
+    print(f'cdp={status}, launched={cdp._chrome_auto_launched}')
+finally:
+    asyncio.run(cdp.disconnect())
 " 2>&1)
   if [ $? -eq 0 ]; then
-    echo "[PASS] doctor 输出包含 Chrome 字段: $OUTPUT"
+    echo "[PASS] doctor 包含结构化 CDP 检查与 Chrome 追踪状态: $OUTPUT"
     PASS=$((PASS+1))
   else
-    echo "[FAIL] doctor 输出缺少 Chrome 字段: $OUTPUT"
+    echo "[FAIL] doctor CDP 检查或 Chrome 追踪状态错误: $OUTPUT"
     FAIL=$((FAIL+1))
   fi
 }
@@ -156,7 +168,7 @@ test_launch_chrome_no_binary
 test_ensure_chrome_import
 test_chrome_not_found_error_class
 test_cdp_integration
-test_doctor_chrome_fields
+test_doctor_cdp_check
 
 echo "PASS: $PASS, FAIL: $FAIL"
 [ $FAIL -eq 0 ] && exit 0 || exit 1
