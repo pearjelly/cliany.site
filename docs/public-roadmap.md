@@ -1,7 +1,7 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-10-28
-- **Current baseline:** v0.16.395 source; [published394 receipt](https://github.com/pearjelly/cliany.site/pull/115#issuecomment-6460191229). Source is not a publication receipt.
+- **Current baseline:** v0.16.396 source; [published395 receipt](https://github.com/pearjelly/cliany.site/pull/118#issuecomment-6461125771). Source is not a publication receipt.
 - **Previously published baseline, October 17:** v0.16.390 ([distribution verified; fresh-generation acceptance failed](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
@@ -9,6 +9,10 @@
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap below records earlier work; the October plan prioritizes verified first use and reliable real workflows.
 
 ## October 28 Current Priorities
+
+Published395 completed exact-source/master, official-package and three-end gates. A separate [native controlled teardown cancellation](user-evidence/2026-10-28-chrome-disconnect-cleanup.md) on actual395 left its owned Chrome and port alive. Source396 always runs bounded ownership cleanup after session teardown; real cancellation must propagate, while an external reused browser survives. This is a new stage-specific failure, not a diagnosis of historical Issue116. Initial erroneous TimeoutError assertions are retained separately: it is an already-handled OSError subclass. Require new complete source/master/package/real-workflow/CI/tagged/publication gates. The fresh online check observed2/3 formal publications today; recheck before any tag. Independent first use remains0/2 on fixed387, A/B, first failures, help and retries separate. No quota-only release or candidate promotion.
+
+## October 28 Startup Prepublication History
 
 Published394 completed full source/master, official-package and three-end gates. A new [actual394 cancellation control](user-evidence/2026-10-28-chrome-startup-cancellation.md) returned exit130 while its owned Chrome remained alive. Source395 cleans failed startup and delivers pending async cancellation before ownership handoff. The first cleanup prototype still failed native checks; preserve those results and require new exact-source/master/real-model/package/CI/tagged/publication gates. No timing/model budget increase, existing-browser shutdown or historical timeout-cause claim. Independent first use remains0/2 on fixed387, A/B, first failures, help and retries separate. Today1/3 formal publications; no quota-only release.
 

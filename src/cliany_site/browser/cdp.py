@@ -12,7 +12,7 @@ from browser_use.browser.session import BrowserSession
 
 from cliany_site.browser.launcher import (
     ChromeNotFoundError,
-    _stop_failed_launch,
+    _stop_owned_chrome,
     ensure_chrome,
 )
 from cliany_site.config import get_config
@@ -122,7 +122,7 @@ class CDPConnection:
             return True
         except asyncio.CancelledError:
             if proc is not None:
-                _stop_failed_launch(proc)
+                _stop_owned_chrome(proc)
                 self._chrome_proc = None
                 self._chrome_auto_launched = False
             raise
@@ -195,19 +195,19 @@ class CDPConnection:
             return []
 
     async def disconnect(self):
-        if self._session:
-            try:
-                await self._session.stop()
-            except (OSError, RuntimeError) as exc:
-                logger.debug("断开 CDP 会话时出错: %s", exc)
+        try:
+            if self._session:
+                try:
+                    await self._session.stop()
+                except (OSError, RuntimeError) as exc:
+                    logger.debug("断开 CDP 会话时出错: %s", exc)
+        finally:
             self._session = None
-        if self._chrome_proc:
-            try:
-                self._chrome_proc.terminate()
-                self._chrome_proc.wait(timeout=5)
-            except (OSError, subprocess.SubprocessError) as exc:
-                logger.debug("终止 Chrome 进程时出错: %s", exc)
+            process = self._chrome_proc
             self._chrome_proc = None
+            self._chrome_auto_launched = False
+            if process is not None:
+                _stop_owned_chrome(process)
 
 
     @asynccontextmanager
