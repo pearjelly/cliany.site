@@ -105,8 +105,9 @@
 
       <main>
         <h1>cliany-site 文档</h1>
-        <p class="intro-meta">v0.16.395 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
-        <p>这是 v0.16.395 的源码文档；正式分发以 GitHub、PyPI 与官网发布收据为准，不能从源码分支推定。最终版本与实际安装包须分别验证。独立报告仍为 0/2，人工试用固定在已发布 0.16.387。</p>
+        <p class="intro-meta">v0.16.396 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
+        <p>这是 v0.16.396 的源码文档；正式分发以 GitHub、PyPI 与官网发布收据为准，不能从源码分支推定。最终版本与实际安装包须分别验证。独立报告仍为 0/2，人工试用固定在已发布 0.16.387。</p>
+        <p>v0.16.396 在断开会话抛出异常或被取消时仍清理本连接创建的 Chrome，释放端口供后续重试；已有外部浏览器不终止。保留原有 OSError/RuntimeError 处理，其他原异常和取消仍传播；最多 terminate 等待5秒，再 kill 等待5秒，OS 仍可能拒绝清理，不构成端到端取消时限。<a href="https://github.com/pearjelly/cliany.site/blob/master/docs/user-evidence/2026-10-28-chrome-disconnect-cleanup.md">查看受控失败及修复证据</a>。</p>
         <p>v0.16.395 在启动失败或取消时清理本次创建的 Chrome，并在同步启动到异步调用方的交接处兑现待处理取消；已有外部浏览器不关闭。保留原错误，不增加启动轮数或模型预算。清理有界，OS 不配合仍可能失败；不能据此解释旧间歇性超时。<a href="https://github.com/pearjelly/cliany.site/blob/master/docs/user-evidence/2026-10-28-chrome-startup-cancellation.md">查看原始失败与分阶段修复证据</a>。</p>
         <p>v0.16.394 检查本地 CDP 响应结构；端口被非浏览器服务占用时停止自动启动，<code>doctor</code> 返回浏览器不可用并提示检查端口。此检查不能排除并发端口竞争，也不能认证响应方身份；此前间歇性启动超时的原因仍待调查。<a href="https://github.com/pearjelly/cliany.site/blob/master/docs/user-evidence/2026-10-27-local-cdp-discovery.md">查看故障与验证记录</a>。</p>
         <p>Click 命令执行中取消返回 <code>E_CANCELLED</code> 和非空提示；直接键盘中断退出 130。已有生成命令会保留取消错误并停止后续动作，但外层仍退出 1；取消后不会触发可选自愈。不会改写已有生成文件。</p>

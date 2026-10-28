@@ -33,7 +33,7 @@ def test_remote_install_site_and_readmes_keep_trial_fixed():
     script = (ROOT / "site/script.js").read_text()
     assert 'data-i18n="qs.downloadDiagnostics"' in index
     assert "'qs.downloadDiagnostics':" in script
-    assert "script.js?v=20261028b" in index
+    assert "script.js?v=20261028c" in index
     trial = (ROOT / "docs/first-use-trial.md").read_text()
     assert "cliany-site==0.16.387" in trial
     assert "cliany-site==0.16.389" not in trial

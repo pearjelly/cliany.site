@@ -83,7 +83,7 @@ def _tcp_port_open(port: int) -> bool:
         return False
 
 
-def _stop_failed_launch(proc: subprocess.Popen) -> None:
+def _stop_owned_chrome(proc: subprocess.Popen) -> None:
     try:
         if proc.poll() is None:
             proc.terminate()
@@ -93,7 +93,7 @@ def _stop_failed_launch(proc: subprocess.Popen) -> None:
             proc.kill()
             proc.wait(timeout=5)
     except (OSError, subprocess.SubprocessError):
-        logger.debug("清理未就绪 Chrome 进程失败")
+        logger.debug("清理自建 Chrome 进程失败")
 
 
 def launch_chrome(port: int | None = None, headless: bool = False) -> subprocess.Popen:
@@ -144,7 +144,7 @@ def launch_chrome(port: int | None = None, headless: bool = False) -> subprocess
         )
     except BaseException:
         # Ownership transfers only when a ready process is returned to the caller.
-        _stop_failed_launch(proc)
+        _stop_owned_chrome(proc)
         raise
 
 
@@ -165,5 +165,5 @@ def ensure_chrome(port: int | None = None, headless: bool = False) -> tuple[str,
             raise RuntimeError(f"Chrome 已启动但无法获取 WebSocket URL (port {port})")
         return (ws_url, proc)
     except BaseException:
-        _stop_failed_launch(proc)
+        _stop_owned_chrome(proc)
         raise

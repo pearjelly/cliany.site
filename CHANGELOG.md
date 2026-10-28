@@ -11,6 +11,12 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
+## [0.16.396] - 2026-10-28
+
+### Fixed
+
+- Always reap this connection's owned Chrome when session teardown is cancelled or raises, so a failed disconnect does not leave the port occupied. Clear ownership/session state even on failure and use the same bounded terminate/kill cleanup as failed startup. Preserve existing handled stop errors and propagate other original errors or cancellation; reused external browsers are not terminated. [Official395 controlled failure and repair](docs/user-evidence/2026-10-28-chrome-disconnect-cleanup.md) do not establish the cause of historical timeouts or independent first-use success.
+
 ## [0.16.395] - 2026-10-28
 
 ### Fixed
@@ -3587,7 +3593,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.395...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.396...HEAD
+[0.16.396]: https://github.com/pearjelly/cliany.site/compare/v0.16.395...v0.16.396
 [0.16.395]: https://github.com/pearjelly/cliany.site/compare/v0.16.394...v0.16.395
 [0.16.394]: https://github.com/pearjelly/cliany.site/compare/v0.16.393...v0.16.394
 [0.16.393]: https://github.com/pearjelly/cliany.site/compare/v0.16.392...v0.16.393
