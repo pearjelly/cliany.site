@@ -12,6 +12,8 @@ cliany-site turns real browser workflows into reusable CLI commands. The Q3 road
 
 Published393 remains the verified distribution. Source394 addresses the [reproduced occupied-port discovery failure](user-evidence/2026-10-27-local-cdp-discovery.md): malformed local JSON no longer produces a generic exception, and a non-CDP listener is not automatically replaced with a new Chrome launch. Exact-source, final-master, real-workflow, package, CI, online release-capacity and publication gates remain separate. It does not resolve the intermittent startup timeout or authenticate an endpoint.
 
+During Click command execution, source394 also reports cancellation as `E_CANCELLED`; a direct keyboard interrupt exits 130, while existing generated wrappers preserve the error and retain outer exit 1. [Issue116](https://github.com/pearjelly/cliany.site/issues/116) keeps the original browser failure, a signal control reproducing the empty error, and a later timed-out post-change control with unknown signal delivery. No result rescoring or root-cause claim.
+
 The fixed387 maintainer first-use attempt failed during adapter download; a later retry succeeded. Preserve both observations, not a new first-use success rate. Two independent non-builders are still needed on the fixed [trial](first-use-trial.md); first attempts, assistance and retries remain separate, and A does not count as browser B. No candidate promotion or alpha claim.
 
 ## October 22 Current Priorities

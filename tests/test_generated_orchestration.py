@@ -462,6 +462,19 @@ class TestGeneratedNoCdpImport:
         assert payload["ok"] is False
         assert payload["error"]["code"] == "E_SELECTOR_NOT_FOUND"
 
+    def test_generated_command_preserves_cancelled_atom_as_failure(self):
+        code = AdapterGenerator(domain="example.com").generate(_simple_result(), "example.com")
+        module = types.ModuleType("generated_adapter")
+        exec(code, module.__dict__)  # noqa: S102 - 测试生成代码的 Click 行为
+        module.execute_steps_via_atoms = lambda action_steps, source_url, domain: [  # noqa: ARG005
+            {"ok": False, "command": "cli", "error": {"code": "E_CANCELLED", "message": "操作已取消"}}
+        ]
+
+        result = CliRunner().invoke(module.cli, ["search", "--json"])
+
+        assert result.exit_code == 1
+        assert json.loads(result.output)["error"]["code"] == "E_CANCELLED"
+
     def test_empty_generated_workflow_returns_nonzero_for_runtime_failure(self):
         code = AdapterGenerator(domain="example.com").generate(
             _make_explore_result(actions=[], commands=[]),

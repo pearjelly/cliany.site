@@ -3,6 +3,22 @@ from __future__ import annotations
 from cliany_site.codegen import runtime_helpers
 
 
+def test_cancelled_atom_stops_following_actions_without_retry(monkeypatch):
+    calls: list[list[str]] = []
+
+    def fake_run_atom(command: list[str], session: str | None = None, heal_on_failure: bool = False):
+        calls.append(command)
+        return {"ok": False, "command": "browser type", "error": {"code": "E_CANCELLED", "message": "操作已取消"}}
+
+    monkeypatch.setattr(runtime_helpers, "run_atom", fake_run_atom)
+    results = runtime_helpers.execute_steps_via_atoms(
+        [{"type": "type", "ref": "1", "value": "hello"}, {"type": "click", "ref": "2"}],
+        source_url="", domain="example.test",
+    )
+    assert len(calls) == 1
+    assert results[0]["error"]["code"] == "E_CANCELLED"
+
+
 def test_execute_steps_routes_select_and_submit_to_browser_atoms(monkeypatch):
     calls: list[tuple[list[str], str | None]] = []
 

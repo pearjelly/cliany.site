@@ -1,8 +1,12 @@
 # October 2026 Value Plan
 
-## October 27 Current Priorities
+## October 28 Current Priorities
+
+Fresh online checks still show published393 on GitHub/PyPI/production and zero October28 formal releases. PR115 is a draft; earlier exact-head CI and the October27 local-wheel3/3 generation/9/9 replay study cover the prior04cba7b5 snapshot only. The revised cancellation source requires new complete gates. Public33/55 feedback still contains no independent participant report; the existing two-participant acceptance workbook remains pending, not an invitation or first-use receipt.
 
 The next source candidate is v0.16.394, based on the published393 master. It fixes the [observed local CDP discovery and occupied-port failure](../user-evidence/2026-10-27-local-cdp-discovery.md); it does not claim the older intermittent Chrome startup timeout is solved. Source checks and maintainer retry evidence are not release, model-exploration or independent-user receipts. Complete fresh exact-source/final-master, CI, tagged readiness, online Shanghai capacity, GitHub/PyPI/website and final remote-audit gates before treating394 as published.
+
+Signal controls exposed an empty cancellation error during Click command execution. The revised candidate returns `E_CANCELLED`, with exit 130 for direct keyboard interruption; legacy generated wrappers retain outer exit 1. Preserve the original browser failure and the later timed-out post-change control in Issue116; an eventual passing control does not establish the timeout cause. Repeat all gates on the revised commit.
 
 Independent first use remains pending on fixed387. Invite two non-builders, preserve their first failures and help timing, and record retries separately; maintainer checks do not count. A fixed387 maintainer attempt failed downloading the Jira archive, then a separate retry succeeded after connectivity returned. Keep both results rather than scoring the retry as a first attempt.
 

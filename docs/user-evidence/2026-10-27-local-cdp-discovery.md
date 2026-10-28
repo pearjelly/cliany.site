@@ -45,3 +45,38 @@ Independent first use remains pending: two non-builders must report their
 first attempts, with first failure, help and retries kept distinct. The
 published trial stays fixed at 0.16.387; this correction neither promotes a
 candidate nor modifies previously generated adapters.
+
+## Cancellation Evidence
+
+A separate signal control reproduced an empty `E_UNKNOWN` inside the same
+generated browser workflow, without the original page-readiness warning. During
+Click command execution, a local correction returns `E_CANCELLED` and a safe reason; direct keyboard
+interruption exits 130. Existing generated wrappers preserve the failure and
+stop later actions but retain outer exit 1. A first post-change browser control
+timed out after 120 seconds without a signal-delivery receipt; a subsequent
+instrumented control recorded delivery and returned `E_CANCELLED` promptly.
+Both controls and the original failure remain separate in Issue116. Their
+results do not establish the cause of either timeout or prove broad browser
+reliability; all revised-source and publication gates must be repeated.
+An explicit cancellation also suppresses optional healing; other errors retain
+the existing healing behavior. The regression first exposed a local import
+shadowing error in the correction, which was fixed and rerun separately.
+
+## October 28 Recheck
+
+The revised source passed 59 focused cancellation, generated-orchestration,
+runtime and healer tests. Its first fresh type check failed on the new union
+error-field access; narrowing the optional error value separately corrected it,
+and the subsequent type check passed all 128 source files. A new isolated real
+browser signal control recorded delivery and returned nonzero `E_CANCELLED`
+in 5.02 seconds without an observer timeout or empty `E_UNKNOWN`. Its injected
+interruption intentionally fails the test's normal-success assertion; it is a
+cancellation control, not a passing ordinary workflow. The private log SHA256
+is `bd72ab7f47bf29e3ae9d202c403831271c953b165902f411b01de24d7cbfe51b`.
+
+The October27 uninterrupted 100-test browser run and local-wheel3/3 generation,
+9/9 returned-prefix comparison belong to the previous04cba7b5 commit, not this
+revision. They preserve rather than resolve the earlier 99/1 failure and the
+120-second observer timeout with no delivery receipt. Repeat the ordinary
+full-suite, exact-head CI and installed-wheel/live gates on the new commit;
+keep Issue116 open because the historical timeout cause is unproven.

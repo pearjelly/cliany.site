@@ -232,8 +232,8 @@ const I18N = {
     en: 'v0.16.393 repairs explicit browser waits for the pinned actor backend. Observe the focused page without closing or navigating it again; pending requests do not count as ready. No extra model calls or dependencies. Official publication requires its receipt; independent first use stays0/2 on fixed387.'
   },
   'qs.localCdp': {
-    zh: 'v0.16.394 校验本地 CDP 发现响应。端口被其他服务占用时停止启动，doctor 提示检查端口。此检查不能认证响应方身份，也不能消除并发端口竞争。',
-    en: 'v0.16.394 checks local CDP discovery before reusing a browser. If another service occupies the port, startup stops and doctor suggests checking the port. This does not authenticate the endpoint or eliminate concurrent port races.'
+    zh: 'v0.16.394 校验本地 CDP 发现响应，端口被其他服务占用时停止启动并提示检查。Click 命令执行中取消返回 E_CANCELLED；直接键盘中断退出 130，已有生成命令保留错误并仍退出 1，取消后不触发可选自愈。此检查不能认证响应方身份，也不能消除并发端口竞争。',
+    en: 'v0.16.394 checks local CDP discovery before reusing a browser. If another service occupies the port, startup stops and doctor suggests checking the port. During Click command execution, cancellation reports E_CANCELLED; direct keyboard interrupts exit 130. Existing generated wrappers preserve the error and retain exit 1; cancellation does not trigger optional healing. This does not authenticate endpoints or eliminate port races.'
   },
   'qs.maintainer.safeRetries': {
     zh: '从 v0.16.381 起，模型请求被 HTTP 拒绝时不再因正文含网关关键词而重复调用。CLI/live doctor 保留认证失败类型；重试警告和可选单次错误事件使用固定摘要，不回显上游正文。成功请求延迟、provider 持续可用性及独立首次使用仍待验证。',

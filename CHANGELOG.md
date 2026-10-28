@@ -11,11 +11,12 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
-## [0.16.394] - 2026-10-27
+## [0.16.394] - 2026-10-28
 
 ### Fixed
 
 - Local CDP discovery rejects invalid JSON shapes and invalid browser WebSocket endpoints. If the local port is occupied without a valid discovery response, do not launch another browser; `doctor --json` reports the existing `E_CDP_UNAVAILABLE` instead of an uncaught attribute error, with guidance to check port occupancy. This is an occupied-port guard, not a diagnosis of the intermittent Chrome startup timeout. [Failure evidence](docs/user-evidence/2026-10-27-local-cdp-discovery.md).
+- During Click command execution, cancellation now reports `E_CANCELLED` with a fixed nonempty message and a safe reason instead of an empty `E_UNKNOWN`. Direct keyboard interruption exits 130; EOF and explicit abort exit 1. Existing generated adapter wrappers preserve the error and stop later actions but retain their existing outer exit 1; optional healing does not run after cancellation. No generated files are rewritten; asynchronous task cancellation remains propagated. [Signal controls and limitations](https://github.com/pearjelly/cliany.site/issues/116).
 
 ## [0.16.393] - 2026-10-22
 
