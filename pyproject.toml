@@ -26,7 +26,7 @@ classifiers = [
 ]
 dependencies = [
     "aiohttp",
-    "browser-use==0.12.4",
+    "browser-use==0.13.11",
     "click",
     "rich",
     "langchain-openai",
