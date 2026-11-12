@@ -224,10 +224,10 @@ def _invalid_value_action_targets(actions: list[dict[str, Any]], selector_map: d
     return failures
 
 
-def _duplicate_navigation_clicks(
+def _unobserved_navigation_clicks(
     actions: list[dict[str, Any]], selector_map: dict[str, dict], current_url: str,
-) -> list[dict[str, int]]:
-    """Find adjacent reuses of one observed link across a likely document transition."""
+) -> list[dict[str, int | str]]:
+    """Find clicks planned from the same observation after a likely document transition."""
     try:
         current = urlsplit(current_url)
     except ValueError:
@@ -237,11 +237,12 @@ def _duplicate_navigation_clicks(
     failures = []
     for index in range(1, len(actions)):
         previous, action = actions[index - 1], actions[index]
+        previous_ref = str(previous.get("ref") or "").removeprefix("@")
         ref = str(action.get("ref") or "").removeprefix("@")
         if (previous.get("type") != "click" or action.get("type") != "click"
-                or not ref or str(previous.get("ref") or "").removeprefix("@") != ref):
+                or not previous_ref or not ref or not isinstance(selector_map.get(ref), dict)):
             continue
-        selected = selector_map.get(ref)
+        selected = selector_map.get(previous_ref)
         if not isinstance(selected, dict) or selected.get("role") != "link" or selected.get("tag_name") != "a":
             continue
         attributes = selected.get("attributes")
@@ -258,7 +259,11 @@ def _duplicate_navigation_clicks(
         if (destination.scheme in {"http", "https"} and destination.netloc
                 and (destination.scheme, destination.netloc.casefold(), destination.path or "/")
                 != (current.scheme, current.netloc.casefold(), current.path or "/")):
-            failures.append({"action_index": index, "previous_action_index": index - 1})
+            failures.append({
+                "action_index": index,
+                "previous_action_index": index - 1,
+                "reason": "duplicate_navigation_click" if previous_ref == ref else "navigation_followup_unobserved",
+            })
     return failures
 
 
@@ -1383,7 +1388,7 @@ class WorkflowExplorer:
 
                 ambiguous_targets = _ambiguous_action_targets(actions_data, selector_map, tree.get("url", ""))
                 invalid_value_targets = _invalid_value_action_targets(actions_data, selector_map)
-                duplicate_clicks = _duplicate_navigation_clicks(actions_data, selector_map, tree.get("url", ""))
+                navigation_clicks = _unobserved_navigation_clicks(actions_data, selector_map, tree.get("url", ""))
                 invalid_extract_targets = _invalid_extract_targets(actions_data, tree)
                 invalid_bindings = _invalid_command_parameter_bindings(
                     parsed, actions_data, result.actions, required_parameter_names, tree,
@@ -1411,19 +1416,19 @@ class WorkflowExplorer:
                     if interactive_ctrl is None else []
                 )
                 deferred_actions: list[dict[str, Any]] = []
-                if (ambiguous_targets or invalid_value_targets or duplicate_clicks or invalid_extract_targets
+                if (ambiguous_targets or invalid_value_targets or navigation_clicks or invalid_extract_targets
                         or repeated_extracts or invalid_bindings):
                     if semantic_plan_repairs >= _MAX_SEMANTIC_PLAN_REPAIRS or step_num + 1 >= cfg.explore_max_steps:
                         raise ExploreContractError(
                             "输入或选择动作指向不可输入的链接；请使用当前实测输入控件" if invalid_value_targets else
                             "命令参数绑定不影响实际执行；请使用实测输入或选择动作" if invalid_bindings else
-                            "同一轮重复点击了同一个跨页链接；请点击一次后重新观察目标页" if duplicate_clicks else
+                            "同一轮在跨页链接后继续点击；请点击一次后重新观察目标页" if navigation_clicks else
                             "已有成功集合被重复提取；请复用已有证据完成命令" if repeated_extracts else
                             "动作目标缺少唯一实测语义身份；请重新规划可唯一重定位的目标",
                             reason=(
                                 "value_target_incompatible" if invalid_value_targets else
                                 "parameter_binding_invalid" if invalid_bindings else
-                                "duplicate_navigation_click" if duplicate_clicks else
+                                str(navigation_clicks[0]["reason"]) if navigation_clicks else
                                 "duplicate_completed_extract" if repeated_extracts else
                                 "extract_selector_ungrounded" if invalid_extract_targets else "action_target_ambiguous"
                             ),
@@ -1456,12 +1461,12 @@ class WorkflowExplorer:
                         "请保留已声明参数，从当前 AX 实测输入框或选择控件规划可重放动作；"
                         "不得猜测 URL 或参数映射，也不得删除参数来伪装修正。"
                     ) if invalid_bindings else (
-                        "跨页点击门禁：同一轮相邻动作重复点击同一个实测跨页链接："
-                        f"{json.dumps(duplicate_clicks, ensure_ascii=False)}。"
+                        "跨页点击门禁：下一次点击仍来自跨页之前的同一份 AX 观察："
+                        f"{json.dumps(navigation_clicks, ensure_ascii=False)}。"
                         "本轮动作尚未执行，也未录制，累计动作索引不变。"
                         "请只规划一次点击，以 done=false 结束本轮，再用新页面的 AX 观察决定后续动作。"
                         "不得猜测 URL 或沿用上一页的 ref。"
-                    ) if duplicate_clicks else (
+                    ) if navigation_clicks else (
                         "已有成功集合，本轮纯提取计划重复了相同页面、实测语义身份与字段："
                         f"{json.dumps(repeated_extracts, ensure_ascii=False)}。"
                         "拟重复动作尚未执行，也未录制，累计动作索引不变。"
@@ -1483,14 +1488,14 @@ class WorkflowExplorer:
                     logger.warning(
                         "步骤 %d 的值动作指向不可输入的链接，发起一次有限规划修正" if invalid_value_targets else
                         "步骤 %d 的参数绑定不影响实际执行，发起一次有限规划修正" if invalid_bindings else
-                        "步骤 %d 相邻点击重复使用同一个跨页链接，发起一次有限规划修正" if duplicate_clicks else
+                        "步骤 %d 跨页后仍计划点击旧观察的目标，发起一次有限规划修正" if navigation_clicks else
                         "步骤 %d 的集合提取重复已完成证据，发起一次有限规划修正" if repeated_extracts else
                         "步骤 %d 的目标缺少唯一实测语义身份，发起一次有限规划修正", step_num + 1,
                     )
                     prefix = (
                         _observed_prefix_before_unobserved_extract(actions_data, tree, invalid_extract_targets)
                         if (invalid_extract_targets and not ambiguous_targets and not repeated_extracts
-                            and not invalid_bindings and not invalid_value_targets and not duplicate_clicks
+                            and not invalid_bindings and not invalid_value_targets and not navigation_clicks
                             and parsed.get("done", False) is False
                             and not parsed.get("next_url")) else 0
                     )
