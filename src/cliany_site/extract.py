@@ -12,7 +12,12 @@ import time
 from typing import Any
 
 from cliany_site.browser.axtree import capture_axtree
-from cliany_site.browser.selector import resolve_extract_target
+from cliany_site.browser.selector import (
+    MAIN_RESULT_LIST_BOUNDARY,
+    MAIN_RESULT_LIST_ROOT,
+    MAIN_RESULT_LIST_SCOPE,
+    resolve_extract_target,
+)
 from cliany_site.config import get_config
 
 SUPPORTED_EXTRACT_MODES = ("text", "list", "table", "attribute")
@@ -56,7 +61,8 @@ async def prepare_semantic_extract_selector(
                     await asyncio.sleep(get_config().resolve_retry_delay)
             for _ in range(2):
                 page = await browser_session.get_current_page()
-                if page is None or time.monotonic() >= deadline or not await _wait_for_list_settle(page, selector):
+                probe = f"{selector} > li" if target.get("scope") == MAIN_RESULT_LIST_SCOPE else selector
+                if page is None or time.monotonic() >= deadline or not await _wait_for_list_settle(page, probe):
                     return None, "E_PAGE_NOT_READY"
                 if time.monotonic() >= deadline:
                     return None, "E_PAGE_NOT_READY"
@@ -78,7 +84,26 @@ def build_semantic_extract_js(selector: str, mode: str, fields: dict | None, tar
     root = selector[:-len(suffix)] if suffix else selector
     expression = build_extract_js(root if mode == "table" else selector, mode, fields)
     shape_guard = ""
-    if mode == "table":
+    if target.get("scope") == MAIN_RESULT_LIST_SCOPE:
+        if selector != MAIN_RESULT_LIST_ROOT:
+            return "() => ({__cliany_extract_target_missing__: true})"
+        # Check the live DOM again after AX resolution, before copying any rows.
+        shape_guard = (
+            'const mains = document.querySelectorAll(\'main,[role="main"]\'); '
+            "const rows = [...region.children].filter(el => el.tagName === 'LI'); "
+            'const heading = ":is(h1,h2,h3,h4,h5,h6):not([role]),[role=heading]"; '
+            "if (mains.length !== 1 || !['UL', 'OL'].includes(region.tagName) || !rows.length || "
+            "(region.hasAttribute('role') && region.getAttribute('role') !== 'list') || "
+            "rows.some(row => ![...row.querySelectorAll('a[href]:not([role]),a[href][role=link]')].some(link => "
+            "link.getAttribute('href').trim() && row.contains(link.closest(heading)) && "
+            "!link.closest('[hidden],[inert],[aria-hidden=true]') && "
+            "link.checkVisibility({checkOpacity: true, checkVisibilityCSS: true}) && "
+            f"link.closest({json.dumps(MAIN_RESULT_LIST_BOUNDARY)}) === region))) "
+            "return {__cliany_extract_target_missing__: true}; "
+        )
+        if mode == "table":
+            shape_guard += "return {__cliany_extract_mode_mismatch__: true}; "
+    elif mode == "table":
         shape_guard = "if (region.tagName !== 'TABLE') return {__cliany_extract_mode_mismatch__: true}; "
     elif mode == "list" and target.get("role") == "list":
         shape_guard = "if (!['UL', 'OL'].includes(region.tagName)) return {__cliany_extract_mode_mismatch__: true}; "
