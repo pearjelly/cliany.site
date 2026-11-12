@@ -22,6 +22,8 @@ The follow-up candidate also distinguishes a still-initializing page from a miss
 
 The same candidate surfaces [live recovery guidance](user-evidence/2026-11-12-doctor-live-recovery-hint.md) and stops copying the configured address into [doctor diagnostics](user-evidence/2026-11-12-doctor-endpoint-privacy.md). Keep the original provider failures separate and require a fresh live preflight before any further generation.
 
+Separate source follow-ups address [late result-list observations](user-evidence/2026-11-12-late-submit-extract-observation.md) and [clicks planned from the previous document](user-evidence/2026-11-12-unobserved-navigation-followup.md). The latter preserves Issue #141's distinct failure in the 2/3 Python Docs cohort. Validate the exact follow-up with fresh real exploration and returned-row comparisons before integrating; neither follow-up changes the separate v0.16.399 release.
+
 Independent first use is still 0/2 on fixed [0.16.387](first-use-trial.md). Keep A/B, first attempts, help and retries separate, and exclude maintainer tests. November 12 reached three formal Shanghai publications; do not publish another today or promote a case on these results.
 
 ## October 28 Disconnect Prepublication History

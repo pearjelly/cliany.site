@@ -11,10 +11,10 @@ from cliany_site.config import get_config
 from cliany_site.errors import ExploreContractError
 from cliany_site.explorer.engine import (
     WorkflowExplorer,
-    _duplicate_navigation_clicks,
     _observe_pending_submitted_list,
     _observed_form_transition,
     _observed_prefix_before_unobserved_extract,
+    _unobserved_navigation_clicks,
 )
 from cliany_site.explorer.models import ActionStep
 
@@ -171,55 +171,67 @@ async def test_text_only_observation_is_not_treated_as_blank(mocker, monkeypatch
     execute.assert_awaited_once()
 
 
-@pytest.mark.parametrize(("attributes", "expected"), [
-    ({"href": "search.html"}, [{"action_index": 1, "previous_action_index": 0}]),
-    ({"href": "/search", "target": "_self"}, [{"action_index": 1, "previous_action_index": 0}]),
-    ({"href": "#results"}, []),
-    ({"href": "?page=2"}, []),
-    ({"href": "/docs"}, []),
-    ({"href": "/search", "target": "_blank"}, []),
-    ({"href": "/search", "download": ""}, []),
-    ({"href": "/search", "onclick": "return false"}, []),
-    ({"href": "javascript:void(0)"}, []),
-    ({"href": "http://[invalid"}, []),
-    ({}, []),
+@pytest.mark.parametrize(("second_ref", "reason"), [
+    ("@7", "duplicate_navigation_click"), ("8", "navigation_followup_unobserved"),
 ])
-def test_duplicate_navigation_clicks_require_a_grounded_different_document(attributes, expected):
-    actions = [{"type": "click", "ref": "7"}, {"type": "click", "ref": "@7"}]
-    links = {"7": {"role": "link", "tag_name": "a", "attributes": attributes}}
+@pytest.mark.parametrize(("attributes", "changes_document"), [
+    ({"href": "search.html"}, True),
+    ({"href": "/search", "target": "_self"}, True),
+    ({"href": "#results"}, False),
+    ({"href": "?page=2"}, False),
+    ({"href": "/docs"}, False),
+    ({"href": "/search", "target": "_blank"}, False),
+    ({"href": "/search", "download": ""}, False),
+    ({"href": "/search", "onclick": "return false"}, False),
+    ({"href": "javascript:void(0)"}, False),
+    ({"href": "http://[invalid"}, False),
+    ({}, False),
+])
+def test_unobserved_navigation_clicks_require_a_grounded_different_document(
+    attributes, changes_document, second_ref, reason,
+):
+    actions = [{"type": "click", "ref": "7"}, {"type": "click", "ref": second_ref}]
+    links = {"7": {"role": "link", "tag_name": "a", "attributes": attributes},
+             "8": {"role": "link", "tag_name": "a", "attributes": {"href": "/contents"}}}
     before = deepcopy((actions, links))
-    assert _duplicate_navigation_clicks(actions, links, "https://plan.example.test/docs") == expected
+    expected = [{"action_index": 1, "previous_action_index": 0, "reason": reason}] if changes_document else []
+    assert _unobserved_navigation_clicks(actions, links, "https://plan.example.test/docs") == expected
     assert (actions, links) == before
 
 
-def test_duplicate_navigation_clicks_do_not_collapse_other_repeated_actions():
+def test_navigation_gate_only_considers_adjacent_clicks_from_one_observation():
     entry = {"role": "link", "tag_name": "a", "attributes": {"href": "search.html"}}
     click = {"type": "click", "ref": "7"}
     url = "https://plan.example.test/docs"
-    assert _duplicate_navigation_clicks([click, click], {"7": {**entry, "role": "button"}}, url) == []
-    assert _duplicate_navigation_clicks([click, click], {"7": {**entry, "tag_name": "div"}}, url) == []
-    assert _duplicate_navigation_clicks(
-        [click, {"type": "click", "ref": "8"}], {"7": entry, "8": entry}, url,
-    ) == []
-    assert _duplicate_navigation_clicks([click, {"type": "type", "ref": "8"}, click], {"7": entry}, url) == []
+    assert _unobserved_navigation_clicks([click, click], {"7": {**entry, "role": "button"}}, url) == []
+    assert _unobserved_navigation_clicks([click, click], {"7": {**entry, "tag_name": "div"}}, url) == []
+    assert _unobserved_navigation_clicks([click, {"type": "click", "ref": "missing"}], {"7": entry}, url) == []
+    assert _unobserved_navigation_clicks([click, {"type": "type", "ref": "8"}, click], {"7": entry}, url) == []
+    assert _unobserved_navigation_clicks(
+        [click, {"type": "click", "ref": "8"}], {"7": entry, "8": {"role": "button"}}, url,
+    ) == [{"action_index": 1, "previous_action_index": 0, "reason": "navigation_followup_unobserved"}]
 
 
 @pytest.mark.parametrize("steps", [1, 5])
-async def test_duplicate_navigation_clicks_share_the_existing_repair_limit(
-    mocker, monkeypatch, tmp_home, no_llm, steps,
+@pytest.mark.parametrize(("second_ref", "reason"), [
+    ("7", "duplicate_navigation_click"), ("8", "navigation_followup_unobserved"),
+])
+async def test_unobserved_navigation_clicks_share_the_existing_repair_limit(
+    mocker, monkeypatch, tmp_home, no_llm, steps, second_ref, reason,
 ):
-    plan = {"done": False, "actions": [{"type": "click", "ref": "7"}] * 2}
+    plan = {"done": False, "actions": [{"type": "click", "ref": "7"}, {"type": "click", "ref": second_ref}]}
     model, execute, cdp = _prepare(mocker, monkeypatch, [plan, plan], steps=steps)
     url = "https://plan.example.test/docs"
     tree = {"url": url, "element_tree": "Search link", "selector_map": {
         "7": {"role": "link", "tag_name": "a", "name": "Search", "attributes": {"href": "search.html"}},
+        "8": {"role": "link", "tag_name": "a", "name": "Contents", "attributes": {"href": "contents.html"}},
     }}
     mocker.patch("cliany_site.explorer.engine.capture_axtree", AsyncMock(return_value=tree))
 
     with pytest.raises(ExploreContractError) as caught:
         await WorkflowExplorer().explore(url, "Search", record=False)
 
-    assert caught.value.reason == "duplicate_navigation_click"
+    assert caught.value.reason == reason
     assert model.ainvoke.await_count == (1 if steps == 1 else 2)
     if steps > 1:
         feedback = str(model.ainvoke.await_args_list[1].args)
