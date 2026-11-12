@@ -37,3 +37,12 @@ cliany-site doctor --llm-live --require-capability generate_adapters --json
 ```
 
 Continue only after this real preflight passes. The live probe checks that the selected provider replies with a JSON object that the exploration parser can read. A response that cannot be parsed or is not an object blocks strict preflight with `llm_invalid_json` or `llm_invalid_shape`, without repeating the probe or exposing the response text. Passing the probe does not validate a workflow plan or establish workflow success. [Issue 38](https://github.com/pearjelly/cliany.site/issues/38) still requires provider/public-site tail measurement; independent first-user acceptance remains separate. Existing adapters, semantic grounding, zero-match declarations and extraction quality gates are unchanged. CLI/live doctor diagnostics do not claim SDK/HTTP exploration-envelope parity.
+
+When the local prerequisites are ready but a requested live check failed, the
+source CLI's `error.hint` repeats the existing sanitized recovery action from
+`error.details.summary.llm_live_preflight.action`. For example, a TLS
+connection closed before an HTTP response calls for checking the endpoint,
+proxy, and network; it does not establish whether the key is valid. Fix the
+reported problem before running preflight again. This changes guidance, not the
+error code, request budget, or the requirement to pass preflight before
+exploration. See the [live failure and controlled comparison](user-evidence/2026-11-12-doctor-live-recovery-hint.md).
