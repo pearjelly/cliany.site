@@ -54,6 +54,8 @@ cliany-site doctor --llm-live --require-capability generate_adapters --json
 
 连接失败时可查看 `checks` 中 `llm_live.details.transport_reason`：例如 `tls_connection_closed` 表示 TLS 握手或传输中断，尚未得到 HTTP 响应，不能据此判断密钥是否有效。证书验证失败应修复信任链，不要关闭证书校验。
 
+源码中的 `openai_base_url` 检查只报告 `details.configured`（是否设置了自定义地址），不再回显 `details.base_url`。地址无法解析时返回 `E_INVALID_PARAM`，理由为 `invalid_openai_base_url`，不会执行 live 请求。请在本机检查配置，只分享脱敏后的错误码和阶段，不要上传完整诊断。
+
 重点看 `data.summary`：
 
 - `must_fix`：先处理，否则关键路径不可用。

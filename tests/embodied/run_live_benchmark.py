@@ -394,6 +394,9 @@ def _safe_explore_timing(stderr: bytes, *, ended_at: float) -> dict[str, Any] | 
 def _safe_provider_context(preflight: dict[str, Any]) -> dict[str, str]:
     context = {"provider": "unknown", "endpoint_type": "unknown"}
     data = preflight.get("data")
+    if not isinstance(data, dict):
+        error = preflight.get("error")
+        data = error.get("details") if isinstance(error, dict) else None
     checks = data.get("checks") if isinstance(data, dict) else None
     if not isinstance(checks, list):
         return context
@@ -405,9 +408,13 @@ def _safe_provider_context(preflight: dict[str, Any]) -> dict[str, str]:
         if check.get("name") == "llm_provider" and isinstance(provider, str) and provider in {"openai", "anthropic"}:
             context["provider"] = provider
         elif check.get("name") == "openai_base_url":
-            base_url = details.get("base_url")
-            if base_url is None or isinstance(base_url, str):
-                context["endpoint_type"] = "custom" if base_url and base_url.strip() else "default"
+            configured = details.get("configured")
+            if isinstance(configured, bool):
+                context["endpoint_type"] = "custom" if configured else "default"
+            elif "base_url" in details:
+                base_url = details["base_url"]
+                if base_url is None or isinstance(base_url, str):
+                    context["endpoint_type"] = "custom" if base_url and base_url.strip() else "default"
     if context["provider"] != "openai":
         context["endpoint_type"] = "not_reported" if context["provider"] == "anthropic" else "unknown"
     return context
