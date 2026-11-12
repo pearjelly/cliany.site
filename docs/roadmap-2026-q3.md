@@ -25,6 +25,8 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 后续候选纳入[输入框未出现时的就绪判断](user-evidence/2026-11-12-missing-input-readiness.md)。原 Python Docs 失败另存；受控误报修正不等于确认原失败根因。
 
+候选同时纳入[实时预检排查提示](user-evidence/2026-11-12-doctor-live-recovery-hint.md)和[诊断地址保护](user-evidence/2026-11-12-doctor-endpoint-privacy.md)。受控配置验证与真实模型门禁分开，不能补记早期失败。
+
 独立试用固定 0.16.387，有效反馈 0/2 人。A/B、首次失败、帮助和重试分开，维护者复测不计入。上海时间 11 月 12 日已正式发布三版，当天不再发版，也不据此晋级案例。
 
 ## 10月28日断开清理发版前历史

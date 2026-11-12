@@ -236,8 +236,8 @@ const I18N = {
     en: 'v0.16.399 stops strict model preflight on an unusable JSON reply. The final exploration result keeps a sanitized failure category, so callers can distinguish a rejected request from a connection problem.'
   },
   'qs.scopedSearchResults': {
-    zh: 'v0.16.400 源码支持核对明确零匹配，并在检查提取行后限制返回条数。安装前检查运行时兼容性；按名称输入时区分页面未就绪和缺少输入框。crates.io 分发包仍是候选。',
-    en: 'The v0.16.400 source verifies explicit zero matches and limits the returned list after checking all inspected rows. Install checks catch missing runtime helpers before writing. Named input distinguishes an unfinished page from a missing field. The crates.io archive remains a candidate.'
+    zh: 'v0.16.400 源码核对明确零匹配，先检查提取行再限制返回条数。安装前检查兼容性；按名称输入时区分页面未就绪和缺少输入框。Doctor 不回显配置地址，并提供排查建议。crates.io 分发包仍是候选。',
+    en: 'The v0.16.400 source verifies explicit zero matches and checks rows before limiting output. Install checks catch incompatible adapters before writing. Named input distinguishes unfinished pages from missing fields. Doctor keeps the configured address private and shows recovery steps. The crates.io archive remains a candidate.'
   },
   'qs.settledInputTarget': {
     zh: 'v0.16.398 在初始化后重新核对同分的输入目标，仍有歧义则拒绝输入。探索会在执行前拦截对同一实测跨页链接的连续重复点击。',

@@ -20,6 +20,8 @@ The [v0.16.400 integration candidate](releases/v0.16.400-draft.md) combines [gro
 
 The follow-up candidate also distinguishes a still-initializing page from a missing named field. The [Chromium comparison](user-evidence/2026-11-12-missing-input-readiness.md) preserves the earlier Python Docs failure separately; it is not a root-cause claim.
 
+The same candidate surfaces [live recovery guidance](user-evidence/2026-11-12-doctor-live-recovery-hint.md) and stops copying the configured address into [doctor diagnostics](user-evidence/2026-11-12-doctor-endpoint-privacy.md). Keep the original provider failures separate and require a fresh live preflight before any further generation.
+
 Independent first use is still 0/2 on fixed [0.16.387](first-use-trial.md). Keep A/B, first attempts, help and retries separate, and exclude maintainer tests. November 12 reached three formal Shanghai publications; do not publish another today or promote a case on these results.
 
 ## October 28 Disconnect Prepublication History
