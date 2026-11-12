@@ -4,6 +4,7 @@ import json
 import click
 
 from cliany_site.browser.cdp import cdp_from_context
+from cliany_site.browser.navigation import NavigationTransportError, classify_navigation_transport
 from cliany_site.browser.waiting import wait_for_current_page
 from cliany_site.commands.browser import browser_group
 from cliany_site.config import get_config
@@ -113,7 +114,8 @@ async def _run_navigate(cdp, url: str, wait_state: str, timeout: int, session: s
                 if saved.get("expires_hint") == "expired":
                     return err("browser navigate", ErrorCode.E_SESSION_EXPIRED, "Session 已失效，请重新登录")
                 await browser_session._cdp_set_cookies(saved.get("cookies", []))
-            await browser_session.navigate_to(url)
+            with classify_navigation_transport():
+                await browser_session.navigate_to(url)
             if wait_state in ("networkidle", "domcontentloaded"):
                 await wait_for_current_page(browser_session, state=wait_state, timeout=timeout)
             if can_capture_axtree:
@@ -125,6 +127,11 @@ async def _run_navigate(cdp, url: str, wait_state: str, timeout: int, session: s
                     return challenge
         finally:
             await cdp.disconnect()
+    except NavigationTransportError as exc:
+        return err(
+            "browser navigate", ErrorCode.E_PAGE_NOT_READY, str(exc),
+            hint=exc.hint, details=exc.details, source="builtin",
+        )
     except (OSError, RuntimeError, TimeoutError) as exc:
         if isinstance(exc, TimeoutError) or (
             isinstance(exc, RuntimeError) and str(exc).startswith("Page.navigate() timed out after ")

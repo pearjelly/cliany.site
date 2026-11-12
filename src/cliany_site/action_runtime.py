@@ -11,6 +11,7 @@ from typing import Any, cast
 from urllib.parse import urljoin, urlparse
 
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
+from cliany_site.browser.navigation import NavigationTransportError, classify_navigation_transport
 from cliany_site.capability import ApiEndpoint, route_action
 from cliany_site.config import get_config
 from cliany_site.envelope import ErrorCode
@@ -754,8 +755,9 @@ async def execute_action_steps(
                             new_tab=False,
                         )
                     )
-                    await event
-                    await event.event_result(raise_if_any=True, raise_if_none=False)
+                    with classify_navigation_transport():
+                        await event
+                        await event.event_result(raise_if_any=True, raise_if_none=False)
                     await asyncio.sleep(_get_post_navigate_delay())
 
                 elif action_type == "submit":
@@ -974,10 +976,10 @@ async def execute_action_steps(
                 )
                 reporter.on_execute_step_done(idx, len(effective_actions), False, step_elapsed_err, str(exc))
 
-                fatal_target_error = (
+                fatal_failure = isinstance(exc, NavigationTransportError) or (
                     isinstance(exc, ActionExecutionError) and exc.error_type == "extract_target_unresolved"
                 )
-                if (not continue_on_error or fatal_target_error) and not dry_run:
+                if (not continue_on_error or fatal_failure) and not dry_run:
                     if resolved_domain and command_name:
                         try:
                             save_checkpoint(resolved_domain, command_name, actions_data, completed_indices, params)
@@ -985,7 +987,7 @@ async def execute_action_steps(
                         except (OSError, ValueError, TypeError) as ckpt_exc:
                             logger.debug("保存断点失败: %s", ckpt_exc)
 
-                    if isinstance(exc, ActionExecutionError):
+                    if isinstance(exc, (ActionExecutionError, NavigationTransportError)):
                         raise
                     raise ActionExecutionError(
                         error_type="execution_error",

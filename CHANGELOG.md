@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Report recognized Chromium page transport failures as `E_PAGE_NOT_READY` with `reason=navigation_transport_failed`, distinct from unavailable Chrome CDP. Browser navigation, exploration and SDK/API replay stop without retrying or sending subsequent input. Structured details contain only the phase, fixed reason and Chromium error token. [Reproduction and limits](docs/user-evidence/2026-11-12-navigation-transport.md).
+
 ### Changed
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.

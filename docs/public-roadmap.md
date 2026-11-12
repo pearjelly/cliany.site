@@ -1,14 +1,18 @@
 # cliany-site Public Roadmap
 
-- **Updated:** 2026-10-28
-- **Current baseline:** v0.16.396 source; [published395 receipt](https://github.com/pearjelly/cliany.site/pull/118#issuecomment-6461125771). Source is not a publication receipt.
+- **Updated:** 2026-11-12
+- **Current baseline:** v0.16.396 ([verified publication and official-package receipt](https://github.com/pearjelly/cliany.site/pull/121#issuecomment-6811949279)).
 - **Previously published baseline, October 17:** v0.16.390 ([distribution verified; fresh-generation acceptance failed](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
 
 cliany-site turns real browser workflows into reusable CLI commands. The Q3 roadmap below records earlier work; the October plan prioritizes verified first use and reliable real workflows.
 
-## October 28 Current Priorities
+## November 12 Current Priorities
+
+Published396 passed its three-end audit and a new official-package study (3/3 real generations, 9/9 returned-row checks). The [navigation follow-up](user-evidence/2026-11-12-navigation-transport.md) keeps the earlier failed cohort separate. [Issue124](https://github.com/pearjelly/cliany.site/issues/124) now has a same-browser reproduction: a page connection can fail while Chrome is still reachable. The unpublished correction distinguishes this from CDP failure and stops replay before further input; it does not repair the underlying connection or document-readiness failure. Validate the exact candidate before release. Independent first use is still 0/2 on fixed 0.16.387, with A/B, first attempts, help and retries separate. No case promotion.
+
+## October 28 Disconnect Prepublication History
 
 Published395 completed exact-source/master, official-package and three-end gates. A separate [native controlled teardown cancellation](user-evidence/2026-10-28-chrome-disconnect-cleanup.md) on actual395 left its owned Chrome and port alive. Source396 always runs bounded ownership cleanup after session teardown; real cancellation must propagate, while an external reused browser survives. This is a new stage-specific failure, not a diagnosis of historical Issue116. Initial erroneous TimeoutError assertions are retained separately: it is an already-handled OSError subclass. Require new complete source/master/package/real-workflow/CI/tagged/publication gates. The fresh online check observed2/3 formal publications today; recheck before any tag. Independent first use remains0/2 on fixed387, A/B, first failures, help and retries separate. No quota-only release or candidate promotion.
 

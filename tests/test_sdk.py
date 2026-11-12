@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 from pathlib import Path
@@ -1038,6 +1039,20 @@ class TestSDKExplore:
             assert "CDP_UNAVAILABLE" in result["error"]["code"]
 
     @pytest.mark.asyncio
+    async def test_explore_preserves_navigation_transport_details(self, tmp_home):
+        from cliany_site.browser.navigation import NavigationTransportError
+        from cliany_site.sdk import ClanySite
+
+        failure = NavigationTransportError("ERR_CONNECTION_CLOSED")
+        with patch("cliany_site.explorer.engine.WorkflowExplorer") as explorer:
+            explorer.return_value.explore = AsyncMock(side_effect=failure)
+            result = await ClanySite().explore("https://example.com", "read-only search")
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_PAGE_NOT_READY"
+        assert result["error"]["details"] == failure.details
+
+    @pytest.mark.asyncio
     async def test_explore_llm_error(self):
         from cliany_site.sdk import ClanySite
 
@@ -1222,6 +1237,26 @@ class TestSDKNavigate:
         assert result["error"]["code"] == expected_code
         if expected_code == "E_PAGE_NOT_READY":
             assert result["error"]["fix"]
+
+    @pytest.mark.asyncio
+    async def test_navigate_page_transport_failure_has_no_target_url(self, tmp_home):
+        from cliany_site.sdk import ClanySite
+
+        session = AsyncMock()
+        session.navigate_to.side_effect = RuntimeError("Navigation failed: net::ERR_CONNECTION_CLOSED")
+        url = "https://example.com/?q=private-test-marker"
+        with patch.object(ClanySite, "_ensure_browser_session", return_value=session):
+            result = await ClanySite().navigate(url)
+
+        assert result["success"] is False
+        assert result["error"]["code"] == "E_PAGE_NOT_READY"
+        assert result["error"]["details"] == {
+            "phase": "navigation",
+            "reason": "navigation_transport_failed",
+            "browser_error": "ERR_CONNECTION_CLOSED",
+        }
+        assert "private-test-marker" not in json.dumps(result)
+        session.navigate_to.assert_awaited_once_with(url, new_tab=False)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -2170,6 +2205,59 @@ class TestAPIServer:
             "verdict": "commands_missing",
             "reason": "commands.py 不存在",
         }
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("entry", ["sdk", "http", "legacy_continue"])
+    async def test_failed_replay_navigation_never_dispatches_the_following_input(self, tmp_home, entry):
+        from aiohttp.test_utils import TestClient, TestServer
+        from browser_use.browser.events import NavigateToUrlEvent
+
+        from cliany_site.action_runtime import execute_action_steps
+        from cliany_site.browser.navigation import NavigationTransportError
+        from cliany_site.sdk import ClanySite
+        from cliany_site.server import APIServer
+
+        cfg = _make_config(tmp_home)
+        adapter_dir = _create_adapter_with_actions(tmp_home)
+        metadata = json.loads((adapter_dir / "metadata.json").read_text(encoding="utf-8"))
+        actions = metadata["command_defs"][0]["actions"]
+        event = asyncio.get_running_loop().create_future()
+        event.set_result(None)
+        event.event_result = AsyncMock(side_effect=RuntimeError("Navigation failed: net::ERR_CONNECTION_CLOSED"))
+        session = MagicMock()
+        session.get_current_page_url = AsyncMock(return_value="https://test.com/previous")
+        session.event_bus.dispatch.return_value = event
+        with (
+            patch("cliany_site.sdk.get_config", return_value=cfg),
+            patch.object(ClanySite, "_ensure_browser_session", return_value=session),
+            patch("cliany_site.session.load_session", new_callable=AsyncMock),
+        ):
+            if entry == "legacy_continue":
+                with pytest.raises(NavigationTransportError) as raised:
+                    await execute_action_steps(session, actions, continue_on_error=True)
+                details = raised.value.details
+            else:
+                sdk = ClanySite()
+                if entry == "sdk":
+                    data = await sdk.execute("test.com", "search")
+                else:
+                    server = APIServer()
+                    server._sdk = sdk
+                    async with TestClient(TestServer(server._build_app())) as client:
+                        response = await client.post("/execute", json={"domain": "test.com", "command": "search"})
+                        assert response.status == 503
+                        data = await response.json()
+                assert data["success"] is False
+                assert data["error"]["code"] == "E_PAGE_NOT_READY"
+                details = data["error"]["details"]
+        assert details == {
+            "phase": "navigation",
+            "reason": "navigation_transport_failed",
+            "browser_error": "ERR_CONNECTION_CLOSED",
+        }
+        assert session.event_bus.dispatch.call_count == 1
+        assert isinstance(session.event_bus.dispatch.call_args.args[0], NavigateToUrlEvent)
+        event.event_result.assert_awaited_once()
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("domain", ["../outside", "C:\\outside"])
