@@ -162,6 +162,12 @@ def substitute_parameters(actions_data: list[dict[str, Any]], params: dict[str, 
                 lambda match: str(params.get(match.group(1), match.group(0))),
                 field_value,
             )
+        target = action_data.get("extract_target")
+        recipe = target.get("empty_result") if isinstance(target, dict) else None
+        if isinstance(recipe, dict) and isinstance(recipe.get("query"), str):
+            query = pattern.fullmatch(recipe["query"])
+            if query is not None and query[1] in params and params[query[1]] is not None:
+                recipe["query"] = str(params[query[1]])
 
     return substituted
 
@@ -1075,3 +1081,4 @@ async def execute_action_steps(
 
 execute_semantic_action_steps = execute_action_steps
 execute_scoped_extract_action_steps = execute_action_steps
+execute_query_scoped_extract_action_steps = execute_action_steps

@@ -13,7 +13,11 @@ import os
 from typing import TYPE_CHECKING, Any
 
 from cliany_site.browser.axtree_pruning import prune_selector_map
-from cliany_site.browser.selector import collect_read_only_extract_candidates, enrich_selector_map
+from cliany_site.browser.selector import (
+    collect_main_result_context,
+    collect_read_only_extract_candidates,
+    enrich_selector_map,
+)
 
 if TYPE_CHECKING:
     pass
@@ -43,7 +47,7 @@ def _count_nested_contexts(selector_map_raw: dict[int, Any]) -> dict[str, int]:
     }
 
 
-async def capture_axtree(browser_session: Any) -> dict:
+async def capture_axtree(browser_session: Any, *, include_main_result_context: bool = False) -> dict:
     from browser_use.dom.service import DomService
 
     from cliany_site.config import get_config
@@ -153,6 +157,7 @@ async def capture_axtree(browser_session: Any) -> dict:
         "screenshot": screenshot_data,
         "pruning_meta": pruning_meta,
         "compounds": compounds_data,
+        **({"main_result_context": collect_main_result_context(enhanced_tree)} if include_main_result_context else {}),
     }
 
 

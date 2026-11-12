@@ -47,8 +47,10 @@ def _extract_capability(targets: Iterable[Any]) -> str:
     prefix = ""
     for target in targets:
         if isinstance(target, dict) and target.get("scope") == MAIN_RESULT_LIST_SCOPE:
-            return "scoped_extract_"
-        if target:
+            if "empty_result" in target:
+                return "query_scoped_extract_"
+            prefix = "scoped_extract_"
+        elif target and not prefix:
             prefix = "semantic_"
     return prefix
 
