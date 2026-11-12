@@ -12,13 +12,49 @@ from cliany_site.errors import ExploreContractError
 from cliany_site.explorer.engine import (
     WorkflowExplorer,
     _duplicate_navigation_clicks,
+    _observe_pending_submitted_list,
+    _observed_form_transition,
     _observed_prefix_before_unobserved_extract,
 )
+from cliany_site.explorer.models import ActionStep
 
 
 def _plan(ref):
     return {"actions": [{"type": "type", "ref": ref, "value": "private-input-value"}],
             "commands": [{"name": "enter-query", "action_steps": [0], "args": []}], "done": True}
+
+
+def test_late_collection_recheck_only_follows_observed_same_origin_submit():
+    url = "https://plan.example.test/search"
+    submit = ActionStep("click", url, target_attributes={"type": "submit"})
+    assert _observed_form_transition(submit, url + "?q=new")
+    assert not _observed_form_transition(submit, url)
+    assert not _observed_form_transition(submit, "https://other.example.test/search?q=new")
+    assert not _observed_form_transition(ActionStep("click", url), url + "?q=new")
+
+
+async def test_pending_list_stops_if_page_changes(monkeypatch):
+    capture = AsyncMock(return_value={"url": "https://plan.example.test/another-query", "extract_candidates": [{}]})
+    monkeypatch.setattr("cliany_site.explorer.engine.capture_axtree", capture)
+    actions = [{"type": "extract", "selector": "#results li", "extract_mode": "list"}]
+    result = await _observe_pending_submitted_list(
+        object(), actions, "https://plan.example.test/results", include_main_result_context=False,
+    )
+    assert result is None
+    capture.assert_awaited_once()
+
+
+async def test_pending_list_grounding_budget_includes_capture(monkeypatch):
+    async def stalled_capture(_session):
+        await asyncio.Event().wait()
+
+    monkeypatch.setattr("cliany_site.explorer.engine.capture_axtree", stalled_capture)
+    monkeypatch.setattr("cliany_site.explorer.engine._EXTRACT_GROUNDING_TIMEOUT_SECONDS", 0.03)
+    actions = [{"type": "extract", "selector": "#results li", "extract_mode": "list"}]
+    result = await asyncio.wait_for(_observe_pending_submitted_list(
+        object(), actions, "https://plan.example.test/results", include_main_result_context=False,
+    ), 0.5)
+    assert result is None
 
 
 def _prepare(mocker, monkeypatch, plans, *, steps=2, distinct=False):

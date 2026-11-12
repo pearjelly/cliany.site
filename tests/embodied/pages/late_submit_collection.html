@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Delayed search results</title></head>
+<body>
+  <nav aria-label="Related"><ul><li><a href="/index.html">Home</a></li></ul></nav>
+  <form>
+    <label for="query">Query</label><input id="query" name="query" value="sample">
+    <button type="submit">Search</button>
+  </form>
+  <main><h1>Search Results</h1><div id="results"></div></main>
+  <script>
+    function publishResults() {
+      if (!new URLSearchParams(location.search).has('query')) return;
+      const list = document.createElement('ul');
+      const row = document.createElement('li');
+      const link = document.createElement('a');
+      list.className = 'search';
+      link.href = '/index.html';
+      link.textContent = 'Observed result';
+      row.append(link);
+      list.append(row);
+      document.getElementById('results').append(list);
+    }
+  </script>
+</body>
+</html>

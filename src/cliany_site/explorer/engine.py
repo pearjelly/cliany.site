@@ -179,6 +179,39 @@ def _invalid_extract_targets(actions: list[dict[str, Any]], tree: dict[str, Any]
     return failures
 
 
+def _observed_form_transition(action: ActionStep | None, url: str) -> bool:
+    if (action is None or not action.page_url or not url or action.page_url == url
+            or not (action.action_type == "submit" or
+                    (action.action_type == "click" and action.target_attributes.get("type") == "submit"))):
+        return False
+    try:
+        source, destination = urlsplit(action.page_url), urlsplit(url)
+    except ValueError:
+        return False
+    return (source.scheme in {"http", "https"} and source.scheme == destination.scheme
+            and bool(source.netloc) and source.netloc.casefold() == destination.netloc.casefold())
+
+
+async def _observe_pending_submitted_list(
+    session: Any, actions: list[dict[str, Any]], url: str, *, include_main_result_context: bool,
+) -> dict[str, Any] | None:
+    deadline = time.monotonic() + _EXTRACT_GROUNDING_TIMEOUT_SECONDS
+    try:
+        async with asyncio.timeout(_EXTRACT_GROUNDING_TIMEOUT_SECONDS):
+            while True:
+                snapshot = (
+                    await capture_axtree(session, include_main_result_context=True)
+                    if include_main_result_context else await capture_axtree(session)
+                )
+                if time.monotonic() >= deadline or snapshot.get("url") != url:
+                    return None
+                if snapshot.get("extract_candidates") and not _invalid_extract_targets(actions, snapshot):
+                    return snapshot
+                await asyncio.sleep(0.5)
+    except TimeoutError:
+        return None
+
+
 def _invalid_value_action_targets(actions: list[dict[str, Any]], selector_map: dict[str, dict]) -> list[dict[str, Any]]:
     failures = []
     for index, action in enumerate(actions):
@@ -1352,12 +1385,30 @@ class WorkflowExplorer:
                 invalid_value_targets = _invalid_value_action_targets(actions_data, selector_map)
                 duplicate_clicks = _duplicate_navigation_clicks(actions_data, selector_map, tree.get("url", ""))
                 invalid_extract_targets = _invalid_extract_targets(actions_data, tree)
+                invalid_bindings = _invalid_command_parameter_bindings(
+                    parsed, actions_data, result.actions, required_parameter_names, tree,
+                )
+                refreshed_extract = None
+                last_action = result.actions[-1] if result.actions else None
+                current_url = str(tree.get("url") or "")
+                if (interactive_ctrl is None and invalid_extract_targets and not invalid_bindings
+                        and len(actions_data) == 1 and actions_data[0].get("extract_mode") == "list"
+                        and not parsed.get("next_url") and _observed_form_transition(last_action, current_url)):
+                    # A result page may expose its list only after the planner's snapshot.
+                    refreshed_extract = await _observe_pending_submitted_list(
+                        browser_session, actions_data, current_url,
+                        include_main_result_context=empty_result_message is not None,
+                    )
+                    if refreshed_extract is not None:
+                        tree = refreshed_extract
+                        selector_map = tree.get("selector_map") or {}
+                        invalid_extract_targets = []
+                        invalid_bindings = _invalid_command_parameter_bindings(
+                            parsed, actions_data, result.actions, required_parameter_names, tree,
+                        )
                 repeated_extracts = (
                     _repeated_completed_extracts(actions_data, tree, result.actions, all_extraction_results)
                     if interactive_ctrl is None else []
-                )
-                invalid_bindings = _invalid_command_parameter_bindings(
-                    parsed, actions_data, result.actions, required_parameter_names, tree,
                 )
                 deferred_actions: list[dict[str, Any]] = []
                 if (ambiguous_targets or invalid_value_targets or duplicate_clicks or invalid_extract_targets
@@ -1516,12 +1567,14 @@ class WorkflowExplorer:
                     action_data: dict[str, Any],
                     _index: int,
                     action_start: int = turn_snapshot.actions_before_count,
+                    observed: dict[str, Any] | None = refreshed_extract,
                 ) -> None:
                     deadline = time.monotonic() + _EXTRACT_GROUNDING_TIMEOUT_SECONDS
                     while True:
                         snapshot = (
-                            await capture_axtree(session, include_main_result_context=True)
-                            if empty_result_message is not None else await capture_axtree(session)
+                            observed if observed is not None else
+                            (await capture_axtree(session, include_main_result_context=True)
+                             if empty_result_message is not None else await capture_axtree(session))
                         )
                         target = ground_extract_target(
                             str(action_data.get("selector") or ""),
@@ -1538,7 +1591,7 @@ class WorkflowExplorer:
                                     "main_result_context": snapshot.get("main_result_context"),
                                 }
                             return
-                        if time.monotonic() >= deadline:
+                        if observed is not None or time.monotonic() >= deadline:
                             raise ExploreContractError(
                                 "提取选择器未在当前页面的 AX 候选中证实；请重新探索",
                                 reason="extract_selector_ungrounded",
