@@ -1,4 +1,5 @@
 import json
+from unittest.mock import AsyncMock
 
 import pytest
 from click.testing import CliRunner
@@ -70,6 +71,47 @@ def test_doctor_has_capability_fields(tmp_home, no_llm, monkeypatch):
     required_fields = ["capability_router", "network_capture", "console_capture", "diagnose_llm"]
     for field in required_fields:
         assert field in data["data"]
+
+
+@pytest.mark.parametrize(
+    ("endpoint", "configured", "valid"),
+    [
+        ("", False, True),
+        ("https://user:private-marker@private.invalid/private-marker/v1?key=private-marker", True, True),
+        ("private.invalid/private-marker", True, False),
+        ("https://[private-marker/v1", True, False),
+    ],
+)
+def test_doctor_endpoint_check_hides_address_and_blocks_invalid_live_request(
+    tmp_home, no_llm, monkeypatch, endpoint, configured, valid,
+):
+    cdp = AsyncMock()
+    cdp.check_available.return_value = True
+    live_check = AsyncMock(side_effect=AssertionError("preflight must not contact the provider"))
+    monkeypatch.setattr("cliany_site.browser.cdp.cdp_from_context", lambda _ctx: cdp)
+    monkeypatch.setattr("cliany_site.commands.doctor._run_llm_live_check", live_check)
+    monkeypatch.setenv("CLIANY_EXPLORE_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("CLIANY_EXPLORE_OPENAI_API_KEY", "private-marker-key")
+    monkeypatch.setenv("CLIANY_EXPLORE_OPENAI_BASE_URL", endpoint)
+    monkeypatch.setenv("CLIANY_OPENAI_BASE_URL", "")
+    args = ["--json", "doctor"]
+    if not valid:
+        args.extend(["--llm-live", "--require-capability", "generate_adapters"])
+    result = CliRunner().invoke(cli, args)
+    payload = json.loads(result.output)
+    assert "private-marker" not in result.output and "private.invalid" not in result.output
+    assert result.exit_code == (0 if valid else 1)
+    assert payload["ok"] is valid
+    live_check.assert_not_awaited()
+    diagnostics = payload["data"] if valid else payload["error"]["details"]
+    check = next(item for item in diagnostics["checks"] if item["name"] == "openai_base_url")
+    assert check["status"] == ("ok" if valid else "fail")
+    expected = {"configured": configured}
+    if not valid:
+        assert payload["error"]["code"] == "E_INVALID_PARAM"
+        assert diagnostics["required_capability_blockers"] == ["openai_base_url"]
+        expected.update(error_code="E_INVALID_PARAM", reason="invalid_openai_base_url")
+    assert check["details"] == expected
 
 
 def test_doctor_no_llm_key_returns_ok(tmp_home, no_llm, monkeypatch):

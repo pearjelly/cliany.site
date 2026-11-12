@@ -1752,6 +1752,44 @@ class TestAPIServer:
         )
 
     @pytest.mark.asyncio
+    @pytest.mark.parametrize("valid", [True, False])
+    async def test_doctor_endpoint_keeps_configured_address_private(self, tmp_home, no_llm, monkeypatch, valid):
+        from aiohttp.test_utils import TestClient, TestServer
+
+        from cliany_site.sdk import ClanySite
+        from cliany_site.server import APIServer
+
+        cfg = _make_config(tmp_home)
+        monkeypatch.setattr("cliany_site.commands.doctor.get_config", lambda: cfg)
+        cdp = AsyncMock()
+        cdp.check_available.return_value = True
+        sdk = ClanySite()
+        sdk._cdp = cdp
+        server = APIServer()
+        server._sdk = sdk
+        live_check = AsyncMock(side_effect=AssertionError("preflight must not contact the provider"))
+        monkeypatch.setattr("cliany_site.commands.doctor._run_llm_live_check", live_check)
+        monkeypatch.setenv("CLIANY_EXPLORE_LLM_PROVIDER", "openai")
+        monkeypatch.setenv("CLIANY_EXPLORE_OPENAI_API_KEY", "private-marker-key")
+        endpoint = "private.invalid/private-marker"
+        monkeypatch.setenv("CLIANY_EXPLORE_OPENAI_BASE_URL", "https://" + endpoint if valid else endpoint)
+
+        query = "" if valid else "?llm_live=true&require_capability=generate_adapters"
+        async with TestClient(TestServer(server._build_app())) as client:
+            response = await client.get("/doctor" + query)
+            output = await response.text()
+            payload = json.loads(output)
+
+        assert response.status == (200 if valid else 400)
+        assert payload["success"] is valid
+        assert "private-marker" not in output and "private.invalid" not in output
+        live_check.assert_not_awaited()
+        check = next(item for item in payload["data"]["checks"] if item["name"] == "openai_base_url")
+        assert check["details"]["configured"] is True and "base_url" not in check["details"]
+        if not valid:
+            assert payload["error"]["code"] == "E_INVALID_PARAM"
+
+    @pytest.mark.asyncio
     async def test_doctor_endpoint_rejects_invalid_live_query(self):
         from aiohttp.test_utils import TestClient, TestServer
 

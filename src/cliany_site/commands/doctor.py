@@ -800,25 +800,27 @@ async def _run_checks(
         "details": {"provider": provider}
     })
 
+    openai_url_valid = True
     if provider == "openai":
         base_url = os.environ.get("CLIANY_EXPLORE_OPENAI_BASE_URL") or os.environ.get("CLIANY_OPENAI_BASE_URL")
         try:
-            normalized_base_url = _normalize_openai_base_url(base_url)
-            checks.append({
-                "name": "openai_base_url",
-                "status": "ok" if (normalized_base_url or not base_url) else "fail",
-                "duration_ms": 0,
-                "details": {"base_url": base_url}
-            })
-        except (ValueError, TypeError):
-            checks.append({
-                "name": "openai_base_url",
-                "status": "fail",
-                "duration_ms": 0,
-                "details": {"base_url": base_url}
-            })
+            openai_url_valid = bool(_normalize_openai_base_url(base_url) or not base_url)
+        except (OSError, ValueError, TypeError):
+            openai_url_valid = False
+        endpoint_details: dict[str, Any] = {"configured": bool(base_url)}
+        if not openai_url_valid:
+            endpoint_details.update(
+                error_code=ErrorCode.E_INVALID_PARAM,
+                reason="invalid_openai_base_url",
+            )
+        checks.append({
+            "name": "openai_base_url",
+            "status": "ok" if openai_url_valid else "fail",
+            "duration_ms": 0,
+            "details": endpoint_details,
+        })
 
-    if llm_live:
+    if llm_live and openai_url_valid:
         checks.append(await _run_llm_live_check(has_llm, provider))
 
     cfg = get_config()
