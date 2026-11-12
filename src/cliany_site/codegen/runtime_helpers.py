@@ -169,6 +169,7 @@ def execute_steps_via_atoms(
 # New adapters import this capability name so older runtimes cannot silently ignore targets.
 execute_semantic_steps_via_atoms = execute_steps_via_atoms
 execute_scoped_extract_steps_via_atoms = execute_steps_via_atoms
+execute_query_scoped_extract_steps_via_atoms = execute_steps_via_atoms
 
 
 def _execute_single_step(step: dict[str, Any], domain: str) -> Envelope:
@@ -377,6 +378,7 @@ __all__ = [
     "execute_steps_via_atoms",
     "execute_semantic_steps_via_atoms",
     "execute_scoped_extract_steps_via_atoms",
+    "execute_query_scoped_extract_steps_via_atoms",
     "_execute_single_step",
     "summarize_extract_quality",
     "diagnose_if_enabled",

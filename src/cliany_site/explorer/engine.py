@@ -22,7 +22,9 @@ from cliany_site.browser.axtree import capture_axtree, serialize_axtree
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.browser.navigation import NavigationTransportError, classify_navigation_transport
 from cliany_site.browser.screenshot import capture_screenshot
+from cliany_site.browser.search_result import ground_empty_result_recipe
 from cliany_site.browser.selector import (
+    MAIN_RESULT_LIST_SCOPE,
     format_read_only_extract_candidates,
     format_selector_candidates_section,
     ground_extract_target,
@@ -128,6 +130,37 @@ def _ambiguous_action_targets(
         if best > 0 and count > 1:
             failures.append({"action_index": index, "candidate_count": count})
     return failures
+
+
+def _bind_explicit_empty_result(result: ExploreResult, observations: dict[int, dict], message: str) -> None:
+    error = ExploreContractError(
+        "无法证实零结果约定：需要单个允许零匹配的搜索命令，并实际观测输入、提交、结果地址和主标题",
+        reason="empty_result_query_unbound",
+    )
+    if len(result.commands) != 1:
+        raise error
+    command = result.commands[0]
+    if command.expects_nonempty or len(command.action_steps) != 3 or len(command.args) != 1:
+        raise error
+    typed_index, submitted_index, extract_index = command.action_steps
+    typed, submitted, extract = (result.actions[index] for index in command.action_steps)
+    if (typed.action_type != "type" or submitted.action_type not in {"click", "submit"}
+            or extract.action_type != "extract" or extract.extract_mode != "list"
+            or extract.extract_target.get("scope") != MAIN_RESULT_LIST_SCOPE
+            or not typed.page_url or not (typed_index < submitted_index < extract_index)):
+        raise error
+    observed = observations.get(extract_index, {})
+    context = observed.get("main_result_context") or {}
+    if context.get("collections") != 1 or context.get("busy") is not False:
+        raise error
+    overrides = build_param_overrides(command.args, command.action_steps, result.actions)
+    recipe = ground_empty_result_recipe(
+        typed.page_url, observed.get("url") or "", context.get("heading") or "", typed.value,
+        overrides.get(typed_index, typed.value), message,
+    )
+    if recipe is None:
+        raise error
+    extract.extract_target = {**extract.extract_target, "empty_result": recipe}
 
 
 def _invalid_extract_targets(actions: list[dict[str, Any]], tree: dict[str, Any]) -> list[dict[str, int]]:
@@ -1064,6 +1097,7 @@ class WorkflowExplorer:
         port: int | None = None,
         progress: ProgressReporter | None = None,
         record: bool = True,
+        empty_result_message: str | None = None,
     ) -> ExploreResult:
         cfg = get_config()
         if port is None:
@@ -1121,6 +1155,7 @@ class WorkflowExplorer:
             completed_steps_text = "（无）"
             final_step_count = 0
             all_extraction_results: list = []
+            query_observations: dict[int, dict] = {}
             data_completion_repairs = 0
             partition_repairs = 0
             semantic_plan_repairs = 0
@@ -1481,7 +1516,10 @@ class WorkflowExplorer:
                 ) -> None:
                     deadline = time.monotonic() + _EXTRACT_GROUNDING_TIMEOUT_SECONDS
                     while True:
-                        snapshot = await capture_axtree(session)
+                        snapshot = (
+                            await capture_axtree(session, include_main_result_context=True)
+                            if empty_result_message is not None else await capture_axtree(session)
+                        )
                         target = ground_extract_target(
                             str(action_data.get("selector") or ""),
                             snapshot.get("selector_map") or {},
@@ -1489,7 +1527,13 @@ class WorkflowExplorer:
                         )
                         if target is not None:
                             action_data["extract_target"] = target
-                            result.actions[action_start + _index].extract_target = target
+                            action_index = action_start + _index
+                            result.actions[action_index].extract_target = target
+                            if empty_result_message is not None and target.get("scope") == MAIN_RESULT_LIST_SCOPE:
+                                query_observations[action_index] = {
+                                    "url": snapshot.get("url"),
+                                    "main_result_context": snapshot.get("main_result_context"),
+                                }
                             return
                         if time.monotonic() >= deadline:
                             raise ExploreContractError(
@@ -1738,6 +1782,9 @@ class WorkflowExplorer:
                             validate_collection_scope(cmd, result.actions)
                         except CollectionScopeError as exc:
                             raise ExploreContractError(str(exc), reason="collection_input_scope_invalid") from exc
+
+                    if empty_result_message is not None:
+                        _bind_explicit_empty_result(result, query_observations, empty_result_message)
 
                     _ca = parsed.get("canonical_actions", [])
                     result.canonical_actions = [a for a in _ca if isinstance(a, dict)]

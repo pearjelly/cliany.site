@@ -212,7 +212,7 @@ def _has_linked_heading(row: Any) -> bool:
     return False
 
 
-def _main_result_list_candidate(root: Any) -> dict[str, Any] | None:
+def _unique_main_landmark(root: Any) -> Any:
     # The interactive visibility flag is viewport-relative and can exclude boxless ancestors.
     main = None
     pending = [root]
@@ -229,6 +229,13 @@ def _main_result_list_candidate(root: Any) -> dict[str, Any] | None:
             main = node
         pending.extend(getattr(node, "children_nodes", None) or [])
     if pending or main is None or _node_tag(main) != "main" or not _has_ax_role(main, "main"):
+        return None
+    return main
+
+
+def _main_result_list_candidate(root: Any) -> dict[str, Any] | None:
+    main = _unique_main_landmark(root)
+    if main is None:
         return None
     collection = None
     pending = list(getattr(main, "children_nodes", None) or [])
@@ -257,6 +264,65 @@ def _main_result_list_candidate(root: Any) -> dict[str, Any] | None:
         "semantic_name": "", "anchor_attributes": {}, "root_selector": MAIN_RESULT_LIST_ROOT,
         "scope": MAIN_RESULT_LIST_SCOPE,
     }
+
+
+def _result_heading_level(node: Any) -> str:
+    if not _has_ax_role(node, "heading"):
+        return ""
+    attributes = getattr(node, "attributes", None) or {}
+    tag = _node_tag(node)
+    return _to_text(attributes.get("aria-level")) or (tag[1:] if tag in _HEADING_TAGS else "")
+
+
+def _text_before_control(node: Any) -> str:
+    pending = list(reversed(getattr(node, "children_nodes", None) or []))
+    parts = []
+    while pending:
+        child = pending.pop()
+        if _hidden_result_content(child):
+            continue
+        tag = _node_tag(child)
+        if tag in {"a", "button"} or _node_role(child) in {"link", "button"}:
+            break
+        if tag == "#text":
+            parts.append(getattr(child, "node_value", "") or "")
+        pending.extend(reversed(getattr(child, "children_nodes", None) or []))
+    return " ".join("".join(parts).split())
+
+
+def collect_main_result_context(root: Any) -> dict[str, Any]:
+    """Observe page identity and explicit summary text, never infer zero from a missing list."""
+    main = _unique_main_landmark(root)
+    if main is None or _hidden_result_content(main):
+        return {}
+    pending = [main]
+    headings = []
+    messages = []
+    collections = 0
+    busy = False
+    while pending:
+        node = pending.pop()
+        if _outside_result_scope(node) or _hidden_result_content(node):
+            continue
+        attrs = getattr(node, "attributes", None) or {}
+        if attrs.get("aria-busy") == "true" or _has_ax_role(node, "progressbar"):
+            busy = True
+        if _collection_boundary(node):
+            collections += 1
+            continue
+        level = _result_heading_level(node)
+        if level == "1":
+            headings.append(_text_before_control(node))
+        elif level == "2" or _has_ax_role(node, "status"):
+            text = _text_before_control(node)
+            if text.casefold().rstrip(". …") in {"searching", "loading", "fetching", "正在搜索", "加载中"}:
+                busy = True
+            if text:
+                messages.append(text)
+        pending.extend(getattr(node, "children_nodes", None) or [])
+    return {"heading": headings[0], "messages": messages, "collections": collections, "busy": busy} if (
+        len(headings) == 1 and headings[0]
+    ) else {}
 
 
 def collect_read_only_extract_candidates(root: Any, limit: int = 20) -> list[dict[str, Any]]:
