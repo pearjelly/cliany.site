@@ -67,9 +67,11 @@ def test_missing_action_target_distinguishes_site_challenge(
     no_llm, action, extra_args, title, expected_code
 ):
     tree = {"title": title, "selector_map": {}}
+    page = MagicMock(evaluate=AsyncMock(return_value={"ready": True}))
+    session = MagicMock(get_current_page=AsyncMock(return_value=page))
     with (
         patch("cliany_site.browser.cdp.CDPConnection.check_available", AsyncMock(return_value=True)),
-        patch("cliany_site.browser.cdp.CDPConnection.connect", AsyncMock(return_value=MagicMock())),
+        patch("cliany_site.browser.cdp.CDPConnection.connect", AsyncMock(return_value=session)),
         patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()),
         patch("cliany_site.browser.axtree.capture_axtree", AsyncMock(return_value=tree)),
     ):
@@ -83,3 +85,4 @@ def test_missing_action_target_distinguishes_site_challenge(
     assert payload["error"]["code"] == expected_code
     if title == "Client Challenge":
         assert payload["error"]["details"] == {"reason": "site_challenge", "title": title}
+        session.get_current_page.assert_not_awaited()
