@@ -5,10 +5,10 @@ body:
   - type: markdown
     attributes:
       value: |
-        请先看 [固定版本试用步骤](https://github.com/pearjelly/cliany.site/blob/master/docs/first-use-trial.md)。
+        新试用者请按 [固定 0.16.387 的试用步骤](https://github.com/pearjelly/cliany.site/blob/v0.16.387/docs/first-use-trial.md) 开始。已在旧版开始试用的人保留原版本和结果。
         Jira 对应 #33，Python 文档浏览器案例对应 #55。失败和未计时也可以提交，不需要排障到成功。
         不要上传密钥、Cookie、环境变量、完整个人路径或原始终端/doctor/AXTree 日志。
-        保留首次失败；修复后的重试另记，不改写原记录。两条路径请分别提交。
+        首次尝试、帮助和重试分别记录，不改写原记录。两条路径请分别提交。
   - type: textarea
     id: environment
     attributes:
@@ -36,21 +36,11 @@ body:
         - "不确定 / Unsure"
     validations:
       required: true
-  - type: dropdown
-    id: help
-    attributes:
-      label: "是否得到维护者帮助 / Maintainer help"
-      options:
-        - "无 / None"
-        - "首次尝试前已获得帮助 / Before first attempt"
-        - "首次失败后获得帮助 / After first failure"
-    validations:
-      required: true
   - type: textarea
     id: first_attempt
     attributes:
       label: "首次尝试及首次失败 / First attempt and first failure"
-      description: "失败可以提交；只分享公开试用命令和脱敏错误码/短提示，不粘贴原始输出。帮助内容也写在这里。"
+      description: "失败可以提交；只分享首次尝试的公开命令和脱敏错误码或短提示，不粘贴原始输出。"
       placeholder: |
         到达的阶段与公开命令：
         首次失败阶段 / 无：
@@ -58,19 +48,38 @@ body:
         demo oracle 失败的 field_invalid_rows 字段名与行号 / 无（不附错误值）：
         第一处看不懂的说明 / 无：
         外部墙钟耗时 / 未测量：
-        帮助的内容与时机 / 无：
     validations:
       required: true
   - type: textarea
     id: result
     attributes:
-      label: "成功后的独立核对（可选）/ Independent result check"
-      description: "仅 ok=true 或安装成功不算业务成功。没有完成可留空，API 成功不能计为浏览器成功。"
+      label: "首试结果的独立核对（可选）/ First result check"
+      description: "只填首次尝试的结果；之后的结果填在重试栏。仅 ok=true 或安装成功不算业务成功。没有完成可留空，API 成功不能计为浏览器成功。"
       placeholder: |
         严格验证 verdict、返回行数：
         首条公开 key/summary 或 title/link：
         单独打开正常站点核对：一致 / 不一致 / 未完成
         A：两次 installed_now；B：limit_reached、改为 asyncio 后的独立核对：
+    validations:
+      required: false
+  - type: dropdown
+    id: help
+    attributes:
+      label: "维护者帮助的时点 / Maintainer help timing"
+      options:
+        - "无 / None"
+        - "仅首次尝试前 / Before first attempt only"
+        - "仅首次停止后 / After first attempt stopped only"
+        - "首次尝试前和停止后都有 / Both before and after"
+        - "不确定 / Unsure"
+    validations:
+      required: true
+  - type: textarea
+    id: help_details
+    attributes:
+      label: "帮助记录（可选）/ Help details"
+      description: "每次帮助单独写时点和脱敏内容；不要附上私密对话。未获得帮助可留空。"
+      placeholder: "例如：首次失败后，维护者解释了如何检查端口是否已被占用。"
     validations:
       required: false
   - type: textarea

@@ -11,18 +11,27 @@ FORM = ROOT / ".github" / "ISSUE_TEMPLATE" / "first_use.yml"
 def test_first_use_form_collects_failures_without_requiring_success_or_logs():
     form = yaml.safe_load(FORM.read_text(encoding="utf-8"))
     fields = {field["id"]: field for field in form["body"] if "id" in field}
-    assert set(fields) == {
-        "environment", "track", "independence", "help", "first_attempt", "result", "retries", "privacy"
-    }
+    assert list(fields) == [
+        "environment", "track", "independence", "first_attempt", "result", "help", "help_details", "retries", "privacy",
+    ]
     for name in ("environment", "track", "independence", "help", "first_attempt"):
         assert fields[name]["validations"]["required"] is True
-    assert fields["result"]["validations"]["required"] is False
-    assert fields["retries"]["validations"]["required"] is False
+    for name in ("result", "help_details", "retries"):
+        assert fields[name]["validations"]["required"] is False
     assert len(fields["independence"]["attributes"]["options"]) == 3
-    assert len(fields["help"]["attributes"]["options"]) == 3
+    options = fields["help"]["attributes"]["options"]
+    assert len(options) == 5
+    assert any("Both before and after" in option for option in options)
+    assert any("Unsure" in option for option in options)
+    first_attempt = fields["first_attempt"]["attributes"]
+    assert "帮助" not in first_attempt["description"] + first_attempt["placeholder"]
+    assert "首次尝试" in fields["result"]["attributes"]["description"]
+    assert "重试栏" in fields["result"]["attributes"]["description"]
+    assert fields["privacy"]["attributes"]["options"][0]["required"] is True
     text = FORM.read_text(encoding="utf-8")
-    for snippet in ("#33", "#55", "first-use-trial.md", "首次失败", "不要上传", "doctor", "原记录"):
+    for snippet in ("#33", "#55", "blob/v0.16.387/docs/first-use-trial.md", "首次失败", "不要上传", "doctor", "原记录"):
         assert snippet in text
+    assert "blob/master/docs/first-use-trial.md" not in text
     assert "auto-reproduce" not in form.get("labels", [])
 
 
