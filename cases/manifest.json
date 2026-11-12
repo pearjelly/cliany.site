@@ -218,7 +218,7 @@
       "metadata_validation": {
         "status": "pending",
         "evidence": "2026-11-12: the private archive passed case schema, payload hash and strict adapter checks on a supporting local runtime. Exact public asset and CLI checks are pending.",
-        "next_action": "Download the reviewed public asset, verify its SHA-256, rerun candidate package validation, and perform a fresh install and strict verify on the exact supporting PyPI CLI."
+        "next_action": "Download the reviewed public asset, verify its SHA-256, run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict, then perform a fresh install and strict verify on the exact supporting PyPI CLI."
       },
       "online_smoke": {
         "status": "pending",
