@@ -11,6 +11,12 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
+## [0.16.397] - 2026-11-12
+
+### Fixed
+
+- Report recognized Chromium page transport failures as `E_PAGE_NOT_READY` with `reason=navigation_transport_failed`, distinct from unavailable Chrome CDP. Browser navigation, exploration and SDK/API replay stop without retrying or sending subsequent input. Structured details contain only the phase, fixed reason and Chromium error token. [Reproduction and limits](docs/user-evidence/2026-11-12-navigation-transport.md).
+
 ## [0.16.396] - 2026-10-28
 
 ### Fixed
@@ -3593,7 +3599,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.396...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.397...HEAD
+[0.16.397]: https://github.com/pearjelly/cliany.site/compare/v0.16.396...v0.16.397
 [0.16.396]: https://github.com/pearjelly/cliany.site/compare/v0.16.395...v0.16.396
 [0.16.395]: https://github.com/pearjelly/cliany.site/compare/v0.16.394...v0.16.395
 [0.16.394]: https://github.com/pearjelly/cliany.site/compare/v0.16.393...v0.16.394

@@ -106,6 +106,8 @@ class TestBrowserNavigate:
             (TimeoutError("on_NavigateToUrlEvent timed out after 30.0s"), "E_PAGE_NOT_READY"),
             (RuntimeError("Page.navigate() timed out after 20.0s (20002ms)"), "E_PAGE_NOT_READY"),
             (RuntimeError("Browser disconnected"), "E_CDP_UNAVAILABLE"),
+            (RuntimeError("Navigation failed: net::ERR_ABORTED"), "E_CDP_UNAVAILABLE"),
+            (RuntimeError("Navigation failed: net::ERR_CONNECTION_CLOSED with context"), "E_CDP_UNAVAILABLE"),
         ],
     )
     def test_navigate_classifies_navigation_failure(self, no_llm, runner, failure, expected_code):
@@ -123,6 +125,41 @@ class TestBrowserNavigate:
         assert data["error"]["code"] == expected_code
         if expected_code == "E_PAGE_NOT_READY":
             assert data["error"]["hint"]
+
+    @pytest.mark.parametrize("phase", ["connect", "navigate"])
+    def test_page_transport_classification_is_scoped_to_navigation(self, tmp_home, no_llm, runner, phase):
+        failure = RuntimeError("Navigation failed: net::ERR_CONNECTION_CLOSED")
+        url = "https://example.com/?q=private-test-marker"
+        session = MagicMock()
+        session.navigate_to = AsyncMock(side_effect=failure if phase == "navigate" else None)
+        with (
+            patch("cliany_site.browser.cdp.CDPConnection.check_available", AsyncMock(return_value=True)),
+            patch(
+                "cliany_site.browser.cdp.CDPConnection.connect",
+                AsyncMock(return_value=session, side_effect=failure if phase == "connect" else None),
+            ),
+            patch("cliany_site.browser.cdp.CDPConnection.disconnect", AsyncMock()) as disconnect,
+            patch("cliany_site.browser.axtree.capture_axtree", AsyncMock()) as capture,
+        ):
+            result = runner.invoke(cli, ["browser", "navigate", url, "--json"])
+
+        assert result.exit_code == 1, result.output
+        error = json.loads(result.stdout)["error"]
+        capture.assert_not_awaited()
+        if phase == "connect":
+            assert error["code"] == "E_CDP_UNAVAILABLE"
+            session.navigate_to.assert_not_awaited()
+            disconnect.assert_not_awaited()
+        else:
+            assert error["code"] == "E_PAGE_NOT_READY"
+            assert error["details"] == {
+                "phase": "navigation",
+                "reason": "navigation_transport_failed",
+                "browser_error": "ERR_CONNECTION_CLOSED",
+            }
+            assert "private-test-marker" not in result.stdout
+            session.navigate_to.assert_awaited_once_with(url)
+            disconnect.assert_awaited_once()
 
 
 class TestBrowserWait:

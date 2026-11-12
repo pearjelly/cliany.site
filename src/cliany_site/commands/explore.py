@@ -57,6 +57,7 @@ def explore_cmd(
 
     async def _run():
         from cliany_site.browser.cdp import cdp_from_context
+        from cliany_site.browser.navigation import NavigationTransportError
         from cliany_site.codegen.generator import (
             AdapterGenerator,
             _safe_domain,
@@ -191,6 +192,8 @@ def explore_cmd(
                 cdp_url=cdp_url, headless=headless, interactive=interactive, extend_domain=extend
             )
             explore_result = await explorer.explore(url, workflow_description, progress=reporter, record=record)
+        except NavigationTransportError as e:
+            return err("explore", ErrorCode.E_PAGE_NOT_READY, str(e), hint=e.hint, details=e.details)
         except LlmUnavailableError as e:
             auth_failed = e.status_code in {401, 403}
             return err(

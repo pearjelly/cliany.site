@@ -20,6 +20,7 @@ import httpx
 from cliany_site.action_runtime import _score_candidate, execute_action_steps, normalize_navigation_url
 from cliany_site.browser.axtree import capture_axtree, serialize_axtree
 from cliany_site.browser.cdp import CDPConnection
+from cliany_site.browser.navigation import NavigationTransportError, classify_navigation_transport
 from cliany_site.browser.screenshot import capture_screenshot
 from cliany_site.browser.selector import (
     format_read_only_extract_candidates,
@@ -1074,7 +1075,8 @@ class WorkflowExplorer:
         failure_turns: list[dict[str, Any]] = []
 
         try:
-            await browser_session.navigate_to(url, new_tab=False)
+            with classify_navigation_transport():
+                await browser_session.navigate_to(url, new_tab=False)
             reporter.on_explore_start(url, workflow_description, cfg.explore_max_steps)
 
             completed_steps: list[str] = []
@@ -1456,7 +1458,7 @@ class WorkflowExplorer:
                         browser_session, actions_data, continue_on_error=False,
                         extraction_results=_extraction_results, before_extract=validate_extract,
                     )
-                except (ExploreContractError, DataCommandQualityError, LlmUnavailableError):
+                except (ExploreContractError, DataCommandQualityError, LlmUnavailableError, NavigationTransportError):
                     raise
                 except Exception as exc:
                     raise ExploreContractError(
@@ -1702,7 +1704,7 @@ class WorkflowExplorer:
 
                 next_url = normalize_navigation_url(parsed.get("next_url", ""), tree.get("url", ""))
                 if next_url and next_url != tree.get("url", ""):
-                    with contextlib.suppress(OSError, RuntimeError, TimeoutError):
+                    with contextlib.suppress(OSError, RuntimeError, TimeoutError), classify_navigation_transport():
                         await browser_session.navigate_to(next_url, new_tab=False)
             else:
                 raise ExploreContractError(
@@ -1740,7 +1742,8 @@ class WorkflowExplorer:
                 if failure_turn is not None:
                     try:
                         reason = (
-                            e.reason if isinstance(e, (ExploreContractError, LlmResponseFormatError))
+                            e.reason
+                            if isinstance(e, (ExploreContractError, LlmResponseFormatError, NavigationTransportError))
                             else "exploration_cancelled" if isinstance(e, asyncio.CancelledError)
                             else "exploration_failed"
                         )

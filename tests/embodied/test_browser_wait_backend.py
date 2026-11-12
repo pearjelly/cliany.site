@@ -5,6 +5,7 @@ import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Event, Thread
 
+import aiohttp
 import pytest
 
 playwright = pytest.importorskip("playwright.async_api")
@@ -119,6 +120,70 @@ async def wait_browser(tmp_home, clean_env, no_llm, monkeypatch, unused_tcp_port
             yield context, f"http://127.0.0.1:{unused_tcp_port}"
         finally:
             await context.close()
+
+
+@pytest.mark.embodied
+async def test_navigation_transport_failure_keeps_the_same_external_browser(
+    wait_browser, tmp_home, local_server,
+):
+    context, endpoint = wait_browser
+    page = context.pages[0]
+
+    async def close_without_response(reader, writer):
+        try:
+            await asyncio.wait_for(reader.readuntil(b"\r\n\r\n"), 2)
+        except (asyncio.IncompleteReadError, asyncio.LimitOverrunError, TimeoutError):
+            pass
+        finally:
+            writer.close()
+            await writer.wait_closed()
+
+    async def invoke(url, label):
+        process = await asyncio.create_subprocess_exec(
+            sys.executable, "-m", "cliany_site", "--cdp-url", endpoint,
+            "browser", "navigate", url, "--json", cwd=tmp_home, env=os.environ.copy(),
+            stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
+        )
+        try:
+            stdout, stderr = await asyncio.wait_for(process.communicate(), 30)
+        except TimeoutError:
+            process.kill()
+            await process.communicate()
+            raise
+        (tmp_home / f"{label}-stdout.json").write_bytes(stdout)
+        (tmp_home / f"{label}-stderr.log").write_bytes(stderr)
+        return process.returncode, json.loads(stdout)
+
+    async def discovery():
+        async with (
+            aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5)) as client,
+            client.get(endpoint + "/json/version") as response,
+        ):
+            assert response.status == 200
+            return (await response.json())["webSocketDebuggerUrl"]
+
+    server = await asyncio.start_server(close_without_response, "127.0.0.1", 0)
+    async with server:
+        url = f"http://127.0.0.1:{server.sockets[0].getsockname()[1]}/empty-response"
+        before = await discovery()
+        with pytest.raises(playwright.Error, match="net::ERR_EMPTY_RESPONSE"):
+            await page.goto(url)
+
+        code, result = await invoke(url, "transport-failure")
+        assert code == 1 and result["ok"] is False
+        assert await discovery() == before
+        assert not page.is_closed()
+        recovery_url = local_server + "/sample_form.html"
+        recovery_code, recovery = await invoke(recovery_url, "transport-recovery")
+        assert recovery_code == 0 and recovery["ok"] is True, recovery
+        assert page.url == recovery_url
+        assert await discovery() == before
+        assert result["error"]["code"] == "E_PAGE_NOT_READY", result
+        assert result["error"]["details"] == {
+            "phase": "navigation",
+            "reason": "navigation_transport_failed",
+            "browser_error": "ERR_EMPTY_RESPONSE",
+        }
 
 
 @pytest.mark.embodied

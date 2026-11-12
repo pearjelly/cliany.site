@@ -110,6 +110,50 @@ def test_explore_classifies_known_contract_errors(tmp_home, clean_env, monkeypat
     assert payload["error"]["details"] == details
 
 
+def test_explore_stops_before_observation_when_initial_navigation_fails(tmp_home, clean_env, monkeypatch):
+    import cliany_site.browser.cdp as cdp_mod
+    import cliany_site.explorer.engine as engine_mod
+    from cliany_site.config import get_config
+
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_home / "config"))
+    monkeypatch.setenv("CLIANY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("CLIANY_OPENAI_API_KEY", "test-key")
+    monkeypatch.setattr(engine_mod, "_load_dotenv", lambda: None)
+    model = MagicMock()
+    monkeypatch.setattr(engine_mod, "_get_llm", lambda **_: model)
+    session = MagicMock()
+    session.navigate_to = AsyncMock(side_effect=RuntimeError("Navigation failed: net::ERR_CONNECTION_CLOSED"))
+    cdp = MagicMock(
+        check_available=AsyncMock(return_value=True),
+        connect=AsyncMock(return_value=session),
+        disconnect=AsyncMock(),
+    )
+    monkeypatch.setattr(cdp_mod, "cdp_from_context", lambda _: cdp)
+    monkeypatch.setattr(engine_mod, "CDPConnection", lambda **_: cdp)
+    capture = AsyncMock()
+    monkeypatch.setattr(engine_mod, "capture_axtree", capture)
+    url = "https://example.com/?q=private-test-marker"
+
+    result = CliRunner().invoke(cli, ["explore", url, "read-only search", "--json"], catch_exceptions=False)
+
+    assert result.exit_code == 1
+    payload = json.loads(result.stdout)
+    assert payload["ok"] is False
+    assert payload["error"]["code"] == "E_PAGE_NOT_READY"
+    assert payload["error"]["details"] == {
+        "phase": "navigation",
+        "reason": "navigation_transport_failed",
+        "browser_error": "ERR_CONNECTION_CLOSED",
+    }
+    assert "private-test-marker" not in result.stdout
+    session.navigate_to.assert_awaited_once_with(url, new_tab=False)
+    capture.assert_not_awaited()
+    model.invoke.assert_not_called()
+    model.ainvoke.assert_not_called()
+    cdp.disconnect.assert_awaited_once()
+    assert not (get_config().adapters_dir / "example.com").exists()
+
+
 def test_explore_returns_invocable_group_for_local_port(tmp_home, clean_env, monkeypatch):
     import cliany_site.activity_log as activity_log
     import cliany_site.browser.cdp as cdp_mod

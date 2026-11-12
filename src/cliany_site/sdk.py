@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 
     from cliany_site.browser.cdp import CDPConnection
 
+from cliany_site.browser.navigation import NavigationTransportError, classify_navigation_transport
 from cliany_site.config import get_config
 from cliany_site.errors import (
     CDP_UNAVAILABLE,
@@ -58,6 +59,10 @@ def _browser_unavailable_response() -> dict[str, Any]:
         "请检查 Chrome 是否运行以及 CDP 地址和端口配置；运行 cliany-site doctor --json 后重试。",
         details={"phase": "browser_connect"},
     )
+
+
+def _navigation_transport_response(exc: NavigationTransportError) -> dict[str, Any]:
+    return error_response("E_PAGE_NOT_READY", str(exc), exc.hint, details=exc.details)
 
 
 # ---------------------------------------------------------------------------
@@ -193,6 +198,8 @@ class ClanySite:
                 ),
                 details={"retryable": e.retryable, "status_code": e.status_code, "phase": "llm_invoke"},
             )
+        except NavigationTransportError as e:
+            return _navigation_transport_response(e)
         except ConnectionError as e:
             return error_response(CDP_UNAVAILABLE, str(e), "请确保 Chrome CDP 可用")
         except DataCommandQualityError as e:
@@ -569,6 +576,8 @@ class ClanySite:
                     "quality": quality,
                 }
             )
+        except NavigationTransportError as e:
+            return _navigation_transport_response(e)
         except Exception as e:
             return error_response(
                 EXECUTION_FAILED,
@@ -828,8 +837,11 @@ class ClanySite:
         except (CdpError, ConnectionError, TimeoutError):
             return _browser_unavailable_response()
         try:
-            await browser_session.navigate_to(url, new_tab=False)
+            with classify_navigation_transport():
+                await browser_session.navigate_to(url, new_tab=False)
             return success_response({"url": url, "status": "navigated"})
+        except NavigationTransportError as e:
+            return _navigation_transport_response(e)
         except (OSError, RuntimeError, TimeoutError) as e:
             if isinstance(e, TimeoutError) or (
                 isinstance(e, RuntimeError) and str(e).startswith("Page.navigate() timed out after ")
