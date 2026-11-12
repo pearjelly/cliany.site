@@ -412,6 +412,7 @@ class ClanySite:
 
         from cliany_site.action_runtime import substitute_parameters
 
+        result_limit: int | None = None
         if generated_command:
             from cliany_site.codegen.naming import argument_parameter_names
             from cliany_site.codegen.params import (
@@ -420,6 +421,7 @@ class ClanySite:
                 build_param_overrides,
             )
             from cliany_site.explorer.models import ActionStep
+            from cliany_site.extract import LIST_EXTRACT_LIMIT
 
             try:
                 recorded_actions = [ActionStep(**action) for action in actions_data]
@@ -432,6 +434,14 @@ class ClanySite:
                 arg["name"] for arg in command_args
                 if isinstance(arg, dict) and isinstance(arg.get("name"), str)
             })
+            if cmd_def.get("result_limit") is True:
+                allowed_params = sorted(set(allowed_params) | {"limit"})
+                if params is not None and "limit" in params:
+                    requested = params["limit"]
+                    if type(requested) is not int or not 1 <= requested <= LIST_EXTRACT_LIMIT:
+                        return error_response("E_INVALID_PARAM", f"limit 必须是 1 到 {LIST_EXTRACT_LIMIT} 的整数")
+                    result_limit = requested
+                    params = {name: value for name, value in params.items() if name != "limit"}
             unknown_params = sorted(str(name) for name in (params or {}) if name not in allowed_params)
             if unknown_params:
                 return error_response(
@@ -533,7 +543,7 @@ class ClanySite:
                 dry_run=dry_run,
                 extraction_results=extraction_results,
             )
-            from cliany_site.extract_quality import evaluate_extract_quality
+            from cliany_site.extract_quality import evaluate_extract_quality, project_result_rows
 
             extracts = [
                 {
@@ -554,6 +564,11 @@ class ClanySite:
                 "empty" if any(item["status"] == "empty" for item in extracts) else "ok"
             )
             quality = {"ok": quality_status in ("ok", "not_applicable"), "status": quality_status, "extracts": extracts}
+            if result_limit is not None and len(extraction_results) == 1:
+                result_item = extraction_results[0]
+                rows = result_item.get("data")
+                if result_item.get("extract_mode") == "list" and isinstance(rows, list):
+                    result_item["data"] = project_result_rows(rows, result_limit, quality)
             requires_data = any(action.get("type") == "extract" for action in actions_data) or (
                 command.lower().replace("_", "-").startswith(("list-", "search-", "read-", "extract-"))
             )

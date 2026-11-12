@@ -5,6 +5,7 @@ import re
 from typing import Any
 
 from cliany_site.atoms.models import AtomCommand, AtomParameter
+from cliany_site.codegen.collection_scope import RESULT_LIMIT_PARAMETER
 from cliany_site.codegen.naming import (
     argument_parameter_names,
     sanitize_docstring_text,
@@ -16,6 +17,7 @@ from cliany_site.codegen.naming import (
 )
 from cliany_site.codegen.params import auto_detect_params_from_actions, build_param_overrides
 from cliany_site.explorer.models import ActionStep, CommandSuggestion
+from cliany_site.extract import LIST_EXTRACT_LIMIT
 
 
 def render_command_block(
@@ -723,6 +725,11 @@ def render_command_block_v2(
     cleaned_steps = command.action_steps
 
     arg_decorators, arg_parameters = render_argument_decorators(effective_args)
+    if command.result_limit:
+        arg_decorators.append(
+            f'@click.option("--limit", "{RESULT_LIMIT_PARAMETER}", type=click.IntRange(1, {LIST_EXTRACT_LIMIT}), '
+            'help="校验后最多返回 N 条列表结果")'
+        )
 
     decorator_lines = [
         f'@cli.command("{command_name}")',
@@ -737,6 +744,8 @@ def render_command_block_v2(
         "json_mode: bool | None",
         *arg_parameters,
     ]
+    if command.result_limit:
+        function_args.append(f"{RESULT_LIMIT_PARAMETER}: int | None")
     function_signature = ", ".join(function_args)
     args_payload = render_args_payload(arg_parameters)
 
@@ -756,6 +765,9 @@ def render_command_block_v2(
         if _requires_data_quality_check(command_name, cleaned_steps, all_actions)
         else ""
     )
+    apply_limit = (
+        f"    limit_generated_result(results, quality, {RESULT_LIMIT_PARAMETER})\n" if command.result_limit else ""
+    )
 
     return f'''{decorators_text}
 def {function_name}({function_signature}):
@@ -770,7 +782,7 @@ def {function_name}({function_signature}):
         results = execute_steps_via_atoms(action_steps, SOURCE_URL, DOMAIN)
     failed = next((r for r in results if not r.get("ok")), None)
     quality = summarize_extract_quality(results, action_steps)
-{empty_result_check}    if _resolve_json_mode(json_mode):
+{empty_result_check}{apply_limit}    if _resolve_json_mode(json_mode):
         click.echo(json.dumps({{
             "ok": failed is None,
             "data": {{"results": results, "quality": quality, "command": "{command_name}", "args": {args_payload}, "expects_nonempty": {command.expects_nonempty!r}}},
