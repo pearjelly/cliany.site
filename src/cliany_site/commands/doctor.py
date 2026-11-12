@@ -371,8 +371,9 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
     summary["ready_for_explore"] = not summary["must_fix"] and not any(
         item["name"] in {"llm", "llm_live"} for item in summary["should_fix"]
     )
-    summary["llm_live_preflight"] = _llm_live_preflight_summary(checks)
-    summary["ready_for_live_explore"] = summary["llm_live_preflight"]["ready"] is True
+    live_preflight = _llm_live_preflight_summary(checks)
+    summary["llm_live_preflight"] = live_preflight
+    summary["ready_for_live_explore"] = live_preflight["ready"] is True
     summary["capabilities"] = _build_capabilities(checks)
     generate_adapters = summary["capabilities"]["generate_adapters"]
     generate_adapters["local_blockers"] = [
@@ -384,14 +385,19 @@ def _enrich_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
     generate_adapters["ready_for_live_explore"] = summary["ready_for_live_explore"]
     if summary["ready_for_live_explore"]:
         generate_adapters["live_blockers"] = []
-    elif summary["llm_live_preflight"]["checked"]:
+    elif live_preflight["checked"]:
         generate_adapters["live_blockers"] = ["llm_live"]
     else:
         generate_adapters["live_blockers"] = ["llm_live_preflight"]
     if generate_adapters["local_ready"] and not summary["ready_for_live_explore"]:
-        generate_adapters["next_step"] = (
-            "先运行 " + _LIVE_EXPLORE_PREFLIGHT_COMMAND + "；通过后再运行 cliany-site explore。"
-        )
+        if live_preflight["checked"]:
+            generate_adapters["next_step"] = (
+                f"{live_preflight['action']} 重新运行实时预检，通过后再运行 cliany-site explore。"
+            )
+        else:
+            generate_adapters["next_step"] = (
+                "先运行 " + _LIVE_EXPLORE_PREFLIGHT_COMMAND + "；通过后再运行 cliany-site explore。"
+            )
     demo_adapter_quickstart = _demo_adapter_quickstart()
     summary["demo_adapter_quickstart"] = demo_adapter_quickstart
     summary["ready_for_demo_adapters"] = bool(demo_adapter_quickstart["available"]) and bool(

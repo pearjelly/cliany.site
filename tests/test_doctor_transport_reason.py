@@ -9,10 +9,11 @@ from cliany_site.commands.doctor import (
     _enrich_checks,
     _human_action_for_check,
     _llm_live_preflight_summary,
+    _require_capability,
     _run_llm_live_check,
     _transport_failure_details,
 )
-from cliany_site.envelope import ErrorCode
+from cliany_site.envelope import ErrorCode, ok
 from cliany_site.errors import LlmUnavailableError
 
 
@@ -44,6 +45,12 @@ async def test_live_check_exposes_only_safe_transport_category(monkeypatch, caus
     assert summary["should_fix"][0]["action"] == _human_action_for_check(result)
     assert summary["llm_live_preflight"]["action"] == _human_action_for_check(result)
     assert "private-marker" not in json.dumps(summary)
+    failure = _require_capability(ok("doctor", {"checks": [result], "summary": summary}), "generate_adapters")
+    assert failure["ok"] is False and failure["error"]["code"] == ErrorCode.E_LLM_UNAVAILABLE
+    hint = failure["error"]["hint"]
+    assert hint.startswith(summary["llm_live_preflight"]["action"])
+    assert "通过后再运行 cliany-site explore" in hint
+    assert "private-marker" not in json.dumps(failure)
     if reason == "tls_certificate_verify_failed":
         assert "不要关闭证书验证" in _human_action_for_check(result)
 
@@ -73,4 +80,8 @@ async def test_live_check_sanitizes_authentication_response(monkeypatch, status_
     assert result["details"]["retryable"] is False
     assert result["details"]["status_code"] == status_code
     assert "private-marker" not in json.dumps(result)
-    assert "密钥" in _enrich_checks([result])["llm_live_preflight"]["action"]
+    summary = _enrich_checks([result])
+    assert "密钥" in summary["llm_live_preflight"]["action"]
+    failure = _require_capability(ok("doctor", {"checks": [result], "summary": summary}), "generate_adapters")
+    assert failure["error"]["code"] == ErrorCode.E_LLM_AUTH_FAILED
+    assert "不要将密钥发往其他服务" in failure["error"]["hint"]
