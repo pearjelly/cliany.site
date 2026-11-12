@@ -142,6 +142,15 @@ def enrich_selector_map(selector_map: dict[str, dict]) -> dict[str, dict]:
 
 
 _READ_ONLY_EXTRACT_ROLES = frozenset({"status", "alert", "list", "table"})
+_EXTRACT_NODE_LIMIT = 5000
+_COLLECTION_TAGS = frozenset({"ol", "ul", "table"})
+_HEADING_TAGS = frozenset({"h1", "h2", "h3", "h4", "h5", "h6"})
+MAIN_RESULT_LIST_SCOPE = "main_linked_heading_list"
+MAIN_RESULT_LIST_BOUNDARY = 'ol,ul,table,[role="list"],[role="table"],nav,[role="navigation"]'
+MAIN_RESULT_LIST_ROOT = (
+    'main :is(ol,ul,table,[role="list"],[role="table"])'
+    f':not(:is({MAIN_RESULT_LIST_BOUNDARY}) *)'
+)
 
 
 def _extract_identity_attributes(attributes: dict[str, Any]) -> dict[str, str]:
@@ -149,6 +158,104 @@ def _extract_identity_attributes(attributes: dict[str, Any]) -> dict[str, str]:
         key: value
         for key in ("id", "data-testid", "aria-label", "name", "placeholder", "title")
         if (value := _to_text(attributes.get(key)))
+    }
+
+
+def _node_role(node: Any) -> str:
+    return _to_text(getattr(getattr(node, "ax_node", None), "role", "")).lower()
+
+
+def _node_tag(node: Any) -> str:
+    return _to_text(getattr(node, "tag_name", "")).lower()
+
+
+def _collection_boundary(node: Any) -> bool:
+    return _node_tag(node) in _COLLECTION_TAGS or _node_role(node) in {"list", "table"}
+
+
+def _outside_document(node: Any) -> bool:
+    return _node_tag(node) in {"iframe", "frame"} or bool(getattr(node, "shadow_root_type", None))
+
+
+def _outside_result_scope(node: Any) -> bool:
+    return _outside_document(node) or _node_tag(node) == "nav" or _node_role(node) == "navigation"
+
+
+def _hidden_result_content(node: Any) -> bool:
+    attrs = getattr(node, "attributes", None) or {}
+    styles = getattr(getattr(node, "snapshot_node", None), "computed_styles", None) or {}
+    return (
+        "hidden" in attrs or "inert" in attrs or attrs.get("aria-hidden") == "true"
+        or styles.get("display") == "none" or styles.get("visibility") in {"hidden", "collapse"}
+        or styles.get("opacity") == "0"
+    )
+
+
+def _has_ax_role(node: Any, role: str) -> bool:
+    return _node_role(node) == role and not getattr(getattr(node, "ax_node", None), "ignored", False)
+
+
+def _has_linked_heading(row: Any) -> bool:
+    pending = [(node, False) for node in getattr(row, "children_nodes", None) or []]
+    while pending:
+        node, in_heading = pending.pop()
+        if _outside_result_scope(node) or _collection_boundary(node) or _hidden_result_content(node):
+            continue
+        tag = _node_tag(node)
+        attributes = getattr(node, "attributes", None) or {}
+        if in_heading and tag == "a" and _has_ax_role(node, "link") and _to_text(attributes.get("href")):
+            return True
+        heading = in_heading or (
+            _has_ax_role(node, "heading") and (tag in _HEADING_TAGS or attributes.get("role") == "heading")
+        )
+        pending.extend((child, heading) for child in getattr(node, "children_nodes", None) or [])
+    return False
+
+
+def _main_result_list_candidate(root: Any) -> dict[str, Any] | None:
+    # The interactive visibility flag is viewport-relative and can exclude boxless ancestors.
+    main = None
+    pending = [root]
+    visited = 0
+    while pending and visited < _EXTRACT_NODE_LIMIT:
+        node = pending.pop()
+        visited += 1
+        if _outside_document(node):
+            continue
+        attrs = getattr(node, "attributes", None) or {}
+        if _node_tag(node) == "main" or _node_role(node) == "main" or attrs.get("role") == "main":
+            if main is not None:
+                return None
+            main = node
+        pending.extend(getattr(node, "children_nodes", None) or [])
+    if pending or main is None or _node_tag(main) != "main" or not _has_ax_role(main, "main"):
+        return None
+    collection = None
+    pending = list(getattr(main, "children_nodes", None) or [])
+    while pending:
+        node = pending.pop()
+        if _outside_result_scope(node):
+            continue
+        if _collection_boundary(node):
+            if collection is not None:
+                return None
+            collection = node
+        else:
+            if not _hidden_result_content(node):
+                pending.extend(getattr(node, "children_nodes", None) or [])
+    if collection is None or not _has_ax_role(collection, "list") or _node_tag(collection) not in {"ol", "ul"}:
+        return None
+    rows = [node for node in getattr(collection, "children_nodes", None) or [] if _node_tag(node) == "li"]
+    if not rows or any(
+        not _has_ax_role(row, "listitem") or _hidden_result_content(row) or not _has_linked_heading(row)
+        for row in rows
+    ):
+        return None
+    text = _to_text(collection.get_all_children_text()) if hasattr(collection, "get_all_children_text") else ""
+    return {
+        "role": "list", "name": "", "text": text[:120], "selectors": [MAIN_RESULT_LIST_ROOT],
+        "semantic_name": "", "anchor_attributes": {}, "root_selector": MAIN_RESULT_LIST_ROOT,
+        "scope": MAIN_RESULT_LIST_SCOPE,
     }
 
 
@@ -162,7 +269,7 @@ def collect_read_only_extract_candidates(root: Any, limit: int = 20) -> list[dic
     visited = 0
     semantic_nodes: list[tuple[str, str, Any, dict[str, Any], Any]] = []
     tag_counts: dict[str, int] = {}
-    while pending and visited < 5000:
+    while pending and visited < _EXTRACT_NODE_LIMIT:
         node, parent = pending.pop()
         visited += 1
         if getattr(node, "is_visible", None) is False:
@@ -179,6 +286,9 @@ def collect_read_only_extract_candidates(root: Any, limit: int = 20) -> list[dic
         if not isinstance(attributes, dict):
             continue
         semantic_nodes.append((role, tag, node, attributes, parent))
+
+    if (scoped := _main_result_list_candidate(root)) is not None:
+        candidates.append(scoped)
 
     for role, tag, node, attributes, parent in semantic_nodes:
         if len(candidates) >= limit:
@@ -284,6 +394,9 @@ def ground_extract_target(
                 "attributes": dict(item.get("attributes") or {}),
                 "suffix": suffix,
             }
+            if item.get("scope") == MAIN_RESULT_LIST_SCOPE:
+                # The list root reads only direct rows, even if the planner adds ` li`.
+                target.update(scope=MAIN_RESULT_LIST_SCOPE, suffix="")
             matches.append(target)
             break
     return matches[0] if len(matches) == 1 else None
@@ -306,11 +419,20 @@ def resolve_extract_target(
         return None
     name = re.sub(r"\s+", " ", _to_text(target.get("name"))).casefold()
     attributes = target.get("attributes") or {}
+    if "scope" in target:
+        if target["scope"] != MAIN_RESULT_LIST_SCOPE or role != "list" or name or attributes or suffix:
+            return None
+        matches = [
+            item for item in extract_candidates if isinstance(item, dict)
+            and item.get("scope") == MAIN_RESULT_LIST_SCOPE
+            and item.get("role") == "list" and item.get("root_selector") == MAIN_RESULT_LIST_ROOT
+        ]
+        return (MAIN_RESULT_LIST_ROOT, "") if len(matches) == 1 else None
     best_score = 0
     best_root = ""
     tied = False
     for item in _extract_semantic_entries(selector_map, extract_candidates):
-        if _to_text(item.get("role")).casefold() != role:
+        if item.get("scope") or _to_text(item.get("role")).casefold() != role:
             continue
         current_name = re.sub(r"\s+", " ", _to_text(item.get("name"))).casefold()
         if name and (not current_name or (name not in current_name and current_name not in name)):

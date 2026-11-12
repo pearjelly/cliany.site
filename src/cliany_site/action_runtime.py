@@ -1074,3 +1074,4 @@ async def execute_action_steps(
 
 
 execute_semantic_action_steps = execute_action_steps
+execute_scoped_extract_action_steps = execute_action_steps
