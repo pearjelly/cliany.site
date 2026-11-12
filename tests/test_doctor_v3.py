@@ -613,8 +613,8 @@ def test_doctor_llm_live_unavailable_blocks_explore_ready(tmp_home, no_llm, monk
     assert summary["capabilities"]["generate_adapters"]["local_ready"] is True
     assert summary["capabilities"]["generate_adapters"]["live_blockers"] == ["llm_live"]
     assert summary["capabilities"]["generate_adapters"]["next_step"] == (
-        "先运行 cliany-site doctor --llm-live --require-capability generate_adapters --json；"
-        "通过后再运行 cliany-site explore。"
+        "OpenAI 兼容服务暂时不可用（HTTP 502）。请稍后重试；若持续失败，请检查服务地址和账户状态。 "
+        "重新运行实时预检，通过后再运行 cliany-site explore。"
     )
     assert summary["llm_live_preflight"] == {
         "checked": True,
@@ -675,6 +675,8 @@ def test_doctor_required_generate_capability_returns_live_error(tmp_home, no_llm
     assert payload["error"]["details"]["required_capability"] == "generate_adapters"
     assert payload["error"]["details"]["required_capability_blockers"] == ["llm_live"]
     assert payload["error"]["details"]["summary"]["capabilities"]["generate_adapters"]["ready"] is False
+    assert "HTTP 502" in payload["error"]["hint"]
+    assert "通过后再运行 cliany-site explore" in payload["error"]["hint"]
 
 
 def test_doctor_human_live_preflight_explains_connection_failure(tmp_home, no_llm, monkeypatch):
