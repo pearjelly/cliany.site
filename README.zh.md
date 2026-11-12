@@ -42,6 +42,8 @@ cliany-site demo --case-id apache-jira-issues --json
 
 ### 告诉我们结果
 
+从 v0.16.399 起，即使模型请求成功返回，严格预检也会拦截不符合 JSON 对象格式的回复。探索失败时，最终 JSON 可保留脱敏分类，不用查看进度日志也能判断下一步。[模型失败诊断](docs/llm-retry-diagnostics.md)。
+
 从 v0.16.398 起，按名称定位输入框时会在文档初始化后重新核对同分目标。临时重复项消失后才输入；若仍有多个同分目标，则不输入、不提交。探索也会在执行前要求修正连续重复点击同一实测跨页链接的计划。[输入复现证据](docs/user-evidence/2026-11-12-settled-input-target.md) · [导航计划证据](docs/user-evidence/2026-11-12-duplicate-navigation-plan.md)。
 
 从 v0.16.397 起，已识别的 Chrome 网页连接错误返回 `E_PAGE_NOT_READY` 和 `reason=navigation_transport_failed`，与 CDP 不可用区分。回放停止，不发送后续输入。先在普通浏览器确认网页可访问，再手动重试。[证据及边界](docs/user-evidence/2026-11-12-navigation-transport.md)。
@@ -198,7 +200,7 @@ export CLIANY_OPENAI_API_KEY="sk-..."
 
 也支持 `.env` 文件配置，查找顺序：`~/.config/cliany-site/.env` → 所选运行目录的 `.env`（默认 `~/.cliany-site/.env`）→ 项目目录 `.env` → 环境变量。
 
-如果 `explore --json` 返回 `E_LLM_UNAVAILABLE`，表示 LLM provider 返回了可重试的上游故障，例如 `502 Bad Gateway`、限流或服务暂不可用。JSON 信封会包含 `details.retryable`、`details.status_code` 和 `details.phase`；请稍后重试，或切换 `CLIANY_LLM_PROVIDER` / `CLIANY_OPENAI_BASE_URL`。这不代表生成的 adapter 或 AXTree selector map 已损坏。
+如果 `explore --json` 返回 `E_LLM_UNAVAILABLE`，先读 `error.details.retryable`。为 `true` 时可以稍后重试，并检查所选服务的状态；为 `false` 时，先检查请求和服务配置再重试。`status_code` 和 `phase` 提供上下文；如果有 `reason`，可区分连接失败、超时和请求被拒绝，不会回显上游正文。这不代表 adapter 或 AXTree selector map 已损坏。见[模型失败诊断](docs/llm-retry-diagnostics.md)。
 
 OpenAI 兼容客户端使用 120 秒网络操作超时，并关闭 SDK 内部重试。探索仍通过现有外层循环重试，JSON 模式在 stderr 输出尝试与退避事件；doctor 只做一次显式预检。这不是整个流程的 120 秒总时限：响应分块、重试和多个工作流阶段都可能延长耗时，重试也可能产生额外模型费用。验证结果与限制见[集成证据](docs/user-evidence/2026-10-08-request-budget-integration.md)。
 

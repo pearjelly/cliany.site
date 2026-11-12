@@ -11,6 +11,13 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
+## [0.16.399] - 2026-11-13
+
+### Fixed
+
+- Stop strict live `doctor` when the provider responds but its probe reply is not a usable JSON object. Return a fixed format reason and keep local readiness distinct from live readiness, without making another request. [Reproduction](https://github.com/pearjelly/cliany.site/issues/128).
+- Preserve the final model attempt's sanitized `error.details.reason` in CLI, SDK and HTTP exploration results. Callers can distinguish connection failures, timeouts and rejected requests without retaining progress logs. Existing retry behavior and error codes are unchanged. [Diagnostic contract](docs/llm-retry-diagnostics.md).
+
 ## [0.16.398] - 2026-11-12
 
 ### Fixed
@@ -3606,7 +3613,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.398...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.399...HEAD
+[0.16.399]: https://github.com/pearjelly/cliany.site/compare/v0.16.398...v0.16.399
 [0.16.398]: https://github.com/pearjelly/cliany.site/compare/v0.16.397...v0.16.398
 [0.16.397]: https://github.com/pearjelly/cliany.site/compare/v0.16.396...v0.16.397
 [0.16.396]: https://github.com/pearjelly/cliany.site/compare/v0.16.395...v0.16.396

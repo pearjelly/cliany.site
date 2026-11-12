@@ -105,8 +105,9 @@
 
       <main>
         <h1>cliany-site 文档</h1>
-        <p class="intro-meta">v0.16.398 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
-        <p>这是 v0.16.398 的源码文档；正式分发以 GitHub、PyPI 与官网发布收据为准。独立报告仍为 0/2，人工试用固定在已发布 0.16.387。</p>
+        <p class="intro-meta">v0.16.399 · Python ≥ 3.11 · MIT License · <a href="https://github.com/pearjelly/cliany.site">GitHub</a> · <a href="https://pypi.org/project/cliany-site/">PyPI</a></p>
+        <p>这是 v0.16.399 的源码文档；正式分发以 GitHub、PyPI 与官网发布收据为准。独立报告仍为 0/2，人工试用固定在已发布 0.16.387。</p>
+        <p>v0.16.399 在严格模型预检中拒绝不可解析或不是 JSON 对象的回复。CLI、SDK 和 HTTP 探索失败时，最终结果可保留脱敏的 <code>error.details.reason</code>。不增加请求或重试；预检通过不代表工作流通过。<a href="https://github.com/pearjelly/cliany.site/blob/master/docs/llm-retry-diagnostics.md">模型失败诊断</a>。</p>
         <p>v0.16.398 按名称输入时在文档初始化后重新观察可访问性树，再判定同分目标。临时重复项消失后才输入；仍有歧义则报 <code>target_ambiguous</code>，不输入、不提交。保留原 10 秒只读观察预算、显式 ref 和验证页检查。<a href="https://github.com/pearjelly/cliany.site/blob/master/docs/user-evidence/2026-11-12-settled-input-target.md">浏览器复现证据</a>。</p>
         <p>探索在执行和录制前拒绝同一轮连续点击同一个实测跨页链接的计划，沿用原有一次修正机会，要求点击一次后重新观察。不会改写旧命令或为重复点击增加重试。<a href="https://github.com/pearjelly/cliany.site/blob/master/docs/user-evidence/2026-11-12-duplicate-navigation-plan.md">候选失败及复测</a>。</p>
         <p>v0.16.397 把已识别的 Chrome 网页连接失败与 CDP 不可用区分开。导航、探索和 SDK 回放返回 <code>E_PAGE_NOT_READY</code>，详情含 <code>reason=navigation_transport_failed</code> 与固定错误标记；对应 HTTP 失败为 503。回放在后续输入前停止，不自动重试，也不增加超时。请先在普通浏览器确认页面可访问。<a href="https://github.com/pearjelly/cliany.site/blob/master/docs/user-evidence/2026-11-12-navigation-transport.md">复现证据及边界</a>。</p>
@@ -145,7 +146,7 @@ export CLIANY_ANTHROPIC_API_KEY="sk-ant-..."
 export CLIANY_LLM_PROVIDER=openai
 export CLIANY_OPENAI_API_KEY="sk-..."</code></pre>
         <p>也可以写入 <code>.env</code> 文件，查找顺序：<code>~/.config/cliany-site/.env</code> → 所选运行目录的 <code>.env</code>（默认 <code>~/.cliany-site/.env</code>）→ 项目目录 <code>.env</code> → 系统环境变量。</p>
-        <p><code>explore --json</code> 遇到 LLM 网关、限流或服务暂不可用时会返回 <code>E_LLM_UNAVAILABLE</code>，并在 <code>details.retryable</code>、<code>details.status_code</code> 和 <code>details.phase</code> 中给出可重试上下文；错误消息会清洗原始 HTML 网关页。</p>
+        <p><code>explore --json</code> 返回 <code>E_LLM_UNAVAILABLE</code> 时，先看 <code>error.details.retryable</code>：为 <code>true</code> 可稍后重试，为 <code>false</code> 则先检查请求与服务配置。<code>status_code</code> 和 <code>phase</code> 提供上下文；如果有 <code>reason</code>，可区分连接失败、超时和请求被拒绝，不回显上游正文。</p>
         <p>OpenAI 兼容客户端使用 120 秒网络操作超时，并关闭 SDK 内部重试。探索保留可见的外层尝试与退避；doctor 只做一次显式预检。这不是整个流程的总时限，响应分块和重试可延长耗时，重试也可能产生额外模型费用。</p>
 
         <h3>模型失败与重试诊断</h3>

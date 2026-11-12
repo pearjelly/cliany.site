@@ -669,19 +669,26 @@ async def _run_llm_live_check(has_llm: bool, provider: str) -> dict[str, Any]:
             },
         }
 
-    from cliany_site.errors import LlmUnavailableError
-    from cliany_site.explorer.engine import _extract_status_code, _get_llm, _invoke_llm_with_retry
+    from cliany_site.errors import LlmResponseFormatError, LlmUnavailableError
+    from cliany_site.explorer.engine import (
+        _extract_status_code,
+        _get_llm,
+        _invoke_llm_with_retry,
+        _parse_llm_response,
+        _to_text,
+    )
 
     t0 = time.monotonic()
     try:
         llm = _get_llm()
-        await _invoke_llm_with_retry(
+        response = await _invoke_llm_with_retry(
             llm,
             'Reply with a JSON object only (valid json): {"status":"ok"}.',
             max_attempts=1,
             base_delay=0,
             backoff_factor=1,
         )
+        _parse_llm_response(_to_text(getattr(response, "content", None)))
         duration_ms = int((time.monotonic() - t0) * 1000)
         return {
             "name": "llm_live",
@@ -690,6 +697,22 @@ async def _run_llm_live_check(has_llm: bool, provider: str) -> dict[str, Any]:
             "details": {
                 "provider": provider,
                 "retryable": False,
+                "phase": "llm_preflight",
+            },
+        }
+    except LlmResponseFormatError as exc:
+        return {
+            "name": "llm_live",
+            "status": "warning",
+            "duration_ms": int((time.monotonic() - t0) * 1000),
+            "action": "模型服务已连接，但回复无法用于探索；请检查模型和 JSON 输出配置后再试。",
+            "details": {
+                "provider": provider,
+                "error_code": ErrorCode.E_LLM_UNAVAILABLE,
+                "message": "LLM 预检回复不符合 JSON 对象格式",
+                "retryable": False,
+                "status_code": None,
+                "reason": exc.reason,
                 "phase": "llm_preflight",
             },
         }

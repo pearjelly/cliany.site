@@ -3,9 +3,9 @@
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-11-12
 
-- **基线版本：** v0.16.398 源码，正式发布以实际收据为准。
-- **已核对的上一正式版：** v0.16.397（[三端发布与正式包验收](https://github.com/pearjelly/cliany.site/pull/125#issuecomment-6813013687)）。
-- **较早正式版：** v0.16.396（[三端发布与正式包验收](https://github.com/pearjelly/cliany.site/pull/121#issuecomment-6811949279)）。
+- **基线版本：** v0.16.399 候选源码，尚未发布。
+- **已核对的正式版：** v0.16.398（[三端发布与正式包验收](https://github.com/pearjelly/cliany.site/pull/126#issuecomment-6815068430)）。
+- **较早正式版：** [v0.16.397](https://github.com/pearjelly/cliany.site/pull/125#issuecomment-6813013687)、[v0.16.396](https://github.com/pearjelly/cliany.site/pull/121#issuecomment-6811949279)。
 - **10月17日的上一公开版本：** v0.16.390（三端分发已验证；正式包新生成验收仍失败）
 - **目标周期：** 滚动维护（2026-09-08 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
@@ -17,11 +17,11 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 ## 11月12日当前优先级
 
-正式397已完成三端审计，实际 PyPI 包通过3/3次真实生成及9/9次返回行核对。该版区分网页连接中断与浏览器不可用，并停止后续输入。[Issue124 的原始失败](user-evidence/2026-11-12-navigation-transport.md)继续保留，连接中断和文档未就绪的根因尚未确认。
+正式 0.16.398 修复初始化期临时同名输入框造成的过早拒绝，并在执行前拦截同一轮连续点击同一个实测跨页链接。通过的候选包、最终 master 和实际 PyPI 安装包分别完成 3/3 个真实工作流、9/9 次返回行核对。[首个候选的重复点击失败](user-evidence/2026-11-12-duplicate-navigation-plan.md)与后续上游失败原样保留。修复不代表已查明 [Issue #124](https://github.com/pearjelly/cliany.site/issues/124) 的间歇公网失败。
 
-[四次正式包观测回放](user-evidence/2026-11-12-settled-input-target.md)没有复现历史文档失败；另一个独立 Chromium 测试复现了初始化期临时同名输入框造成的过早拒绝。未发布修复会在初始化后重新观察 AX，仍无法区分的同名目标不执行输入。独立试用固定0.16.387、0/2人，A/B、首次失败、帮助和重试分开，维护者复测不计入；不晋级案例，不为配额发版。
+[v0.16.399 候选](releases/v0.16.399-draft.md)一起修复两个首用问题：[PR #129](https://github.com/pearjelly/cliany.site/pull/129)在严格预检拦截格式错误的模型回复，[PR #127](https://github.com/pearjelly/cliany.site/pull/127)在最终 JSON 保留最后一次请求的脱敏失败分类。两份独立验证不替代组合候选及最终 master 的完整门禁。
 
-首个 398 实际候选包保留[新的真实规划失败](user-evidence/2026-11-12-duplicate-navigation-plan.md)：模型同一轮连续点击同一个实测跨页链接，完整工作流仅 2/3、计划回放仅 6/9 通过。修订候选在执行前拒绝该计划，沿用既有修正预算；须重新通过完整门禁，不覆盖首轮失败。
+独立试用固定 0.16.387，有效反馈 0/2 人。A/B、首次失败、帮助和重试分开，维护者复测不计入。上海时间 11 月 12 日已正式发布三版，当天不再发版，也不据此晋级案例。
 
 ## 10月28日断开清理发版前历史
 

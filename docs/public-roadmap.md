@@ -1,9 +1,9 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-11-12
-- **Current baseline:** v0.16.398 source. Source is not proof of publication.
-- **Verified prior publication:** v0.16.397 ([publication and actual PyPI acceptance](https://github.com/pearjelly/cliany.site/pull/125#issuecomment-6813013687)).
-- **Earlier publication:** v0.16.396 ([publication and official-package receipt](https://github.com/pearjelly/cliany.site/pull/121#issuecomment-6811949279)).
+- **Current baseline:** v0.16.399 candidate source; not published.
+- **Verified publication:** v0.16.398 ([three-channel and actual PyPI acceptance](https://github.com/pearjelly/cliany.site/pull/126#issuecomment-6815068430)).
+- **Earlier publications:** [v0.16.397](https://github.com/pearjelly/cliany.site/pull/125#issuecomment-6813013687) and [v0.16.396](https://github.com/pearjelly/cliany.site/pull/121#issuecomment-6811949279).
 - **Previously published baseline, October 17:** v0.16.390 ([distribution verified; fresh-generation acceptance failed](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
@@ -12,11 +12,11 @@ cliany-site turns real browser workflows into reusable CLI commands. The Q3 road
 
 ## November 12 Current Priorities
 
-Published397 distinguishes page transport failure from unavailable Chrome and stops replay before further input. Exact master, the actual PyPI package and all three distribution channels passed. The [navigation evidence](user-evidence/2026-11-12-navigation-transport.md) preserves the earlier failed cohort, and [Issue124](https://github.com/pearjelly/cliany.site/issues/124) remains open for the intermittent connection and document-readiness causes.
+Published v0.16.398 rechecks temporarily duplicate named inputs after document initialization and refuses consecutive clicks on the same observed cross-page link before dispatch. The accepted candidate, final master and actual PyPI install each passed 3/3 real workflows and 9/9 returned-row checks separately. The [original duplicate-click failure](user-evidence/2026-11-12-duplicate-navigation-plan.md) and later provider failures remain recorded. [Issue #124](https://github.com/pearjelly/cliany.site/issues/124) remains open: the controlled input correction does not establish the cause of the intermittent public failures.
 
-A [new bounded observation](user-evidence/2026-11-12-settled-input-target.md) on the published package did not reproduce the historical document failure in four read-only replays. A separate native fixture reproduced premature ambiguity when an initializer removes a duplicate input. The unpublished correction judges ties on a fresh initialized AX snapshot; persistent ties remain non-mutating failures. This is not a diagnosis of Issue124. Independent first use is still 0/2 on fixed 0.16.387, with A/B, first attempts, help and retries separate. No case promotion or release to fill a quota.
+The [v0.16.399 candidate](releases/v0.16.399-draft.md) combines two first-use fixes. [PR #129](https://github.com/pearjelly/cliany.site/pull/129) blocks malformed model replies during strict preflight; [PR #127](https://github.com/pearjelly/cliany.site/pull/127) retains the final attempt's sanitized reason for JSON-only callers. The two draft receipts are separate evidence. Revalidate the exact combined candidate and final master before publishing.
 
-The first 398 local-wheel study retained [a distinct real planning failure](user-evidence/2026-11-12-duplicate-navigation-plan.md): the model emitted two consecutive clicks on one observed cross-page link. Only 2/3 workflows and 6/9 planned replays passed. The revised candidate rejects that plan before dispatch and uses the existing repair budget. It requires its own complete gates; the failed study does not become a pass.
+Independent first use is still 0/2 on fixed [0.16.387](first-use-trial.md). Keep A/B, first attempts, help and retries separate, and exclude maintainer tests. November 12 reached three formal Shanghai publications; do not publish another today or promote a case on these results.
 
 ## October 28 Disconnect Prepublication History
 
