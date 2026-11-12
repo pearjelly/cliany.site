@@ -11,6 +11,10 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
+### Fixed
+
+- Preserve the final model attempt's sanitized `error.details.reason` in CLI, SDK and HTTP exploration results. Callers can distinguish connection failures, timeouts and rejected requests without retaining progress logs. Existing retry behavior and error codes are unchanged. [Diagnostic contract](docs/llm-retry-diagnostics.md).
+
 ## [0.16.398] - 2026-11-12
 
 ### Fixed
