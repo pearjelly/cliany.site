@@ -318,6 +318,15 @@ def test_provider_context_uses_doctor_checks_without_leaking_endpoint():
     assert benchmark._safe_provider_context({}) == {"provider": "unknown", "endpoint_type": "unknown"}
 
 
+@pytest.mark.parametrize(("configured", "endpoint_type"), [(True, "custom"), (False, "default")])
+def test_provider_context_handles_redacted_endpoint_in_failed_preflight(configured, endpoint_type):
+    payload = {"data": None, "error": {"details": {"checks": [
+        {"name": "llm_provider", "details": {"provider": "openai"}},
+        {"name": "openai_base_url", "details": {"configured": configured}},
+    ]}}}
+    assert benchmark._safe_provider_context(payload) == {"provider": "openai", "endpoint_type": endpoint_type}
+
+
 @pytest.mark.asyncio
 async def test_timeout_keeps_only_safe_inflight_timing(tmp_home, monkeypatch):
     class HangingProcess:
