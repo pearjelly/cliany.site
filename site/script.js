@@ -239,6 +239,10 @@ const I18N = {
     zh: 'v0.16.400 源码核对明确零匹配，先检查提取行再限制返回条数。安装前检查兼容性；按名称输入时区分页面未就绪和缺少输入框。Doctor 不回显配置地址，并提供排查建议。crates.io 分发包仍是候选。',
     en: 'The v0.16.400 source verifies explicit zero matches and checks rows before limiting output. Install checks catch incompatible adapters before writing. Named input distinguishes unfinished pages from missing fields. Doctor keeps the configured address private and shows recovery steps. The crates.io archive remains a candidate.'
   },
+  'qs.explorationObservation': {
+    zh: '探索会在已观察到表单跳转后重新确认晚到的结果列表。找不到列表不会被当成零匹配。跨页后的下一次点击需要观察新页面，不能沿用旧页面的目标。',
+    en: 'Exploration can recheck a late result list after a form changes the page. A missing list is not a zero match. After following a link to a different page, the next click needs a fresh page observation.'
+  },
   'qs.settledInputTarget': {
     zh: 'v0.16.398 在初始化后重新核对同分的输入目标，仍有歧义则拒绝输入。探索会在执行前拦截对同一实测跨页链接的连续重复点击。',
     en: 'v0.16.398 rechecks equally good input targets after initialization and still refuses a persistent tie. Exploration rejects consecutive clicks on the same observed cross-page link before dispatch.'
