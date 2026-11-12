@@ -36,4 +36,4 @@ def test_semantic_readiness_changelog_and_site_are_versioned():
     script = (ROOT / "site/script.js").read_text()
     assert 'data-i18n="qs.semanticReadiness"' in index
     assert "'qs.semanticReadiness':" in script
-    assert "script.js?v=20261112b" in index
+    assert "script.js?v=20261113a" in index

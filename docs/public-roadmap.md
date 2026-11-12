@@ -1,9 +1,9 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-11-12
-- **Current baseline:** v0.16.398 ([verified publication and actual PyPI acceptance](https://github.com/pearjelly/cliany.site/pull/126#issuecomment-6815068430)).
-- **Verified prior publication:** v0.16.397 ([publication and actual PyPI acceptance](https://github.com/pearjelly/cliany.site/pull/125#issuecomment-6813013687)).
-- **Earlier publication:** v0.16.396 ([publication and official-package receipt](https://github.com/pearjelly/cliany.site/pull/121#issuecomment-6811949279)).
+- **Current baseline:** v0.16.399 candidate source; not published.
+- **Verified publication:** v0.16.398 ([three-channel and actual PyPI acceptance](https://github.com/pearjelly/cliany.site/pull/126#issuecomment-6815068430)).
+- **Earlier publications:** [v0.16.397](https://github.com/pearjelly/cliany.site/pull/125#issuecomment-6813013687) and [v0.16.396](https://github.com/pearjelly/cliany.site/pull/121#issuecomment-6811949279).
 - **Previously published baseline, October 17:** v0.16.390 ([distribution verified; fresh-generation acceptance failed](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
@@ -14,7 +14,7 @@ cliany-site turns real browser workflows into reusable CLI commands. The Q3 road
 
 Published v0.16.398 rechecks temporarily duplicate named inputs after document initialization and refuses consecutive clicks on the same observed cross-page link before dispatch. The accepted candidate, final master and actual PyPI install each passed 3/3 real workflows and 9/9 returned-row checks separately. The [original duplicate-click failure](user-evidence/2026-11-12-duplicate-navigation-plan.md) and later provider failures remain recorded. [Issue #124](https://github.com/pearjelly/cliany.site/issues/124) remains open: the controlled input correction does not establish the cause of the intermittent public failures.
 
-[Draft PR #127](https://github.com/pearjelly/cliany.site/pull/127) addresses a separate first-use blocker: JSON-only callers currently lose the model failure category when they do not retain progress logs. Keep the optional reason consistent across CLI, SDK and HTTP without increasing retries or copying provider text. Test the actual installed draft on the published baseline before treating it as a release candidate.
+The [v0.16.399 candidate](releases/v0.16.399-draft.md) combines two first-use fixes. [PR #129](https://github.com/pearjelly/cliany.site/pull/129) blocks malformed model replies during strict preflight; [PR #127](https://github.com/pearjelly/cliany.site/pull/127) retains the final attempt's sanitized reason for JSON-only callers. The two draft receipts are separate evidence. Revalidate the exact combined candidate and final master before publishing.
 
 Independent first use is still 0/2 on fixed [0.16.387](first-use-trial.md). Keep A/B, first attempts, help and retries separate, and exclude maintainer tests. November 12 reached three formal Shanghai publications; do not publish another today or promote a case on these results.
 

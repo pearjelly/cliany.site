@@ -3,9 +3,9 @@
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-11-12
 
-- **基线版本：** v0.16.398（[三端发布与正式包验收](https://github.com/pearjelly/cliany.site/pull/126#issuecomment-6815068430)）。
-- **已核对的上一正式版：** v0.16.397（[三端发布与正式包验收](https://github.com/pearjelly/cliany.site/pull/125#issuecomment-6813013687)）。
-- **较早正式版：** v0.16.396（[三端发布与正式包验收](https://github.com/pearjelly/cliany.site/pull/121#issuecomment-6811949279)）。
+- **基线版本：** v0.16.399 候选源码，尚未发布。
+- **已核对的正式版：** v0.16.398（[三端发布与正式包验收](https://github.com/pearjelly/cliany.site/pull/126#issuecomment-6815068430)）。
+- **较早正式版：** [v0.16.397](https://github.com/pearjelly/cliany.site/pull/125#issuecomment-6813013687)、[v0.16.396](https://github.com/pearjelly/cliany.site/pull/121#issuecomment-6811949279)。
 - **10月17日的上一公开版本：** v0.16.390（三端分发已验证；正式包新生成验收仍失败）
 - **目标周期：** 滚动维护（2026-09-08 起）
 - **公开视图：** [public-roadmap.md](public-roadmap.md)
@@ -19,7 +19,7 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 
 正式 0.16.398 修复初始化期临时同名输入框造成的过早拒绝，并在执行前拦截同一轮连续点击同一个实测跨页链接。通过的候选包、最终 master 和实际 PyPI 安装包分别完成 3/3 个真实工作流、9/9 次返回行核对。[首个候选的重复点击失败](user-evidence/2026-11-12-duplicate-navigation-plan.md)与后续上游失败原样保留。修复不代表已查明 [Issue #124](https://github.com/pearjelly/cliany.site/issues/124) 的间歇公网失败。
 
-[草稿 PR #127](https://github.com/pearjelly/cliany.site/pull/127) 处理另一个首用阻塞：只收集最终 JSON 时，用户看不到模型请求失败的分类。让 CLI、SDK 和 HTTP 保留同一脱敏分类，不增加重试，不复制上游正文；在新的正式基线上复核实际安装包，再决定候选发布。
+[v0.16.399 候选](releases/v0.16.399-draft.md)一起修复两个首用问题：[PR #129](https://github.com/pearjelly/cliany.site/pull/129)在严格预检拦截格式错误的模型回复，[PR #127](https://github.com/pearjelly/cliany.site/pull/127)在最终 JSON 保留最后一次请求的脱敏失败分类。两份独立验证不替代组合候选及最终 master 的完整门禁。
 
 独立试用固定 0.16.387，有效反馈 0/2 人。A/B、首次失败、帮助和重试分开，维护者复测不计入。上海时间 11 月 12 日已正式发布三版，当天不再发版，也不据此晋级案例。
 
