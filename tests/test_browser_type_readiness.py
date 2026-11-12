@@ -134,6 +134,23 @@ async def test_missing_named_type_stays_bounded_without_dispatch(monkeypatch, ty
 
 
 @pytest.mark.asyncio
+async def test_missing_named_type_distinguishes_pending_document(monkeypatch, typing_context):
+    cdp, session = typing_context
+    capture = AsyncMock(return_value={"selector_map": {}})
+    monkeypatch.setattr("cliany_site.browser.axtree.capture_axtree", capture)
+    session.get_current_page.return_value.evaluate.return_value = {"ready": False}
+
+    result = await _run_type(cdp, None, "Search", "Gamma", True, True, role="textbox")
+
+    assert result["ok"] is False and result["error"]["code"] == "E_PAGE_NOT_READY"
+    assert result["error"]["details"]["reason"] == "document_not_ready"
+    assert capture.await_count >= 2
+    session.get_element_by_index.assert_not_awaited()
+    session.event_bus.dispatch.assert_not_called()
+    cdp.disconnect.assert_awaited_once()
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("late_success", [False, True])
 async def test_type_probe_cannot_dispatch_after_its_deadline(monkeypatch, typing_context, late_success):
     cdp, session = typing_context

@@ -135,24 +135,25 @@ async def _run_type(
                             elif results:
                                 found_ref = results[0]["ref"]
                                 element = resolve_ref(selector_map, found_ref)
+                        if ref is None and text is not None:
+                            # An initializer may create the target, so an empty tree is not enough.
+                            initialization_pending = True
+                            initialized = await _document_initialized(browser_session)
+                            if time.monotonic() >= deadline:
+                                element = None
+                                break
+                            initialization_pending = not initialized
+                            if not initialized:
+                                needs_ready_snapshot = True
+                                element = None
+                                await asyncio.sleep(get_config().resolve_retry_delay)
+                                continue
                         if element is not None or ambiguous:
-                            if ref is None:
-                                initialization_pending = True
-                                initialized = await _document_initialized(browser_session)
-                                if time.monotonic() >= deadline:
-                                    element = None
-                                    break
-                                initialization_pending = not initialized
-                                if not initialized:
-                                    needs_ready_snapshot = True
-                                    element = None
-                                    await asyncio.sleep(get_config().resolve_retry_delay)
-                                    continue
-                                if needs_ready_snapshot:
-                                    # Initializers can replace controls; resolve again after DOMContentLoaded.
-                                    needs_ready_snapshot = False
-                                    element = None
-                                    continue
+                            if needs_ready_snapshot:
+                                # Initializers can replace controls; resolve again after DOMContentLoaded.
+                                needs_ready_snapshot = False
+                                element = None
+                                continue
                             if ambiguous:
                                 return err(
                                     command="browser type", code=ErrorCode.E_SELECTOR_NOT_FOUND,
