@@ -65,7 +65,10 @@ def initializing_search():
         def do_GET(self):
             path = self.path.split("?", 1)[0]
             content_type = "text/html; charset=utf-8"
-            if path == "/search.html":
+            if path == "/search.html" and state["phase"] in ("missing_pending", "missing_ready"):
+                script = b'<script defer src="/init.js"></script>' if state["phase"] == "missing_pending" else b""
+                body = b"<!doctype html><html><head>" + script + b"</head><body><h1>Search</h1></body></html>"
+            elif path == "/search.html":
                 body = form.replace("__PHASE__", json.dumps(state["phase"]))
                 body = body.replace("__QUERY_LENGTH__", str(len(QUERY)))
                 preview = ('<input id="preview-input" aria-label="Search" value="preview">'
@@ -77,7 +80,7 @@ def initializing_search():
                 if state["phase"] == "defer":
                     typed.wait(2)
                     time.sleep(0.12)
-                elif state["phase"] in ("temporary_pair", "persistent_pair"):
+                elif state["phase"] in ("temporary_pair", "persistent_pair", "missing_pending"):
                     release_deferred.wait(12)
                 content_type = "application/javascript"
                 body = b"window.deferredScriptFinished = true;"
@@ -248,6 +251,48 @@ async def test_named_type_checks_ambiguity_on_the_initialized_document(
                 assert result["ok"] is False and result["error"]["details"]["reason"] == "target_ambiguous"
                 assert observed["field_values"] == ["preview", ""]
                 assert observed["submitted"] is None and observed["submits"] is None
+        finally:
+            release_deferred.set()
+            await cdp.disconnect()
+            await browser.close()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("phase", "code", "reason"),
+    [("missing_pending", "E_PAGE_NOT_READY", "document_not_ready"),
+     ("missing_ready", "E_SELECTOR_NOT_FOUND", None)],
+)
+async def test_missing_named_input_distinguishes_unfinished_from_initialized_document(
+    tmp_home, clean_env, no_llm, monkeypatch, initializing_search, unused_tcp_port, phase, code, reason,
+):
+    for key, value in BROWSER_HOME.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.setenv("CLIANY_RUNTIME_HOME", str(tmp_home / "runtime"))
+    monkeypatch.setenv("CLIANY_QA_OFFLINE", "1")
+    monkeypatch.setattr("cliany_site.commands.browser.type_cmd._TYPE_TARGET_TIMEOUT_SECONDS", 2.5)
+    url, state, release_deferred = initializing_search
+    state["phase"] = phase
+    cdp = CDPConnection(cdp_url=f"ws://127.0.0.1:{unused_tcp_port}")
+    async with playwright_api.async_playwright() as playwright:
+        browser = await playwright.chromium.launch(
+            headless=True, env={**os.environ, **BROWSER_HOME}, args=[f"--remote-debugging-port={unused_tcp_port}"]
+        )
+        try:
+            page = await browser.new_page()
+            await page.goto(url + "search.html", wait_until="commit")
+            await page.get_by_role("heading", name="Search").wait_for()
+            initialized = "performance.getEntriesByType('navigation')[0].domContentLoadedEventEnd > 0"
+            if phase == "missing_ready":
+                await page.wait_for_function(initialized)
+            else:
+                assert not await page.evaluate(initialized)
+            result = await _run_type(cdp, None, "Search", QUERY, True, True, role="textbox")
+            assert await page.evaluate(initialized) is (phase == "missing_ready")
+            assert await page.get_by_role("textbox", name="Search", exact=True).count() == 0
+            assert result["ok"] is False and result["error"]["code"] == code, result
+            assert (result["error"]["details"] or {}).get("reason") == reason
         finally:
             release_deferred.set()
             await cdp.disconnect()
