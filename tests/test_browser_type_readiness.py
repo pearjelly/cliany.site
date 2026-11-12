@@ -208,9 +208,29 @@ async def test_missing_document_is_not_ready(typing_context):
 async def test_tied_named_type_never_mutates_either_field(monkeypatch, typing_context):
     cdp, session = typing_context
     tree = {"selector_map": {**TREE["selector_map"], "3": {"ref": "3", "role": "textbox", "name": "Search"}}}
-    monkeypatch.setattr("cliany_site.browser.axtree.capture_axtree", AsyncMock(return_value=tree))
+    capture = AsyncMock(return_value=tree)
+    monkeypatch.setattr("cliany_site.browser.axtree.capture_axtree", capture)
     result = await _run_type(cdp, None, "Search", "Gamma", False, True, role="textbox")
     assert result["ok"] is False and result["error"]["code"] == "E_SELECTOR_NOT_FOUND"
+    assert result["error"]["details"]["reason"] == "target_ambiguous"
+    assert capture.await_count == 2
+    session.get_element_by_index.assert_not_awaited()
+    session.event_bus.dispatch.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_tied_named_type_with_pending_document_keeps_the_readiness_budget(monkeypatch, typing_context):
+    cdp, session = typing_context
+    tree = {"selector_map": {**TREE["selector_map"], "3": {"ref": "3", "role": "textbox", "name": "Search"}}}
+    capture = AsyncMock(return_value=tree)
+    monkeypatch.setattr("cliany_site.browser.axtree.capture_axtree", capture)
+    session.get_current_page.return_value.evaluate.return_value = {"ready": False}
+
+    result = await _run_type(cdp, None, "Search", "Gamma", False, True, role="textbox")
+
+    assert result["ok"] is False and result["error"]["code"] == "E_PAGE_NOT_READY"
+    assert result["error"]["details"]["reason"] == "document_not_ready"
+    assert capture.await_count >= 2
     session.get_element_by_index.assert_not_awaited()
     session.event_bus.dispatch.assert_not_called()
 

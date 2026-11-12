@@ -14,6 +14,8 @@ from cliany_site.browser.axtree import capture_axtree
 from cliany_site.browser.cdp import CDPConnection
 from cliany_site.browser.selector import ground_extract_target
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
+from cliany_site.commands.browser._common import fuzzy_find_by_text
+from cliany_site.commands.browser.type_cmd import _run_type
 from cliany_site.explorer.models import ActionStep, CommandSuggestion, ExploreResult, PageInfo
 
 playwright_api = pytest.importorskip("playwright.async_api")
@@ -26,8 +28,9 @@ def initializing_search():
     state = {"phase": "ready"}
     typed = Event()
     release_image = Event()
+    release_deferred = Event()
     form = """<!doctype html><html><body data-phase=__PHASE__>
-    <form onsubmit="submitSearch(event)"><input name="q" aria-label="Search"><button>Search</button></form>
+    __PREVIEW__<form onsubmit="submitSearch(event)"><input name="q" aria-label="Search"><button>Search</button></form>
     <section><h2 id="status">Loading</h2><ul id="results" aria-label="Package results"><li>Preview</li></ul></section>
     <script>
     const field = document.querySelector('input[name="q"]'); let reported = false; let pending = false;
@@ -49,6 +52,7 @@ def initializing_search():
       publish();
     }
     document.addEventListener('DOMContentLoaded', () => {
+      if (document.body.dataset.phase === 'temporary_pair') document.getElementById('preview-input').remove();
       document.body.dataset.resetValue = field.value;
       field.value = new URLSearchParams(location.search).get('q') || '';
       document.body.dataset.initialized = 'true';
@@ -64,12 +68,17 @@ def initializing_search():
             if path == "/search.html":
                 body = form.replace("__PHASE__", json.dumps(state["phase"]))
                 body = body.replace("__QUERY_LENGTH__", str(len(QUERY)))
+                preview = ('<input id="preview-input" aria-label="Search" value="preview">'
+                           if state["phase"] in ("temporary_pair", "persistent_pair") else "")
+                body = body.replace("__PREVIEW__", preview)
                 body = body.replace("__IMAGE__", '<img src="/slow.png" alt="Slow image">'
                                     if state["phase"] == "image" else "").encode()
             elif path == "/init.js":
                 if state["phase"] == "defer":
                     typed.wait(2)
                     time.sleep(0.12)
+                elif state["phase"] in ("temporary_pair", "persistent_pair"):
+                    release_deferred.wait(12)
                 content_type = "application/javascript"
                 body = b"window.deferredScriptFinished = true;"
             elif path == "/typed":
@@ -95,10 +104,11 @@ def initializing_search():
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
-        yield f"http://127.0.0.1:{server.server_address[1]}/", state
+        yield f"http://127.0.0.1:{server.server_address[1]}/", state, release_deferred
     finally:
         typed.set()
         release_image.set()
+        release_deferred.set()
         server.shutdown()
         server.server_close()
         thread.join()
@@ -115,7 +125,7 @@ async def test_generated_query_survives_document_initialization_without_waiting_
     monkeypatch.setenv("CLIANY_RUNTIME_HOME", str(tmp_home / "runtime"))
     monkeypatch.setenv("CLIANY_QA_OFFLINE", "1")
     monkeypatch.setenv("CLIANY_NO_AGENT_MD", "1")
-    url, state = initializing_search
+    url, state, _release_deferred = initializing_search
     domain = f"127.0.0.1_{url.split(':')[-1].strip('/')}"
     cdp_url = f"ws://127.0.0.1:{unused_tcp_port}"
     cdp = CDPConnection(cdp_url=cdp_url)
@@ -181,5 +191,64 @@ async def test_generated_query_survives_document_initialization_without_waiting_
             finally:
                 await observer.close()
         finally:
+            await cdp.disconnect()
+            await browser.close()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
+@pytest.mark.parametrize("phase", ["temporary_pair", "persistent_pair"])
+async def test_named_type_checks_ambiguity_on_the_initialized_document(
+    tmp_home, clean_env, no_llm, monkeypatch, initializing_search, unused_tcp_port, phase,
+):
+    for key, value in BROWSER_HOME.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.setenv("CLIANY_RUNTIME_HOME", str(tmp_home / "runtime"))
+    monkeypatch.setenv("CLIANY_QA_OFFLINE", "1")
+    url, state, release_deferred = initializing_search
+    state["phase"] = phase
+    cdp = CDPConnection(cdp_url=f"http://127.0.0.1:{unused_tcp_port}")
+    async with playwright_api.async_playwright() as playwright:
+        browser = await playwright.chromium.launch(
+            headless=True, env={**os.environ, **BROWSER_HOME}, args=[f"--remote-debugging-port={unused_tcp_port}"]
+        )
+        try:
+            page = await browser.new_page()
+            await page.goto(url + "search.html", wait_until="commit")
+            fields = page.get_by_role("textbox", name="Search", exact=True)
+            await fields.nth(1).wait_for()
+            observed_counts = []
+
+            async def capture(session):
+                tree = await capture_axtree(session)
+                count = len(fuzzy_find_by_text(tree["selector_map"], "Search", role="textbox"))
+                if not observed_counts:
+                    assert count == 2
+                    assert not await page.locator("body").get_attribute("data-initialized")
+                    release_deferred.set()
+                observed_counts.append(count)
+                return tree
+
+            monkeypatch.setattr("cliany_site.browser.axtree.capture_axtree", capture)
+            result = await _run_type(cdp, None, "Search", QUERY, True, True, role="textbox")
+            await page.wait_for_load_state("domcontentloaded")
+            observed = {
+                "target_counts": observed_counts,
+                "field_values": [await field.input_value() for field in await fields.all()],
+                "submitted": await page.locator("body").get_attribute("data-submitted"),
+                "submits": await page.locator("body").get_attribute("data-submits"),
+            }
+            (tmp_home / "named-type-result.json").write_text(json.dumps({"result": result, "observed": observed}))
+            if phase == "temporary_pair":
+                assert result["ok"] is True, result
+                assert observed_counts[-1] == 1
+                assert observed["field_values"] == [QUERY]
+                assert observed["submitted"] == QUERY and observed["submits"] == "1"
+            else:
+                assert result["ok"] is False and result["error"]["details"]["reason"] == "target_ambiguous"
+                assert observed["field_values"] == ["preview", ""]
+                assert observed["submitted"] is None and observed["submits"] is None
+        finally:
+            release_deferred.set()
             await cdp.disconnect()
             await browser.close()

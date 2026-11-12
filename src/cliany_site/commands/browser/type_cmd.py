@@ -124,22 +124,18 @@ async def _run_type(
                         if challenge is not None:
                             return challenge
                         selector_map = tree.get("selector_map", {})
+                        ambiguous = False
                         if ref is not None:
                             element = resolve_ref(selector_map, ref)
                             found_ref = ref
                         elif text is not None:
                             results = fuzzy_find_by_text(selector_map, text, limit=2, role=role)
                             if len(results) > 1 and results[0]["score"] == results[1]["score"]:
-                                return err(
-                                    command="browser type", code=ErrorCode.E_SELECTOR_NOT_FOUND,
-                                    message="多个元素具有相同语义匹配分数，未执行输入",
-                                    hint="请提供可唯一定位的角色与名称，或重新运行 browser find",
-                                    details={"reason": "target_ambiguous"}, source="builtin",
-                                )
-                            if results:
+                                ambiguous = True
+                            elif results:
                                 found_ref = results[0]["ref"]
                                 element = resolve_ref(selector_map, found_ref)
-                        if element is not None:
+                        if element is not None or ambiguous:
                             if ref is None:
                                 initialization_pending = True
                                 initialized = await _document_initialized(browser_session)
@@ -157,6 +153,13 @@ async def _run_type(
                                     needs_ready_snapshot = False
                                     element = None
                                     continue
+                            if ambiguous:
+                                return err(
+                                    command="browser type", code=ErrorCode.E_SELECTOR_NOT_FOUND,
+                                    message="多个元素具有相同语义匹配分数，未执行输入",
+                                    hint="请提供可唯一定位的角色与名称，或重新运行 browser find",
+                                    details={"reason": "target_ambiguous"}, source="builtin",
+                                )
                             assert found_ref is not None
                             node = await browser_session.get_element_by_index(int(found_ref))
                             if time.monotonic() >= deadline:

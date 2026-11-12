@@ -1,8 +1,9 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-11-12
-- **Current baseline:** v0.16.397 source. Source is not proof of publication.
-- **Verified prior publication:** v0.16.396 ([publication and official-package receipt](https://github.com/pearjelly/cliany.site/pull/121#issuecomment-6811949279)).
+- **Current baseline:** v0.16.398 source. Source is not proof of publication.
+- **Verified prior publication:** v0.16.397 ([publication and actual PyPI acceptance](https://github.com/pearjelly/cliany.site/pull/125#issuecomment-6813013687)).
+- **Earlier publication:** v0.16.396 ([publication and official-package receipt](https://github.com/pearjelly/cliany.site/pull/121#issuecomment-6811949279)).
 - **Previously published baseline, October 17:** v0.16.390 ([distribution verified; fresh-generation acceptance failed](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
@@ -11,7 +12,11 @@ cliany-site turns real browser workflows into reusable CLI commands. The Q3 road
 
 ## November 12 Current Priorities
 
-Published396 passed its three-end audit and a new official-package study (3/3 real generations, 9/9 returned-row checks). The [navigation follow-up](user-evidence/2026-11-12-navigation-transport.md) keeps the earlier failed cohort separate. [Issue124](https://github.com/pearjelly/cliany.site/issues/124) now has a same-browser reproduction: a page connection can fail while Chrome is still reachable. The unpublished correction distinguishes this from CDP failure and stops replay before further input; it does not repair the underlying connection or document-readiness failure. Validate the exact candidate before release. Independent first use is still 0/2 on fixed 0.16.387, with A/B, first attempts, help and retries separate. No case promotion.
+Published397 distinguishes page transport failure from unavailable Chrome and stops replay before further input. Exact master, the actual PyPI package and all three distribution channels passed. The [navigation evidence](user-evidence/2026-11-12-navigation-transport.md) preserves the earlier failed cohort, and [Issue124](https://github.com/pearjelly/cliany.site/issues/124) remains open for the intermittent connection and document-readiness causes.
+
+A [new bounded observation](user-evidence/2026-11-12-settled-input-target.md) on the published package did not reproduce the historical document failure in four read-only replays. A separate native fixture reproduced premature ambiguity when an initializer removes a duplicate input. The unpublished correction judges ties on a fresh initialized AX snapshot; persistent ties remain non-mutating failures. This is not a diagnosis of Issue124. Independent first use is still 0/2 on fixed 0.16.387, with A/B, first attempts, help and retries separate. No case promotion or release to fill a quota.
+
+The first 398 local-wheel study retained [a distinct real planning failure](user-evidence/2026-11-12-duplicate-navigation-plan.md): the model emitted two consecutive clicks on one observed cross-page link. Only 2/3 workflows and 6/9 planned replays passed. The revised candidate rejects that plan before dispatch and uses the existing repair budget. It requires its own complete gates; the failed study does not become a pass.
 
 ## October 28 Disconnect Prepublication History
 
