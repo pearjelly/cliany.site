@@ -11,6 +11,17 @@
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
 
+## [0.16.400] - 2026-11-13
+
+### Added
+
+- Generated single-list searches can opt into `--empty-result-message` for a separately confirmed zero-match message and `--with-result-limit` for a returned prefix. Replay checks the current query, verifies inspected rows before limiting output, and rejects missing or ambiguous results. [Workflow contract](docs/semantic-extract-targets.md).
+
+### Fixed
+
+- Ground a single native list of linked headings inside the main landmark without relying on viewport clipping. Ignore pagination and nested metadata; refuse competing result regions. [Browser evidence](docs/user-evidence/2026-11-12-main-result-list.md).
+- Reject incompatible generated runtime imports during marketplace dry-run and before any adapter or backup files are written, including with `--force`. No package code is executed by the compatibility check. [Public package reproduction](docs/user-evidence/2026-11-12-market-runtime-preflight.md).
+
 ## [0.16.399] - 2026-11-13
 
 ### Fixed
@@ -3613,7 +3624,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.399...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.400...HEAD
+[0.16.400]: https://github.com/pearjelly/cliany.site/compare/v0.16.399...v0.16.400
 [0.16.399]: https://github.com/pearjelly/cliany.site/compare/v0.16.398...v0.16.399
 [0.16.398]: https://github.com/pearjelly/cliany.site/compare/v0.16.397...v0.16.398
 [0.16.397]: https://github.com/pearjelly/cliany.site/compare/v0.16.396...v0.16.397

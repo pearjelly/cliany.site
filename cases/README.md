@@ -25,7 +25,7 @@
 | `apache-jenkins-jobs` | ASF Jenkins job 列表 | active | [维护版公开包验收](../docs/user-evidence/2026-10-02-jenkins-public-package-audit.md)：固定哈希安装、严格校验、只读查询返回 5/106 条；旧 v0.14.1 包仍不推荐 |
 | `pypi-project-search` | PyPI 项目搜索 | candidate | Python 包注册表搜索候选；样例输出见 [pypi-project-search.json](examples/pypi-project-search.json)。公开 adapter 包与严格校验已通过；[只读在线搜索](../docs/user-evidence/2026-09-23-pypi-package-smoke.md) 尚未稳定通过，暂不晋级 active |
 | `npm-package-search` | npm 包搜索 | candidate | JavaScript 包注册表搜索候选；样例输出见 [npm-package-search.json](examples/npm-package-search.json)。[2026-09-28 访问检查](../docs/user-evidence/2026-09-28-npm-access.md)遇到 Cloudflare 验证页，未生成 adapter；待正常页面、包资产和在线 smoke 验证后再晋级 |
-| `crates-io-crate-search` | crates.io crate 搜索 | candidate | Rust 包注册表搜索候选；样例输出见 [crates-io-crate-search.json](examples/crates-io-crate-search.json)，待生成 adapter 包和在线 smoke 后晋级 active |
+| `crates-io-crate-search` | crates.io crate 搜索 | candidate | [本地固定包与真实重放](https://github.com/pearjelly/cliany.site/pull/134#issuecomment-6817333134)已验证；公开 `0.16.398` 无法加载此包。须在支持的 CLI 和固定公开包上复测，不提前晋级。见[样例](examples/crates-io-crate-search.json) |
 | `search-extraction-gap` | 搜索结果抽取复盘 | known-gap | 明确「页面交互强、列表抽取弱」的产品边界 |
 
 ## Active Demo Downloads

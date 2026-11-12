@@ -3,7 +3,7 @@
 - **制定日期：** 2026-06-10
 - **校准日期：** 2026-11-12
 
-- **基线版本：** v0.16.399 候选源码，尚未发布。
+- **基线版本：** v0.16.400 组合候选源码，尚未发布。
 - **已核对的正式版：** v0.16.398（[三端发布与正式包验收](https://github.com/pearjelly/cliany.site/pull/126#issuecomment-6815068430)）。
 - **较早正式版：** [v0.16.397](https://github.com/pearjelly/cliany.site/pull/125#issuecomment-6813013687)、[v0.16.396](https://github.com/pearjelly/cliany.site/pull/121#issuecomment-6811949279)。
 - **10月17日的上一公开版本：** v0.16.390（三端分发已验证；正式包新生成验收仍失败）
@@ -20,6 +20,8 @@ cliany-site 要成为「把真实网页工作流沉淀成可复用 CLI/SDK/API �
 正式 0.16.398 修复初始化期临时同名输入框造成的过早拒绝，并在执行前拦截同一轮连续点击同一个实测跨页链接。通过的候选包、最终 master 和实际 PyPI 安装包分别完成 3/3 个真实工作流、9/9 次返回行核对。[首个候选的重复点击失败](user-evidence/2026-11-12-duplicate-navigation-plan.md)与后续上游失败原样保留。修复不代表已查明 [Issue #124](https://github.com/pearjelly/cliany.site/issues/124) 的间歇公网失败。
 
 [v0.16.399 候选](releases/v0.16.399-draft.md)一起修复两个首用问题：[PR #129](https://github.com/pearjelly/cliany.site/pull/129)在严格预检拦截格式错误的模型回复，[PR #127](https://github.com/pearjelly/cliany.site/pull/127)在最终 JSON 保留最后一次请求的脱敏失败分类。两份独立验证不替代组合候选及最终 master 的完整门禁。
+
+[v0.16.400 组合候选](releases/v0.16.400-draft.md)准备将浏览器列表定位、明确零匹配、返回前缀和安装兼容检查一起交付。优先保护 v0.16.399 的既有验收，再复核新组合包的 Python 文档和 crates.io 工作流。固定候选包仍在本地，公开运行时、公开包和重放门禁全部通过前不晋级。
 
 独立试用固定 0.16.387，有效反馈 0/2 人。A/B、首次失败、帮助和重试分开，维护者复测不计入。上海时间 11 月 12 日已正式发布三版，当天不再发版，也不据此晋级案例。
 
