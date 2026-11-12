@@ -9,7 +9,11 @@ import pytest
 
 from cliany_site.config import get_config
 from cliany_site.errors import ExploreContractError
-from cliany_site.explorer.engine import WorkflowExplorer, _observed_prefix_before_unobserved_extract
+from cliany_site.explorer.engine import (
+    WorkflowExplorer,
+    _duplicate_navigation_clicks,
+    _observed_prefix_before_unobserved_extract,
+)
 
 
 def _plan(ref):
@@ -129,6 +133,63 @@ async def test_text_only_observation_is_not_treated_as_blank(mocker, monkeypatch
     capture.assert_awaited_once()
     model.ainvoke.assert_awaited_once()
     execute.assert_awaited_once()
+
+
+@pytest.mark.parametrize(("attributes", "expected"), [
+    ({"href": "search.html"}, [{"action_index": 1, "previous_action_index": 0}]),
+    ({"href": "/search", "target": "_self"}, [{"action_index": 1, "previous_action_index": 0}]),
+    ({"href": "#results"}, []),
+    ({"href": "?page=2"}, []),
+    ({"href": "/docs"}, []),
+    ({"href": "/search", "target": "_blank"}, []),
+    ({"href": "/search", "download": ""}, []),
+    ({"href": "/search", "onclick": "return false"}, []),
+    ({"href": "javascript:void(0)"}, []),
+    ({"href": "http://[invalid"}, []),
+    ({}, []),
+])
+def test_duplicate_navigation_clicks_require_a_grounded_different_document(attributes, expected):
+    actions = [{"type": "click", "ref": "7"}, {"type": "click", "ref": "@7"}]
+    links = {"7": {"role": "link", "tag_name": "a", "attributes": attributes}}
+    before = deepcopy((actions, links))
+    assert _duplicate_navigation_clicks(actions, links, "https://plan.example.test/docs") == expected
+    assert (actions, links) == before
+
+
+def test_duplicate_navigation_clicks_do_not_collapse_other_repeated_actions():
+    entry = {"role": "link", "tag_name": "a", "attributes": {"href": "search.html"}}
+    click = {"type": "click", "ref": "7"}
+    url = "https://plan.example.test/docs"
+    assert _duplicate_navigation_clicks([click, click], {"7": {**entry, "role": "button"}}, url) == []
+    assert _duplicate_navigation_clicks([click, click], {"7": {**entry, "tag_name": "div"}}, url) == []
+    assert _duplicate_navigation_clicks(
+        [click, {"type": "click", "ref": "8"}], {"7": entry, "8": entry}, url,
+    ) == []
+    assert _duplicate_navigation_clicks([click, {"type": "type", "ref": "8"}, click], {"7": entry}, url) == []
+
+
+@pytest.mark.parametrize("steps", [1, 5])
+async def test_duplicate_navigation_clicks_share_the_existing_repair_limit(
+    mocker, monkeypatch, tmp_home, no_llm, steps,
+):
+    plan = {"done": False, "actions": [{"type": "click", "ref": "7"}] * 2}
+    model, execute, cdp = _prepare(mocker, monkeypatch, [plan, plan], steps=steps)
+    url = "https://plan.example.test/docs"
+    tree = {"url": url, "element_tree": "Search link", "selector_map": {
+        "7": {"role": "link", "tag_name": "a", "name": "Search", "attributes": {"href": "search.html"}},
+    }}
+    mocker.patch("cliany_site.explorer.engine.capture_axtree", AsyncMock(return_value=tree))
+
+    with pytest.raises(ExploreContractError) as caught:
+        await WorkflowExplorer().explore(url, "Search", record=False)
+
+    assert caught.value.reason == "duplicate_navigation_click"
+    assert model.ainvoke.await_count == (1 if steps == 1 else 2)
+    if steps > 1:
+        feedback = str(model.ainvoke.await_args_list[1].args)
+        assert "跨页点击门禁" in feedback and "本轮动作尚未执行" in feedback
+    execute.assert_not_awaited()
+    cdp.disconnect.assert_awaited_once()
 
 
 @pytest.fixture

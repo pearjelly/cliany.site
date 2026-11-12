@@ -42,7 +42,7 @@ cliany-site demo --case-id apache-jira-issues --json
 
 ### 告诉我们结果
 
-从 v0.16.398 起，按名称定位输入框时会在文档初始化后重新核对同分目标。临时重复项消失后才输入；若仍有多个同分目标，则不输入、不提交。[浏览器复现证据](docs/user-evidence/2026-11-12-settled-input-target.md)。
+从 v0.16.398 起，按名称定位输入框时会在文档初始化后重新核对同分目标。临时重复项消失后才输入；若仍有多个同分目标，则不输入、不提交。探索也会在执行前要求修正连续重复点击同一实测跨页链接的计划。[输入复现证据](docs/user-evidence/2026-11-12-settled-input-target.md) · [导航计划证据](docs/user-evidence/2026-11-12-duplicate-navigation-plan.md)。
 
 从 v0.16.397 起，已识别的 Chrome 网页连接错误返回 `E_PAGE_NOT_READY` 和 `reason=navigation_transport_failed`，与 CDP 不可用区分。回放停止，不发送后续输入。先在普通浏览器确认网页可访问，再手动重试。[证据及边界](docs/user-evidence/2026-11-12-navigation-transport.md)。
 

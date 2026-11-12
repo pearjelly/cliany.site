@@ -20,8 +20,9 @@ BROWSER_HOME = {key: os.environ[key] for key in ("HOME", "USERPROFILE", "HOMEDRI
 
 
 @pytest.mark.embodied
-async def test_failed_placeholder_type_on_link_cannot_survive_generation(
-    tmp_home, monkeypatch, local_server, unused_tcp_port,
+@pytest.mark.parametrize("invalid_plan", ["value_on_link", "duplicate_link_click"])
+async def test_invalid_link_plan_is_repaired_before_generation(
+    tmp_home, monkeypatch, local_server, unused_tcp_port, invalid_plan,
 ):
     for key, value in BROWSER_HOME.items():
         monkeypatch.setenv(key, value)
@@ -40,9 +41,8 @@ async def test_failed_placeholder_type_on_link_cannot_survive_generation(
         return tree
 
     async def execute(session, actions, **kwargs):
-        result = await original_execute(session, actions, **kwargs)
         attempted.extend(dict(action) for action in actions)
-        return result
+        return await original_execute(session, actions, **kwargs)
 
     monkeypatch.setattr(engine, "capture_axtree", capture)
     monkeypatch.setattr(engine, "execute_action_steps", execute)
@@ -60,12 +60,17 @@ async def test_failed_placeholder_type_on_link_cannot_survive_generation(
                         if value.get("name") == name and value.get("role") == role)
 
         reply = {"done": False}
+        if calls == 2:
+            assert tree["url"] == source and not attempted
         if tree["url"] == source:
             target = ref("Full Search", "link")
             reply["actions"] = [{"type": "click", "ref": target}]
             if calls == 1:
-                reply["actions"].append({"type": "type", "ref": target, "value": "Ada",
-                                         "description": "placeholder"})
+                if invalid_plan == "value_on_link":
+                    reply["actions"].append({"type": "type", "ref": target, "value": "Ada",
+                                             "description": "placeholder"})
+                else:
+                    reply["actions"].append({"type": "click", "ref": f"@{target}"})
         elif query_index is None:
             assert tree["url"] == form
             query_index = len(attempted)
@@ -89,7 +94,9 @@ async def test_failed_placeholder_type_on_link_cannot_survive_generation(
             env={**os.environ, **BROWSER_HOME}, args=[f"--remote-debugging-port={unused_tcp_port}"],
         )
         try:
-            result = await WorkflowExplorer(cdp_url=endpoint).explore(source, "Search docs", record=False)
+            result = await WorkflowExplorer(cdp_url=endpoint).explore(
+                source, "Search docs", record=invalid_plan == "duplicate_link_click",
+            )
             save_adapter(domain, AdapterGenerator().generate(result, domain), {"source_url": source}, result)
             directory = runtime / "adapters" / domain
             before = {name: hashlib.sha256((directory / name).read_bytes()).hexdigest()
@@ -109,6 +116,7 @@ async def test_failed_placeholder_type_on_link_cannot_survive_generation(
                 {"title": "Grace", "url": "/docs/Grace.html"},
             ]
             assert calls == 4 and query_index == 1 and len(result.actions) == 4
+            assert [action.action_type for action in result.actions] == ["click", "type", "click", "extract"]
             assert all(action.action_type != "type" or action.target_role != "link" for action in result.actions)
             assert evidence["core_unchanged"] is True
         finally:

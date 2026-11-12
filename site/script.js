@@ -232,8 +232,8 @@ const I18N = {
     en: 'v0.16.393 repairs explicit browser waits for the pinned actor backend. Observe the focused page without closing or navigating it again; pending requests do not count as ready. No extra model calls or dependencies. Official publication requires its receipt; independent first use stays0/2 on fixed387.'
   },
   'qs.settledInputTarget': {
-    zh: 'v0.16.398 在文档初始化后重新核对同分的输入目标。临时重复项消失后才继续；仍有歧义则不输入、不提交。',
-    en: 'v0.16.398 rechecks equally good input targets after document initialization. If a temporary duplicate disappears, replay can proceed. If the tie remains, it stops without typing or submitting.'
+    zh: 'v0.16.398 在初始化后重新核对同分的输入目标，仍有歧义则拒绝输入。探索会在执行前拦截对同一实测跨页链接的连续重复点击。',
+    en: 'v0.16.398 rechecks equally good input targets after initialization and still refuses a persistent tie. Exploration rejects consecutive clicks on the same observed cross-page link before dispatch.'
   },
   'qs.navigationTransport': {
     zh: 'v0.16.397 区分网页连接失败与 Chrome 不可用。回放在后续输入前停止，并报告 <code>navigation_transport_failed</code>。请在普通浏览器确认页面可访问，再手动重试。',

@@ -16,6 +16,7 @@
 ### Fixed
 
 - Judge equal-score named input targets on a fresh AX snapshot after document initialization. A temporary duplicate no longer blocks a target that becomes unique; a persistent tie still fails before any input or submission. The existing ten-second observation budget, challenge handling and explicit ref behavior are unchanged. [Controlled browser evidence](docs/user-evidence/2026-11-12-settled-input-target.md).
+- Reject consecutive clicks on the same observed cross-page link before dispatch or recording. Use the existing bounded semantic-plan repair to plan one click and observe the next page; do not silently remove repeated replay actions. [Preserved failed candidate and Chromium regression](docs/user-evidence/2026-11-12-duplicate-navigation-plan.md).
 
 ## [0.16.397] - 2026-11-12
 
