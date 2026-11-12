@@ -61,6 +61,72 @@ def test_invalid_package_metadata_cannot_replace_installed_adapter(tmp_home, met
         assert list_backups("broken.test") == []
 
 
+@pytest.mark.parametrize("dry_run", [True, False])
+def test_missing_generated_runtime_import_is_reported_before_any_replacement(tmp_home, dry_run):
+    from cliany_site.cli import cli
+
+    cfg = _make_config(tmp_home / ".cliany-site")
+    adapter_dir = _create_adapter(cfg.adapters_dir, "old.test")
+    before = {item.name: item.read_bytes() for item in adapter_dir.iterdir()}
+    package = _make_tarball(
+        tmp_home, "old.test",
+        commands_source="from cliany_site.codegen.runtime_helpers import future_runtime_helper_for_test as replay\n",
+    )
+    with patch("cliany_site.marketplace.get_config", return_value=cfg):
+        options = ["--dry-run"] if dry_run else []
+        result = CliRunner().invoke(cli, ["--json", "market", "install", str(package), "--force", *options])
+        assert result.exit_code == 1, result.output
+        payload = json.loads(result.output)
+        assert payload["error"]["code"] == "INSTALL_FAILED"
+        details = payload["error"]["details"]
+        assert details["stage"] == "compatibility" and details["reason"] == "missing_runtime_imports"
+        assert details["missing_imports"] == [
+            {"module": "cliany_site.codegen.runtime_helpers", "name": "future_runtime_helper_for_test"},
+        ]
+        assert {item.name: item.read_bytes() for item in adapter_dir.iterdir()} == before
+        assert list_backups("old.test") == []
+
+
+def test_runtime_preflight_does_not_execute_adapter_or_require_conditional_imports(tmp_home):
+    cfg = _make_config(tmp_home / ".cliany-site")
+    package = _make_tarball(
+        tmp_home, "safe.test",
+        commands_source=(
+            "from cliany_site.codegen.runtime_helpers import execute_steps_via_atoms as replay\n"
+            "try:\n"
+            "    from cliany_site.action_runtime import future_runtime_helper_for_test\n"
+            "except ImportError:\n"
+            "    pass\n"
+            "raise RuntimeError('archive code must not execute during preflight or installation')\n"
+        ),
+    )
+    with patch("cliany_site.marketplace.get_config", return_value=cfg):
+        assert inspect_adapter_package(package)["domain"] == "safe.test"
+        assert not (cfg.adapters_dir / "safe.test").exists()
+        assert install_adapter(package).domain == "safe.test"
+
+
+def test_runtime_preflight_follows_integrity_validation(tmp_home):
+    package = _make_tarball(
+        tmp_home, "wrong-hash.test", bad_hash=True,
+        commands_source="from cliany_site.action_runtime import future_runtime_helper_for_test\n",
+    )
+    with pytest.raises(ValueError, match="文件校验失败"):
+        inspect_adapter_package(package)
+
+
+def test_package_syntax_failure_returns_fixed_diagnostic_without_source_text(tmp_home):
+    from cliany_site.cli import cli
+
+    package = _make_tarball(tmp_home, "syntax.test", commands_source="private_source_marker = (")
+    result = CliRunner().invoke(cli, ["--json", "market", "install", str(package), "--dry-run"])
+    assert result.exit_code == 1, result.output
+    assert "private_source_marker" not in result.output
+    assert json.loads(result.output)["error"]["details"] == {
+        "stage": "compatibility", "reason": "commands_syntax_invalid",
+    }
+
+
 def _make_config(tmp_path: Path) -> MagicMock:
     cfg = MagicMock()
     cfg.home_dir = tmp_path
@@ -100,12 +166,13 @@ def _make_tarball(
     no_manifest: bool = False,
     manifest_data: object | None = None,
     metadata_json: str | None = None,
+    commands_source: str = "import click\n\n@click.command()\ndef test():\n    pass\n",
 ) -> Path:
     """手工构建一个 .tar.gz 安装包"""
     import hashlib
 
     pack_path = tmp_path / f"{domain}{PACK_EXTENSION}"
-    commands_content = b"import click\n\n@click.command()\ndef test():\n    pass\n"
+    commands_content = commands_source.encode("utf-8")
     metadata_content = (
         metadata_json if metadata_json is not None else json.dumps({"workflow": "test", "version": version})
     ).encode("utf-8")

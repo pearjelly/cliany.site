@@ -6,6 +6,7 @@ manifest.json 记录版本、依赖、签名哈希、兼容性信息。
 
 from __future__ import annotations
 
+import ast
 import contextlib
 import gzip
 import hashlib
@@ -21,7 +22,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from http.client import IncompleteRead
-from importlib import resources
+from importlib import import_module, metadata, resources
 from io import BytesIO
 from pathlib import Path, PureWindowsPath
 from typing import Any
@@ -37,6 +38,16 @@ MANIFEST_VERSION = "1"
 PACK_EXTENSION = ".cliany-adapter.tar.gz"
 MAX_REMOTE_PACKAGE_SIZE = 64 * 1024 * 1024
 _REMOTE_READ_CHUNK_SIZE = 64 * 1024
+_ADAPTER_RUNTIME_MODULES = frozenset({"cliany_site.action_runtime", "cliany_site.codegen.runtime_helpers"})
+_MAX_REPORTED_MISSING_IMPORTS = 8
+
+
+class AdapterRuntimeCompatibilityError(ValueError):
+    """Known incompatibility found without loading any packaged Python code."""
+
+    def __init__(self, reason: str, message: str, **details: Any) -> None:
+        super().__init__(message)
+        self.details = {"stage": "compatibility", "reason": reason, **details}
 
 
 class AdapterDownloadError(ValueError):
@@ -411,12 +422,54 @@ def _validated_adapter_package(
 
                 tar.extractall(tmp_path, filter="data")  # noqa: S202
                 _validate_extracted_adapter_package(manifest, tmp_path)
+                _check_adapter_runtime_imports(tmp_path / "commands.py")
                 package_sha256 = _sha256_file(archive_path)
         except (tarfile.TarError, EOFError, gzip.BadGzipFile) as exc:
             msg = f"安装包无法读取: {archive_path}"
             raise ValueError(msg) from exc
 
         yield manifest, tmp_path, package_sha256
+
+
+def _check_adapter_runtime_imports(commands: Path) -> None:
+    try:
+        tree = ast.parse(commands.read_bytes(), filename="commands.py")
+    except (SyntaxError, ValueError, RecursionError) as exc:
+        raise AdapterRuntimeCompatibilityError(
+            "commands_syntax_invalid", "安装包 commands.py 无法通过当前 Python 的静态语法检查",
+        ) from exc
+
+    # Only direct imports from these installed runtime modules form the generated adapter ABI.
+    required: dict[str, set[str]] = {}
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom) and node.level == 0 and node.module in _ADAPTER_RUNTIME_MODULES:
+            assert node.module is not None
+            required.setdefault(node.module, set()).update(alias.name for alias in node.names if alias.name != "*")
+
+    missing: list[dict[str, str]] = []
+    count = 0
+    for module, names in sorted(required.items()):
+        if not names:
+            continue
+        try:
+            available = vars(import_module(module))
+        except ImportError as exc:
+            raise AdapterRuntimeCompatibilityError(
+                "runtime_import_check_failed", "无法加载当前 cliany-site 的运行时模块", module=module,
+            ) from exc
+        for name in sorted(names - available.keys()):
+            count += 1
+            if len(missing) < _MAX_REPORTED_MISSING_IMPORTS:
+                missing.append({"module": module, "name": name[:96]})
+    if missing:
+        try:
+            installed_version = metadata.version("cliany-site")
+        except metadata.PackageNotFoundError:
+            installed_version = None
+        raise AdapterRuntimeCompatibilityError(
+            "missing_runtime_imports", "当前 cliany-site 缺少安装包所需的运行时能力",
+            installed_version=installed_version, missing_imports=missing, missing_count=count,
+        )
 
 
 def validate_adapter_domain(domain: str) -> None:
