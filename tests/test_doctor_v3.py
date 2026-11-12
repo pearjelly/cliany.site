@@ -1,4 +1,5 @@
 import json
+from types import SimpleNamespace
 
 import pytest
 from click.testing import CliRunner
@@ -517,7 +518,7 @@ def test_doctor_llm_live_success_keeps_explore_ready(tmp_home, no_llm, monkeypat
         pass
 
     async def fake_invoke(_llm, _prompt, **_kwargs):
-        return object()
+        return SimpleNamespace(content=[{"type": "text", "text": '{"status":"ok"}'}])
 
     monkeypatch.setattr("cliany_site.browser.cdp.CDPConnection", MockCDP)
     monkeypatch.setenv("CLIANY_LLM_PROVIDER", "anthropic")
