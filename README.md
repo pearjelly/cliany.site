@@ -34,6 +34,8 @@ From v0.16.390, named browser input observes document initialization and refresh
 
 ### Tell us what happened
 
+From v0.16.398, named browser input rechecks equally good matches after document initialization. A temporary duplicate can disappear before typing; if more than one equally good match remains, the command stops without typing or submitting. [Browser evidence](docs/user-evidence/2026-11-12-settled-input-target.md).
+
 From v0.16.397, a recognized Chrome page connection failure reports `E_PAGE_NOT_READY` with `reason=navigation_transport_failed`, rather than blaming the CDP connection. Replay stops before subsequent input. Check the target in a normal browser before a manual retry. [Evidence and limits](docs/user-evidence/2026-11-12-navigation-transport.md).
 
 The v0.16.391 SDK/HTTP correction uses CLI-compatible internal parameter aliases; requests still use the original metadata argument names. The [alias review](docs/user-evidence/2026-10-17-generated-parameter-aliases.md) retains four wrong successes from the previous local391 wheel and requires fresh gates, not a rewrite of its earlier green sample.

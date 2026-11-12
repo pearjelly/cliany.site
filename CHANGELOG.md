@@ -7,13 +7,15 @@
 
 ## [Unreleased]
 
-### Fixed
-
-- Judge equal-score named input targets on a fresh AX snapshot after document initialization. A temporary duplicate no longer blocks a target that becomes unique; a persistent tie still fails before any input or submission. The existing ten-second observation budget, challenge handling and explicit ref behavior are unchanged. [Controlled browser evidence](docs/user-evidence/2026-11-12-settled-input-target.md).
-
 ### Changed
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
+
+## [0.16.398] - 2026-11-12
+
+### Fixed
+
+- Judge equal-score named input targets on a fresh AX snapshot after document initialization. A temporary duplicate no longer blocks a target that becomes unique; a persistent tie still fails before any input or submission. The existing ten-second observation budget, challenge handling and explicit ref behavior are unchanged. [Controlled browser evidence](docs/user-evidence/2026-11-12-settled-input-target.md).
 
 ## [0.16.397] - 2026-11-12
 
@@ -3603,7 +3605,8 @@
 - 修复合并周期保留 selector/extract_mode/fields_map 的问题
 - 修正 QA 测试断言与实际 API 对齐
 
-[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.397...HEAD
+[Unreleased]: https://github.com/pearjelly/cliany.site/compare/v0.16.398...HEAD
+[0.16.398]: https://github.com/pearjelly/cliany.site/compare/v0.16.397...v0.16.398
 [0.16.397]: https://github.com/pearjelly/cliany.site/compare/v0.16.396...v0.16.397
 [0.16.396]: https://github.com/pearjelly/cliany.site/compare/v0.16.395...v0.16.396
 [0.16.395]: https://github.com/pearjelly/cliany.site/compare/v0.16.394...v0.16.395
