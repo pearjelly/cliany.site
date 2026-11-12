@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Judge equal-score named input targets on a fresh AX snapshot after document initialization. A temporary duplicate no longer blocks a target that becomes unique; a persistent tie still fails before any input or submission. The existing ten-second observation budget, challenge handling and explicit ref behavior are unchanged. [Controlled browser evidence](docs/user-evidence/2026-11-12-settled-input-target.md).
+
 ### Changed
 
 - Continue evidence-led browser workflow improvements; independent first use, candidate promotion and alpha readiness remain separate gates.
