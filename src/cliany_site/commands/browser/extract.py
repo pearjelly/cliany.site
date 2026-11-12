@@ -8,6 +8,8 @@ import click
 from markdownify import markdownify
 
 from cliany_site.browser.cdp import cdp_from_context
+from cliany_site.browser.search_result import valid_empty_result_recipe
+from cliany_site.browser.selector import MAIN_RESULT_LIST_SCOPE
 from cliany_site.commands.browser import browser_group
 from cliany_site.commands.browser._common import print_envelope
 from cliany_site.envelope import Envelope, ErrorCode, err, ok
@@ -84,7 +86,7 @@ def _parse_target_json(target_json: str | None) -> dict[str, Any] | None:
         target = None
     valid = (
         isinstance(target, dict)
-        and not (set(target) - {"role", "name", "attributes", "suffix"})
+        and not (set(target) - {"role", "name", "attributes", "suffix", "scope", "empty_result"})
         and isinstance(target.get("role"), str)
         and bool(target["role"].strip())
         and isinstance(target.get("name", ""), str)
@@ -93,6 +95,17 @@ def _parse_target_json(target_json: str | None) -> dict[str, Any] | None:
         and isinstance(target.get("suffix", ""), str)
         and target.get("suffix", "") in {"", " li", " tr"}
         and (not target.get("suffix") or target["role"] == {" li": "list", " tr": "table"}[target["suffix"]])
+        and (
+            "scope" not in target
+            or (
+                target["scope"] == MAIN_RESULT_LIST_SCOPE and target["role"] == "list"
+                and not any(target.get(key) for key in ("name", "attributes", "suffix"))
+            )
+        )
+        and ("empty_result" not in target or (
+            target.get("scope") == MAIN_RESULT_LIST_SCOPE
+            and valid_empty_result_recipe(target["empty_result"], bound=True)
+        ))
     )
     if not valid:
         return cast(
@@ -100,7 +113,7 @@ def _parse_target_json(target_json: str | None) -> dict[str, Any] | None:
             err(
                 command="browser extract",
                 code=ErrorCode.E_INVALID_PARAM,
-                message="--target-json 必须包含非空 role、文本 name、文本属性对象和有效语义后缀",
+                message="--target-json 必须包含非空 role、文本 name、文本属性对象和有效语义后缀或范围",
                 source="builtin",
             ),
         )
@@ -167,7 +180,7 @@ async def _run_extract(
                         ),
                         details={
                             "reason": "extract_target_unsettled" if unsettled else "extract_target_unresolved",
-                            "target": extract_target,
+                            "target": {key: value for key, value in extract_target.items() if key != "empty_result"},
                         },
                         source="builtin",
                     )

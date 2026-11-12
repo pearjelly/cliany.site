@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from cliany_site.browser.selector import MAIN_RESULT_LIST_SCOPE
 from cliany_site.commands.browser.extract import _do_structured_extract, _parse_target_json, _run_extract
 from cliany_site.envelope import ErrorCode
 from cliany_site.extract import prepare_semantic_extract_selector, resolve_semantic_extract_selector
@@ -22,10 +23,21 @@ from cliany_site.extract import prepare_semantic_extract_selector, resolve_seman
         '{"role":"list","suffix":[]}',
         '{"role":"status","suffix":" li"}',
         '{"role":"list","unknown":1}',
+        '{"role":"list","scope":"main ol"}',
+        '{"role":"list","scope":null}',
+        '{"role":"table","scope":"main_linked_heading_list"}',
+        '{"role":"list","scope":"main_linked_heading_list","attributes":{"id":"other"}}',
+        '{"role":"list","scope":"main_linked_heading_list","suffix":" li"}',
     ],
 )
 def test_invalid_target_json_is_rejected(value):
     assert _parse_target_json(value)["error"]["code"] == ErrorCode.E_INVALID_PARAM
+
+
+def test_scoped_target_json_accepts_only_the_fixed_scope():
+    assert _parse_target_json('{"role":"list","scope":"main_linked_heading_list"}') == {
+        "role": "list", "scope": MAIN_RESULT_LIST_SCOPE,
+    }
 
 
 @pytest.mark.asyncio

@@ -34,6 +34,7 @@ class CommandSuggestion:
     args: list[dict[str, Any]]
     action_steps: list[int]
     expects_nonempty: bool = True
+    result_limit: bool = False
 
 
 @dataclass

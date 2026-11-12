@@ -29,6 +29,18 @@ class ExtractQuality:
         return data
 
 
+def project_result_rows(rows: list[Any], limit: int, quality: dict[str, Any]) -> list[Any]:
+    """Bound the returned prefix without replacing the quality of the inspected rows."""
+    returned = rows[:limit]
+    quality["result_limit"] = {
+        "requested": limit,
+        "inspected_rows": len(rows),
+        "returned_rows": len(returned),
+        "truncated": len(returned) < len(rows),
+    }
+    return returned
+
+
 def _is_blank(value: Any) -> bool:
     if value is None:
         return True
