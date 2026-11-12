@@ -22,7 +22,9 @@ The controlled benchmark stores bounded `attempt_errors` with step, attempt, cat
 
 ## SDK and HTTP from v0.16.382
 
-`ClanySite.explore()` keeps the legacy `success/data/error` envelope. Typed provider failures return `E_LLM_AUTH_FAILED` for observed upstream HTTP 401/403, or `E_LLM_UNAVAILABLE` otherwise. `error.details` retains only `retryable`, `status_code` and `phase="llm_invoke"`; fixed messages and repair hints do not copy the exception body or configured endpoint. Failed generation does not write adapter core files, including when `force=True` was requested.
+`ClanySite.explore()` keeps the legacy `success/data/error` envelope. Typed provider failures return `E_LLM_AUTH_FAILED` for observed upstream HTTP 401/403, or `E_LLM_UNAVAILABLE` otherwise. `error.details` retains `retryable`, `status_code` and `phase="llm_invoke"`; fixed messages and repair hints do not copy the exception body or configured endpoint. Failed generation does not write adapter core files, including when `force=True` was requested.
+
+When `error.details.reason` is present, it is the final attempt's fixed category from the list above. CLI, SDK and HTTP expose it in their final result even when the caller does not retain progress events. For example, `connection_error` and `timeout` both have a null HTTP status but suggest different checks. Older versions and failures without a classified model attempt may omit the field. A reason is not proof of a provider's internal cause and does not change the retry policy.
 
 The local HTTP API returns the same JSON envelope and HTTP **503** for these unavailable upstream dependencies. Upstream authentication rejection is not an HTTP caller-login challenge and does not add an authentication layer to the experimental local server. Do not automatically retry every 503: `retryable=false` requires repairing the selected upstream credentials or request configuration. A final transient failure can still report `retryable=true` after its attempt budget is exhausted.
 

@@ -42,6 +42,7 @@ from cliany_site.config import get_config
 from cliany_site.errors import (
     DataCommandQualityError,
     ExploreContractError,
+    LlmFailureReason,
     LlmResponseFormatError,
     LlmUnavailableError,
 )
@@ -826,31 +827,31 @@ def _looks_like_llm_gateway_error(message: str) -> bool:
     )
 
 
-def _llm_failure_reason(exc: Exception) -> str:
+def _llm_failure_reason(exc: Exception) -> LlmFailureReason:
     status_code = _extract_status_code(exc)
     if status_code in {401, 403}:
-        return "authentication_failed"
+        return LlmFailureReason.AUTHENTICATION_FAILED
     if status_code == 429:
-        return "rate_limited"
+        return LlmFailureReason.RATE_LIMITED
     if status_code is not None and status_code >= 500:
-        return "upstream_http_error"
+        return LlmFailureReason.UPSTREAM_HTTP_ERROR
     if status_code is not None and status_code >= 400:
-        return "request_rejected"
+        return LlmFailureReason.REQUEST_REJECTED
     if status_code is not None:
-        return "http_error"
+        return LlmFailureReason.HTTP_ERROR
     current: BaseException | None = exc
     seen: set[int] = set()
     while current is not None and id(current) not in seen:
         seen.add(id(current))
         if isinstance(current, (TimeoutError, httpx.TimeoutException)):
-            return "timeout"
+            return LlmFailureReason.TIMEOUT
         if isinstance(current, (ConnectionError, httpx.NetworkError)):
-            return "connection_error"
+            return LlmFailureReason.CONNECTION_ERROR
         current = current.__cause__ or current.__context__
     message = str(exc).lower()
     if any(marker in message for marker in ("connection error", "connection refused", "connection reset")):
-        return "connection_error"
-    return "upstream_unavailable" if _looks_like_llm_gateway_error(message) else "unknown"
+        return LlmFailureReason.CONNECTION_ERROR
+    return LlmFailureReason.UPSTREAM_UNAVAILABLE if _looks_like_llm_gateway_error(message) else LlmFailureReason.UNKNOWN
 
 
 def _llm_error_summary(exc: Exception) -> str:
@@ -904,13 +905,14 @@ async def _invoke_llm_with_retry(
         except Exception as exc:
             elapsed_ms = (time.monotonic() - attempt_started) * 1000
             status_code = _extract_status_code(exc)
+            reason = _llm_failure_reason(exc)
             retryable = _is_retryable_error(exc)
             will_retry = retryable and attempt < max_attempts - 1
             delay = base_delay * (backoff_factor**attempt) if will_retry else 0.0
             if progress is not None:
                 report_error = getattr(progress, "on_explore_llm_attempt_error", None)
                 if callable(report_error):
-                    report_error(step, attempt + 1, _llm_failure_reason(exc), status_code, retryable)
+                    report_error(step, attempt + 1, reason.value, status_code, retryable)
                 progress.on_explore_llm_attempt_done(
                     step, attempt + 1, elapsed_ms,
                     "retry" if will_retry else "error", delay * 1000,
@@ -920,6 +922,7 @@ async def _invoke_llm_with_retry(
                     _llm_error_summary(exc),
                     status_code=status_code,
                     retryable=retryable,
+                    reason=reason,
                 ) from exc
             if not retryable:
                 raise

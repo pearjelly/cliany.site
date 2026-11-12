@@ -204,7 +204,7 @@ From v0.16.389, failed remote `market install` reports `error.details.stage=down
 
 Also supports `.env` file configuration. Search order: `~/.config/cliany-site/.env` → the selected runtime directory's `.env` (default `~/.cliany-site/.env`) → project directory `.env` → environment variables.
 
-If `explore --json` returns `E_LLM_UNAVAILABLE`, the LLM provider returned a retryable upstream outage such as `502 Bad Gateway`, rate limiting, provider connection failure, or service unavailable. The JSON envelope includes `details.retryable`, `details.status_code`, and `details.phase`; retry later or switch `CLIANY_LLM_PROVIDER` / `CLIANY_OPENAI_BASE_URL`. This does not mean the generated adapter or AXTree selector map is broken.
+If `explore --json` returns `E_LLM_UNAVAILABLE`, check `error.details.retryable` before retrying. For `true`, wait and check the selected provider's status; for `false`, check the request and provider configuration before retrying. `status_code` and `phase` give context. When present, `reason` distinguishes a connection failure, timeout or rejected request without exposing upstream text. This does not indicate a broken adapter or AXTree selector map. See [LLM failure diagnostics](docs/llm-retry-diagnostics.md).
 
 OpenAI-compatible clients use a 120-second network-operation timeout with SDK-internal retries disabled. Exploration keeps the existing outer retry loop and emits attempt/backoff events on stderr in JSON mode; doctor performs one explicit preflight attempt. This is not a 120-second end-to-end deadline: response chunks, retries and workflow stages can extend elapsed time, and retries may incur additional model cost. See the [integration evidence and limits](docs/user-evidence/2026-10-08-request-budget-integration.md).
 

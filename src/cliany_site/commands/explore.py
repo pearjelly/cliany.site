@@ -205,11 +205,7 @@ def explore_cmd(
                     else "请检查请求与服务配置。" if not e.retryable
                     else "请稍后重试；如果持续失败，请检查服务地址和上游状态。"
                 ),
-                details={
-                    "retryable": e.retryable,
-                    "status_code": e.status_code,
-                    "phase": "llm_invoke",
-                },
+                details=e.invocation_details,
             )
         except DataCommandQualityError as e:
             return err(

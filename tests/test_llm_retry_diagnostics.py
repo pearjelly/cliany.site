@@ -209,8 +209,11 @@ async def test_real_openai_http_rejection_stops_after_one_request(tmp_home, clea
     assert "private" not in str(caught.value)
 
 
-@pytest.mark.parametrize("status", [401, 403, 400])
-def test_explore_http_failure_has_safe_nonretryable_envelope(tmp_home, clean_env, monkeypatch, status):
+@pytest.mark.parametrize("status,reason", [
+    (401, "authentication_failed"), (403, "authentication_failed"), (400, "request_rejected"),
+    (None, "connection_error"), (None, "timeout"),
+])
+def test_explore_failure_retains_progress_reason_in_final_json(tmp_home, clean_env, monkeypatch, status, reason):
     from types import SimpleNamespace
     from unittest.mock import AsyncMock
 
@@ -222,7 +225,14 @@ def test_explore_http_failure_has_safe_nonretryable_envelope(tmp_home, clean_env
         status_code = status
 
     class LLM:
+        calls = 0
+
         async def ainvoke(self, _prompt):
+            self.calls += 1
+            if reason == "connection_error" or (reason == "timeout" and self.calls == 1):
+                raise httpx.ConnectError("private endpoint https://private.invalid")
+            if reason == "timeout":
+                raise httpx.ReadTimeout("private timeout")
             raise Rejected("private Bad Gateway token")
 
     class Explorer:
@@ -240,12 +250,24 @@ def test_explore_http_failure_has_safe_nonretryable_envelope(tmp_home, clean_env
     monkeypatch.setattr("cliany_site.browser.cdp.cdp_from_context", lambda _ctx: SimpleNamespace(
         check_available=AsyncMock(return_value=True),
     ))
-    result = CliRunner().invoke(cli, ["explore", "https://example.com", "read page", "--json"])
+    monkeypatch.setattr(logging.getLogger("cliany_site"), "handlers", [])
+    result = CliRunner().invoke(cli, ["--json", "explore", "https://example.com", "read page"])
     payload = json.loads(result.stdout)
     assert result.exit_code == 1
     assert payload["ok"] is False
     assert payload["error"]["code"] == ("E_LLM_AUTH_FAILED" if status in {401, 403} else "E_LLM_UNAVAILABLE")
-    assert payload["error"]["details"] == {"retryable": False, "status_code": status, "phase": "llm_invoke"}
+    retryable = status is None
+    assert payload["error"]["details"] == {
+        "retryable": retryable, "status_code": status, "phase": "llm_invoke", "reason": reason,
+    }
+    attempt_errors = [
+        event for line in result.stderr.splitlines() if line.startswith("{")
+        if (event := json.loads(line)).get("event") == "explore_llm_attempt_error"
+    ]
+    expected_reasons = [reason] * (3 if retryable else 1)
+    if reason == "timeout":
+        expected_reasons[0] = "connection_error"
+    assert [event["reason"] for event in attempt_errors] == expected_reasons
     assert "private" not in result.output + json.dumps(payload)
 
 
