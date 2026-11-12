@@ -100,6 +100,10 @@ class AdapterGenerator:
             command_blocks.append(render_empty_command_block_v2())
 
         commands_text = "\n\n".join(command_blocks)
+        limit_import = (
+            "\nfrom cliany_site.codegen.runtime_helpers import limit_generated_result"
+            if any(command.result_limit for command in explore_result.commands) else ""
+        )
 
         substitute_import = ""
         if (has_parameterized_args or has_param_placeholders) and not has_reuse_atom:
@@ -145,7 +149,7 @@ def _normalize_atom_actions(actions):
 
 import json
 import click
-from cliany_site.codegen.runtime_helpers import {execution_import}, summarize_extract_quality, diagnose_if_enabled
+from cliany_site.codegen.runtime_helpers import {execution_import}, summarize_extract_quality, diagnose_if_enabled{limit_import}
 from cliany_site.envelope import ok, err, ErrorCode{atom_imports}{substitute_import}
 
 DOMAIN = {domain!r}
@@ -477,6 +481,7 @@ def save_adapter(
                 "args": cmd.args,
                 "action_steps": cmd.action_steps,
                 "expects_nonempty": cmd.expects_nonempty,
+                **({"result_limit": True} if cmd.result_limit else {}),
                 "actions": cmd_actions,
             }
             if atom_refs:

@@ -11,7 +11,7 @@ import click
 from click.testing import CliRunner
 
 from cliany_site.envelope import Envelope, ErrorCode
-from cliany_site.extract_quality import evaluate_extract_quality
+from cliany_site.extract_quality import evaluate_extract_quality, project_result_rows
 
 _workflow_browser: ContextVar[dict[str, Any] | None] = ContextVar("workflow_browser", default=None)
 
@@ -288,6 +288,14 @@ def _navigation_session(domain: str) -> str | None:
     return domain if _session_path(domain).is_file() else None
 
 
+def limit_generated_result(results: list[Envelope], quality: dict[str, Any], limit: int | None) -> None:
+    if limit is None or not results or results[-1].get("command") != "browser extract":
+        return
+    data = results[-1].get("data")
+    if isinstance(data, dict) and data.get("mode") == "list" and isinstance(data.get("content"), list):
+        data["content"] = project_result_rows(data["content"], limit, quality)
+
+
 def summarize_extract_quality(
     results: list[Envelope],
     action_steps: list[dict[str, Any]],
@@ -381,5 +389,6 @@ __all__ = [
     "execute_query_scoped_extract_steps_via_atoms",
     "_execute_single_step",
     "summarize_extract_quality",
+    "limit_generated_result",
     "diagnose_if_enabled",
 ]
