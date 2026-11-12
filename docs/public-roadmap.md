@@ -18,6 +18,8 @@ The [v0.16.399 candidate](releases/v0.16.399-draft.md) combines two first-use fi
 
 The [v0.16.400 integration candidate](releases/v0.16.400-draft.md) combines [grounded lists, explicit zero and bounded output](https://github.com/pearjelly/cliany.site/pull/134#issuecomment-6817333134) with [pre-install compatibility checks](https://github.com/pearjelly/cliany.site/pull/135#issuecomment-6817535082). Keep the separate v0.16.399 release unchanged. Revalidate the combined build with both Python Docs and crates.io, then verify the public CLI and pinned archive before any case promotion. Local results are not public availability or independent first use.
 
+The follow-up candidate also distinguishes a still-initializing page from a missing named field. The [Chromium comparison](user-evidence/2026-11-12-missing-input-readiness.md) preserves the earlier Python Docs failure separately; it is not a root-cause claim.
+
 Independent first use is still 0/2 on fixed [0.16.387](first-use-trial.md). Keep A/B, first attempts, help and retries separate, and exclude maintainer tests. November 12 reached three formal Shanghai publications; do not publish another today or promote a case on these results.
 
 ## October 28 Disconnect Prepublication History

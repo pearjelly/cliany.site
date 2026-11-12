@@ -20,6 +20,7 @@
 ### Fixed
 
 - Ground a single native list of linked headings inside the main landmark without relying on viewport clipping. Ignore pagination and nested metadata; refuse competing result regions. [Browser evidence](docs/user-evidence/2026-11-12-main-result-list.md).
+- Named input reports `E_PAGE_NOT_READY / document_not_ready` if initialization is still pending when the input is absent. A ready document without a match still reports `E_SELECTOR_NOT_FOUND`. The observation budget and explicit refs are unchanged. [Chromium controls](docs/user-evidence/2026-11-12-missing-input-readiness.md).
 - Reject incompatible generated runtime imports during marketplace dry-run and before any adapter or backup files are written, including with `--force`. No package code is executed by the compatibility check. [Public package reproduction](docs/user-evidence/2026-11-12-market-runtime-preflight.md).
 
 ## [0.16.399] - 2026-11-13
