@@ -1,7 +1,8 @@
 # cliany-site Public Roadmap
 
 - **Updated:** 2026-11-12
-- **Current baseline:** v0.16.396 ([verified publication and official-package receipt](https://github.com/pearjelly/cliany.site/pull/121#issuecomment-6811949279)).
+- **Current source baseline:** v0.16.397. Source is not proof of publication.
+- **Verified prior publication:** v0.16.396 ([publication and official-package receipt](https://github.com/pearjelly/cliany.site/pull/121#issuecomment-6811949279)).
 - **Previously published baseline, October 17:** v0.16.390 ([distribution verified; fresh-generation acceptance failed](https://github.com/pearjelly/cliany.site/pull/101#issuecomment-6224129791))
 - **Maintainer roadmap:** [roadmap-2026-q3.md](roadmap-2026-q3.md)
 - **October value plan:** [2026-10-02-october-value-plan.md](plans/2026-10-02-october-value-plan.md)
