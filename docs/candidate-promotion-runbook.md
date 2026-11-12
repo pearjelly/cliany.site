@@ -116,6 +116,10 @@ python scripts/validate_cases.py --case-id pypi-project-search --packages-dir ~/
 
 如果 package 暂时只作为 GitHub Release asset 存在，应先下载到本地 packages dir 再跑同一条 validation 命令。
 
+单独确认发布包与目标 CLI 版本兼容。清单哈希和 schema 通过，不代表运行时支持生成命令所需的功能。用计划公开的确切 PyPI 版本和空运行目录执行 `market install <asset-url> --sha256 <digest> --dry-run --json`，再正常安装、`verify <domain> --strict --json` 和实际只读重放。旧 CLI 的预检或安装成功不能替代严格验证。
+
+正在验证的 [运行时兼容检查](user-evidence/2026-11-12-market-runtime-preflight.md) 会在写入前检查生成命令的直接运行时导入，不执行包内代码。`INSTALL_FAILED` 的 `stage=compatibility`、`reason=missing_runtime_imports` 表示应升级 CLI 或选择兼容包；不要用 `--force` 重试。这项静态检查也不替代浏览器重放。
+
 ## Step 4: Online Smoke
 
 安装或加载 adapter 后，运行只读 smoke 命令：
