@@ -83,13 +83,14 @@ async def test_provider_failure_keeps_existing_files_even_with_force(isolated_sd
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("entrypoint", ["sdk", "http"])
-@pytest.mark.parametrize("scenario,expected_requests,status", [
-    ("auth", 1, 401), ("forbidden", 1, 403), ("rejected", 1, 400),
-    ("limited", 3, 429), ("gateway", 3, 502), ("timeout", 3, None),
-    ("recovery", 2, None),
+@pytest.mark.parametrize("scenario,expected_requests,status,reason", [
+    ("auth", 1, 401, "authentication_failed"), ("forbidden", 1, 403, "authentication_failed"),
+    ("rejected", 1, 400, "request_rejected"), ("limited", 3, 429, "rate_limited"),
+    ("gateway", 3, 502, "upstream_http_error"), ("timeout", 3, None, "timeout"),
+    ("connection", 3, None, "connection_error"), ("recovery", 2, None, None),
 ])
 async def test_actual_sdk_transport_through_error_boundary(
-    isolated_sdk, monkeypatch, caplog, entrypoint, scenario, expected_requests, status,
+    isolated_sdk, monkeypatch, caplog, entrypoint, scenario, expected_requests, status, reason,
 ):
     from langchain_openai import ChatOpenAI
 
@@ -103,6 +104,8 @@ async def test_actual_sdk_transport_through_error_boundary(
         assert request.headers["authorization"] == "Bearer test-key"
         if scenario == "timeout":
             raise httpx.ReadTimeout(PRIVATE_MARKER, request=request)
+        if scenario == "connection":
+            raise httpx.ConnectError(PRIVATE_MARKER, request=request)
         if scenario == "recovery" and len(requests) > 1:
             return httpx.Response(200, json={
                 "id": "fixture", "object": "chat.completion", "created": 0, "model": "fixture-json",
@@ -141,6 +144,7 @@ async def test_actual_sdk_transport_through_error_boundary(
         assert payload["error"]["code"] == ("E_LLM_AUTH_FAILED" if status in {401, 403} else "E_LLM_UNAVAILABLE")
         assert payload["error"]["details"] == {
             "retryable": status not in {400, 401, 403}, "status_code": status, "phase": "llm_invoke",
+            "reason": reason,
         }
         assert http_status == (503 if entrypoint == "http" else None)
         assert not (directory / "commands.py").exists()

@@ -1,3 +1,5 @@
+from enum import StrEnum
+
 # ---------------------------------------------------------------------------
 # 异常层级体系
 # ---------------------------------------------------------------------------
@@ -21,6 +23,18 @@ class ExplorerError(ClanySiteError):
     """工作流探索（LLM 交互 / AXTree 采集）相关异常"""
 
 
+class LlmFailureReason(StrEnum):
+    AUTHENTICATION_FAILED = "authentication_failed"
+    RATE_LIMITED = "rate_limited"
+    UPSTREAM_HTTP_ERROR = "upstream_http_error"
+    REQUEST_REJECTED = "request_rejected"
+    HTTP_ERROR = "http_error"
+    TIMEOUT = "timeout"
+    CONNECTION_ERROR = "connection_error"
+    UPSTREAM_UNAVAILABLE = "upstream_unavailable"
+    UNKNOWN = "unknown"
+
+
 class LlmUnavailableError(ExplorerError):
     """LLM 上游服务不可用、限流或网关错误"""
 
@@ -30,10 +44,23 @@ class LlmUnavailableError(ExplorerError):
         *,
         status_code: int | None = None,
         retryable: bool = True,
+        reason: LlmFailureReason | None = None,
     ) -> None:
         super().__init__(message)
         self.status_code = status_code
         self.retryable = retryable
+        self.reason = reason
+
+    @property
+    def invocation_details(self) -> dict[str, str | int | bool | None]:
+        details: dict[str, str | int | bool | None] = {
+            "retryable": self.retryable,
+            "status_code": self.status_code,
+            "phase": "llm_invoke",
+        }
+        if isinstance(self.reason, LlmFailureReason):
+            details["reason"] = self.reason.value
+        return details
 
 
 class DataCommandQualityError(ExplorerError):
