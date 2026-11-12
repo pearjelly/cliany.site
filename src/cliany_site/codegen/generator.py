@@ -6,6 +6,7 @@ import os
 import re
 import tempfile
 import time
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from importlib.metadata import version as _pkg_version
 from typing import Any
@@ -13,6 +14,7 @@ from typing import Any
 from cliany_site.atoms.models import AtomCommand
 from cliany_site.atoms.storage import load_atom, load_atoms
 from cliany_site.audit import audit_source
+from cliany_site.browser.selector import MAIN_RESULT_LIST_SCOPE
 from cliany_site.codegen.collection_scope import validate_collection_scope, validate_discovery_purposes
 from cliany_site.codegen.naming import (
     sanitize_docstring_text,
@@ -41,6 +43,18 @@ except Exception:
 logger = logging.getLogger(__name__)
 
 
+def _extract_capability(targets: Iterable[Any]) -> str:
+    prefix = ""
+    for target in targets:
+        if isinstance(target, dict) and target.get("scope") == MAIN_RESULT_LIST_SCOPE:
+            if "empty_result" in target:
+                return "query_scoped_extract_"
+            prefix = "scoped_extract_"
+        elif target and not prefix:
+            prefix = "semantic_"
+    return prefix
+
+
 class AdapterGenerator:
     def __init__(self, domain: str = ""):
         self.domain = domain
@@ -62,16 +76,17 @@ class AdapterGenerator:
         has_reuse_atom = self._has_reuse_atom_actions(explore_result)
         has_parameterized_args = any(cmd.args for cmd in explore_result.commands)
         has_param_placeholders = any(re.search(r"\{\{\w+\}\}", action.value or "") for action in explore_result.actions)
-        semantic_targets = any(action.extract_target for action in explore_result.actions)
-        if has_reuse_atom and not semantic_targets:
+        targets: list[Any] = [action.extract_target for action in explore_result.actions]
+        if has_reuse_atom:
             reused_ids = {action.target_ref for action in explore_result.actions if action.action_type == "reuse_atom"}
-            semantic_targets = any(
+            targets.extend(
                 action.get("extract_target") for atom in load_atoms(domain)
                 if atom.atom_id in reused_ids for action in atom.actions
             )
+        capability = _extract_capability(targets)
         execution_import = (
-            "execute_semantic_steps_via_atoms as execute_steps_via_atoms"
-            if semantic_targets
+            f"execute_{capability}steps_via_atoms as execute_steps_via_atoms"
+            if capability
             else "execute_steps_via_atoms"
         )
 
@@ -85,6 +100,10 @@ class AdapterGenerator:
             command_blocks.append(render_empty_command_block_v2())
 
         commands_text = "\n\n".join(command_blocks)
+        limit_import = (
+            "\nfrom cliany_site.codegen.runtime_helpers import limit_generated_result"
+            if any(command.result_limit for command in explore_result.commands) else ""
+        )
 
         substitute_import = ""
         if (has_parameterized_args or has_param_placeholders) and not has_reuse_atom:
@@ -130,7 +149,7 @@ def _normalize_atom_actions(actions):
 
 import json
 import click
-from cliany_site.codegen.runtime_helpers import {execution_import}, summarize_extract_quality, diagnose_if_enabled
+from cliany_site.codegen.runtime_helpers import {execution_import}, summarize_extract_quality, diagnose_if_enabled{limit_import}
 from cliany_site.envelope import ok, err, ErrorCode{atom_imports}{substitute_import}
 
 DOMAIN = {domain!r}
@@ -172,9 +191,10 @@ if __name__ == "__main__":
         domain_doc = self._sanitize_docstring_text(domain)
         source_url = f"https://{domain}"
         atoms = load_atoms(domain)
+        capability = _extract_capability(action.get("extract_target") for atom in atoms for action in atom.actions)
         action_execution_import = (
-            "execute_semantic_action_steps as execute_action_steps"
-            if any(action.get("extract_target") for atom in atoms for action in atom.actions)
+            f"execute_{capability}action_steps as execute_action_steps"
+            if capability
             else "execute_action_steps"
         )
 
@@ -461,6 +481,7 @@ def save_adapter(
                 "args": cmd.args,
                 "action_steps": cmd.action_steps,
                 "expects_nonempty": cmd.expects_nonempty,
+                **({"result_limit": True} if cmd.result_limit else {}),
                 "actions": cmd_actions,
             }
             if atom_refs:

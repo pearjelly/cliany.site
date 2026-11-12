@@ -11,10 +11,10 @@ import pytest
 
 from cliany_site.browser.axtree import capture_axtree
 from cliany_site.browser.cdp import CDPConnection
-from cliany_site.browser.selector import ground_extract_target
+from cliany_site.browser.selector import ground_extract_target, replayable_extract_selectors, resolve_extract_target
 from cliany_site.codegen.generator import AdapterGenerator, save_adapter
 from cliany_site.explorer.models import ActionStep, CommandSuggestion, ExploreResult, PageInfo
-from cliany_site.extract import build_semantic_extract_js
+from cliany_site.extract import build_semantic_extract_js, prepare_semantic_extract_selector
 
 playwright_api = pytest.importorskip("playwright.async_api")
 BROWSER_HOME = {key: os.environ[key] for key in ("HOME", "USERPROFILE", "HOMEDRIVE", "HOMEPATH") if key in os.environ}
@@ -109,6 +109,163 @@ def changing_catalog():
         server.shutdown()
         server.server_close()
         thread.join()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
+async def test_main_result_list_is_distinct_from_pagination_and_nested_metadata(
+    tmp_home, clean_env, no_llm, monkeypatch, changing_catalog, unused_tcp_port
+):
+    url, _ = changing_catalog
+    monkeypatch.setenv("CLIANY_RUNTIME_HOME", str(tmp_home / "runtime"))
+    for key, value in BROWSER_HOME.items():
+        monkeypatch.setenv(key, value)
+    cdp = CDPConnection(cdp_url=f"ws://127.0.0.1:{unused_tcp_port}")
+    result_list = """
+        <ol><li><h2><a href="/crates/alpha">Alpha</a></h2>
+            <ul aria-label="Statistics"><li><a href="/history">Release history</a></li></ul></li>
+            <li style="margin-top: 2500px"><h2><a href="/crates/beta">Beta</a></h2></li></ol>
+    """
+    pagination = '<nav aria-label="Pagination"><ol><li><a href="?page=2">Next</a></li></ol></nav>'
+    footer = '<footer><ul id="elsewhere"><li><a href="/about">About</a></li></ul></footer>'
+    async with playwright_api.async_playwright() as playwright:
+        browser = await playwright.chromium.launch(
+            headless=True, env={**os.environ, **BROWSER_HOME}, args=[f"--remote-debugging-port={unused_tcp_port}"]
+        )
+        try:
+            page = await browser.new_page()
+            await page.goto(url)
+            await page.set_content(
+                f'<div style="display: contents"><main><h1>Search Results</h1>'
+                f'<div>{result_list}{pagination}</div></main></div>{footer}'
+            )
+            session = await cdp.connect()
+            tree = await capture_axtree(session)
+            refs, candidates = tree["selector_map"], tree["extract_candidates"]
+            scoped = [item for item in candidates if item["root_selector"].startswith("main ")]
+            assert len(scoped) == 1, candidates
+            root = scoped[0]["root_selector"]
+            assert root in replayable_extract_selectors(refs, candidates)
+            target = ground_extract_target(f"{root} li", refs, candidates)
+            assert target and target["suffix"] == ""
+            selector, error = await prepare_semantic_extract_selector(session, target, "list")
+            assert error is None and selector == root
+            script = build_semantic_extract_js(selector, "list", {"name": "h2 a", "url": "h2 a@href"}, target)
+            assert await page.evaluate(script) == [
+                {"name": "Alpha", "url": "/crates/alpha"}, {"name": "Beta", "url": "/crates/beta"},
+            ]
+
+            # The same identity survives a new result row and a different list tag and wrapper.
+            changed = '<ul><li><h2><a href="/crates/gamma">Gamma</a></h2></li></ul>'
+            await page.set_content(f"<main><article>{changed}</article></main>{footer}")
+            selector, error = await prepare_semantic_extract_selector(session, target, "list")
+            assert error is None and selector == root
+            assert await page.evaluate(script) == [{"name": "Gamma", "url": "/crates/gamma"}]
+
+            for html in (
+                f"<main>{changed}{result_list}</main>{footer}",
+                f'<main>{changed}<div role="list"><div role="listitem">Other results</div></div></main>{footer}',
+                f"<main>{changed}</main><main>{result_list}</main>{footer}",
+                f"<main>{changed}</main><main><p>Another main</p></main>{footer}",
+                f"<main><h1>Search Results</h1><p>0 crates found.</p><ol></ol></main>{footer}",
+                f'<main><ol><li><a href="/about">Navigation only</a></li></ol></main>{footer}',
+                '<main><ol><li><h2 role="presentation"><a href="/about">Not a heading</a></h2></li></ol></main>'
+                + footer,
+                f'<main><ol><li><ul><li><h2><a href="/about">Nested only</a></h2></li></ul></li></ol></main>{footer}',
+                f'<main><div style="opacity: 0">{changed}</div></main>{footer}',
+            ):
+                await page.set_content(html)
+                current = await capture_axtree(session)
+                assert resolve_extract_target(target, current["selector_map"], current["extract_candidates"]) is None
+                assert await page.evaluate(script) == {"__cliany_extract_target_missing__": True}
+        finally:
+            await cdp.disconnect()
+            await browser.close()
+
+
+@pytest.mark.embodied
+@pytest.mark.asyncio
+async def test_scoped_search_replay_requires_explicit_zero_for_the_bound_query(
+    tmp_home, clean_env, no_llm, monkeypatch, changing_catalog, unused_tcp_port
+):
+    url, _ = changing_catalog
+    monkeypatch.setenv("CLIANY_RUNTIME_HOME", str(tmp_home / "runtime"))
+    for key, value in BROWSER_HOME.items():
+        monkeypatch.setenv(key, value)
+    cdp = CDPConnection(cdp_url=f"ws://127.0.0.1:{unused_tcp_port}")
+    empty = '<h2>0 crates found. <a href="/help">Get started</a> and create your own.</h2>'
+    title = "<h1>Search Results<span> for 'no-result'</span></h1>"
+    async with playwright_api.async_playwright() as playwright:
+        browser = await playwright.chromium.launch(
+            headless=True, env={**os.environ, **BROWSER_HOME}, args=[f"--remote-debugging-port={unused_tcp_port}"]
+        )
+        try:
+            page = await browser.new_page()
+            await page.goto(f"{url}?q=alpha")
+            await page.set_content(
+                "<main><h1>Search Results for 'alpha'</h1>"
+                '<ol><li><h2><a href="/crates/alpha">Alpha</a></h2></li></ol></main>'
+            )
+            session = await cdp.connect()
+            tree = await capture_axtree(session)
+            candidates = tree["extract_candidates"]
+            root = next(item["root_selector"] for item in candidates if item.get("scope"))
+            target = ground_extract_target(root, tree["selector_map"], candidates)
+            assert target
+            target["empty_result"] = {
+                "page": url, "parameter": "q", "heading_prefix": "Search Results for '", "heading_suffix": "'",
+                "message": "0 crates found.", "query": "no-result",
+            }
+            await page.goto(f"{url}?q=no-result")
+            await page.set_content(f"<main>{title}{empty}</main>")
+            monkeypatch.setattr("cliany_site.extract._LIST_SETTLE_TIMEOUT_SECONDS", 3.0)
+            selector, error = await prepare_semantic_extract_selector(session, target, "list")
+            assert error is None and selector is not None
+            script = build_semantic_extract_js(selector, "list", {"title": "h2 a", "url": "h2 a@href"}, target)
+            assert await page.evaluate(script) == []
+            process = await asyncio.create_subprocess_exec(
+                sys.executable, "-m", "cliany_site", "--cdp-url", f"ws://127.0.0.1:{unused_tcp_port}",
+                "browser", "extract", "--mode", "list", "--target-json", json.dumps(target), "--json",
+                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, cwd=tmp_home,
+            )
+            try:
+                stdout, stderr = await asyncio.wait_for(process.communicate(), 30)
+            except TimeoutError:
+                process.kill()
+                await process.communicate()
+                raise
+            assert process.returncode == 0, stderr.decode()
+            payload = json.loads(stdout)
+            assert payload["data"]["content"] == [] and payload["data"]["quality"]["status"] == "empty", payload
+
+            rows = '<ol><li><h2><a href="/crates/other">Other</a></h2></li></ol>'
+            await page.set_content(f"<main>{title}{rows}</main>")
+            selector, error = await prepare_semantic_extract_selector(session, target, "list")
+            assert error is None and selector == root
+            positive_script = build_semantic_extract_js(selector, "list", {"title": "h2 a"}, target)
+            assert await page.evaluate(positive_script) == [{"title": "Other"}]
+
+            monkeypatch.setattr("cliany_site.extract._LIST_SETTLE_TIMEOUT_SECONDS", 0.3)
+            for markup in (
+                f"<main>{title}<p>No region yet</p></main>",
+                f"<main><h1>Search Results for 'old'</h1>{empty}</main>",
+                f'<main aria-busy="true">{title}{empty}</main>',
+                f'<main>{title}<section hidden>{empty}</section></main>',
+                f"<main>{title}{empty}{empty}</main>",
+                f"<main>{title}{empty}<ol><li><a href='/old'>Old row</a></li></ol></main>",
+                f"<main>{title}<nav>{empty}</nav></main>",
+                f"<main>{title}{empty}</main><main>Another main</main>",
+            ):
+                await page.set_content(markup)
+                selector, _ = await prepare_semantic_extract_selector(session, target, "list")
+                assert selector is None, markup
+                assert await page.evaluate(script) == {"__cliany_extract_target_missing__": True}, markup
+            await page.goto(f"{url}?q=no-result&q=old")
+            await page.set_content(f"<main>{title}{empty}</main>")
+            assert await page.evaluate(script) == {"__cliany_extract_target_missing__": True}
+        finally:
+            await cdp.disconnect()
+            await browser.close()
 
 
 @pytest.mark.embodied

@@ -301,6 +301,7 @@ class AdapterMerger:
             "args": command.args,
             "action_steps": command.action_steps,
             "expects_nonempty": command.expects_nonempty,
+            **({"result_limit": True} if command.result_limit else {}),
             "actions": cmd_actions,
         }
 
@@ -379,6 +380,7 @@ class AdapterMerger:
                         if isinstance(cmd_def.get("expects_nonempty"), bool)
                         else True
                     ),
+                    result_limit=cmd_def.get("result_limit") is True,
                 )
             )
 

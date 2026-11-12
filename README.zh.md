@@ -42,6 +42,8 @@ cliany-site demo --case-id apache-jira-issues --json
 
 ### 告诉我们结果
 
+v0.16.400 源码为单列表搜索增加了明确零匹配和输出条数选项，安装前也会检查所需的运行时功能。[浏览器结果与兼容性说明](docs/semantic-extract-targets.md)。crates.io 仍是候选，须先验证公开运行时和固定包。
+
 从 v0.16.399 起，即使模型请求成功返回，严格预检也会拦截不符合 JSON 对象格式的回复。探索失败时，最终 JSON 可保留脱敏分类，不用查看进度日志也能判断下一步。[模型失败诊断](docs/llm-retry-diagnostics.md)。
 
 从 v0.16.398 起，按名称定位输入框时会在文档初始化后重新核对同分目标。临时重复项消失后才输入；若仍有多个同分目标，则不输入、不提交。探索也会在执行前要求修正连续重复点击同一实测跨页链接的计划。[输入复现证据](docs/user-evidence/2026-11-12-settled-input-target.md) · [导航计划证据](docs/user-evidence/2026-11-12-duplicate-navigation-plan.md)。

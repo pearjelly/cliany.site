@@ -5,6 +5,7 @@ import click
 from cliany_site.errors import ADAPTER_NOT_FOUND, ERROR_FIX_HINTS, EXECUTION_FAILED, INSTALL_FAILED
 from cliany_site.marketplace import (
     AdapterDownloadError,
+    AdapterRuntimeCompatibilityError,
     get_adapter_info,
     inspect_adapter_package,
     install_adapter,
@@ -121,6 +122,13 @@ def install_cmd(
                 resp = success_response(manifest.to_dict())
     except AdapterDownloadError as exc:
         resp = error_response(INSTALL_FAILED, str(exc), _download_fix_hint(exc.details), details=exc.details)
+    except AdapterRuntimeCompatibilityError as exc:
+        fix = (
+            "请确认运行时满足包的要求，或联系维护者修正 commands.py；已有安装未被替换。"
+            if exc.details["reason"] == "commands_syntax_invalid"
+            else "请升级或修复 cliany-site，或选用兼容的适配器包；--force 不能跳过运行时检查。"
+        )
+        resp = error_response(INSTALL_FAILED, str(exc), fix, details=exc.details)
     except (FileNotFoundError, FileExistsError, ValueError) as exc:
         resp = error_response(INSTALL_FAILED, str(exc), _install_fix_hint(str(exc)))
     except OSError as exc:

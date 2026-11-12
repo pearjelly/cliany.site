@@ -12,7 +12,18 @@ import time
 from typing import Any
 
 from cliany_site.browser.axtree import capture_axtree
-from cliany_site.browser.selector import resolve_extract_target
+from cliany_site.browser.search_result import (
+    EMPTY_SEARCH_ROOT,
+    build_search_outcome_js,
+    observed_search_outcome,
+    valid_empty_result_recipe,
+)
+from cliany_site.browser.selector import (
+    MAIN_RESULT_LIST_BOUNDARY,
+    MAIN_RESULT_LIST_ROOT,
+    MAIN_RESULT_LIST_SCOPE,
+    resolve_extract_target,
+)
 from cliany_site.config import get_config
 
 SUPPORTED_EXTRACT_MODES = ("text", "list", "table", "attribute")
@@ -40,6 +51,12 @@ async def resolve_semantic_extract_selector(browser_session: Any, target: dict[s
 async def prepare_semantic_extract_selector(
     browser_session: Any, target: dict[str, Any], mode: str | None,
 ) -> tuple[str | None, str | None]:
+    if "empty_result" in target:
+        if (target.get("scope") != MAIN_RESULT_LIST_SCOPE or target.get("role") != "list" or mode != "list"
+                or any(target.get(key) for key in ("name", "attributes", "suffix"))
+                or not valid_empty_result_recipe(target["empty_result"], bound=True)):
+            return None, "E_SELECTOR_NOT_FOUND"
+        return await _prepare_scoped_search(browser_session, target)
     if mode not in {"list", "table"} and not (mode == "text" and target.get("role") == "status"):
         selector = await resolve_semantic_extract_selector(browser_session, target)
         return selector, None if selector is not None else "E_SELECTOR_NOT_FOUND"
@@ -56,7 +73,8 @@ async def prepare_semantic_extract_selector(
                     await asyncio.sleep(get_config().resolve_retry_delay)
             for _ in range(2):
                 page = await browser_session.get_current_page()
-                if page is None or time.monotonic() >= deadline or not await _wait_for_list_settle(page, selector):
+                probe = f"{selector} > li" if target.get("scope") == MAIN_RESULT_LIST_SCOPE else selector
+                if page is None or time.monotonic() >= deadline or not await _wait_for_list_settle(page, probe):
                     return None, "E_PAGE_NOT_READY"
                 if time.monotonic() >= deadline:
                     return None, "E_PAGE_NOT_READY"
@@ -73,18 +91,75 @@ async def prepare_semantic_extract_selector(
     return None, "E_PAGE_NOT_READY"
 
 
+async def _prepare_scoped_search(browser_session: Any, target: dict[str, Any]) -> tuple[str | None, str | None]:
+    recipe = target["empty_result"]
+    probe = build_search_outcome_js(recipe)
+    previous = None
+    stable_since = time.monotonic()
+    try:
+        async with asyncio.timeout(_LIST_SETTLE_TIMEOUT_SECONDS):
+            while True:
+                snapshot = await capture_axtree(browser_session, include_main_result_context=True)
+                kind = observed_search_outcome(snapshot, recipe)
+                if kind == "rows" and resolve_extract_target(
+                    target, snapshot.get("selector_map") or {}, snapshot.get("extract_candidates") or [],
+                ) != (MAIN_RESULT_LIST_ROOT, ""):
+                    kind = None
+                page = await browser_session.get_current_page() if kind else None
+                raw = _coerce_json_like_extract_data(await page.evaluate(probe)) if page is not None else None
+                state = raw if isinstance(raw, dict) and raw.get("kind") == kind else None
+                now = time.monotonic()
+                if state != previous or state is None:
+                    stable_since = now
+                elif now - stable_since >= 1.0:
+                    return (EMPTY_SEARCH_ROOT if kind == "empty" else MAIN_RESULT_LIST_ROOT), None
+                previous = state
+                await asyncio.sleep(0.25)
+    except TimeoutError:
+        return None, "E_SELECTOR_NOT_FOUND" if previous is None else "E_PAGE_NOT_READY"
+
+
 def build_semantic_extract_js(selector: str, mode: str, fields: dict | None, target: dict[str, Any]) -> str:
+    query_guard = ""
+    if "empty_result" in target:
+        missing = "{__cliany_extract_target_missing__: true}"
+        if target.get("scope") != MAIN_RESULT_LIST_SCOPE or mode != "list":
+            return f"() => ({missing})"
+        probe = build_search_outcome_js(target["empty_result"])
+        if selector == EMPTY_SEARCH_ROOT:
+            return f"() => (({probe})()?.kind === 'empty' ? [] : {missing})"
+        query_guard = f"if (({probe})()?.kind !== 'rows') return {missing}; "
     suffix = target.get("suffix", "")
     root = selector[:-len(suffix)] if suffix else selector
     expression = build_extract_js(root if mode == "table" else selector, mode, fields)
     shape_guard = ""
-    if mode == "table":
+    if target.get("scope") == MAIN_RESULT_LIST_SCOPE:
+        if selector != MAIN_RESULT_LIST_ROOT:
+            return "() => ({__cliany_extract_target_missing__: true})"
+        # Check the live DOM again after AX resolution, before copying any rows.
+        shape_guard = (
+            'const mains = document.querySelectorAll(\'main,[role="main"]\'); '
+            "const rows = [...region.children].filter(el => el.tagName === 'LI'); "
+            'const heading = ":is(h1,h2,h3,h4,h5,h6):not([role]),[role=heading]"; '
+            "if (mains.length !== 1 || !['UL', 'OL'].includes(region.tagName) || !rows.length || "
+            "(region.hasAttribute('role') && region.getAttribute('role') !== 'list') || "
+            "rows.some(row => ![...row.querySelectorAll('a[href]:not([role]),a[href][role=link]')].some(link => "
+            "link.getAttribute('href').trim() && row.contains(link.closest(heading)) && "
+            "!link.closest('[hidden],[inert],[aria-hidden=true]') && "
+            "link.checkVisibility({checkOpacity: true, checkVisibilityCSS: true}) && "
+            f"link.closest({json.dumps(MAIN_RESULT_LIST_BOUNDARY)}) === region))) "
+            "return {__cliany_extract_target_missing__: true}; "
+        )
+        if mode == "table":
+            shape_guard += "return {__cliany_extract_mode_mismatch__: true}; "
+    elif mode == "table":
         shape_guard = "if (region.tagName !== 'TABLE') return {__cliany_extract_mode_mismatch__: true}; "
     elif mode == "list" and target.get("role") == "list":
         shape_guard = "if (!['UL', 'OL'].includes(region.tagName)) return {__cliany_extract_mode_mismatch__: true}; "
     return (
         "() => { "
-        f"const regions = document.querySelectorAll({json.dumps(root)}); "
+        + query_guard
+        + f"const regions = document.querySelectorAll({json.dumps(root)}); "
         "if (regions.length !== 1) "
         "return {__cliany_extract_target_missing__: true}; "
         "const region = regions[0]; "

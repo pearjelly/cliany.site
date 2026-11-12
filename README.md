@@ -34,6 +34,8 @@ From v0.16.390, named browser input observes document initialization and refresh
 
 ### Tell us what happened
 
+The v0.16.400 source adds opt-in zero-match verification and output limits for generated single-list searches, plus an install-time check for required runtime helpers. See the [browser result and compatibility contract](docs/semantic-extract-targets.md). The crates.io workflow remains a candidate until its public runtime and archive are verified.
+
 From v0.16.399, strict live doctor blocks an unusable JSON probe reply even when the provider accepted the request. The final exploration JSON preserves a sanitized failure category, so callers can choose the next check without reading progress logs. [Model failure diagnostics](docs/llm-retry-diagnostics.md).
 
 From v0.16.398, named browser input rechecks equally good matches after document initialization. A temporary duplicate can disappear before typing; if more than one equally good match remains, the command stops without typing or submitting. Exploration also asks for a corrected plan before executing consecutive clicks on the same observed cross-page link. [Input evidence](docs/user-evidence/2026-11-12-settled-input-target.md) · [Navigation-plan evidence](docs/user-evidence/2026-11-12-duplicate-navigation-plan.md).

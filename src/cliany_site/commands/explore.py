@@ -33,6 +33,8 @@ def _post_save_agent_md(domain: str, commands_list: list[str]) -> None:
 @click.option("--interactive", "-i", is_flag=True, default=False, help="交互式探索模式")
 @click.option("--extend", type=str, help="扩展现有适配器")
 @click.option("--record/--no-record", default=True, help="是否记录探索过程")
+@click.option("--empty-result-message", help="已在正常页面核对的零匹配文案，仅用于单一只读搜索")
+@click.option("--with-result-limit", is_flag=True, help="为单一列表结果生成输出参数 --limit")
 @click.pass_context
 def explore_cmd(
     ctx: click.Context,
@@ -43,11 +45,16 @@ def explore_cmd(
     interactive: bool,
     extend: str | None,
     record: bool,
+    empty_result_message: str | None = None,
+    with_result_limit: bool = False,
 ):
     """探索网站工作流并生成 CLI adapter"""
     root_ctx = ctx.find_root()
     root_obj = root_ctx.obj if isinstance(root_ctx.obj, dict) else {}
     effective_json_mode = json_mode if json_mode is not None else bool(root_obj.get("json_mode", False))
+
+    if empty_result_message is not None and not 0 < len(" ".join(empty_result_message.split())) <= 160:
+        raise click.BadParameter("请输入 1 到 160 个字符的已核对零匹配文案", param_hint="--empty-result-message")
 
     if interactive and effective_json_mode:
         raise click.UsageError("--interactive 与 --json 不兼容，请删除 --json 标志")
@@ -191,7 +198,24 @@ def explore_cmd(
             explorer = WorkflowExplorer(
                 cdp_url=cdp_url, headless=headless, interactive=interactive, extend_domain=extend
             )
-            explore_result = await explorer.explore(url, workflow_description, progress=reporter, record=record)
+            if empty_result_message is None:
+                explore_result = await explorer.explore(url, workflow_description, progress=reporter, record=record)
+            else:
+                explore_result = await explorer.explore(
+                    url, workflow_description, progress=reporter, record=record,
+                    empty_result_message=empty_result_message,
+                )
+            if with_result_limit:
+                from cliany_site.codegen.collection_scope import CollectionScopeError, validate_collection_scope
+
+                if len(explore_result.commands) != 1:
+                    raise ExploreContractError("输出 --limit 需要一个列表命令", reason="result_limit_unsupported")
+                command = explore_result.commands[0]
+                command.result_limit = True
+                try:
+                    validate_collection_scope(command, explore_result.actions)
+                except CollectionScopeError as exc:
+                    raise ExploreContractError(str(exc), reason="result_limit_unsupported") from exc
         except NavigationTransportError as e:
             return err("explore", ErrorCode.E_PAGE_NOT_READY, str(e), hint=e.hint, details=e.details)
         except LlmUnavailableError as e:

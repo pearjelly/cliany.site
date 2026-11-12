@@ -193,7 +193,7 @@
     "docs": "cases/README.md#candidate-cases",
     "example_output": "cases/examples/crates-io-crate-search.json",
     "commands": [
-      "cliany-site explore \"https://crates.io\" \"search Rust crates for serde and list crate names\" --json",
+      "cliany-site explore \"https://crates.io/\" \"Search for serde using the visible Search field; generate a read-only command with a required query, ordered crate names and links, and one empty list for an explicit zero match\" --empty-result-message \"0 crates found.\" --with-result-limit --json",
       "cliany-site crates.io search-crates --query serde --limit 5 --json"
     ],
     "validation": {
@@ -212,18 +212,18 @@
     "promotion_evidence": {
       "adapter_package": {
         "status": "pending",
-        "evidence": "2026-09-28: live model and headless browser preflight passed with a temporary system HOME, but crates.io search returned HTTP 403 from this network and browser navigation timed out. Later local controls showed temporary system HOME can confound Chrome navigation, so the timeout cannot be attributed to crates.io alone. No adapter was generated.",
-        "next_action": "Recheck crates.io accessibility from an independent network before repeating read-only explore; then generate crates.io-<version>.cliany-adapter.tar.gz and attach the package path or release asset name."
+        "evidence": "2026-09-28: live model and headless browser preflight passed with a temporary system HOME, but crates.io search returned HTTP 403 from this network and browser navigation timed out. Later local controls showed temporary system HOME can confound Chrome navigation, so the timeout cannot be attributed to crates.io alone. No adapter was generated in that attempt. 2026-11-12: PR #134 verified a private archive (SHA-256 ad015cca4b20f3b5bf9f0c465ad81097bdb5661074b1e27aea66a7efa1b7f788); the public 0.16.398 runtime could not load it after installing it. No asset is public.",
+        "next_action": "After the compatible CLI is published and verified, publish the exact reviewed archive and pin its SHA-256. Do not install this archive on public 0.16.398."
       },
       "metadata_validation": {
         "status": "pending",
-        "evidence": null,
-        "next_action": "After the package exists, run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict and paste the result."
+        "evidence": "2026-11-12: the private archive passed case schema, payload hash and strict adapter checks on a supporting local runtime. Exact public asset and CLI checks are pending.",
+        "next_action": "Download the reviewed public asset, verify its SHA-256, run python scripts/validate_cases.py --packages-dir ~/.cliany-site/packages --include-candidate-packages --strict, then perform a fresh install and strict verify on the exact supporting PyPI CLI."
       },
       "online_smoke": {
         "status": "pending",
-        "evidence": null,
-        "next_action": "Run cliany-site crates.io search-crates --query serde --limit 5 --json and attach a JSON envelope summary with data.quality.ok=true and row_count>0."
+        "evidence": "2026-11-12: PR #134 matched the first five ordered name/link rows for serde and tokio, plus one explicit empty result, from the private generated and installed archive separately. Earlier ungrounded and zero-match failures remain on Issue #131 and PR #132. No public-runtime replay yet.",
+        "next_action": "On the exact public CLI and pinned archive, run the listed --limit 5 command, a changed query and a known zero query. Compare both five-row prefixes and the empty list with normal public pages."
       }
     }
   },
